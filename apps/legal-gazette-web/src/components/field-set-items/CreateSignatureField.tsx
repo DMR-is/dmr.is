@@ -28,6 +28,7 @@ export const CreateSignatureField = ({ advertId, canEdit }: Props) => {
         queryClient.invalidateQueries(
           trpc.getAdvert.queryFilter({ id: advertId }),
         )
+        queryClient.invalidateQueries(trpc.getPublication.queryFilter())
         toast.success('Undirritun bætt við', {
           toastId: 'update-signature-success',
         })

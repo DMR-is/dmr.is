@@ -58,9 +58,7 @@ export const useUpdateAdvert = (id: string) => {
   const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id }))
 
   // We fetch this to map type, category and courtDistrict to the optimistic data
-  const { data: entities } = useQuery(
-    trpc.getAllEntities.queryOptions(),
-  )
+  const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
   const types = entities?.types || []
   const categories = entities?.categories || []
   const courtDistricts = entities?.courtDistricts || []
@@ -226,6 +224,7 @@ export const useUpdateAdvert = (id: string) => {
           queryClient.invalidateQueries(
             trpc.getAdvert.queryFilter({ id: variables.id }),
           )
+          queryClient.invalidateQueries(trpc.getPublication.queryFilter())
         },
         onError: (_, variables, mutateResults) => {
           toast.error(

@@ -64,6 +64,7 @@ export const useUpdateSignature = ({
           queryClient.invalidateQueries(
             trpc.getAdvert.queryFilter({ id: variables.advertId }),
           )
+          queryClient.invalidateQueries(trpc.getPublication.queryFilter())
           toast.success('Undirritun vistuð', {
             toastId: 'update-signature-success',
           })
