@@ -151,7 +151,7 @@ export class AdvertPublicationController {
   @Delete('/:publicationId')
   @LGResponse({ operationId: 'deletePublication' })
   @AdminAccess()
-  @UseGuards(CanEditGuard)
+  @UseGuards(CanEditOrPublishGuard)
   async deletePublication(
     @Param('publicationId', new UUIDValidationPipe()) publicationId: string,
   ): Promise<void> {

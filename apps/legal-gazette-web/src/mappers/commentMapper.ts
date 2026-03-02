@@ -52,6 +52,19 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
       cmt.icon = 'checkmarkCircle'
       cmt.iconType = 'outline'
       break
+    case CommentTypeEnum.DELETEPUBLICATION:
+      cmt.message = ''
+      cmt.action = `fjarlægði birtingu: `
+      cmt.receiver = comment.comment
+      cmt.icon = 'trash'
+      cmt.iconType = 'outline'
+
+      break
+    case CommentTypeEnum.CREATEPUBLICATION:
+      ;(cmt.message = ''), (cmt.action = `bætti við nýrri birtingu: `)
+      cmt.receiver = comment.comment
+      cmt.icon = 'add'
+      cmt.iconType = 'outline'
   }
 
   return cmt

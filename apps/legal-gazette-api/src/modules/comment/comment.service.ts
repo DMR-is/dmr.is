@@ -11,7 +11,9 @@ import {
   CommentDto,
   CommentModel,
   CommentTypeEnum,
+  CreateAddPublicationCommentDto,
   CreateAssignCommentDto,
+  CreateDeletePublicationCommentDto,
   CreatePublishCommentDto,
   CreateStatusUpdateCommentDto,
   CreateSubmitCommentDto,
@@ -36,6 +38,55 @@ export class CommentService implements ICommentService {
     @InjectModel(StatusModel) private statusModel: typeof StatusModel,
     @InjectModel(AdvertModel) private advertModel: typeof AdvertModel,
   ) {}
+
+  async createDeletePublicationComment(
+    advertId: string,
+    body: CreateDeletePublicationCommentDto,
+  ): Promise<void> {
+    const [actor, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.getAdvertStatusId(advertId),
+    ])
+
+    await this.commentModel.create({
+      actor: actor.name,
+      actorId: actor.id,
+      advertId: advertId,
+      statusId: statusId,
+      comment: body.version,
+      type: CommentTypeEnum.DELETE_PUBLICATION,
+    })
+
+    this.logger.info('Created delete publication comment successfully', {
+      context: LOGGING_CONTEXT,
+      advertId: advertId,
+    })
+  }
+
+  async createAddPublicationComment(
+    advertId: string,
+    body: CreateAddPublicationCommentDto,
+  ): Promise<void> {
+    const [actor, statusId] = await Promise.all([
+      this.findActor(body.actorId),
+      this.getAdvertStatusId(advertId),
+    ])
+
+    await this.commentModel.create({
+      actor: actor.name,
+      actorId: actor.id,
+      advertId: advertId,
+      statusId: statusId,
+      comment: body.version,
+      type: CommentTypeEnum.CREATE_PUBLICATION,
+    })
+
+    this.logger.info('Created add publication comment successfully', {
+      context: LOGGING_CONTEXT,
+      advertId: advertId,
+    })
+  }
+
   async createPublishComment(
     advertId: string,
     body: CreatePublishCommentDto,

@@ -6,6 +6,8 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { LegalGazetteEvents } from '../../../core/constants'
 import { ICommentService } from '../comment.service.interface'
 import {
+  CreateAddPublicationEvent,
+  CreateDeletePublicationEvent,
   CreateStatusChangeCommentEvent,
   CreateSubmitCommentEvent,
   CreateUserAssignedCommentEvent,
@@ -99,6 +101,56 @@ export class CommentListener {
     })
     await this.commentService.createPublishComment(payload.advertId, {
       actorId: payload.actorId,
+    })
+  }
+
+  @OnEvent(LegalGazetteEvents.CREATE_PUBLICATION)
+  async addCreatePublicationComment(payload: CreateAddPublicationEvent) {
+    this.logger.info('Creating add publication comment', {
+      advertId: payload.advertId,
+      context: LOGGING_CONTEXT,
+    })
+
+    if (!payload.actorId) {
+      this.logger.warn(
+        'No actor id provided in create publication comment listener, skipping creation',
+        {
+          advertId: payload.advertId,
+          context: LOGGING_CONTEXT,
+        },
+      )
+
+      return
+    }
+
+    await this.commentService.createAddPublicationComment(payload.advertId, {
+      actorId: payload.actorId,
+      version: payload.version,
+    })
+  }
+
+  @OnEvent(LegalGazetteEvents.DELETE_PUBLICATION)
+  async addDeletePublicationComment(payload: CreateDeletePublicationEvent) {
+    this.logger.info('Creating delete publication comment', {
+      advertId: payload.advertId,
+      context: LOGGING_CONTEXT,
+    })
+
+    if (!payload.actorId) {
+      this.logger.warn(
+        'No actor id provided in delete publication comment listener, skipping creation',
+        {
+          advertId: payload.advertId,
+          context: LOGGING_CONTEXT,
+        },
+      )
+
+      return
+    }
+
+    await this.commentService.createDeletePublicationComment(payload.advertId, {
+      actorId: payload.actorId,
+      version: payload.version,
     })
   }
 }

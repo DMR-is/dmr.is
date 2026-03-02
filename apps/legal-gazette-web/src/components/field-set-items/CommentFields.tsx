@@ -47,6 +47,7 @@ export const CommentFields = ({ id }: Props) => {
         </Inline>
         {sortedComments.map((comment, index) => {
           const mapped = commentMapper(comment)
+          console.log('mapped', mapped)
           return <Comment key={index} {...mapped} />
         })}
         <AddComment advertId={id} />

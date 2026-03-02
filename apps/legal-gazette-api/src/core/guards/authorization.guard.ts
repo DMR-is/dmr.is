@@ -11,6 +11,7 @@ import { getLogger } from '@dmr.is/logging'
 
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
+import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 
@@ -72,6 +73,7 @@ const logger = getLogger('AuthorizationGuard')
 export class AuthorizationGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
+    private readonly userContext: UserContext,
     @Inject(IUsersService) private readonly usersService: IUsersService,
   ) {}
 
@@ -82,6 +84,9 @@ export class AuthorizationGuard implements CanActivate {
       context.getClass(),
     ])
 
+    const request = context.switchToHttp().getRequest()
+    const user = request.user
+
     const requiredScopes = this.reflector.getAllAndOverride<string[]>(
       SCOPES_KEY,
       [context.getHandler(), context.getClass()],
@@ -90,11 +95,13 @@ export class AuthorizationGuard implements CanActivate {
     // Case 1: No decorators - allow access (auth only)
     if (!requiresAdmin && !requiredScopes?.length) {
       logger.debug('No authorization decorators, allowing authenticated access')
+
+      this.userContext.user = user
+
       return true
     }
 
-    const request = context.switchToHttp().getRequest()
-    const user = request.user
+
 
     // Case 2: @Scopes() only - check scope without user lookup
     if (!requiresAdmin && requiredScopes?.length) {
@@ -112,6 +119,11 @@ export class AuthorizationGuard implements CanActivate {
           nationalId: user?.nationalId,
           matchedScopes: this.getMatchingScopes(user, requiredScopes),
         })
+
+
+        // populating the actor context
+        this.userContext.user = user
+
         return true
       }
 
@@ -130,6 +142,8 @@ export class AuthorizationGuard implements CanActivate {
       logger.debug('Admin access granted', {
         nationalId: user?.nationalId,
       })
+
+      this.userContext.user = request.user
 
       return true
     } catch (error) {

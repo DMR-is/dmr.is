@@ -3,12 +3,19 @@ import { Op } from 'sequelize'
 
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager'
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Cacheable } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
+import { LegalGazetteEvents } from '../../../core/constants'
+import { UserContext } from '../../../core/context/user/user.context'
+import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
@@ -34,6 +41,8 @@ export class PublicationService implements IPublicationService {
     readonly publicationModel: typeof AdvertPublicationModel,
     @InjectModel(AdvertModel)
     readonly advertModel: typeof AdvertModel,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly userContext: UserContext,
   ) {}
 
   async getRelatedPublications(
@@ -191,11 +200,57 @@ export class PublicationService implements IPublicationService {
       currentPublications[currentPublications.length - 1]
     const withTwoWeeks = addDays(lastestPublication.scheduledAt, 14)
 
-    await this.publicationModel.create({
+    const newPublication = await this.publicationModel.create({
       advertId,
       scheduledAt: withTwoWeeks,
       versionNumber: currentPublications.length + 1,
     })
+
+    console.log('----------------------------------------------')
+    console.log('this.useContext.user', this.userContext.user)
+    console.log('----------------------------------------------')
+
+    if (this.userContext.user?.adminUserId) {
+      await this.eventEmitter.emitAsync(LegalGazetteEvents.CREATE_PUBLICATION, {
+        advertId,
+        actorId: this.userContext.user.adminUserId,
+        version: newPublication.versionLetter,
+      })
+    } else {
+      this.logger.warn(
+        'No user was populated in the userContext, skip emitting comment',
+        {
+          context: LOGGING_CONTEXT,
+          advertId,
+          publicationId: newPublication.id,
+        },
+      )
+    }
+
+    const hasSiblingsPublished = currentPublications.every(
+      (pub) => pub.publishedAt !== null,
+    )
+
+    if (hasSiblingsPublished) {
+      this.logger.info(
+        'Published siblings exist, updating advert status to in publishing',
+        {
+          context: LOGGING_CONTEXT,
+          advertId,
+          publicationId: newPublication.id,
+        },
+      )
+      await this.advertModel.update(
+        { statusId: StatusIdEnum.IN_PUBLISHING },
+        { where: { id: advertId } },
+      )
+
+      await this.eventEmitter.emitAsync(LegalGazetteEvents.STATUS_CHANGED, {
+        advertId,
+        actorId: this.userContext.user?.adminUserId,
+        statusId: StatusIdEnum.IN_PUBLISHING,
+      })
+    }
   }
 
   async deletePublication(publicationId: string): Promise<void> {
@@ -250,6 +305,51 @@ export class PublicationService implements IPublicationService {
         newVersionNumber: index + 1,
       })
       await publications[index].update({ versionNumber: index + 1 })
+    }
+
+    console.log('----------------------------------------------')
+    console.log('this.useContext.user', this.userContext.user)
+    console.log('----------------------------------------------')
+    if (this.userContext.user?.adminUserId) {
+      await this.eventEmitter.emitAsync(LegalGazetteEvents.DELETE_PUBLICATION, {
+        advertId: publication.advertId,
+        actorId: this.userContext.user.adminUserId,
+        version: publication.versionLetter,
+      })
+    } else {
+      this.logger.warn(
+        'No user was populated in the userContext, skip emitting comment',
+        {
+          context: LOGGING_CONTEXT,
+          advertId: publication.advertId,
+          publicationId: publication.id,
+        },
+      )
+    }
+
+    const allSiblingsPublished = publications.every(
+      (pub) => pub.publishedAt !== null,
+    )
+
+    if (allSiblingsPublished) {
+      this.logger.info(
+        'All remaining publications are published, updating advert status to published',
+        {
+          context: LOGGING_CONTEXT,
+          advertId: publication.advertId,
+          publicationId: publication.id
+        },
+      )
+      await this.advertModel.update(
+        { statusId: StatusIdEnum.PUBLISHED },
+        { where: { id: publication.advertId } },
+      )
+
+      await this.eventEmitter.emitAsync(LegalGazetteEvents.STATUS_CHANGED, {
+        advertId: publication.advertId,
+        actorId: this.userContext.user?.adminUserId,
+        statusId: StatusIdEnum.PUBLISHED,
+      })
     }
   }
 

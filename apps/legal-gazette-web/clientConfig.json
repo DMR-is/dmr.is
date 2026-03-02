@@ -6184,7 +6184,15 @@
       },
       "CommentTypeEnum": {
         "type": "string",
-        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT", "PUBLISH"]
+        "enum": [
+          "SUBMIT",
+          "ASSIGN",
+          "STATUS_UPDATE",
+          "COMMENT",
+          "PUBLISH",
+          "DELETE_PUBLICATION",
+          "CREATE_PUBLICATION"
+        ]
       },
       "CommentDto": {
         "type": "object",
