@@ -1,4 +1,3 @@
-import { IsOptional, IsUUID } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -8,12 +7,11 @@ import {
   PrimaryKey,
 } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
+import { ApiDto, ApiDtoArray } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
+import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeModel } from './type.model'
 
@@ -46,13 +44,11 @@ export class TypeCategoriesModel extends BaseModel<
   @PrimaryKey
   @ForeignKey(() => TypeModel)
   @Column({ type: DataType.UUID, allowNull: false })
-  @ApiProperty({ type: String })
   typeId!: string
 
   @PrimaryKey
   @ForeignKey(() => CategoryModel)
   @Column({ type: DataType.UUID, allowNull: false })
-  @ApiProperty({ type: String })
   categoryId!: string
 
   @BelongsTo(() => TypeModel)
@@ -74,35 +70,14 @@ export class TypeCategoriesModel extends BaseModel<
 }
 
 export class TypeCategoryDto {
-  @ApiProperty({ type: TypeDto })
+  @ApiDto(TypeDto)
   type!: TypeDto
-  @ApiProperty({ type: CategoryDto })
+
+  @ApiDto(CategoryDto)
   category!: CategoryDto
 }
 
-export class TypeWithCategoriesQueryDto {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  typeId?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  categoryId?: string
-}
-
 export class TypeWithCategoriesDto extends BaseEntityDto {
-  @ApiProperty({ type: () => [CategoryDto] })
+  @ApiDtoArray(CategoryDto)
   categories!: CategoryDto[]
-}
-
-export class TypeWithCategoriesResponseDto {
-  @ApiProperty({ type: TypeWithCategoriesDto })
-  type!: TypeWithCategoriesDto
-}
-
-export class TypesWithCategoriesResponseDto {
-  @ApiProperty({ type: [TypeWithCategoriesDto] })
-  types!: TypeWithCategoriesDto[]
 }

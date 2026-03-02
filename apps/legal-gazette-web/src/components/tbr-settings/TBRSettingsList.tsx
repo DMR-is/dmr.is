@@ -2,8 +2,8 @@
 
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 
-import { TBRCompanySettingsItemDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { TbrSettingItem } from '../../lib/trpc/types'
 import { CreateTBRSetting } from './CreateTBRSetting'
 import { DeleteTBRSetting } from './DeleteTBRSetting'
 import { TBRSettingInfo } from './TBRSettingInfo'
@@ -12,7 +12,7 @@ import { ToggleTBRSettingsStatus } from './ToggleTBRStatus'
 import { useQueryClient } from '@tanstack/react-query'
 
 type Props = {
-  items: TBRCompanySettingsItemDto[]
+  items: TbrSettingItem[]
 }
 
 export const TBRSettingsList = ({ items }: Props) => {

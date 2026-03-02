@@ -19,9 +19,9 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   AdvertDetailedDto,
-  UpdateAdvertDto,
 } from '../../../models/advert.model'
 import { IAdvertService } from '../../../modules/advert/advert.service.interface'
+import { UpdateAdvertDto } from '../../../modules/advert/dto/advert.dto'
 
 @Controller({
   path: 'adverts/:id',

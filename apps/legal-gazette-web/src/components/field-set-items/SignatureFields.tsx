@@ -6,11 +6,11 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { SignatureDto } from '../../gen/fetch'
 import { useUpdateSignature } from '../../hooks/useUpdateSignature'
+import { AdvertSignature } from '../../lib/trpc/types'
 
 type SignatureFieldsProps = {
-  signature: SignatureDto
+  signature: AdvertSignature
   canEdit: boolean
 }
 

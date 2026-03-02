@@ -18,7 +18,8 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import { CaseDto, CaseQueryDto, GetCasesDto } from '../../models/case.model'
+import { CaseDto } from '../../models/case.model'
+import { CaseQueryDto, GetCasesDto } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
 // TODO: Determine usage - currently no tRPC routers call this controller

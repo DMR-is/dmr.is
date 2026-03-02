@@ -1,19 +1,3 @@
-import { Transform, Type } from 'class-transformer'
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsArray,
-  IsBoolean,
-  IsDateString,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUUID,
-  MaxLength,
-  MinLength,
-  ValidateNested,
-} from 'class-validator'
 import { BulkCreateOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
@@ -28,18 +12,33 @@ import {
 } from 'sequelize-typescript'
 
 import { InternalServerErrorException } from '@nestjs/common'
-import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
+import { PickType } from '@nestjs/swagger'
 
+import {
+  ApiBoolean,
+  ApiDto,
+  ApiDtoArray,
+  ApiEnum,
+  ApiOptionalDateTime,
+  ApiOptionalDto,
+  ApiOptionalNumber,
+  ApiOptionalString,
+  ApiOptionalUuid,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { getLogger } from '@dmr.is/logging'
-import { Paging } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
-import { QueryDto } from '../core/dto/query.dto'
 import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/templates/html'
+import { CreateSignatureDto } from '../modules/advert/signature/dto/signature.dto'
+import { CreateCommunicationChannelDto } from '../modules/communication-channel/dto/communication-channel.dto'
+import { CreateSettlementDto } from '../modules/settlement/dto/settlement.dto'
+import { DetailedDto } from '../modules/shared/dto/detailed.dto'
+import { QueryDto } from '../modules/shared/dto/query.dto'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -54,19 +53,16 @@ import {
   CommunicationChannelCreateAttributes,
   CommunicationChannelDto,
   CommunicationChannelModel,
-  CreateCommunicationChannelDto,
 } from './communication-channel.model'
 import { CourtDistrictDto, CourtDistrictModel } from './court-district.model'
 import { ForeclosureModel } from './foreclosure.model'
 import { ForeclosurePropertyModel } from './foreclosure-property.model'
 import {
-  CreateSettlementDto,
   SettlementCreateAttributes,
   SettlementDto,
   SettlementModel,
 } from './settlement.model'
 import {
-  CreateSignatureDto,
   SignatureCreationAttributes,
   SignatureDto,
   SignatureModel,
@@ -213,7 +209,6 @@ export class AdvertModel extends BaseModel<
     defaultValue: AdvertTemplateType.COMMON,
     allowNull: false,
   })
-  @ApiProperty({ enum: AdvertTemplateType, enumName: 'AdvertTemplateType' })
   templateType!: AdvertTemplateType
 
   @Column({
@@ -222,7 +217,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
   })
   @ForeignKey(() => CaseModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   caseId?: string | null
 
   @Column({
@@ -231,7 +225,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
   })
   @ForeignKey(() => ApplicationModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   applicationId?: string | null
 
   @Column({
@@ -239,7 +232,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   legacyId!: string | null
 
   @Column({
@@ -248,7 +240,6 @@ export class AdvertModel extends BaseModel<
     defaultValue: null,
   })
   @ForeignKey(() => UserModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   assignedUserId?: string | null
 
   @Column({
@@ -257,7 +248,6 @@ export class AdvertModel extends BaseModel<
     defaultValue: null,
   })
   @ForeignKey(() => CourtDistrictModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   courtDistrictId?: string | null
 
   @Column({
@@ -266,13 +256,11 @@ export class AdvertModel extends BaseModel<
     defaultValue: null,
   })
   @ForeignKey(() => SettlementModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   settlementId?: string | null
 
   @Column({
     type: DataType.UUID,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   islandIsApplicationId?: string | null
 
   @Column({
@@ -281,8 +269,6 @@ export class AdvertModel extends BaseModel<
     field: 'advert_type_id',
   })
   @ForeignKey(() => TypeModel)
-  @ApiProperty({ type: String })
-  @IsString()
   typeId!: TypeIdEnum | string
 
   @Column({
@@ -291,8 +277,6 @@ export class AdvertModel extends BaseModel<
     field: 'advert_category_id',
   })
   @ForeignKey(() => CategoryModel)
-  @ApiProperty({ type: String })
-  @IsString()
   categoryId!: string
 
   @Column({
@@ -302,7 +286,6 @@ export class AdvertModel extends BaseModel<
     defaultValue: StatusIdEnum.SUBMITTED,
   })
   @ForeignKey(() => StatusModel)
-  @ApiProperty({ type: String })
   statusId!: StatusIdEnum
 
   @Column({
@@ -310,15 +293,12 @@ export class AdvertModel extends BaseModel<
     unique: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, nullable: true })
   publicationNumber!: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
-  @ApiProperty({ type: String })
-  @IsString()
   title!: string
 
   @Column({
@@ -326,44 +306,36 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   legacyHtml?: string | null
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  @ApiProperty({ type: String })
   createdByNationalId!: string
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  @ApiProperty({ type: String })
   createdBy!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   additionalText?: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   caption?: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
   content?: string | null
 
   @Column({
@@ -371,7 +343,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   divisionMeetingLocation?: string | null
 
   @Column({
@@ -379,7 +350,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   divisionMeetingDate!: Date | null
 
   @Column({
@@ -387,7 +357,6 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false })
   judgementDate?: Date | null
 
   @Column({
@@ -395,11 +364,10 @@ export class AdvertModel extends BaseModel<
     allowNull: true,
     defaultValue: null,
   })
-  @ApiProperty({ type: String, required: false, nullable: true })
   externalId?: string | null
 
   @Column({ type: DataType.VIRTUAL(DataType.DATE) })
-  get nextScheduledAt(): string | null {
+  get nextScheduledAt(): Date | null {
     if (!this.publications || this.publications.length === 0) {
       return null
     }
@@ -416,11 +384,11 @@ export class AdvertModel extends BaseModel<
       return prev.scheduledAt < curr.scheduledAt ? prev : curr
     }, futurePubs[0])
 
-    return nextPub.scheduledAt.toISOString()
+    return nextPub.scheduledAt
   }
 
   @Column({ type: DataType.VIRTUAL(DataType.DATE) })
-  get lastPublishedAt(): string | null {
+  get lastPublishedAt(): Date | null {
     if (!this.publications || this.publications.length === 0) {
       return null
     }
@@ -438,7 +406,7 @@ export class AdvertModel extends BaseModel<
 
     if (!latestPub.publishedAt) return null
 
-    return latestPub.publishedAt.toISOString()
+    return latestPub.publishedAt
   }
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
@@ -478,7 +446,6 @@ export class AdvertModel extends BaseModel<
     field: 'transaction_id',
   })
   @ForeignKey(() => TBRTransactionModel)
-  @ApiProperty({ type: String, required: false, nullable: true })
   transactionId?: string | null
 
   @BelongsTo(() => TBRTransactionModel)
@@ -595,10 +562,10 @@ export class AdvertModel extends BaseModel<
     try {
       return {
         id: model.id,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
+        createdAt: model.createdAt,
+        updatedAt: model.updatedAt,
         hasInternalComments: model.hasInternalComments,
-        deletedAt: model.deletedAt?.toISOString(),
+        deletedAt: model.deletedAt ?? undefined,
         category: model.category.fromModel(),
         type: model.type.fromModel(),
         status: model.status.fromModel(),
@@ -644,15 +611,13 @@ export class AdvertModel extends BaseModel<
       courtDistrict: model.courtDistrict?.fromModel()
         ? model.courtDistrict.fromModel()
         : undefined,
-      judgementDate: model.judgementDate?.toISOString(),
-      divisionMeetingDate: model.divisionMeetingDate?.toISOString(),
+      judgementDate: model.judgementDate ?? undefined,
+      divisionMeetingDate: model.divisionMeetingDate ?? undefined,
       divisionMeetingLocation: model.divisionMeetingLocation ?? undefined,
       settlement: model.settlement?.fromModel(),
       communicationChannels:
         model.communicationChannels?.map((c) => c.fromModel()) ?? [],
-      paidAt: model.transaction?.paidAt
-        ? model.transaction.paidAt?.toISOString()
-        : undefined,
+      paidAt: model.transaction?.paidAt ?? undefined,
       totalPrice: model.transaction?.totalPrice
         ? model.transaction.totalPrice
         : undefined,
@@ -668,10 +633,10 @@ export class AdvertModel extends BaseModel<
     try {
       return {
         id: model.id,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
+        createdAt: model.createdAt,
+        updatedAt: model.updatedAt,
         hasInternalComments: false,
-        deletedAt: model.deletedAt?.toISOString(),
+        deletedAt: model.deletedAt ?? undefined,
         category: model.category.fromModel(),
         type: model.type.fromModel(),
         status: model.status.fromModel(),
@@ -700,8 +665,8 @@ export class AdvertModel extends BaseModel<
     try {
       return {
         id: model.id,
-        createdAt: model.createdAt.toISOString(),
-        updatedAt: model.updatedAt.toISOString(),
+        createdAt: model.createdAt,
+        updatedAt: model.updatedAt,
         category: model.category.title,
         type: model.type.title,
         status: model.status.title,
@@ -730,156 +695,97 @@ export class AdvertModel extends BaseModel<
 }
 
 export class AdvertDetailedDto extends DetailedDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   id!: string
 
-  @ApiProperty({ enum: AdvertTemplateType, enumName: 'AdvertTemplateType' })
-  @IsEnum(AdvertTemplateType)
+  @ApiEnum(AdvertTemplateType, { enumName: 'AdvertTemplateType' })
   templateType!: AdvertTemplateType
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
+  @ApiOptionalUuid()
   caseId?: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   title!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   createdBy!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   createdByNationalId!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   caption?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   content?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   publicationNumber?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   additionalText?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  judgementDate?: string
+  @ApiOptionalDateTime()
+  judgementDate?: Date
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  divisionMeetingDate?: string
+  @ApiOptionalDateTime()
+  divisionMeetingDate?: Date
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   divisionMeetingLocation?: string
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   canEdit!: boolean
 
-  @ApiProperty({ type: Boolean })
+  @ApiBoolean()
   canPublish!: boolean
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   isAssignedToMe!: boolean
 
-  @ApiProperty({ type: CourtDistrictDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CourtDistrictDto)
+  @ApiOptionalDto(CourtDistrictDto)
   courtDistrict?: CourtDistrictDto
 
-  @ApiProperty({ type: SettlementDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => SettlementDto)
+  @ApiOptionalDto(SettlementDto)
   settlement?: SettlementDto
 
-  @ApiProperty({ type: [CommunicationChannelDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CommunicationChannelDto)
+  @ApiDtoArray(CommunicationChannelDto)
   communicationChannels!: CommunicationChannelDto[]
 
-  @ApiProperty({ type: [AdvertPublicationDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AdvertPublicationDto)
+  @ApiDtoArray(AdvertPublicationDto)
   publications!: AdvertPublicationDto[]
 
-  @ApiProperty({ type: CategoryDto })
-  @ValidateNested()
-  @Type(() => CategoryDto)
+  @ApiDto(CategoryDto)
   category!: CategoryDto
 
-  @ApiProperty({ type: TypeDto })
-  @ValidateNested()
-  @Type(() => TypeDto)
+  @ApiDto(TypeDto)
   type!: TypeDto
 
-  @ApiProperty({ type: StatusDto })
-  @ValidateNested()
-  @Type(() => StatusDto)
+  @ApiDto(StatusDto)
   status!: StatusDto
 
-  @ApiProperty({ type: String, nullable: true })
-  @IsOptional()
-  @IsDateString()
-  scheduledAt!: string | null
+  @ApiOptionalDateTime()
+  scheduledAt!: Date | null
 
-  @ApiProperty({ type: String, nullable: true })
-  @IsOptional()
-  @IsDateString()
-  lastPublishedAt!: string | null
+  @ApiOptionalDateTime()
+  lastPublishedAt!: Date | null
 
-  @ApiProperty({ type: UserDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => UserDto)
+  @ApiOptionalDto(UserDto)
   assignedUser?: UserDto
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   hasInternalComments!: boolean
 
-  @ApiProperty({ type: [CommentDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CommentDto)
+  @ApiDtoArray(CommentDto)
   comments!: CommentDto[]
 
-  @ApiProperty({ type: SignatureDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => SignatureDto)
+  @ApiOptionalDto(SignatureDto)
   signature?: SignatureDto
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  paidAt?: string
+  @ApiOptionalDateTime()
+  paidAt?: Date
 
-  @ApiProperty({ type: Number, required: false })
-  @IsOptional()
-  @IsNumber()
+  @ApiOptionalNumber()
   totalPrice?: number
 }
 
@@ -899,18 +805,8 @@ export class AdvertDto extends PickType(AdvertDetailedDto, [
   'publications',
   'publicationNumber',
 ] as const) {
-  @ApiProperty({ type: String, nullable: true })
-  @IsOptional()
-  @IsDateString()
-  lastPublishedAt!: string | null
-}
-
-export class GetAdvertsDto {
-  @ApiProperty({ type: [AdvertDto] })
-  adverts!: AdvertDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
+  @ApiOptionalDateTime()
+  lastPublishedAt!: Date | null
 }
 
 export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
@@ -924,292 +820,15 @@ export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
   'content',
   'lastPublishedAt',
 ] as const) {
-  @ApiProperty({ type: String, required: false })
+  @ApiOptionalString()
   externalId?: string
-  @ApiProperty({ type: String })
+
+  @ApiString()
   category!: string
-  @ApiProperty({ type: String })
+
+  @ApiString()
   type!: string
-  @ApiProperty({ type: String })
+
+  @ApiString()
   status!: string
-}
-
-export class GetExternalAdvertsDto {
-  @ApiProperty({ type: [ExternalAdvertDto] })
-  adverts!: ExternalAdvertDto[]
-}
-
-export class GetAdvertsQueryDto extends QueryDto {
-  @ApiProperty({
-    type: [String],
-    required: false,
-  })
-  @Transform(({ value }) => {
-    if (!value) return undefined
-    return Array.isArray(value) ? value : [value]
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUUID(undefined, { each: true })
-  categoryId?: string[]
-
-  @ApiProperty({ type: [String], required: false })
-  @Transform(({ value }) => {
-    if (!value) return undefined
-    return Array.isArray(value) ? value : [value]
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUUID(undefined, { each: true })
-  statusId?: string[]
-
-  @ApiProperty({
-    type: [String],
-    required: false,
-  })
-  @Transform(({ value }) => {
-    if (!value) return undefined
-    return Array.isArray(value) ? value : [value]
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUUID(undefined, { each: true })
-  typeId?: string[]
-
-  @ApiProperty({ type: [String], required: false })
-  @Transform(({ value }) => {
-    if (!value) return undefined
-    return Array.isArray(value) ? value : [value]
-  })
-  @IsArray()
-  @IsOptional()
-  externalId?: string[]
-}
-
-export class AdvertTabCountItemDto {
-  @ApiProperty({ type: Number })
-  count!: number
-}
-
-export class GetAdvertsStatusCounterDto {
-  @ApiProperty({ type: AdvertTabCountItemDto })
-  submittedTab!: AdvertTabCountItemDto
-
-  @ApiProperty({ type: AdvertTabCountItemDto })
-  readyForPublicationTab!: AdvertTabCountItemDto
-
-  @ApiProperty({ type: AdvertTabCountItemDto })
-  inPublishingTab!: AdvertTabCountItemDto
-
-  @ApiProperty({ type: AdvertTabCountItemDto })
-  finishedTab!: AdvertTabCountItemDto
-}
-
-// ============================================================================
-// My Adverts DTOs (for application-web users to view their submitted adverts)
-// ============================================================================
-
-export class MyAdvertListItemDto {
-  @ApiProperty({ type: String, format: 'uuid' })
-  id!: string
-
-  @ApiProperty({ type: String, format: 'uuid', nullable: true })
-  legacyId!: string | null
-
-  @ApiProperty({ type: String })
-  title!: string
-
-  @ApiProperty({ type: String, nullable: true })
-  publicationNumber!: string | null
-
-  @ApiProperty({ type: TypeDto })
-  type!: TypeDto
-
-  @ApiProperty({ type: CategoryDto })
-  category!: CategoryDto
-
-  @ApiProperty({ type: StatusDto })
-  status!: StatusDto
-
-  @ApiProperty({ type: String, format: 'date-time' })
-  createdAt!: Date
-
-  @ApiProperty({ type: String, format: 'date-time', nullable: true })
-  publishedAt!: Date | null
-
-  @ApiProperty({ type: String, nullable: true })
-  html!: string | null
-}
-
-export class GetMyAdvertsDto {
-  @ApiProperty({ type: [MyAdvertListItemDto] })
-  adverts!: MyAdvertListItemDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
-}
-
-export class CreateAdvertInternalDto extends PickType(AdvertModel, [
-  'caseId',
-  'islandIsApplicationId',
-  'typeId',
-  'title',
-  'categoryId',
-  'legacyHtml',
-  'createdBy',
-  'createdByNationalId',
-  'additionalText',
-  'caption',
-  'content',
-  'courtDistrictId',
-  'settlementId',
-  'divisionMeetingLocation',
-  'externalId',
-] as const) {
-  @ApiProperty({
-    enum: AdvertTemplateType,
-    enumName: 'AdvertTemplateType',
-    required: false,
-    description: 'Template type of the advert',
-  })
-  @IsOptional()
-  @IsEnum(AdvertTemplateType)
-  templateType?: AdvertTemplateType
-
-  @ApiProperty({ type: Boolean, required: false })
-  @IsOptional()
-  @IsBoolean()
-  isFromExternalSystem?: boolean
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  applicationId?: string
-
-  @ApiProperty({
-    type: String,
-    description: 'Date of signature',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  signatureDate?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsUUID()
-  statusId?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  judgementDate?: string | null
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  divisionMeetingDate?: string | null
-
-  @ApiProperty({
-    type: [String],
-    description: 'List of scheduled publication dates',
-  })
-  @IsArray()
-  @IsDateString(undefined, { each: true })
-  @ArrayMinSize(1)
-  @ArrayMaxSize(3)
-  scheduledAt!: string[]
-
-  @ApiProperty({ type: CreateSignatureDto, required: false })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateSignatureDto)
-  signature?: CreateSignatureDto
-
-  @ApiProperty({
-    type: [CreateCommunicationChannelDto],
-    description: 'List of communication channels for notifications',
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateCommunicationChannelDto)
-  communicationChannels?: CreateCommunicationChannelDto[]
-
-  @ApiProperty({
-    type: CreateSettlementDto,
-    required: false,
-  })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => CreateSettlementDto)
-  settlement?: CreateSettlementDto | null
-}
-
-export class CreateAdvertDto extends OmitType(CreateAdvertInternalDto, [
-  'statusId',
-  'createdBy',
-  'createdByNationalId',
-  'islandIsApplicationId',
-] as const) {}
-
-export class UpdateAdvertDto extends PartialType(
-  PickType(AdvertDetailedDto, [
-    'content',
-    'additionalText',
-    'caption',
-    'divisionMeetingDate',
-    'divisionMeetingLocation',
-    'judgementDate',
-    'title',
-  ] as const),
-) {
-  @ApiProperty({ type: [String], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsDateString(undefined, { each: true })
-  @MinLength(1, { each: true })
-  @MaxLength(3, { each: true })
-  scheduledAt?: string[]
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
-  categoryId?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
-  typeId?: string
-
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
-  courtDistrictId?: string
-}
-
-export class PublishAdvertsBody {
-  @ApiProperty({
-    type: [String],
-  })
-  @IsArray()
-  @IsUUID(undefined, { each: true })
-  advertIds!: string[]
-}
-
-export class CreateAdvertResponseDto {
-  @ApiProperty({ type: String })
-  id!: string
 }

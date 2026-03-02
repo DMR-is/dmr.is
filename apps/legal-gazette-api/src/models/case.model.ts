@@ -1,5 +1,3 @@
-import { Type } from 'class-transformer'
-import { IsArray, IsString, ValidateNested } from 'class-validator'
 import { Op } from 'sequelize'
 import {
   BeforeCreate,
@@ -11,14 +9,16 @@ import {
   HasOne,
 } from 'sequelize-typescript'
 
-import { ApiProperty, IntersectionType, PickType } from '@nestjs/swagger'
-
+import {
+  ApiOptionalEnum,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
-import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
+import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertCreateAttributes, AdvertModel } from './advert.model'
 import {
   ApplicationCreateAttributes,
@@ -60,7 +60,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'case_number',
     defaultValue: ''.padEnd(10, '0'), // Placeholder for case number
   })
-  @ApiProperty({ type: String })
   caseNumber!: string
 
   @Column({
@@ -68,7 +67,6 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     field: 'involved_party_national_id',
     allowNull: false,
   })
-  @ApiProperty({ type: String })
   involvedPartyNationalId!: string
 
   @HasMany(() => AdvertModel, 'caseId')
@@ -130,9 +128,9 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
     return {
       id: model.id,
       caseNumber: model.caseNumber,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt?.toISOString(),
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+      deletedAt: model.deletedAt ?? undefined,
       applicationType: model.application?.applicationType ?? undefined,
     }
   }
@@ -142,35 +140,13 @@ export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
   }
 }
 
-export class CaseQueryDto extends PagingQuery {}
+export class CaseDto extends DetailedDto {
+  @ApiUUId()
+  id!: string
 
-export class CreateCaseDto {
-  @ApiProperty({ type: String })
-  @IsString()
-  involvedPartyNationalId!: string
-}
+  @ApiString()
+  caseNumber!: string
 
-export class CaseDto extends IntersectionType(
-  DetailedDto,
-  PickType(CaseModel, ['id', 'caseNumber'] as const),
-) {
-  @ApiProperty({
-    enum: ApplicationTypeEnum,
-    required: false,
-    enumName: 'ApplicationTypeEnum',
-  })
+  @ApiOptionalEnum(ApplicationTypeEnum, { enumName: 'ApplicationTypeEnum' })
   applicationType?: ApplicationTypeEnum
-}
-
-export class GetCasesDto {
-  @ApiProperty({ type: [CaseDto] })
-  @IsArray()
-  @Type(() => CaseDto)
-  @ValidateNested({ each: true })
-  cases!: CaseDto[]
-
-  @ApiProperty({ type: Paging })
-  @Type(() => Paging)
-  @ValidateNested()
-  paging!: Paging
 }

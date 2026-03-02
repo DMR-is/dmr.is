@@ -9,7 +9,6 @@ import {
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
-import { ApplicationDetailedDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { useLocalFormStorage } from './useLocalFormStorage'
 
@@ -83,7 +82,7 @@ export const useUpdateApplication = <T extends UpdateApplicationType>({
         // FIX: Use deepmerge instead of shallow spread to preserve nested fields
         // This fixes the bug where updating a nested field (e.g., settlementFields.name)
         // would overwrite sibling fields (e.g., liquidatorName)
-        const optimisticData: ApplicationDetailedDto = {
+        const optimisticData = {
           ...prevData,
           answers: deepmerge(
             (prevData.answers || {}) as Record<string, unknown>,

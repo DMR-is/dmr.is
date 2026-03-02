@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common'
 import { SwaggerModule } from '@nestjs/swagger'
 
-import { BaseEntityDto } from './modules/base-entity/base-entity.dto'
+import { BaseEntityDto } from './modules/base-entity/dto/base-entity.dto'
 import { openApi } from './openApi'
 
 export type SetupSwaggerOptions = {

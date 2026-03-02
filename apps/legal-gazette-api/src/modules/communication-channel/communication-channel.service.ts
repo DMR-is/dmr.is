@@ -5,10 +5,12 @@ import { AdvertModel } from '../../models/advert.model'
 import {
   CommunicationChannelDto,
   CommunicationChannelModel,
+} from '../../models/communication-channel.model'
+import {
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
-} from '../../models/communication-channel.model'
+} from './dto/communication-channel.dto'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
 
 export class CommunicationChannelService

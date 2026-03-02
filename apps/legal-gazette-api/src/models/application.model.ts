@@ -1,16 +1,5 @@
-import { Transform, Type } from 'class-transformer'
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsDateString,
-  IsDefined,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsString,
-  IsUUID,
-  ValidateNested,
-} from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsArray, IsOptional, ValidateNested } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -20,16 +9,15 @@ import {
   HasMany,
   Scopes,
 } from 'sequelize-typescript'
-import { isBase64 } from 'validator'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
 import {
-  ApiDateTime,
-  ApiDto,
-  ApiHTML,
-  ApiOptionalNumber,
+  ApiEnum,
+  ApiNumber,
   ApiOptionalString,
+  ApiString,
+  ApiUUId,
 } from '@dmr.is/decorators'
 import {
   ApplicationTypeEnum,
@@ -37,17 +25,15 @@ import {
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
 } from '@dmr.is/legal-gazette-schemas'
-import { Paging } from '@dmr.is/shared-dto'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
+import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'
 import { CaseModel } from './case.model'
 import { SettlementModel } from './settlement.model'
-import { CreateSignatureDto } from './signature.model'
 
 export enum ApplicationStatusEnum {
   DRAFT = 'DRAFT',
@@ -235,9 +221,9 @@ export class ApplicationModel extends BaseModel<
   static fromModel(model: ApplicationModel): ApplicationDto {
     return {
       id: model.id,
-      deletedAt: model.deletedAt?.toISOString(),
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
+      deletedAt: model.deletedAt ?? undefined,
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
       caseId: model.caseId,
       applicantNationalId: model.applicantNationalId,
       submittedByNationalId: model.submittedByNationalId || undefined,
@@ -270,162 +256,46 @@ export class ApplicationModel extends BaseModel<
 }
 
 export class ApplicationDto extends DetailedDto {
-  @ApiProperty({ type: String })
+  @ApiUUId()
   id!: string
 
-  @ApiProperty({ type: String })
+  @ApiUUId()
   caseId!: string
 
-  @ApiProperty({ type: String })
+  @ApiString()
   applicantNationalId!: string
 
-  @ApiProperty({ type: String, required: false })
+  @ApiOptionalString()
   submittedByNationalId?: string
 
-  @ApiProperty({
-    enum: ApplicationStatusEnum,
-    enumName: 'ApplicationStatusEnum',
-  })
+  @ApiEnum(ApplicationStatusEnum, { enumName: 'ApplicationStatusEnum' })
   status!: ApplicationStatusEnum
 
-  @ApiProperty({ type: String })
+  @ApiString()
   title!: string
 
-  @ApiProperty({ type: String, required: false })
+  @ApiOptionalString()
   subtitle?: string
 
-  @ApiProperty({ enum: ApplicationTypeEnum, enumName: 'ApplicationTypeEnum' })
+  @ApiEnum(ApplicationTypeEnum, { enumName: 'ApplicationTypeEnum' })
   type!: ApplicationTypeEnum
 
-  @ApiProperty({ type: () => [AdvertDto], required: false })
+  @ApiProperty({
+    type: () => AdvertDto,
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => AdvertDto)
+  @ValidateNested({ each: true })
   adverts?: AdvertDto[]
 
-  @ApiProperty({ type: Number })
+  @ApiNumber()
   currentStep!: number
-}
-
-export class ApplicationDtoWithSubtitle extends ApplicationDto {
-  subtitle?: string
-}
-
-export class GetApplicationsDto {
-  @ApiProperty({ type: [ApplicationDto] })
-  applications!: ApplicationDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
 }
 
 export class ApplicationDetailedDto extends ApplicationDto {
   @ApiProperty({ type: Object, default: {} })
   answers!: Record<string, any>
-}
-
-export class UpdateApplicationDto {
-  @ApiProperty({ type: Number, required: false })
-  @IsOptional()
-  @IsNumber()
-  currentStep?: number
-
-  @ApiProperty({ type: Object, default: {} })
-  @IsOptional()
-  @IsObject()
-  answers?: Record<string, any>
-}
-
-export class CreateDivisionMeetingDto {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  additionalText?: string
-
-  @ApiProperty({ type: String })
-  @IsDateString()
-  meetingDate!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  meetingLocation!: string
-
-  @ApiProperty({ type: CreateSignatureDto })
-  @IsDefined()
-  @Type(() => CreateSignatureDto)
-  @ValidateNested()
-  signature!: CreateSignatureDto
-}
-
-export class CreateDivisionEndingDto {
-  @ApiOptionalString()
-  additionalText?: string
-
-  @ApiHTML({ required: false })
-  @IsOptional()
-  content?: string
-
-  @ApiDateTime()
-  scheduledAt!: Date
-
-  @ApiDateTime()
-  endingDate!: Date
-
-  @ApiOptionalNumber()
-  declaredClaims?: number
-
-  @ApiDto(CreateSignatureDto)
-  signature!: CreateSignatureDto
-}
-
-export class IslandIsSubmitApplicationDto extends PickType(
-  CreateDivisionMeetingDto,
-  ['signature', 'additionalText'] as const,
-) {
-  @ApiProperty({ type: String })
-  @IsUUID()
-  islandIsApplicationId!: string
-
-  @ApiProperty({ type: String })
-  @IsUUID()
-  typeId!: string
-
-  @ApiProperty({ type: String })
-  @IsUUID()
-  categoryId!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  caption!: string
-
-  @ApiProperty({ type: String })
-  @IsString()
-  @Transform(({ value }) => {
-    if (isBase64(value)) {
-      return Buffer.from(value, 'base64').toString('utf-8')
-    }
-    return value
-  })
-  html!: string
-
-  @ApiProperty({ type: [String] })
-  @IsOptional()
-  @ArrayMinSize(1)
-  @ArrayMaxSize(3)
-  @IsDateString(undefined, { each: true })
-  publishingDates!: string[]
-}
-
-export class GetHTMLPreview {
-  @ApiProperty({ type: String })
-  preview!: string
-}
-
-export class GetMinDateResponseDto {
-  @ApiProperty({ type: String })
-  @IsDateString()
-  minDate!: string
-}
-
-export class GetApplicationEstimatedPriceDto {
-  @ApiProperty({ type: Number })
-  @IsNumber()
-  price!: number
 }

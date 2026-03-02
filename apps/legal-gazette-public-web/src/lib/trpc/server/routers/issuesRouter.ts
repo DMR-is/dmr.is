@@ -3,11 +3,11 @@ import * as z from 'zod'
 import { publicProcedure, router } from '../trpc'
 
 const getIssuesSchema = z.object({
-  page: z.number().optional(),
-  pageSize: z.number().optional(),
-  year: z.string().optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
+  page: z.coerce.number().int().optional(),
+  pageSize: z.coerce.number().int().optional(),
+  year: z.coerce.number().int().optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
 })
 export const issuesRouter = router({
   getIssues: publicProcedure

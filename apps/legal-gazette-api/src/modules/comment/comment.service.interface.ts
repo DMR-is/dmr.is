@@ -1,12 +1,12 @@
+import { CommentDto } from '../../models/comment.model'
 import {
-  CommentDto,
   CreateAssignCommentDto,
   CreatePublishCommentDto,
   CreateStatusUpdateCommentDto,
   CreateSubmitCommentDto,
   CreateTextCommentDto,
   GetCommentsDto,
-} from '../../models/comment.model'
+} from './dto/comment.dto'
 
 export interface ICommentService {
   getCommentsByAdvertId(advertId: string): Promise<GetCommentsDto>

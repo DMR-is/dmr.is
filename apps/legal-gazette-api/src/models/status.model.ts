@@ -1,12 +1,10 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { StatusEnum, StatusIdEnum } from '../core/enums/status.enum'
-import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
+import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { AdvertModel } from './advert.model'
 
 // Re-export enums for backwards compatibility - circular dependency issues
@@ -25,26 +23,18 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
     allowNull: false,
     primaryKey: true,
   })
-  @ApiProperty({
-    type: String,
-    enum: Object.values(StatusIdEnum),
-    description: 'Status ID for the advert',
-    example: StatusIdEnum.SUBMITTED,
-  })
   id!: StatusIdEnum
 
   @Column({
     type: DataType.ENUM(...Object.values(StatusEnum)),
     allowNull: false,
   })
-  @ApiProperty({ type: String, enum: StatusEnum, enumName: 'StatusEnum' })
   title!: StatusEnum
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  @ApiProperty({ type: String })
   slug!: string
 
   @HasMany(() => AdvertModel, {
@@ -75,10 +65,3 @@ export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
 }
 
 export class StatusDto extends BaseEntityDto {}
-
-export class GetStatusesDto {
-  @ApiProperty({
-    type: [StatusDto],
-  })
-  statuses!: StatusDto[]
-}

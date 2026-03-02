@@ -1,9 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger'
-
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
+import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
+
 @BaseEntityTable({ tableName: LegalGazetteModels.COURT_DISTRICT })
 export class CourtDistrictModel extends BaseEntityModel<CourtDistrictDto> {
   // returns the title in "eignarfall"
@@ -15,10 +14,3 @@ export class CourtDistrictModel extends BaseEntityModel<CourtDistrictDto> {
 }
 
 export class CourtDistrictDto extends BaseEntityDto {}
-
-export class GetCourtDistrictsDto {
-  @ApiProperty({
-    type: [CourtDistrictDto],
-  })
-  courtDistricts!: CourtDistrictDto[]
-}

@@ -7,7 +7,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvertModel } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { PdfService } from '../advert/pdf/pdf.service'
-import { RegeneratePdfResponseDto } from './pdf-admin.dto'
+import { RegeneratePdfResponseDto } from './dto/pdf-admin.dto'
 import { IPdfAdminService } from './pdf-admin.service.interface'
 
 const LOGGING_CONTEXT = 'PdfAdminService'

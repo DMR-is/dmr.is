@@ -13,17 +13,17 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import {
-  ApplicationDto,
   ApplicationStatusEnum,
   ApplicationTypeEnum,
 } from '../../gen/fetch'
 import { PageRoutes } from '../../lib/constants'
+import { ApplicationListItem } from '../../lib/trpc/types'
 import { AddAdvertsToApplicationMenu } from '../adverts/AddAdvertsToApplicationMenu'
 import { cardExtraButtonStyle, cardTagButtonStyle } from './application.css'
 import { RemoveApplicationAdvert } from './RemoveApplicationAdvert'
 
 type Props = {
-  application: ApplicationDto
+  application: ApplicationListItem
 }
 
 export const ApplicationCard = ({ application }: Props) => {

@@ -1,14 +1,10 @@
-import { Transform } from 'class-transformer'
-import { IsBoolean, IsOptional, IsString } from 'class-validator'
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
-import { ApiProperty, PartialType, PickType } from '@nestjs/swagger'
-
-import { Paging, PagingQuery } from '@dmr.is/shared-dto'
+import { ApiBoolean, ApiOptionalString, ApiString } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
+import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 
 export type TBRCompanySettingsAttributes = {
   name: string
@@ -64,8 +60,8 @@ export class TBRCompanySettingsModel extends BaseModel<
   static fromModel(model: TBRCompanySettingsModel): TBRCompanySettingsItemDto {
     return {
       id: model.id,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
       name: model.name,
       nationalId: model.nationalId,
       email: model.email,
@@ -81,58 +77,21 @@ export class TBRCompanySettingsModel extends BaseModel<
 }
 
 export class TBRCompanySettingsItemDto extends DetailedDto {
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   name!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   nationalId!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   email?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   phone?: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   code!: string
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   active!: boolean
 }
-
-export class GetTBRCompanySettingsQueryDto extends PagingQuery {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  search?: string
-
-  @ApiProperty({ type: Boolean, required: false })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
-  activeOnly?: boolean
-}
-export class TBRCompanySettingsListDto {
-  @ApiProperty({ type: [TBRCompanySettingsItemDto] })
-  items!: TBRCompanySettingsItemDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
-}
-
-export class CreateTBRCompanySettingsDto extends PickType(
-  TBRCompanySettingsItemDto,
-  ['name', 'nationalId', 'email', 'phone'],
-) {}
-
-export class UpdateTbrCompanySettingsDto extends PartialType(
-  CreateTBRCompanySettingsDto,
-) {}

@@ -1,10 +1,12 @@
 import {
+  TBRCompanySettingsItemDto,
+} from '../../../models/tbr-company-settings.model'
+import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,
-  TBRCompanySettingsItemDto,
   TBRCompanySettingsListDto,
   UpdateTbrCompanySettingsDto,
-} from '../../../models/tbr-company-settings.model'
+} from './dto/tbr-company-settings.dto'
 
 export interface ITBRCompanySettingsService {
   getSettings(

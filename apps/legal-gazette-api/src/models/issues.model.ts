@@ -1,16 +1,13 @@
-import {
-  IsBoolean,
-  IsDateString,
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator'
 import { Column, DataType } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
-import { Paging, PagingQuery } from '@dmr.is/shared-dto'
+import {
+  ApiBoolean,
+  ApiDateTime,
+  ApiNumber,
+  ApiOptionalDateTime,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -62,7 +59,7 @@ export class IssueModel extends BaseModel<
   static fromModel(model: IssueModel): IssueDto {
     return {
       id: model.id,
-      publishDate: model.publishDate.toISOString(),
+      publishDate: model.publishDate,
       title: model.title,
       url: model.url,
       issue: model.issue,
@@ -79,79 +76,37 @@ export class IssueModel extends BaseModel<
 }
 
 export class IssueDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   id!: string
 
-  @ApiProperty({
-    type: String,
-    format: 'date-time',
+  @ApiOptionalDateTime({
     description: 'The date and time when the issue was created',
   })
-  @IsDateString()
-  @IsOptional()
-  createdAt?: string
+  createdAt?: Date
 
-  @ApiProperty({
-    type: String,
-    format: 'date-time',
+  @ApiDateTime({
     description: 'The date and time when the issue was published',
   })
-  @IsDateString()
-  publishDate!: string
+  publishDate!: Date
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   title!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   url!: string
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   issue!: number
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   year!: number
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   runningPageNumber!: number
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
+  @ApiBoolean()
   isLegacy!: boolean
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   hash!: string
-}
-
-export class GetIssuesDto {
-  @ApiProperty({
-    type: [IssueDto],
-  })
-  issues!: IssueDto[]
-
-  @ApiProperty({ type: Paging })
-  paging!: Paging
-}
-
-export class GetIssuesQuery extends PagingQuery {
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateFrom?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateTo?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  year?: string
 }

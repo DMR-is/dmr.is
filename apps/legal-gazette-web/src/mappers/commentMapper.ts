@@ -5,9 +5,10 @@ import {
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
 import { CommentProps } from '../components/comments/Comment'
-import { CommentDto, CommentTypeEnum } from '../gen/fetch'
+import { CommentTypeEnum } from '../gen/fetch'
+import { AdvertComment } from '../lib/trpc/types'
 
-export const commentMapper = (comment: CommentDto): CommentProps => {
+export const commentMapper = (comment: AdvertComment): CommentProps => {
   const cmt: CommentProps = {
     creator: comment.actor,
     createdAt: comment.createdAt,
@@ -57,7 +58,7 @@ export const commentMapper = (comment: CommentDto): CommentProps => {
   return cmt
 }
 
-export const commentStepperMapper = (comment: CommentDto) => {
+export const commentStepperMapper = (comment: AdvertComment) => {
   switch (comment.type) {
     case CommentTypeEnum.SUBMIT:
       return {

@@ -2,7 +2,7 @@ import {
   TypesWithCategoriesResponseDto,
   TypeWithCategoriesQueryDto,
   TypeWithCategoriesResponseDto,
-} from '../../models/type-categories.model'
+} from './dto/type-categories.dto'
 
 export interface ITypeCategoriesService {
   findAll(

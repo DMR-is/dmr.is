@@ -15,16 +15,16 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { ApplicationShell } from '../components/application/ApplicationShell'
 import { FormStep } from '../components/form-step/FormStep'
-import { ApplicationDetailedDto } from '../gen/fetch'
 import { useLocalFormStorage } from '../hooks/useLocalFormStorage'
 import { useSubmitApplication } from '../hooks/useSubmitApplication'
 import { commonForm } from '../lib/forms/common/form'
 import { CommonFormSteps } from '../lib/forms/common/steps'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { ApplicationDetails } from '../lib/trpc/types'
 
 const logger = getLogger('CommonFormContainer')
 type Props = {
-  application: ApplicationDetailedDto
+  application: ApplicationDetails
 }
 
 export const CommonFormContainer = ({ application }: Props) => {

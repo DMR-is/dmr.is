@@ -7,16 +7,16 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
-import {
-  CreateCommonAdvertAndApplicationDto,
-  CreateRecallBankruptcyAdvertAndApplicationDto,
-  CreateRecallDeceasedAdvertAndApplicationDto,
-} from '../../../core/dto/advert-application.dto'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import {
   CreateAdvertDto,
   CreateAdvertResponseDto,
-} from '../../../models/advert.model'
+} from '../../../modules/advert/dto/advert.dto'
+import {
+  CreateCommonAdvertAndApplicationDto,
+  CreateRecallBankruptcyAdvertAndApplicationDto,
+  CreateRecallDeceasedAdvertAndApplicationDto,
+} from '../../../modules/advert/dto/advert-application.dto'
 import { IAdvertService } from '../advert.service.interface'
 
 @Controller({

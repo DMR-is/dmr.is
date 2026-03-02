@@ -8,7 +8,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
-import { RegeneratePdfResponseDto } from './pdf-admin.dto'
+import { RegeneratePdfResponseDto } from './dto/pdf-admin.dto'
 import { IPdfAdminService } from './pdf-admin.service.interface'
 
 @ApiBearerAuth()

@@ -4,7 +4,7 @@ import { isBase64, IsString } from 'class-validator'
 import { applyDecorators } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 
-export function ApiHTML(options: ApiPropertyOptions ) {
+export function ApiHTML(options: ApiPropertyOptions = {}) {
   return applyDecorators(
     ApiProperty({
       type: String,

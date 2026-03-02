@@ -10,8 +10,8 @@ import { ApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.d
 import {
   CourtDistrictDto,
   CourtDistrictModel,
-  GetCourtDistrictsDto,
 } from '../../../models/court-district.model'
+import { GetCourtDistrictsDto } from '../../base-entity/dto/base-entity-query.dto'
 import { BaseEntityController } from '../base-entity.controller'
 
 // Access: Admin users OR application-web users

@@ -7,14 +7,16 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
 import {
-  CreateSubscriberAdminDto,
-  GetSubscribersWithPagingResponse,
   SubscriberDto,
   SubscriberModel,
-  UpdateSubscriberEndDateDto,
 } from '../../models/subscriber.model'
 import { LGNationalRegistryService } from '../national-registry/national-registry.service'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
+import {
+  CreateSubscriberAdminDto,
+  GetSubscribersWithPagingResponse,
+  UpdateSubscriberEndDateDto,
+} from '../subscribers/dto/subscriber.dto'
 import { ISubscriberAdminService } from './subscriber-admin.service.interface'
 
 const LOGGING_CONTEXT = 'SubscriberAdminService'

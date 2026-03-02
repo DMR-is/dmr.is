@@ -12,15 +12,17 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUt
 import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
-  AdvertPublicationDetailedDto,
   AdvertPublicationModel,
   AdvertVersionEnum,
+} from '../../../models/advert-publication.model'
+import {
+  AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
-} from '../../../models/advert-publication.model'
+} from './dto/publication.dto'
 import { IPublicationService } from './publication.service.interface'
 
 const LOGGING_CONTEXT = 'PublicationService'
@@ -262,7 +264,7 @@ export class PublicationService implements IPublicationService {
     })
 
     const prevDate = publication.scheduledAt.toISOString()
-    const incomingDate = new Date(body.scheduledAt)
+    const incomingDate = body.scheduledAt
 
     const siblings = await this.publicationModel.findAll({
       where: {

@@ -4,7 +4,7 @@ import {
   CreateDivisionEndingDto,
   CreateDivisionMeetingDto,
   GetMinDateResponseDto,
-} from '../../../models/application.model'
+} from '../dto/application-extra.dto'
 
 export interface IRecallApplicationService {
   submitRecallApplication(applicationId: string, user: DMRUser): Promise<void>

@@ -1,13 +1,14 @@
-import { Transform } from 'class-transformer'
-import { IsDate, IsOptional, IsString, IsUUID } from 'class-validator'
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
-import { ApiProperty } from '@nestjs/swagger'
-
+import {
+  ApiOptionalDateTime,
+  ApiOptionalString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
+import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertModel } from './advert.model'
 
 type SignatureAttributes = {
@@ -21,7 +22,7 @@ type SignatureAttributes = {
 export type SignatureCreationAttributes = {
   name?: string | null
   location?: string | null
-  date?: Date | string | null
+  date?: Date | null
   onBehalfOf?: string | null
   advertId?: string
 }
@@ -53,13 +54,13 @@ export class SignatureModel extends BaseModel<
   static fromModel(model: SignatureModel): SignatureDto {
     return {
       id: model.id,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
-      deletedAt: model.deletedAt?.toISOString(),
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
+      deletedAt: model.deletedAt ?? undefined,
       advertId: model.advertId,
       name: model.name ?? undefined,
       location: model.location ?? undefined,
-      date: model.date?.toISOString(),
+      date: model.date ?? undefined,
       onBehalfOf: model.onBehalfOf ?? undefined,
     }
   }
@@ -69,49 +70,18 @@ export class SignatureModel extends BaseModel<
   }
 }
 export class SignatureDto extends DetailedDto {
-  @ApiProperty({ type: String })
-  @IsUUID()
+  @ApiUUId()
   advertId!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   name?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   location?: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  date?: string
+  @ApiOptionalDateTime()
+  date?: Date
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
+  @ApiOptionalString()
   onBehalfOf?: string
 }
-
-export class UpdateSignatureDto {
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @IsOptional()
-  @IsDate()
-  @Transform(({ value }) => (value ? new Date(value) : null))
-  date?: Date | null
-
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @IsOptional()
-  @IsString()
-  name?: string | null
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @IsOptional()
-  @IsString()
-  location?: string | null
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @IsOptional()
-  @IsString()
-  onBehalfOf?: string | null
-}
-
-export class CreateSignatureDto extends UpdateSignatureDto {}

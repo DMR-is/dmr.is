@@ -9,10 +9,10 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { PublishedPublicationDto } from '../../../gen/fetch'
+import { PublicationCardItem } from '../../../lib/trpc/types'
 
 type Props = {
-  publication: PublishedPublicationDto
+  publication: PublicationCardItem
 }
 
 export const PublicationCard = ({ publication }: Props) => {

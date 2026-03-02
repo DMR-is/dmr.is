@@ -19,10 +19,12 @@ import { PublicOrApplicationWebScopes } from '../../../core/guards/scope-guards/
 import {
   CategoryDto,
   CategoryModel,
-  GetCategoriesDto,
-  GetCategoriesQueryDto,
 } from '../../../models/category.model'
 import { TypeModel } from '../../../models/type.model'
+import {
+  GetCategoriesDto,
+  GetCategoriesQueryDto,
+} from '../../base-entity/dto/base-entity-query.dto'
 import { BaseEntityController } from '../base-entity.controller'
 
 // Access: Admin users OR public-web users OR application-web users

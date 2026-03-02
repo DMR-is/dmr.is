@@ -4,11 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { AdvertModel } from '../../../models/advert.model'
 import {
-  CreateSignatureDto,
   SignatureModel,
-  UpdateSignatureDto,
 } from '../../../models/signature.model'
 import { StatusIdEnum } from '../../../models/status.model'
+import {
+  CreateSignatureDto,
+  UpdateSignatureDto,
+} from './dto/signature.dto'
 import { SignatureService } from './signature.service'
 // ==========================================
 // Mock Factories

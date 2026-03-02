@@ -1,14 +1,24 @@
-import { IsString } from 'class-validator'
+import { IsString, MaxLength, MinLength } from 'class-validator'
 
 import { applyDecorators } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger'
 
-export function ApiString(options: ApiPropertyOptions) {
-  return applyDecorators(
+export function ApiString(
+  options: ApiPropertyOptions & { minLength?: number; maxLength?: number } = {},
+) {
+  const { minLength, maxLength, ...apiOptions } = options
+  const decorators = [
     ApiProperty({
       type: String,
-      ...options,
+      minLength,
+      maxLength,
+      ...apiOptions,
     }),
     IsString(),
-  )
+  ]
+
+  if (minLength !== undefined) decorators.push(MinLength(minLength))
+  if (maxLength !== undefined) decorators.push(MaxLength(maxLength))
+
+  return applyDecorators(...decorators)
 }
