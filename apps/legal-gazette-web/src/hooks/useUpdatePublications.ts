@@ -135,9 +135,10 @@ export const useUpdatePublications = (id: string) => {
 
         return prevData
       },
-      onSuccess: async () => {
+      onSuccess: () => {
         toast.success('Birting uppfærð')
-        await queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
+        queryClient.invalidateQueries(trpc.getAdvert.queryFilter({ id }))
+        queryClient.invalidateQueries(trpc.getPublication.queryFilter())
       },
       onError: (_, _variables, mutateResults) => {
         queryClient.setQueryData(trpc.getAdvert.queryKey({ id }), mutateResults)
