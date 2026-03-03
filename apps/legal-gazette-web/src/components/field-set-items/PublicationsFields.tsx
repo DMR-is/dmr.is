@@ -105,25 +105,27 @@ export const PublicationsFields = ({
                     />
                   </GridColumn>
                   <GridColumn span={['2/12']}>
-                    <Box
-                      height="full"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePublication(pub.id)}
-                        disabled={!canEdit}
+                    {!pub.publishedAt ? (
+                      <Box
+                        height="full"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        borderRadius="large"
                       >
-                        <Icon
-                          size="medium"
-                          color="roseTinted400"
-                          type="outline"
-                          icon="trash"
-                        />
-                      </button>
-                    </Box>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePublication(pub.id)}
+                        >
+                          <Icon
+                            size="medium"
+                            color="roseTinted400"
+                            type="outline"
+                            icon="trash"
+                          />
+                        </button>
+                      </Box>
+                    ) : null}
                   </GridColumn>
                 </GridRow>
               </GridColumn>

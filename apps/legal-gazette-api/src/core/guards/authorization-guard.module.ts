@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common'
 
 import { UsersProviderModule } from '../../modules/users/users.provider.module'
+import { UserContextModule } from '../context/user/user-context.module'
 import { AuthorizationGuard } from './authorization.guard'
 
 /**
@@ -30,8 +31,8 @@ import { AuthorizationGuard } from './authorization.guard'
  */
 @Global()
 @Module({
-  imports: [UsersProviderModule],
+  imports: [UsersProviderModule, UserContextModule],
   providers: [AuthorizationGuard],
-  exports: [AuthorizationGuard, UsersProviderModule],
+  exports: [AuthorizationGuard, UsersProviderModule, UserContextModule],
 })
 export class AuthorizationGuardModule {}

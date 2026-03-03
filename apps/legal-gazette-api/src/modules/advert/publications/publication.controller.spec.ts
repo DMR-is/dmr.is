@@ -2,6 +2,7 @@ import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { UserContext } from '../../../core/context/user/user.context'
 import { ADMIN_KEY } from '../../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { SCOPES_KEY } from '../../../core/guards/scope-guards/scopes.decorator'
@@ -83,6 +84,10 @@ describe('AdvertPublicationController - Guard Authorization', () => {
       providers: [
         AuthorizationGuard,
         Reflector, // Use REAL Reflector to read actual decorators
+        {
+          provide: UserContext,
+          useValue: { user: undefined },
+        },
         {
           provide: IUsersService,
           useValue: mockUsersService,

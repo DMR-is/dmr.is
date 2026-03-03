@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { UserDto } from '../../models/users.model'
 import { IUsersService } from '../../modules/users/users.service.interface'
+import { UserContext } from '../context/user/user.context'
 import { ADMIN_KEY } from '../decorators/admin.decorator'
 import { SCOPES_KEY } from './scope-guards/scopes.decorator'
 import { AuthorizationGuard } from './authorization.guard'
@@ -52,6 +53,10 @@ describe('AuthorizationGuard', () => {
           useValue: {
             getAllAndOverride: jest.fn(),
           },
+        },
+        {
+          provide: UserContext,
+          useValue: { user: undefined },
         },
         {
           provide: IUsersService,

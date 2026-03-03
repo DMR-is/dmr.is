@@ -1,6 +1,8 @@
 import {
   CommentDto,
+  CreateAddPublicationCommentDto,
   CreateAssignCommentDto,
+  CreateDeletePublicationCommentDto,
   CreatePublishCommentDto,
   CreateStatusUpdateCommentDto,
   CreateSubmitCommentDto,
@@ -41,6 +43,16 @@ export interface ICommentService {
   createPublishComment(
     advertId: string,
     body: CreatePublishCommentDto,
+  ): Promise<void>
+
+  createDeletePublicationComment(
+    advertId: string,
+    body: CreateDeletePublicationCommentDto,
+  ): Promise<void>
+
+  createAddPublicationComment(
+    advertId: string,
+    body: CreateAddPublicationCommentDto,
   ): Promise<void>
 }
 

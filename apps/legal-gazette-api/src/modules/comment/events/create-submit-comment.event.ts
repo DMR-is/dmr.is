@@ -17,3 +17,15 @@ export class CreateUserAssignedCommentEvent {
   actorId!: string
   receiverId!: string
 }
+
+export class CreateDeletePublicationEvent {
+  advertId!: string
+  actorId!: string
+  version!: string
+}
+
+export class CreateAddPublicationEvent {
+  advertId!: string
+  actorId!: string
+  version!: string
+}

@@ -9,6 +9,7 @@ import {
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
+import { ApiString } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -21,6 +22,8 @@ export enum CommentTypeEnum {
   STATUS_UPDATE = 'STATUS_UPDATE',
   COMMENT = 'COMMENT',
   PUBLISH = 'PUBLISH',
+  DELETE_PUBLICATION = 'DELETE_PUBLICATION',
+  CREATE_PUBLICATION = 'CREATE_PUBLICATION',
 }
 
 type CommentAttributes = {
@@ -66,12 +69,24 @@ type CreatePublishComment = CreateCommentBaseAttributes & {
   type: CommentTypeEnum.PUBLISH
 }
 
+type CreateDeletePublicationComment = CreateCommentBaseAttributes & {
+  type: CommentTypeEnum.DELETE_PUBLICATION,
+  comment: string
+}
+
+type CreateCreatePublicationComment = CreateCommentBaseAttributes & {
+  type: CommentTypeEnum.CREATE_PUBLICATION,
+  comment: string
+}
+
 type CreateCommentAttributes =
   | CreateSubmitComment
   | CreateAssignComment
   | CreateStatusUpdateComment
   | CreateTextComment
   | CreatePublishComment
+  | CreateDeletePublicationComment
+  | CreateCreatePublicationComment
 
 @DefaultScope(() => ({
   include: [{ model: StatusModel }],
@@ -194,6 +209,22 @@ export class CreateSubmitCommentDto extends CreateCommentBaseDto {}
 export class CreatePublishCommentDto {
   @ApiProperty({ type: String, required: false })
   actorId?: string
+}
+
+export class CreateDeletePublicationCommentDto extends CreatePublishCommentDto {
+  @ApiString()
+  actorId!: string
+
+  @ApiString()
+  version!: string
+}
+
+export class CreateAddPublicationCommentDto extends CreatePublishCommentDto {
+  @ApiString()
+  actorId!: string
+
+  @ApiString()
+  version!: string
 }
 
 export class CreateAssignCommentDto extends CreateCommentBaseDto {

@@ -2,6 +2,7 @@ import { ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import { UserContext } from '../../core/context/user/user.context'
 import { ADMIN_KEY } from '../../core/decorators/admin.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import { UserDto } from '../../models/users.model'
@@ -64,6 +65,10 @@ describe('PdfAdminController - Guard Authorization', () => {
       providers: [
         AuthorizationGuard,
         Reflector,
+        {
+          provide: UserContext,
+          useValue: { user: undefined },
+        },
         {
           provide: IUsersService,
           useValue: mockUsersService,
