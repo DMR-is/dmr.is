@@ -1,29 +1,35 @@
 'use client'
-import { useFormContext } from 'react-hook-form'
+import { useMemo } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 
-import { BaseApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
-import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { getApplicationPreview } from '@dmr.is/legal-gazette-html'
+import {
+  CommonApplicationWebSchema,
+  RecallApplicationWebSchema,
+} from '@dmr.is/legal-gazette-schemas'
 import { AdvertDisplay } from '@dmr.is/ui/components/AdvertDisplay/AdvertDisplay'
-import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
-
-import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { Problem } from '@dmr.is/ui/components/Problem/Problem'
 
 export const PreviewStep = () => {
-  const trpc = useTRPC()
-  const { getValues } = useFormContext<BaseApplicationWebSchema>()
-  const id = getValues('metadata.applicationId')
-  const { data, isPending } = useQuery(
-    trpc.getPreviewHTML.queryOptions({ applicationId: id }, { gcTime: 0 }),
+  const { control, getValues } = useFormContext<
+    RecallApplicationWebSchema | CommonApplicationWebSchema
+  >()
+
+  const values = useWatch({ control })
+  const markup = useMemo(
+    () => getApplicationPreview(getValues('metadata.type'), getValues()),
+    [getValues, values],
   )
 
-  return isPending ? (
-    <SkeletonLoader
-      repeat={5}
-      height={64}
-      space={[1, 2]}
-      borderRadius="large"
-    />
-  ) : (
-    <AdvertDisplay html={data?.preview} />
-  )
+  if (markup.error !== null) {
+    return (
+      <Problem
+        type="bad-request"
+        title="Ekki tókst að búa til forskoðunarskjal"
+        message="Gögn í umsókninni eru óglid eða ekki til staðar"
+      />
+    )
+  }
+
+  return <AdvertDisplay html={markup.html} />
 }

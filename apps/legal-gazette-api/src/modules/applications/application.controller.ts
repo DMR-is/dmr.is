@@ -30,7 +30,6 @@ import {
   ApplicationDto,
   GetApplicationEstimatedPriceDto,
   GetApplicationsDto,
-  GetHTMLPreview,
   UpdateApplicationDto,
 } from '../../models/application.model'
 import { IAdvertService } from '../advert/advert.service.interface'
@@ -123,15 +122,6 @@ export class ApplicationController {
     @Body() body: UpdateApplicationDto,
   ): Promise<ApplicationDetailedDto> {
     return this.applicationService.updateApplication(applicationId, body)
-  }
-
-  @Get(':applicationId/preview')
-  @LGResponse({ operationId: 'previewApplication', type: GetHTMLPreview })
-  @UseGuards(OwnershipGuard)
-  async previewApplication(
-    @Param('applicationId') applicationId: string,
-  ): Promise<GetHTMLPreview> {
-    return this.applicationService.previewApplication(applicationId)
   }
 
   @Get(':applicationId/price')
