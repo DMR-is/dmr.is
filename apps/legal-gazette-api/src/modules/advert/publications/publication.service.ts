@@ -206,10 +206,6 @@ export class PublicationService implements IPublicationService {
       versionNumber: currentPublications.length + 1,
     })
 
-    console.log('----------------------------------------------')
-    console.log('this.useContext.user', this.userContext.user)
-    console.log('----------------------------------------------')
-
     if (this.userContext.user?.adminUserId) {
       await this.eventEmitter.emitAsync(LegalGazetteEvents.CREATE_PUBLICATION, {
         advertId,
@@ -307,9 +303,6 @@ export class PublicationService implements IPublicationService {
       await publications[index].update({ versionNumber: index + 1 })
     }
 
-    console.log('----------------------------------------------')
-    console.log('this.useContext.user', this.userContext.user)
-    console.log('----------------------------------------------')
     if (this.userContext.user?.adminUserId) {
       await this.eventEmitter.emitAsync(LegalGazetteEvents.DELETE_PUBLICATION, {
         advertId: publication.advertId,
