@@ -20,6 +20,7 @@ import { PublicationsFields } from '../../components/field-set-items/Publication
 import { SettlementFields } from '../../components/field-set-items/SettlementFields'
 import { SignatureFields } from '../../components/field-set-items/SignatureFields'
 import { AdvertFormAccordion } from '../../components/Form/AdvertFormAccordion'
+import { AdvertTemplateType } from '../../gen/fetch'
 import {
   DivisionMeetingAdvertTypes,
   RecallAdvertTypes,
@@ -31,11 +32,43 @@ type AdvertContainerProps = {
   advertId: string
 }
 
+const mapTemplateType = (type: AdvertTemplateType): string => {
+  switch (type) {
+    case AdvertTemplateType.COMMON:
+      return 'Almennt'
+    case AdvertTemplateType.DIVISIONENDING:
+      return 'Skiptalok'
+    case AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY:
+      return 'Skiptafundur þrotabús'
+    case AdvertTemplateType.DIVISIONMEETINGDECEASED:
+      return 'Skiptafundur dánarbús'
+    case AdvertTemplateType.FORECLOSURE:
+      return 'Nauðungarsala'
+    case AdvertTemplateType.RECALLBANKRUPTCY:
+      return 'Innköllun þrotabús'
+    case AdvertTemplateType.RECALLDECEASED:
+      return 'Innköllun dánarbús'
+  }
+
+  return 'Óþekkt sniðmát'
+}
+
+const showFeeCode = (templateType: AdvertTemplateType) => {
+  const toshow = [
+    AdvertTemplateType.FORECLOSURE,
+    AdvertTemplateType.ADDITIONALANNOUNCEMENT,
+  ]
+
+  return toshow.includes(templateType)
+}
+
 export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
   const trpc = useTRPC()
   const { data: entities } = useQuery(trpc.getAllEntities.queryOptions())
 
-  const { data: advert } = useSuspenseQuery(trpc.getAdvert.queryOptions({ id: advertId }))
+  const { data: advert } = useSuspenseQuery(
+    trpc.getAdvert.queryOptions({ id: advertId }),
+  )
 
   const isRecallAdvertType = RecallAdvertTypes.includes(advert.templateType)
   const hasDivisionMeeting = DivisionMeetingAdvertTypes.includes(
@@ -58,6 +91,8 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
               createdByNationalId={advert.createdByNationalId}
               paid={!!advert.paidAt}
               totalPrice={advert.totalPrice}
+              estimatedPrice={advert.estimatedPrice}
+              templateType={mapTemplateType(advert.templateType)}
             />
           ),
           hidden: false,
@@ -72,6 +107,8 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
               selectedCategoryId={advert.category.id}
               title={advert.title ?? ''}
               additionalText={advert.additionalText ?? ''}
+              showFeeCode={showFeeCode(advert.templateType)}
+              feeQuantity={advert.feeQuantity}
             />
           ),
           hidden: false,

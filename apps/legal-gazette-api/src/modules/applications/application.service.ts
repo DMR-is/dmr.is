@@ -18,7 +18,10 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { AdvertModel } from '../../models/advert.model'
 import {
@@ -29,6 +32,7 @@ import {
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
+import { TypeIdEnum } from '../../models/type.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
@@ -81,6 +85,16 @@ export class ApplicationService implements IApplicationService {
   ) {
     const parsed = commonApplicationAnswersRefined.parse(application.answers)
 
+    let feeQuantity: number | undefined = undefined
+    if (parsed.fields.type.id === TypeIdEnum.FORECLOSURE) {
+      const searchString = 'Heiti eignar:'
+      const regex = new RegExp(searchString, 'g')
+
+      const matches = parsed.fields.html.match(regex)
+
+      feeQuantity = matches ? matches.length : 0
+    }
+
     await this.advertService.createAdvert({
       caseId: application.caseId,
       applicationId: application.id,
@@ -102,6 +116,7 @@ export class ApplicationService implements IApplicationService {
       scheduledAt: parsed.publishingDates.map(
         (publishingDate) => new Date(publishingDate),
       ),
+      feeQuantity: feeQuantity,
     })
 
     await application.update({

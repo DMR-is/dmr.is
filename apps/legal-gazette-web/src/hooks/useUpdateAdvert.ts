@@ -567,6 +567,21 @@ export const useUpdateAdvert = (id: string) => {
     [updateAdvert, advert?.divisionMeetingDate],
   )
 
+  const updateFeeQuantity = useCallback(
+    (feeQuantity: number) => {
+      if(feeQuantity === advert.feeQuantity) return
+
+      return updateAdvert(
+        { feeQuantity },
+        {
+          successMessage: 'Fjöldi uppfærður',
+          errorMessage: 'Ekki tókst að uppfæra fjölda'
+        }
+      )
+    },
+    [updateAdvert, advert.feeQuantity]
+  )
+
   const moveToNextStatus = useCallback(() => {
     moveToNextStatusMutation({ id })
   }, [id, moveToNextStatusMutation])
@@ -601,5 +616,6 @@ export const useUpdateAdvert = (id: string) => {
     updateJudgementDay,
     updateDivisionMeetingLocation,
     updateDivisionMeetingDate,
+    updateFeeQuantity,
   }
 }

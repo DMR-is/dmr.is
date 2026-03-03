@@ -6,6 +6,7 @@ import { formatDate } from '@dmr.is/utils-server/serverUtils'
 import { numberFormat } from '@dmr.is/utils-shared/format/number'
 
 import { SYSTEM_ACTOR } from '../../../core/constants'
+import { AdvertTemplateType } from '../../../models/advert.model'
 import { StatusIdEnum } from '../../../models/status.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { ICommentService } from '../../comment/comment.service.interface'
@@ -191,6 +192,7 @@ export class CompanyService implements ICompanyService {
     `
 
     const advert = await this.advertService.createAdvert({
+      templateType: AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       title: `Aukatilkynningar hlutafélaga`,
       typeId: '8CF1CD80-4F20-497F-8992-B32424AB82D4',
@@ -207,6 +209,7 @@ export class CompanyService implements ICompanyService {
       scheduledAt: [pubDate],
       caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
+      feeQuantity: body.announcements.length,
     })
 
     await this.commentService.createStatusUpdateComment(advert.id, {

@@ -6,7 +6,7 @@ import { getForeclosureTemplate } from './custom/foreclosure'
 
 export function getCommonTemplate(model: AdvertModel): string {
   if (model.typeId === TypeIdEnum.FORECLOSURE && model.foreclosure) {
-    return getForeclosureTemplate(model.foreclosure)
+    return getForeclosureTemplate(model.foreclosure, model.publicationNumber)
   }
 
   const htmlToUse = isBase64(model.content)

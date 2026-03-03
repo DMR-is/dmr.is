@@ -19,6 +19,7 @@ import {
   ApiDto,
   ApiDtoArray,
   ApiEnum,
+  ApiNumber,
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalNumber,
@@ -30,15 +31,12 @@ import {
 import { getLogger } from '@dmr.is/logging'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
+import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/templates/html'
-import { CreateSignatureDto } from '../modules/advert/signature/dto/signature.dto'
-import { CreateCommunicationChannelDto } from '../modules/communication-channel/dto/communication-channel.dto'
-import { CreateSettlementDto } from '../modules/settlement/dto/settlement.dto'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
-import { QueryDto } from '../modules/shared/dto/query.dto'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -55,6 +53,7 @@ import {
   CommunicationChannelModel,
 } from './communication-channel.model'
 import { CourtDistrictDto, CourtDistrictModel } from './court-district.model'
+import { FeeCodeModel } from './fee-code.model'
 import { ForeclosureModel } from './foreclosure.model'
 import { ForeclosurePropertyModel } from './foreclosure-property.model'
 import {
@@ -80,6 +79,7 @@ export enum AdvertTemplateType {
   DIVISION_MEETING_DECEASED = 'DIVISION_MEETING_DECEASED',
   DIVISION_ENDING = 'DIVISION_ENDING',
   FORECLOSURE = 'FORECLOSURE',
+  ADDITIONAL_ANNOUNCEMENT = 'ADDITIONAL_ANNOUNCEMENT'
 }
 
 type AdvertAttributes = {
@@ -99,6 +99,7 @@ type AdvertAttributes = {
   legacyHtml?: string | null
   legacyId: string | null
   externalId?: string | null
+  feeQuantity?: number
 
   // Common specific properties
   caption: string | null
@@ -137,6 +138,7 @@ export type AdvertCreateAttributes = {
   createdBy: string
   createdByNationalId: string
   externalId?: string | null
+  feeQuantity?: number
 
   // signature
   signature?: SignatureCreationAttributes
@@ -188,7 +190,7 @@ export type AdvertCreateAttributes = {
       { model: StatusModel },
       { model: CategoryModel },
       { model: CourtDistrictModel },
-      { model: TypeModel },
+      { model: TypeModel, include: [{ model: FeeCodeModel }] },
       { model: UserModel, paranoid: false },
       { model: AdvertPublicationModel, as: 'publications' },
       { model: SettlementModel },
@@ -366,6 +368,13 @@ export class AdvertModel extends BaseModel<
   })
   externalId?: string | null
 
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  })
+  feeQuantity?: number | null
+
   @Column({ type: DataType.VIRTUAL(DataType.DATE) })
   get nextScheduledAt(): Date | null {
     if (!this.publications || this.publications.length === 0) {
@@ -498,6 +507,23 @@ export class AdvertModel extends BaseModel<
     }
   }
 
+  get estimatedPrice(): number | null {
+    const feeCode = this.type?.feeCode?.[0]
+    if (!feeCode) return null
+
+    const quantity = this.feeQuantity ?? 0
+    if (quantity > 0) return feeCode.value * quantity
+    if (!feeCode.isMultiplied) return feeCode.value
+
+    try {
+      const html = this.htmlMarkup(AdvertVersionEnum.A)
+      if (!html) return null
+      return feeCode.value * getHtmlTextLength(html)
+    } catch {
+      return null
+    }
+  }
+
   @BeforeBulkCreate
   static addIndividualhooks(
     _models: AdvertModel[],
@@ -618,9 +644,9 @@ export class AdvertModel extends BaseModel<
       communicationChannels:
         model.communicationChannels?.map((c) => c.fromModel()) ?? [],
       paidAt: model.transaction?.paidAt ?? undefined,
-      totalPrice: model.transaction?.totalPrice
-        ? model.transaction.totalPrice
-        : undefined,
+      estimatedPrice: model.estimatedPrice ?? 0,
+      totalPrice: model.transaction?.totalPrice ?? undefined,
+      feeQuantity: model.feeQuantity ?? undefined,
       comments: model.comments?.map((c) => c.fromModel()) || [],
     }
   }
@@ -787,6 +813,12 @@ export class AdvertDetailedDto extends DetailedDto {
 
   @ApiOptionalNumber()
   totalPrice?: number
+
+  @ApiNumber()
+  estimatedPrice!: number
+
+  @ApiOptionalNumber()
+  feeQuantity?: number
 }
 
 export class AdvertDto extends PickType(AdvertDetailedDto, [

@@ -1,0 +1,49 @@
+'use strict'
+
+module.exports = {
+  up: (queryInterface, Sequelize) => {
+    return queryInterface.sequelize.query(`
+      BEGIN;
+
+      ALTER TABLE ADVERT
+      ADD COLUMN IF NOT EXISTS FEE_QUANTITY INTEGER;
+
+      ALTER TYPE TEMPLATE_TYPE ADD VALUE IF NOT EXISTS 'FORECLOSURE';
+      ALTER TYPE TEMPLATE_TYPE ADD VALUE IF NOT EXISTS 'ADDITIONAL_ANNOUNCEMENT';
+
+      COMMIT;
+    `)
+  },
+
+  down: (queryInterface, Sequelize) => {
+    return queryInterface.sequelize.query(`
+
+      -- https://blog.yo1.dog/updating-enum-values-in-postgresql-the-safe-and-easy-way/
+
+      BEGIN;
+
+      ALTER TABLE ADVERT
+      DROP COLUMN IF EXISTS FEE_QUANTITY;
+
+      UPDATE ADVERT SET TEMPLATE_TYPE = 'COMMON' WHERE TEMPLATE_TYPE = 'FORECLOSURE';
+      UPDATE ADVERT SET TEMPLATE_TYPE = 'COMMON' WHERE TEMPLATE_TYPE = 'ADDITIONAL_ANNOUNCEMENT';
+
+      ALTER TYPE TEMPLATE_TYPE RENAME TO TEMPLATE_TYPE_OLD;
+
+      CREATE TYPE TEMPLATE_TYPE AS ENUM (
+        'COMMON',
+        'RECALL_BANKRUPTCY',
+        'RECALL_DECEASED',
+        'DIVISION_MEETING_BANKRUPTCY',
+        'DIVISION_MEETING_DECEASED',
+        'DIVISION_ENDING'
+      );
+
+      ALTER TABLE ADVERT ALTER COLUMN TEMPLATE_TYPE TYPE TEMPLATE_TYPE USING TEMPLATE_TYPE::text::TEMPLATE_TYPE;
+
+      DROP TYPE TEMPLATE_TYPE_OLD;
+
+      COMMIT;
+    `)
+  },
+}
