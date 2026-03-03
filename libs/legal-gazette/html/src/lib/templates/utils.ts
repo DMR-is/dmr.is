@@ -2,6 +2,7 @@ import { isDefined, isNotEmpty, isString } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
+import { ICELANDIC_WEEKDAYS_POSSESIVE_MAP } from '../constants'
 import { BaseSettlement } from './types'
 
 type GetElementOptions = {
@@ -17,12 +18,11 @@ type GetElementProps = {
 export const getElement = ({
   text = '',
   options = { as: 'p', className: '' },
-}: GetElementProps): string =>
-  {
-    // must use this fallback, if options are passed wihout as, it should default to 'p'
-    const tag = options.as || 'p'
-    return `<${tag}${isString(options.className) ? ` class="${options.className}"` : ''}>${text}</${tag}>`
-  }
+}: GetElementProps): string => {
+  // must use this fallback, if options are passed wihout as, it should default to 'p'
+  const tag = options.as || 'p'
+  return `<${tag}${isString(options.className) ? ` class="${options.className}"` : ''}>${text}</${tag}>`
+}
 
 export function getTableHeaderCell(text: string): string {
   const strongElement = getElement({ text, options: { as: 'strong' } })
@@ -115,7 +115,7 @@ export const formatDate = (date: unknown): [string, string, string] => {
     }
     return [
       format(date, 'd. MMMM yyyy', { locale: is }),
-      format(date, 'EEEE', { locale: is }),
+      getPossesiveDay(format(date, 'EEEE', { locale: is })),
       format(date, "'kl.' HH:mm", { locale: is }),
     ]
   }
@@ -124,11 +124,21 @@ export const formatDate = (date: unknown): [string, string, string] => {
     if (!isNaN(parsedDate.getTime())) {
       return [
         format(parsedDate, 'd. MMMM yyyy', { locale: is }),
-        format(parsedDate, 'EEEE', { locale: is }),
+        getPossesiveDay(format(parsedDate, 'EEEE', { locale: is })),
         format(parsedDate, "'kl.' HH:mm", { locale: is }),
       ]
     }
   }
 
   return ['', '', '']
+}
+
+export const getPossesiveDay = (day: string) => {
+  const found = ICELANDIC_WEEKDAYS_POSSESIVE_MAP[day]
+
+  if (found === undefined) {
+    return day
+  }
+
+  return found
 }

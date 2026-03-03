@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { formatNationalId } from '@dmr.is/utils-server/formatting'
 import { formatDate } from '@dmr.is/utils-server/serverUtils'
 import { numberFormat } from '@dmr.is/utils-shared/format/number'
 
@@ -374,7 +375,7 @@ export class CompanyService implements ICompanyService {
           <tr>
             <td>
               <i>Kt.: </i>
-              ${body.nationalId}
+              ${formatNationalId(body.nationalId)}
             </td>
           </tr>
           <tr>
