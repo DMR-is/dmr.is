@@ -6050,7 +6050,8 @@
           "scheduledAt": { "type": "array", "items": { "type": "string" } },
           "categoryId": { "type": "string" },
           "typeId": { "type": "string" },
-          "courtDistrictId": { "type": "string" }
+          "courtDistrictId": { "type": "string" },
+          "feeQuantity": { "type": "number" }
         }
       },
       "AdvertTemplateType": {
@@ -6062,7 +6063,8 @@
           "DIVISION_MEETING_BANKRUPTCY",
           "DIVISION_MEETING_DECEASED",
           "DIVISION_ENDING",
-          "FORECLOSURE"
+          "FORECLOSURE",
+          "ADDITIONAL_ANNOUNCEMENT"
         ]
       },
       "CourtDistrictDto": {
@@ -6416,7 +6418,9 @@
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           },
-          "totalPrice": { "type": "number" }
+          "totalPrice": { "type": "number" },
+          "estimatedPrice": { "type": "number" },
+          "feeQuantity": { "type": "number" }
         },
         "required": [
           "id",
@@ -6435,7 +6439,8 @@
           "type",
           "status",
           "hasInternalComments",
-          "comments"
+          "comments",
+          "estimatedPrice"
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },

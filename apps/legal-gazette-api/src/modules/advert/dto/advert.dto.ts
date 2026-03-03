@@ -16,6 +16,7 @@ import {
   ApiOptionalDto,
   ApiOptionalDtoArray,
   ApiOptionalEnum,
+  ApiOptionalNumber,
   ApiOptionalString,
   ApiOptionalUuid,
   ApiString,
@@ -241,6 +242,9 @@ export class CreateAdvertInternalDto {
 
   @ApiOptionalDto(CreateSettlementDto)
   settlement?: CreateSettlementDto | null
+
+  @ApiOptionalNumber()
+  feeQuantity?: number
 }
 
 export class CreateAdvertDto extends OmitType(CreateAdvertInternalDto, [
@@ -291,6 +295,9 @@ export class UpdateAdvertDto extends PartialType(
   @IsOptional()
   @IsUUID()
   courtDistrictId?: string
+
+  @ApiOptionalNumber()
+  feeQuantity?: number
 }
 
 export class PublishAdvertsBody {

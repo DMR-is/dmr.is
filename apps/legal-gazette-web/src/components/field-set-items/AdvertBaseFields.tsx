@@ -14,6 +14,8 @@ type Props = {
   selectedCategoryId: string
   title: string
   additionalText?: string
+  showFeeCode?: boolean
+  feeQuantity?: number
 }
 
 export const AdvertBaseFields = ({
@@ -23,12 +25,15 @@ export const AdvertBaseFields = ({
   selectedCategoryId,
   title,
   additionalText,
+  showFeeCode = false,
+  feeQuantity,
 }: Props) => {
   const {
     updateType,
     updateCategory,
     updateTitle,
     updateAdditionalText,
+    updateFeeQuantity,
     isUpdatingAdvert,
   } = useUpdateAdvert(id)
 
@@ -81,6 +86,25 @@ export const AdvertBaseFields = ({
           />
         </GridColumn>
       </GridRow>
+      {showFeeCode && (
+        <GridRow>
+          <GridColumn span={['12/12', '6/12']}>
+            <Input
+              backgroundColor="blue"
+              disabled={!canEdit}
+              name="feeQuantity"
+              size="sm"
+              label="Fjöldi eigna"
+              inputMode="numeric"
+              type="number"
+              defaultValue={feeQuantity}
+              onBlur={(e) => {
+                return updateFeeQuantity(Number(e.target.value))
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+      )}
     </Stack>
   )
 }

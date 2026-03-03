@@ -46,6 +46,7 @@ const updateAdvertDtoSchema = z.object({
   divisionMeetingDate: z.string().optional(),
   judgementDate: z.string().optional(),
   courtDistrictId: z.string().optional(),
+  feeQuantity: z.number().optional(),
 })
 
 export const createAdvertDtoSchema = z.object({
@@ -163,6 +164,7 @@ export const advertsRouter = router({
           divisionMeetingDate: input.divisionMeetingDate
             ? toDate(input.divisionMeetingDate)
             : undefined,
+          feeQuantity: input.feeQuantity,
         },
       })
     }),
@@ -263,7 +265,9 @@ export const advertsRouter = router({
           fields: {
             courtDistrictId:
               input.fields.courtAndJudgmentFields.courtDistrict.id,
-            judgmentDate: toDate(input.fields.courtAndJudgmentFields.judgmentDate),
+            judgmentDate: toDate(
+              input.fields.courtAndJudgmentFields.judgmentDate,
+            ),
             meetingDate: toDate(input.fields.divisionMeetingFields.meetingDate),
             meetingLocation: input.fields.divisionMeetingFields.meetingLocation,
             liquidatorLocation:
@@ -294,11 +298,12 @@ export const advertsRouter = router({
           fields: {
             courtDistrictId:
               input.fields.courtAndJudgmentFields.courtDistrict.id,
-            judgmentDate: toDate(input.fields.courtAndJudgmentFields.judgmentDate),
-            meetingDate:
-              input.fields.divisionMeetingFields?.meetingDate
-                ? toDate(input.fields.divisionMeetingFields.meetingDate)
-                : undefined,
+            judgmentDate: toDate(
+              input.fields.courtAndJudgmentFields.judgmentDate,
+            ),
+            meetingDate: input.fields.divisionMeetingFields?.meetingDate
+              ? toDate(input.fields.divisionMeetingFields.meetingDate)
+              : undefined,
             meetingLocation:
               input.fields.divisionMeetingFields?.meetingLocation || undefined,
             liquidatorLocation:

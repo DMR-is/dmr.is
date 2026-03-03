@@ -14,6 +14,8 @@ type ReadOnlyAccordionItemProps = {
   createdByNationalId?: string
   paid?: boolean
   totalPrice?: number
+  estimatedPrice?: number
+  templateType: string
 }
 
 export const AdvertReadonlyFields = ({
@@ -24,6 +26,8 @@ export const AdvertReadonlyFields = ({
   paid,
   totalPrice,
   createdByNationalId,
+  templateType,
+  estimatedPrice = 0,
 }: ReadOnlyAccordionItemProps) => {
   return (
     <Stack space={[1, 2]}>
@@ -111,11 +115,29 @@ export const AdvertReadonlyFields = ({
         <GridColumn span={['12/12', '6/12']}>
           <Input
             readOnly
+            name="templateType"
+            size="sm"
+            label="Sniðmát auglýsingar"
+            value={templateType}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
             name="payment-status"
             size="sm"
             label="Greiðslustaða"
             defaultValue={paid ? 'Greitt' : 'Ógreitt'}
             icon={{ name: paid ? 'checkmark' : 'close', type: 'outline' }}
+          />
+        </GridColumn>
+        <GridColumn span={['12/12', '6/12']}>
+          <Input
+            readOnly
+            name="estimatedPrice"
+            size="sm"
+            label="Áætlað verð"
+            value={amountFormat(estimatedPrice)}
           />
         </GridColumn>
         {totalPrice ? (

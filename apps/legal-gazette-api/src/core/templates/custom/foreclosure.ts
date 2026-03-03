@@ -11,7 +11,7 @@ const logger = getLogger(LOGGING_CONTEXT)
 
 export function getForeclosureTemplate(
   foreclosure: ForeclosureModel,
-  publicationNumber = '(Reiknast við útgáfu)',
+  publicationNumber: string | null = '(Reiknast við útgáfu)',
 ): string {
   if (!foreclosure) {
     logger.error('Foreclosure data not provided', { context: LOGGING_CONTEXT })

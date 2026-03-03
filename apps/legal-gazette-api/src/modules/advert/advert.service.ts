@@ -661,6 +661,7 @@ export class AdvertService implements IAdvertService {
         divisionMeetingDate: body.divisionMeetingDate,
         divisionMeetingLocation: body.divisionMeetingLocation,
         communicationChannels: body.communicationChannels,
+        feeQuantity: body.feeQuantity,
         settlementId: body.settlementId,
         settlement: body.settlement
           ? {
@@ -814,6 +815,7 @@ export class AdvertService implements IAdvertService {
       caption: body.caption,
       courtDistrictId: body.courtDistrictId,
       judgementDate: body.judgementDate,
+      feeQuantity: body.feeQuantity
     })
 
     return updated.fromModelToDetailed()

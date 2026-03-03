@@ -42,6 +42,46 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     private readonly tbrCompanySettingsModel: typeof TBRCompanySettingsModel,
   ) {}
 
+
+  async getEstimatedPrice(advertId: string): Promise<number> {
+    const advert = await this.advertModel.scope('detailed').findByPk(advertId, {
+      include: [{ model: TypeModel, include: [{ model: FeeCodeModel }] }],
+    })
+
+    if (!advert) {
+      throw new NotFoundException('Advert not found')
+    }
+
+    const feeCodeResult = advert.type.feeCode
+    if (!feeCodeResult || feeCodeResult.length === 0) {
+      throw new InternalServerErrorException(
+        'Fee code not found for advert type',
+      )
+    }
+
+    const feeCode = feeCodeResult[0]
+
+    // Per-item billing: feeQuantity takes precedence (nauðungarsölur per property,
+    // aukatilkynningar hlutafélaga per notification)
+    const quantity = advert.feeQuantity ?? 0
+    if (quantity > 0) {
+      return feeCode.value * quantity
+    }
+
+    // Flat fee
+    if (!feeCode.isMultiplied) {
+      return feeCode.value
+    }
+
+    // Text-length billing — use version A since the advert may not be published yet
+    const html = advert.htmlMarkup(AdvertVersionEnum.A)
+    if (!html || html.length === 0) {
+      throw new InternalServerErrorException('HTML markup not found for advert')
+    }
+
+    return feeCode.value * getHtmlTextLength(html)
+  }
+
   async getChargeCategory(nationalId: string): Promise<string> {
     const isPerson = Kennitala.isPerson(nationalId)
 
@@ -199,6 +239,31 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     // the relation in the db is one-to-one
     // but to handle sequelize join tables we have to treat it as an array
     const feeCodeModel = feeCodeResult[0]
+
+    // Per-item billing: feeQuantity is set explicitly on the advert (e.g. nauðungarsölur
+    // charges per property, aukatilkynningar hlutafélaga charges per notification).
+    // This takes precedence over the type-level isMultiplied text-length calculation.
+    const quantity = advert.feeQuantity ?? 0
+    if (quantity > 0) {
+      return {
+        feeCodeId: feeCodeModel.id,
+        paymentData: {
+          id: advertId,
+          chargeBase: advert.publicationNumber,
+          chargeCategory,
+          debtorNationalId: advert.createdByNationalId,
+          expenses: [
+            {
+              feeCode: feeCodeModel.feeCode,
+              quantity: quantity,
+              reference: advert.publicationNumber,
+              sum: feeCodeModel.value * quantity,
+              unitPrice: feeCodeModel.value,
+            },
+          ],
+        },
+      }
+    }
 
     if (!feeCodeModel.isMultiplied) {
       return {

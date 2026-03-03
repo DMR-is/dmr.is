@@ -21,6 +21,7 @@ import {
   getNextWeekdayWithLeadTime,
   WeekdayEnum,
 } from './utils'
+import { AdvertTemplateType } from '../../../models/advert.model'
 
 const LOGGING_CONTEXT = 'CompanyService'
 
@@ -60,6 +61,8 @@ export class CompanyService implements ICompanyService {
     ]
 
     const { announcementDate } = body
+
+
 
     const intro = `<p>Eftirtalin hlutafélög og einkahlutafélög hafa sent hlutafélagaskrá tilkynningar í ${formatDate(announcementDate, 'MMMM yyyy')}, samanber skýringar á táknum hér fyrir neðan:</p>`
 
@@ -191,6 +194,7 @@ export class CompanyService implements ICompanyService {
     `
 
     const advert = await this.advertService.createAdvert({
+      templateType: AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
       title: `Aukatilkynningar hlutafélaga`,
       typeId: '8CF1CD80-4F20-497F-8992-B32424AB82D4',
@@ -207,6 +211,7 @@ export class CompanyService implements ICompanyService {
       scheduledAt: [pubDate],
       caption: `${formatDate(announcementDate, 'MMMM yyyy')}`,
       isFromExternalSystem: true,
+      feeQuantity: body.announcements.length,
     })
 
     await this.commentService.createStatusUpdateComment(advert.id, {

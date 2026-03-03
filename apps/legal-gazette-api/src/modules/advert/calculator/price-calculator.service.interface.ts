@@ -4,6 +4,7 @@ export interface IPriceCalculatorService {
   getPaymentData(advertId: string): Promise<GetPaymentDataResponseDto>
 
   getEstimatedPriceForApplication(applicationId: string): Promise<number>
+  getEstimatedPrice(advertId: string): Promise<number>
 
   getChargeCategory(nationalId: string): Promise<string>
 }

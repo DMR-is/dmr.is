@@ -57,7 +57,9 @@ export class ForeclosureService implements IForeclosureService {
   async createForeclosureSale(
     body: CreateForeclosureSaleDto,
   ): Promise<ForeclosureDto> {
-    this.logger.info('Creating new foreclosure sale', { context: LOGGING_CONTEXT })
+    this.logger.info('Creating new foreclosure sale', {
+      context: LOGGING_CONTEXT,
+    })
 
     // Escape HTML in all text fields to prevent XSS
     const escapedRegion = escapeHtml(body.foreclosureRegion) ?? ''
@@ -92,6 +94,7 @@ export class ForeclosureService implements IForeclosureService {
       },
       scheduledAt: [body.foreclosureDate],
       isFromExternalSystem: true,
+      feeQuantity: body.properties.length,
     })
 
     const newForeClosure = await this.foreclosureModel.create(
