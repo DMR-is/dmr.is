@@ -1,9 +1,9 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { formatNationalId } from '@dmr.is/utils-server/formatting'
 import { formatDate } from '@dmr.is/utils-server/serverUtils'
 import { numberFormat } from '@dmr.is/utils-shared/format/number'
-import { formatNationalId } from '@dmr.is/utils-server/formatting'
 
 import { SYSTEM_ACTOR } from '../../../core/constants'
 import { StatusIdEnum } from '../../../models/status.model'
