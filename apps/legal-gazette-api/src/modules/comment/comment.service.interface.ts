@@ -1,5 +1,6 @@
 import { CommentDto } from '../../models/comment.model'
 import {
+  CreateAddPublicationCommentDto,
   CreateAssignCommentDto,
   CreateDeletePublicationCommentDto,
   CreatePublishCommentDto,

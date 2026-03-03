@@ -16,6 +16,7 @@ import { StatusIdEnum, StatusModel } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import {
+  CreateAddPublicationCommentDto,
   CreateAssignCommentDto,
   CreateDeletePublicationCommentDto,
   CreatePublishCommentDto,

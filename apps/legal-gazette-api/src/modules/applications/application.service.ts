@@ -18,13 +18,9 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
-  RECALL_DECEASED_ADVERT_TYPE_ID,
-} from '../../core/constants'
-import { getAdvertHTMLMarkupPreview } from '../../core/templates/html'
-import { mapIndexToVersion } from '../../core/utils'
-import { AdvertModel, AdvertTemplateType } from '../../models/advert.model'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
+
+import { AdvertModel } from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
@@ -36,7 +32,6 @@ import { CategoryModel } from '../../models/category.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
-  GetHTMLPreview,
   IslandIsSubmitApplicationDto,
   UpdateApplicationDto,
 } from '../../modules/applications/dto/application-extra.dto'
@@ -104,8 +99,8 @@ export class ApplicationService implements IApplicationService {
       content: parsed.fields.html,
       title: parsed.fields.caption,
       communicationChannels: parsed.communicationChannels,
-      scheduledAt: parsed.publishingDates.map((publishingDate) =>
-        new Date(publishingDate),
+      scheduledAt: parsed.publishingDates.map(
+        (publishingDate) => new Date(publishingDate),
       ),
     })
 
@@ -390,8 +385,8 @@ export class ApplicationService implements IApplicationService {
       additionalText: body.additionalText,
       content: body.html,
       communicationChannels: [],
-      scheduledAt: body.publishingDates.map((publishingDate) =>
-        new Date(publishingDate),
+      scheduledAt: body.publishingDates.map(
+        (publishingDate) => new Date(publishingDate),
       ),
     })
   }
