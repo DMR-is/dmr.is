@@ -2,14 +2,14 @@ import type {
   CommonApplicationAnswers,
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 import {
   ApplicationRequirementStatementEnum,
   ApplicationTypeEnum,
   commonApplicationAnswers,
   recallBankruptcyAnswers,
   recallDeceasedAnswers,
-} from '@dmr.is/legal-gazette/schemas'
+} from '@dmr.is/legal-gazette-schemas'
 
 import { LegalGazetteHTMLTemplates } from '../constants'
 import { getAdvertHTMLMarkup } from '../templates/base'

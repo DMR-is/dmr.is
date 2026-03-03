@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { getApplicationPreview } from '@dmr.is/legal-gazette/html'
-import { ApplicationTypeEnum } from '@dmr.is/legal-gazette/schemas'
+import { getApplicationPreview } from '@dmr.is/legal-gazette-html'
+import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { getHtmlTextLength } from '@dmr.is/utils/server/serverUtils'
+import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
