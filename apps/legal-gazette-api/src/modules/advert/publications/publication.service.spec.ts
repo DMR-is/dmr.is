@@ -9,6 +9,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { UserContext } from '../../../core/context/user/user.context'
 import { AdvertModel } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import { PublicationService } from './publication.service'
@@ -49,6 +50,7 @@ beforeEach(async () => {
           findOne: jest.fn(),
           findByPkOrThrow: jest.fn(),
           withScope: jest.fn(),
+          update: jest.fn(),
         },
       },
       {
@@ -74,6 +76,10 @@ beforeEach(async () => {
           emitAsync: jest.fn(),
         },
       },
+      {
+        provide: UserContext,
+        useValue: { user: undefined },
+      },
     ],
   }).compile()
   service = module.get<IPublicationService>(PublicationService)
@@ -94,6 +100,7 @@ describe('PublicationService - Delete Publication Protection', () => {
             findOne: jest.fn(),
             findByPkOrThrow: jest.fn(),
             withScope: jest.fn(),
+            update: jest.fn(),
           },
         },
         {
@@ -124,6 +131,10 @@ describe('PublicationService - Delete Publication Protection', () => {
             emit: jest.fn(),
             emitAsync: jest.fn(),
           },
+        },
+        {
+          provide: UserContext,
+          useValue: { user: undefined },
         },
       ],
     }).compile()
