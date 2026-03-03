@@ -1,4 +1,3 @@
-import { IsNumber, IsString } from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -7,8 +6,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
-
+import { ApiDateTime, ApiNumber, ApiString, ApiUUId } from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -43,27 +41,21 @@ export class ForeclosurePropertyModel extends BaseModel<
 > {
   @Column({ type: DataType.UUID, allowNull: false })
   @ForeignKey(() => ForeclosureModel)
-  @ApiProperty({ type: String })
   foreclosureId!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  @ApiProperty({ type: String })
   propertyName!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  @ApiProperty({ type: String })
   propertyNumber!: string
 
   @Column({ type: DataType.INTEGER, allowNull: false })
-  @ApiProperty({ type: Number })
   propertyTotalPrice!: number
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  @ApiProperty({ type: String })
   claimant!: string
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  @ApiProperty({ type: String })
   respondent!: string
 
   @BelongsTo(() => ForeclosureModel)
@@ -72,8 +64,8 @@ export class ForeclosurePropertyModel extends BaseModel<
   static fromModel(model: ForeclosurePropertyModel): ForeclosurePropertyDto {
     return {
       id: model.id,
-      createdAt: model.createdAt.toISOString(),
-      updatedAt: model.updatedAt.toISOString(),
+      createdAt: model.createdAt,
+      updatedAt: model.updatedAt,
       foreclosureId: model.foreclosureId,
       propertyName: model.propertyName,
       propertyNumber: model.propertyNumber,
@@ -88,40 +80,31 @@ export class ForeclosurePropertyModel extends BaseModel<
   }
 }
 
-export class ForeclosurePropertyDto extends PickType(ForeclosurePropertyModel, [
-  'id',
-  'foreclosureId',
-  'propertyName',
-  'propertyNumber',
-  'propertyTotalPrice',
-  'claimant',
-  'respondent',
-] as const) {
-  @ApiProperty({ type: String })
-  createdAt!: string
+export class ForeclosurePropertyDto {
+  @ApiUUId()
+  id!: string
 
-  @ApiProperty({ type: String })
-  updatedAt!: string
-}
+  @ApiUUId()
+  foreclosureId!: string
 
-export class CreateForeclosurePropertyDto {
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   propertyName!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   propertyNumber!: string
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
+  @ApiNumber()
   propertyTotalPrice!: number
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   claimant!: string
 
-  @ApiProperty({ type: String })
-  @IsString()
+  @ApiString()
   respondent!: string
+
+  @ApiDateTime()
+  createdAt!: Date
+
+  @ApiDateTime()
+  updatedAt!: Date
 }

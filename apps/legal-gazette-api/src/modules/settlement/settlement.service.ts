@@ -5,10 +5,8 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { assertAdvertsEditable } from '../../core/utils/advert-status.util'
 import { AdvertModel } from '../../models/advert.model'
-import {
-  SettlementModel,
-  UpdateSettlementDto,
-} from '../../models/settlement.model'
+import { SettlementModel } from '../../models/settlement.model'
+import { UpdateSettlementDto } from './dto/settlement.dto'
 
 const LOGGING_CONTEXT = 'SettlementService'
 @Injectable()
@@ -51,12 +49,10 @@ export class SettlementService {
       updateData.address = body.address
     }
     if (body.deadline !== undefined) {
-      updateData.deadline = body.deadline ? new Date(body.deadline) : null
+      updateData.deadline = body.deadline
     }
     if (body.dateOfDeath !== undefined) {
       updateData.dateOfDeath = body.dateOfDeath
-        ? new Date(body.dateOfDeath)
-        : null
     }
     if (body.declaredClaims !== undefined) {
       updateData.declaredClaims = body.declaredClaims

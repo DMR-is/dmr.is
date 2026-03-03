@@ -9,8 +9,9 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { AdvertDetailedDto, CommentDto, CommentTypeEnum } from '../../gen/fetch'
+import { CommentTypeEnum } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertDetails } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -29,7 +30,11 @@ export const AddComment = ({ advertId }: Props) => {
         )
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: variables.advertId }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails | undefined
+
+        if (!prevData) {
+          return
+        }
 
         const newComment = {
           advertId: variables.advertId,
@@ -46,7 +51,7 @@ export const AddComment = ({ advertId }: Props) => {
           trpc.getAdvert.queryKey({ id: variables.advertId }),
           {
             ...prevData,
-            comments: newComments as CommentDto[],
+            comments: newComments,
           },
         )
 

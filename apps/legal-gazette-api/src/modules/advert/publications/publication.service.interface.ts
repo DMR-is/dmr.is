@@ -1,12 +1,14 @@
 import {
-  AdvertPublicationDetailedDto,
   AdvertVersionEnum,
+} from '../../../models/advert-publication.model'
+import {
+  AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,
   GetPublicationsDto,
   GetPublicationsQueryDto,
   GetRelatedPublicationsDto,
   UpdateAdvertPublicationDto,
-} from '../../../models/advert-publication.model'
+} from './dto/publication.dto'
 
 export interface IPublicationService {
   createPublication(advertId: string): Promise<void>

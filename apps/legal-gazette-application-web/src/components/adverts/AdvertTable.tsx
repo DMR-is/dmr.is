@@ -12,9 +12,10 @@ import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { DataTableColumnProps } from '@dmr.is/ui/components/Tables/DataTable/types'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
-import { AdvertDto, ApplicationTypeEnum } from '../../gen/fetch'
+import { ApplicationTypeEnum } from '../../gen/fetch'
 import { DateFormats } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { ApplicationAdvert } from '../../lib/trpc/types'
 import { cardTagButtonStyle } from '../application/application.css'
 import { RemoveApplicationAdvert } from '../application/RemoveApplicationAdvert'
 import { AdvertPublications } from './AdvertPublications'
@@ -22,7 +23,7 @@ import { AdvertPublications } from './AdvertPublications'
 import { useQueryClient } from '@tanstack/react-query'
 
 type Props = {
-  adverts: AdvertDto[]
+  adverts: ApplicationAdvert[]
   applicationId: string
   type?: ApplicationTypeEnum
 }
@@ -84,11 +85,11 @@ export const AdvertTable = ({
     }
   }
 
-  const isPublished = (ad: AdvertDto) => {
+  const isPublished = (ad: ApplicationAdvert) => {
     return ad.status.slug === 'utgefid'
   }
 
-  const isAllPublished = (ad: AdvertDto) => {
+  const isAllPublished = (ad: ApplicationAdvert) => {
     let publishedCount = 0
     ad.publications.forEach((pub) => {
       if (pub.publishedAt) {
@@ -99,7 +100,7 @@ export const AdvertTable = ({
     return publishedCount === ad.publications.length
   }
 
-  const isRejected = (ad: AdvertDto) => {
+  const isRejected = (ad: ApplicationAdvert) => {
     return ad.status.slug === 'hafnad'
   }
   return (

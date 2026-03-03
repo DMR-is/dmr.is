@@ -1,4 +1,4 @@
-import { UpdateSettlementDto } from '../../models/settlement.model'
+import { UpdateSettlementDto } from './dto/settlement.dto'
 
 export interface ISettlementService {
   updateSettlement(id: string, body: UpdateSettlementDto): Promise<void>

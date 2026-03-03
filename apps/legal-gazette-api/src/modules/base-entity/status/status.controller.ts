@@ -13,11 +13,8 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
-import {
-  GetStatusesDto,
-  StatusDto,
-  StatusModel,
-} from '../../../models/status.model'
+import { StatusDto, StatusModel } from '../../../models/status.model'
+import { GetStatusesDto } from '../../base-entity/dto/base-entity-query.dto'
 
 @Controller({
   path: 'statuses',

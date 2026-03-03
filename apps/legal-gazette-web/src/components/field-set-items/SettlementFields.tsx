@@ -12,15 +12,15 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import {
   AdvertTemplateType,
   ApplicationRequirementStatementEnum,
-  SettlementDto,
 } from '../../gen/fetch'
 import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
+import { AdvertSettlement } from '../../lib/trpc/types'
 import { requirementsStatementOptions } from '../create-advert/CreateBankruptcySettlement'
 
 type SettlementFieldsProps = {
   advertId: string
   canEdit: boolean
-  settlement: SettlementDto
+  settlement: AdvertSettlement
   templateType: AdvertTemplateType
 }
 

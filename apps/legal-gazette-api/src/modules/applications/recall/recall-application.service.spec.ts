@@ -62,7 +62,7 @@ describe('RecallApplicationService', () => {
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
-      expect(typeof result.minDate).toBe('string')
+      expect(result.minDate).toBeInstanceOf(Date)
     })
     it('should return 5 business days after previous division meeting when one exists', async () => {
       // Arrange - Previous division meeting found
@@ -238,7 +238,7 @@ describe('RecallApplicationService', () => {
       // Assert
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
-      expect(typeof result.minDate).toBe('string')
+      expect(result.minDate).toBeInstanceOf(Date)
     })
   })
 })

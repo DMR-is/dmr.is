@@ -8,12 +8,12 @@ import {
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { fetchWithTimeout } from '@dmr.is/utils-server/httpUtils'
 
-import { ITBRConfig } from './tbr.config'
 import {
   TBRGetPaymentQueryDto,
   TBRGetPaymentResponseDto,
   TBRPostPaymentBodyDto,
-} from './tbr.dto'
+} from './dto/tbr.dto'
+import { ITBRConfig } from './tbr.config'
 import { ITBRService } from './tbr.service.interface'
 
 type TBRPaymentJSON = {

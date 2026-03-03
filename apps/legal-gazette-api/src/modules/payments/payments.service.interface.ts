@@ -2,8 +2,8 @@ import {
   GetPaymentsDto,
   GetPaymentsQuery,
   SyncPaymentsResponseDto,
-} from '../../core/dto/payments.dto'
-import { TBRGetPaymentResponseDto } from '../tbr/tbr.dto'
+} from '../../modules/payments/dto/payments.dto'
+import { TBRGetPaymentResponseDto } from '../tbr/dto/tbr.dto'
 
 export interface IPaymentsService {
   getPayments(query: GetPaymentsQuery): Promise<GetPaymentsDto>

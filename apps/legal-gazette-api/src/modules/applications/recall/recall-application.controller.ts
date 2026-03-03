@@ -21,7 +21,7 @@ import {
   CreateDivisionEndingDto,
   CreateDivisionMeetingDto,
   GetMinDateResponseDto,
-} from '../../../models/application.model'
+} from '../dto/application-extra.dto'
 import { IRecallApplicationService } from './recall-application.service.interface'
 
 @ApiBearerAuth()

@@ -12,12 +12,10 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import {
-  AdvertDetailedDto,
-  CreateCommunicationChannelDto,
-} from '../../gen/fetch'
+import { CreateCommunicationChannelDto } from '../../gen/fetch'
 import { useToggle } from '../../hooks/useToggle'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertDetails } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -61,7 +59,11 @@ export const CreateCommunicationChannel = ({ advertId }: Props) => {
 
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: advertId }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails | undefined
+
+        if (!prevData) {
+          return
+        }
 
         const currentChannels = prevData?.communicationChannels ?? []
 

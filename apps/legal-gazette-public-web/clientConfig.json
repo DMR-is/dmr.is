@@ -608,7 +608,7 @@
             "name": "advertId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "search",
@@ -620,19 +620,27 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "categoryId",
@@ -728,7 +736,7 @@
             "name": "advertId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "search",
@@ -740,19 +748,27 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "typeId",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "categoryId",
@@ -1247,19 +1263,27 @@
             "name": "dateFrom",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "dateTo",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
           },
           {
             "name": "year",
             "required": false,
             "in": "query",
-            "schema": { "type": "string" }
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
@@ -1513,7 +1537,11 @@
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
           },
-          "publishedAt": { "type": "string" },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "title": { "type": "string" },
@@ -1585,8 +1613,16 @@
           "id": { "type": "string" },
           "advertId": { "type": "string" },
           "pdfUrl": { "type": "string" },
-          "scheduledAt": { "type": "string" },
-          "publishedAt": { "type": "string" },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "isLegacy": { "type": "boolean" },
           "version": {
             "allOf": [{ "$ref": "#/components/schemas/AdvertVersionEnum" }]
@@ -1633,22 +1669,26 @@
           "id": {
             "type": "string",
             "description": "Unique identifier",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "format": "uuid"
           },
           "createdAt": {
             "type": "string",
-            "description": "ISO representation of the creation date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the creation date"
           },
           "updatedAt": {
             "type": "string",
-            "description": "ISO representation of the updated date",
-            "example": "2021-08-31T12:00:00.000Z"
+            "format": "date-time",
+            "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the updated date"
           },
           "deletedAt": {
             "type": "string",
-            "description": "ISO representation of the deletion date",
+            "format": "date-time",
             "example": "2021-08-31T12:00:00.000Z",
+            "description": "ISO representation of the deletion date",
             "nullable": true
           },
           "title": { "type": "string" },
@@ -1661,10 +1701,18 @@
           "category": { "$ref": "#/components/schemas/CategoryDto" },
           "type": { "$ref": "#/components/schemas/TypeDto" },
           "status": { "$ref": "#/components/schemas/StatusDto" },
-          "scheduledAt": { "type": "string", "nullable": true },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "assignedUser": { "$ref": "#/components/schemas/UserDto" },
           "hasInternalComments": { "type": "boolean" },
-          "lastPublishedAt": { "type": "string", "nullable": true }
+          "lastPublishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
         },
         "required": [
           "id",
@@ -1676,9 +1724,7 @@
           "category",
           "type",
           "status",
-          "scheduledAt",
-          "hasInternalComments",
-          "lastPublishedAt"
+          "hasInternalComments"
         ]
       },
       "AdvertPublicationDetailedDto": {
@@ -1704,21 +1750,29 @@
       },
       "UpdateAdvertPublicationDto": {
         "type": "object",
-        "properties": { "scheduledAt": { "type": "string" } },
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
         "required": ["scheduledAt"]
       },
       "IssueDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
+          "id": { "type": "string", "format": "uuid" },
           "createdAt": {
             "type": "string",
             "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
             "description": "The date and time when the issue was created"
           },
           "publishDate": {
             "type": "string",
             "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
             "description": "The date and time when the issue was published"
           },
           "title": { "type": "string" },
@@ -1731,7 +1785,6 @@
         },
         "required": [
           "id",
-          "createdAt",
           "publishDate",
           "title",
           "url",

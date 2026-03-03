@@ -41,10 +41,10 @@ export const createAdvertAndDeceasedApplicationInput =
 export const createSubscriberInput = z.object({
   nationalId: z.string().min(10).max(10),
   email: z.email().optional(),
-  subscribedTo: z.string(),
+  subscribedTo: z.coerce.date(),
 })
 
 export const updateSubscriberEndDateInput = z.object({
   subscriberId: z.string(),
-  subscribedTo: z.string(),
+  subscribedTo: z.coerce.date(),
 })

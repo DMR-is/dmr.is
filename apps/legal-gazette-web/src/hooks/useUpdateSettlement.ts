@@ -3,25 +3,71 @@ import { useCallback } from 'react'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import {
-  AdvertDetailedDto,
-  ApplicationRequirementStatementEnum,
-  SettlementDto,
-} from '../gen/fetch'
+import { ApplicationRequirementStatementEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import { AdvertDetails } from '../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const createOptimisticDataForSettlement = (
-  prevData: AdvertDetailedDto,
-  variables: SettlementDto,
-): AdvertDetailedDto => {
+  prevData: AdvertDetails,
+  variables: Record<string, unknown>,
+): AdvertDetails => {
+  if (!prevData.settlement) {
+    return prevData
+  }
+
+  const toIsoStringOrNull = (
+    value: unknown,
+  ): string | null | undefined => {
+    if (value === undefined) return undefined
+    if (value === null) return null
+    return value instanceof Date ? value.toISOString() : String(value)
+  }
+
+  const settlement = {
+    ...prevData.settlement,
+  }
+
+  if (variables.liquidatorName !== undefined) {
+    settlement.liquidatorName = variables.liquidatorName as string
+  }
+  if (variables.liquidatorLocation !== undefined) {
+    settlement.liquidatorLocation = variables.liquidatorLocation as string
+  }
+  if (variables.settlementName !== undefined) {
+    settlement.name = variables.settlementName as string
+  }
+  if (variables.settlementNationalId !== undefined) {
+    settlement.nationalId = variables.settlementNationalId as string
+  }
+  if (variables.settlementAddress !== undefined) {
+    settlement.address = variables.settlementAddress as string
+  }
+  if (variables.declaredClaims !== undefined) {
+    settlement.declaredClaims = variables.declaredClaims as number
+  }
+  if (variables.liquidatorRecallStatementLocation !== undefined) {
+    settlement.liquidatorRecallStatementLocation =
+      variables.liquidatorRecallStatementLocation as string
+  }
+  if (variables.liquidatorRecallStatementType !== undefined) {
+    settlement.liquidatorRecallStatementType =
+      variables.liquidatorRecallStatementType as ApplicationRequirementStatementEnum
+  }
+  if (variables.type !== undefined) {
+    settlement.type = variables.type as typeof settlement.type
+  }
+  if (variables.settlementDeadline !== undefined) {
+    settlement.deadline = toIsoStringOrNull(variables.settlementDeadline)
+  }
+  if (variables.settlementDateOfDeath !== undefined) {
+    settlement.dateOfDeath = toIsoStringOrNull(variables.settlementDateOfDeath)
+  }
+
   return {
     ...prevData,
-    settlement: {
-      ...prevData.settlement,
-      ...variables,
-    },
+    settlement,
   }
 }
 
@@ -40,17 +86,21 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
             trpc.getAdvert.queryFilter({ id: advertId }),
           )
 
-          const prevData = queryClient.getQueryData(
+          const prevData = queryClient.getQueryData<AdvertDetails>(
             trpc.getAdvert.queryKey({ id: advertId }),
-          ) as AdvertDetailedDto
+          )
+
+          if (!prevData) {
+            return
+          }
 
           const filteredSettlementData = Object.fromEntries(
-            Object.entries(variables).filter(([_, value]) => !!value),
+            Object.entries(variables).filter(([_, value]) => value !== undefined),
           )
 
           const optimisticData = createOptimisticDataForSettlement(
             prevData,
-            filteredSettlementData as unknown as SettlementDto,
+            filteredSettlementData,
           )
 
           queryClient.setQueryData(
@@ -70,7 +120,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
           if (mutateResults) {
             queryClient.setQueryData(
               trpc.getAdvert.queryKey({ id: advertId }),
-              mutateResults as AdvertDetailedDto,
+              mutateResults,
             )
           }
         },
@@ -281,7 +331,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
       updateSettlementMutation(
         {
           id: settlementId,
-          settlementDeadline,
+          settlementDeadline: new Date(settlementDeadline),
         },
         {
           onSuccess: () => {
@@ -310,7 +360,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
       updateSettlementMutation(
         {
           id: settlementId,
-          settlementDateOfDeath,
+          settlementDateOfDeath: new Date(settlementDateOfDeath),
         },
         {
           onSuccess: () => {

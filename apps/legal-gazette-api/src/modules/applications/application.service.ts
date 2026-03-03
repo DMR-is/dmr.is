@@ -18,24 +18,23 @@ import {
   updateApplicationInput,
 } from '@dmr.is/legal-gazette-schemas'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import {
-  generatePaging,
-  getLimitAndOffset,
-} from '@dmr.is/utils-server/serverUtils'
+import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
-import { GetMyApplicationsQueryDto } from '../../core/dto/application.dto'
 import { AdvertModel } from '../../models/advert.model'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
   ApplicationModel,
   ApplicationStatusEnum,
-  GetApplicationsDto,
-  IslandIsSubmitApplicationDto,
-  UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
+import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
+import {
+  GetApplicationsDto,
+  IslandIsSubmitApplicationDto,
+  UpdateApplicationDto,
+} from '../../modules/applications/dto/application-extra.dto'
 import { IAdvertService } from '../advert/advert.service.interface'
 import { IRecallApplicationService } from './recall/recall-application.service.interface'
 import { IApplicationService } from './application.service.interface'
@@ -100,7 +99,9 @@ export class ApplicationService implements IApplicationService {
       content: parsed.fields.html,
       title: parsed.fields.caption,
       communicationChannels: parsed.communicationChannels,
-      scheduledAt: parsed.publishingDates,
+      scheduledAt: parsed.publishingDates.map(
+        (publishingDate) => new Date(publishingDate),
+      ),
     })
 
     await application.update({
@@ -230,18 +231,15 @@ export class ApplicationService implements IApplicationService {
 
     if (query.dateFrom && query.dateTo) {
       where.createdAt = {
-        [Op.between]: [
-          startOfDay(new Date(query.dateFrom)),
-          endOfDay(new Date(query.dateTo)),
-        ],
+        [Op.between]: [startOfDay(query.dateFrom), endOfDay(query.dateTo)],
       }
     } else if (query.dateFrom) {
       where.createdAt = {
-        [Op.gte]: startOfDay(new Date(query.dateFrom)),
+        [Op.gte]: startOfDay(query.dateFrom),
       }
     } else if (query.dateTo) {
       where.createdAt = {
-        [Op.lte]: endOfDay(new Date(query.dateTo)),
+        [Op.lte]: endOfDay(query.dateTo),
       }
     }
 
@@ -387,7 +385,9 @@ export class ApplicationService implements IApplicationService {
       additionalText: body.additionalText,
       content: body.html,
       communicationChannels: [],
-      scheduledAt: body.publishingDates,
+      scheduledAt: body.publishingDates.map(
+        (publishingDate) => new Date(publishingDate),
+      ),
     })
   }
   async submitApplication(applicationId: string, user: DMRUser): Promise<void> {

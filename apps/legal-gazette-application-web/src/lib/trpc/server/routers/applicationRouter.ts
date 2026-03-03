@@ -27,12 +27,32 @@ export const getApplicationsSchema = z.object({
   pageSize: z.number().min(1).max(100).optional().default(10),
   sortBy: z.string().optional(),
   direction: z.enum(SortDirectionEnum).optional(),
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
   search: z.string().optional(),
   type: z.enum(ApplicationTypeEnum).optional(),
   status: z.enum(ApplicationStatusEnum).optional(),
 })
+
+const parseOptionalDate = (value?: string) => {
+  if (!value) {
+    return undefined
+  }
+
+  return new Date(value)
+}
+
+const parseOptionalNullableDate = (value?: string | null) => {
+  if (value === null) {
+    return null
+  }
+
+  if (!value) {
+    return undefined
+  }
+
+  return new Date(value)
+}
 
 export const applicationRouter = router({
   getTypes: protectedProcedure.query(async ({ ctx }) => {
@@ -121,7 +141,13 @@ export const applicationRouter = router({
       const { applicationId, ...rest } = input
       return await ctx.api.addDivisionMeeting({
         applicationId: applicationId,
-        createDivisionMeetingDto: rest,
+        createDivisionMeetingDto: {
+          ...rest,
+          signature: {
+            ...rest.signature,
+            date: parseOptionalNullableDate(rest.signature.date),
+          },
+        },
       })
     }),
   addDivisionEnding: protectedProcedure
@@ -131,7 +157,13 @@ export const applicationRouter = router({
 
       return await ctx.api.addDivisionEnding({
         applicationId: input.applicationId,
-        createDivisionEndingDto: rest,
+        createDivisionEndingDto: {
+          ...rest,
+          signature: {
+            ...rest.signature,
+            date: parseOptionalNullableDate(rest.signature.date),
+          },
+        },
       })
     }),
   getMyAdverts: protectedProcedure

@@ -55,8 +55,3 @@ export class FeeCodeDto extends PickType(FeeCodeModel, [
   'value',
   'isMultiplied',
 ] as const) {}
-
-export class GetFeeCodesResponse {
-  @ApiProperty({ type: [FeeCodeDto] })
-  feeCodes!: FeeCodeDto[]
-}

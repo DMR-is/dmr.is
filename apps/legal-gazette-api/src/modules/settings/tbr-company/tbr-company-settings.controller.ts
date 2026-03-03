@@ -17,12 +17,14 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { AdminAccess, LGResponse } from '../../../core/decorators'
 import { AuthorizationGuard } from '../../../core/guards'
 import {
+  TBRCompanySettingsItemDto,
+} from '../../../models/tbr-company-settings.model'
+import {
   CreateTBRCompanySettingsDto,
   GetTBRCompanySettingsQueryDto,
-  TBRCompanySettingsItemDto,
   TBRCompanySettingsListDto,
   UpdateTbrCompanySettingsDto,
-} from '../../../models/tbr-company-settings.model'
+} from './dto/tbr-company-settings.dto'
 import { ITBRCompanySettingsService } from './tbr-company-settings.service.interface'
 
 @Controller({

@@ -10,6 +10,7 @@ import {
   ApplicationTypeEnum,
   recallBankruptcyAnswersRefined,
   recallDeceasedAnswersRefined,
+  SettlementType,
 } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils-server/dateUtils'
@@ -22,19 +23,22 @@ import {
 import {
   AdvertModel,
   AdvertTemplateType,
-  CreateAdvertInternalDto,
 } from '../../../models/advert.model'
 import { AdvertPublicationModel } from '../../../models/advert-publication.model'
 import {
   ApplicationModel,
   ApplicationStatusEnum,
-  CreateDivisionEndingDto,
-  CreateDivisionMeetingDto,
-  GetMinDateResponseDto,
 } from '../../../models/application.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
+import { CreateAdvertInternalDto } from '../../advert/dto/advert.dto'
+import { CreateSettlementDto } from '../../settlement/dto/settlement.dto'
+import {
+  CreateDivisionEndingDto,
+  CreateDivisionMeetingDto,
+  GetMinDateResponseDto,
+} from '../dto/application-extra.dto'
 import { IRecallApplicationService } from './recall-application.service.interface'
 
 const LOGGING_CONTEXT = 'RecallApplicationService'
@@ -81,20 +85,17 @@ export class RecallApplicationService implements IRecallApplicationService {
         ? new Date(meeting.publishedAt)
         : new Date(meeting.scheduledAt)
 
-      const nextMeetingDate = addBusinessDays(
-        previousMeetingDate,
-        1,
-      ).toISOString()
+      const nextMeetingDate = addBusinessDays(previousMeetingDate, 1)
 
       this.logger.debug(
         `Found previous division meeting advert, setting next min meeting date to`,
         {
           context: LOGGING_CONTEXT,
-          message: nextMeetingDate,
+          message: nextMeetingDate.toISOString(),
           applicationId: applicationId,
           advertId: divisionMeeting.id,
           previousMeetingDate: previousMeetingDate.toISOString(),
-          nextMinMeetingDate: nextMeetingDate,
+          nextMinMeetingDate: nextMeetingDate.toISOString(),
         },
       )
 
@@ -135,7 +136,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         applicationId: applicationId,
       })
 
-      return { minDate: getNextValidPublishingDate().toISOString() }
+      return { minDate: getNextValidPublishingDate() }
     }
 
     if (firstRecallAdvert.divisionMeetingDate) {
@@ -143,16 +144,16 @@ export class RecallApplicationService implements IRecallApplicationService {
         firstRecallAdvert.divisionMeetingDate,
       )
 
-      const nextMinDate = addBusinessDays(divisionMeetingDate, 1).toISOString()
+      const nextMinDate = addBusinessDays(divisionMeetingDate, 1)
       this.logger.debug(
         `Found division meeting date on first recall advert, setting next min meeting date to`,
         {
           context: LOGGING_CONTEXT,
-          message: nextMinDate,
+          message: nextMinDate.toISOString(),
           applicationId: applicationId,
           advertId: firstRecallAdvert.id,
           divisionMeetingDate: divisionMeetingDate.toISOString(),
-          nextMinMeetingDate: nextMinDate,
+          nextMinMeetingDate: nextMinDate.toISOString(),
         },
       )
       return { minDate: nextMinDate }
@@ -163,19 +164,17 @@ export class RecallApplicationService implements IRecallApplicationService {
       ? new Date(firstPublication.publishedAt)
       : new Date(firstPublication.scheduledAt)
 
-    const nextMinDate = getNextValidPublishingDate(
-      addDays(publicationDate, 63),
-    ).toISOString()
+    const nextMinDate = getNextValidPublishingDate(addDays(publicationDate, 63))
 
     this.logger.debug(
       `No division meeting date found on first recall advert, setting next min meeting date to`,
       {
         context: LOGGING_CONTEXT,
-        message: nextMinDate,
+        message: nextMinDate.toISOString(),
         applicationId: applicationId,
         advertId: firstRecallAdvert.id,
         publicationDate: publicationDate.toISOString(),
-        nextMinMeetingDate: nextMinDate,
+        nextMinMeetingDate: nextMinDate.toISOString(),
       },
     )
 
@@ -297,9 +296,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       title: `Skiptalok - ${application.settlement?.name}`,
       additionalText: body.additionalText,
       settlementId: application.settlement?.id,
-      judgementDate: judgementDate.toISOString(),
+      judgementDate: judgementDate,
       communicationChannels: application.answers.communicationChannels,
-      scheduledAt: [body.scheduledAt.toISOString()],
+      scheduledAt: [body.scheduledAt],
     })
 
     await application.settlement?.update({
@@ -348,19 +347,16 @@ export class RecallApplicationService implements IRecallApplicationService {
         ? new Date(meeting.publishedAt)
         : new Date(meeting.scheduledAt)
 
-      const nextMinMeetingDate = addBusinessDays(
-        previousMeetingDate,
-        5,
-      ).toISOString()
+      const nextMinMeetingDate = addBusinessDays(previousMeetingDate, 5)
       this.logger.debug(
         `Found previous division meeting advert, setting next min meeting date to`,
         {
           context: LOGGING_CONTEXT,
-          message: nextMinMeetingDate,
+          message: nextMinMeetingDate.toISOString(),
           applicationId: applicationId,
           advertId: divisionMeeting.id,
           previousMeetingDate: previousMeetingDate.toISOString(),
-          nextMinMeetingDate: nextMinMeetingDate,
+          nextMinMeetingDate: nextMinMeetingDate.toISOString(),
         },
       )
 
@@ -406,7 +402,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       })
 
       // if there is no recall advert found, we cannot determine a minDate
-      return { minDate: getNextValidPublishingDate().toISOString() }
+      return { minDate: getNextValidPublishingDate() }
     }
 
     if (firstRecallAdvert.publications.length === 0) {
@@ -419,7 +415,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         },
       )
 
-      return { minDate: getNextValidPublishingDate().toISOString() }
+      return { minDate: getNextValidPublishingDate() }
     }
 
     const firstPublication = firstRecallAdvert.publications[0]
@@ -429,10 +425,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         firstRecallAdvert.divisionMeetingDate,
       )
 
-      const nextMinMeetingDate = addBusinessDays(
-        previousMeetingDate,
-        5,
-      ).toISOString()
+      const nextMinMeetingDate = addBusinessDays(previousMeetingDate, 5)
 
       this.logger.debug(
         `Found division meeting date in first recall advert, setting min date based on that date`,
@@ -441,7 +434,7 @@ export class RecallApplicationService implements IRecallApplicationService {
           applicationId: applicationId,
           advertId: firstRecallAdvert.id,
           previousMeetingDate: previousMeetingDate,
-          nextMinMeetingDate: nextMinMeetingDate,
+          nextMinMeetingDate: nextMinMeetingDate.toISOString(),
         },
       )
 
@@ -455,7 +448,7 @@ export class RecallApplicationService implements IRecallApplicationService {
     // Adding 63 days (9 weeks) to the minDate
     const nextMeetingDate = getNextValidPublishingDate(
       addDays(previousMeetingDate, 63),
-    ).toISOString()
+    )
 
     this.logger.debug(
       `No division meeting date found in first recall advert, setting min date based on first publication date`,
@@ -464,11 +457,11 @@ export class RecallApplicationService implements IRecallApplicationService {
         applicationId: applicationId,
         advertId: firstRecallAdvert.id,
         previousMeetingDate: previousMeetingDate.toISOString(),
-        nextMeetingDate: nextMeetingDate,
+        nextMeetingDate: nextMeetingDate.toISOString(),
       },
     )
 
-    return { minDate: previousMeetingDate.toISOString() }
+    return { minDate: nextMeetingDate }
   }
   async submitRecallApplication(
     applicationId: string,
@@ -489,7 +482,7 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     let data
 
-    let createObj: CreateAdvertInternalDto = {} as CreateAdvertInternalDto
+    let settlementOverrides: Partial<CreateSettlementDto> = {}
 
     switch (application.applicationType) {
       case ApplicationTypeEnum.RECALL_BANKRUPTCY: {
@@ -507,11 +500,11 @@ export class RecallApplicationService implements IRecallApplicationService {
         }
 
         data = check.data
-        Object.assign(createObj, {
-          settlement: {
-            deadline: data.fields.settlementFields.deadlineDate,
-          },
-        })
+        settlementOverrides = {
+          deadline: data.fields.settlementFields.deadlineDate
+            ? new Date(data.fields.settlementFields.deadlineDate)
+            : undefined,
+        }
         break
       }
       case ApplicationTypeEnum.RECALL_DECEASED: {
@@ -529,12 +522,12 @@ export class RecallApplicationService implements IRecallApplicationService {
         }
 
         data = check.data
-        Object.assign(createObj, {
-          settlement: {
-            dateOfDeath: data.fields.settlementFields.dateOfDeath,
-            type: data.fields.settlementFields.type,
-          },
-        })
+        settlementOverrides = {
+          dateOfDeath: data.fields.settlementFields.dateOfDeath
+            ? new Date(data.fields.settlementFields.dateOfDeath)
+            : undefined,
+          settlementType: data.fields.settlementFields.type as SettlementType,
+        }
         break
       }
       default:
@@ -553,7 +546,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         ? `Innköllun þrotabús - ${data.fields.settlementFields.name}`
         : `Innköllun dánarbús - ${data.fields.settlementFields.name}`
 
-    createObj = {
+    const createObj: CreateAdvertInternalDto = {
       applicationId: application.id,
       templateType:
         application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -573,16 +566,34 @@ export class RecallApplicationService implements IRecallApplicationService {
       },
       title: title,
       additionalText: data.additionalText,
-      divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate,
+      divisionMeetingDate: data.fields.divisionMeetingFields?.meetingDate
+        ? new Date(data.fields.divisionMeetingFields.meetingDate)
+        : undefined,
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
-      judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate,
+      judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate
+        ? new Date(data.fields.courtAndJudgmentFields.judgmentDate)
+        : undefined,
       courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,
-      scheduledAt: data.publishingDates,
+      scheduledAt: data.publishingDates.map((publishingDate) =>
+        new Date(publishingDate),
+      ),
       settlement: {
-        ...data.fields.settlementFields,
-        ...createObj.settlement,
+        liquidatorName: data.fields.settlementFields.liquidatorName,
+        liquidatorLocation: data.fields.settlementFields.liquidatorLocation,
+        recallRequirementStatementLocation:
+          data.fields.settlementFields.recallRequirementStatementLocation,
+        recallRequirementStatementType:
+          data.fields.settlementFields.recallRequirementStatementType,
+        name: data.fields.settlementFields.name,
+        nationalId: data.fields.settlementFields.nationalId,
+        address: data.fields.settlementFields.address,
+        companies:
+          'companies' in data.fields.settlementFields
+            ? data.fields.settlementFields.companies
+            : undefined,
+        ...settlementOverrides,
       },
     }
 

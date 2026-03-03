@@ -10,16 +10,13 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 import { debounce } from '@dmr.is/utils-shared/lodash/debounce'
 
-import {
-  TBRCompanySettingsItemDto,
-  TBRCompanySettingsListDto,
-} from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { TbrSettingItem, TbrSettingsResult } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
-  setting: TBRCompanySettingsItemDto
+  setting: TbrSettingItem
 }
 
 export const TBRSettingInfo = ({ setting }: Props) => {
@@ -31,13 +28,13 @@ export const TBRSettingInfo = ({ setting }: Props) => {
       onMutate: async (variables) => {
         await queryClient.cancelQueries(trpc.getTbrSettings.queryFilter())
 
-        const prevData = queryClient.getQueryData<TBRCompanySettingsListDto>(
+        const prevData = queryClient.getQueryData<TbrSettingsResult>(
           trpc.getTbrSettings.queryKey(),
         )
 
         if (!prevData) return
 
-        const optimisticData = {
+        const optimisticData: TbrSettingsResult = {
           ...prevData,
           items: prevData.items.map((item) =>
             item.id === variables.id ? { ...item, ...variables } : item,

@@ -12,7 +12,7 @@ import {
   TBRTransactionStatus,
   TBRTransactionType,
 } from '../../../../models/tbr-transactions.model'
-import { TBRGetPaymentResponseDto } from '../../../tbr/tbr.dto'
+import { TBRGetPaymentResponseDto } from '../../../tbr/dto/tbr.dto'
 import { ITBRService } from '../../../tbr/tbr.service.interface'
 import { IPriceCalculatorService } from '../../calculator/price-calculator.service.interface'
 import { PgAdvisoryLockService } from '../lock.service'

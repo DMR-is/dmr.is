@@ -15,11 +15,13 @@ import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PublicOrApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
 import { CategoryModel } from '../../../models/category.model'
 import {
-  GetTypesDto,
-  GetTypesQueryDto,
   TypeDto,
   TypeModel,
 } from '../../../models/type.model'
+import {
+  GetTypesDto,
+  GetTypesQueryDto,
+} from '../../base-entity/dto/base-entity-query.dto'
 import { BaseEntityController } from '../base-entity.controller'
 
 // Access: Admin users OR public-web users OR application-web users

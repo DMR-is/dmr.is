@@ -1,13 +1,9 @@
-import { Transform } from 'class-transformer'
-import { IsBoolean, IsOptional, IsUUID } from 'class-validator'
 import { BelongsToMany } from 'sequelize-typescript'
-
-import { ApiProperty } from '@nestjs/swagger'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { BaseEntityDto } from '../modules/base-entity/base-entity.dto'
+import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
 import { TypeModel } from './type.model'
 import { TypeCategoriesModel } from './type-categories.model'
 
@@ -26,32 +22,4 @@ export class CategoryModel extends BaseEntityModel<CategoryDto> {
   types!: TypeModel[]
 }
 
-export class GetCategoriesQueryDto {
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
-  type?: string
-
-  @ApiProperty({
-    type: Boolean,
-    required: false,
-    description: 'Filter out unassignable advert types',
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true')
-  excludeUnassignable?: boolean
-}
-
 export class CategoryDto extends BaseEntityDto {}
-
-export class GetCategoriesDto {
-  @ApiProperty({
-    type: [CategoryDto],
-  })
-  categories!: CategoryDto[]
-}

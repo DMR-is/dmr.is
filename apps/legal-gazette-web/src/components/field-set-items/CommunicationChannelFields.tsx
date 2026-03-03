@@ -1,11 +1,11 @@
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { CommunicationChannelDto } from '../../gen/fetch'
+import { AdvertChannel } from '../../lib/trpc/types'
 import { CommunicationChannelTable } from '../communication-channel/CommunicationChannelTable'
 
 type Props = {
   advertId: string
-  channels: CommunicationChannelDto[]
+  channels: AdvertChannel[]
 }
 
 export const CommunicationChannelFields = ({ advertId, channels }: Props) => {

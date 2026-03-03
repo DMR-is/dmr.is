@@ -4,8 +4,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import {
   FeeCodeDto,
   FeeCodeModel,
-  GetFeeCodesResponse,
 } from '../../models/fee-code.model'
+import { GetFeeCodesResponse } from './dto/fee-code.dto'
 import { IFeeCodeService } from './fee-code.service.interface'
 
 @Injectable()

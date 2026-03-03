@@ -57,12 +57,42 @@ export const createAdvertDtoSchema = z.object({
   communicationChannels: z.array(communicationChannelSchema),
 })
 
+const toDate = (value: string | Date): Date =>
+  value instanceof Date ? value : new Date(value)
+
+const toOptionalDate = (
+  value?: string | Date | null,
+): Date | null | undefined => {
+  if (value === undefined || value === null) {
+    return value
+  }
+
+  return toDate(value)
+}
+
+const mapSignatureDates = <
+  T extends {
+    date?: string | Date | null
+    name?: string | null
+    location?: string | null
+    onBehalfOf?: string | null
+  },
+>(
+  signature: T,
+) => ({
+  ...signature,
+  date: toOptionalDate(signature.date),
+})
+
 export const advertsRouter = router({
   createAdvert: protectedProcedure
     .input(createAdvertDtoSchema)
     .mutation(async ({ ctx, input }) => {
       return await ctx.api.createAdvert({
-        createAdvertDto: input,
+        createAdvertDto: {
+          ...input,
+          scheduledAt: input.scheduledAt.map((date) => toDate(date)),
+        },
       })
     }),
   getAdvert: protectedProcedure
@@ -114,10 +144,26 @@ export const advertsRouter = router({
   updateAdvert: protectedProcedure
     .input(updateAdvertDtoSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...rest } = input
+      const { id } = input
       return await ctx.api.updateAdvert({
         id: id,
-        updateAdvertDto: rest,
+        updateAdvertDto: {
+          title: input.title,
+          caption: input.caption,
+          content: input.content,
+          additionalText: input.additionalText,
+          divisionMeetingLocation: input.divisionMeetingLocation,
+          scheduledAt: input.scheduledAt,
+          categoryId: input.categoryId,
+          typeId: input.typeId,
+          courtDistrictId: input.courtDistrictId,
+          judgementDate: input.judgementDate
+            ? toDate(input.judgementDate)
+            : undefined,
+          divisionMeetingDate: input.divisionMeetingDate
+            ? toDate(input.divisionMeetingDate)
+            : undefined,
+        },
       })
     }),
   assignUser: protectedProcedure
@@ -198,8 +244,8 @@ export const advertsRouter = router({
             content: input.fields.html,
             typeId: input.fields.type.id,
           },
-          publishingDates: input.publishingDates,
-          signature: input.signature,
+          publishingDates: input.publishingDates.map((date) => toDate(date)),
+          signature: mapSignatureDates(input.signature),
           additionalText: input.additionalText,
         },
       })
@@ -211,14 +257,14 @@ export const advertsRouter = router({
         createRecallBankruptcyAdvertAndApplicationDto: {
           applicantNationalId: input.applicantNationalId,
           communicationChannels: input.communicationChannels,
-          publishingDates: input.publishingDates,
-          signature: input.signature,
+          publishingDates: input.publishingDates.map((date) => toDate(date)),
+          signature: mapSignatureDates(input.signature),
           additionalText: input.additionalText,
           fields: {
             courtDistrictId:
               input.fields.courtAndJudgmentFields.courtDistrict.id,
-            judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
-            meetingDate: input.fields.divisionMeetingFields.meetingDate,
+            judgmentDate: toDate(input.fields.courtAndJudgmentFields.judgmentDate),
+            meetingDate: toDate(input.fields.divisionMeetingFields.meetingDate),
             meetingLocation: input.fields.divisionMeetingFields.meetingLocation,
             liquidatorLocation:
               input.fields.settlementFields.liquidatorLocation,
@@ -228,7 +274,7 @@ export const advertsRouter = router({
             requirementStatement: input.fields.settlementFields
               .recallRequirementStatementType as unknown as RecallBankruptcyFieldsDtoRequirementStatementEnum,
             settlementAddress: input.fields.settlementFields.address,
-            settlementDate: input.fields.settlementFields.deadlineDate,
+            settlementDate: toDate(input.fields.settlementFields.deadlineDate),
             settlementName: input.fields.settlementFields.name,
             settlementNationalId: input.fields.settlementFields.nationalId,
           },
@@ -242,15 +288,17 @@ export const advertsRouter = router({
         createRecallDeceasedAdvertAndApplicationDto: {
           applicantNationalId: input.applicantNationalId,
           communicationChannels: input.communicationChannels,
-          publishingDates: input.publishingDates,
-          signature: input.signature,
+          publishingDates: input.publishingDates.map((date) => toDate(date)),
+          signature: mapSignatureDates(input.signature),
           additionalText: input.additionalText,
           fields: {
             courtDistrictId:
               input.fields.courtAndJudgmentFields.courtDistrict.id,
-            judgmentDate: input.fields.courtAndJudgmentFields.judgmentDate,
+            judgmentDate: toDate(input.fields.courtAndJudgmentFields.judgmentDate),
             meetingDate:
-              input.fields.divisionMeetingFields?.meetingDate || undefined,
+              input.fields.divisionMeetingFields?.meetingDate
+                ? toDate(input.fields.divisionMeetingFields.meetingDate)
+                : undefined,
             meetingLocation:
               input.fields.divisionMeetingFields?.meetingLocation || undefined,
             liquidatorLocation:
@@ -261,7 +309,7 @@ export const advertsRouter = router({
             requirementStatement: input.fields.settlementFields
               .recallRequirementStatementType as unknown as RecallDeceasedFieldsDtoRequirementStatementEnum,
             settlementAddress: input.fields.settlementFields.address,
-            settlementDate: input.fields.settlementFields.dateOfDeath,
+            settlementDate: toDate(input.fields.settlementFields.dateOfDeath),
             settlementName: input.fields.settlementFields.name,
             settlementNationalId: input.fields.settlementFields.nationalId,
             settlementType: input.fields.settlementFields

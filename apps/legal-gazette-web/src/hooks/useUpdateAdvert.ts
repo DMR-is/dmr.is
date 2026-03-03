@@ -3,16 +3,15 @@ import { useCallback } from 'react'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import {
-  AdvertDetailedDto,
-  CategoryDto,
-  CourtDistrictDto,
-  StatusDto,
-  TypeDto,
-  UpdateAdvertDto,
-} from '../gen/fetch'
 import { StatusIdEnum } from '../lib/constants'
 import { useTRPC } from '../lib/trpc/client/trpc'
+import {
+  AdvertDetails,
+  EntityCategory,
+  EntityCourtDistrict,
+  EntityType,
+  UpdateAdvertInput,
+} from '../lib/trpc/types'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -22,12 +21,12 @@ type UpdateOptions = {
 }
 
 const createOptimisticDataForAdvert = (
-  prevData: AdvertDetailedDto,
-  variables: UpdateAdvertDto,
-  types: TypeDto[],
-  categories: CategoryDto[],
-  courtDistricts: CourtDistrictDto[],
-): AdvertDetailedDto => {
+  prevData: AdvertDetails,
+  variables: UpdateAdvertInput,
+  types: EntityType[],
+  categories: EntityCategory[],
+  courtDistricts: EntityCourtDistrict[],
+): AdvertDetails => {
   const filteredVariables = Object.fromEntries(
     Object.entries(variables).filter(([_, value]) => value !== null),
   )
@@ -75,7 +74,7 @@ export const useUpdateAdvert = (id: string) => {
           )
           const prevData = queryClient.getQueryData(
             trpc.getAdvert.queryKey({ id: variables.id }),
-          ) as AdvertDetailedDto
+          ) as AdvertDetails
 
           const currentStatus = prevData.status
           let nextStatus: string
@@ -103,7 +102,7 @@ export const useUpdateAdvert = (id: string) => {
             trpc.getAdvert.queryKey({ id: variables.id }),
             {
               ...prevData,
-              status: status as StatusDto,
+              status,
             },
           )
           return prevData
@@ -139,7 +138,7 @@ export const useUpdateAdvert = (id: string) => {
         )
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: variables.id }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails
 
         const currentStatus = prevData.status
         let prevStatus: string
@@ -167,7 +166,7 @@ export const useUpdateAdvert = (id: string) => {
           trpc.getAdvert.queryKey({ id: variables.id }),
           {
             ...prevData,
-            status: status as StatusDto,
+            status,
           },
         )
 
@@ -205,7 +204,7 @@ export const useUpdateAdvert = (id: string) => {
           )
           const prevData = queryClient.getQueryData(
             trpc.getAdvert.queryKey({ id: variables.id }),
-          ) as AdvertDetailedDto
+          ) as AdvertDetails
 
           const optimisticData = createOptimisticDataForAdvert(
             prevData,
@@ -250,7 +249,7 @@ export const useUpdateAdvert = (id: string) => {
           )
           const prevData = queryClient.getQueryData(
             trpc.getAdvert.queryKey({ id: variables.id }),
-          ) as AdvertDetailedDto
+          ) as AdvertDetails
 
           return prevData
         },
@@ -285,7 +284,7 @@ export const useUpdateAdvert = (id: string) => {
         )
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: variables.id }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails
 
         return prevData
       },
@@ -318,7 +317,7 @@ export const useUpdateAdvert = (id: string) => {
           )
           const prevData = queryClient.getQueryData(
             trpc.getAdvert.queryKey({ id: variables.id }),
-          ) as AdvertDetailedDto
+          ) as AdvertDetails
 
           const inProgressStatus = statuses.find(
             (status) => status.id === StatusIdEnum.IN_PROGRESS,
@@ -329,7 +328,7 @@ export const useUpdateAdvert = (id: string) => {
               trpc.getAdvert.queryKey({ id: variables.id }),
               {
                 ...prevData,
-                status: inProgressStatus as StatusDto,
+                status: inProgressStatus,
               },
             )
           }
@@ -360,7 +359,7 @@ export const useUpdateAdvert = (id: string) => {
     )
 
   const updateAdvert = useCallback(
-    (data: UpdateAdvertDto, options: UpdateOptions = {}) => {
+    (data: Omit<UpdateAdvertInput, 'id'>, options: UpdateOptions = {}) => {
       const {
         successMessage,
         errorMessage = 'Villa við að uppfæra breytingar',

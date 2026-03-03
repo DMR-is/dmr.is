@@ -6,10 +6,8 @@ import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUt
 import {
   CaseDto,
   CaseModel,
-  CaseQueryDto,
-  CreateCaseDto,
-  GetCasesDto,
 } from '../../models/case.model'
+import { CaseQueryDto, CreateCaseDto, GetCasesDto } from './dto/case.dto'
 import { ICaseService } from './case.service.interface'
 
 @Injectable()

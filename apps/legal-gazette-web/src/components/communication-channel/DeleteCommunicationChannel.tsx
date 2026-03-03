@@ -1,8 +1,8 @@
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { AdvertDetailedDto } from '../../gen/fetch'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { AdvertDetails } from '../../lib/trpc/types'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -24,7 +24,11 @@ export const DeleteCommunicationChannel = ({ advertId, channelId }: Props) => {
 
         const prevData = queryClient.getQueryData(
           trpc.getAdvert.queryKey({ id: advertId }),
-        ) as AdvertDetailedDto
+        ) as AdvertDetails | undefined
+
+        if (!prevData) {
+          return
+        }
 
         const currentChannels = prevData?.communicationChannels ?? []
 

@@ -11,6 +11,11 @@ import {
   CommentDto,
   CommentModel,
   CommentTypeEnum,
+} from '../../models/comment.model'
+import { StatusIdEnum, StatusModel } from '../../models/status.model'
+import { UserModel } from '../../models/users.model'
+import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
+import {
   CreateAddPublicationCommentDto,
   CreateAssignCommentDto,
   CreateDeletePublicationCommentDto,
@@ -19,10 +24,7 @@ import {
   CreateSubmitCommentDto,
   CreateTextCommentDto,
   GetCommentsDto,
-} from '../../models/comment.model'
-import { StatusIdEnum, StatusModel } from '../../models/status.model'
-import { UserModel } from '../../models/users.model'
-import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
+} from './dto/comment.dto'
 import { ICommentService } from './comment.service.interface'
 
 const LOGGING_CONTEXT = 'CommentService'

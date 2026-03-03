@@ -1,16 +1,13 @@
-import {
-  IsDateString,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-  ValidateIf,
-} from 'class-validator'
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger'
-
+import {
+  ApiEnum,
+  ApiOptionalDateTime,
+  ApiOptionalNumber,
+  ApiOptionalString,
+  ApiString,
+  ApiUUID,
+} from '@dmr.is/decorators'
 import {
   ApplicationRequirementStatementEnum,
   CompanySchema,
@@ -153,8 +150,8 @@ export class SettlementModel extends BaseModel<
       name: model.name,
       nationalId: model.nationalId,
       address: model.address,
-      deadline: model.deadline ? model.deadline.toISOString() : null,
-      dateOfDeath: model.dateOfDeath ? model.dateOfDeath.toISOString() : null,
+      deadline: model.deadline,
+      dateOfDeath: model.dateOfDeath,
       declaredClaims: model.declaredClaims,
     }
   }
@@ -165,148 +162,51 @@ export class SettlementModel extends BaseModel<
 }
 
 export class SettlementCompanyDto {
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   companyName!: string
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   companyNationalId!: string
 }
 
 export class SettlementDto {
-  @ApiProperty({ type: String, required: true })
-  @IsString()
+  @ApiUUID()
   id!: string
 
-  @ApiProperty({
-    enum: SettlementType,
+  @ApiEnum(SettlementType, {
     enumName: 'SettlementType',
-    required: true,
   })
-  @IsEnum(SettlementType)
   type!: SettlementType
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   liquidatorName!: string
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   liquidatorLocation!: string
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
+  @ApiOptionalString({ maxLength: 255, nullable: true })
   liquidatorRecallStatementLocation!: string | null
 
-  @ApiProperty({
-    enum: ApplicationRequirementStatementEnum,
+  @ApiEnum(ApplicationRequirementStatementEnum, {
     enumName: 'ApplicationRequirementStatementEnum',
-    required: true,
   })
-  @IsEnum(ApplicationRequirementStatementEnum)
   liquidatorRecallStatementType!: ApplicationRequirementStatementEnum
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   name!: string
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 10 })
   nationalId!: string
 
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
+  @ApiString({ maxLength: 255 })
   address!: string
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @ValidateIf((o) => o.deadline !== null)
-  @IsDateString()
-  deadline!: string | null
+  @ApiOptionalDateTime({ nullable: true })
+  deadline?: Date | null
 
-  @ApiProperty({ type: String, required: false, nullable: true })
-  @ValidateIf((o) => o.dateOfDeath !== null)
-  @IsDateString()
-  dateOfDeath!: string | null
+  @ApiOptionalDateTime({ nullable: true })
+  dateOfDeath?: Date | null
 
-  @ApiProperty({ type: Number, required: false, nullable: true })
-  @IsOptional()
-  @IsNumber()
+  @ApiOptionalNumber({ nullable: true })
   declaredClaims!: number | null
 }
-
-export class CreateSettlementDto {
-  @ApiProperty({ enum: SettlementType, required: false })
-  @IsOptional()
-  @IsEnum(SettlementType)
-  settlementType?: SettlementType
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
-  liquidatorName!: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
-  liquidatorLocation!: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsString()
-  @MaxLength(255)
-  @IsOptional()
-  recallRequirementStatementLocation?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsString()
-  @MaxLength(255)
-  @IsOptional()
-  recallRequirementStatementType?: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
-  name!: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
-  nationalId!: string
-
-  @ApiProperty({ type: String, required: true })
-  @IsString()
-  @MaxLength(255)
-  address!: string
-
-  @ApiProperty({ type: Number, required: false })
-  @IsOptional()
-  @IsNumber()
-  declaredClaims?: number
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  deadline?: string
-
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsDateString()
-  dateOfDeath?: string
-
-  @ApiProperty({ type: [SettlementCompanyDto], required: false })
-  @IsOptional()
-  companies?: SettlementCompanyDto[]
-}
-
-export class UpdateSettlementDto extends OmitType(PartialType(SettlementDto), [
-  'id',
-] as const) {}

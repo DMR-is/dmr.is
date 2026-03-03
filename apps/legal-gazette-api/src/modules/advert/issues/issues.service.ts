@@ -7,11 +7,8 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { generatePaging, getLimitAndOffset } from '@dmr.is/utils-server/serverUtils'
 
-import {
-  GetIssuesDto,
-  GetIssuesQuery,
-  IssueModel,
-} from '../../../models/issues.model'
+import { IssueModel } from '../../../models/issues.model'
+import { GetIssuesDto, GetIssuesQuery } from './dto/issues.dto'
 import { IIssuesService } from './issues.service.interface'
 
 @Injectable()
@@ -39,10 +36,7 @@ export class IssuesService implements IIssuesService {
     if (q?.dateTo && q?.dateFrom) {
       Object.assign(whereParams, {
         publishDate: {
-          [Op.between]: [
-            startOfDay(new Date(q.dateFrom)),
-            endOfDay(new Date(q.dateTo)),
-          ],
+          [Op.between]: [startOfDay(q.dateFrom), endOfDay(q.dateTo)],
         },
       })
     }

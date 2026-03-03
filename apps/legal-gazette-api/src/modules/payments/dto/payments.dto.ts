@@ -1,33 +1,32 @@
 import { Transform } from 'class-transformer'
-import { IsBoolean, IsEnum, IsOptional } from 'class-validator'
+import { IsBoolean, IsOptional } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import {
+  ApiDateTime,
+  ApiEnum,
+  ApiOptionalDateTime,
+  ApiOptionalEnum,
+  ApiString,
+} from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
 
 import {
   TBRTransactionStatus,
   TBRTransactionType,
-} from '../../models/tbr-transactions.model'
-import { QueryDto } from './query.dto'
+} from '../../../models/tbr-transactions.model'
+import { QueryDto } from '../../shared/dto/query.dto'
 
 export class GetPaymentsQuery extends QueryDto {
-  @ApiProperty({
-    enum: TBRTransactionType,
+  @ApiOptionalEnum(TBRTransactionType, {
     enumName: 'TBRTransactionType',
-    required: false,
   })
-  @IsOptional()
-  @IsEnum(TBRTransactionType)
   type?: TBRTransactionType
 
-  @ApiProperty({
-    enum: TBRTransactionStatus,
+  @ApiOptionalEnum(TBRTransactionStatus, {
     enumName: 'TBRTransactionStatus',
-    required: false,
   })
-  @IsOptional()
-  @IsEnum(TBRTransactionStatus)
   status?: TBRTransactionStatus
 
   @ApiProperty({ type: Boolean, required: false })
@@ -42,31 +41,31 @@ export class GetPaymentsQuery extends QueryDto {
 }
 
 export class PaymentDto {
-  @ApiProperty({ type: String })
+  @ApiString()
   id!: string
 
-  @ApiProperty({ enum: TBRTransactionType, enumName: 'TBRTransactionType' })
+  @ApiEnum(TBRTransactionType, { enumName: 'TBRTransactionType' })
   type!: TBRTransactionType
 
-  @ApiProperty({ enum: TBRTransactionStatus, enumName: 'TBRTransactionStatus' })
+  @ApiEnum(TBRTransactionStatus, { enumName: 'TBRTransactionStatus' })
   status!: TBRTransactionStatus
 
   @ApiProperty({ type: Number })
   totalPrice!: number
 
-  @ApiProperty({ type: String })
+  @ApiString()
   debtorNationalId!: string
 
-  @ApiProperty({ type: String, nullable: true })
-  paidAt!: string | null
+  @ApiOptionalDateTime({ nullable: true })
+  paidAt!: Date | null
 
-  @ApiProperty({ type: String })
-  createdAt!: string
+  @ApiDateTime()
+  createdAt!: Date
 
-  @ApiProperty({ type: String })
+  @ApiString()
   chargeBase!: string
 
-  @ApiProperty({ type: String })
+  @ApiString()
   chargeCategory!: string
 
   @ApiProperty({ type: String, nullable: true })

@@ -18,10 +18,12 @@ import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
   CommunicationChannelDto,
+} from '../../models/communication-channel.model'
+import {
   CreateCommunicationChannelDto,
   GetCommunicationChannelsDto,
   UpdateCommunicationChannelDto,
-} from '../../models/communication-channel.model'
+} from './dto/communication-channel.dto'
 import { ICommunicationChannelService } from './communication-channel.service.interface'
 
 @Controller({

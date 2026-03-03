@@ -20,11 +20,13 @@ import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
+  SubscriberDto,
+} from '../../models/subscriber.model'
+import {
   CreateSubscriberAdminDto,
   GetSubscribersWithPagingResponse,
-  SubscriberDto,
   UpdateSubscriberEndDateDto,
-} from '../../models/subscriber.model'
+} from '../subscribers/dto/subscriber.dto'
 import { ISubscriberAdminService } from './subscriber-admin.service.interface'
 
 @ApiBearerAuth()

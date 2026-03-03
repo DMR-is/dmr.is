@@ -1,13 +1,3 @@
-import { Type } from 'class-transformer'
-import {
-  IsArray,
-  IsEmail,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-  ValidateNested,
-} from 'class-validator'
 import {
   BelongsTo,
   Column,
@@ -17,16 +7,13 @@ import {
 } from 'sequelize-typescript'
 
 import {
-  ApiProperty,
-  IntersectionType,
-  PartialType,
-  PickType,
-} from '@nestjs/swagger'
-
+  ApiOptionalString,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
-import { DetailedDto } from '../core/dto/detailed.dto'
 import { AdvertModel } from './advert.model'
 
 type CommunicationChannelAttributes = {
@@ -54,27 +41,23 @@ export class CommunicationChannelModel extends BaseModel<
 > {
   @ForeignKey(() => AdvertModel)
   @Column({ type: DataType.UUID, allowNull: false })
-  @ApiProperty({ type: String })
   advertId!: string
 
   @Column({
     type: DataType.TEXT,
   })
-  @ApiProperty({ type: String })
   email!: string
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false })
   name?: string | null
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  @ApiProperty({ type: String, required: false })
   phone?: string | null
 
   @BelongsTo(() => AdvertModel)
@@ -95,49 +78,19 @@ export class CommunicationChannelModel extends BaseModel<
   }
 }
 
-export class CreateCommunicationChannelDto {
-  @ApiProperty({ type: String })
-  @IsEmail()
+export class CommunicationChannelDto {
+  @ApiUUId()
+  id!: string
+
+  @ApiUUId()
+  advertId!: string
+
+  @ApiString()
   email!: string
 
-  @ApiProperty({ type: String, required: false })
-  @IsOptional()
-  @IsString()
-  @MinLength(0)
-  @MaxLength(255)
-  name?: string
+  @ApiOptionalString({ nullable: true })
+  name?: string | null
 
-  @ApiProperty({
-    type: String,
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(0)
-  @MaxLength(255)
-  phone?: string
+  @ApiOptionalString({ nullable: true })
+  phone?: string | null
 }
-
-export class CommunicationChannelDto extends PickType(
-  CommunicationChannelModel,
-  ['id', 'advertId', 'email', 'name', 'phone'],
-) {}
-
-export class GetCommunicationChannelsDto {
-  @ApiProperty({
-    type: [CommunicationChannelDto],
-  })
-  @IsArray()
-  @Type(() => CommunicationChannelDto)
-  @ValidateNested({ each: true })
-  channels!: CommunicationChannelDto[]
-}
-
-export class CommunicationChannelDetailedDto extends IntersectionType(
-  CommunicationChannelDto,
-  DetailedDto,
-) {}
-
-export class UpdateCommunicationChannelDto extends PartialType(
-  CreateCommunicationChannelDto,
-) {}

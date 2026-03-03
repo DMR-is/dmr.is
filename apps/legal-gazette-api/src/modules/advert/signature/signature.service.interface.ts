@@ -1,8 +1,8 @@
+import { SignatureDto } from '../../../models/signature.model'
 import {
   CreateSignatureDto,
-  SignatureDto,
   UpdateSignatureDto,
-} from '../../../models/signature.model'
+} from './dto/signature.dto'
 
 export interface ISignatureService {
   getSignatureById(id: string): Promise<SignatureDto>
