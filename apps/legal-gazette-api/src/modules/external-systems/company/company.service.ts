@@ -6,6 +6,7 @@ import { formatDate } from '@dmr.is/utils-server/serverUtils'
 import { numberFormat } from '@dmr.is/utils-shared/format/number'
 
 import { SYSTEM_ACTOR } from '../../../core/constants'
+import { AdvertTemplateType } from '../../../models/advert.model'
 import { StatusIdEnum } from '../../../models/status.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { ICommentService } from '../../comment/comment.service.interface'
@@ -21,7 +22,6 @@ import {
   getNextWeekdayWithLeadTime,
   WeekdayEnum,
 } from './utils'
-import { AdvertTemplateType } from '../../../models/advert.model'
 
 const LOGGING_CONTEXT = 'CompanyService'
 
@@ -61,8 +61,6 @@ export class CompanyService implements ICompanyService {
     ]
 
     const { announcementDate } = body
-
-
 
     const intro = `<p>Eftirtalin hlutafélög og einkahlutafélög hafa sent hlutafélagaskrá tilkynningar í ${formatDate(announcementDate, 'MMMM yyyy')}, samanber skýringar á táknum hér fyrir neðan:</p>`
 
