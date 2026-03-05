@@ -107,6 +107,7 @@ export enum RitstjornTabs {
 export const RecallAdvertTypes = [
   AdvertTemplateType.RECALLBANKRUPTCY,
   AdvertTemplateType.RECALLDECEASED,
+  AdvertTemplateType.DIVISIONENDING,
 ]
 
 export const DivisionMeetingAdvertTypes = [

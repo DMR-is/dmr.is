@@ -27,6 +27,7 @@ import {
   Route,
 } from '../../lib/constants'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { RelatedAdvertsContainer } from './AdvertsRelatedContainer'
 
 type AdvertContainerProps = {
   advertId: string
@@ -231,6 +232,7 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
           />
 
           <Text variant="h2">{advert.title}</Text>
+          {advert.caseId && <RelatedAdvertsContainer caseId={advert?.caseId} advertId={advert.id} />}
         </Stack>
         <AdvertFormAlert status={advert.status} canEdit={advert.canEdit} />
         <AdvertFormAccordion items={items} />
