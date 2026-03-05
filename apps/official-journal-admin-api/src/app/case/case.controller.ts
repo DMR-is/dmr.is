@@ -1007,6 +1007,14 @@ export class CaseController {
         throw new HttpException('PDF generation failed', 500)
       }
 
+      if (res.writableEnded || res.destroyed) {
+        this.logger.warn('Client disconnected before PDF could be sent', {
+          caseId: id,
+          category: 'CaseController',
+        })
+        return
+      }
+
       res.set({
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="case-preview.pdf"`,
@@ -1020,6 +1028,10 @@ export class CaseController {
         error: error instanceof Error ? error.message : error,
         category: 'CaseController',
       })
+
+      if (res.writableEnded || res.destroyed) {
+        return
+      }
 
       if (error instanceof HttpException) {
         throw error
