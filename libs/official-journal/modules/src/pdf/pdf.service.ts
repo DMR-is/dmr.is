@@ -1,7 +1,8 @@
 import { dirname, join } from 'node:path'
 import { PDFDocument, PDFFont, PDFPage, rgb, StandardFonts } from 'pdf-lib'
+import type { Browser, Page } from 'puppeteer'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common'
 
 import {
   CHROME_USER_AGENT,
@@ -31,14 +32,22 @@ import { getBrowser } from './puppetBrowser'
 const LOGGING_CATEGORY = 'pdf-service'
 
 @Injectable()
-export class PdfService implements IPdfService {
+export class PdfService implements OnModuleDestroy, IPdfService {
   private cachedPdfJs: any | null = null
+  private browser: Browser | null = null
 
   constructor(
     @Inject(IUtilityService)
     private readonly utilityService: IUtilityService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  async onModuleDestroy() {
+    if (this.browser) {
+      await this.browser.close()
+      this.browser = null
+    }
+  }
 
   private getPdfJsLegacy(): any {
     if (this.cachedPdfJs) {
@@ -348,10 +357,12 @@ export class PdfService implements IPdfService {
         const serialText = `Nr. ${advert.serial}`
         const rowFontSize = 10
         const leftX = headerLeftX
-        const rightX = headerRightX - font.widthOfTextAtSize(serialText, rowFontSize)
+        const rightX =
+          headerRightX - font.widthOfTextAtSize(serialText, rowFontSize)
         const centerX =
           headerLeftX +
-          (headerWidth - font.widthOfTextAtSize(pageNumberText, rowFontSize)) / 2
+          (headerWidth - font.widthOfTextAtSize(pageNumberText, rowFontSize)) /
+            2
 
         page.drawText(dateText, {
           x: leftX,
@@ -455,36 +466,45 @@ export class PdfService implements IPdfService {
     htmlContent: string,
     header?: string,
   ): Promise<ResultWrapper<Buffer>> {
-    const attempt = async () => {
+    const attempt = async (): Promise<Buffer> => {
+      // (Re)create browser if missing or disconnected
+      if (!this.browser || !this.browser.connected) {
+        this.logger.debug('Creating new browser instance', {
+          category: LOGGING_CATEGORY,
+        })
+        this.browser = await getBrowser()
+      }
+
+      let page: Page | null = null
+
       try {
-        const browser = await getBrowser()
-        try {
-          const page = await browser.newPage()
-          page.setDefaultTimeout(60000)
-          page.setDefaultNavigationTimeout(60000)
-          await page.setUserAgent(CHROME_USER_AGENT)
+        page = (await this.browser.newPage()) as Page
 
-          await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
-          await page.addStyleTag({ content: pdfCss })
+        page.setDefaultTimeout(60000)
+        page.setDefaultNavigationTimeout(60000)
+        await page.setUserAgent(CHROME_USER_AGENT)
 
-          await page.evaluate(async () => {
-            const images = Array.from(document.querySelectorAll('img'))
-            await Promise.all(
-              images.map((img) => {
-                if (img.complete) return Promise.resolve()
-                return new Promise<void>((resolve) => {
-                  img.addEventListener('load', () => resolve())
-                  img.addEventListener('error', () => {
-                    resolve() // Resolve anyway to not block PDF generation
-                  })
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+        await page.addStyleTag({ content: pdfCss })
+
+        await page.evaluate(async () => {
+          const images = Array.from(document.querySelectorAll('img'))
+          await Promise.all(
+            images.map((img) => {
+              if (img.complete) return Promise.resolve()
+              return new Promise<void>((resolve) => {
+                img.addEventListener('load', () => resolve())
+                img.addEventListener('error', () => {
+                  resolve() // Resolve anyway to not block PDF generation
                 })
-              }),
-            )
-          })
+              })
+            }),
+          )
+        })
 
-          if (header) {
-            const pdf = await page.pdf({
-              headerTemplate: `
+        if (header) {
+          const pdf = await page.pdf({
+            headerTemplate: `
               <div style="font-size:14px;
                           width:100%;
                           padding:35px 100px;
@@ -495,32 +515,21 @@ export class PdfService implements IPdfService {
                 ${header}
               </div>
             `,
-              footerTemplate: '<div></div>',
-              displayHeaderFooter: true,
-            })
-
-            return pdf
-          } else {
-            const pdf = await page.pdf()
-            return pdf
-          }
-        } catch (error) {
-          this.logger.error(`Failed to generate PDF`, {
-            category: LOGGING_CATEGORY,
-            error,
+            footerTemplate: '<div></div>',
+            displayHeaderFooter: true,
           })
 
-          throw error
-        } finally {
-          await browser.close()
+          return pdf
+        } else {
+          const pdf = await page.pdf()
+          return pdf
         }
-      } catch (error) {
-        this.logger.error(`Failed to launch browser for PDF generation`, {
-          category: LOGGING_CATEGORY,
-          error,
-        })
-
-        throw error
+      } finally {
+        try {
+          await page?.close({ runBeforeUnload: true })
+        } catch {
+          /* ignore */
+        }
       }
     }
 
@@ -544,6 +553,12 @@ export class PdfService implements IPdfService {
                   error: msg,
                 },
               )
+              try {
+                await this.browser?.close()
+              } catch {
+                /* ignore */
+              }
+              this.browser = null
             }
             throw err // let retryAsync back off and retry
           }
