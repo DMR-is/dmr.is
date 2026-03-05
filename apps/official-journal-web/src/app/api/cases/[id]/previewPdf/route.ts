@@ -40,7 +40,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    logger.error('Failed to generate PDF preview', {
+    logger.error('Failed to generate PDF preview.', {
       caseId: id,
       error: error instanceof Error ? error.message : error,
     })
