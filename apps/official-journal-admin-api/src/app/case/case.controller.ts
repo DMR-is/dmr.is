@@ -1000,18 +1000,32 @@ export class CaseController {
     @Param('id', new UUIDValidationPipe()) id: string,
     @Res() res: Response,
   ) {
-    const pdf = await this.caseService.generatePdfByCase(id)
+    try {
+      const pdf = await this.caseService.generatePdfByCase(id)
 
-    if (!pdf) {
+      if (!pdf || !Buffer.isBuffer(pdf)) {
+        throw new HttpException('PDF generation failed', 500)
+      }
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="case-preview.pdf"`,
+        'Content-Length': pdf.length,
+      })
+
+      res.send(pdf)
+    } catch (error) {
+      this.logger.error('Failed to generate PDF preview', {
+        caseId: id,
+        error: error instanceof Error ? error.message : error,
+        category: 'CaseController',
+      })
+
+      if (error instanceof HttpException) {
+        throw error
+      }
+
       throw new HttpException('PDF generation failed', 500)
     }
-
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="case-preview.pdf"`,
-      'Content-Length': pdf.length,
-    })
-
-    res.send(pdf)
   }
 }
