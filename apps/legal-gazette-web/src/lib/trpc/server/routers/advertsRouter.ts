@@ -96,6 +96,11 @@ export const advertsRouter = router({
         },
       })
     }),
+  getRelatedAdverts: protectedProcedure
+    .input(z.object({ caseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.api.getAdvertsByCaseId({ caseId: input.caseId})
+    }),
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
