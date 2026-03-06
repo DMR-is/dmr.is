@@ -1,6 +1,6 @@
 'use client'
 
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import { useEffect, useMemo, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 
@@ -77,7 +77,7 @@ export const NationalIdLookup = ({
     setNationalId(val)
   }
 
-  const isValidId = useMemo(() => Kennitala.isValid(nationalId), [nationalId])
+  const isValidId = useMemo(() => isValid(nationalId), [nationalId])
 
   const errorMessage =
     formState.errors.fields?.settlementFields?.nationalId?.message

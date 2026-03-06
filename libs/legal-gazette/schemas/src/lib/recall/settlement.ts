@@ -1,5 +1,5 @@
 import { isString } from 'class-validator'
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import * as z from 'zod'
 
 import { ApplicationRequirementStatementEnum } from '../constants'
@@ -25,7 +25,7 @@ export const settlementSchemaRefined = z.object({
     }),
   nationalId: z
     .string('Kennitala bús er nauðsynleg')
-    .refine((nationalId) => Kennitala.isValid(nationalId), {
+    .refine((nationalId) => isValid(nationalId), {
       message: 'Kennitala bús er nauðsynleg',
     }),
   address: z

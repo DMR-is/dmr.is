@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import * as z from 'zod'
 
 import { protectedProcedure, router } from '../trpc'
@@ -18,7 +18,7 @@ export const nationalRegistryRouter = router({
     .mutation(async ({ input, ctx }): Promise<string> => {
       const { nationalId } = input
 
-      if (!Kennitala.isValid(nationalId)) {
+      if (!isValid(nationalId)) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Invalid national ID format',

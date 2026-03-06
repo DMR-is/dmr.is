@@ -1,4 +1,4 @@
-import * as Kennitala from 'kennitala'
+import { isPersonKennitala } from 'kennitala'
 import get from 'lodash/get'
 
 import {
@@ -82,7 +82,7 @@ export class PriceCalculatorService implements IPriceCalculatorService {
   }
 
   async getChargeCategory(nationalId: string): Promise<string> {
-    const isPerson = Kennitala.isPersonKennitala(nationalId)
+    const isPerson = isPersonKennitala(nationalId)
 
     // If it's a person, use person charge category
     if (isPerson) {

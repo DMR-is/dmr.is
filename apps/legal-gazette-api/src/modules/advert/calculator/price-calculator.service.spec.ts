@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import { isPersonKennitala } from 'kennitala'
 
 import { InternalServerErrorException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
@@ -224,7 +224,7 @@ describe('PriceCalculatorService', () => {
         // eslint-disable-next-line local-rules/disallow-kennitalas
         const companyId = '4709201230' // Company ID
         tbrCompanySettingsModel.findOne.mockResolvedValue(null)
-        expect(Kennitala.isPersonKennitala(companyId)).toBe(false)
+        expect(isPersonKennitala(companyId)).toBe(false)
         const result = await service.getChargeCategory(companyId)
         expect(result).toBe('RL1')
         expect(tbrCompanySettingsModel.findOne).toHaveBeenCalled()
