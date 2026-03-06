@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import * as Kennitala from 'kennitala'
 import get from 'lodash/get'
 
 import {
