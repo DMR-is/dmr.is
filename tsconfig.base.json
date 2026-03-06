@@ -84,6 +84,9 @@
       ],
       "react-select/dist/declarations/src/Select": [
         "node_modules/react-select/dist/declarations/src/Select.d.ts"
+      ],
+      "kennitala": [
+        "node_modules/kennitala/dist/index.d.ts"
       ]
     }
   },
