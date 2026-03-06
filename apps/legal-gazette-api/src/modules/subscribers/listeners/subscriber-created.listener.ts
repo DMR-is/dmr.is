@@ -1,5 +1,4 @@
 import crypto from 'crypto'
-import Kennitala from 'kennitala'
 import { Sequelize } from 'sequelize-typescript'
 
 import { Inject, Injectable } from '@nestjs/common'

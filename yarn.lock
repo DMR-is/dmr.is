@@ -4109,7 +4109,7 @@ __metadata:
     date-fns: "npm:2.30.0"
     deepmerge: "npm:4.3.1"
     express: "npm:4.21.2"
-    kennitala: "npm:^2.0.0-beta.3"
+    kennitala: "npm:^2.0.6"
     lodash: "npm:4.17.23"
     nest-winston: "npm:^1.9.4"
     pdf-lib: "npm:1.17.1"
@@ -4159,7 +4159,7 @@ __metadata:
     downshift: "npm:^5.4.3"
     hypher: "npm:^0.2.5"
     jose: "npm:6.1.3"
-    kennitala: "npm:^2.0.0-beta.3"
+    kennitala: "npm:^2.0.6"
     libphonenumber-js: "npm:^1.10.53"
     next: "npm:16.1.6"
     next-auth: "npm:4.24.13"
@@ -4246,7 +4246,7 @@ __metadata:
   resolution: "@dmr.is/legal-gazette-schemas@workspace:libs/legal-gazette/schemas"
   dependencies:
     class-validator: "npm:^0.14.1"
-    kennitala: "npm:^2.0.0-beta.3"
+    kennitala: "npm:^2.0.6"
     zod: "npm:4.1.11"
   languageName: unknown
   linkType: soft
@@ -4281,7 +4281,7 @@ __metadata:
     downshift: "npm:^5.4.3"
     hypher: "npm:^0.2.5"
     jose: "npm:6.1.3"
-    kennitala: "npm:^2.0.0-beta.3"
+    kennitala: "npm:^2.0.6"
     libphonenumber-js: "npm:^1.10.53"
     next: "npm:16.1.6"
     next-auth: "npm:4.24.13"
@@ -4587,7 +4587,7 @@ __metadata:
     "@dmr.is/logging": "npm:*"
     "@types/mime-types": "npm:^2"
     class-validator: "npm:^0.14.1"
-    kennitala: "npm:^2.0.0-beta.3"
+    kennitala: "npm:^2.0.6"
     mime-types: "npm:^2.1.35"
   peerDependencies:
     "@nestjs/common": ^10.4.19
@@ -20693,10 +20693,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kennitala@npm:^2.0.0-beta.3":
-  version: 2.0.0-beta.3
-  resolution: "kennitala@npm:2.0.0-beta.3"
-  checksum: 10c0/52ec1c1e7e1526ea4d335d20063fb4d914db076fb8cc855b4a201ac751f685077c459c09e27838afe6deaeb27ab13ed80cbe226a5ffc36b4cdf94fafdfe757a2
+"kennitala@npm:^2.0.6":
+  version: 2.0.6
+  resolution: "kennitala@npm:2.0.6"
+  checksum: 10c0/e31fe4485af6975f5581823cb31d0a7ea359ed8762e711cdc1f10a5468b7e43b25b688213c23a37e42ee6a76dbd03b5ab35989e3d63fa70a39a342bc2c6f84d4
   languageName: node
   linkType: hard
 

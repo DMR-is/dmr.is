@@ -1,5 +1,5 @@
 import { isDateString } from 'class-validator'
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import { useEffect, useState } from 'react'
 import * as z from 'zod'
 
@@ -96,7 +96,7 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
       ...prev,
       nationalId: id,
     }))
-    if (Kennitala.isValid(id)) {
+    if (isValid(id)) {
       mutate(
         {
           nationalId: id,

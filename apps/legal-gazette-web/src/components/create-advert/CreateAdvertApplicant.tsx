@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import { useState } from 'react'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -38,7 +38,7 @@ export const CreateAdvertApplicant = ({ onChange }: Props) => {
     setVal(nationalId)
     if (nationalId.length !== 10) setName('')
     if (error) setError(false)
-    if (Kennitala.isValid(nationalId)) {
+    if (isValid(nationalId)) {
       return mutate({ nationalId: nationalId })
     }
 

@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import { useEffect, useState } from 'react'
 import * as z from 'zod'
 
@@ -68,7 +68,7 @@ export const CreateBankruptcySettlement = ({ onChange }: Props) => {
       ...prev,
       nationalId: id,
     }))
-    if (Kennitala.isValid(id)) {
+    if (isValid(id)) {
       mutate(
         {
           nationalId: id,

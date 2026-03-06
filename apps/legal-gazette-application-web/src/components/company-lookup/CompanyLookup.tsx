@@ -1,6 +1,6 @@
 'use client'
 import { isNotEmpty } from 'class-validator'
-import Kennitala from 'kennitala'
+import { isCompanyKennitala } from 'kennitala'
 import { useCallback, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import * as z from 'zod'
@@ -87,7 +87,7 @@ export const CompanyLookup = () => {
   const isValidLookupResults = useCallback(() => {
     if (!lookupResults) return false
 
-    if (!Kennitala.isCompany(lookupResults.companyNationalId)) {
+    if (!isCompanyKennitala(lookupResults.companyNationalId)) {
       return false
     }
 
@@ -179,11 +179,11 @@ export const CompanyLookup = () => {
         : { companyNationalId: id, companyName: '' },
     )
 
-    if (id.length === 10 && !Kennitala.isCompany(id)) {
+    if (id.length === 10 && !isCompanyKennitala(id)) {
       setInputError('Kennitala er ekki gild')
     }
 
-    if (Kennitala.isCompany(id)) {
+    if (isCompanyKennitala(id)) {
       toast.info('Leita að fyrirtæki með kennitölu: ' + id)
       mutate({ nationalId: id })
     }

@@ -1,4 +1,4 @@
-import Kennitala from 'kennitala'
+import { isValid } from 'kennitala'
 import * as z from 'zod'
 
 import {
@@ -24,7 +24,7 @@ export const updateUserInput = z
   })
 
 const applicantNationalId = z.object({
-  applicantNationalId: z.string().refine((val) => Kennitala.isValid(val), {
+  applicantNationalId: z.string().refine((val) => isValid(val), {
     message: 'Kennitala er ekki gild',
   }),
 })
