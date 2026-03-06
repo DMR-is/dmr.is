@@ -183,7 +183,7 @@ export const CompanyLookup = () => {
       setInputError('Kennitala er ekki gild')
     }
 
-    if (Kennitala.isCompanyKennitala(id)) {
+    if (isCompanyKennitala(id)) {
       toast.info('Leita að fyrirtæki með kennitölu: ' + id)
       mutate({ nationalId: id })
     }
