@@ -51,7 +51,7 @@ describe('PriceCalculatorService', () => {
     jest.clearAllMocks()
     // Mock Kennitala.isPerson - return true for IDs starting with 0-3, false for 4-9
     const mockedKennitala = Kennitala as jest.Mocked<typeof Kennitala>
-    mockedKennitala.isPerson = jest.fn((id: string) => {
+    mockedKennitala.isPersonKennitala = jest.fn((id: string) => {
       const firstDigit = parseInt(id[0], 10)
       return firstDigit <= 3
     })
@@ -224,7 +224,7 @@ describe('PriceCalculatorService', () => {
         // eslint-disable-next-line local-rules/disallow-kennitalas
         const companyId = '4709201230' // Company ID
         tbrCompanySettingsModel.findOne.mockResolvedValue(null)
-        expect(Kennitala.isPerson(companyId)).toBe(false)
+        expect(Kennitala.isPersonKennitala(companyId)).toBe(false)
         const result = await service.getChargeCategory(companyId)
         expect(result).toBe('RL1')
         expect(tbrCompanySettingsModel.findOne).toHaveBeenCalled()

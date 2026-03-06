@@ -87,7 +87,7 @@ export const CompanyLookup = () => {
   const isValidLookupResults = useCallback(() => {
     if (!lookupResults) return false
 
-    if (!Kennitala.isCompany(lookupResults.companyNationalId)) {
+    if (!Kennitala.isCompanyKennitala(lookupResults.companyNationalId)) {
       return false
     }
 
@@ -179,11 +179,11 @@ export const CompanyLookup = () => {
         : { companyNationalId: id, companyName: '' },
     )
 
-    if (id.length === 10 && !Kennitala.isCompany(id)) {
+    if (id.length === 10 && !Kennitala.isCompanyKennitala(id)) {
       setInputError('Kennitala er ekki gild')
     }
 
-    if (Kennitala.isCompany(id)) {
+    if (Kennitala.isCompanyKennitala(id)) {
       toast.info('Leita að fyrirtæki með kennitölu: ' + id)
       mutate({ nationalId: id })
     }

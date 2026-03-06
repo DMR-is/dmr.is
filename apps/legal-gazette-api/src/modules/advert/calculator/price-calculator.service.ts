@@ -42,7 +42,6 @@ export class PriceCalculatorService implements IPriceCalculatorService {
     private readonly tbrCompanySettingsModel: typeof TBRCompanySettingsModel,
   ) {}
 
-
   async getEstimatedPrice(advertId: string): Promise<number> {
     const advert = await this.advertModel.scope('detailed').findByPk(advertId, {
       include: [{ model: TypeModel, include: [{ model: FeeCodeModel }] }],
@@ -83,7 +82,7 @@ export class PriceCalculatorService implements IPriceCalculatorService {
   }
 
   async getChargeCategory(nationalId: string): Promise<string> {
-    const isPerson = Kennitala.isPerson(nationalId)
+    const isPerson = Kennitala.isPersonKennitala(nationalId)
 
     // If it's a person, use person charge category
     if (isPerson) {
