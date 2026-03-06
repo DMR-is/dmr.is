@@ -46,6 +46,8 @@ export class AdvertPublishedListener {
     this.logger.info('Creating TBR transaction for advert', {
       advertId: advert.id,
       context: LOGGING_CONTEXT,
+      advert: advert, // While we debug the publish error
+      publication: publication, // -- || --
     })
 
     const { feeCodeId, paymentData } =
