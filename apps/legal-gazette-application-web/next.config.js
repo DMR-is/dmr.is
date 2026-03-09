@@ -14,6 +14,8 @@ const nextConfig = {
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     resolveAlias: {
+      // Keep runtime resolution on JS while tsconfig paths points to .d.ts for types.
+      kennitala: 'kennitala/dist/index.js',
       'react-select': 'react-select/dist/react-select.esm.js',
       'react-select/creatable':
         'react-select/creatable/dist/react-select-creatable.esm.js',
