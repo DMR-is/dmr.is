@@ -1473,13 +1473,18 @@
             "name": "category",
             "required": false,
             "in": "query",
-            "schema": { "nullable": true, "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "excludeTypes",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           },
           {
             "name": "excludeUnassignable",
             "required": false,
             "in": "query",
-            "description": "Filter out unassignable advert types",
             "schema": { "type": "boolean" }
           }
         ],
@@ -1678,13 +1683,12 @@
             "name": "type",
             "required": false,
             "in": "query",
-            "schema": { "nullable": true, "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "excludeUnassignable",
             "required": false,
             "in": "query",
-            "description": "Filter out unassignable advert types",
             "schema": { "type": "boolean" }
           }
         ],
@@ -4104,7 +4108,8 @@
           "scheduledAt": { "type": "array", "items": { "type": "string" } },
           "categoryId": { "type": "string" },
           "typeId": { "type": "string" },
-          "courtDistrictId": { "type": "string" }
+          "courtDistrictId": { "type": "string" },
+          "feeQuantity": { "type": "number" }
         }
       },
       "AdvertTemplateType": {
@@ -4116,7 +4121,8 @@
           "DIVISION_MEETING_BANKRUPTCY",
           "DIVISION_MEETING_DECEASED",
           "DIVISION_ENDING",
-          "FORECLOSURE"
+          "FORECLOSURE",
+          "ADDITIONAL_ANNOUNCEMENT"
         ]
       },
       "CourtDistrictDto": {
@@ -4313,7 +4319,15 @@
       },
       "CommentTypeEnum": {
         "type": "string",
-        "enum": ["SUBMIT", "ASSIGN", "STATUS_UPDATE", "COMMENT", "PUBLISH"]
+        "enum": [
+          "SUBMIT",
+          "ASSIGN",
+          "STATUS_UPDATE",
+          "COMMENT",
+          "PUBLISH",
+          "DELETE_PUBLICATION",
+          "CREATE_PUBLICATION"
+        ]
       },
       "CommentDto": {
         "type": "object",
@@ -4462,7 +4476,9 @@
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           },
-          "totalPrice": { "type": "number" }
+          "totalPrice": { "type": "number" },
+          "estimatedPrice": { "type": "number" },
+          "feeQuantity": { "type": "number" }
         },
         "required": [
           "id",
@@ -4481,7 +4497,8 @@
           "type",
           "status",
           "hasInternalComments",
-          "comments"
+          "comments",
+          "estimatedPrice"
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
@@ -4784,7 +4801,8 @@
               "$ref": "#/components/schemas/CreateCommunicationChannelDto"
             }
           },
-          "settlement": { "$ref": "#/components/schemas/CreateSettlementDto" }
+          "settlement": { "$ref": "#/components/schemas/CreateSettlementDto" },
+          "feeQuantity": { "type": "number" }
         },
         "required": ["typeId", "title", "categoryId", "scheduledAt"]
       },

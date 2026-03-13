@@ -200,13 +200,18 @@
             "name": "category",
             "required": false,
             "in": "query",
-            "schema": { "nullable": true, "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "excludeTypes",
+            "required": false,
+            "in": "query",
+            "schema": { "type": "string" }
           },
           {
             "name": "excludeUnassignable",
             "required": false,
             "in": "query",
-            "description": "Filter out unassignable advert types",
             "schema": { "type": "boolean" }
           }
         ],
@@ -405,13 +410,12 @@
             "name": "type",
             "required": false,
             "in": "query",
-            "schema": { "nullable": true, "type": "string" }
+            "schema": { "format": "uuid", "type": "string" }
           },
           {
             "name": "excludeUnassignable",
             "required": false,
             "in": "query",
-            "description": "Filter out unassignable advert types",
             "schema": { "type": "boolean" }
           }
         ],

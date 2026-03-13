@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth } from '@nestjs/swagger'
@@ -14,10 +14,7 @@ import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
 import { PublicOrApplicationWebScopes } from '../../../core/guards/scope-guards/scopes.decorator'
 import { CategoryModel } from '../../../models/category.model'
-import {
-  TypeDto,
-  TypeModel,
-} from '../../../models/type.model'
+import { TypeDto, TypeModel } from '../../../models/type.model'
 import {
   GetTypesDto,
   GetTypesQueryDto,
@@ -65,12 +62,20 @@ export class TypeController extends BaseEntityController<
   @Get()
   @LGResponse({ operationId: 'getTypes', type: GetTypesDto })
   async getTypes(@Query() query?: GetTypesQueryDto): Promise<GetTypesDto> {
+    const where: WhereOptions<TypeModel> = {}
+    if (query?.excludeUnassignable && query?.excludeTypes) {
+      const merged = [
+        ...new Set([...UNASSIGNABLE_TYPE_IDS, ...query.excludeTypes]),
+      ]
+      where.id = { [Op.notIn]: merged }
+    } else if (query?.excludeUnassignable) {
+      where.id = { [Op.notIn]: UNASSIGNABLE_TYPE_IDS }
+    } else if (query?.excludeTypes) {
+      where.id = { [Op.notIn]: query.excludeTypes }
+    }
+
     const types = await super.findAll({
-      where: query?.excludeUnassignable
-        ? {
-            id: { [Op.notIn]: UNASSIGNABLE_TYPE_IDS },
-          }
-        : undefined,
+      where: where,
       include: [
         {
           model: CategoryModel,

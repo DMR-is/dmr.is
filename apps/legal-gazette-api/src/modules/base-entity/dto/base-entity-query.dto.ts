@@ -1,7 +1,11 @@
-import { Transform } from 'class-transformer'
-import { IsBoolean, IsOptional, IsUUID } from 'class-validator'
+import { IsUUID } from 'class-validator'
 
-import { ApiProperty } from '@nestjs/swagger'
+import {
+  ApiDtoArray,
+  ApiOptionalArray,
+  ApiOptionalBoolean,
+  ApiOptionalUUID,
+} from '@dmr.is/decorators'
 
 import { CategoryDto } from '../../../models/category.model'
 import { CourtDistrictDto } from '../../../models/court-district.model'
@@ -9,69 +13,41 @@ import { StatusDto } from '../../../models/status.model'
 import { TypeDto } from '../../../models/type.model'
 
 export class GetCategoriesQueryDto {
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
+  @ApiOptionalUUID()
   type?: string
 
-  @ApiProperty({
-    type: Boolean,
-    required: false,
-    description: 'Filter out unassignable advert types',
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true')
+  @ApiOptionalBoolean()
   excludeUnassignable?: boolean
 }
 
 export class GetCategoriesDto {
-  @ApiProperty({
-    type: [CategoryDto],
-  })
+  @ApiDtoArray(CategoryDto)
   categories!: CategoryDto[]
 }
 
 export class GetTypesDto {
-  @ApiProperty({ type: [TypeDto] })
+  @ApiDtoArray(TypeDto)
   types!: TypeDto[]
 }
 
 export class GetTypesQueryDto {
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    required: false,
-  })
-  @IsOptional()
-  @IsUUID()
+  @ApiOptionalUUID()
   category?: string
 
-  @ApiProperty({
-    type: Boolean,
-    required: false,
-    description: 'Filter out unassignable advert types',
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => value === 'true')
+  @ApiOptionalArray({ type: String })
+  @IsUUID(undefined, { each: true })
+  excludeTypes?: string[]
+
+  @ApiOptionalBoolean()
   excludeUnassignable?: boolean
 }
 
 export class GetStatusesDto {
-  @ApiProperty({
-    type: [StatusDto],
-  })
+  @ApiDtoArray(StatusDto)
   statuses!: StatusDto[]
 }
 
 export class GetCourtDistrictsDto {
-  @ApiProperty({
-    type: [CourtDistrictDto],
-  })
+  @ApiDtoArray(CourtDistrictDto)
   courtDistricts!: CourtDistrictDto[]
 }
