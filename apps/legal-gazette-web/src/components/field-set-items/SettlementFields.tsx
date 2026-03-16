@@ -9,11 +9,13 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import {
-  AdvertTemplateType,
-  ApplicationRequirementStatementEnum,
-} from '../../gen/fetch'
+import { ApplicationRequirementStatementEnum } from '../../gen/fetch'
 import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
+import {
+  BankruptcySettlementAdvertTypes,
+  DeceasedSettlementAdvertTypes,
+  DivisionEndingAdvertTypes,
+} from '../../lib/constants'
 import { AdvertSettlement } from '../../lib/trpc/types'
 import { requirementsStatementOptions } from '../create-advert/CreateBankruptcySettlement'
 
@@ -21,7 +23,7 @@ type SettlementFieldsProps = {
   advertId: string
   canEdit: boolean
   settlement: AdvertSettlement
-  templateType: AdvertTemplateType
+  templateType: string
 }
 
 export const SettlementFields = ({
@@ -119,8 +121,7 @@ export const SettlementFields = ({
           />
         </GridColumn>
 
-        {(templateType === AdvertTemplateType.RECALLBANKRUPTCY ||
-          templateType === AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY) && (
+        {BankruptcySettlementAdvertTypes.includes(templateType) && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               disabled={!canEdit}
@@ -140,8 +141,7 @@ export const SettlementFields = ({
           </GridColumn>
         )}
 
-        {(templateType === AdvertTemplateType.RECALLDECEASED ||
-          templateType === AdvertTemplateType.DIVISIONMEETINGDECEASED) && (
+        {DeceasedSettlementAdvertTypes.includes(templateType) && (
           <GridColumn span={['12/12', '6/12']}>
             <DatePicker
               disabled={!canEdit}
@@ -231,7 +231,7 @@ export const SettlementFields = ({
           />
         </GridColumn>
       </GridRow>
-      {templateType === AdvertTemplateType.DIVISIONENDING && (
+      {DivisionEndingAdvertTypes.includes(templateType) && (
         <GridRow>
           <GridColumn span={['12/12', '6/12']}>
             <Input

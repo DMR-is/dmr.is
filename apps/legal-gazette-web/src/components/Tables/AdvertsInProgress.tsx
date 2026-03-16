@@ -53,7 +53,7 @@ export const AdvertsInProgress = () => {
     skraning: formatDate(advert.createdAt),
     status: <StatusTag status={advert.status} />,
     tegund: advert.type.title,
-    efni: advert.title,
+    heiti: advert.title,
     sender: advert.createdBy,
     owner: advert.assignedUser?.name,
     href: `/ritstjorn/${advert.id}`,
@@ -110,7 +110,7 @@ export const AdvertsInProgress = () => {
           size: 'tiny',
         },
         {
-          field: 'efni',
+          field: 'heiti',
           children: formatMessage(ritstjornTableMessages.columns.content),
         },
         {

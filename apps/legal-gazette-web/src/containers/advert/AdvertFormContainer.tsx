@@ -33,12 +33,16 @@ type AdvertContainerProps = {
   advertId: string
 }
 
-const mapTemplateType = (type: AdvertTemplateType): string => {
+const mapTemplateType = (type: string): string => {
   switch (type) {
     case AdvertTemplateType.COMMON:
       return 'Almennt'
     case AdvertTemplateType.DIVISIONENDING:
       return 'Skiptalok'
+    case 'DIVISION_ENDING_BANKRUPTCY':
+      return 'Skiptalok þrotabús'
+    case 'DIVISION_ENDING_DECEASED':
+      return 'Skiptalok dánarbús'
     case AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY:
       return 'Skiptafundur þrotabús'
     case AdvertTemplateType.DIVISIONMEETINGDECEASED:
@@ -54,8 +58,8 @@ const mapTemplateType = (type: AdvertTemplateType): string => {
   return 'Óþekkt sniðmát'
 }
 
-const showFeeCode = (templateType: AdvertTemplateType) => {
-  const toshow = [
+const showFeeCode = (templateType: string) => {
+  const toshow: readonly string[] = [
     AdvertTemplateType.FORECLOSURE,
     AdvertTemplateType.ADDITIONALANNOUNCEMENT,
   ]
@@ -232,7 +236,12 @@ export function AdvertFormContainer({ advertId }: AdvertContainerProps) {
           />
 
           <Text variant="h2">{advert.title}</Text>
-          {advert.caseId && <RelatedAdvertsContainer caseId={advert?.caseId} advertId={advert.id} />}
+          {advert.caseId && (
+            <RelatedAdvertsContainer
+              caseId={advert?.caseId}
+              advertId={advert.id}
+            />
+          )}
         </Stack>
         <AdvertFormAlert status={advert.status} canEdit={advert.canEdit} />
         <AdvertFormAccordion items={items} />
