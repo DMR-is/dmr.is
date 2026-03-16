@@ -194,7 +194,7 @@ export class CompanyService implements ICompanyService {
     const advert = await this.advertService.createAdvert({
       templateType: AdvertTemplateType.ADDITIONAL_ANNOUNCEMENT,
       statusId: StatusIdEnum.READY_FOR_PUBLICATION,
-      title: `Aukatilkynningar hlutafélaga`,
+      title: `Aukatilkynningar hlutafélaga - ${formatDate(announcementDate, 'MMMM yyyy')}`,
       typeId: '8CF1CD80-4F20-497F-8992-B32424AB82D4',
       categoryId: 'c2430ac0-a18f-4363-be88-b6de46b857b9',
       createdBy: body.responsibleParty.name,
