@@ -35,8 +35,8 @@ import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { StatusIdEnum } from '../core/enums/status.enum'
+import { getAdvertHtmlMarkup } from '../core/html/advert-html'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
-import { getAdvertHtmlMarkup } from './advert-html'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,

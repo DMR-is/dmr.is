@@ -9,9 +9,9 @@ import {
   SettlementType,
 } from '@dmr.is/legal-gazette-schemas'
 
-import type { AdvertModel } from './advert.model'
-import { AdvertTemplateType } from './advert.model'
-import { AdvertVersionEnum } from './advert-publication.model'
+import type { AdvertModel } from '../../models/advert.model'
+import { AdvertTemplateType } from '../../models/advert.model'
+import { AdvertVersionEnum } from '../../models/advert-publication.model'
 
 type HTMLVersion = 'A' | 'B' | 'C'
 
@@ -265,17 +265,11 @@ export function getAdvertHtmlMarkup(
         templateType,
       })
     case LegalGazetteHTMLTemplates.COMMON:
-    default: {
-      console.log({
-        ...baseProps,
-        content: model.content ?? '',
-        templateType: LegalGazetteHTMLTemplates.COMMON,
-      })
+    default:
       return getAdvertHTMLMarkup({
         ...baseProps,
         content: model.content ?? '',
         templateType: LegalGazetteHTMLTemplates.COMMON,
       })
-    }
   }
 }
