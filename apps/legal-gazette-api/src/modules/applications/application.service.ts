@@ -111,7 +111,7 @@ export class ApplicationService implements IApplicationService {
           : undefined,
       },
       content: parsed.fields.html,
-      title: parsed.fields.caption,
+      title: `${parsed.fields.type.title} - ${parsed.fields.caption}`,
       communicationChannels: parsed.communicationChannels,
       scheduledAt: parsed.publishingDates.map(
         (publishingDate) => new Date(publishingDate),

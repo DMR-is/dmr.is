@@ -35,8 +35,8 @@ import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
 import { LegalGazetteModels } from '../core/constants'
 import { StatusIdEnum } from '../core/enums/status.enum'
-import { getAdvertHtmlMarkup } from '../core/templates/html'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
+import { getAdvertHtmlMarkup } from './advert-html'
 import {
   AdvertPublicationDto,
   AdvertPublicationModel,
@@ -79,7 +79,7 @@ export enum AdvertTemplateType {
   DIVISION_MEETING_DECEASED = 'DIVISION_MEETING_DECEASED',
   DIVISION_ENDING = 'DIVISION_ENDING',
   FORECLOSURE = 'FORECLOSURE',
-  ADDITIONAL_ANNOUNCEMENT = 'ADDITIONAL_ANNOUNCEMENT'
+  ADDITIONAL_ANNOUNCEMENT = 'ADDITIONAL_ANNOUNCEMENT',
 }
 
 type AdvertAttributes = {
@@ -487,18 +487,16 @@ export class AdvertModel extends BaseModel<
     }
 
     try {
-      if (version) {
-        return getAdvertHtmlMarkup(this, version)
-      }
+      const resolvedVersion =
+        version ??
+        this.publications
+          .filter((pub) => pub.publishedAt !== null)
+          .sort((a, b) => {
+            if (!a.publishedAt || !b.publishedAt) return 0
+            return b.publishedAt.getTime() - a.publishedAt.getTime()
+          })[0]?.versionLetter
 
-      const latestPub = this.publications
-        .filter((pub) => pub.publishedAt !== null)
-        .sort((a, b) => {
-          if (!a.publishedAt || !b.publishedAt) return 0
-          return b.publishedAt.getTime() - a.publishedAt.getTime()
-        })[0]
-
-      return getAdvertHtmlMarkup(this, latestPub?.versionLetter)
+      return getAdvertHtmlMarkup(this, resolvedVersion)
     } catch (error) {
       const logger = getLogger('AdvertModel')
       const message = error instanceof Error ? error.message : 'Unknown error'

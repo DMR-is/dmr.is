@@ -104,13 +104,29 @@ export enum RitstjornTabs {
   COMPLETED = 'klaradar',
 }
 
-export const RecallAdvertTypes = [
-  AdvertTemplateType.RECALLBANKRUPTCY,
-  AdvertTemplateType.RECALLDECEASED,
+export const DivisionEndingAdvertTypes: readonly string[] = [
   AdvertTemplateType.DIVISIONENDING,
+  'DIVISION_ENDING_BANKRUPTCY',
+  'DIVISION_ENDING_DECEASED',
 ]
 
-export const DivisionMeetingAdvertTypes = [
+export const BankruptcySettlementAdvertTypes: readonly string[] = [
+  AdvertTemplateType.RECALLBANKRUPTCY,
+  AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY,
+]
+
+export const DeceasedSettlementAdvertTypes: readonly string[] = [
+  AdvertTemplateType.RECALLDECEASED,
+  AdvertTemplateType.DIVISIONMEETINGDECEASED,
+]
+
+export const RecallAdvertTypes: readonly string[] = [
+  AdvertTemplateType.RECALLBANKRUPTCY,
+  AdvertTemplateType.RECALLDECEASED,
+  ...DivisionEndingAdvertTypes,
+]
+
+export const DivisionMeetingAdvertTypes: readonly string[] = [
   AdvertTemplateType.DIVISIONMEETINGBANKRUPTCY,
   AdvertTemplateType.DIVISIONMEETINGDECEASED,
   AdvertTemplateType.RECALLBANKRUPTCY,
