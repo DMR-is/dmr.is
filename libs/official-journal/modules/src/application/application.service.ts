@@ -35,6 +35,7 @@ import {
   PresignedUrlResponse,
   S3UploadFilesResponse,
   UpdateApplicationBody,
+  UpdateCaseBody,
   UserDto,
 } from '@dmr.is/shared-dto'
 import { IAWSService } from '@dmr.is/shared-modules'
@@ -65,6 +66,18 @@ import { applicationCaseMigrate } from './migrations'
 import { wordBufferToHtml } from './utils'
 
 const LOGGING_CATEGORY = 'application-service'
+
+const REGULATION_APPLICATION_TYPES = [
+  'base_regulation',
+  'amending_regulation',
+] as const
+
+function isRegulationApplication(application: Application): boolean {
+  return REGULATION_APPLICATION_TYPES.includes(
+    application.answers
+      .applicationType as (typeof REGULATION_APPLICATION_TYPES)[number],
+  )
+}
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -130,7 +143,7 @@ export class ApplicationService implements IApplicationService {
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
     const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`, // localhost:3333
       {
         method: 'GET',
       },
@@ -257,31 +270,16 @@ export class ApplicationService implements IApplicationService {
         await this.getApplication(applicationId),
       )
 
-      try {
-        if (application.answers.misc?.mainTextAsFile) {
-          const mainTextAsHtml = await this.getMainTextAttachment(applicationId)
-          if (mainTextAsHtml) {
-            application.answers.advert.html = mainTextAsHtml
-          }
-        }
-      } catch (e) {
-        // noop
-      }
+      const updateBody = await this.buildUpdateCaseBody(
+        caseLookup.id,
+        applicationId,
+        application,
+      )
 
       ResultWrapper.unwrap(
         await this.caseService.updateCase(
           caseLookup.id,
-          {
-            caseId: caseLookup.id,
-            applicationId: applicationId,
-            advertTitle: application.answers.advert.title,
-            departmentId: application.answers.advert.department.id,
-            advertTypeId: application.answers.advert.type.id,
-            requestedPublicationDate: application.answers.advert.requestedDate,
-            message: application.answers.advert.message,
-            categoryIds: application.answers.advert.categories.map((c) => c.id),
-            advertHtml: application.answers.advert.html,
-          },
+          updateBody,
           transaction,
         ),
       )
@@ -373,6 +371,51 @@ export class ApplicationService implements IApplicationService {
     }
 
     return mainTextAsHtml
+  }
+
+  /**
+   * Builds the UpdateCaseBody for either ad or regulation applications.
+   * Both types use answers.advert data for shared fields.
+   * Regulation applications additionally set applicationType and regulationDraftId.
+   */
+  private async buildUpdateCaseBody(
+    caseId: string,
+    applicationId: string,
+    application: Application,
+  ): Promise<UpdateCaseBody> {
+    // For ad applications, optionally convert Word doc to HTML
+    if (!isRegulationApplication(application)) {
+      try {
+        if (application.answers.misc?.mainTextAsFile) {
+          const mainTextAsHtml = await this.getMainTextAttachment(applicationId)
+          if (mainTextAsHtml) {
+            application.answers.advert.html = mainTextAsHtml
+          }
+        }
+      } catch (e) {
+        // noop
+      }
+    }
+
+    const isRegulation = isRegulationApplication(application)
+
+    return {
+      caseId,
+      applicationId,
+      advertTitle: application.answers.advert.title,
+      departmentId: application.answers.advert?.department?.id,
+      advertTypeId: application.answers.advert?.type?.id,
+      requestedPublicationDate: application.answers.advert?.requestedDate,
+      message: application.answers.advert?.message,
+      categoryIds: application.answers.advert?.categories?.map((c) => c.id),
+      advertHtml: application.answers.advert.html,
+      ...(isRegulation
+        ? {
+            applicationType: application.answers.applicationType,
+            regulationDraftId: application.answers.regulation?.draftId,
+          }
+        : {}),
+    }
   }
 
   /**

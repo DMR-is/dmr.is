@@ -4,6 +4,8 @@ import { CaseStatusEnum } from '../../../../gen/fetch'
 import { getParamsWithoutNullOrEmpty } from '../../../utils'
 import { protectedProcedure, router } from '../trpc'
 
+import { TRPCError } from '@trpc/server'
+
 export const casesRouter = router({
   createCase: protectedProcedure
     .input(
@@ -322,6 +324,140 @@ export const casesRouter = router({
     return ctx.api.getFeeCodes()
   }),
 
+  getRegulationDraft: protectedProcedure
+    .input(z.object({ caseId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.api.getCaseRegulationDraft({ caseId: input.caseId })
+    }),
+
+  updateRegulationDraft: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        draftingStatus: z.string(),
+        title: z.string(),
+        text: z.string(),
+        draftingNotes: z.string(),
+        name: z.string().optional(),
+        comments: z.string().optional(),
+        idealPublishDate: z.string().optional(),
+        ministry: z.string().optional(),
+        signatureDate: z.string().optional(),
+        signatureText: z.string().optional(),
+        effectiveDate: z.string().optional(),
+        type: z.string().optional(),
+        authors: z.array(z.string()).optional(),
+        signedDocumentUrl: z.string().optional(),
+        lawChapters: z.array(z.string()).optional(),
+        fastTrack: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { caseId, ...body } = input
+      await ctx.api.updateCaseRegulationDraft({
+        caseId,
+        updateRegulationDraftBody: body,
+      })
+    }),
+
+  deleteRegulationDraft: protectedProcedure
+    .input(z.object({ caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.deleteCaseRegulationDraft({ caseId: input.caseId })
+    }),
+
+  createRegulationChange: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        regulation: z.string(),
+        date: z.string(),
+        title: z.string(),
+        text: z.string(),
+        comments: z.string().optional(),
+        diff: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { caseId, ...body } = input
+      await ctx.api.createCaseRegulationChange({
+        caseId,
+        createRegulationChangeBody: body,
+      })
+    }),
+
+  updateRegulationChange: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        changeId: z.string(),
+        date: z.string().optional(),
+        title: z.string().optional(),
+        text: z.string().optional(),
+        comments: z.string().optional(),
+        diff: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { caseId, changeId, ...body } = input
+      await ctx.api.updateCaseRegulationChange({
+        caseId,
+        changeId,
+        updateRegulationChangeBody: body,
+      })
+    }),
+
+  deleteRegulationChange: protectedProcedure
+    .input(z.object({ caseId: z.string(), changeId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.deleteCaseRegulationChange({
+        caseId: input.caseId,
+        changeId: input.changeId,
+      })
+    }),
+
+  createRegulationCancel: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        regulation: z.string(),
+        date: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { caseId, ...body } = input
+      await ctx.api.createCaseRegulationCancel({
+        caseId,
+        createRegulationCancelBody: body,
+      })
+    }),
+
+  updateRegulationCancel: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        cancelId: z.string(),
+        date: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { caseId, cancelId, ...body } = input
+      await ctx.api.updateCaseRegulationCancel({
+        caseId,
+        cancelId,
+        updateRegulationCancelBody: body,
+      })
+    }),
+
+  deleteRegulationCancel: protectedProcedure
+    .input(z.object({ caseId: z.string(), cancelId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.deleteCaseRegulationCancel({
+        caseId: input.caseId,
+        cancelId: input.cancelId,
+      })
+    }),
+
   getAdvert: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -348,4 +484,49 @@ export const casesRouter = router({
     .query(async ({ ctx, input }) => {
       return ctx.api.getAdverts(input)
     }),
+
+  getPublicRegulationText: protectedProcedure
+    .input(z.object({ regulation: z.string() }))
+    .query(async ({ input }) => {
+      const baseUrl = process.env.REGULATION_BASE_API_PATH
+      if (!baseUrl) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'REGULATION_BASE_API_PATH not configured',
+        })
+      }
+
+      // Convert "0665/2020" to "0665-2020" for the API URL
+      const slug = input.regulation.replace('/', '-')
+      const url = `${baseUrl}/api/v1/regulation/${slug}/current`
+
+      const res = await fetch(url)
+      if (!res.ok) {
+        return null
+      }
+
+      const data = await res.json()
+      return {
+        title: data.title as string,
+        text: data.text as string,
+      }
+    }),
+
+  getLawChapters: protectedProcedure.query(async () => {
+    const baseUrl = process.env.REGULATION_BASE_API_PATH
+    if (!baseUrl) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'REGULATION_BASE_API_PATH not configured',
+      })
+    }
+
+    const res = await fetch(`${baseUrl}/api/v1/lawchapters`)
+    if (!res.ok) {
+      return []
+    }
+
+    const data: Array<{ name: string; slug: string }> = await res.json()
+    return data
+  }),
 })

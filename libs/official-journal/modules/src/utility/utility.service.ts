@@ -327,6 +327,24 @@ export class UtilityService implements IUtilityService {
 
   @LogAndHandle()
   @Transactional()
+  async departmentLookupByTitle(
+    title: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<AdvertDepartmentModel>> {
+    const department = await this.departmentModel.findOne({
+      where: { title },
+      transaction,
+    })
+
+    if (!department) {
+      throw new NotFoundException(`Department with title "${title}" not found`)
+    }
+
+    return ResultWrapper.ok(department)
+  }
+
+  @LogAndHandle()
+  @Transactional()
   async caseCommunicationStatusLookup(
     status: string,
     transaction?: Transaction,

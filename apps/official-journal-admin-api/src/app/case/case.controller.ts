@@ -62,6 +62,8 @@ import {
   CreateCategory,
   CreateMainCategory,
   CreateMainCategoryCategories,
+  CreateRegulationCancelBody,
+  CreateRegulationChangeBody,
   DefaultSearchParams,
   DeleteAdvertAppendixBody,
   DepartmentEnum,
@@ -94,6 +96,7 @@ import {
   PostApplicationAttachmentBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  RegulationDraft,
   S3UploadFileResponse,
   TransactionFeeCodesResponse,
   UpdateAdvertAppendixBody,
@@ -111,6 +114,9 @@ import {
   UpdateFasttrackBody,
   UpdateMainCategory,
   UpdatePublishDateBody,
+  UpdateRegulationCancelBody,
+  UpdateRegulationChangeBody,
+  UpdateRegulationDraftBody,
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
@@ -749,6 +755,120 @@ export class CaseController {
   ) {
     ResultWrapper.unwrap(
       await this.caseService.deleteCaseAddition(body.additionId, caseId),
+    )
+  }
+
+  @Get(':caseId/regulation-draft')
+  @ApiOperation({ operationId: 'getCaseRegulationDraft' })
+  @ApiResponse({ status: 200, type: RegulationDraft })
+  async getCaseRegulationDraft(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ): Promise<RegulationDraft> {
+    return ResultWrapper.unwrap(
+      await this.caseService.getRegulationDraft(caseId),
+    )
+  }
+
+  @Put(':caseId/regulation-draft')
+  @ApiOperation({ operationId: 'updateCaseRegulationDraft' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async updateCaseRegulationDraft(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: UpdateRegulationDraftBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateRegulationDraft(caseId, body),
+    )
+  }
+
+  @Delete(':caseId/regulation-draft')
+  @ApiOperation({ operationId: 'deleteCaseRegulationDraft' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async deleteCaseRegulationDraft(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(await this.caseService.deleteRegulationDraft(caseId))
+  }
+
+  @Post(':caseId/regulation-draft/changes')
+  @ApiOperation({ operationId: 'createCaseRegulationChange' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async createCaseRegulationChange(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateRegulationChangeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.createRegulationChange(caseId, body),
+    )
+  }
+
+  @Put(':caseId/regulation-draft/changes/:changeId')
+  @ApiOperation({ operationId: 'updateCaseRegulationChange' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async updateCaseRegulationChange(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('changeId', new UUIDValidationPipe()) changeId: string,
+    @Body() body: UpdateRegulationChangeBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateRegulationChange(caseId, changeId, body),
+    )
+  }
+
+  @Delete(':caseId/regulation-draft/changes/:changeId')
+  @ApiOperation({ operationId: 'deleteCaseRegulationChange' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async deleteCaseRegulationChange(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('changeId', new UUIDValidationPipe()) changeId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteRegulationChange(caseId, changeId),
+    )
+  }
+
+  @Post(':caseId/regulation-draft/cancels')
+  @ApiOperation({ operationId: 'createCaseRegulationCancel' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async createCaseRegulationCancel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: CreateRegulationCancelBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.createRegulationCancel(caseId, body),
+    )
+  }
+
+  @Put(':caseId/regulation-draft/cancels/:cancelId')
+  @ApiOperation({ operationId: 'updateCaseRegulationCancel' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async updateCaseRegulationCancel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('cancelId', new UUIDValidationPipe()) cancelId: string,
+    @Body() body: UpdateRegulationCancelBody,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.updateRegulationCancel(caseId, cancelId, body),
+    )
+  }
+
+  @Delete(':caseId/regulation-draft/cancels/:cancelId')
+  @ApiOperation({ operationId: 'deleteCaseRegulationCancel' })
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async deleteCaseRegulationCancel(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('cancelId', new UUIDValidationPipe()) cancelId: string,
+  ): Promise<void> {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteRegulationCancel(caseId, cancelId),
     )
   }
 

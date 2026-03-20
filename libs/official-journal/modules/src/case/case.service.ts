@@ -26,6 +26,8 @@ import {
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
+  CreateRegulationCancelBody,
+  CreateRegulationChangeBody,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
@@ -47,6 +49,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  RegulationDraft,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
@@ -59,6 +62,9 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdatePublishDateBody,
+  UpdateRegulationCancelBody,
+  UpdateRegulationChangeBody,
+  UpdateRegulationDraftBody,
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
@@ -90,6 +96,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
+import { IRegulationsAdminService } from '../regulations-admin/regulations-admin.service.interface'
 import { IReindexRunnerService } from '../search'
 import { SignatureModel } from '../signature/models/signature.model'
 import { SignatureMemberModel } from '../signature/models/signature-member.model'
@@ -180,6 +187,9 @@ export class CaseService implements ICaseService {
 
     @Inject(IReindexRunnerService)
     private readonly runner: IReindexRunnerService,
+
+    @Inject(IRegulationsAdminService)
+    private readonly regulationsAdminService: IRegulationsAdminService,
   ) {
     this.logger.info('Using CaseService')
   }
@@ -281,11 +291,13 @@ export class CaseService implements ICaseService {
   }
 
   @LogAndHandle()
-  updateCaseFasttrack(
+  async updateCaseFasttrack(
     caseId: string,
     body: UpdateFasttrackBody,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateFasttrack(caseId, body)
+    const result = await this.updateService.updateFasttrack(caseId, body)
+    await this.syncRegulationDraft(caseId, { fastTrack: body.fasttrack })
+    return result
   }
 
   private async getCasesSqlQuery(params: GetCasesQuery) {
@@ -693,12 +705,28 @@ export class CaseService implements ICaseService {
   }
   @LogAndHandle()
   @Transactional()
-  updateCaseDepartment(
+  async updateCaseDepartment(
     caseId: string,
     body: UpdateCaseDepartmentBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseDepartment(caseId, body, transaction)
+    const result = await this.updateService.updateCaseDepartment(
+      caseId,
+      body,
+      transaction,
+    )
+
+    const deptResult = await this.utilityService.departmentLookup(
+      body.departmentId,
+      transaction,
+    )
+    if (deptResult.result.ok) {
+      await this.syncRegulationDraft(caseId, {
+        ministry: deptResult.result.value.title,
+      })
+    }
+
+    return result
   }
   @LogAndHandle()
   @Transactional()
@@ -789,12 +817,18 @@ export class CaseService implements ICaseService {
   }
   @LogAndHandle()
   @Transactional()
-  updateCaseTitle(
+  async updateCaseTitle(
     caseId: string,
     body: UpdateTitleBody,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    return this.updateService.updateCaseTitle(caseId, body, transaction)
+    const result = await this.updateService.updateCaseTitle(
+      caseId,
+      body,
+      transaction,
+    )
+    await this.syncRegulationDraft(caseId, { title: body.title })
+    return result
   }
   @LogAndHandle()
   @Transactional()
@@ -2294,5 +2328,208 @@ export class CaseService implements ICaseService {
       url: signedUrl.url,
       attachmentId: applicationAttachmentCreation.id,
     })
+  }
+
+  @LogAndHandle()
+  async getRegulationDraft(
+    caseId: string,
+  ): Promise<ResultWrapper<RegulationDraft>> {
+    const caseRecord = await this.caseModel.findByPk(caseId, {
+      attributes: ['regulationDraftId'],
+    })
+
+    if (!caseRecord) {
+      return ResultWrapper.err({
+        code: 404,
+        message: `Case not found: ${caseId}`,
+      })
+    }
+
+    if (!caseRecord.regulationDraftId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: `Case ${caseId} has no regulation draft`,
+      })
+    }
+
+    return this.regulationsAdminService.getDraft(caseRecord.regulationDraftId)
+  }
+
+  /**
+   * Syncs a partial update to the regulation draft if the case is a regulation case.
+   * Silently no-ops if the case has no regulation draft.
+   */
+  private async syncRegulationDraft(
+    caseId: string,
+    partial: Record<string, unknown>,
+  ): Promise<void> {
+    const caseRecord = await this.caseModel.findByPk(caseId, {
+      attributes: ['regulationDraftId', 'applicationType'],
+    })
+
+    if (
+      !caseRecord?.regulationDraftId ||
+      (caseRecord.applicationType !== 'base_regulation' &&
+        caseRecord.applicationType !== 'amending_regulation')
+    ) {
+      return
+    }
+
+    const draftResult = await this.regulationsAdminService.getDraft(
+      caseRecord.regulationDraftId,
+    )
+
+    if (!draftResult.result.ok) {
+      this.logger.warn(
+        `Failed to fetch regulation draft for sync on case<${caseId}>`,
+        { category: LOGGING_CATEGORY },
+      )
+      return
+    }
+
+    const draft = draftResult.result.value
+
+    await this.regulationsAdminService.updateDraft(
+      caseRecord.regulationDraftId,
+      {
+        draftingStatus: draft.draftingStatus,
+        title: (partial.title as string) ?? draft.title,
+        text: draft.text,
+        draftingNotes: draft.draftingNotes ?? '',
+        ministry: (partial.ministry as string) ?? draft.ministry,
+        signatureDate: (partial.signatureDate as string) ?? draft.signatureDate,
+        fastTrack: (partial.fastTrack as boolean) ?? draft.fastTrack,
+        lawChapters: draft.lawChapters?.map((c) => c.slug),
+        ...partial,
+      },
+    )
+  }
+
+  private async getRegulationDraftId(
+    caseId: string,
+  ): Promise<ResultWrapper<string>> {
+    const caseRecord = await this.caseModel.findByPk(caseId, {
+      attributes: ['regulationDraftId'],
+    })
+
+    if (!caseRecord) {
+      return ResultWrapper.err({
+        code: 404,
+        message: `Case not found: ${caseId}`,
+      })
+    }
+
+    if (!caseRecord.regulationDraftId) {
+      return ResultWrapper.err({
+        code: 400,
+        message: `Case ${caseId} has no regulation draft`,
+      })
+    }
+
+    return ResultWrapper.ok(caseRecord.regulationDraftId)
+  }
+
+  @LogAndHandle()
+  async updateRegulationDraft(
+    caseId: string,
+    body: UpdateRegulationDraftBody,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.updateDraft(
+      draftIdResult.result.value,
+      body,
+    )
+  }
+
+  @LogAndHandle()
+  async deleteRegulationDraft(caseId: string): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.deleteDraft(draftIdResult.result.value)
+  }
+
+  @LogAndHandle()
+  async createRegulationChange(
+    caseId: string,
+    body: CreateRegulationChangeBody,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.createChange({
+      ...body,
+      changingId: draftIdResult.result.value,
+    })
+  }
+
+  @LogAndHandle()
+  async updateRegulationChange(
+    caseId: string,
+    changeId: string,
+    body: UpdateRegulationChangeBody,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.updateChange(changeId, body)
+  }
+
+  @LogAndHandle()
+  async deleteRegulationChange(
+    caseId: string,
+    changeId: string,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.deleteChange(changeId)
+  }
+
+  @LogAndHandle()
+  async createRegulationCancel(
+    caseId: string,
+    body: CreateRegulationCancelBody,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.createCancel({
+      ...body,
+      changingId: draftIdResult.result.value,
+    })
+  }
+
+  @LogAndHandle()
+  async updateRegulationCancel(
+    caseId: string,
+    cancelId: string,
+    body: UpdateRegulationCancelBody,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.updateCancel(cancelId, body)
+  }
+
+  @LogAndHandle()
+  async deleteRegulationCancel(
+    caseId: string,
+    cancelId: string,
+  ): Promise<ResultWrapper> {
+    const draftIdResult = await this.getRegulationDraftId(caseId)
+    if (!draftIdResult.result.ok) {
+      return ResultWrapper.err(draftIdResult.result.error)
+    }
+    return this.regulationsAdminService.deleteCancel(cancelId)
   }
 }

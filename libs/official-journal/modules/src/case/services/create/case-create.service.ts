@@ -33,6 +33,7 @@ import { IApplicationService } from '../../../application/application.service.in
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
+import { IRegulationsAdminService } from '../../../regulations-admin/regulations-admin.service.interface'
 import { ISignatureService } from '../../../signature/signature.service.interface'
 import { IUtilityService } from '../../../utility/utility.module'
 import { caseChannelMigrate } from '../../migrations/case-channel.migrate'
@@ -78,11 +79,24 @@ interface CreateCaseBodyValues {
     isLegacy: boolean
     createdAt: string
     updatedAt: string
+    applicationType?: string
+    regulationDraftId?: string
   }
   categories: BaseEntity[]
   channels: CreateCaseChannelBody[]
   additions: CreateAddtionBody[]
   signatureDate: string
+}
+
+const REGULATION_APPLICATION_TYPES = [
+  'base_regulation',
+  'amending_regulation',
+] as const
+
+function isRegulationApplication(application: Application): boolean {
+  return REGULATION_APPLICATION_TYPES.includes(
+    application.answers.applicationType as (typeof REGULATION_APPLICATION_TYPES)[number],
+  )
 }
 
 @Injectable()
@@ -98,6 +112,8 @@ export class CaseCreateService implements ICaseCreateService {
     private readonly signatureService: ISignatureService,
     @Inject(ICommentServiceV2)
     private readonly commentService: ICommentServiceV2,
+    @Inject(IRegulationsAdminService)
+    private readonly regulationsAdminService: IRegulationsAdminService,
     @InjectModel(CaseChannelModel)
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
@@ -234,6 +250,82 @@ export class CaseCreateService implements ICaseCreateService {
     return ResultWrapper.ok({ id: createResults.id })
   }
 
+  /**
+   * Resolves the department ID for an application.
+   * Uses answers.advert.department if present, otherwise falls back to
+   * looking up the department by ministry name from the regulations-admin API.
+   */
+  private async resolveDepartmentId(
+    application: Application,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<string>> {
+    if (application.answers.advert?.department?.id) {
+      const result = await this.utilityService.departmentLookup(
+        application.answers.advert.department.id,
+        transaction,
+      )
+      if (result.result.ok) {
+        return ResultWrapper.ok(result.result.value.id)
+      }
+    }
+
+    // Fallback: fetch ministry name from the regulations-admin API
+    const draftId = application.answers.regulation?.draftId
+    if (draftId) {
+      const draftResult = await this.regulationsAdminService.getDraft(draftId)
+      if (draftResult.result.ok && draftResult.result.value.ministry) {
+        const result = await this.utilityService.departmentLookupByTitle(
+          draftResult.result.value.ministry,
+          transaction,
+        )
+        if (result.result.ok) {
+          return ResultWrapper.ok(result.result.value.id)
+        }
+
+        this.logger.warn(
+          `Could not find department by ministry name "${draftResult.result.value.ministry}"`,
+          { category: LOGGING_CATEGORY },
+        )
+      }
+    }
+
+    return ResultWrapper.err({
+      code: 400,
+      message: 'Could not resolve department for application',
+    })
+  }
+
+  /**
+   * Extracts signature date from application answers.
+   * Used by both ad and regulation applications.
+   */
+  private getSignatureDateFromAnswers(application: Application): Date {
+    const findLatestYear = (dateStrings: string[]) => {
+      const dates = dateStrings.map((date) => new Date(date))
+      return dates.reduce(
+        (prev, current) => (prev > current ? prev : current),
+        new Date(),
+      )
+    }
+
+    const signatureType =
+      application.answers.misc?.signatureType === SignatureType.Committee
+        ? SignatureType.Committee
+        : SignatureType.Regular
+
+    return signatureType === SignatureType.Regular
+      ? findLatestYear(
+          application.answers.signature?.regular?.records?.map(
+            (signature) => signature.signatureDate,
+          ) ?? [],
+        )
+      : findLatestYear(
+          application.answers.signature?.committee?.records?.map(
+            (signature) => signature.signatureDate,
+          ) ?? [],
+        )
+  }
+
   @LogAndHandle()
   @Transactional()
   private async getCreateCaseBody(
@@ -242,6 +334,19 @@ export class CaseCreateService implements ICaseCreateService {
   ): Promise<ResultWrapper<CreateCaseBodyValues>> {
     const now = new Date()
     const caseId = uuid()
+
+    const isRegulation = isRegulationApplication(application)
+
+    const departmentIdResult = await this.resolveDepartmentId(
+      application,
+      transaction,
+    )
+
+    if (!departmentIdResult.result.ok) {
+      return ResultWrapper.err(departmentIdResult.result.error)
+    }
+
+    const departmentId = departmentIdResult.result.value
 
     const promises = await Promise.all([
       this.utilityService.caseStatusLookup(
@@ -258,10 +363,6 @@ export class CaseCreateService implements ICaseCreateService {
         application.answers.advert.type.id,
         transaction,
       ),
-      this.utilityService.departmentLookup(
-        application.answers.advert.department.id,
-        transaction,
-      ),
     ])
 
     const [
@@ -270,7 +371,6 @@ export class CaseCreateService implements ICaseCreateService {
       caseCommunicationStatusResult,
       internalCaseNumberResult,
       typeResult,
-      departmentResult,
     ] = promises
 
     if (!caseStatusResult.result.ok) {
@@ -308,49 +408,16 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
-    if (!departmentResult.result.ok) {
-      return ResultWrapper.err({
-        code: departmentResult.result.error.code,
-        message: departmentResult.result.error.message,
-      })
-    }
-
     const caseStatus = caseStatusResult.result.value
     const caseTag = caseTagResult.result.value
     const caseCommunicationStatus = caseCommunicationStatusResult.result.value
     const internalCaseNumber = internalCaseNumberResult.result.value
     const type = typeResult.result.value
-    const department = departmentResult.result.value
-    const requestedDate = application.answers.advert.requestedDate
-    const { fastTrack } = getFastTrack(new Date(requestedDate))
     const involvedPartyId = application.answers.advert.involvedPartyId
     const message = application.answers.advert?.message ?? null
 
-    const findLatestYear = (dateStrings: string[]) => {
-      const dates = dateStrings.map((date) => new Date(date))
-      return dates.reduce(
-        (prev, current) => (prev > current ? prev : current),
-        new Date(),
-      )
-    }
-
-    const signatureType =
-      application.answers.misc?.signatureType === SignatureType.Committee
-        ? SignatureType.Committee
-        : SignatureType.Regular
-
-    const signatureDate =
-      signatureType === SignatureType.Regular
-        ? findLatestYear(
-            application.answers.signature?.regular?.records?.map(
-              (signature) => signature.signatureDate,
-            ) ?? [],
-          )
-        : findLatestYear(
-            application.answers.signature?.committee?.records?.map(
-              (signature) => signature.signatureDate,
-            ) ?? [],
-          )
+    // Signature date comes from answers for all application types
+    const signatureDate = this.getSignatureDateFromAnswers(application)
 
     const channels =
       application.answers.advert.channels?.map((channel) => {
@@ -360,6 +427,10 @@ export class CaseCreateService implements ICaseCreateService {
           phone: channel.phone,
         }
       }) ?? []
+
+    // Content comes from answers.advert for both ad and regulation applications
+    const requestedDate = application.answers.advert.requestedDate
+    const { fastTrack } = getFastTrack(new Date(requestedDate))
 
     const additions = (application.answers.advert.additions?.filter(
       (addition) => addition.content !== undefined,
@@ -381,7 +452,7 @@ export class CaseCreateService implements ICaseCreateService {
         tagId: caseTag.id,
         communicationStatusId: caseCommunicationStatus.id,
         involvedPartyId: involvedPartyId,
-        departmentId: department.id,
+        departmentId: departmentId,
         advertTypeId: type.id,
         year: signatureDate.getFullYear(),
         caseNumber: internalCaseNumber.internalCaseNumber,
@@ -398,6 +469,12 @@ export class CaseCreateService implements ICaseCreateService {
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         proposedAdvertId: uuid(),
+        ...(isRegulation
+          ? {
+              applicationType: application.answers.applicationType,
+              regulationDraftId: application.answers.regulation?.draftId,
+            }
+          : {}),
       },
       categories: application.answers.advert.categories,
       channels: channels,

@@ -20,10 +20,13 @@ import { CommonFields } from './CommonFields'
 import { CommunicationChannelsField } from './CommunicationChannelsField'
 import { MessageField } from './MessageField'
 import { PublishingFields } from './PublishingFields'
+import { RegulationImpactsFields } from './RegulationImpactsFields'
+import { RegulationMetadataFields } from './RegulationMetadataFields'
 import { SignatureFields } from './SignatureFields'
 
 export const CaseFields = () => {
-  const { canEdit, isPublishedOrRejected, currentCase } = useCaseContext()
+  const { canEdit, isPublishedOrRejected, isRegulation, currentCase } =
+    useCaseContext()
 
   const commonToggle = useToggle(true)
   const publishingToggle = useToggle(false)
@@ -35,6 +38,8 @@ export const CaseFields = () => {
   const correctionToggle = useToggle(false)
   const communicationChannelsToggle = useToggle(false)
   const appendixToggle = useToggle(false)
+  const regulationMetadataToggle = useToggle(false)
+  const regulationImpactsToggle = useToggle(false)
 
   const toggles = [
     commonToggle,
@@ -47,6 +52,8 @@ export const CaseFields = () => {
     correctionToggle,
     communicationChannelsToggle,
     appendixToggle,
+    regulationMetadataToggle,
+    regulationImpactsToggle,
   ]
 
   const expandAll = () => {
@@ -106,6 +113,18 @@ export const CaseFields = () => {
                 toggle={publishingToggle.toggle}
                 onToggle={publishingToggle.onToggle}
               />
+              {isRegulation && (
+                <>
+                  <RegulationMetadataFields
+                    toggle={regulationMetadataToggle.toggle}
+                    onToggle={regulationMetadataToggle.onToggle}
+                  />
+                  <RegulationImpactsFields
+                    toggle={regulationImpactsToggle.toggle}
+                    onToggle={regulationImpactsToggle.onToggle}
+                  />
+                </>
+              )}
               <AdvertFields
                 toggle={advertToggle.toggle}
                 onToggle={advertToggle.onToggle}

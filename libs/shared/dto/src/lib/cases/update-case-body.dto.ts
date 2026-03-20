@@ -79,4 +79,22 @@ export class UpdateCaseBody {
   })
   @IsOptional()
   readonly categoryIds?: string[]
+
+  @ApiProperty({
+    type: String,
+    description: 'Application type: ad, base_regulation, or amending_regulation',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  readonly applicationType?: string
+
+  @ApiProperty({
+    type: String,
+    description: 'Regulation draft UUID',
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  readonly regulationDraftId?: string
 }

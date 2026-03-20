@@ -327,6 +327,28 @@ export class CaseDetailed {
   @Type(() => CaseHistory)
   @IsArray()
   history!: CaseHistory[]
+
+  @ApiProperty({
+    type: String,
+    example: 'ad',
+    description:
+      'Application type: ad, base_regulation, or amending_regulation',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  readonly applicationType?: string
+
+  @ApiProperty({
+    type: String,
+    example: 'd290f1ee-6c54-4b01-90e6-d701748f0851',
+    description: 'UUID reference to regulation draft in regulations-admin',
+    nullable: true,
+    required: false,
+  })
+  @IsUUID()
+  @IsOptional()
+  readonly regulationDraftId?: string
 }
 
 export class Case extends PickType(CaseDetailed, [
@@ -348,6 +370,7 @@ export class Case extends PickType(CaseDetailed, [
   'publishedAt',
   'transaction',
   'caseNumber',
+  'applicationType',
 ]) {}
 
 export class DepartmentCounter {
