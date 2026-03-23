@@ -2400,7 +2400,6 @@ export class CaseService implements ICaseService {
         signatureDate: (partial.signatureDate as string) ?? draft.signatureDate,
         fastTrack: (partial.fastTrack as boolean) ?? draft.fastTrack,
         lawChapters: draft.lawChapters?.map((c) => c.slug),
-        ...partial,
       },
     )
   }

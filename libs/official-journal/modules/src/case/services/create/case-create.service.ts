@@ -472,7 +472,9 @@ export class CaseCreateService implements ICaseCreateService {
         ...(isRegulation
           ? {
               applicationType: application.answers.applicationType,
-              regulationDraftId: application.answers.regulation?.draftId,
+              ...(application.answers.regulation?.draftId && {
+                regulationDraftId: application.answers.regulation.draftId,
+              }),
             }
           : {}),
       },

@@ -257,7 +257,6 @@ export class ApplicationService implements IApplicationService {
     applicationId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper> {
-    ResultWrapper
     try {
       const caseLookup = (
         await this.utilityService.caseLookupByApplicationId(
@@ -412,7 +411,9 @@ export class ApplicationService implements IApplicationService {
       ...(isRegulation
         ? {
             applicationType: application.answers.applicationType,
-            regulationDraftId: application.answers.regulation?.draftId,
+            ...(application.answers.regulation?.draftId && {
+              regulationDraftId: application.answers.regulation.draftId,
+            }),
           }
         : {}),
     }
