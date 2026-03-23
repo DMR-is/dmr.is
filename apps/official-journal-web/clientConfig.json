@@ -1423,6 +1423,225 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/{caseId}/regulation-draft": {
+      "get": {
+        "operationId": "getCaseRegulationDraft",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulationDraft" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      },
+      "put": {
+        "operationId": "updateCaseRegulationDraft",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulationDraftBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      },
+      "delete": {
+        "operationId": "deleteCaseRegulationDraft",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{caseId}/regulation-draft/changes": {
+      "post": {
+        "operationId": "createCaseRegulationChange",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulationChangeBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{caseId}/regulation-draft/changes/{changeId}": {
+      "put": {
+        "operationId": "updateCaseRegulationChange",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "changeId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulationChangeBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      },
+      "delete": {
+        "operationId": "deleteCaseRegulationChange",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "changeId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{caseId}/regulation-draft/cancels": {
+      "post": {
+        "operationId": "createCaseRegulationCancel",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulationCancelBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{caseId}/regulation-draft/cancels/{cancelId}": {
+      "put": {
+        "operationId": "updateCaseRegulationCancel",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "cancelId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulationCancelBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      },
+      "delete": {
+        "operationId": "deleteCaseRegulationCancel",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "cancelId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}": {
       "get": {
         "operationId": "getCase",
@@ -4354,6 +4573,11 @@
           "publicationNumber": {
             "type": "string",
             "description": "Publication number of the case."
+          },
+          "applicationType": {
+            "type": "string",
+            "example": "ad",
+            "description": "Application type: ad, base_regulation, or amending_regulation"
           }
         },
         "required": [
@@ -5037,6 +5261,290 @@
         },
         "required": ["additionId"]
       },
+      "RegulationAppendix": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "description": "Title of the appendix" },
+          "text": {
+            "type": "string",
+            "description": "HTML content of the appendix"
+          }
+        },
+        "required": ["title", "text"]
+      },
+      "RegulationLawChapter": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Law chapter name" },
+          "slug": { "type": "string", "description": "Law chapter slug" }
+        },
+        "required": ["name", "slug"]
+      },
+      "RegulationImpact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Unique impact ID" },
+          "type": {
+            "type": "string",
+            "description": "Impact type: amend or repeal"
+          },
+          "regulation": {
+            "type": "string",
+            "description": "RegName of the target regulation"
+          },
+          "date": {
+            "type": "string",
+            "description": "When this impact takes effect"
+          },
+          "title": { "type": "string", "description": "Impact section title" },
+          "text": {
+            "type": "string",
+            "description": "New/replacement text HTML"
+          },
+          "appendixes": {
+            "description": "Changed appendix content",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments about this impact"
+          },
+          "diff": {
+            "type": "string",
+            "description": "HTML diff showing changes"
+          },
+          "dropped": {
+            "type": "boolean",
+            "description": "If true, this impact was dropped"
+          }
+        },
+        "required": ["id", "type", "regulation", "date"]
+      },
+      "RegulationDraft": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Regulation draft UUID" },
+          "draftingStatus": {
+            "type": "string",
+            "description": "Drafting status"
+          },
+          "title": { "type": "string", "description": "Regulation title" },
+          "text": { "type": "string", "description": "Regulation body HTML" },
+          "appendixes": {
+            "description": "Appendixes with title and HTML content",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationAppendix" }
+          },
+          "comments": { "type": "string", "description": "General comments" },
+          "name": {
+            "type": "string",
+            "description": "Regulation name (e.g., \"0123/2020\")"
+          },
+          "draftingNotes": {
+            "type": "string",
+            "description": "Internal drafting notes HTML"
+          },
+          "idealPublishDate": {
+            "type": "string",
+            "description": "Desired publication date"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "When the regulation takes legal effect"
+          },
+          "ministry": {
+            "type": "string",
+            "description": "Responsible ministry name"
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "Date of signature"
+          },
+          "signatureText": {
+            "type": "string",
+            "description": "Rendered signature block HTML"
+          },
+          "signedDocumentUrl": {
+            "type": "string",
+            "description": "Link to signed PDF"
+          },
+          "type": {
+            "type": "string",
+            "description": "Regulation type: base or amending"
+          },
+          "lawChapters": {
+            "description": "Law chapters",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationLawChapter" }
+          },
+          "fastTrack": {
+            "type": "boolean",
+            "description": "Skip normal publication timeline"
+          },
+          "authors": {
+            "description": "Author kennitala",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "impacts": {
+            "description": "Flattened list of impacts (amendments and repeals) across all affected regulations",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationImpact" }
+          }
+        },
+        "required": ["id", "draftingStatus", "title", "text", "type"]
+      },
+      "UpdateRegulationDraftBody": {
+        "type": "object",
+        "properties": {
+          "draftingStatus": {
+            "type": "string",
+            "description": "Drafting status"
+          },
+          "title": { "type": "string", "description": "Regulation title" },
+          "text": { "type": "string", "description": "Regulation body HTML" },
+          "draftingNotes": {
+            "type": "string",
+            "description": "Internal drafting notes HTML"
+          },
+          "name": {
+            "type": "string",
+            "description": "Regulation name (e.g., \"0123/2020\")"
+          },
+          "appendixes": {
+            "description": "Appendixes",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationAppendix" }
+          },
+          "comments": { "type": "string", "description": "General comments" },
+          "idealPublishDate": {
+            "type": "string",
+            "description": "Desired publication date"
+          },
+          "ministry": {
+            "type": "string",
+            "description": "Responsible ministry name"
+          },
+          "signatureDate": {
+            "type": "string",
+            "description": "Date of signature"
+          },
+          "signatureText": {
+            "type": "string",
+            "description": "Rendered signature block HTML"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "description": "When the regulation takes legal effect"
+          },
+          "type": {
+            "type": "string",
+            "description": "Regulation type: base or amending"
+          },
+          "authors": {
+            "description": "Author kennitala",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "signedDocumentUrl": {
+            "type": "string",
+            "description": "Link to signed PDF"
+          },
+          "lawChapters": {
+            "description": "Law chapter slugs",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "fastTrack": {
+            "type": "boolean",
+            "description": "Skip normal publication timeline"
+          }
+        },
+        "required": ["draftingStatus", "title", "text", "draftingNotes"]
+      },
+      "CreateRegulationChangeBody": {
+        "type": "object",
+        "properties": {
+          "regulation": {
+            "type": "string",
+            "description": "RegName of the target regulation"
+          },
+          "date": {
+            "type": "string",
+            "description": "When this change takes effect"
+          },
+          "title": { "type": "string", "description": "Change section title" },
+          "text": {
+            "type": "string",
+            "description": "New/replacement text HTML"
+          },
+          "appendixes": {
+            "description": "Changed appendixes",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationAppendix" }
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments about this change"
+          },
+          "diff": {
+            "type": "string",
+            "description": "HTML diff showing changes"
+          }
+        },
+        "required": ["regulation", "date", "title", "text"]
+      },
+      "UpdateRegulationChangeBody": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "When this change takes effect"
+          },
+          "title": { "type": "string", "description": "Change section title" },
+          "text": {
+            "type": "string",
+            "description": "New/replacement text HTML"
+          },
+          "appendixes": {
+            "description": "Changed appendixes",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RegulationAppendix" }
+          },
+          "comments": {
+            "type": "string",
+            "description": "Comments about this change"
+          },
+          "diff": {
+            "type": "string",
+            "description": "HTML diff showing changes"
+          }
+        }
+      },
+      "CreateRegulationCancelBody": {
+        "type": "object",
+        "properties": {
+          "regulation": {
+            "type": "string",
+            "description": "RegName of the target regulation"
+          },
+          "date": {
+            "type": "string",
+            "description": "When this cancellation takes effect"
+          }
+        },
+        "required": ["regulation", "date"]
+      },
+      "UpdateRegulationCancelBody": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "When this cancellation takes effect"
+          }
+        }
+      },
       "CaseActionEnum": {
         "type": "string",
         "enum": [
@@ -5582,6 +6090,17 @@
             "description": "History of the case.",
             "type": "array",
             "items": { "$ref": "#/components/schemas/CaseHistory" }
+          },
+          "applicationType": {
+            "type": "string",
+            "example": "ad",
+            "description": "Application type: ad, base_regulation, or amending_regulation"
+          },
+          "regulationDraftId": {
+            "type": "string",
+            "example": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+            "description": "UUID reference to regulation draft in regulations-admin",
+            "nullable": true
           }
         },
         "required": [

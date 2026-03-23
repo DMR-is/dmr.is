@@ -36,6 +36,10 @@ export interface IUtilityService {
     departmentId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<AdvertDepartmentModel>>
+  departmentLookupByTitle(
+    title: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper<AdvertDepartmentModel>>
   typeLookup(
     type: string,
     transaction?: Transaction,

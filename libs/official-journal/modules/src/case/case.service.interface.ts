@@ -8,6 +8,8 @@ import {
   CreateCaseChannelBody,
   CreateCaseDto,
   CreateCaseResponseDto,
+  CreateRegulationCancelBody,
+  CreateRegulationChangeBody,
   DeleteCaseAdvertCorrection,
   DepartmentEnum,
   GetCaseResponse,
@@ -29,6 +31,7 @@ import {
   PostApplicationBody,
   PostCasePublishBody,
   PresignedUrlResponse,
+  RegulationDraft,
   UpdateAdvertHtmlBody,
   UpdateAdvertHtmlCorrection,
   UpdateCaseBody,
@@ -41,6 +44,9 @@ import {
   UpdateCommunicationStatusBody,
   UpdateFasttrackBody,
   UpdatePublishDateBody,
+  UpdateRegulationCancelBody,
+  UpdateRegulationChangeBody,
+  UpdateRegulationDraftBody,
   UpdateTagBody,
   UpdateTitleBody,
   UserDto,
@@ -266,6 +272,47 @@ export interface ICaseService {
     caseId: string,
     hide: boolean,
     transaction?: Transaction,
+  ): Promise<ResultWrapper>
+
+  getRegulationDraft(caseId: string): Promise<ResultWrapper<RegulationDraft>>
+
+  updateRegulationDraft(
+    caseId: string,
+    body: UpdateRegulationDraftBody,
+  ): Promise<ResultWrapper>
+
+  deleteRegulationDraft(caseId: string): Promise<ResultWrapper>
+
+  createRegulationChange(
+    caseId: string,
+    body: CreateRegulationChangeBody,
+  ): Promise<ResultWrapper>
+
+  updateRegulationChange(
+    caseId: string,
+    changeId: string,
+    body: UpdateRegulationChangeBody,
+  ): Promise<ResultWrapper>
+
+  deleteRegulationChange(
+    caseId: string,
+    changeId: string,
+  ): Promise<ResultWrapper>
+
+  createRegulationCancel(
+    caseId: string,
+    body: CreateRegulationCancelBody,
+  ): Promise<ResultWrapper>
+
+  updateRegulationCancel(
+    caseId: string,
+    cancelId: string,
+    body: UpdateRegulationCancelBody,
+  ): Promise<ResultWrapper>
+
+  deleteRegulationCancel(
+    caseId: string,
+    cancelId: string,
   ): Promise<ResultWrapper>
 }
 

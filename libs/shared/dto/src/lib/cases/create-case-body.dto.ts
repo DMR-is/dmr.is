@@ -112,4 +112,16 @@ export class CreateCaseBody {
     required: true,
   })
   updatedAt!: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  applicationType?: string
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  regulationDraftId?: string
 }

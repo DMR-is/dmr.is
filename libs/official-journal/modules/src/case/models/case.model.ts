@@ -233,6 +233,21 @@ export class CaseModel extends Model {
   })
   additions?: CaseAdditionModel[]
 
+  @Column({
+    type: DataType.STRING(50),
+    allowNull: false,
+    defaultValue: 'ad',
+    field: 'application_type',
+  })
+  applicationType!: string
+
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+    field: 'r_draft_id',
+  })
+  regulationDraftId?: string
+
   @ForeignKey(() => CaseTransactionModel)
   @Column({
     type: DataType.UUID,

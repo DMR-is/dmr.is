@@ -77,5 +77,7 @@ export const caseDetailedMigrate = (model: CaseModel): CaseDetailed => {
       ? model.advert.corrections.map((item) => advertCorrectionMigrate(item))
       : undefined,
     history: model.history.map((h) => caseHistoryMigrate(h)),
+    applicationType: model.applicationType,
+    regulationDraftId: model.regulationDraftId,
   }
 }

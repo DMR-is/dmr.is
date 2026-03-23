@@ -37,6 +37,12 @@ export const updateCaseBodyMapper = (
   if (body.advertHtml !== undefined) {
     updateData.html = body.advertHtml
   }
+  if (body.applicationType !== undefined) {
+    updateData.applicationType = body.applicationType
+  }
+  if (body.regulationDraftId !== undefined) {
+    updateData.regulationDraftId = body.regulationDraftId
+  }
 
   return updateData
 }

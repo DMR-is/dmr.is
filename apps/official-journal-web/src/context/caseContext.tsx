@@ -39,6 +39,7 @@ type CaseState = {
   corrections: AdvertCorrection[]
   localCorrection: AdvertCorrection | undefined
   setLocalCorrection: (correction: AdvertCorrection | undefined) => void
+  isRegulation: boolean
   canUpdateAdvert: boolean
   refetchSignature: () => void
   isRefetchingSignature: boolean
@@ -67,6 +68,7 @@ export const CaseContext = createContext<CaseState>({
   corrections: [],
   localCorrection: undefined,
   setLocalCorrection: () => undefined,
+  isRegulation: false,
   canUpdateAdvert: false,
   refetchSignature: () => undefined,
   isRefetchingSignature: false,
@@ -208,6 +210,10 @@ export const CaseProvider = ({
     currentCase.status.title,
   )
 
+  const isRegulation =
+    currentCase.applicationType === 'base_regulation' ||
+    currentCase.applicationType === 'amending_regulation'
+
   const canUpdateAdvert = localCorrection !== undefined
 
   return (
@@ -227,6 +233,7 @@ export const CaseProvider = ({
         canEdit,
         lastFetched,
         isPublishedOrRejected,
+        isRegulation,
         corrections,
         localCorrection,
         setLocalCorrection,
