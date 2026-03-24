@@ -46,6 +46,9 @@ export class CreateSettlementDto {
   @ApiOptionalDateTime()
   dateOfDeath?: Date
 
+  @ApiOptionalDateTime()
+  endingDate?: Date
+
   @ApiOptionalDtoArray(SettlementCompanyDto)
   companies?: SettlementCompanyDto[]
 }
