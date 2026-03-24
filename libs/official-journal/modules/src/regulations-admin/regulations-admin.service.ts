@@ -57,7 +57,10 @@ function flattenImpacts(
   return results
 }
 
-const getBaseUrl = () => process.env.REGULATIONS_ADMIN_API_URL
+const getBaseUrl = () =>
+  process.env.REGULATIONS_ADMIN_API_URL
+    ? `${process.env.REGULATIONS_ADMIN_API_URL}/api`
+    : `${process.env.XROAD_ISLAND_IS_PATH}/regulations`
 
 @Injectable()
 export class RegulationsAdminService implements IRegulationsAdminService {
@@ -111,13 +114,10 @@ export class RegulationsAdminService implements IRegulationsAdminService {
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       })
     } catch (error) {
-      this.logger.warn(
-        `Regulations-admin API unreachable: ${method} ${url}`,
-        {
-          category: LOGGING_CATEGORY,
-          error: error instanceof Error ? error.message : String(error),
-        },
-      )
+      this.logger.warn(`Regulations-admin API unreachable: ${method} ${url}`, {
+        category: LOGGING_CATEGORY,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return ResultWrapper.err({
         code: 503,
         message: `Regulations-admin API unreachable: ${method} ${url}`,
@@ -143,7 +143,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
 
   @LogAndHandle()
   async getDraft(draftId: string): Promise<ResultWrapper<RegulationDraft>> {
-    const url = `${getBaseUrl()}/api/draft_regulation/${draftId}`
+    const url = `${getBaseUrl()}/draft_regulation/${draftId}`
 
     const result = await this.makeAuthenticatedRequest(url, 'GET')
     if (!result.result.ok) {
@@ -170,7 +170,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
     draftId: string,
     body: UpdateRegulationDraftBody,
   ): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation/${draftId}`
+    const url = `${getBaseUrl()}/draft_regulation/${draftId}`
     const result = await this.makeAuthenticatedRequest(url, 'PUT', body)
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -180,7 +180,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
 
   @LogAndHandle()
   async deleteDraft(draftId: string): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation/${draftId}`
+    const url = `${getBaseUrl()}/draft_regulation/${draftId}`
     const result = await this.makeAuthenticatedRequest(url, 'DELETE')
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -192,7 +192,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
   async createChange(
     body: CreateRegulationChangeBody & { changingId: string },
   ): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_change`
+    const url = `${getBaseUrl()}/draft_regulation_change`
     const result = await this.makeAuthenticatedRequest(url, 'POST', body)
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
