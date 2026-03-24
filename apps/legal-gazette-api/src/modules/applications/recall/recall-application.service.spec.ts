@@ -2,16 +2,75 @@
 import { getModelToken } from '@nestjs/sequelize'
 import { Test, TestingModule } from '@nestjs/testing'
 
+import {
+  ApplicationTypeEnum,
+  SettlementType,
+} from '@dmr.is/legal-gazette-schemas'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { AdvertModel } from '../../../models/advert.model'
-import { ApplicationModel } from '../../../models/application.model'
+import { AdvertModel, AdvertTemplateType } from '../../../models/advert.model'
+import {
+  ApplicationModel,
+  ApplicationStatusEnum,
+} from '../../../models/application.model'
+import { CategoryDefaultIdEnum } from '../../../models/category.model'
+import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { RecallApplicationService } from './recall-application.service'
+
 describe('RecallApplicationService', () => {
   let service: RecallApplicationService
-  let advertModel: typeof AdvertModel
+  let advertModel: {
+    findOne: jest.Mock
+    findOneOrThrow: jest.Mock
+  }
+  let applicationModel: {
+    findByPk: jest.Mock
+    findOne: jest.Mock
+    findOneOrThrow: jest.Mock
+  }
+  let advertService: {
+    createAdvert: jest.Mock
+  }
   const APPLICATION_ID = 'test-app-id-123'
+  const mockUser = {
+    name: 'Test User',
+    nationalId: '0101302399',
+  } as any
+
+  const createMockSettlement = (overrides: Record<string, unknown> = {}) => ({
+    id: 'settlement-123',
+    type: SettlementType.DEFAULT,
+    liquidatorName: 'Jane Liquidator',
+    liquidatorLocation: 'Reykjavik',
+    liquidatorRecallStatementLocation: 'Harbor 1',
+    liquidatorRecallStatementType: 'LIQUIDATOR_LOCATION',
+    name: 'Original Settlement',
+    nationalId: '1111111111',
+    address: 'Settlement Street 1',
+    deadline: new Date('2026-03-01'),
+    dateOfDeath: null,
+    endingDate: null,
+    declaredClaims: null,
+    companies: undefined,
+    update: jest.fn(),
+    ...overrides,
+  })
+
+  const createMockApplication = (overrides: Record<string, unknown> = {}) => ({
+    id: APPLICATION_ID,
+    caseId: 'case-123',
+    settlementId: 'settlement-123',
+    settlement: createMockSettlement(),
+    applicationType: ApplicationTypeEnum.RECALL_BANKRUPTCY,
+    status: ApplicationStatusEnum.SUBMITTED,
+    answers: {
+      communicationChannels: [{ email: 'test@example.com' }],
+    },
+    update: jest.fn().mockResolvedValue(undefined),
+    ...overrides,
+  })
+
   beforeEach(async () => {
     const mockLogger = {
       debug: jest.fn(),
@@ -20,14 +79,16 @@ describe('RecallApplicationService', () => {
       error: jest.fn(),
     }
     const mockAdvertService = {
-      // Add any methods you need
+      createAdvert: jest.fn(),
     }
     const mockApplicationModel = {
       findByPk: jest.fn(),
       findOne: jest.fn(),
+      findOneOrThrow: jest.fn(),
     }
     const mockAdvertModel = {
       findOne: jest.fn(),
+      findOneOrThrow: jest.fn(),
     }
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -52,7 +113,14 @@ describe('RecallApplicationService', () => {
     }).compile()
     service = module.get<RecallApplicationService>(RecallApplicationService)
     advertModel = module.get(getModelToken(AdvertModel))
+    applicationModel = module.get(getModelToken(ApplicationModel))
+    advertService = module.get(IAdvertService)
   })
+
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe('getMinDateForDivisionMeeting', () => {
     it('should return next valid publishing date when no adverts exist', async () => {
       // Arrange - No division meeting found
@@ -239,6 +307,134 @@ describe('RecallApplicationService', () => {
       expect(result).toBeDefined()
       expect(result.minDate).toBeDefined()
       expect(result.minDate).toBeInstanceOf(Date)
+    })
+  })
+
+  describe('addDivisionMeeting', () => {
+    it('should clone the current settlement into a new advert settlement', async () => {
+      const application = createMockApplication()
+
+      applicationModel.findOneOrThrow.mockResolvedValue(application as any)
+      advertService.createAdvert.mockResolvedValue({
+        id: 'advert-456',
+        settlement: { id: 'settlement-456' },
+      })
+
+      const body = {
+        additionalText: 'Additional note',
+        meetingDate: new Date('2026-04-08T10:00:00.000Z'),
+        meetingLocation: 'Court House',
+        signature: {
+          date: new Date('2026-04-01T10:00:00.000Z'),
+          name: 'Lawyer',
+          location: 'Reykjavik',
+          onBehalfOf: null,
+        },
+      }
+
+      await service.addDivisionMeeting(APPLICATION_ID, body, mockUser)
+
+      const createAdvertCall = advertService.createAdvert.mock.calls[0][0]
+
+      expect(createAdvertCall).toEqual(
+        expect.objectContaining({
+          applicationId: APPLICATION_ID,
+          typeId: TypeIdEnum.DIVISION_MEETING,
+          categoryId: CategoryDefaultIdEnum.DIVISION_MEETINGS,
+          templateType: AdvertTemplateType.DIVISION_MEETING_BANKRUPTCY,
+          title: 'Skiptafundur - Original Settlement',
+          settlement: {
+            settlementType: SettlementType.DEFAULT,
+            liquidatorName: 'Jane Liquidator',
+            liquidatorLocation: 'Reykjavik',
+            recallRequirementStatementLocation: 'Harbor 1',
+            recallRequirementStatementType: 'LIQUIDATOR_LOCATION',
+            name: 'Original Settlement',
+            nationalId: '1111111111',
+            address: 'Settlement Street 1',
+            deadline: new Date('2026-03-01'),
+            dateOfDeath: undefined,
+            endingDate: undefined,
+            declaredClaims: undefined,
+            companies: undefined,
+          },
+        }),
+      )
+      expect(createAdvertCall.settlementId).toBeUndefined()
+      expect(application.update).toHaveBeenCalledWith({
+        settlementId: 'settlement-456',
+      })
+    })
+  })
+
+  describe('addDivisionEnding', () => {
+    it('should clone the current settlement with ending overrides instead of mutating the previous settlement', async () => {
+      const settlement = createMockSettlement({
+        declaredClaims: 12,
+        endingDate: new Date('2026-04-20T00:00:00.000Z'),
+      })
+      const application = createMockApplication({
+        applicationType: ApplicationTypeEnum.RECALL_DECEASED,
+        settlement,
+      })
+
+      applicationModel.findOne.mockResolvedValue(application as any)
+      advertModel.findOneOrThrow.mockResolvedValue({
+        judgementDate: new Date('2026-03-15T00:00:00.000Z'),
+      })
+      advertService.createAdvert.mockResolvedValue({
+        id: 'advert-789',
+        settlement: { id: 'settlement-789' },
+      })
+
+      const body = {
+        additionalText: 'Wrap up',
+        content: '<p>Division ending content</p>',
+        declaredClaims: 345,
+        endingDate: new Date('2026-05-01T00:00:00.000Z'),
+        scheduledAt: new Date('2026-05-05T00:00:00.000Z'),
+        signature: {
+          date: new Date('2026-05-01T00:00:00.000Z'),
+          name: 'Lawyer',
+          location: 'Akureyri',
+          onBehalfOf: null,
+        },
+      }
+
+      await service.addDivisionEnding(APPLICATION_ID, body, mockUser)
+
+      const createAdvertCall = advertService.createAdvert.mock.calls[0][0]
+
+      expect(createAdvertCall).toEqual(
+        expect.objectContaining({
+          applicationId: APPLICATION_ID,
+          typeId: TypeIdEnum.DIVISION_ENDING,
+          categoryId: CategoryDefaultIdEnum.DIVISION_ENDINGS,
+          templateType: AdvertTemplateType.DIVISION_ENDING,
+          title: 'Skiptalok - Original Settlement',
+          settlement: {
+            settlementType: SettlementType.DEFAULT,
+            liquidatorName: 'Jane Liquidator',
+            liquidatorLocation: 'Reykjavik',
+            recallRequirementStatementLocation: 'Harbor 1',
+            recallRequirementStatementType: 'LIQUIDATOR_LOCATION',
+            name: 'Original Settlement',
+            nationalId: '1111111111',
+            address: 'Settlement Street 1',
+            deadline: new Date('2026-03-01'),
+            dateOfDeath: undefined,
+            endingDate: new Date('2026-05-01T00:00:00.000Z'),
+            declaredClaims: 345,
+            companies: undefined,
+          },
+        }),
+      )
+      expect(createAdvertCall.settlementId).toBeUndefined()
+      expect(settlement.update).not.toHaveBeenCalled()
+      expect(application.update).toHaveBeenCalledWith({
+        status: ApplicationStatusEnum.FINISHED,
+        settlementId: 'settlement-789',
+      })
     })
   })
 })

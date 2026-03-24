@@ -30,6 +30,7 @@ import {
   ApplicationStatusEnum,
 } from '../../../models/application.model'
 import { CategoryDefaultIdEnum } from '../../../models/category.model'
+import { SettlementModel } from '../../../models/settlement.model'
 import { TypeIdEnum } from '../../../models/type.model'
 import { IAdvertService } from '../../advert/advert.service.interface'
 import { CreateAdvertInternalDto } from '../../advert/dto/advert.dto'
@@ -51,6 +52,30 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+
+  private cloneSettlement(
+    settlement: SettlementModel,
+    overrides: Partial<CreateSettlementDto> = {},
+  ): CreateSettlementDto {
+    return {
+      settlementType: settlement.type,
+      liquidatorName: settlement.liquidatorName,
+      liquidatorLocation: settlement.liquidatorLocation,
+      recallRequirementStatementLocation:
+        settlement.liquidatorRecallStatementLocation ?? undefined,
+      recallRequirementStatementType:
+        settlement.liquidatorRecallStatementType ?? undefined,
+      name: settlement.name,
+      nationalId: settlement.nationalId,
+      address: settlement.address,
+      declaredClaims: settlement.declaredClaims ?? undefined,
+      deadline: settlement.deadline ?? undefined,
+      dateOfDeath: settlement.dateOfDeath ?? undefined,
+      endingDate: settlement.endingDate ?? undefined,
+      companies: settlement.companies,
+      ...overrides,
+    }
+  }
 
   async getMinDateForDivisionEnding(
     applicationId: string,
@@ -197,7 +222,18 @@ export class RecallApplicationService implements IRecallApplicationService {
       },
     })
 
-    await this.advertService.createAdvert({
+    if (!application.settlement) {
+      this.logger.error(
+        `Cannot create division meeting advert without settlement on application`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: applicationId,
+        },
+      )
+      throw new BadRequestException('Settlement not set on application')
+    }
+
+    const advert = await this.advertService.createAdvert({
       applicationId: application.id,
       templateType:
         application.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY
@@ -214,12 +250,16 @@ export class RecallApplicationService implements IRecallApplicationService {
       divisionMeetingDate: body.meetingDate,
       divisionMeetingLocation: body.meetingLocation,
       typeId: TypeIdEnum.DIVISION_MEETING,
-      title: `Skiptafundur - ${application.settlement?.name}`,
+      title: `Skiptafundur - ${application.settlement.name}`,
       additionalText: body.additionalText,
-      settlementId: application.settlement?.id,
+      settlement: this.cloneSettlement(application.settlement),
       communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.meetingDate],
     })
+
+    if (advert.settlement?.id) {
+      await application.update({ settlementId: advert.settlement.id })
+    }
   }
 
   async addDivisionEnding(
@@ -280,7 +320,18 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Application is not in SUBMITTED status')
     }
 
-    await this.advertService.createAdvert({
+    if (!application.settlement) {
+      this.logger.error(
+        `Cannot create division ending advert without settlement on application`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: applicationId,
+        },
+      )
+      throw new BadRequestException('Settlement not set on application')
+    }
+
+    const advert = await this.advertService.createAdvert({
       applicationId: application.id,
       caseId: application.caseId,
       typeId: TypeIdEnum.DIVISION_ENDING,
@@ -293,20 +344,21 @@ export class RecallApplicationService implements IRecallApplicationService {
         date: body.signature?.date ? new Date(body.signature.date) : undefined,
       },
       content: body.content,
-      title: `Skiptalok - ${application.settlement?.name}`,
+      title: `Skiptalok - ${application.settlement.name}`,
       additionalText: body.additionalText,
-      settlementId: application.settlement?.id,
+      settlement: this.cloneSettlement(application.settlement, {
+        declaredClaims: body.declaredClaims,
+        endingDate: body.endingDate,
+      }),
       judgementDate: judgementDate,
       communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.scheduledAt],
     })
 
-    await application.settlement?.update({
-      declaredClaims: body.declaredClaims,
-      endingDate: body.endingDate,
+    await application.update({
+      status: ApplicationStatusEnum.FINISHED,
+      settlementId: advert.settlement?.id ?? application.settlementId,
     })
-
-    await application.update({ status: ApplicationStatusEnum.FINISHED })
   }
   async getMinDateForDivisionMeeting(
     applicationId: string,
