@@ -352,7 +352,7 @@ export class JournalController {
 
     const hits = (res.body ?? res).hits
     const totalItems =
-      typeof hits.total === 'number' ? hits.total : hits.total?.value ?? 0
+      typeof hits.total === 'number' ? hits.total : (hits.total?.value ?? 0)
 
     const paging = getOsPaging(totalItems, page, size)
 

@@ -4407,6 +4407,7 @@ __metadata:
     "@dmr.is/apm": "npm:*"
     "@dmr.is/constants": "npm:*"
     "@dmr.is/db": "npm:*"
+    "@dmr.is/decorators": "npm:*"
     "@dmr.is/logging": "npm:*"
     "@dmr.is/ojoi-modules": "npm:*"
     "@dmr.is/pipelines": "npm:*"

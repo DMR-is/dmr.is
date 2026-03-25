@@ -16,13 +16,8 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": [
-      "node",
-      "multer"
-    ],
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "types": ["node", "multer"],
+    "typeRoots": ["node_modules/@types"],
     "paths": {
       "@island.is/auth-nest-tools": [
         "submodules/island.is/libs/auth-nest-tools/src/lib/auth.ts"
@@ -73,25 +68,16 @@
       "oidc-client-ts": [
         "node_modules/oidc-client-ts/dist/types/oidc-client-ts.d.ts"
       ],
-      "react-pdf": [
-        "node_modules/react-pdf/dist/cjs/index.d.ts"
-      ],
-      "react-select": [
-        "node_modules/react-select/dist/react-select.cjs.d.ts"
-      ],
+      "react-pdf": ["node_modules/react-pdf/dist/cjs/index.d.ts"],
+      "react-select": ["node_modules/react-select/dist/react-select.cjs.d.ts"],
       "react-select/base": [
         "node_modules/react-select/base/dist/react-select-base.cjs.d.ts"
       ],
       "react-select/dist/declarations/src/Select": [
         "node_modules/react-select/dist/declarations/src/Select.d.ts"
       ],
-      "kennitala": [
-        "node_modules/kennitala/dist/index.d.ts"
-      ]
+      "kennitala": ["node_modules/kennitala/dist/index.d.ts"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

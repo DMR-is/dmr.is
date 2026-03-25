@@ -5,8 +5,8 @@
   "dependencies": {
     "@dmr.is/apm": "*",
     "@dmr.is/constants": "*",
-    "@dmr.is/decorators": "*",
     "@dmr.is/db": "*",
+    "@dmr.is/decorators": "*",
     "@dmr.is/logging": "*",
     "@dmr.is/ojoi-modules": "*",
     "@dmr.is/pipelines": "*",
