@@ -37,6 +37,7 @@ export enum LegalGazetteModels {
   DOCUMENT_ISSUES = 'document_issues',
   TBR_COMPANY_SETTINGS = 'tbr_company_settings',
   SUBSCRIBER_PAYMENT = 'subscriber_payments',
+  PUBLICATION_SEARCH_EVENT = 'publication_search_event',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =
