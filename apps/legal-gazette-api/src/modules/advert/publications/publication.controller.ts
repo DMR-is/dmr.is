@@ -23,9 +23,7 @@ import {
   PublicOrApplicationWebScopes,
   PublicWebScopes,
 } from '../../../core/guards/scope-guards/scopes.decorator'
-import {
-  AdvertVersionEnum,
-} from '../../../models/advert-publication.model'
+import { AdvertVersionEnum } from '../../../models/advert-publication.model'
 import {
   AdvertPublicationDetailedDto,
   GetCombinedHTMLDto,
@@ -35,6 +33,7 @@ import {
   UpdateAdvertPublicationDto,
 } from './dto/publication.dto'
 import { IPublicationService } from './publication.service.interface'
+import { PublicationSearchTrackingService } from './publication-search-tracking.service'
 
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AuthorizationGuard)
@@ -46,6 +45,7 @@ export class AdvertPublicationController {
   constructor(
     @Inject(IPublicationService)
     readonly advertPublicationService: IPublicationService,
+    private readonly publicationSearchTrackingService: PublicationSearchTrackingService,
   ) {}
 
   @Get()
@@ -57,7 +57,18 @@ export class AdvertPublicationController {
   async getPublishedPublications(
     @Query() query: GetPublicationsQueryDto,
   ): Promise<GetPublicationsDto> {
-    return this.advertPublicationService.getPublications(query)
+    const startedAt = Date.now()
+    const response = await this.advertPublicationService.getPublications(query)
+
+    void this.publicationSearchTrackingService.track(query, {
+      page: response.paging.page,
+      pageSize: response.paging.pageSize,
+      pageResultCount: response.publications.length,
+      totalResultCount: response.paging.totalItems,
+      durationMs: Date.now() - startedAt,
+    })
+
+    return response
   }
 
   @PublicWebScopes()
