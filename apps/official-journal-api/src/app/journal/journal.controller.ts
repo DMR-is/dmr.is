@@ -50,8 +50,13 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertsToRss, getOsBody, getOsPaging } from '../../util'
+import { LeanSearchTrackingService } from './lean-search-tracking.service'
 
 import { Client } from '@opensearch-project/opensearch'
+
+type SearchOptions = {
+  track?: boolean
+}
 
 @Controller({
   version: '1',
@@ -63,6 +68,7 @@ export class JournalController {
     @Inject(IReindexRunnerService)
     private readonly runner: IReindexRunnerService,
     private readonly openSearch: Client,
+    private readonly leanSearchTrackingService: LeanSearchTrackingService,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -99,7 +105,7 @@ export class JournalController {
   async advertsLean(
     @Query() params?: GetAdvertsQueryParams,
   ): Promise<GetLeanAdvertsResponse> {
-    return this.search(params)
+    return this.search(params, { track: true })
   }
 
   @Get('/departments/:id')
@@ -336,17 +342,21 @@ export class JournalController {
 
   private async search(
     @Query() qp?: GetAdvertsQueryParams,
+    options: SearchOptions = {},
   ): Promise<GetLeanAdvertsResponse> {
     const { body, alias, page, size } = getOsBody(qp)
+    const startTime = Date.now()
 
     const res: any = await this.openSearch.search({ index: alias, body })
+    const durationMs = Date.now() - startTime
 
     const hits = (res.body ?? res).hits
-    const totalItems = hits.total?.value ?? 0
+    const totalItems =
+      typeof hits.total === 'number' ? hits.total : hits.total?.value ?? 0
 
     const paging = getOsPaging(totalItems, page, size)
 
-    return {
+    const response = {
       adverts: hits.hits.map((h: any) => ({
         id: h._id,
         score: h._score,
@@ -355,5 +365,17 @@ export class JournalController {
       })),
       paging,
     }
+
+    if (options.track) {
+      void this.leanSearchTrackingService.track(qp, {
+        page,
+        pageSize: size,
+        pageResultCount: response.adverts.length,
+        totalResultCount: totalItems,
+        durationMs,
+      })
+    }
+
+    return response
   }
 }
