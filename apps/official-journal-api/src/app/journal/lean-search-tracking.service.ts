@@ -25,6 +25,10 @@ export class LeanSearchTrackingService {
     params: GetAdvertsQueryParams | undefined,
     result: LeanSearchTrackingResultDto,
   ): Promise<void> {
+    this.logger.debug('Tracking lean search event', {
+      context: LOGGING_CONTEXT,
+      params: JSON.stringify(params),
+    })
     let payload: LeanSearchTrackingEventDto | null = null
 
     try {
