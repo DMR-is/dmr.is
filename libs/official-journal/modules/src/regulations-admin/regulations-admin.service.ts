@@ -88,27 +88,11 @@ export class RegulationsAdminService implements IRegulationsAdminService {
       })
     }
 
-    const token = await this.authService.getAccessToken()
-
-    if (!token) {
-      this.logger.error(
-        'Could not get access token for regulations-admin API',
-        {
-          category: LOGGING_CATEGORY,
-        },
-      )
-      return ResultWrapper.err({
-        code: 500,
-        message: 'Could not get access token for regulations-admin API',
-      })
-    }
-
     let res: Response
     try {
-      res = await fetch(url, {
+      res = await this.authService.xroadFetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${token.access_token}`,
           'Content-Type': 'application/json',
         },
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
@@ -205,7 +189,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
     changeId: string,
     body: UpdateRegulationChangeBody,
   ): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_change/${changeId}`
+    const url = `${getBaseUrl()}/draft_regulation_change/${changeId}`
     const result = await this.makeAuthenticatedRequest(url, 'PUT', body)
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -215,7 +199,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
 
   @LogAndHandle()
   async deleteChange(changeId: string): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_change/${changeId}`
+    const url = `${getBaseUrl()}/draft_regulation_change/${changeId}`
     const result = await this.makeAuthenticatedRequest(url, 'DELETE')
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -227,7 +211,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
   async createCancel(
     body: CreateRegulationCancelBody & { changingId: string },
   ): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_cancel`
+    const url = `${getBaseUrl()}/draft_regulation_cancel`
     const result = await this.makeAuthenticatedRequest(url, 'POST', body)
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -240,7 +224,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
     cancelId: string,
     body: UpdateRegulationCancelBody,
   ): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_cancel/${cancelId}`
+    const url = `${getBaseUrl()}/draft_regulation_cancel/${cancelId}`
     const result = await this.makeAuthenticatedRequest(url, 'PUT', body)
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
@@ -250,7 +234,7 @@ export class RegulationsAdminService implements IRegulationsAdminService {
 
   @LogAndHandle()
   async deleteCancel(cancelId: string): Promise<ResultWrapper> {
-    const url = `${getBaseUrl()}/api/draft_regulation_cancel/${cancelId}`
+    const url = `${getBaseUrl()}/draft_regulation_cancel/${cancelId}`
     const result = await this.makeAuthenticatedRequest(url, 'DELETE')
     if (!result.result.ok) {
       return ResultWrapper.err(result.result.error)
