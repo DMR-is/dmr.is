@@ -116,6 +116,7 @@ describe('publication-search-tracking utils', () => {
         Object.assign(new PublicationSearchTrackingEventDto(), {
           route: '/api/v1/publications',
           backend: 'postgres',
+          createdAt: expect.any(Date),
           normalizedQuery: '12345678901',
           queryHash: expect.any(String),
           queryKind: PublicationSearchQueryKind.PublicationNumber,
