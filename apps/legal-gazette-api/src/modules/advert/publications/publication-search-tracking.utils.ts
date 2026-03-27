@@ -130,5 +130,6 @@ export const buildPublicationSearchTrackingEvent = (
     pageResultCount: result.pageResultCount,
     totalResultCount: result.totalResultCount,
     durationMs: result.durationMs,
+    createdAt: new Date(),
   })
 }
