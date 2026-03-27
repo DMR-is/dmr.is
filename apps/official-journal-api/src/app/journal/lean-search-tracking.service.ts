@@ -37,6 +37,7 @@ export class LeanSearchTrackingService {
       this.logger.info('lean_search_tracking', {
         context: LOGGING_CONTEXT,
         ...payload,
+        createdAt: new Date().toISOString(),
       })
 
       await this.advertSearchEventModel.create(payload)
