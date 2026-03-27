@@ -33,6 +33,7 @@ export class PublicationSearchTrackingService {
       this.logger.info('publication_search_tracking', {
         context: LOGGING_CONTEXT,
         ...payload,
+        createdAt: new Date().toISOString(),
       })
 
       await this.publicationSearchEventModel.create(payload)
