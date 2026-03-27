@@ -408,10 +408,8 @@ export const pdfCss = `
     margin-top: 0;
     margin-bottom: var(--paragraph-space);
     font-size: 1em;
-    text-transform: uppercase;
     text-align: left;
     text-decoration: underline;
-    text-transform: capitalize;
   }
 
   .appendix__text > p:not([align]) {
