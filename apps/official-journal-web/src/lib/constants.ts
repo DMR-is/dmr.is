@@ -38,6 +38,8 @@ export enum Routes {
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
   UserManagement = '/notendur',
+  Statistics = '/tolfraedi',
+  SearchDashboard = '/leitaryfirlit',
   ReplacePdf = '/yfirskrifa-pdf',
   ReplacePdfAdvert = '/yfirskrifa-pdf/:advertId',
   AdvertMigration = '/auglysing-til-ritstjornar',

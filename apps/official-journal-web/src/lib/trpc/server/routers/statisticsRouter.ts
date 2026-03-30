@@ -4,7 +4,65 @@ import {
   DepartmentSlugEnum,
   StatisticsOverviewQueryType,
 } from '../../../../gen/fetch'
+import {
+  SearchAnalyticsInterval,
+  SearchAnalyticsQueryTableType,
+  type SearchAnalyticsBreakdownsResponse,
+  type SearchAnalyticsOverviewResponse,
+  type SearchAnalyticsQueriesResponse,
+  type SearchAnalyticsTrendsResponse,
+} from '../../../search-analytics/types'
+import {
+  getMockSearchAnalyticsBreakdowns,
+  getMockSearchAnalyticsOverview,
+  getMockSearchAnalyticsQueries,
+  getMockSearchAnalyticsTrends,
+  shouldUseMockSearchAnalytics,
+} from '../../../search-analytics/mock'
 import { protectedProcedure, router } from '../trpc'
+
+const getAdminApiBaseUrl = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:4000'
+  }
+
+  return process.env.DMR_ADMIN_API_BASE_PATH as string
+}
+
+const buildUrl = (
+  path: string,
+  query?: Record<string, string | undefined>,
+): string => {
+  const params = new URLSearchParams()
+
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value) {
+      params.set(key, value)
+    }
+  }
+
+  const search = params.toString()
+  return `${getAdminApiBaseUrl()}/api/v1/statistics${path}${search ? `?${search}` : ''}`
+}
+
+const fetchStatisticsJson = async <T>(
+  path: string,
+  idToken: string,
+  query?: Record<string, string | undefined>,
+): Promise<T> => {
+  const response = await fetch(buildUrl(path, query), {
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Statistics request failed with status ${response.status}`)
+  }
+
+  return response.json() as Promise<T>
+}
 
 export const statisticsRouter = router({
   getStatisticsForDepartment: protectedProcedure
@@ -32,4 +90,122 @@ export const statisticsRouter = router({
       return ctx.api.getStatisticsOverviewDashboard()
     },
   ),
+
+  getSearchAnalyticsOverview: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (shouldUseMockSearchAnalytics()) {
+        return getMockSearchAnalyticsOverview()
+      }
+
+      try {
+        return await fetchStatisticsJson<SearchAnalyticsOverviewResponse>(
+          '/search/overview',
+          ctx.idToken,
+          input,
+        )
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          return getMockSearchAnalyticsOverview()
+        }
+
+        throw error
+      }
+    }),
+
+  getSearchAnalyticsTrends: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+        interval: z
+          .enum(
+            Object.values(SearchAnalyticsInterval) as [string, ...string[]],
+          )
+          .optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (shouldUseMockSearchAnalytics()) {
+        return getMockSearchAnalyticsTrends(input)
+      }
+
+      try {
+        return await fetchStatisticsJson<SearchAnalyticsTrendsResponse>(
+          '/search/trends',
+          ctx.idToken,
+          input,
+        )
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          return getMockSearchAnalyticsTrends(input)
+        }
+
+        throw error
+      }
+    }),
+
+  getSearchAnalyticsBreakdowns: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (shouldUseMockSearchAnalytics()) {
+        return getMockSearchAnalyticsBreakdowns()
+      }
+
+      try {
+        return await fetchStatisticsJson<SearchAnalyticsBreakdownsResponse>(
+          '/search/breakdowns',
+          ctx.idToken,
+          input,
+        )
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          return getMockSearchAnalyticsBreakdowns()
+        }
+
+        throw error
+      }
+    }),
+
+  getSearchAnalyticsQueries: protectedProcedure
+    .input(
+      z.object({
+        from: z.string().optional(),
+        to: z.string().optional(),
+        type: z.enum(
+          Object.values(SearchAnalyticsQueryTableType) as [string, ...string[]],
+        ),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const queryType = input.type as SearchAnalyticsQueryTableType
+
+      if (shouldUseMockSearchAnalytics()) {
+        return getMockSearchAnalyticsQueries(queryType)
+      }
+
+      try {
+        return await fetchStatisticsJson<SearchAnalyticsQueriesResponse>(
+          '/search/queries',
+          ctx.idToken,
+          input,
+        )
+      } catch (error) {
+        if (process.env.NODE_ENV !== 'production') {
+          return getMockSearchAnalyticsQueries(queryType)
+        }
+
+        throw error
+      }
+    }),
 })

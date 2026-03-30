@@ -16,15 +16,30 @@ import {
   CaseCommunicationStatus,
   CaseStatusEnum,
   DepartmentSlugEnum,
+  GetSearchAnalyticsQueriesQuery,
+  GetSearchAnalyticsQuery,
+  GetSearchAnalyticsTrendsQuery,
 } from '@dmr.is/shared-dto'
 import {
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  SearchAnalyticsBreakdownsResponse,
+  SearchAnalyticsOverviewResponse,
+  SearchAnalyticsQueriesResponse,
+  SearchAnalyticsTrendsResponse,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { AdvertSearchEventModel } from './models/advert-search-event.model'
+import {
+  buildSearchAnalyticsBreakdowns,
+  buildSearchAnalyticsOverview,
+  buildSearchAnalyticsQueries,
+  buildSearchAnalyticsTrends,
+  resolveSearchAnalyticsRange,
+} from './search-analytics.utils'
 import { IStatisticsService } from './statistics.service.interface'
 const LOGGING_CATEGORY = 'statistics-service'
 const LOGGING_CONTEXT = 'StatisticsQueryRunner'
@@ -40,6 +55,8 @@ export class StatisticsService implements IStatisticsService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
+    @InjectModel(AdvertSearchEventModel)
+    private readonly advertSearchEventModel: typeof AdvertSearchEventModel,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -159,6 +176,45 @@ export class StatisticsService implements IStatisticsService {
     }
 
     return ResultWrapper.ok(results)
+  }
+
+  @LogAndHandle()
+  async getSearchAnalyticsOverview(
+    query?: GetSearchAnalyticsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsOverviewResponse>> {
+    const events = await this.getSearchEvents(query)
+
+    return ResultWrapper.ok(buildSearchAnalyticsOverview(events))
+  }
+
+  @LogAndHandle()
+  async getSearchAnalyticsTrends(
+    query?: GetSearchAnalyticsTrendsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsTrendsResponse>> {
+    const events = await this.getSearchEvents(query)
+    const { dateKeys } = resolveSearchAnalyticsRange(query)
+
+    return ResultWrapper.ok(
+      buildSearchAnalyticsTrends(events, dateKeys, query?.interval),
+    )
+  }
+
+  @LogAndHandle()
+  async getSearchAnalyticsBreakdowns(
+    query?: GetSearchAnalyticsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsBreakdownsResponse>> {
+    const events = await this.getSearchEvents(query)
+
+    return ResultWrapper.ok(buildSearchAnalyticsBreakdowns(events))
+  }
+
+  @LogAndHandle()
+  async getSearchAnalyticsQueries(
+    query: GetSearchAnalyticsQueriesQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsQueriesResponse>> {
+    const events = await this.getSearchEvents(query)
+
+    return ResultWrapper.ok(buildSearchAnalyticsQueries(events, query))
   }
 
   @LogAndHandle()
@@ -520,5 +576,28 @@ export class StatisticsService implements IStatisticsService {
     }
 
     return ResultWrapper.ok(result)
+  }
+
+  private async getSearchEvents(query?: GetSearchAnalyticsQuery) {
+    const { fromDate, toDate } = resolveSearchAnalyticsRange(query)
+
+    return this.advertSearchEventModel.findAll({
+      benchmark: true,
+      where: {
+        createdAt: {
+          [Op.between]: [fromDate, toDate],
+        },
+      },
+      order: [['createdAt', 'ASC']],
+      logging: (_, timing) =>
+        this.logger.info(
+          `getSearchAnalytics events query ran in ${timing}ms`,
+          {
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            query: 'searchAnalyticsEvents',
+          },
+        ),
+    })
   }
 }

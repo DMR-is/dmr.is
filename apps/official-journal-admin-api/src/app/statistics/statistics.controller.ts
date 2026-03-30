@@ -1,4 +1,11 @@
-import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -13,9 +20,16 @@ import { RoleGuard } from '@dmr.is/ojoi-modules/guards/auth'
 import { EnumValidationPipe } from '@dmr.is/pipelines'
 import {
   DepartmentSlugEnum,
+  GetSearchAnalyticsQueriesQuery,
+  GetSearchAnalyticsQuery,
+  GetSearchAnalyticsTrendsQuery,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  SearchAnalyticsBreakdownsResponse,
+  SearchAnalyticsOverviewResponse,
+  SearchAnalyticsQueriesResponse,
+  SearchAnalyticsTrendsResponse,
   StatisticsOverviewQueryType,
   UserDto,
 } from '@dmr.is/shared-dto'
@@ -78,6 +92,50 @@ export class StatisticsController {
   ): Promise<GetStatisticsOverviewResponse> {
     return ResultWrapper.unwrap(
       await this.statisticsService.getOverview(type, user?.id),
+    )
+  }
+
+  @Get('/search/overview')
+  @ApiOperation({ operationId: 'getSearchAnalyticsOverview' })
+  @ApiResponse({ status: 200, type: SearchAnalyticsOverviewResponse })
+  async searchOverview(
+    @Query() query: GetSearchAnalyticsQuery,
+  ): Promise<SearchAnalyticsOverviewResponse> {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getSearchAnalyticsOverview(query),
+    )
+  }
+
+  @Get('/search/trends')
+  @ApiOperation({ operationId: 'getSearchAnalyticsTrends' })
+  @ApiResponse({ status: 200, type: SearchAnalyticsTrendsResponse })
+  async searchTrends(
+    @Query() query: GetSearchAnalyticsTrendsQuery,
+  ): Promise<SearchAnalyticsTrendsResponse> {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getSearchAnalyticsTrends(query),
+    )
+  }
+
+  @Get('/search/breakdowns')
+  @ApiOperation({ operationId: 'getSearchAnalyticsBreakdowns' })
+  @ApiResponse({ status: 200, type: SearchAnalyticsBreakdownsResponse })
+  async searchBreakdowns(
+    @Query() query: GetSearchAnalyticsQuery,
+  ): Promise<SearchAnalyticsBreakdownsResponse> {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getSearchAnalyticsBreakdowns(query),
+    )
+  }
+
+  @Get('/search/queries')
+  @ApiOperation({ operationId: 'getSearchAnalyticsQueries' })
+  @ApiResponse({ status: 200, type: SearchAnalyticsQueriesResponse })
+  async searchQueries(
+    @Query() query: GetSearchAnalyticsQueriesQuery,
+  ): Promise<SearchAnalyticsQueriesResponse> {
+    return ResultWrapper.unwrap(
+      await this.statisticsService.getSearchAnalyticsQueries(query),
     )
   }
 }

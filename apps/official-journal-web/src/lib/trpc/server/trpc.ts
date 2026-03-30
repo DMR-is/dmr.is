@@ -20,6 +20,7 @@ export const createTRPCContext = cache(async () => {
 
   return {
     api: await getServerClient(session.idToken),
+    idToken: session.idToken,
   }
 })
 
