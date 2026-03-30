@@ -12,13 +12,6 @@ import {
   type SearchAnalyticsQueriesResponse,
   type SearchAnalyticsTrendsResponse,
 } from '../../../search-analytics/types'
-import {
-  getMockSearchAnalyticsBreakdowns,
-  getMockSearchAnalyticsOverview,
-  getMockSearchAnalyticsQueries,
-  getMockSearchAnalyticsTrends,
-  shouldUseMockSearchAnalytics,
-} from '../../../search-analytics/mock'
 import { protectedProcedure, router } from '../trpc'
 
 const getAdminApiBaseUrl = () => {
@@ -99,23 +92,11 @@ export const statisticsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (shouldUseMockSearchAnalytics()) {
-        return getMockSearchAnalyticsOverview()
-      }
-
-      try {
-        return await fetchStatisticsJson<SearchAnalyticsOverviewResponse>(
-          '/search/overview',
-          ctx.idToken,
-          input,
-        )
-      } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          return getMockSearchAnalyticsOverview()
-        }
-
-        throw error
-      }
+      return fetchStatisticsJson<SearchAnalyticsOverviewResponse>(
+        '/search/overview',
+        ctx.idToken,
+        input,
+      )
     }),
 
   getSearchAnalyticsTrends: protectedProcedure
@@ -131,23 +112,11 @@ export const statisticsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (shouldUseMockSearchAnalytics()) {
-        return getMockSearchAnalyticsTrends(input)
-      }
-
-      try {
-        return await fetchStatisticsJson<SearchAnalyticsTrendsResponse>(
-          '/search/trends',
-          ctx.idToken,
-          input,
-        )
-      } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          return getMockSearchAnalyticsTrends(input)
-        }
-
-        throw error
-      }
+      return fetchStatisticsJson<SearchAnalyticsTrendsResponse>(
+        '/search/trends',
+        ctx.idToken,
+        input,
+      )
     }),
 
   getSearchAnalyticsBreakdowns: protectedProcedure
@@ -158,23 +127,11 @@ export const statisticsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (shouldUseMockSearchAnalytics()) {
-        return getMockSearchAnalyticsBreakdowns()
-      }
-
-      try {
-        return await fetchStatisticsJson<SearchAnalyticsBreakdownsResponse>(
-          '/search/breakdowns',
-          ctx.idToken,
-          input,
-        )
-      } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          return getMockSearchAnalyticsBreakdowns()
-        }
-
-        throw error
-      }
+      return fetchStatisticsJson<SearchAnalyticsBreakdownsResponse>(
+        '/search/breakdowns',
+        ctx.idToken,
+        input,
+      )
     }),
 
   getSearchAnalyticsQueries: protectedProcedure
@@ -188,24 +145,10 @@ export const statisticsRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const queryType = input.type as SearchAnalyticsQueryTableType
-
-      if (shouldUseMockSearchAnalytics()) {
-        return getMockSearchAnalyticsQueries(queryType)
-      }
-
-      try {
-        return await fetchStatisticsJson<SearchAnalyticsQueriesResponse>(
-          '/search/queries',
-          ctx.idToken,
-          input,
-        )
-      } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          return getMockSearchAnalyticsQueries(queryType)
-        }
-
-        throw error
-      }
+      return fetchStatisticsJson<SearchAnalyticsQueriesResponse>(
+        '/search/queries',
+        ctx.idToken,
+        input,
+      )
     }),
 })
