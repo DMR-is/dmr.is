@@ -8,6 +8,10 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { SearchDashboard } from '@dmr.is/ui/components/SearchDashboard'
 
+import {
+  SearchAnalyticsInterval,
+  SearchAnalyticsQueryTableType,
+} from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import {
   DEFAULT_SEARCH_DASHBOARD_PRESET,
@@ -69,7 +73,7 @@ export const SearchDashboardContainer = ({
     trpc.getSearchAnalyticsTrends.queryOptions(
       {
         ...queryInput,
-        interval: 'day',
+        interval: SearchAnalyticsInterval.Day,
       },
       queryOptions,
     ),
@@ -81,7 +85,7 @@ export const SearchDashboardContainer = ({
     trpc.getSearchAnalyticsQueries.queryOptions(
       {
         ...queryInput,
-        type: 'top',
+        type: SearchAnalyticsQueryTableType.Top,
       },
       queryOptions,
     ),
@@ -90,7 +94,7 @@ export const SearchDashboardContainer = ({
     trpc.getSearchAnalyticsQueries.queryOptions(
       {
         ...queryInput,
-        type: 'zero_results',
+        type: SearchAnalyticsQueryTableType.ZeroResults,
       },
       queryOptions,
     ),
@@ -99,7 +103,7 @@ export const SearchDashboardContainer = ({
     trpc.getSearchAnalyticsQueries.queryOptions(
       {
         ...queryInput,
-        type: 'slow',
+        type: SearchAnalyticsQueryTableType.Slow,
       },
       queryOptions,
     ),

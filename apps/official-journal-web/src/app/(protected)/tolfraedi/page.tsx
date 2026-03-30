@@ -1,6 +1,10 @@
 import { fetchQuery, HydrateClient } from '@dmr.is/trpc/client/server'
 
 import { resolveSearchDashboardFilters } from '../../../containers/search-dashboard.utils'
+import {
+  SearchAnalyticsInterval,
+  SearchAnalyticsQueryTableType,
+} from '../../../gen/fetch'
 import { StatisticsPageContainer } from '../../../containers/StatisticsPageContainer'
 import { trpc } from '../../../lib/trpc/client/server'
 
@@ -32,7 +36,7 @@ export default async function StatisticsPage({
         trpc.getSearchAnalyticsTrends.queryOptions({
           from: resolvedFilters.from,
           to: resolvedFilters.to,
-          interval: 'day',
+          interval: SearchAnalyticsInterval.Day,
         }),
       ),
       fetchQuery(
@@ -45,21 +49,21 @@ export default async function StatisticsPage({
         trpc.getSearchAnalyticsQueries.queryOptions({
           from: resolvedFilters.from,
           to: resolvedFilters.to,
-          type: 'top',
+          type: SearchAnalyticsQueryTableType.Top,
         }),
       ),
       fetchQuery(
         trpc.getSearchAnalyticsQueries.queryOptions({
           from: resolvedFilters.from,
           to: resolvedFilters.to,
-          type: 'zero_results',
+          type: SearchAnalyticsQueryTableType.ZeroResults,
         }),
       ),
       fetchQuery(
         trpc.getSearchAnalyticsQueries.queryOptions({
           from: resolvedFilters.from,
           to: resolvedFilters.to,
-          type: 'slow',
+          type: SearchAnalyticsQueryTableType.Slow,
         }),
       ),
     ])

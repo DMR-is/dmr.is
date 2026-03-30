@@ -3750,6 +3750,160 @@
         "summary": ""
       }
     },
+    "/api/v1/statistics/search/overview": {
+      "get": {
+        "operationId": "getSearchAnalyticsOverview",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAnalyticsOverviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/statistics/search/trends": {
+      "get": {
+        "operationId": "getSearchAnalyticsTrends",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "interval",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SearchAnalyticsInterval" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAnalyticsTrendsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/statistics/search/breakdowns": {
+      "get": {
+        "operationId": "getSearchAnalyticsBreakdowns",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAnalyticsBreakdownsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/statistics/search/queries": {
+      "get": {
+        "operationId": "getSearchAnalyticsQueries",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Inclusive date in YYYY-MM-DD format",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SearchAnalyticsQueryTableType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAnalyticsQueriesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController__v1",
@@ -6723,6 +6877,130 @@
       "StatisticsOverviewQueryType": {
         "type": "string",
         "enum": ["general", "personal", "inactive", "publishing"]
+      },
+      "SearchAnalyticsOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "totalSearches": { "type": "number" },
+          "zeroResultRate": { "type": "number" },
+          "withFiltersRate": { "type": "number" },
+          "avgDurationMs": { "type": "number" },
+          "p95DurationMs": { "type": "number" },
+          "pageOneRate": { "type": "number" }
+        },
+        "required": [
+          "totalSearches",
+          "zeroResultRate",
+          "withFiltersRate",
+          "avgDurationMs",
+          "p95DurationMs",
+          "pageOneRate"
+        ]
+      },
+      "SearchAnalyticsInterval": { "type": "string", "enum": ["day"] },
+      "SearchAnalyticsTrendPoint": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "totalSearches": { "type": "number" },
+          "zeroResultRate": { "type": "number" },
+          "avgDurationMs": { "type": "number" },
+          "p95DurationMs": { "type": "number" }
+        },
+        "required": [
+          "date",
+          "totalSearches",
+          "zeroResultRate",
+          "avgDurationMs",
+          "p95DurationMs"
+        ]
+      },
+      "SearchAnalyticsTrendsResponse": {
+        "type": "object",
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchAnalyticsTrendPoint"
+            }
+          }
+        },
+        "required": ["points"]
+      },
+      "SearchAnalyticsBreakdownItem": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "count": { "type": "number" },
+          "percentage": { "type": "number" }
+        },
+        "required": ["key", "count", "percentage"]
+      },
+      "SearchAnalyticsBreakdownsResponse": {
+        "type": "object",
+        "properties": {
+          "queryKinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchAnalyticsBreakdownItem"
+            }
+          },
+          "resultBuckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchAnalyticsBreakdownItem"
+            }
+          },
+          "sortUsage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchAnalyticsBreakdownItem"
+            }
+          },
+          "filterUsage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchAnalyticsBreakdownItem"
+            }
+          }
+        },
+        "required": ["queryKinds", "resultBuckets", "sortUsage", "filterUsage"]
+      },
+      "SearchAnalyticsQueryTableType": {
+        "type": "string",
+        "enum": ["top", "zero_results", "slow"]
+      },
+      "SearchAnalyticsQueryRow": {
+        "type": "object",
+        "properties": {
+          "normalizedQuery": { "type": "string" },
+          "count": { "type": "number" },
+          "zeroResultRate": { "type": "number" },
+          "avgDurationMs": { "type": "number" },
+          "resultBucket": { "type": "string" }
+        },
+        "required": [
+          "normalizedQuery",
+          "count",
+          "zeroResultRate",
+          "avgDurationMs",
+          "resultBucket"
+        ]
+      },
+      "SearchAnalyticsQueriesResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              { "$ref": "#/components/schemas/SearchAnalyticsQueryTableType" }
+            ]
+          },
+          "rows": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SearchAnalyticsQueryRow" }
+          }
+        },
+        "required": ["type", "rows"]
       },
       "IssueDto": {
         "type": "object",
