@@ -65,15 +65,13 @@ const QUERY_TABLE_COLUMNS = [
     key: 'zeroResultRate' as const,
     label: '0 niðurstöður',
     align: 'right' as const,
-    helpText:
-      'Hlutfall tilvika þessarar leitar sem skiluðu engum niðurstöðum.',
+    helpText: 'Hlutfall tilvika þessarar leitar sem skiluðu engum niðurstöðum.',
   },
   {
     key: 'avgDurationMs' as const,
     label: 'Meðaltími',
     align: 'right' as const,
-    helpText:
-      'Meðalsvörun fyrir þessa tilteknu leit á valda tímabilinu.',
+    helpText: 'Meðalsvörun fyrir þessa tilteknu leit á valda tímabilinu.',
   },
   {
     key: 'resultBucket' as const,
@@ -128,7 +126,10 @@ export const resolveSearchDashboardFilters = (params?: {
       from: normalizedFrom,
       to: normalizedTo,
       preset:
-        params?.preset && SEARCH_DASHBOARD_PRESETS.some((option) => option.value === params.preset)
+        params?.preset &&
+        SEARCH_DASHBOARD_PRESETS.some(
+          (option) => option.value === params.preset,
+        )
           ? params.preset
           : null,
     }
@@ -180,8 +181,7 @@ export const mapOverviewToKpis = (
     {
       label: 'Meðaltími',
       value: formatDuration(overview.avgDurationMs),
-      helpText:
-        'Meðalsvörun allra leita á tímabilinu, mæld í millisekúndum.',
+      helpText: 'Meðalsvörun allra leita á tímabilinu, mæld í millisekúndum.',
     },
     {
       label: 'P95',
@@ -217,8 +217,7 @@ export const mapTrendsToCharts = (
     {
       title: '0 niðurstöður',
       description: 'Hlutfall leita sem skiluðu engu',
-      helpText:
-        'Sýnir hlutfall daglegra leita sem skiluðu engum niðurstöðum.',
+      helpText: 'Sýnir hlutfall daglegra leita sem skiluðu engum niðurstöðum.',
       points: points.map((point) => ({
         label: point.date,
         value: point.zeroResultRate,
@@ -228,8 +227,7 @@ export const mapTrendsToCharts = (
     {
       title: 'Meðaltími',
       description: 'Meðalsvörun á dag',
-      helpText:
-        'Sýnir meðalsvörun leitar á hverjum degi, í millisekúndum.',
+      helpText: 'Sýnir meðalsvörun leitar á hverjum degi, í millisekúndum.',
       points: points.map((point) => ({
         label: point.date,
         value: point.avgDurationMs,

@@ -211,7 +211,9 @@ const buildQueryGroups = (events: SearchAnalyticsEvent[]): QueryGroup[] => {
     groups.set(event.normalizedQuery, existing)
   }
 
-  return Array.from(groups.values()).filter((group) => group.count >= MIN_QUERY_COUNT)
+  return Array.from(groups.values()).filter(
+    (group) => group.count >= MIN_QUERY_COUNT,
+  )
 }
 
 const toQueryRow = (group: QueryGroup): SearchAnalyticsQueryRow => {
@@ -231,7 +233,9 @@ export const buildSearchAnalyticsOverview = (
   events: SearchAnalyticsEvent[],
 ): SearchAnalyticsOverviewResponse => {
   const totalSearches = events.length
-  const zeroResultCount = events.filter((event) => event.totalResultCount === 0).length
+  const zeroResultCount = events.filter(
+    (event) => event.totalResultCount === 0,
+  ).length
   const filteredCount = events.filter((event) => event.hasFilters).length
   const pageOneCount = events.filter((event) => event.page === 1).length
   const durations = events.map((event) => event.durationMs)
@@ -239,11 +243,15 @@ export const buildSearchAnalyticsOverview = (
 
   return Object.assign(new SearchAnalyticsOverviewResponse(), {
     totalSearches,
-    zeroResultRate: totalSearches > 0 ? round((zeroResultCount / totalSearches) * 100) : 0,
-    withFiltersRate: totalSearches > 0 ? round((filteredCount / totalSearches) * 100) : 0,
-    avgDurationMs: totalSearches > 0 ? Math.round(totalDurationMs / totalSearches) : 0,
+    zeroResultRate:
+      totalSearches > 0 ? round((zeroResultCount / totalSearches) * 100) : 0,
+    withFiltersRate:
+      totalSearches > 0 ? round((filteredCount / totalSearches) * 100) : 0,
+    avgDurationMs:
+      totalSearches > 0 ? Math.round(totalDurationMs / totalSearches) : 0,
     p95DurationMs: calculateP95(durations),
-    pageOneRate: totalSearches > 0 ? round((pageOneCount / totalSearches) * 100) : 0,
+    pageOneRate:
+      totalSearches > 0 ? round((pageOneCount / totalSearches) * 100) : 0,
   })
 }
 
@@ -269,7 +277,9 @@ export const buildSearchAnalyticsTrends = (
     const items = grouped.get(date) ?? []
     const durations = items.map((item) => item.durationMs)
     const totalDurationMs = durations.reduce((acc, value) => acc + value, 0)
-    const zeroResultCount = items.filter((item) => item.totalResultCount === 0).length
+    const zeroResultCount = items.filter(
+      (item) => item.totalResultCount === 0,
+    ).length
 
     return Object.assign(new SearchAnalyticsTrendPoint(), {
       date,
@@ -332,7 +342,11 @@ export const buildSearchAnalyticsQueries = (
     switch (query.type) {
       case SearchAnalyticsQueryTableType.Top:
         return groups
-          .sort((a, b) => b.count - a.count || a.normalizedQuery.localeCompare(b.normalizedQuery))
+          .sort(
+            (a, b) =>
+              b.count - a.count ||
+              a.normalizedQuery.localeCompare(b.normalizedQuery),
+          )
           .slice(0, MAX_QUERY_ROWS)
           .map(toQueryRow)
       case SearchAnalyticsQueryTableType.ZeroResults:
@@ -352,7 +366,11 @@ export const buildSearchAnalyticsQueries = (
             const avgA = a.totalDurationMs / a.count
             const avgB = b.totalDurationMs / b.count
 
-            return avgB - avgA || b.count - a.count || a.normalizedQuery.localeCompare(b.normalizedQuery)
+            return (
+              avgB - avgA ||
+              b.count - a.count ||
+              a.normalizedQuery.localeCompare(b.normalizedQuery)
+            )
           })
           .slice(0, MAX_QUERY_ROWS)
           .map(toQueryRow)

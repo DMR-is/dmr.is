@@ -9,10 +9,10 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
   AdvertStatus,
+  CaseStatusEnum,
   GetSearchAnalyticsQueriesQuery,
   GetSearchAnalyticsQuery,
   GetSearchAnalyticsTrendsQuery,
-  CaseStatusEnum,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,

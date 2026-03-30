@@ -18,11 +18,7 @@ export const SearchDashboardKpiGrid = ({ items }: Props) => {
             <Box className={styles.labelWithTooltip}>
               <Text variant="eyebrow">{item.label}</Text>
               {item.helpText ? (
-                <Tooltip
-                  text={item.helpText}
-                  placement="top"
-                  color="blue400"
-                />
+                <Tooltip text={item.helpText} placement="top" color="blue400" />
               ) : null}
             </Box>
             <Text as="div" className={styles.kpiValue}>

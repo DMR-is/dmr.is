@@ -1,6 +1,6 @@
 import { theme } from '@dmr.is/island-ui-theme'
 
-import { globalStyle,style, styleVariants } from '@vanilla-extract/css'
+import { globalStyle, style, styleVariants } from '@vanilla-extract/css'
 
 export const container = style({
   display: 'inline-block',

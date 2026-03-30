@@ -5,11 +5,11 @@ import {
   StatisticsOverviewQueryType,
 } from '../../../../gen/fetch'
 import {
-  SearchAnalyticsInterval,
-  SearchAnalyticsQueryTableType,
   type SearchAnalyticsBreakdownsResponse,
+  SearchAnalyticsInterval,
   type SearchAnalyticsOverviewResponse,
   type SearchAnalyticsQueriesResponse,
+  SearchAnalyticsQueryTableType,
   type SearchAnalyticsTrendsResponse,
 } from '../../../search-analytics/types'
 import { protectedProcedure, router } from '../trpc'
@@ -78,11 +78,9 @@ export const statisticsRouter = router({
       return ctx.api.getStatisticsOverview({ type: input.type })
     }),
 
-  getStatisticsOverviewDashboard: protectedProcedure.query(
-    async ({ ctx }) => {
-      return ctx.api.getStatisticsOverviewDashboard()
-    },
-  ),
+  getStatisticsOverviewDashboard: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.api.getStatisticsOverviewDashboard()
+  }),
 
   getSearchAnalyticsOverview: protectedProcedure
     .input(
@@ -105,9 +103,7 @@ export const statisticsRouter = router({
         from: z.string().optional(),
         to: z.string().optional(),
         interval: z
-          .enum(
-            Object.values(SearchAnalyticsInterval) as [string, ...string[]],
-          )
+          .enum(Object.values(SearchAnalyticsInterval) as [string, ...string[]])
           .optional(),
       }),
     )

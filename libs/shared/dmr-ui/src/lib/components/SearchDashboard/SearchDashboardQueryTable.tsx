@@ -36,48 +36,48 @@ export const SearchDashboardQueryTable = ({
         <Text variant="small">{emptyMessage}</Text>
       ) : (
         <T.Table>
-            <T.Head>
-              <T.Row>
-                {columns.map((column) => (
-                  <T.HeadData key={column.key} align={column.align ?? 'left'}>
-                    <Box className={styles.tableHeadContent}>
-                      <Text variant="small" fontWeight="semiBold">
-                        {column.label}
-                      </Text>
-                      {column.helpText ? (
-                        <Tooltip
-                          text={column.helpText}
-                          placement="bottom"
-                          horizontalAlign={
-                            column.align === 'left'
-                              ? 'start'
-                              : column.align === 'right'
-                                ? 'end'
-                                : 'center'
-                          }
-                          color="blue400"
-                        />
-                      ) : null}
-                    </Box>
-                  </T.HeadData>
-                ))}
-              </T.Row>
-            </T.Head>
-            <T.Body>
-              {rows.map((row) => (
-                <T.Row key={`${row.normalizedQuery}-${row.resultBucket}`}>
-                  <T.Data align="left">
-                    <Text className={styles.queryCell} variant="small">
-                      {row.normalizedQuery}
+          <T.Head>
+            <T.Row>
+              {columns.map((column) => (
+                <T.HeadData key={column.key} align={column.align ?? 'left'}>
+                  <Box className={styles.tableHeadContent}>
+                    <Text variant="small" fontWeight="semiBold">
+                      {column.label}
                     </Text>
-                  </T.Data>
-                  <T.Data align="right">{row.count}</T.Data>
-                  <T.Data align="right">{row.zeroResultRate}</T.Data>
-                  <T.Data align="right">{row.avgDurationMs}</T.Data>
-                  <T.Data align="right">{row.resultBucket}</T.Data>
-                </T.Row>
-                ))}
-            </T.Body>
+                    {column.helpText ? (
+                      <Tooltip
+                        text={column.helpText}
+                        placement="bottom"
+                        horizontalAlign={
+                          column.align === 'left'
+                            ? 'start'
+                            : column.align === 'right'
+                              ? 'end'
+                              : 'center'
+                        }
+                        color="blue400"
+                      />
+                    ) : null}
+                  </Box>
+                </T.HeadData>
+              ))}
+            </T.Row>
+          </T.Head>
+          <T.Body>
+            {rows.map((row) => (
+              <T.Row key={`${row.normalizedQuery}-${row.resultBucket}`}>
+                <T.Data align="left">
+                  <Text className={styles.queryCell} variant="small">
+                    {row.normalizedQuery}
+                  </Text>
+                </T.Data>
+                <T.Data align="right">{row.count}</T.Data>
+                <T.Data align="right">{row.zeroResultRate}</T.Data>
+                <T.Data align="right">{row.avgDurationMs}</T.Data>
+                <T.Data align="right">{row.resultBucket}</T.Data>
+              </T.Row>
+            ))}
+          </T.Body>
         </T.Table>
       )}
     </SearchDashboardPanel>

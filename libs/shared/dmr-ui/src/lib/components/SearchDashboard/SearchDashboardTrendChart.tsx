@@ -64,10 +64,7 @@ const createTrendPath = (points: ChartPoint[]) => {
     .join(' ')
 }
 
-const createAreaPath = (
-  points: ChartPoint[],
-  baselineY: number,
-) => {
+const createAreaPath = (points: ChartPoint[], baselineY: number) => {
   if (points.length === 0) {
     return ''
   }
@@ -91,59 +88,48 @@ export const SearchDashboardTrendChart = ({
   valueFormatter = (value) => value.toString(),
 }: SearchDashboardTrendChartProps) => {
   const trendId = toTrendId(title)
-  const [activeIndex, setActiveIndex] = useState(
-    Math.max(points.length - 1, 0),
-  )
+  const [activeIndex, setActiveIndex] = useState(Math.max(points.length - 1, 0))
 
   const chart = useMemo(() => {
-    const plotWidth =
-      CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right
-    const plotHeight =
-      CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom
+    const plotWidth = CHART_WIDTH - CHART_PADDING.left - CHART_PADDING.right
+    const plotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom
     const maxValue = Math.max(...points.map((point) => point.value), 1)
     const safeDivisor = points.length > 1 ? points.length - 1 : 1
 
     const chartPoints: ChartPoint[] = points.map((point, index) => ({
       ...point,
       x: CHART_PADDING.left + (index / safeDivisor) * plotWidth,
-      y:
-        CHART_PADDING.top +
-        plotHeight -
-        (point.value / maxValue) * plotHeight,
+      y: CHART_PADDING.top + plotHeight - (point.value / maxValue) * plotHeight,
     }))
 
     const yTicks = getYTicks(maxValue).map((value) => ({
       value,
-      y:
-        CHART_PADDING.top +
-        plotHeight -
-        (value / maxValue) * plotHeight,
+      y: CHART_PADDING.top + plotHeight - (value / maxValue) * plotHeight,
     }))
 
-    const interactiveRegions: ChartRegion[] = chartPoints.map((point, index) => {
-      const previousPoint = chartPoints[index - 1]
-      const nextPoint = chartPoints[index + 1]
-      const leftEdge = previousPoint
-        ? (previousPoint.x + point.x) / 2
-        : CHART_PADDING.left
-      const rightEdge = nextPoint
-        ? (point.x + nextPoint.x) / 2
-        : CHART_WIDTH - CHART_PADDING.right
+    const interactiveRegions: ChartRegion[] = chartPoints.map(
+      (point, index) => {
+        const previousPoint = chartPoints[index - 1]
+        const nextPoint = chartPoints[index + 1]
+        const leftEdge = previousPoint
+          ? (previousPoint.x + point.x) / 2
+          : CHART_PADDING.left
+        const rightEdge = nextPoint
+          ? (point.x + nextPoint.x) / 2
+          : CHART_WIDTH - CHART_PADDING.right
 
-      return {
-        x: leftEdge,
-        width: Math.max(rightEdge - leftEdge, 1),
-      }
-    })
+        return {
+          x: leftEdge,
+          width: Math.max(rightEdge - leftEdge, 1),
+        }
+      },
+    )
 
     return {
       chartPoints,
       interactiveRegions,
       linePath: createTrendPath(chartPoints),
-      areaPath: createAreaPath(
-        chartPoints,
-        CHART_PADDING.top + plotHeight,
-      ),
+      areaPath: createAreaPath(chartPoints, CHART_PADDING.top + plotHeight),
       xTickIndexes: getTickIndexes(points.length),
       yTicks,
       plotHeight,
@@ -186,7 +172,13 @@ export const SearchDashboardTrendChart = ({
                   <stop offset="0%" stopColor="#0061ff" />
                   <stop offset="100%" stopColor="#0bbf99" />
                 </linearGradient>
-                <linearGradient id={`trend-area-${trendId}`} x1="0" x2="0" y1="0" y2="1">
+                <linearGradient
+                  id={`trend-area-${trendId}`}
+                  x1="0"
+                  x2="0"
+                  y1="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#0061ff" stopOpacity="0.18" />
                   <stop offset="100%" stopColor="#0061ff" stopOpacity="0.03" />
                 </linearGradient>

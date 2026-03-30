@@ -590,14 +590,11 @@ export class StatisticsService implements IStatisticsService {
       },
       order: [['createdAt', 'ASC']],
       logging: (_, timing) =>
-        this.logger.info(
-          `getSearchAnalytics events query ran in ${timing}ms`,
-          {
-            context: LOGGING_CONTEXT,
-            category: LOGGING_CATEGORY,
-            query: 'searchAnalyticsEvents',
-          },
-        ),
+        this.logger.info(`getSearchAnalytics events query ran in ${timing}ms`, {
+          context: LOGGING_CONTEXT,
+          category: LOGGING_CATEGORY,
+          query: 'searchAnalyticsEvents',
+        }),
     })
   }
 }

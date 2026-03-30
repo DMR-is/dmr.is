@@ -57,7 +57,11 @@ export const SearchDashboardFilters = ({
   ) : null
 
   return (
-    <SearchDashboardPanel title={title} helpText={helpText} action={resetAction}>
+    <SearchDashboardPanel
+      title={title}
+      helpText={helpText}
+      action={resetAction}
+    >
       <Box className={styles.filtersLayout}>
         <Box className={styles.filterInputs}>
           <DatePicker

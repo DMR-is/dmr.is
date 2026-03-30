@@ -61,9 +61,24 @@ describe('search analytics utils', () => {
   describe('buildSearchAnalyticsOverview', () => {
     it('aggregates core KPI metrics', () => {
       const result = buildSearchAnalyticsOverview([
-        makeEvent({ totalResultCount: 0, hasFilters: true, page: 1, durationMs: 50 }),
-        makeEvent({ totalResultCount: 4, hasFilters: false, page: 2, durationMs: 100 }),
-        makeEvent({ totalResultCount: 250, hasFilters: true, page: 1, durationMs: 300 }),
+        makeEvent({
+          totalResultCount: 0,
+          hasFilters: true,
+          page: 1,
+          durationMs: 50,
+        }),
+        makeEvent({
+          totalResultCount: 4,
+          hasFilters: false,
+          page: 2,
+          durationMs: 100,
+        }),
+        makeEvent({
+          totalResultCount: 250,
+          hasFilters: true,
+          page: 1,
+          durationMs: 300,
+        }),
       ])
 
       expect(result).toEqual({
@@ -173,9 +188,12 @@ describe('search analytics utils', () => {
       const top = buildSearchAnalyticsQueries([...repeated, ...ignored], {
         type: SearchAnalyticsQueryTableType.Top,
       })
-      const zeroResults = buildSearchAnalyticsQueries([...repeated, ...ignored], {
-        type: SearchAnalyticsQueryTableType.ZeroResults,
-      })
+      const zeroResults = buildSearchAnalyticsQueries(
+        [...repeated, ...ignored],
+        {
+          type: SearchAnalyticsQueryTableType.ZeroResults,
+        },
+      )
 
       expect(top.rows).toEqual([
         {
