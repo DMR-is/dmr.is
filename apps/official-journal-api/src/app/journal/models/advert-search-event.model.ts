@@ -137,6 +137,7 @@ export class AdvertSearchEventModel extends Model<
   @Column({
     type: DataType.DATE,
     allowNull: false,
+    defaultValue: DataType.NOW,
     field: 'created_at',
   })
   createdAt!: Date
