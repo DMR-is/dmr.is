@@ -37,7 +37,11 @@ export const RegulationMetadataFields = ({
 
   const hasRegulationDraft = !!currentCase.regulationDraftId
 
-  const { data: draft, isLoading, error } = useQuery({
+  const {
+    data: draft,
+    isLoading,
+    error,
+  } = useQuery({
     ...trpc.getRegulationDraft.queryOptions({
       caseId: currentCase.id,
     }),
@@ -59,6 +63,15 @@ export const RegulationMetadataFields = ({
   const currentSlugs = useMemo(
     () => new Set(draft?.lawChapters?.map((c) => c.slug) ?? []),
     [draft?.lawChapters],
+  )
+
+  const lawChapterNameBySlug = useMemo(
+    () =>
+      allLawChapters.reduce<Record<string, string>>((acc, chapter) => {
+        acc[chapter.slug] = chapter.name
+        return acc
+      }, {}),
+    [allLawChapters],
   )
 
   const lawChapterOptions = useMemo(
@@ -89,7 +102,8 @@ export const RegulationMetadataFields = ({
         draftingStatus: draft.draftingStatus,
         title: (partial.title as string) ?? draft.title,
         text: draft.text,
-        draftingNotes: (partial.draftingNotes as string) ?? draft.draftingNotes ?? '',
+        draftingNotes:
+          (partial.draftingNotes as string) ?? draft.draftingNotes ?? '',
         name: draft.name,
         ministry: (partial.ministry as string) ?? draft.ministry,
         effectiveDate: (partial.effectiveDate as string) ?? draft.effectiveDate,
@@ -182,7 +196,6 @@ export const RegulationMetadataFields = ({
             )}
           </Inline>
 
-
           <Box>
             <Text variant="small" fontWeight="semiBold" marginBottom={1}>
               Lagakaflar
@@ -192,7 +205,7 @@ export const RegulationMetadataFields = ({
                 <Inline space={1} flexWrap="wrap">
                   {draft.lawChapters.map((chapter) => (
                     <Tag key={chapter.slug} variant="blue" outlined>
-                      {chapter.name}
+                      {lawChapterNameBySlug[chapter.slug] ?? chapter.name ?? chapter.slug}
                       {canEdit && (
                         <Box
                           component="button"
@@ -257,7 +270,6 @@ export const RegulationMetadataFields = ({
               </Box>
             </Box>
           )}
-
         </Stack>
       )}
     </AccordionItem>
