@@ -73,7 +73,11 @@ describe('search-dashboard utils', () => {
         },
       })
 
-      expect(kpis[0]).toEqual({ label: 'Leitir alls', value: '10' })
+      expect(kpis[0]).toEqual({
+        label: 'Leitir alls',
+        value: '10',
+        helpText: 'Heildarfjöldi leita á valda tímabilinu.',
+      })
       expect(charts[0]?.points[0]).toEqual({
         label: '2026-03-01',
         value: 5,
