@@ -18,6 +18,7 @@ import { toast } from '@dmr.is/ui/utils/toast'
 import { RegulationImpact } from '../../gen/fetch'
 import { useCaseContext } from '../../hooks/useCaseContext'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { formatDate } from '../../lib/utils'
 import { EditCancellationModal } from './EditCancellationModal'
 import { EditChangeModal } from './EditChangeModal'
 import * as styles from './EditChangeModal.css'
@@ -316,9 +317,7 @@ const ImpactCard = ({
           <Text variant="small" fontWeight="semiBold">
             Dagsetning:
           </Text>
-          <Text variant="small">
-            {new Date(impact.date).toLocaleDateString('is-IS')}
-          </Text>
+          <Text variant="small">{formatDate(impact.date)}</Text>
         </Inline>
 
         {impact.title && (
