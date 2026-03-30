@@ -38,6 +38,8 @@ export enum Routes {
   OverviewDetail = '/heildaryfirlit/:caseId',
   Login = '/innskraning',
   UserManagement = '/notendur',
+  Statistics = '/tolfraedi',
+  SearchDashboard = '/leitaryfirlit',
   ReplacePdf = '/yfirskrifa-pdf',
   ReplacePdfAdvert = '/yfirskrifa-pdf/:advertId',
   AdvertMigration = '/auglysing-til-ritstjornar',
@@ -107,9 +109,7 @@ export class OJOIWebException extends Error {
     super(message)
   }
 
-  static serverError(
-    message = 'Ekki tókst að vinna beiðni',
-  ): OJOIWebException {
+  static serverError(message = 'Ekki tókst að vinna beiðni'): OJOIWebException {
     const error = new OJOIWebException(message)
     error.status = 500
     error.name = 'Villa kom upp í vefþjón'
@@ -130,7 +130,6 @@ export class OJOIWebException extends Error {
     return error
   }
 }
-
 
 export const MONTH_OPTIONS_ZERO_BASED = [
   { label: 'Janúar', value: 0 },

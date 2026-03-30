@@ -6,6 +6,7 @@ import { ALL_MOCK_JOURNAL_DEPARTMENTS } from '@dmr.is/mocks'
 import { IUserService } from '@dmr.is/ojoi-modules'
 import {
   DepartmentSlugEnum,
+  SearchAnalyticsQueryTableType,
   StatisticsOverviewQueryType,
   UserDto,
 } from '@dmr.is/shared-dto'
@@ -71,6 +72,26 @@ describe('StatisticsController', () => {
           expect(error.getStatus()).toEqual(501)
         }
       }
+    })
+  })
+
+  describe('search analytics', () => {
+    it('returns an overview payload', async () => {
+      const result = await controller.searchOverview({
+        from: '2026-03-01',
+        to: '2026-03-30',
+      })
+
+      expect(result.totalSearches).toBe(0)
+    })
+
+    it('returns a query table payload', async () => {
+      const result = await controller.searchQueries({
+        type: SearchAnalyticsQueryTableType.Top,
+      })
+
+      expect(result.type).toBe(SearchAnalyticsQueryTableType.Top)
+      expect(result.rows).toEqual([])
     })
   })
 })

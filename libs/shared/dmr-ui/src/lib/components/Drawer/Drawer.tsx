@@ -7,7 +7,7 @@ import { Drawer as DrawerBase } from '../../island-is/'
 type Props = {
   baseId?: string
   isVisible?: boolean
-  disclosure: React.ReactElement<any, string | React.JSXElementConstructor<any>>
+  disclosure: React.ReactElement
   children?: React.ReactNode
 }
 

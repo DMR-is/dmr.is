@@ -10,9 +10,17 @@ import { ALL_MOCK_ADVERTS } from '@dmr.is/mocks'
 import {
   AdvertStatus,
   CaseStatusEnum,
+  GetSearchAnalyticsQueriesQuery,
+  GetSearchAnalyticsQuery,
+  GetSearchAnalyticsTrendsQuery,
   GetStatisticOverviewDashboardResponse,
   GetStatisticsDepartmentResponse,
   GetStatisticsOverviewResponse,
+  SearchAnalyticsBreakdownsResponse,
+  SearchAnalyticsOverviewResponse,
+  SearchAnalyticsQueriesResponse,
+  SearchAnalyticsQueryTableType,
+  SearchAnalyticsTrendsResponse,
   StatisticsOverviewCategory,
   StatisticsOverviewQueryType,
 } from '@dmr.is/shared-dto'
@@ -100,6 +108,45 @@ export class MockStatisticsService implements IStatisticsService {
     _userId: string,
   ): Promise<ResultWrapper<GetStatisticOverviewDashboardResponse>> {
     throw new NotImplementedException()
+  }
+
+  async getSearchAnalyticsOverview(
+    _query?: GetSearchAnalyticsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsOverviewResponse>> {
+    return ResultWrapper.ok({
+      totalSearches: 0,
+      zeroResultRate: 0,
+      withFiltersRate: 0,
+      avgDurationMs: 0,
+      p95DurationMs: 0,
+      pageOneRate: 0,
+    })
+  }
+
+  async getSearchAnalyticsTrends(
+    _query?: GetSearchAnalyticsTrendsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsTrendsResponse>> {
+    return ResultWrapper.ok({ points: [] })
+  }
+
+  async getSearchAnalyticsBreakdowns(
+    _query?: GetSearchAnalyticsQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsBreakdownsResponse>> {
+    return ResultWrapper.ok({
+      queryKinds: [],
+      resultBuckets: [],
+      sortUsage: [],
+      filterUsage: [],
+    })
+  }
+
+  async getSearchAnalyticsQueries(
+    query: GetSearchAnalyticsQueriesQuery,
+  ): Promise<ResultWrapper<SearchAnalyticsQueriesResponse>> {
+    return ResultWrapper.ok({
+      type: query.type ?? SearchAnalyticsQueryTableType.Top,
+      rows: [],
+    })
   }
 
   getOverview(

@@ -69,7 +69,7 @@ export const HeaderLogin = ({
                     size="small"
                     icon={md ? 'person' : undefined}
                     iconType="outline"
-                    // loading={loading}
+                    loading={loading}
                     onClick={async (e) => {
                       e.preventDefault()
                       try {

@@ -17,6 +17,7 @@ import {
   GetStatisticsDepartmentResponse,
 } from '../../gen/fetch'
 import { useFormatMessage } from '../../hooks/useFormatMessage'
+import { Routes } from '../../lib/constants'
 import { messages as dashBoardMessages } from '../../lib/messages/dashboard'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { ContentWrapper } from '../content-wrapper/ContentWrapper'
@@ -101,7 +102,13 @@ const TabContent = ({
   )
 }
 
-export const StatisticsContainer = () => {
+type StatisticsContainerProps = {
+  embedded?: boolean
+}
+
+export const StatisticsContainer = ({
+  embedded = false,
+}: StatisticsContainerProps) => {
   const { formatMessage } = useFormatMessage()
   const trpc = useTRPC()
 
@@ -146,36 +153,41 @@ export const StatisticsContainer = () => {
     },
   ]
 
-  if (loading) {
-    return (
-      <Stack space={1}>
-        <SkeletonLoader
-          height={30}
-          repeat={1}
-          space={1}
-          borderRadius="standard"
-        />
-        <Inline align="center">
-          <SkeletonLoader borderRadius="full" height={184} width={184} />
-        </Inline>
-        <SkeletonLoader
-          height={30}
-          repeat={5}
-          space={1}
-          borderRadius="standard"
-        />
-      </Stack>
-    )
-  }
-  return (
-    <ContentWrapper title={title} linkText={linkText}>
-      <Tabs
-        label={tabLabel}
-        selected={departmentTab}
-        onChange={(id) => setDepartmentTab(id as DepartmentSlugEnum)}
-        size="sm"
-        tabs={statisticsTabs}
+  const content = loading ? (
+    <Stack space={1}>
+      <SkeletonLoader
+        height={30}
+        repeat={1}
+        space={1}
+        borderRadius="standard"
       />
+      <Inline align="center">
+        <SkeletonLoader borderRadius="full" height={184} width={184} />
+      </Inline>
+      <SkeletonLoader
+        height={30}
+        repeat={5}
+        space={1}
+        borderRadius="standard"
+      />
+    </Stack>
+  ) : (
+    <Tabs
+      label={tabLabel}
+      selected={departmentTab}
+      onChange={(id) => setDepartmentTab(id as DepartmentSlugEnum)}
+      size="sm"
+      tabs={statisticsTabs}
+    />
+  )
+
+  return (
+    <ContentWrapper
+      title={embedded ? undefined : title}
+      link={embedded ? undefined : Routes.Statistics}
+      linkText={embedded ? undefined : linkText}
+    >
+      {content}
     </ContentWrapper>
   )
 }

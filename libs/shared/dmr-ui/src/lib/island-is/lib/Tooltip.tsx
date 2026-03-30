@@ -5,15 +5,17 @@ import React, { ElementType, FC, ReactElement } from 'react'
 
 import type { Colors } from '@dmr.is/island-ui-theme'
 
-import { Icon } from '@island.is/island-ui/core/IconRC/Icon'
 import type { Size } from '@island.is/island-ui/core/IconRC/types'
 
+import { Icon } from './Icon'
 import * as styles from './Tooltip.css'
 
 type Placement = 'top' | 'right' | 'bottom' | 'left'
+type HorizontalAlign = 'start' | 'center' | 'end'
 
 interface TooltipProps {
   placement?: Placement
+  horizontalAlign?: HorizontalAlign
   text: React.ReactNode
   iconSize?: Size
   color?: Colors
@@ -24,6 +26,7 @@ interface TooltipProps {
 
 export const Tooltip: FC<React.PropsWithChildren<TooltipProps>> = ({
   placement = 'top',
+  horizontalAlign = 'center',
   text,
   iconSize = 'small',
   color = 'dark200',
@@ -44,6 +47,7 @@ export const Tooltip: FC<React.PropsWithChildren<TooltipProps>> = ({
         className={cn(
           styles.tooltipContent,
           styles.placement[placement],
+          styles.horizontalAlign[horizontalAlign],
           fullWidth && styles.fullWidth,
         )}
         role="tooltip"

@@ -1,6 +1,6 @@
 import { theme } from '@dmr.is/island-ui-theme'
 
-import { globalStyle,style, styleVariants } from '@vanilla-extract/css'
+import { globalStyle, style, styleVariants } from '@vanilla-extract/css'
 
 export const container = style({
   display: 'inline-block',
@@ -17,7 +17,8 @@ export const tooltipContent = style({
   backgroundColor: theme.color.blue100,
   borderRadius: theme.border.radius.large,
   padding: theme.spacing[2],
-  maxWidth: 240,
+  maxWidth: 320,
+  minWidth: 220,
   border: `1px solid ${theme.color.blue200}`,
   fontWeight: theme.typography.light,
   fontSize: 15,
@@ -26,6 +27,7 @@ export const tooltipContent = style({
   color: theme.color.dark400,
   zIndex: 10000,
   whiteSpace: 'normal',
+  textAlign: 'left',
   pointerEvents: 'none',
   selectors: {
     [`${container}:hover &, ${container}:focus-within &`]: {
@@ -58,6 +60,20 @@ export const placement = styleVariants({
     top: '50%',
     transform: 'translateY(-50%)',
     marginLeft: 8,
+  },
+})
+
+export const horizontalAlign = styleVariants({
+  start: {
+    left: 0,
+    right: 'auto',
+    transform: 'none',
+  },
+  center: {},
+  end: {
+    left: 'auto',
+    right: 0,
+    transform: 'none',
   },
 })
 
