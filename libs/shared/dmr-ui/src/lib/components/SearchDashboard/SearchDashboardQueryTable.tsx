@@ -1,5 +1,4 @@
 import { Box } from '../../island-is/lib/Box'
-import { Stack } from '../../island-is/lib/Stack'
 import { Table as T } from '../../island-is/lib/Table'
 import { Text } from '../../island-is/lib/Text'
 import { Tooltip } from '../../island-is/lib/Tooltip'

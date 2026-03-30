@@ -11,7 +11,7 @@ import { DataTableColumnProps } from './types'
 
 export const DataTableColumn = ({
   field,
-  fluid = false,
+  fluid: _fluid = false,
   width,
   align = 'left',
   children,
