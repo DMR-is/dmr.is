@@ -1,11 +1,11 @@
 import { fetchQuery, HydrateClient } from '@dmr.is/trpc/client/server'
 
 import { resolveSearchDashboardFilters } from '../../../containers/search-dashboard.utils'
+import { StatisticsPageContainer } from '../../../containers/StatisticsPageContainer'
 import {
   SearchAnalyticsInterval,
   SearchAnalyticsQueryTableType,
 } from '../../../gen/fetch'
-import { StatisticsPageContainer } from '../../../containers/StatisticsPageContainer'
 import { trpc } from '../../../lib/trpc/client/server'
 
 type StatisticsPageSearchParams = {
