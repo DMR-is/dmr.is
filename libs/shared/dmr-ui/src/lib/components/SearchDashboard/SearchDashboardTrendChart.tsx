@@ -183,8 +183,8 @@ export const SearchDashboardTrendChart = ({
                   <stop offset="100%" stopColor="#0061ff" stopOpacity="0.03" />
                 </linearGradient>
               </defs>
-              {chart.yTicks.map((tick) => (
-                <g key={tick.value}>
+              {chart.yTicks.map((tick, index) => (
+                <g key={`y-tick-${index}-${tick.value}`}>
                   <line
                     className={styles.trendGridLine}
                     x1={CHART_PADDING.left}
