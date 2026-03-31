@@ -1,11 +1,13 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import { type ReactNode, useEffect, useState } from 'react'
+
+import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 
 type TabItem = {
   id: string
   label: string
-  content: React.ReactNode
+  content: ReactNode
 }
 
 type ClientTabsProps = {
@@ -17,14 +19,16 @@ type ClientTabsProps = {
   tabs: TabItem[]
 }
 
-const DynamicTabs = dynamic(
-  () =>
-    import('@dmr.is/ui/components/island-is/Tabs').then((mod) => mod.Tabs),
-  {
-    ssr: false,
-  },
-)
-
 export const ClientTabs = (props: ClientTabsProps) => {
-  return <DynamicTabs {...props} selected={props.selected ?? undefined} />
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
+  return <Tabs {...props} selected={props.selected ?? undefined} />
 }
