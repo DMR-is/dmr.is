@@ -478,7 +478,7 @@ export class CaseCreateService implements ICaseCreateService {
             }
           : {}),
       },
-      categories: application.answers.advert.categories,
+      categories: application.answers.advert.categories ?? [],
       channels: channels,
       additions: additionsBody,
       signatureDate: signatureDate.toISOString(),
@@ -760,32 +760,30 @@ export class CaseCreateService implements ICaseCreateService {
       })
     }
 
-    const regularSignature = application.answers.signature.regular
-    const committeeSignature = application.answers.signature.committee
     const signatureType =
       application.answers.misc?.signatureType === SignatureType.Committee
         ? SignatureType.Committee
         : SignatureType.Regular
 
+    const signatureRecords =
+      (signatureType === SignatureType.Regular
+        ? application.answers.signature?.regular?.records
+        : application.answers.signature?.committee?.records) ?? []
+
     ResultWrapper.unwrap(
       await this.signatureService.createSignature(caseId, {
         involvedPartyId: values.caseBody.involvedPartyId,
-        records: (
-          (signatureType === SignatureType.Regular
-            ? regularSignature?.records
-            : committeeSignature?.records) ?? []
-        ).map((rec) => ({
+        records: signatureRecords.map((rec) => ({
           institution: rec.institution,
           signatureDate: rec.signatureDate,
           additional: rec?.additional,
-          members:
-            rec?.members.map((member) => ({
-              name: member.name,
-              textAbove: member.above ?? null,
-              textBelow: member.below ?? null,
-              textAfter: member.after ?? null,
-              textBefore: null,
-            })) ?? [],
+          members: (rec?.members ?? []).map((member) => ({
+            name: member.name,
+            textAbove: member.above ?? null,
+            textBelow: member.below ?? null,
+            textAfter: member.after ?? null,
+            textBefore: null,
+          })),
           chairman: rec?.chairman
             ? {
                 ...rec.chairman,
