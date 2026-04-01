@@ -79,8 +79,9 @@ export const Modal = ({
             <GridRow>
               <GridColumn span={columnSpan} offset={columnOffset}>
                 <Box
-                  className={styles.modalContent}
-                  style={{ overflowY: allowOverflow ? 'visible' : 'auto' }}
+                  className={styles.modalContent({
+                    overflow: allowOverflow ? 'visible' : 'scrollable',
+                  })}
                 >
                   <Stack space={2}>
                     <Inline
