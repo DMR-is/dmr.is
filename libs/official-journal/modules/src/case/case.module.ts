@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
 
+import { AdditionalPartiesModule } from '../additional-parties'
 import { AdvertMainTypeModel } from '../advert-type/models'
 import { ApplicationModule } from '../application/application.module'
 import { AttachmentsModule } from '../attachments/attachments.module'
@@ -56,6 +57,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     ]),
     LoggingModule,
     SharedJournalModule,
+    AdditionalPartiesModule,
     SignatureModule,
     CommentModuleV2,
     ExternalModule,

@@ -1,5 +1,6 @@
 import { Includeable } from 'sequelize'
 
+import { AdditionalPartiesModel } from '../../additional-parties/models'
 import { AdvertTypeModel } from '../../advert-type/models'
 import { CaseActionModel } from '../../comment/v2/models/case-action.model'
 import { CommentModel } from '../../comment/v2/models/comment.model'
@@ -27,6 +28,11 @@ export const casesDetailedIncludes: Includeable[] = [
   AdvertTypeModel,
   AdvertCategoryModel,
   AdvertInvolvedPartyModel,
+  {
+    model: AdditionalPartiesModel,
+    separate: true,
+    include: [AdvertInvolvedPartyModel],
+  },
 
   {
     model: UserModel,
@@ -114,6 +120,17 @@ export const casesIncludes = (params: CaseIncludeFilters): Includeable[] => [
     model: AdvertInvolvedPartyModel,
     attributes: ['id', 'title', 'slug'],
     where: matchByIdTitleOrSlug(params?.institution),
+  },
+  {
+    model: AdditionalPartiesModel,
+    separate: true,
+    include: [
+      {
+        model: AdvertInvolvedPartyModel,
+        attributes: ['id', 'title', 'slug', 'nationalId'],
+      },
+    ],
+    required: false,
   },
   {
     model: AdvertCategoryModel,

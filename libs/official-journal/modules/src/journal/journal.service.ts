@@ -55,6 +55,7 @@ import { ResultWrapper } from '@dmr.is/types'
 import { cleanLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
 import { generatePaging, toUtf8 } from '@dmr.is/utils-server/serverUtils'
 
+import { AdditionalPartiesModel } from '../additional-parties/models'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { caseAdditionMigrate } from '../case/migrations/case-addition.migrate'
 import { CaseCategoriesModel, CaseModel } from '../case/models'
@@ -200,6 +201,11 @@ export class JournalService implements IJournalService {
         AdvertDepartmentModel,
         AdvertStatusModel,
         AdvertInvolvedPartyModel,
+        {
+          model: AdditionalPartiesModel,
+          separate: true,
+          include: [AdvertInvolvedPartyModel],
+        },
         AdvertAttachmentsModel,
         AdvertCategoryModel,
       ],
@@ -914,6 +920,11 @@ export class JournalService implements IJournalService {
         AdvertDepartmentModel,
         AdvertStatusModel,
         AdvertInvolvedPartyModel,
+        {
+          model: AdditionalPartiesModel,
+          separate: true,
+          include: [AdvertInvolvedPartyModel],
+        },
         AdvertAttachmentsModel,
         AdvertCategoryModel,
         AdvertCorrectionModel,
@@ -1143,6 +1154,11 @@ export class JournalService implements IJournalService {
                 AdvertDepartmentModel,
                 AdvertStatusModel,
                 AdvertInvolvedPartyModel,
+                {
+                  model: AdditionalPartiesModel,
+                  separate: true,
+                  include: [AdvertInvolvedPartyModel],
+                },
                 AdvertAttachmentsModel,
                 AdvertCategoryModel,
               ],
@@ -1292,6 +1308,11 @@ export class JournalService implements IJournalService {
                 slug: params?.involvedParty,
               }
             : undefined,
+        },
+        {
+          model: AdditionalPartiesModel,
+          separate: true,
+          include: [AdvertInvolvedPartyModel],
         },
         AdvertAttachmentsModel,
         AdvertCategoryModel,

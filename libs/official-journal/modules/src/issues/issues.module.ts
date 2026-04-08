@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AwsModule } from '@dmr.is/shared-modules'
 
+import { AdditionalPartiesModel } from '../additional-parties/models'
 import { AdvertModel } from '../journal/models'
 import { PdfModule } from '../pdf/pdf.module'
 import { UserModule } from '../user/user.module'
@@ -16,7 +17,11 @@ import { IIssuesService } from './issues.service.interface'
     PdfModule,
     AwsModule,
     UserModule,
-    SequelizeModule.forFeature([AdvertModel, IssuesModel]),
+    SequelizeModule.forFeature([
+      AdvertModel,
+      AdditionalPartiesModel,
+      IssuesModel,
+    ]),
   ],
   controllers: [IssuesController],
   providers: [

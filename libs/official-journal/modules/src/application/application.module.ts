@@ -4,6 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
 
+import { AdditionalPartiesModule } from '../additional-parties'
 import { AttachmentsModule } from '../attachments/attachments.module'
 import { AuthModule } from '../auth/auth.module'
 import { SharedCaseModule } from '../case/case.module'
@@ -34,6 +35,7 @@ export { ApplicationService } from './application.service'
     PriceModule,
     LoggingModule,
     AuthModule,
+    AdditionalPartiesModule,
     AttachmentsModule,
     SignatureModule,
     CommentModuleV2,

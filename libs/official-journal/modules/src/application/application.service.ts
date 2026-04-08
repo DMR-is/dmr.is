@@ -47,6 +47,7 @@ import {
   getTemplateDetails,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import { IAuthService } from '../auth/auth.service.interface'
@@ -99,6 +100,7 @@ export class ApplicationService implements IApplicationService {
     private readonly priceService: IPriceService,
     @Inject(IAWSService)
     private readonly s3Service: IAWSService,
+    private readonly additionalPartiesService: AdditionalPartiesService,
     @InjectModel(AdvertModel) private readonly advertModel: typeof AdvertModel,
     private readonly sequelize: Sequelize,
   ) {
@@ -281,6 +283,13 @@ export class ApplicationService implements IApplicationService {
           updateBody,
           transaction,
         ),
+      )
+
+      await this.additionalPartiesService.syncCaseAdditionalParties(
+        caseLookup.id,
+        application,
+        transaction,
+        caseLookup.advertId,
       )
 
       const commStatus = ResultWrapper.unwrap(

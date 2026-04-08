@@ -10,6 +10,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdditionalPartiesModel } from '../../additional-parties/models/additional-parties.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
@@ -85,6 +86,9 @@ export class CaseModel extends Model {
 
   @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
   involvedParty!: AdvertInvolvedPartyModel
+
+  @HasMany(() => AdditionalPartiesModel, 'case_id')
+  additionalParties?: AdditionalPartiesModel[]
 
   @Column({
     type: DataType.STRING,

@@ -132,6 +132,14 @@ export class Advert {
   readonly involvedParty!: Institution
 
   @ApiProperty({
+    description: 'Additional involved parties for the advert.',
+    required: true,
+    nullable: false,
+    type: [Institution],
+  })
+  readonly additionalParties!: Institution[]
+
+  @ApiProperty({
     description: 'Advert document in different formats.',
     required: true,
     nullable: false,

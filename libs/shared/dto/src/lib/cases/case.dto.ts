@@ -113,6 +113,15 @@ export class CaseDetailed {
   involvedParty!: Institution
 
   @ApiProperty({
+    type: [Institution],
+    description: 'Additional involved parties on the case.',
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Institution)
+  additionalParties!: Institution[]
+
+  @ApiProperty({
     type: String,
     example: '2024-01-01T09:00:00Z',
     description:
@@ -366,6 +375,7 @@ export class Case extends PickType(CaseDetailed, [
   'assignedTo',
   'tag',
   'involvedParty',
+  'additionalParties',
   'publicationNumber',
   'publishedAt',
   'transaction',
