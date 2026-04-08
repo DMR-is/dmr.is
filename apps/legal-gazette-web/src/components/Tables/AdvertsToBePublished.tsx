@@ -7,6 +7,7 @@ import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { DataTable } from '@dmr.is/ui/components/Tables/DataTable'
 import { formatDate } from '@dmr.is/utils-shared/format/date'
 
@@ -76,6 +77,15 @@ export const AdvertsToBePublished = () => {
         onChange={(evt) => handleAdvertSelect(advert.id, evt.target.checked)}
       />
     ),
+    icon: advert.hasInternalComments ? (
+      <Tooltip
+        iconSize="medium"
+        color="blue400"
+        as="button"
+        placement="top"
+        text="Þessi auglýsing er með skráðar athugasemdir frá ritstjóra"
+      />
+    ) : undefined,
     utgafudagur: advert.scheduledAt
       ? formatDate(advert.scheduledAt)
       : formatMessage(ritstjornTableMessages.publishing.noScheduledDate),
@@ -106,6 +116,11 @@ export const AdvertsToBePublished = () => {
                   }
                 />
               ),
+              size: 'tiny',
+            },
+            {
+              field: 'icon',
+              children: '',
               size: 'tiny',
             },
             {
