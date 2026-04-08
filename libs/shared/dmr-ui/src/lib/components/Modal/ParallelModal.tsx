@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 
-import cn from 'classnames'
 import { type ComponentRef, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -14,7 +13,7 @@ import { GridRow } from '../../island-is/lib/GridRow'
 import { Inline } from '../../island-is/lib/Inline'
 import { Stack } from '../../island-is/lib/Stack'
 import { Text } from '../../island-is/lib/Text'
-import { modalBase, modalBaseBackdrop, modalContent } from './Modal.css'
+import * as modalStyles from './Modal.css'
 import * as styles from './ParallelModal.css'
 
 type SpanType = React.ComponentProps<typeof GridColumn>['span']
@@ -56,20 +55,21 @@ export const ParallelModal = ({
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
   return createPortal(
-    <div className={cn(styles.backdrop, styles.backdropColor['default'])}>
+    <div className={styles.backdrop({ color: 'default' })}>
       <dialog
         ref={dialogRef}
         onClose={onDismiss}
-        className={cn(styles.parallelModal, modalBaseBackdrop)}
+        className={styles.parallelModalDialog}
         style={{ border: 'none', borderRadius: '12px' }}
       >
-        <Box className={modalBase}>
+        <Box className={modalStyles.modalBase}>
           <GridContainer>
             <GridRow>
               <GridColumn span={columnSpan} offset={columnOffset}>
                 <Box
-                  className={modalContent}
-                  style={{ overflowY: allowOverflow ? 'visible' : 'auto' }}
+                  className={modalStyles.modalContent({
+                    overflow: allowOverflow ? 'visible' : 'scrollable',
+                  })}
                 >
                   <Stack space={2}>
                     <Inline

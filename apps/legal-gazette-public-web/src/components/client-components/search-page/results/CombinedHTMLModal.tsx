@@ -22,6 +22,19 @@ export const CombinedHTMLModal = ({
   disclosure,
   onVisibilityChange,
 }: Props) => {
+  const handlePrint = () => {
+    const previousBodyOverflow = document.body.style.overflow
+
+    const restoreBodyOverflow = () => {
+      document.body.style.overflow = previousBodyOverflow
+      window.removeEventListener('afterprint', restoreBodyOverflow)
+    }
+
+    document.body.style.overflow = 'visible'
+    window.addEventListener('afterprint', restoreBodyOverflow)
+    window.print()
+  }
+
   return (
     <Modal disclosure={disclosure} onVisibilityChange={onVisibilityChange}>
       <Box padding={2} paddingTop={0} paddingBottom={6}>
@@ -35,7 +48,7 @@ export const CombinedHTMLModal = ({
                   icon="print"
                   iconType="outline"
                   colorScheme="negative"
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                   title="Prenta"
                 />
               </Inline>
