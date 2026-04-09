@@ -1,10 +1,13 @@
 import { Op, Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { Application } from '@dmr.is/shared-dto'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertInvolvedPartyModel } from '../journal/models/advert-involved-party.model'
 import { AdditionalPartiesModel } from './models'
@@ -19,6 +22,7 @@ export class AdditionalPartiesService {
     private readonly additionalPartiesModel: typeof AdditionalPartiesModel,
     @InjectModel(AdvertInvolvedPartyModel)
     private readonly involvedPartyModel: typeof AdvertInvolvedPartyModel,
+    private readonly sequelize: Sequelize,
   ) {}
 
   async syncCaseAdditionalParties(
@@ -80,6 +84,65 @@ export class AdditionalPartiesService {
         },
       },
     )
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async addCaseAdditionalParty(
+    caseId: string,
+    involvedPartyId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const existing = await this.additionalPartiesModel.findOne({
+      where: { caseId, involvedPartyId },
+      transaction,
+    })
+
+    if (existing) {
+      return ResultWrapper.err({
+        code: 400,
+        message: 'Additional party already exists on this case',
+      })
+    }
+
+    const involvedParty = await this.involvedPartyModel.findByPk(
+      involvedPartyId,
+      { transaction },
+    )
+
+    if (!involvedParty) {
+      throw new BadRequestException('Involved party not found')
+    }
+
+    await this.additionalPartiesModel.create(
+      { caseId, involvedPartyId },
+      { transaction },
+    )
+
+    return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  @Transactional()
+  async deleteCaseAdditionalParty(
+    caseId: string,
+    involvedPartyId: string,
+    transaction?: Transaction,
+  ): Promise<ResultWrapper> {
+    const deleted = await this.additionalPartiesModel.destroy({
+      where: { caseId, involvedPartyId },
+      force: true,
+      transaction,
+    })
+
+    if (deleted === 0) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Additional party not found on this case',
+      })
+    }
+
+    return ResultWrapper.ok()
   }
 
   private async getAdditionalInvolvedParties(

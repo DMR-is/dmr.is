@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   CaseComment,
   CaseCommunicationStatus,
@@ -272,6 +273,20 @@ export class CaseServiceMock {
   deleteCorrection(
     caseId: string,
     body: DeleteCaseAdvertCorrection,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+
+  addCaseAdditionalParty(
+    caseId: string,
+    body: AddCaseAdditionalPartyBody,
+  ): Promise<ResultWrapper> {
+    throw new Error('Method not implemented.')
+  }
+
+  deleteCaseAdditionalParty(
+    caseId: string,
+    involvedPartyId: string,
   ): Promise<ResultWrapper> {
     throw new Error('Method not implemented.')
   }

@@ -51,6 +51,7 @@ import {
   UUIDValidationPipe,
 } from '@dmr.is/pipelines'
 import {
+  AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   CaseChannel,
   CaseCommunicationStatus,
@@ -1087,6 +1088,34 @@ export class CaseController {
   ) {
     ResultWrapper.unwrap(
       await this.caseService.updateCaseInvolvedParty(id, body),
+    )
+  }
+
+  @Post(':caseId/additional-parties')
+  @ApiOperation({ operationId: 'addCaseAdditionalParty' })
+  @ApiNoContentResponse()
+  async addCaseAdditionalParty(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Body() body: AddCaseAdditionalPartyBody,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.addCaseAdditionalParty(caseId, body),
+    )
+  }
+
+  @Delete(':caseId/additional-parties/:involvedPartyId')
+  @ApiOperation({ operationId: 'deleteCaseAdditionalParty' })
+  @ApiNoContentResponse()
+  async deleteCaseAdditionalParty(
+    @Param('caseId', new UUIDValidationPipe()) caseId: string,
+    @Param('involvedPartyId', new UUIDValidationPipe())
+    involvedPartyId: string,
+  ) {
+    ResultWrapper.unwrap(
+      await this.caseService.deleteCaseAdditionalParty(
+        caseId,
+        involvedPartyId,
+      ),
     )
   }
 

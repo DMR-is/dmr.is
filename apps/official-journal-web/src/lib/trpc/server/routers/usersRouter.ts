@@ -90,4 +90,34 @@ export const usersRouter = router({
         },
       })
     }),
+
+  addAdditionalParty: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        involvedPartyId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.addCaseAdditionalParty({
+        caseId: input.caseId,
+        addCaseAdditionalPartyBody: {
+          involvedPartyId: input.involvedPartyId,
+        },
+      })
+    }),
+
+  deleteAdditionalParty: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string(),
+        involvedPartyId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.api.deleteCaseAdditionalParty({
+        caseId: input.caseId,
+        involvedPartyId: input.involvedPartyId,
+      })
+    }),
 })
