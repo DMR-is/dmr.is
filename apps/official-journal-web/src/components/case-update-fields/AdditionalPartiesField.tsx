@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
