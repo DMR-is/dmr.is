@@ -1,5 +1,6 @@
 import { Case } from '@dmr.is/shared-dto'
 
+import { additionalPartiesMigrate } from '../../additional-parties/migrations'
 import { advertInvolvedPartyMigrate } from '../../journal/migrations'
 import { advertCategoryMigrate } from '../../journal/migrations'
 import { userMigrate } from '../../user/migration/user.migrate'
@@ -18,6 +19,7 @@ export const caseMigrate = (model: CaseModel): Case => ({
     slug: model.communicationStatus.slug,
   },
   involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+  additionalParties: additionalPartiesMigrate(model.additionalParties),
   advertDepartment: {
     id: model.department.id,
     title: model.department.title,

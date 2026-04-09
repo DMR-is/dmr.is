@@ -1,6 +1,7 @@
 import { Advert, AdvertAttachment } from '@dmr.is/shared-dto'
 import { toUtf8 } from '@dmr.is/utils-server/serverUtils'
 
+import { additionalPartiesMigrate } from '../../additional-parties/migrations'
 import { advertTypeMigrate } from '../../advert-type/migrations'
 import { AdvertModel } from '../models'
 import { advertCategoryMigrate } from './advert-category.migrate'
@@ -46,6 +47,7 @@ export function advertMigrate(model: AdvertModel): Advert {
       ? model.categories.map((item) => advertCategoryMigrate(item))
       : [],
     involvedParty: advertInvolvedPartyMigrate(model.involvedParty),
+    additionalParties: additionalPartiesMigrate(model.additionalParties),
     document: {
       //no migrate because this is not a database table.
       html: html,

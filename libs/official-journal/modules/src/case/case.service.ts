@@ -79,6 +79,7 @@ import {
   getS3Bucket,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
 import {
@@ -149,6 +150,7 @@ export class CaseService implements ICaseService {
     private readonly updateService: ICaseUpdateService,
 
     @Inject(IUtilityService) private readonly utilityService: IUtilityService,
+    private readonly additionalPartiesService: AdditionalPartiesService,
     @InjectModel(CaseModel) private readonly caseModel: typeof CaseModel,
     @InjectModel(CaseTagModel)
     private readonly caseTagModel: typeof CaseTagModel,
@@ -1397,6 +1399,12 @@ export class CaseService implements ICaseService {
         },
         transaction: transaction,
       },
+    )
+
+    await this.additionalPartiesService.linkCasePartiesToAdvert(
+      caseId,
+      advertCreateResult.result.value.advert.id,
+      transaction,
     )
 
     this.logger.info(`Marking case <${caseId}> as published`, {

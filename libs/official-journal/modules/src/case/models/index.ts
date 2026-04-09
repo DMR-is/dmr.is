@@ -1,3 +1,4 @@
+import { AdditionalPartiesModel } from '../../additional-parties/models/additional-parties.model'
 import { CaseModel } from './case.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
@@ -14,6 +15,7 @@ import { TransactionFeeCodesModel } from './transaction-fee-codes.model'
 
 export {
   CaseModel,
+  AdditionalPartiesModel,
   CaseTagModel,
   CaseStatusModel,
   CaseChannelModel,
@@ -30,6 +32,7 @@ export {
 
 export const models = [
   CaseModel,
+  AdditionalPartiesModel,
   CaseTagModel,
   CaseStatusModel,
   CaseChannelModel,

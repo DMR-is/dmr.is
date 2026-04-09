@@ -10,6 +10,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import { AdditionalPartiesModel } from '../../additional-parties/models/additional-parties.model'
 import { AdvertTypeModel } from '../../advert-type/models'
 import { CaseAdditionModel, CaseModel } from '../../case/models'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
@@ -47,6 +48,11 @@ import { AdvertStatusModel } from './advert-status.model'
       AdvertDepartmentModel,
       AdvertStatusModel,
       AdvertInvolvedPartyModel,
+      {
+        model: AdditionalPartiesModel,
+        separate: true,
+        include: [AdvertInvolvedPartyModel],
+      },
       AdvertAttachmentsModel,
       AdvertCategoryModel,
       AdvertCorrectionModel,
@@ -105,6 +111,9 @@ export class AdvertModel extends Model {
 
   @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
   involvedParty!: AdvertInvolvedPartyModel
+
+  @HasMany(() => AdditionalPartiesModel, 'advert_id')
+  additionalParties?: AdditionalPartiesModel[]
 
   @Column({ field: 'is_legacy' })
   isLegacy!: boolean

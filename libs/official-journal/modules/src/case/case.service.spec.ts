@@ -10,6 +10,7 @@ import { LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
 import { PostApplicationBody } from '@dmr.is/shared-dto'
 import { IAWSService } from '@dmr.is/shared-modules'
 
+import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel } from '../advert-type/models'
 import { IApplicationService } from '../application/application.service.interface'
 import { IAttachmentService } from '../attachments/attachment.service.interface'
@@ -131,6 +132,12 @@ describe('CaseService', () => {
         {
           provide: IPriceService,
           useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: AdditionalPartiesService,
+          useClass: jest.fn(() => ({
+            linkCasePartiesToAdvert: jest.fn(),
+          })),
         },
         {
           provide: getModelToken(CaseModel),

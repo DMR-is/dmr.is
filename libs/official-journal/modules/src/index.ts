@@ -1,4 +1,5 @@
 export * from './auth/auth.module'
+export * from './additional-parties'
 export * from './application/application.module'
 export * from './case/case.module'
 export * from './price/price.module'

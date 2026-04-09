@@ -29,6 +29,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { getFastTrack } from '@dmr.is/utils-server/serverUtils'
 
+import { AdditionalPartiesService } from '../../../additional-parties'
 import { IApplicationService } from '../../../application/application.service.interface'
 import { IAttachmentService } from '../../../attachments/attachment.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
@@ -114,6 +115,7 @@ export class CaseCreateService implements ICaseCreateService {
     private readonly commentService: ICommentServiceV2,
     @Inject(IRegulationsAdminService)
     private readonly regulationsAdminService: IRegulationsAdminService,
+    private readonly additionalPartiesService: AdditionalPartiesService,
     @InjectModel(CaseChannelModel)
     private readonly caseChannelModel: typeof CaseChannelModel,
     @InjectModel(CaseChannelsModel)
@@ -724,6 +726,11 @@ export class CaseCreateService implements ICaseCreateService {
     }
 
     const caseId = createCaseResult.result.value.id
+
+    await this.additionalPartiesService.syncCaseAdditionalParties(
+      caseId,
+      application,
+    )
 
     await this.commentService.createSubmitComment(caseId, {
       institutionCreatorId: values.caseBody.involvedPartyId,
