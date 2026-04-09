@@ -2313,6 +2313,54 @@
         "summary": ""
       }
     },
+    "/api/v1/cases/{caseId}/additional-parties": {
+      "post": {
+        "operationId": "addCaseAdditionalParty",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCaseAdditionalPartyBody"
+              }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
+    "/api/v1/cases/{caseId}/additional-parties/{involvedPartyId}": {
+      "delete": {
+        "operationId": "deleteCaseAdditionalParty",
+        "parameters": [
+          {
+            "name": "caseId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "involvedPartyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/cases/{id}/update-signature-date-display": {
       "put": {
         "operationId": "updateCaseSignatureDateDisplay",
@@ -4669,6 +4717,11 @@
             "description": "Involved party of the case.",
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
+          "additionalParties": {
+            "description": "Additional involved parties on the case.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
           "createdAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
@@ -4741,6 +4794,7 @@
           "status",
           "tag",
           "involvedParty",
+          "additionalParties",
           "createdAt",
           "assignedTo",
           "communicationStatus",
@@ -5297,6 +5351,12 @@
             "nullable": false,
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
+          "additionalParties": {
+            "description": "Additional involved parties for the advert.",
+            "nullable": false,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
           "document": {
             "description": "Advert document in different formats.",
             "nullable": false,
@@ -5339,6 +5399,7 @@
           "publicationDate",
           "categories",
           "involvedParty",
+          "additionalParties",
           "document",
           "signature",
           "attachments"
@@ -6120,6 +6181,11 @@
             "description": "Involved party of the case.",
             "allOf": [{ "$ref": "#/components/schemas/Institution" }]
           },
+          "additionalParties": {
+            "description": "Additional involved parties on the case.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Institution" }
+          },
           "createdAt": {
             "type": "string",
             "example": "2024-01-01T09:00:00Z",
@@ -6266,6 +6332,7 @@
           "status",
           "tag",
           "involvedParty",
+          "additionalParties",
           "createdAt",
           "modifiedAt",
           "isLegacy",
@@ -6429,6 +6496,16 @@
           "involvedPartyId": {
             "type": "string",
             "description": "Involved party id"
+          }
+        },
+        "required": ["involvedPartyId"]
+      },
+      "AddCaseAdditionalPartyBody": {
+        "type": "object",
+        "properties": {
+          "involvedPartyId": {
+            "type": "string",
+            "description": "Involved party id to add as additional party"
           }
         },
         "required": ["involvedPartyId"]

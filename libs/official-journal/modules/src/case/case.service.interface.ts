@@ -2,6 +2,7 @@ import { Transaction } from 'sequelize'
 
 import { AttachmentTypeParam } from '@dmr.is/constants'
 import {
+  AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   CaseCommunicationStatus,
   CaseStatusEnum,
@@ -267,6 +268,16 @@ export interface ICaseService {
     nationalId: string,
     transaction?: Transaction,
   ): Promise<ResultWrapper<Pick<GetInstitutionsResponse, 'institutions'>>>
+
+  addCaseAdditionalParty(
+    caseId: string,
+    body: AddCaseAdditionalPartyBody,
+  ): Promise<ResultWrapper>
+
+  deleteCaseAdditionalParty(
+    caseId: string,
+    involvedPartyId: string,
+  ): Promise<ResultWrapper>
 
   updateSignatureDateDisplay(
     caseId: string,

@@ -11,6 +11,7 @@ import { useCaseContext } from '../../hooks/useCaseContext'
 import { useToggle } from '../../hooks/useToggle'
 import { AdvertPreview } from '../advert-display/AdvertPreview'
 import { IconButton } from '../icon-button/IconButton'
+import { AdditionalPartiesField } from './AdditionalPartiesField'
 import { AdvertFields } from './AdvertFields'
 import { AppendixFields } from './AppendixFields'
 import { AttachmentFields } from './AttachmentsFields'
@@ -38,6 +39,7 @@ export const CaseFields = () => {
   const correctionToggle = useToggle(false)
   const communicationChannelsToggle = useToggle(false)
   const appendixToggle = useToggle(false)
+  const additionalPartiesToggle = useToggle(false)
   const regulationMetadataToggle = useToggle(false)
   const regulationImpactsToggle = useToggle(false)
 
@@ -52,6 +54,7 @@ export const CaseFields = () => {
     correctionToggle,
     communicationChannelsToggle,
     appendixToggle,
+    additionalPartiesToggle,
     regulationMetadataToggle,
     regulationImpactsToggle,
   ]
@@ -115,6 +118,10 @@ export const CaseFields = () => {
               />
               {isRegulation && (
                 <>
+                  <AdditionalPartiesField
+                    toggle={additionalPartiesToggle.toggle}
+                    onToggle={additionalPartiesToggle.onToggle}
+                  />
                   <RegulationMetadataFields
                     toggle={regulationMetadataToggle.toggle}
                     onToggle={regulationMetadataToggle.onToggle}

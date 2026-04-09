@@ -17,6 +17,7 @@ import { AttachmentTypeParam, REGULATION_TYPES } from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  AddCaseAdditionalPartyBody,
   AddCaseAdvertCorrection,
   AdvertStatus,
   Case,
@@ -217,6 +218,28 @@ export class CaseService implements ICaseService {
     })
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async addCaseAdditionalParty(
+    caseId: string,
+    body: AddCaseAdditionalPartyBody,
+  ): Promise<ResultWrapper> {
+    return this.additionalPartiesService.addCaseAdditionalParty(
+      caseId,
+      body.involvedPartyId,
+    )
+  }
+
+  @LogAndHandle()
+  async deleteCaseAdditionalParty(
+    caseId: string,
+    involvedPartyId: string,
+  ): Promise<ResultWrapper> {
+    return this.additionalPartiesService.deleteCaseAdditionalParty(
+      caseId,
+      involvedPartyId,
+    )
   }
 
   @LogAndHandle()

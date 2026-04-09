@@ -5,12 +5,13 @@ import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { OJOIInput } from './OJOIInput'
 
 type Props = React.ComponentProps<typeof Select> & {
+  filterConfig?: React.ComponentProps<typeof Select>['filterConfig']
   width?: BoxProps['width']
   isValidating?: boolean
 }
 
 export const OJOISelect = ({
-  filterConfig,
+  filterConfig = { matchFrom: 'start' },
   isLoading,
   isValidating,
   width,
@@ -43,7 +44,7 @@ export const OJOISelect = ({
           backgroundColor="blue"
           isLoading={false}
           {...rest}
-          filterConfig={{ matchFrom: 'start' }}
+          filterConfig={filterConfig}
         />
       )}
     </Box>
