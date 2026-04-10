@@ -152,7 +152,7 @@ export class IssuesTaskService implements IIssuesTask {
 
       const htmlParts = await Promise.all(
         publications.map(async (pub) => {
-          const html = (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter)
+          const html = await pub.getPublishedHtml()
           return `<div class="advert-container">${html}</div>`
         }),
       )

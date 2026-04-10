@@ -91,7 +91,7 @@ export class PublicationService implements IPublicationService {
 
     return {
       advert: pub.advert.fromModel(),
-      html: (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
+      html: await pub.getPublishedHtml(),
       publication: pub.fromModel(),
     }
   }
@@ -113,7 +113,7 @@ export class PublicationService implements IPublicationService {
 
     const results: AdvertPublicationDetailedDto[] = []
     for (const publication of advert.publications) {
-      const html = (await publication.getPublishedHtml()) ?? advert.htmlMarkup(publication.versionLetter)
+      const html = await publication.getPublishedHtml()
       results.push({
         advert: advert.fromModel(),
         html,
@@ -185,7 +185,7 @@ export class PublicationService implements IPublicationService {
 
     const publicationsHtml = await Promise.all(
       publications.map(async (pub) =>
-        (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
+        await pub.getPublishedHtml(),
       ),
     )
 
@@ -412,7 +412,7 @@ export class PublicationService implements IPublicationService {
 
     return {
       advert: pub.advert.fromModel(),
-      html: (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
+      html: await pub.getPublishedHtml(),
       publication: pub.fromModel(),
     }
   }

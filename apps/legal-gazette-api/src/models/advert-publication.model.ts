@@ -213,17 +213,17 @@ export class AdvertPublicationModel extends BaseModel<
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel
 
-  async getPublishedHtml(): Promise<string | null> {
+  async getPublishedHtml(): Promise<string> {
     if (this.publishedHtml) {
       return this.publishedHtml
     }
 
-    if (!this.publishedAt || !this.advert) {
-      return null
+    const html = this.advert.htmlMarkup(this.versionLetter)
+
+    if (this.publishedAt) {
+      await this.update({ publishedHtml: html })
     }
 
-    const html = this.advert.htmlMarkup(this.versionLetter)
-    await this.update({ publishedHtml: html })
     return html
   }
 
