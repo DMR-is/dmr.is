@@ -1,7 +1,10 @@
 import { isNotEmpty } from 'class-validator'
 
 import { DivisionEndingTemplateProps } from './types'
+import { amountFormat } from '@dmr.is/utils-shared/format/number'
+
 import {
+  formatNationalId,
   getElement,
   getTableCell,
   getTableHeaderCell,
@@ -31,7 +34,7 @@ export function getDivisionEndingBankruptcyTemplate({
 
   const settlementMarkup = [
     settlementName,
-    settlementNationalId ? `kt. ${settlementNationalId}` : '',
+    settlementNationalId ? `kt. ${formatNationalId(settlementNationalId)}` : '',
   ]
     .filter(isNotEmpty)
     .join(', <br />')
@@ -39,7 +42,9 @@ export function getDivisionEndingBankruptcyTemplate({
   const settlementCell = getTableCell({ text: settlementMarkup })
 
   const declaredClaimsCell = getTableCell({
-    text: settlementDeclaredClaims ? `kr. ${settlementDeclaredClaims}` : '',
+    text: settlementDeclaredClaims
+      ? amountFormat(settlementDeclaredClaims)
+      : '',
   })
 
   const tableMarkup = `
