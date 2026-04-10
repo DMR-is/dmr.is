@@ -1,8 +1,8 @@
 import { isNotEmpty } from 'class-validator'
 
-import { DivisionEndingTemplateProps } from './types'
 import { amountFormat } from '@dmr.is/utils-shared/format/number'
 
+import { DivisionEndingTemplateProps } from './types'
 import {
   formatNationalId,
   getElement,
