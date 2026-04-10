@@ -253,14 +253,6 @@ export class AdvertPublicationModel extends BaseModel<
     }
   }
 
-  @BeforeBulkCreate
-  static async testing(
-    _instances: AdvertPublicationModel[],
-    options: BulkCreateOptions,
-  ) {
-    options.individualHooks = true
-  }
-
   static fromModel(model: AdvertPublicationModel): AdvertPublicationDto {
     return {
       id: model.id,
