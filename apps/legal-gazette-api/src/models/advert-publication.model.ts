@@ -21,7 +21,7 @@ import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
 import { LegalGazetteModels } from '../core/constants'
 import { mapVersionToIndex } from '../core/utils'
 import type { GetPublicationsQueryDto } from '../modules/advert/publications/dto/publication.dto'
-import { AdvertDto, AdvertModel } from './advert.model'
+import { AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
 
@@ -37,6 +37,7 @@ export type AdvertPublicationsAttributes = {
   publishedAt: Date | null
   versionNumber: number
   pdfUrl?: string
+  publishedHtml?: string | null
 }
 
 export type AdvertPublicationsCreateAttributes = {
@@ -45,6 +46,7 @@ export type AdvertPublicationsCreateAttributes = {
   publishedAt?: Date | null
   versionNumber?: number
   pdfUrl?: string
+  publishedHtml?: string | null
 }
 
 @BaseTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATION })
@@ -186,6 +188,10 @@ export class AdvertPublicationModel extends BaseModel<
   @ApiProperty({ type: String, required: false })
   pdfUrl?: string
 
+  @Column({ type: DataType.TEXT, allowNull: true })
+  @ApiProperty({ type: String, required: false })
+  publishedHtml?: string | null
+
   @Column({ type: DataType.VIRTUAL })
   get isPublished(): boolean {
     return this.publishedAt !== null
@@ -206,6 +212,20 @@ export class AdvertPublicationModel extends BaseModel<
 
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel
+
+  async getPublishedHtml(): Promise<string | null> {
+    if (this.publishedHtml) {
+      return this.publishedHtml
+    }
+
+    if (!this.publishedAt || !this.advert) {
+      return null
+    }
+
+    const html = this.advert.htmlMarkup(this.versionLetter)
+    await this.update({ publishedHtml: html })
+    return html
+  }
 
   @BeforeCreate
   static async validate(model: AdvertPublicationModel) {

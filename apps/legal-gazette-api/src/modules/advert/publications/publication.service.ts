@@ -16,7 +16,7 @@ import {
 import { LegalGazetteEvents } from '../../../core/constants'
 import { UserContext } from '../../../core/context/user/user.context'
 import { StatusIdEnum } from '../../../core/enums/status.enum'
-import { mapIndexToVersion, mapVersionToIndex } from '../../../core/utils'
+import { mapVersionToIndex } from '../../../core/utils'
 import { AdvertModel } from '../../../models/advert.model'
 import {
   AdvertPublicationModel,
@@ -91,7 +91,7 @@ export class PublicationService implements IPublicationService {
 
     return {
       advert: pub.advert.fromModel(),
-      html: pub.advert.htmlMarkup(pub.versionLetter),
+      html: (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
       publication: pub.fromModel(),
     }
   }
@@ -111,13 +111,16 @@ export class PublicationService implements IPublicationService {
         ],
       })
 
-    return advert.publications.map((publication, index) => {
-      return {
+    const results: AdvertPublicationDetailedDto[] = []
+    for (const publication of advert.publications) {
+      const html = (await publication.getPublishedHtml()) ?? advert.htmlMarkup(publication.versionLetter)
+      results.push({
         advert: advert.fromModel(),
-        html: advert.htmlMarkup(mapIndexToVersion(index)),
+        html,
         publication: publication.fromModel(),
-      }
-    })
+      })
+    }
+    return results
   }
 
   @Cacheable({ tagBy: [0], topic: 'advert-publications-all', service: 'lg' })
@@ -180,7 +183,11 @@ export class PublicationService implements IPublicationService {
         offset,
       })
 
-    const publicationsHtml = publications.map((pub) => pub.advert.htmlMarkup())
+    const publicationsHtml = await Promise.all(
+      publications.map(async (pub) =>
+        (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
+      ),
+    )
 
     return { publicationsHtml }
   }
@@ -405,7 +412,7 @@ export class PublicationService implements IPublicationService {
 
     return {
       advert: pub.advert.fromModel(),
-      html: pub.advert.htmlMarkup(pub.versionLetter),
+      html: (await pub.getPublishedHtml()) ?? pub.advert.htmlMarkup(pub.versionLetter),
       publication: pub.fromModel(),
     }
   }

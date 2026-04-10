@@ -157,8 +157,10 @@ export class PublishingTaskService implements IPublishingTaskService {
             ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
             : advert.publicationNumber
 
+          const html = advert.htmlMarkup(pub.versionLetter)
+
           await pub.update(
-            { publishedAt: new Date() },
+            { publishedAt: new Date(), publishedHtml: html },
             { transaction: transaction },
           )
 
@@ -173,7 +175,7 @@ export class PublishingTaskService implements IPublishingTaskService {
           const payload: AdvertPublishedEvent = {
             advert: advert.fromModelToDetailed(),
             publication: pub.fromModel(),
-            html: advert.htmlMarkup(pub.versionLetter),
+            html,
           }
 
           try {

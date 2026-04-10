@@ -153,7 +153,12 @@ export class AdvertPublishService implements IAdvertPublishService {
         )
       }
 
-      await publication.update({ publishedAt: new Date() })
+      const html = advert.htmlMarkup(publication.versionLetter)
+
+      await publication.update({
+        publishedAt: new Date(),
+        publishedHtml: html,
+      })
       await Promise.all([publication.reload(), advert.reload()])
 
       this.logger.info(
@@ -168,7 +173,7 @@ export class AdvertPublishService implements IAdvertPublishService {
       const payload: AdvertPublishedEvent = {
         advert: advert.fromModelToDetailed(),
         publication: publication.fromModel(),
-        html: advert.htmlMarkup(publication.versionLetter),
+        html,
       }
 
       // Store payload for side effects to emit after transaction

@@ -54,7 +54,7 @@ export class PdfAdminService implements IPdfAdminService {
       )
     }
 
-    const html = publication.advert.htmlMarkup(publication.versionLetter)
+    const html = (await publication.getPublishedHtml()) ?? publication.advert.htmlMarkup(publication.versionLetter)
     const title = publication.advert.title
 
     const result = await this.pdfService.generatePdfAndSaveToS3(
