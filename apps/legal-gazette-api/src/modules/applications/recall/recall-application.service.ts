@@ -272,18 +272,19 @@ export class RecallApplicationService implements IRecallApplicationService {
       applicationId: applicationId,
     })
 
-    const { judgementDate } = await this.advertModel.findOneOrThrow({
-      attributes: ['id', 'judgementDate'],
-      where: {
-        applicationId: applicationId,
-        typeId: {
-          [Op.in]: [
-            RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
-            RECALL_DECEASED_ADVERT_TYPE_ID,
-          ],
+    const { judgementDate, courtDistrictId } =
+      await this.advertModel.findOneOrThrow({
+        attributes: ['id', 'judgementDate', 'courtDistrictId'],
+        where: {
+          applicationId: applicationId,
+          typeId: {
+            [Op.in]: [
+              RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
+              RECALL_DECEASED_ADVERT_TYPE_ID,
+            ],
+          },
         },
-      },
-    })
+      })
 
     if (!judgementDate) {
       this.logger.error(
@@ -350,6 +351,7 @@ export class RecallApplicationService implements IRecallApplicationService {
         declaredClaims: body.declaredClaims,
         endingDate: body.endingDate,
       }),
+      courtDistrictId: courtDistrictId ?? undefined,
       judgementDate: judgementDate,
       communicationChannels: application.answers.communicationChannels,
       scheduledAt: [body.scheduledAt],
