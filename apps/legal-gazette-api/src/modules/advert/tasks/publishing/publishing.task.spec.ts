@@ -350,7 +350,10 @@ describe('PublishingTaskService - Event Emission', () => {
       ] as unknown as AdvertPublicationModel[])
       await service.publishAdverts()
       expect(mockPublication.update).toHaveBeenCalledWith(
-        { publishedAt: expect.any(Date) },
+        {
+          publishedAt: expect.any(Date),
+          publishedHtml: expect.any(String),
+        },
         { transaction: expect.any(Object) },
       )
     })

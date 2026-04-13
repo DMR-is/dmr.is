@@ -28,6 +28,7 @@ const createMockPublication = (overrides: Record<string, unknown> = {}) => ({
   id: PUBLICATION_ID,
   advertId: ADVERT_ID,
   versionLetter: 'A',
+  getPublishedHtml: jest.fn().mockResolvedValue(MOCK_HTML),
   advert: {
     htmlMarkup: jest.fn().mockReturnValue(MOCK_HTML),
     title: MOCK_TITLE,
@@ -127,7 +128,7 @@ describe('PdfAdminService', () => {
         pdfBuffer: Buffer.from('pdf'),
       })
       await service.regeneratePdf(ADVERT_ID, PUBLICATION_ID, MOCK_USER as any)
-      expect(mockPublication.advert.htmlMarkup).toHaveBeenCalledWith('A')
+      expect(mockPublication.getPublishedHtml).toHaveBeenCalled()
       expect(pdfService.generatePdfAndSaveToS3).toHaveBeenCalledWith(
         MOCK_HTML,
         ADVERT_ID,

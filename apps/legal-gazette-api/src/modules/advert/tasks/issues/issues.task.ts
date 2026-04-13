@@ -150,12 +150,13 @@ export class IssuesTaskService implements IIssuesTask {
         count: publications.length,
       })
 
-      const combinedHtml = publications
-        .map(
-          (pub) =>
-            `<div class="advert-container">${pub.advert.htmlMarkup()}</div>`,
-        )
-        .join('<div class="advert-divider-line"></div>')
+      const htmlParts = await Promise.all(
+        publications.map(async (pub) => {
+          const html = await pub.getPublishedHtml()
+          return `<div class="advert-container">${html}</div>`
+        }),
+      )
+      const combinedHtml = htmlParts.join('<div class="advert-divider-line"></div>')
 
       const currentYear = now.getFullYear()
 

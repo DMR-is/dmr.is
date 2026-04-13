@@ -158,6 +158,7 @@ describe('AdvertPublishService', () => {
       )
       expect(publication.update).toHaveBeenCalledWith({
         publishedAt: expect.any(Date),
+        publishedHtml: expect.any(String),
       })
     })
     it('should throw error when no unpublished publication found', async () => {
