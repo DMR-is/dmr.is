@@ -33,6 +33,12 @@ export const MenuButton = () => {
       icon: 'card',
       iconType: 'outline',
     },
+    {
+      title: 'Viðhald',
+      href: '/stillingar/vidhald',
+      icon: 'settings',
+      iconType: 'outline',
+    },
   ]
 
   const disclosure = <Button size="small" variant="utility" icon="dots" />
