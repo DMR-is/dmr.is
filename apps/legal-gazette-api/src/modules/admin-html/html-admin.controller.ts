@@ -1,4 +1,12 @@
-import { Controller, Inject, Post, Query, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
@@ -11,6 +19,10 @@ import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
   BackfillHtmlQueryDto,
   BackfillHtmlResponseDto,
+  BackfillJobStatusDto,
+  BackfillStartResponseDto,
+  BackfilledPublicationsListDto,
+  BackfilledPublicationsQueryDto,
 } from './dto/html-admin.dto'
 import { IHtmlAdminService } from './html-admin.service.interface'
 
@@ -32,17 +44,62 @@ export class HtmlAdminController {
   @LGResponse({
     operationId: 'backfillPublishedHtml',
     type: BackfillHtmlResponseDto,
-    description:
-      'Generates and persists HTML for all published adverts missing it',
+    description: 'Preview backfill (dryRun=true) or start backfill job',
   })
   backfillPublishedHtml(
-    @Query() query: BackfillHtmlQueryDto,
+    @Query('dryRun') dryRun: string,
     @CurrentUser() user: DMRUser,
   ): Promise<BackfillHtmlResponseDto> {
-    if (query.dryRun) {
+    if (dryRun === 'true') {
       return this.htmlAdminService.previewBackfill(user)
     }
 
-    return this.htmlAdminService.runBackfill(user)
+    return Promise.resolve(this.htmlAdminService.startBackfill(user))
+  }
+
+  @Get('backfill/status')
+  @LGResponse({
+    operationId: 'getBackfillStatus',
+    type: BackfillJobStatusDto,
+    description: 'Get current backfill job status',
+  })
+  getBackfillStatus(): BackfillJobStatusDto {
+    return this.htmlAdminService.getBackfillStatus()
+  }
+
+  @Get('backfill/history')
+  @LGResponse({
+    operationId: 'getBackfilledPublications',
+    type: BackfilledPublicationsListDto,
+    description: 'Get paginated list of backfilled publications',
+  })
+  getBackfilledPublications(
+    @Query() query: BackfilledPublicationsQueryDto,
+  ): Promise<BackfilledPublicationsListDto> {
+    return this.htmlAdminService.getBackfilledPublications(query)
+  }
+
+  @Post('backfill/revert')
+  @HttpCode(202)
+  @LGResponse({
+    operationId: 'startBackfillRevert',
+    type: BackfillStartResponseDto,
+    status: 202,
+    description: 'Start reverting all backfilled publications',
+  })
+  startBackfillRevert(
+    @CurrentUser() user: DMRUser,
+  ): BackfillStartResponseDto {
+    return this.htmlAdminService.startRevert(user)
+  }
+
+  @Get('backfill/revert/status')
+  @LGResponse({
+    operationId: 'getRevertStatus',
+    type: BackfillJobStatusDto,
+    description: 'Get current revert job status',
+  })
+  getRevertStatus(): BackfillJobStatusDto {
+    return this.htmlAdminService.getRevertStatus()
   }
 }

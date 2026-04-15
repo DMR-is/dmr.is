@@ -71,6 +71,101 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
+    "/api/v1/html-admin/backfill/status": {
+      "get": {
+        "description": "Get current backfill job status",
+        "operationId": "getBackfillStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/history": {
+      "get": {
+        "description": "Get paginated list of backfilled publications",
+        "operationId": "getBackfilledPublications",
+        "parameters": [
+          { "name": "page", "required": false, "in": "query", "schema": { "type": "number" } },
+          { "name": "pageSize", "required": false, "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfilledPublicationsListDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/revert": {
+      "post": {
+        "description": "Start reverting all backfilled publications",
+        "operationId": "startBackfillRevert",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillStartResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/revert/status": {
+      "get": {
+        "description": "Get current revert job status",
+        "operationId": "getRevertStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/pdf-admin/{advertId}/publications/{publicationId}/regenerate": {
       "post": {
         "description": "Regenerates the PDF for a specific publication",
@@ -6112,6 +6207,52 @@
           }
         },
         "required": ["dryRun", "total", "backfilled", "failed", "items", "message"]
+      },
+      "BackfillJobStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["idle", "running", "completed", "failed"] },
+          "total": { "type": "number" },
+          "completed": { "type": "number" },
+          "failed": { "type": "number" },
+          "currentBatch": { "type": "number" },
+          "totalBatches": { "type": "number" },
+          "startedAt": { "type": "string" },
+          "finishedAt": { "type": "string" },
+          "message": { "type": "string" }
+        },
+        "required": ["status", "total", "completed", "failed", "currentBatch", "totalBatches"]
+      },
+      "BackfillStartResponseDto": {
+        "type": "object",
+        "properties": {
+          "started": { "type": "boolean" },
+          "message": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+        },
+        "required": ["started", "status"]
+      },
+      "BackfilledPublicationItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "publicationId": { "type": "string" },
+          "title": { "type": "string" },
+          "type": { "type": "string" },
+          "version": { "type": "string" },
+          "backfilledAt": { "type": "string" }
+        },
+        "required": ["id", "publicationId", "title", "type", "version", "backfilledAt"]
+      },
+      "BackfilledPublicationsListDto": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/BackfilledPublicationItemDto" } },
+          "total": { "type": "number" },
+          "page": { "type": "number" },
+          "pageSize": { "type": "number" }
+        },
+        "required": ["items", "total", "page", "pageSize"]
       },
       "ApiErrorDto": {
         "type": "object",
