@@ -188,7 +188,7 @@ export class AdvertPublicationModel extends BaseModel<
   @ApiProperty({ type: String, required: false })
   pdfUrl?: string
 
-  @Column({ type: DataType.TEXT, allowNull: true })
+  @Column({ field: 'published_html', type: DataType.TEXT, allowNull: true })
   @ApiProperty({ type: String, required: false })
   publishedHtml?: string | null
 
@@ -213,18 +213,12 @@ export class AdvertPublicationModel extends BaseModel<
   @BelongsTo(() => AdvertModel)
   advert!: AdvertModel
 
-  async getPublishedHtml(): Promise<string> {
+  getPublishedHtml(): string {
     if (this.publishedHtml) {
       return this.publishedHtml
     }
 
-    const html = this.advert.htmlMarkup(this.versionLetter)
-
-    if (this.publishedAt) {
-      await this.update({ publishedHtml: html })
-    }
-
-    return html
+    return this.advert.htmlMarkup(this.versionLetter)
   }
 
   @BeforeCreate

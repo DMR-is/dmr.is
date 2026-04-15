@@ -1,6 +1,171 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/html-admin/backfill": {
+      "post": {
+        "description": "Generates and persists HTML for all published adverts missing it",
+        "operationId": "backfillPublishedHtml",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "required": false,
+            "in": "query",
+            "description": "If true, no changes are persisted to the database",
+            "schema": { "type": "boolean", "default": false }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackfillHtmlResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/status": {
+      "get": {
+        "description": "Get current backfill job status",
+        "operationId": "getBackfillStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/history": {
+      "get": {
+        "description": "Get paginated list of backfilled publications",
+        "operationId": "getBackfilledPublications",
+        "parameters": [
+          { "name": "page", "required": false, "in": "query", "schema": { "type": "number" } },
+          { "name": "pageSize", "required": false, "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfilledPublicationsListDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/revert": {
+      "post": {
+        "description": "Start reverting all backfilled publications",
+        "operationId": "startBackfillRevert",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillStartResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
+    "/api/v1/html-admin/backfill/revert/status": {
+      "get": {
+        "description": "Get current revert job status",
+        "operationId": "getRevertStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+              }
+            }
+          },
+          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
+          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/pdf-admin/{advertId}/publications/{publicationId}/regenerate": {
       "post": {
         "description": "Regenerates the PDF for a specific publication",
@@ -5978,21 +6143,116 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "RegeneratePdfResponseDto": {
+      "BackfillHtmlItemDto": {
         "type": "object",
         "properties": {
-          "pdfUrl": {
+          "publicationId": {
             "type": "string",
-            "description": "The URL of the regenerated PDF",
-            "example": "https://files.legal-gazette.dev.dmr-dev.cloud/adverts/123/456/advert.pdf"
+            "description": "Publication ID"
+          },
+          "advertId": {
+            "type": "string",
+            "description": "Advert ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Advert title"
+          },
+          "type": {
+            "type": "string",
+            "description": "Advert type title"
+          },
+          "version": {
+            "type": "string",
+            "description": "Publication version letter (A, B, C)"
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether HTML generation succeeded"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if generation failed"
+          }
+        },
+        "required": ["publicationId", "advertId", "title", "type", "version", "success"]
+      },
+      "BackfillHtmlResponseDto": {
+        "type": "object",
+        "properties": {
+          "dryRun": {
+            "type": "boolean",
+            "description": "Whether this was a dry run"
+          },
+          "total": {
+            "type": "number",
+            "description": "Total number of publications found missing HTML"
+          },
+          "backfilled": {
+            "type": "number",
+            "description": "Number of publications that were backfilled (or would be)"
+          },
+          "failed": {
+            "type": "number",
+            "description": "Number of publications that failed to generate HTML"
+          },
+          "items": {
+            "type": "array",
+            "description": "Details per publication",
+            "items": { "$ref": "#/components/schemas/BackfillHtmlItemDto" }
           },
           "message": {
             "type": "string",
-            "description": "Success message",
-            "example": "PDF regenerated successfully"
+            "description": "Success message"
           }
         },
-        "required": ["pdfUrl", "message"]
+        "required": ["dryRun", "total", "backfilled", "failed", "items", "message"]
+      },
+      "BackfillJobStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["idle", "running", "completed", "failed"] },
+          "total": { "type": "number" },
+          "completed": { "type": "number" },
+          "failed": { "type": "number" },
+          "currentBatch": { "type": "number" },
+          "totalBatches": { "type": "number" },
+          "startedAt": { "type": "string" },
+          "finishedAt": { "type": "string" },
+          "message": { "type": "string" }
+        },
+        "required": ["status", "total", "completed", "failed", "currentBatch", "totalBatches"]
+      },
+      "BackfillStartResponseDto": {
+        "type": "object",
+        "properties": {
+          "started": { "type": "boolean" },
+          "message": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+        },
+        "required": ["started", "status"]
+      },
+      "BackfilledPublicationItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "publicationId": { "type": "string" },
+          "title": { "type": "string" },
+          "type": { "type": "string" },
+          "version": { "type": "string" },
+          "backfilledAt": { "type": "string" }
+        },
+        "required": ["id", "publicationId", "title", "type", "version", "backfilledAt"]
+      },
+      "BackfilledPublicationsListDto": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/BackfilledPublicationItemDto" } },
+          "total": { "type": "number" },
+          "page": { "type": "number" },
+          "pageSize": { "type": "number" }
+        },
+        "required": ["items", "total", "page", "pageSize"]
       },
       "ApiErrorDto": {
         "type": "object",
@@ -6032,6 +6292,22 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "RegeneratePdfResponseDto": {
+        "type": "object",
+        "properties": {
+          "pdfUrl": {
+            "type": "string",
+            "description": "The URL of the regenerated PDF",
+            "example": "https://files.legal-gazette.dev.dmr-dev.cloud/adverts/123/456/advert.pdf"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "PDF regenerated successfully"
+          }
+        },
+        "required": ["pdfUrl", "message"]
       },
       "UpdateAdvertDto": {
         "type": "object",
@@ -6679,6 +6955,11 @@
             "example": "2026-02-19T10:30:00.000Z"
           },
           "dateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "endingDate": {
             "type": "string",
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"

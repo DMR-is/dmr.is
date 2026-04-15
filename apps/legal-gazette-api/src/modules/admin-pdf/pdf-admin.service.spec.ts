@@ -28,7 +28,7 @@ const createMockPublication = (overrides: Record<string, unknown> = {}) => ({
   id: PUBLICATION_ID,
   advertId: ADVERT_ID,
   versionLetter: 'A',
-  getPublishedHtml: jest.fn().mockResolvedValue(MOCK_HTML),
+  getPublishedHtml: jest.fn().mockReturnValue(MOCK_HTML),
   advert: {
     htmlMarkup: jest.fn().mockReturnValue(MOCK_HTML),
     title: MOCK_TITLE,

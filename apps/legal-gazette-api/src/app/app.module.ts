@@ -22,6 +22,7 @@ import { AdvertModel } from '../models/advert.model'
 import { AdvertPublicationModel } from '../models/advert-publication.model'
 import { AdvertTypeFeeCodeModel } from '../models/advert-type-fee-code.model'
 import { ApplicationModel } from '../models/application.model'
+import { BackfilledPublicationModel } from '../models/backfilled-publication.model'
 import { CaseModel } from '../models/case.model'
 import { CategoryModel } from '../models/category.model'
 import { CommentModel } from '../models/comment.model'
@@ -105,6 +106,7 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
             IssueSettingsModel,
             SignatureModel,
             TBRCompanySettingsModel,
+            BackfilledPublicationModel,
           ],
         }),
       ],

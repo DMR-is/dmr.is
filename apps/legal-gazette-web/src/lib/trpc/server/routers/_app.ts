@@ -4,6 +4,7 @@ import { advertsRouter } from './advertsRouter'
 import { baseEntityRouter } from './baseEntityRouter'
 import { channelsRouter } from './channelsRouter'
 import { commentRouter } from './commentRouter'
+import { htmlAdminRouter } from './htmlAdminRouter'
 import { nationalRegistryRouter } from './nationalRegistryRouter'
 import { paymentsRouter } from './paymentsRouter'
 import { pdfAdminRouter } from './pdfAdminRouter'
@@ -30,6 +31,7 @@ export const appRouter = mergeRouters(
   paymentsRouter,
   subscribersRouter,
   advertPublishRouter,
+  htmlAdminRouter,
   pdfAdminRouter,
 )
 
