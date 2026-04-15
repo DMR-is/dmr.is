@@ -7,17 +7,17 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { AdvertModel } from '../../models/advert.model'
-import { TypeModel } from '../../models/type.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { BackfilledPublicationModel } from '../../models/backfilled-publication.model'
+import { TypeModel } from '../../models/type.model'
 import {
+  BackfilledPublicationItemDto,
+  BackfilledPublicationsListDto,
+  BackfilledPublicationsQueryDto,
   BackfillHtmlItemDto,
   BackfillHtmlResponseDto,
   BackfillJobStatusDto,
   BackfillStartResponseDto,
-  BackfilledPublicationItemDto,
-  BackfilledPublicationsListDto,
-  BackfilledPublicationsQueryDto,
 } from './dto/html-admin.dto'
 import { IHtmlAdminService } from './html-admin.service.interface'
 
@@ -173,17 +173,16 @@ export class HtmlAdminService implements IHtmlAdminService {
       this.backfillState.total = total
       this.backfillState.totalBatches = totalBatches
 
-      this.logger.info(`Backfill executing: ${total} publications, ${totalBatches} batches`, {
-        context: LOGGING_CONTEXT,
-        total,
-        totalBatches,
-      })
+      this.logger.info(
+        `Backfill executing: ${total} publications, ${totalBatches} batches`,
+        {
+          context: LOGGING_CONTEXT,
+          total,
+          totalBatches,
+        },
+      )
 
-      for (
-        let batchNumber = 0;
-        batchNumber < totalBatches;
-        batchNumber++
-      ) {
+      for (let batchNumber = 0; batchNumber < totalBatches; batchNumber++) {
         // Always offset 0: completed rows drop out of WHERE clause
         const batch = await this.publicationModel.findAll({
           where: MISSING_HTML_WHERE,
@@ -256,10 +255,13 @@ export class HtmlAdminService implements IHtmlAdminService {
               successful.map((r) => ({ publicationId: r.publicationId })),
               { transaction: null as any },
             )
-            this.logger.info(`Recorded ${successful.length} backfilled publications`, {
-              context: LOGGING_CONTEXT,
-              batchNumber: batchNumber + 1,
-            })
+            this.logger.info(
+              `Recorded ${successful.length} backfilled publications`,
+              {
+                context: LOGGING_CONTEXT,
+                batchNumber: batchNumber + 1,
+              },
+            )
           } catch (error) {
             this.logger.error('Failed to record backfilled publications', {
               context: LOGGING_CONTEXT,
@@ -398,11 +400,7 @@ export class HtmlAdminService implements IHtmlAdminService {
         { context: LOGGING_CONTEXT, total, totalBatches },
       )
 
-      for (
-        let batchNumber = 0;
-        batchNumber < totalBatches;
-        batchNumber++
-      ) {
+      for (let batchNumber = 0; batchNumber < totalBatches; batchNumber++) {
         // Always offset 0: soft-deleted rows drop out
         const batch = await this.backfilledModel.findAll({
           limit: REVERT_BATCH_SIZE,
@@ -462,15 +460,18 @@ export class HtmlAdminService implements IHtmlAdminService {
         this.revertState.completed += successful
         this.revertState.failed += results.length - successful
 
-        this.logger.info(`Revert batch ${batchNumber + 1}/${totalBatches} complete`, {
-          context: LOGGING_CONTEXT,
-          batchNumber: batchNumber + 1,
-          totalBatches,
-          batchReverted: successful,
-          batchFailed: results.length - successful,
-          totalReverted: this.revertState.completed,
-          totalFailed: this.revertState.failed,
-        })
+        this.logger.info(
+          `Revert batch ${batchNumber + 1}/${totalBatches} complete`,
+          {
+            context: LOGGING_CONTEXT,
+            batchNumber: batchNumber + 1,
+            totalBatches,
+            batchReverted: successful,
+            batchFailed: results.length - successful,
+            totalReverted: this.revertState.completed,
+            totalFailed: this.revertState.failed,
+          },
+        )
       }
 
       this.revertState.status = 'completed'

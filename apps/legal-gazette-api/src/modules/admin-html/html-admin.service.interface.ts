@@ -1,11 +1,11 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
 import {
+  BackfilledPublicationsListDto,
+  BackfilledPublicationsQueryDto,
   BackfillHtmlResponseDto,
   BackfillJobStatusDto,
   BackfillStartResponseDto,
-  BackfilledPublicationsListDto,
-  BackfilledPublicationsQueryDto,
 } from './dto/html-admin.dto'
 
 export interface IHtmlAdminService {

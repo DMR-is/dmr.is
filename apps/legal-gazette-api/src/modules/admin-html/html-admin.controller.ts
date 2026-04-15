@@ -17,12 +17,11 @@ import { AdminAccess } from '../../core/decorators/admin.decorator'
 import { LGResponse } from '../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../core/guards/authorization.guard'
 import {
-  BackfillHtmlQueryDto,
+  BackfilledPublicationsListDto,
+  BackfilledPublicationsQueryDto,
   BackfillHtmlResponseDto,
   BackfillJobStatusDto,
   BackfillStartResponseDto,
-  BackfilledPublicationsListDto,
-  BackfilledPublicationsQueryDto,
 } from './dto/html-admin.dto'
 import { IHtmlAdminService } from './html-admin.service.interface'
 
@@ -87,9 +86,7 @@ export class HtmlAdminController {
     status: 202,
     description: 'Start reverting all backfilled publications',
   })
-  startBackfillRevert(
-    @CurrentUser() user: DMRUser,
-  ): BackfillStartResponseDto {
+  startBackfillRevert(@CurrentUser() user: DMRUser): BackfillStartResponseDto {
     return this.htmlAdminService.startRevert(user)
   }
 
