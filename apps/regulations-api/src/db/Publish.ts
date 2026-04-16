@@ -1,6 +1,5 @@
 import { QueryTypes, Transaction } from 'sequelize'
 
-import type { ISODate, RegName } from '../routes/types'
 import { db } from '../utils/sequelize'
 
 // ---------------------------------------------------------------------------
