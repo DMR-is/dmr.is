@@ -6,6 +6,7 @@ import { fileUploadRoutes } from './routes/fileUploadRoutes'
 import { healthCheck } from './routes/health'
 import { lawChapterRoutes } from './routes/lawChapterRoutes'
 import { ministryRoutes } from './routes/ministryRoutes'
+import { publishRoutes } from './routes/publishRoutes'
 import { redirectsRoutes } from './routes/redirectsRoutes'
 import { regulationRoutes } from './routes/regulationRoutes'
 import { regulationsRoutes } from './routes/regulationsRoutes'
@@ -106,6 +107,7 @@ fastify.register(lawChapterRoutes, { prefix: '/api/v1' })
 fastify.register(yearsRoutes, { prefix: '/api/v1' })
 fastify.register(redirectsRoutes, { prefix: '/api/v1' })
 fastify.register(changeSuggestionRoutes, { prefix: '/api/v1' })
+fastify.register(publishRoutes, { prefix: '/api/v1' })
 fastify.register(healthCheck)
 
 serveRobotsTxt(fastify, 'static/robots-api.txt')

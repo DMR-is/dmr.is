@@ -98,6 +98,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
+import { IRegulationPublishService } from '../regulation-publish/regulation-publish.service.interface'
 import { IRegulationsAdminService } from '../regulations-admin/regulations-admin.service.interface'
 import { IReindexRunnerService } from '../search'
 import { SignatureModel } from '../signature/models/signature.model'
@@ -193,6 +194,9 @@ export class CaseService implements ICaseService {
 
     @Inject(IRegulationsAdminService)
     private readonly regulationsAdminService: IRegulationsAdminService,
+
+    @Inject(IRegulationPublishService)
+    private readonly regulationPublishService: IRegulationPublishService,
   ) {
     this.logger.info('Using CaseService')
   }
@@ -1491,18 +1495,24 @@ export class CaseService implements ICaseService {
       })
     }
 
-    //here we are going to post directly to regulations if the advert is in the correct category.
+    // Publish regulation if advert type is a regulation type
     const flatTypes = maintypes.flatMap((type) => {
       return type.types?.map((t) => t.slug) ?? []
     })
 
     if (flatTypes.includes(caseToPublish.advertType.slug)) {
+      const appType = caseToPublish.applicationType
+      const advert = advertCreateResult.result.value.advert
+
       try {
-        await this.externalService.publishRegulation(
-          advertCreateResult.result.value.advert,
-        )
+        if (appType === 'base_regulation' || appType === 'amending_regulation') {
+          await this.publishRegulationByType(caseToPublish, advert, now)
+        } else {
+          // 'ad' type (legacy/cutover) - existing Eplica flow
+          await this.externalService.publishRegulation(advert)
+        }
       } catch (error) {
-        this.logger.error('Failed to create regulation', {
+        this.logger.error('Failed to publish regulation', {
           error,
           category: LOGGING_CATEGORY,
         })
@@ -1545,9 +1555,74 @@ export class CaseService implements ICaseService {
       })
     }
 
-    await this.externalService.publishRegulation(advert.result.value.advert)
+    const publishedAdvert = advert.result.value.advert
+
+    // Look up the case to determine application type
+    const caseRecord = await this.caseModel.findOne({
+      where: { advertId },
+      attributes: ['id', 'applicationType', 'regulationDraftId'],
+    })
+
+    const appType = caseRecord?.applicationType
+    if (caseRecord && (appType === 'base_regulation' || appType === 'amending_regulation')) {
+      await this.publishRegulationByType(caseRecord, publishedAdvert, new Date())
+    } else {
+      await this.externalService.publishRegulation(publishedAdvert)
+    }
 
     return ResultWrapper.ok()
+  }
+
+  private async publishRegulationByType(
+    caseToPublish: CaseModel,
+    advert: import('@dmr.is/shared-dto').Advert,
+    publishedDate: Date,
+  ): Promise<void> {
+    // 1. Fetch draft from regulations-admin
+    if (!caseToPublish.regulationDraftId) {
+      throw new Error('Case is missing regulationDraftId for regulation publishing')
+    }
+
+    const draftResult = await this.regulationsAdminService.getDraft(
+      caseToPublish.regulationDraftId,
+    )
+    if (!draftResult.result.ok) {
+      throw new Error('Failed to fetch regulation draft for publishing')
+    }
+    const draft = draftResult.result.value
+
+    // 2. For amending regulations, check for pending tasks on impacted base regulations
+    if (caseToPublish.applicationType === 'amending_regulation') {
+      const hasPending = await this.checkPendingTasksForImpacts(draft)
+      if (hasPending) {
+        // Pending tasks exist - use existing Eplica flow (adds to task queue)
+        await this.externalService.publishRegulation(advert)
+        return
+      }
+    }
+
+    // 3. Direct publish (base_regulation, or amending with no pending tasks)
+    await this.regulationPublishService.publishRegulationDirectly(
+      draft,
+      publishedDate,
+      advert,
+    )
+  }
+
+  private async checkPendingTasksForImpacts(
+    draft: RegulationDraft,
+  ): Promise<boolean> {
+    if (!draft.impacts?.length) return false
+
+    const baseRegNames = [...new Set(draft.impacts.map((i) => i.regulation))]
+
+    for (const regName of baseRegNames) {
+      const result = await this.regulationPublishService.hasPendingTasks(regName)
+      if (result.result.ok && result.result.value === true) {
+        return true
+      }
+    }
+    return false
   }
 
   @LogAndHandle()
