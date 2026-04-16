@@ -1,0 +1,54 @@
+{
+  "name": "doe-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/directorate-of-equality-web",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.json --noEmit"],
+        "cwd": "apps/directorate-of-equality-web",
+        "forwardAllArgs": false
+      }
+    },
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": ["codegen"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "apps/directorate-of-equality-web/dist"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/directorate-of-equality-web"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "doe-web:build",
+        "dev": true,
+        "port": 5200
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "doe-web:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "doe-web:build:production",
+          "dev": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}
