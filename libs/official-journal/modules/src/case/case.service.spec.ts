@@ -25,6 +25,7 @@ import {
 } from '../journal/models'
 import { IPdfService } from '../pdf/pdf.service.interface'
 import { IPriceService } from '../price/price.service.interface'
+import { IRegulationPublishService } from '../regulation-publish/regulation-publish.service.interface'
 import { IRegulationsAdminService } from '../regulations-admin/regulations-admin.service.interface'
 import { IReindexRunnerService } from '../search'
 import { ISignatureService } from '../signature/signature.service.interface'
@@ -98,6 +99,10 @@ describe('CaseService', () => {
         },
         {
           provide: IRegulationsAdminService,
+          useClass: jest.fn(() => ({})),
+        },
+        {
+          provide: IRegulationPublishService,
           useClass: jest.fn(() => ({})),
         },
         {

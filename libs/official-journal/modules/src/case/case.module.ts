@@ -15,6 +15,7 @@ import { AdvertDepartmentModel } from '../journal/models'
 import advertModels from '../journal/models'
 import { PdfModule } from '../pdf/pdf.module'
 import { PriceModule } from '../price/price.module'
+import { RegulationPublishModule } from '../regulation-publish/regulation-publish.module'
 import { RegulationsAdminModule } from '../regulations-admin/regulations-admin.module'
 import { OpenSearchModule, OpsModule } from '../search'
 import { SignatureModule } from '../signature/signature.module'
@@ -71,6 +72,7 @@ const API_MOCK = process.env.API_MOCK === 'true'
     forwardRef(() => ApplicationModule),
     forwardRef(() => SharedJournalModule),
     RegulationsAdminModule,
+    RegulationPublishModule,
   ],
   providers: [
     {
