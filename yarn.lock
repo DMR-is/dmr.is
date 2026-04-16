@@ -4051,6 +4051,56 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/doe-web@workspace:apps/directorate-of-equality-web":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/doe-web@workspace:apps/directorate-of-equality-web"
+  dependencies:
+    "@ariakit/react": "npm:0.4.17"
+    "@dmr.is/api-client": "npm:*"
+    "@dmr.is/auth": "npm:*"
+    "@dmr.is/island-ui-theme": "npm:*"
+    "@dmr.is/logging-next": "npm:*"
+    "@dmr.is/trpc": "npm:*"
+    "@dmr.is/ui": "npm:*"
+    "@dmr.is/utils-client": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
+    "@tanstack/react-query": "npm:5.90.2"
+    "@tanstack/react-query-devtools": "npm:5.90.2"
+    "@trpc/client": "npm:11.10.0"
+    "@trpc/react-query": "npm:11.10.0"
+    "@trpc/server": "npm:11.10.0"
+    "@trpc/tanstack-react-query": "npm:11.10.0"
+    "@types/react-datepicker": "npm:^4.10.0"
+    "@vanilla-extract/css": "npm:^1.7.0"
+    "@vanilla-extract/next-plugin": "npm:^2.4.14"
+    agentkeepalive: "npm:^4.2.1"
+    classnames: "npm:^2.5.1"
+    date-fns: "npm:2.30.0"
+    downshift: "npm:^5.4.3"
+    hypher: "npm:^0.2.5"
+    jose: "npm:6.1.3"
+    kennitala: "npm:^2.0.6"
+    libphonenumber-js: "npm:^1.10.53"
+    next: "npm:16.1.6"
+    next-auth: "npm:4.24.13"
+    next-usequerystate: "npm:1.20.0"
+    nuqs: "npm:2.5.0"
+    oidc-client-ts: "npm:2.0.3"
+    react: "npm:19.2.4"
+    react-datepicker: "npm:^4.10.0"
+    react-dom: "npm:19.2.4"
+    react-dropzone: "npm:^11.7.1"
+    react-error-boundary: "npm:6.1.0"
+    react-intl: "npm:^6.6.8"
+    react-keyed-flatten-children: "npm:5.1.1"
+    react-number-format: "npm:^4.9.1"
+    reakit: "npm:^1.3.11"
+    tslib: "npm:^2.6.3"
+    webpack-bundle-analyzer: "npm:^4.10.2"
+    zod: "npm:4.1.11"
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/island-auth-nest@npm:*, @dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest":
   version: 0.0.0-use.local
   resolution: "@dmr.is/island-auth-nest@workspace:libs/shared/island-auth-nest"

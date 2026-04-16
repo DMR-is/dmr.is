@@ -35,6 +35,7 @@ jobs:
           scopes: |
             ojoi
             lg
+            doe
             regulations
             shared
           requireScope: true
