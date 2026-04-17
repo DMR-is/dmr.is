@@ -1,0 +1,90 @@
+{
+  "name": "doe-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/directorate-of-equality-api/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "cwd": "apps/directorate-of-equality-api",
+        "forwardAllArgs": false
+      }
+    },
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "apps/directorate-of-equality-api/dist",
+        "main": "apps/directorate-of-equality-api/src/main.ts",
+        "tsConfig": "apps/directorate-of-equality-api/tsconfig.app.json",
+        "webpackConfig": "apps/directorate-of-equality-api/webpack.config.js",
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "development": {
+          "outputHashing": "none"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "doe-api:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "doe-api:build:development"
+        },
+        "production": {
+          "buildTarget": "doe-api:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "dev-services": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose up -d",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:migrate",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:seed:all",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "dev-init": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run directorate-of-equality-api:dev-services",
+          "yarn nx run directorate-of-equality-api:migrate",
+          "yarn nx run directorate-of-equality-api:seed"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

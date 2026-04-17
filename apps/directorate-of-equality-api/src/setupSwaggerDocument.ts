@@ -1,0 +1,46 @@
+import { INestApplication } from '@nestjs/common'
+import { SwaggerModule } from '@nestjs/swagger'
+
+import { openApi } from './openApi'
+
+export type SetupSwaggerOptions = {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  modules: Function[]
+  tag: string
+  swaggerTitle: string
+  swaggerPath: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  filterPaths?: (path: Record<string, any>) => Record<string, any>
+  autoTagControllers?: boolean
+}
+
+export const setupSwaggerDocument = (
+  app: INestApplication,
+  options: SetupSwaggerOptions,
+) => {
+  const document = SwaggerModule.createDocument(app, openApi, {
+    deepScanRoutes: true,
+    include: options.modules,
+    autoTagControllers: options.autoTagControllers ?? false,
+  })
+
+  document.tags = [{ name: options.tag }]
+
+  if (options.filterPaths) {
+    document.paths = options.filterPaths(document.paths)
+  }
+
+  if (!options.autoTagControllers) {
+    // tag routes
+    Object.values(document.paths).forEach((path) => {
+      for (const method of Object.values(path)) {
+        method.tags = [options.tag]
+      }
+    })
+  }
+
+  SwaggerModule.setup(options.swaggerPath, app, document, {
+    customSiteTitle: options.swaggerTitle,
+    jsonDocumentUrl: `/${options.swaggerPath}/json`,
+  })
+}

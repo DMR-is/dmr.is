@@ -4051,6 +4051,62 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/doe-api@workspace:apps/directorate-of-equality-api":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/doe-api@workspace:apps/directorate-of-equality-api"
+  dependencies:
+    "@dmr.is/apm": "npm:*"
+    "@dmr.is/clients-national-registry": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/db": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/island-auth-nest": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-filters": "npm:*"
+    "@dmr.is/shared-interceptors": "npm:*"
+    "@dmr.is/shared-middleware": "npm:*"
+    "@dmr.is/shared-models-base": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
+    "@nestjs/cache-manager": "npm:3.0.1"
+    "@nestjs/common": "npm:^10.4.19"
+    "@nestjs/core": "npm:^10.4.19"
+    "@nestjs/event-emitter": "npm:3.0.1"
+    "@nestjs/platform-express": "npm:^10.4.20"
+    "@nestjs/schedule": "npm:6.0.0"
+    "@nestjs/sequelize": "npm:^10.0.1"
+    "@nestjs/swagger": "npm:^8.1.1"
+    "@nestjs/testing": "npm:^10.4.18"
+    "@nestjs/throttler": "npm:6.5.0"
+    "@types/express": "npm:4.17.22"
+    "@types/lodash": "npm:^4.14.160"
+    "@types/validator": "npm:^13.7.0"
+    cache-manager: "npm:7.2.4"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    date-fns: "npm:2.30.0"
+    deepmerge: "npm:4.3.1"
+    express: "npm:4.21.2"
+    kennitala: "npm:^2.0.6"
+    lodash: "npm:4.17.23"
+    nest-winston: "npm:^1.9.4"
+    pdf-lib: "npm:1.17.1"
+    pg: "npm:8.13.3"
+    puppeteer: "npm:^22.8.1"
+    reflect-metadata: "npm:0.1.14"
+    rxjs: "npm:^7.8.0"
+    sequelize: "npm:6.37.3"
+    sequelize-cli: "npm:^6.6.2"
+    sequelize-typescript: "npm:2.1.6"
+    validator: "npm:13.15.22"
+    winston: "npm:^3.11.0"
+    zod: "npm:4.1.11"
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/doe-web@workspace:apps/directorate-of-equality-web":
   version: 0.0.0-use.local
   resolution: "@dmr.is/doe-web@workspace:apps/directorate-of-equality-web"
