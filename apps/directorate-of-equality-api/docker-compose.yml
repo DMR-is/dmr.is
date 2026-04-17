@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  db_directorate_of_equality_api:
+    image: public.ecr.aws/docker/library/postgres:16
+    container_name: db_directorate_of_equality
+    environment:
+      - POSTGRES_DB=dev_db_directorate_of_equality
+      - POSTGRES_USER=dev_db
+      - POSTGRES_PASSWORD=dev_db
+      - POSTGRES_INITDB_ARGS=--locale-provider=icu --icu-locale=is-IS
+    ports:
+      - '5435:5432'
+
+volumes:
+  redis:
+    driver: local
