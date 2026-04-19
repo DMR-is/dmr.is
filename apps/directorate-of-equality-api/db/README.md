@@ -1,5 +1,7 @@
 # DoE DB Schema
 
+> Visual ER diagram: [`DIAGRAM.md`](./DIAGRAM.md)
+
 ## Overview
 
 This database backs the Directorate of Equality (DoE) salary equality reporting system. Every Icelandic company with **50 or more employees** is required by law to submit a salary equality report. DoE reviewers audit each report, approve or reject it, and publish an anonymized summary of every approved report to a public site. Approved reports are valid for **three years**, after which the company must resubmit.
