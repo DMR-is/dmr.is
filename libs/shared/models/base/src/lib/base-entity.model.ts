@@ -1,7 +1,7 @@
 import { Column, DataType } from 'sequelize-typescript'
 
-import { ParanoidModel, ParanoidModelAttributes } from './paranoid.model'
 import { BaseEntityTable } from './decorators'
+import { ParanoidModel, ParanoidModelAttributes } from './paranoid.model'
 
 type BaseEntityModelCreateAttributes = {
   title: string
