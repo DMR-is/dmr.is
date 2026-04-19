@@ -29,7 +29,7 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 import { getLogger } from '@dmr.is/logging'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
 import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 
@@ -161,7 +161,7 @@ export type AdvertCreateAttributes = {
   communicationChannels?: CommunicationChannelCreateAttributes[]
 }
 
-@BaseTable({ tableName: LegalGazetteModels.ADVERT })
+@ParanoidTable({ tableName: LegalGazetteModels.ADVERT })
 @Scopes(() => ({
   listview: {
     include: [
@@ -202,7 +202,7 @@ export type AdvertCreateAttributes = {
     ],
   },
 }))
-export class AdvertModel extends BaseModel<
+export class AdvertModel extends ParanoidModel<
   AdvertAttributes,
   AdvertCreateAttributes
 > {

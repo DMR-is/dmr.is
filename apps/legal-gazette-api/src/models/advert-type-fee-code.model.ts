@@ -8,7 +8,7 @@ import {
   PrimaryKey,
 } from 'sequelize-typescript'
 
-import { BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { FeeCodeModel } from './fee-code.model'
@@ -31,7 +31,7 @@ type AdvertTypeFeeCodeCreateAttributes = {
   attributes: ['advertTypeId', 'feeCodeId'],
   include: [{ model: TypeModel }, { model: FeeCodeModel }],
 }))
-@BaseTable({
+@ParanoidTable({
   modelName: LegalGazetteModels.ADVERT_TYPE_FEE_CODE,
   freezeTableName: true, // Use the exact name of the table (so sequelize does not pluralize it)
   paranoid: false, // No deletedAt

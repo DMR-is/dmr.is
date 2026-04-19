@@ -8,7 +8,7 @@ import {
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 
@@ -27,8 +27,8 @@ type IssueCreateAttributes = Omit<IssueAttributes, 'isLegacy'> & {
   isLegacy?: boolean
 }
 
-@BaseTable({ tableName: LegalGazetteModels.DOCUMENT_ISSUES })
-export class IssueModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.DOCUMENT_ISSUES })
+export class IssueModel extends ParanoidModel<
   IssueAttributes,
   IssueCreateAttributes
 > {

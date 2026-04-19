@@ -5,7 +5,7 @@ import {
   DefaultScope,
 } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { advertDepartmentMigrate } from '../journal/migrations'
 import { AdvertDepartmentModel } from '../journal/models'
@@ -38,8 +38,8 @@ export type IssuesCreationAttributes = Omit<
   ],
   order: [['startDate', 'DESC']],
 }))
-@BaseTable({ tableName: 'monthly_issues' })
-export class IssuesModel extends BaseModel<
+@ParanoidTable({ tableName: 'monthly_issues' })
+export class IssuesModel extends ParanoidModel<
   IssuesAttributes,
   IssuesCreationAttributes
 > {

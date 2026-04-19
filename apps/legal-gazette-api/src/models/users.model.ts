@@ -5,7 +5,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { ApiOptionalString, ApiString } from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 export type UserAttributes = {
@@ -26,7 +26,7 @@ export type UserCreateAttributes = {
   phone?: string | null
 }
 
-@BaseTable({ tableName: LegalGazetteModels.USERS })
+@ParanoidTable({ tableName: LegalGazetteModels.USERS })
 @DefaultScope(() => ({
   paranoid: false,
   orderBy: [
@@ -34,7 +34,7 @@ export type UserCreateAttributes = {
     ['lastName', 'ASC'],
   ],
 }))
-export class UserModel extends BaseModel<UserAttributes, UserCreateAttributes> {
+export class UserModel extends ParanoidModel<UserAttributes, UserCreateAttributes> {
   @Column({
     type: DataType.TEXT,
     field: 'national_id',

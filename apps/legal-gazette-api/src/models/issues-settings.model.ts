@@ -3,7 +3,7 @@ import { Column, DataType } from 'sequelize-typescript'
 import { ApiProperty } from '@nestjs/swagger'
 
 import { ApiString, ApiUUId } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 
@@ -13,8 +13,8 @@ export interface IssueSettingsAttributes {
 
 type IssueCreateAttributes = IssueSettingsAttributes
 
-@BaseTable({ tableName: LegalGazetteModels.DOCUMENT_ISSUE_SETTINGS })
-export class IssueSettingsModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.DOCUMENT_ISSUE_SETTINGS })
+export class IssueSettingsModel extends ParanoidModel<
   IssueSettingsAttributes,
   IssueCreateAttributes
 > {

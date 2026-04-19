@@ -14,7 +14,7 @@ import {
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
@@ -41,7 +41,7 @@ type ForeclosureModelCreateAttributes = {
   properties?: ForeclosurePropertyModelCreateAttributes[]
 }
 
-@BaseTable({ tableName: LegalGazetteModels.FORECLOSURE })
+@ParanoidTable({ tableName: LegalGazetteModels.FORECLOSURE })
 @DefaultScope(() => ({
   include: [
     {
@@ -50,7 +50,7 @@ type ForeclosureModelCreateAttributes = {
     },
   ],
 }))
-export class ForeclosureModel extends BaseModel<
+export class ForeclosureModel extends ParanoidModel<
   ForeclosureModelAttributes,
   ForeclosureModelCreateAttributes
 > {

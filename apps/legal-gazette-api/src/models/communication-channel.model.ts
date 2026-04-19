@@ -11,7 +11,7 @@ import {
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
@@ -30,12 +30,12 @@ export type CommunicationChannelCreateAttributes = {
   phone?: string | null
 }
 
-@BaseTable({ tableName: LegalGazetteModels.COMMUNICATION_CHANNEL })
+@ParanoidTable({ tableName: LegalGazetteModels.COMMUNICATION_CHANNEL })
 @DefaultScope(() => ({
   attributes: ['id', 'advertId', 'email', 'name', 'phone'],
   order: [['name', 'ASC']],
 }))
-export class CommunicationChannelModel extends BaseModel<
+export class CommunicationChannelModel extends ParanoidModel<
   CommunicationChannelAttributes,
   CommunicationChannelCreateAttributes
 > {

@@ -2,7 +2,7 @@ import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 export interface FeeCodeAttributes {
@@ -12,11 +12,11 @@ export interface FeeCodeAttributes {
   isMultiplied: boolean
 }
 
-@BaseTable({ tableName: LegalGazetteModels.TBR_FEE_CODE })
+@ParanoidTable({ tableName: LegalGazetteModels.TBR_FEE_CODE })
 @DefaultScope(() => ({
   attributes: ['id', 'feeCode', 'description', 'value', 'isMultiplied'],
 }))
-export class FeeCodeModel extends BaseModel<FeeCodeAttributes, FeeCodeModel> {
+export class FeeCodeModel extends ParanoidModel<FeeCodeAttributes, FeeCodeModel> {
   @Column({ type: DataType.TEXT })
   @ApiProperty({ type: String })
   feeCode!: string

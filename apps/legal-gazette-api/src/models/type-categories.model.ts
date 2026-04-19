@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript'
 
 import { ApiDto, ApiDtoArray } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { BaseEntityDto } from '../modules/base-entity/dto/base-entity.dto'
@@ -36,8 +36,8 @@ export type TypeCategoriesCreateAttributes = TypeCategoriesAttributes
     },
   ],
 }))
-@BaseTable({ tableName: LegalGazetteModels.TYPE_CATEGORIES })
-export class TypeCategoriesModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.TYPE_CATEGORIES })
+export class TypeCategoriesModel extends ParanoidModel<
   TypeCategoriesAttributes,
   TypeCategoriesCreateAttributes
 > {

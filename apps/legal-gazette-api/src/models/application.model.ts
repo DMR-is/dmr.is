@@ -25,7 +25,7 @@ import {
   RecallBankruptcyApplicationAnswers,
   RecallDeceasedApplicationAnswers,
 } from '@dmr.is/legal-gazette-schemas'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
@@ -85,7 +85,7 @@ export type ApplicationCreateAttributes = {
   answers?: ApplicationAnswers
 }
 
-@BaseTable({ tableName: LegalGazetteModels.APPLICATION })
+@ParanoidTable({ tableName: LegalGazetteModels.APPLICATION })
 @DefaultScope(() => ({
   include: [{ model: SettlementModel, as: 'settlement' }],
   order: [['updatedAt', 'DESC']],
@@ -110,7 +110,7 @@ export type ApplicationCreateAttributes = {
     order: [['updatedAt', 'DESC']],
   },
 }))
-export class ApplicationModel extends BaseModel<
+export class ApplicationModel extends ParanoidModel<
   ApplicationAttributes,
   ApplicationCreateAttributes
 > {
