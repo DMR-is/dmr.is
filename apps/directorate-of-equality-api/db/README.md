@@ -8,15 +8,39 @@ This database backs the Directorate of Equality (DoE) salary equality reporting 
 
 Scope of this schema: the ≥50-employee flow only. Smaller-company flows and edge cases (mergers, exemptions, liquidations) are out of scope for now.
 
+## Report types
+
+`report.type` (`ReportTypeEnum`) splits submissions into two distinct kinds that share the same lifecycle, reviewer flow, and public-snapshot pipeline but differ in payload:
+
+- **`SALARY`** — structured equal-pay report. Uses the full set of demographic, criterion, employee, and aggregate tables (`report_criterion`, `report_sub_criterion`, `report_employee`, `report_result`, etc.). Employee counts and aggregate columns on `report` are populated.
+- **`EQUALITY`** — narrative gender-equality plan. Stored as free-form text in `equality_report_content`. The structured child tables and aggregate columns are not populated for this type.
+
+Columns on `report` that are specific to one type (demographic counts, `equality_report_content`) are nullable and should be populated based on `type`.
+
+**Gating rule — equality precedes salary.** Every company must submit an `EQUALITY` report. Only companies flagged by `salary_report_required` must additionally submit a `SALARY` report, and a `SALARY` row cannot be submitted until a matching `EQUALITY` row exists with `status = 'APPROVED'` and `valid_until > now()`. The dependency is captured on the salary row via `equality_report_id` — a self-FK back to `report` that points to the approved equality the salary was audited against. Snapshot, not tracking: once set it's never rewired, so later supersedes of the equality don't rewrite the salary's audit trail.
+
+Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
+- `equality_report_id IS NOT NULL` ⇒ `type = 'SALARY'`.
+- Referenced row must have `type = 'EQUALITY'` and must have been `APPROVED` (not just `SUBMITTED`) at the moment the salary row was inserted.
+
 ## Actors
 
 - **Company admin** — fills out and submits reports on behalf of a company. In parent/subsidiary groups, one company acts as the parent and reports on its daughter companies in the same submission.
 - **DoE reviewer (admin)** — reads submitted reports, denies with reason, approves when valid, flags fine accrual. Identified by a row in the `user` table.
 - **Public consumer** — browses anonymized aggregates on the public site. Has no access to PII or to denied/draft reports.
 
+## Eligibility
+
+Every company must submit an `EQUALITY` report — no gating column, no exceptions. `company.salary_report_required` gates only the additional `SALARY` submission. A database trigger on `company` insert/update keeps it in sync with the RSK-reported headcount:
+
+- `average_employee_count_from_rsk >= 50` → trigger sets `salary_report_required = true`.
+- `average_employee_count_from_rsk < 50` → trigger sets `salary_report_required = false`.
+
+`salary_report_required_override` marks rows whose flag has been set manually (e.g. institutions that must report regardless of headcount, or any other case where the law-by-headcount rule doesn't apply). When `salary_report_required_override = true`, the trigger skips the row entirely — the manual value stands even as the RSK count crosses the 50-threshold in either direction.
+
 ## Report lifecycle
 
-`report.status` drives every transition. `previous_report_id` chains resubmissions.
+`report.status` drives every transition. Resubmissions are new rows; there is no FK chain back to the prior submission.
 
 ```
   DRAFT  ──submit──▶  SUBMITTED  ──pickup──▶  IN_REVIEW
@@ -25,9 +49,8 @@ Scope of this schema: the ≥50-employee flow only. Smaller-company flows and ed
                        ▼                          ▼
                     DENIED                     APPROVED
                        │                          │
-                       │ (resubmit = new row      │ (3yr later, or on new approval)
-                       │  with previous_report_id │
-                       │  pointing here)          ▼
+                       │ (resubmit = new DRAFT    │ (3yr later, or on new approval)
+                       │  row, no FK chain)       ▼
                        │                       SUPERSEDED
                        ▼
                   (new DRAFT row)
@@ -37,14 +60,14 @@ State-by-state:
 
 - **`DRAFT`** — company admin is still editing. Not visible to reviewers. Most columns may be null. Can transition to `SUBMITTED`.
 - **`SUBMITTED`** — company finalized the submission. `submitted_at` stamped. Waits in reviewer queue.
-- **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewed_by` on pickup; currently it's stamped on the final decision.)
-- **`DENIED`** — reviewer rejected the submission. `reviewed_by`, `reviewed_at`, `denial_reason` set. The company must submit a new report (new row) — this denied row **stays forever** as audit.
+- **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.)
+- **`DENIED`** — reviewer rejected the submission. `reviewer_user_id`, `reviewed_at`, `denial_reason` set. The company must submit a new report (new row) — this denied row **stays forever** as audit.
 - **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition.
 - **`SUPERSEDED`** — a newer report from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per company is "current" at any time.
 
 ## Resubmission
 
-A resubmission is always a **new row** in `report`. It is never an update of an existing report. The new row's `previous_report_id` points to the report being replaced (the denied one, or the expiring approved one). Children (`report_criterion`, `report_employee`, `report_result`, etc.) belong to the new row — old children stay with the old row.
+A resubmission is always a **new row** in `report`. It is never an update of an existing report. There is no FK linking the new row back to the one it replaces — old and new are correlated via `company_report.company_id` + `submitted_at` ordering, not a direct reference. Children (`report_criterion`, `report_employee`, `report_result`, etc.) belong to the new row — old children stay with the old row.
 
 Two resubmission triggers:
 
@@ -58,7 +81,7 @@ On the `APPROVED` transition, the system inserts a row into `public_report`. Thi
 - **Anonymized** — no company name, no national ID, no personal data. Only `size_bucket`, `isat_category`, and precomputed salary aggregates.
 - **Detached** — `source_report_id` exists for internal traceability but is never exposed on the public API.
 - **Immutable** — insert-only, no `updated_at`, no `deleted_at`. Once published, it stays as-is.
-- **Precomputed** — all six directional `salary_diff_*` permutations are written. The public site does zero math; it just renders.
+- **Precomputed** — all six directional `salary_difference_*` permutations are written. The public site does zero math; it just renders.
 
 If a mistake is discovered post-publication, the retraction flow (TBD) kicks in. Until that's designed, assume public rows are permanent.
 
@@ -72,10 +95,10 @@ A company that misses its deadline accrues daily fines.
 
 ## Daughter companies
 
-Large companies often report on behalf of their corporate group. The `company_report` M:M table captures this:
+Large companies often report on behalf of their corporate group. The `company_report` table captures this — one row per participating company per submission, with the company's identity and demographics (name, national ID, address, headcount, ISAT category) snapshotted so later mutations to `company` don't rewrite history:
 
 - One row per (company, report) pair.
-- `company_parent_id` (nullable) points to the parent company in the group. A row with `company_parent_id = NULL` is the top-level reporter; rows with it set are subsidiaries.
+- `parent_company_id` (nullable) points to the parent company in the group. A row with `parent_company_id = NULL` is the top-level reporter; rows with it set are subsidiaries.
 - All employees of all companies in the group are listed on the same `report`. Reviewers see the full company list by reading `company_report` for that report.
 
 The schema does **not** track which specific company paid which specific employee. Aggregate visibility (the list of participating companies) is sufficient for the audit.
@@ -95,7 +118,7 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds report-level salary aggregates (overall avg/min/max/mid, per-gender breakdowns, and six directional salary gap pairs). `report_role_result` holds the same breakdown per role. Both tables are write-once per approval — computed as part of the approval pipeline, not edited by humans.
+`report_result` holds report-level salary aggregates (overall average/minimum/maximum/median, per-gender breakdowns, and six directional salary gap pairs). `report_role_result` holds the same breakdown per role. Both tables are write-once per approval — computed as part of the approval pipeline, not edited by humans.
 
 ## Enums
 
@@ -106,6 +129,7 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL` |
 | `EducationEnum` | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
 | `ReportStatusEnum` | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED` |
+| `ReportTypeEnum` | `SALARY`, `EQUALITY` |
 
 ### `EducationEnum` — Iceland to Western mapping
 
@@ -133,7 +157,7 @@ Notes for reviewers mapping a CV:
 
 - **Singular table names** (`report`, `company`, `user`, `report_employee`, ...). One row = one entity, which maps 1:1 to the ORM class name (`ReportModel` ↔ `report`) and avoids the mental flip when reading code vs. SQL.
 - **No app-level prefix** (e.g. no `doe_` in front of every table). The schema lives in its own DB namespace for this service — cross-app collisions aren't a concern here.
-- **FK columns use `<referenced_table>_id`** (e.g. `report_id`, `report_criterion_id`, `reviewed_by` points to `user`).
+- **FK columns use `<referenced_table>_id`** (e.g. `report_id`, `report_criterion_id`, `reviewer_user_id` points to `user`).
 - **Join tables are also singular**, named after both sides or their relationship (e.g. `company_report`, `report_employee_role_criterion_step`).
 - **Latin plurals normalized to singular** — `criteria` → `criterion`, `results` → `result`. Even when awkward to English ear, consistency wins.
 - **Enums named in PascalCase with `Enum` suffix** (`GenderEnum`, `ReportStatusEnum`). This doc keeps enum casing as-is (not singularized).
@@ -177,54 +201,62 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `address` | `text` |
 | `city` | `text` |
 | `postcode` | `text` |
-| `employee_count` | `int` |
+| `average_employee_count_from_rsk` | `int` |
 | `national_id` | `text` |
 | `isat_category` | `text` |
+| `salary_report_required` | `boolean` |
+| `salary_report_required_override` | `boolean` |
 
-### `company_report` (M:M)
-Join table between `company` and `report`. `company_parent_id` allows a parent company to be linked alongside a subsidiary.
+### `company_report`
+Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all identity and demographic fields are frozen at submission so audits reflect the company as it looked then, not as it looks now. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`.
 
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
 | `company_id` | `fk → company` |
 | `report_id` | `fk → report` |
-| `company_parent_id` | `fk → company` (nullable) |
+| `parent_company_id` | `fk → company` (nullable) |
+| `name` | `text` (snapshot at submission) |
+| `national_id` | `text` (snapshot at submission) |
+| `address` | `text` (snapshot at submission) |
+| `city` | `text` (snapshot at submission) |
+| `postcode` | `text` (snapshot at submission) |
+| `average_employee_count_from_rsk` | `int` (snapshot at submission) |
+| `isat_category` | `text` (snapshot at submission) |
 
 ### `report`
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
+| `type` | `ReportTypeEnum` |
 | `company_admin_name` | `text` |
 | `company_admin_email` | `text` |
 | `company_admin_gender` | `GenderEnum` |
 | `contact_name` | `text` |
 | `contact_email` | `text` |
 | `contact_phone` | `text` |
-| `avg_emp_mcount` | `num` |
-| `avg_emp_fcount` | `num` |
-| `avg_emp_ocount` | `num` |
+| `average_employee_male_count` | `decimal(10, 2)` |
+| `average_employee_female_count` | `decimal(10, 2)` |
+| `average_employee_neutral_count` | `decimal(10, 2)` |
 | `provider_type` | `ReportProviderEnum` |
 | `provider_id` | `text` (nullable) |
 | `imported_from_excel` | `boolean` |
 | `identifier` | `text` |
 | `status` | `ReportStatusEnum` |
-| `previous_report_id` | `fk → report` (nullable, chain for resubmissions) |
-| `submitted_at` | `timestamp` (nullable) |
-| `reviewed_by` | `fk → user` (nullable) |
-| `reviewed_at` | `timestamp` (nullable) |
+| `equality_report_id` | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
+| `reviewer_user_id` | `fk → user` (nullable) |
 | `denial_reason` | `text` (nullable) |
 | `approved_at` | `timestamp` (nullable) |
 | `valid_until` | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede) |
-| `due_date` | `date` (nullable — inherited from prior report's `valid_until`) |
-| `fines_started_at` | `date` (nullable — admin-set, triggers daily fine accrual cron) |
+| `correction_deadline` | `timestamp` (nullable) |
+| `equality_report_content` | `text` (nullable — narrative body for `type = EQUALITY`) |
 
 ### `report_criterion`
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
 | `title` | `text` |
-| `weight` | `float` |
+| `weight` | `decimal(6, 4)` |
 | `description` | `text` |
 | `type` | `ReportCriterionTypeEnum` |
 | `report_id` | `fk → report` |
@@ -234,36 +266,36 @@ Join table between `company` and `report`. `company_parent_id` allows a parent c
 |--------|------|
 | `id` | `uuid` PK |
 | `title` | `text` |
-| `desc` | `text` |
-| `weight` | `float` |
+| `description` | `text` |
+| `weight` | `decimal(6, 4)` |
 | `report_criterion_id` | `fk → report_criterion` |
 
 ### `report_sub_criterion_step`
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `order` | `num` |
+| `order` | `int` |
 | `description` | `text` |
 | `report_sub_criterion_id` | `fk → report_sub_criterion` |
-| `score` | `float` |
+| `score` | `decimal(6, 2)` |
 
 ### `report_employee`
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `index` | `num` |
+| `index` | `int` |
 | `education` | `EducationEnum` |
 | `field` | `text` |
 | `department` | `text` |
 | `start_date` | `date` |
-| `work_ratio` | `float` |
-| `base_salary` | `num` |
-| `additional_salary` | `num` |
-| `bonus_salary` | `num` (nullable) |
+| `work_ratio` | `decimal(5, 4)` |
+| `base_salary` | `decimal(14, 2)` |
+| `additional_salary` | `decimal(14, 2)` |
+| `bonus_salary` | `decimal(14, 2)` (nullable) |
 | `gender` | `GenderEnum` |
-| `role_id` | `fk → report_employee_role` |
+| `report_employee_role_id` | `fk → report_employee_role` |
 | `report_id` | `fk → report` |
-| `score` | `num` |
+| `score` | `decimal(6, 2)` |
 
 ### `report_employee_role`
 | Column | Type |
@@ -275,7 +307,7 @@ Join table between `company` and `report`. `company_parent_id` allows a parent c
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `emp_id` | `fk → report_employee` |
+| `report_employee_id` | `fk → report_employee` |
 | `reason` | `text` |
 | `action` | `text` |
 | `signature_name` | `text` |
@@ -287,8 +319,8 @@ Join: which sub-criteria steps apply to a given role.
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `role_id` | `fk → report_employee_role` |
-| `step_id` | `fk → report_sub_criterion_step` |
+| `report_employee_role_id` | `fk → report_employee_role` |
+| `report_sub_criterion_step_id` | `fk → report_sub_criterion_step` |
 
 ### `report_employee_personal_criterion_step`
 Join: which sub-criteria steps apply to a given employee personally.
@@ -296,8 +328,8 @@ Join: which sub-criteria steps apply to a given employee personally.
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `employee_id` | `fk → report_employee` |
-| `step_id` | `fk → report_sub_criterion_step` |
+| `report_employee_id` | `fk → report_employee` |
+| `report_sub_criterion_step_id` | `fk → report_sub_criterion_step` |
 
 ### `report_result`
 Aggregated per-report salary stats.
@@ -306,19 +338,19 @@ Aggregated per-report salary stats.
 |--------|------|
 | `id` | `uuid` PK |
 | `report_id` | `fk → report` |
-| `avg_male_salary` | `num` |
-| `avg_female_salary` | `num` |
-| `avg_neutral_salary` | `num` |
-| `avg_salary` | `num` |
-| `min_salary` | `num` |
-| `max_salary` | `num` |
-| `mid_salary` | `num` |
-| `salary_diff_male_female` | `num` |
-| `salary_diff_male_neutral` | `num` |
-| `salary_diff_female_male` | `num` |
-| `salary_diff_female_neutral` | `num` |
-| `salary_diff_neutral_male` | `num` |
-| `salary_diff_neutral_female` | `num` |
+| `average_male_salary` | `decimal(14, 2)` |
+| `average_female_salary` | `decimal(14, 2)` |
+| `average_neutral_salary` | `decimal(14, 2)` |
+| `average_salary` | `decimal(14, 2)` |
+| `minimum_salary` | `decimal(14, 2)` |
+| `maximum_salary` | `decimal(14, 2)` |
+| `median_salary` | `decimal(14, 2)` |
+| `salary_difference_male_female` | `decimal(14, 2)` |
+| `salary_difference_male_neutral` | `decimal(14, 2)` |
+| `salary_difference_female_male` | `decimal(14, 2)` |
+| `salary_difference_female_neutral` | `decimal(14, 2)` |
+| `salary_difference_neutral_male` | `decimal(14, 2)` |
+| `salary_difference_neutral_female` | `decimal(14, 2)` |
 
 ### `report_role_result`
 Same salary stats broken down per role. Whiteboard used ditto marks (`==`) — expanded below.
@@ -327,20 +359,20 @@ Same salary stats broken down per role. Whiteboard used ditto marks (`==`) — e
 |--------|------|
 | `id` | `uuid` PK |
 | `report_result_id` | `fk → report_result` |
-| `role_id` | `fk → report_employee_role` |
-| `avg_salary` | `num` |
-| `min_salary` | `num` |
-| `max_salary` | `num` |
-| `mid_salary` | `num` |
-| `avg_male_salary` | `num` |
-| `avg_female_salary` | `num` |
-| `avg_neutral_salary` | `num` |
-| `min_male_salary` | `num` |
-| `min_female_salary` | `num` |
-| `min_neutral_salary` | `num` |
-| `max_male_salary` | `num` |
-| `max_female_salary` | `num` |
-| `max_neutral_salary` | `num` |
+| `report_employee_role_id` | `fk → report_employee_role` |
+| `average_salary` | `decimal(14, 2)` |
+| `minimum_salary` | `decimal(14, 2)` |
+| `maximum_salary` | `decimal(14, 2)` |
+| `median_salary` | `decimal(14, 2)` |
+| `average_male_salary` | `decimal(14, 2)` |
+| `average_female_salary` | `decimal(14, 2)` |
+| `average_neutral_salary` | `decimal(14, 2)` |
+| `minimum_male_salary` | `decimal(14, 2)` |
+| `minimum_female_salary` | `decimal(14, 2)` |
+| `minimum_neutral_salary` | `decimal(14, 2)` |
+| `maximum_male_salary` | `decimal(14, 2)` |
+| `maximum_female_salary` | `decimal(14, 2)` |
+| `maximum_neutral_salary` | `decimal(14, 2)` |
 
 ### `public_report`
 Insert-only snapshot published when a private report is approved. No PII, no FK to `company`. Anonymized aggregate shown on public site. Immutable by design.
@@ -353,21 +385,21 @@ Insert-only snapshot published when a private report is approved. No PII, no FK 
 | `isat_category` | `text` (industry field) |
 | `published_at` | `timestamp` |
 | `valid_until` | `timestamp` |
-| `avg_male_salary` | `num` |
-| `avg_female_salary` | `num` |
-| `avg_neutral_salary` | `num` |
-| `salary_diff_male_female` | `num` |
-| `salary_diff_male_neutral` | `num` |
-| `salary_diff_female_male` | `num` |
-| `salary_diff_female_neutral` | `num` |
-| `salary_diff_neutral_male` | `num` |
-| `salary_diff_neutral_female` | `num` |
+| `average_male_salary` | `decimal(14, 2)` |
+| `average_female_salary` | `decimal(14, 2)` |
+| `average_neutral_salary` | `decimal(14, 2)` |
+| `salary_difference_male_female` | `decimal(14, 2)` |
+| `salary_difference_male_neutral` | `decimal(14, 2)` |
+| `salary_difference_female_male` | `decimal(14, 2)` |
+| `salary_difference_female_neutral` | `decimal(14, 2)` |
+| `salary_difference_neutral_male` | `decimal(14, 2)` |
+| `salary_difference_neutral_female` | `decimal(14, 2)` |
 
-Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — min/max/mid and role-level breakdown probably omitted, confirm with stakeholders.
+Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — minimum/maximum/median and role-level breakdown probably omitted, confirm with stakeholders.
 
 ## Relationships (summary)
 
-- `company` ⟷ `report` via `company_report` (M:M, with optional parent company).
+- `company` ⟷ `report` via `company_report` (per-submission snapshot, with optional parent company).
 - `report` 1:N `report_criterion` 1:N `report_sub_criterion` 1:N `report_sub_criterion_step`.
 - `report` 1:N `report_employee` N:1 `report_employee_role`.
 - `report_employee` 1:N `report_employee_deviation`.
@@ -375,8 +407,8 @@ Full six permutations precomputed — public consumer does no math. Exact aggreg
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
 - `report` 1:1 `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
-- `report` → `report` self-ref via `previous_report_id` (resubmission chain).
-- `report` N:1 `user` via `reviewed_by` (DoE reviewer who accepted/denied).
+- `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
+- `report` N:1 `user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
 
 ## Notes / open questions
 
