@@ -1,7 +1,7 @@
 import { Column, DataType, DefaultScope } from 'sequelize-typescript'
 
 import { ApiBoolean, ApiOptionalString, ApiString } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
@@ -20,8 +20,8 @@ export type TBRCompanySettingsCreateAttributes = TBRCompanySettingsAttributes
 @DefaultScope(() => ({
   order: [['name', 'ASC']],
 }))
-@BaseTable({ tableName: LegalGazetteModels.TBR_COMPANY_SETTINGS })
-export class TBRCompanySettingsModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.TBR_COMPANY_SETTINGS })
+export class TBRCompanySettingsModel extends ParanoidModel<
   TBRCompanySettingsAttributes,
   TBRCompanySettingsCreateAttributes
 > {

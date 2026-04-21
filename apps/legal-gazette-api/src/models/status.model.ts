@@ -1,6 +1,6 @@
 import { Column, DataType, HasMany } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { StatusEnum, StatusIdEnum } from '../core/enums/status.enum'
@@ -16,8 +16,8 @@ type StatusAttributes = {
   slug: string
 }
 
-@BaseTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
-export class StatusModel extends BaseModel<StatusAttributes, StatusAttributes> {
+@ParanoidTable({ tableName: LegalGazetteModels.ADVERT_STATUS })
+export class StatusModel extends ParanoidModel<StatusAttributes, StatusAttributes> {
   @Column({
     type: DataType.ENUM(...Object.values(StatusIdEnum)),
     allowNull: false,

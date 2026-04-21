@@ -3,12 +3,9 @@ import {
   BeforeCreate,
   BeforeFind,
   Column,
-  CreatedAt,
   DataType,
-  DeletedAt,
   Model,
   PrimaryKey,
-  UpdatedAt,
 } from 'sequelize-typescript'
 
 import { NotFoundException } from '@nestjs/common'
@@ -16,31 +13,28 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { getLogger } from '@dmr.is/logging'
 
-export interface BaseModelAttributes {
+export interface AbstractDmrModelAttributes {
   id: string
-  createdAt: Date
-  updatedAt: Date
-  deletedAt: Date | null
 }
 
-export interface BaseModelStatic<T extends BaseModel = BaseModel>
+export interface AbstractDmrModelStatic<T extends AbstractDmrModel = AbstractDmrModel>
   extends ModelStatic<T> {
   findByPkOrThrow(
     this: ModelStatic<T>,
     id: string,
     options?: Omit<FindOptions<T>, 'where'>,
   ): Promise<T>
-  findOneOrThrow<T extends BaseModel>(
+  findOneOrThrow<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
     errorMessage?: string,
   ): Promise<T>
 }
 
-export abstract class BaseModel<
+export abstract class AbstractDmrModel<
   TAttributes = any,
   TCreateAttributes extends {} = any,
-> extends Model<TAttributes & BaseModelAttributes, TCreateAttributes> {
+> extends Model<TAttributes & AbstractDmrModelAttributes, TCreateAttributes> {
   @PrimaryKey
   @Column({
     type: DataType.UUID,
@@ -49,17 +43,8 @@ export abstract class BaseModel<
   @ApiProperty({ type: String })
   declare id: string
 
-  @CreatedAt
-  declare createdAt: Date
-
-  @UpdatedAt
-  declare updatedAt: Date
-
-  @DeletedAt
-  declare deletedAt: Date | null
-
   @BeforeCreate
-  static logBeforeCreate(instance: BaseModel): void {
+  static logBeforeCreate(instance: AbstractDmrModel): void {
     this.logger.debug('Creating entity', {
       context: this.name,
       id: instance.id,
@@ -114,14 +99,14 @@ export abstract class BaseModel<
     return getLogger(this.name)
   }
 
-  static withScope<T extends BaseModel>(
+  static withScope<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     ...scopes: Parameters<ModelStatic<T>['scope']>
-  ): BaseModelStatic<T> {
-    return this.scope(...scopes) as BaseModelStatic<T>
+  ): AbstractDmrModelStatic<T> {
+    return this.scope(...scopes) as AbstractDmrModelStatic<T>
   }
 
-  static async findOneOrThrow<T extends BaseModel>(
+  static async findOneOrThrow<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
     errorMessage?: string,
@@ -133,7 +118,7 @@ export abstract class BaseModel<
     return result
   }
 
-  static async findByPkOrThrow<T extends BaseModel>(
+  static async findByPkOrThrow<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     id: string,
     options?: Omit<FindOptions<T>, 'where'>,

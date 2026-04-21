@@ -5,7 +5,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { AdvertInvolvedPartyModel } from '../../journal/models/advert-involved-party.model'
 
@@ -22,8 +22,8 @@ type AdditionalPartiesCreateAttributes = {
   caseId?: string | null
 }
 
-@BaseTable({ tableName: 'additional_parties' })
-export class AdditionalPartiesModel extends BaseModel<
+@ParanoidTable({ tableName: 'additional_parties' })
+export class AdditionalPartiesModel extends ParanoidModel<
   AdditionalPartiesAttributes,
   AdditionalPartiesCreateAttributes
 > {

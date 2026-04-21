@@ -9,7 +9,7 @@ import {
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { ApiDateTime, ApiString } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertModel } from './advert.model'
@@ -91,8 +91,8 @@ type CreateCommentAttributes =
   include: [{ model: StatusModel }],
   order: [['createdAt', 'DESC']],
 }))
-@BaseTable({ tableName: LegalGazetteModels.COMMENT })
-export class CommentModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.COMMENT })
+export class CommentModel extends ParanoidModel<
   CommentAttributes,
   CreateCommentAttributes
 > {

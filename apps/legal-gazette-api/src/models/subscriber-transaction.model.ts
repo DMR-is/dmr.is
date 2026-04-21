@@ -5,7 +5,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { SubscriberModel } from './subscriber.model'
@@ -25,8 +25,8 @@ export type SubscriberTransactionCreateAttributes = Omit<
   isCurrent?: boolean
 }
 
-@BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER_TRANSACTION })
-export class SubscriberTransactionModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.SUBSCRIBER_TRANSACTION })
+export class SubscriberTransactionModel extends ParanoidModel<
   SubscriberTransactionAttributes,
   SubscriberTransactionCreateAttributes
 > {

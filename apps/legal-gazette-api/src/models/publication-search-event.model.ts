@@ -1,6 +1,6 @@
 import { Column, DataType, Model } from 'sequelize-typescript'
 
-import { BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import {
@@ -16,7 +16,7 @@ type PublicationSearchEventAttributes = {
 
 type PublicationSearchEventCreateAttributes = PublicationSearchTrackingEventDto
 
-@BaseTable({
+@ParanoidTable({
   tableName: LegalGazetteModels.PUBLICATION_SEARCH_EVENT,
   freezeTableName: true,
   paranoid: false,

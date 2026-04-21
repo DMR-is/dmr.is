@@ -5,7 +5,7 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { PaymentDto } from '../modules/payments/dto/payments.dto'
@@ -59,8 +59,8 @@ export type TBRTransactionCreateAttributes = Omit<
   feeCodeMultiplier?: number
 }
 
-@BaseTable({ tableName: LegalGazetteModels.TBR_TRANSACTION })
-export class TBRTransactionModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.TBR_TRANSACTION })
+export class TBRTransactionModel extends ParanoidModel<
   TBRTransactionAttributes,
   TBRTransactionCreateAttributes
 > {

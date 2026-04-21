@@ -15,7 +15,7 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
@@ -42,7 +42,7 @@ type CaseCreateAttributes = {
   application?: ApplicationCreateAttributes
 }
 
-@BaseTable({ tableName: LegalGazetteModels.CASE })
+@ParanoidTable({ tableName: LegalGazetteModels.CASE })
 @DefaultScope(() => ({
   attributes: ['id', 'caseNumber', 'createdAt', 'updatedAt', 'deletedAt'],
   include: [
@@ -53,7 +53,7 @@ type CaseCreateAttributes = {
   ],
   order: [['createdAt', 'DESC']],
 }))
-export class CaseModel extends BaseModel<CaseAttributes, CaseCreateAttributes> {
+export class CaseModel extends ParanoidModel<CaseAttributes, CaseCreateAttributes> {
   @Column({
     type: DataType.TEXT,
     allowNull: false,

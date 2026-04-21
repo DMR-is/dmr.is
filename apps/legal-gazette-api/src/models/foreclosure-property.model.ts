@@ -7,7 +7,7 @@ import {
 } from 'sequelize-typescript'
 
 import { ApiDateTime, ApiNumber, ApiString, ApiUUId } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { ForeclosureModel } from './foreclosure.model'
@@ -30,12 +30,12 @@ export type ForeclosurePropertyModelCreateAttributes = {
   respondent: string
 }
 
-@BaseTable({ tableName: LegalGazetteModels.FORECLOSURE_PROPERTY })
+@ParanoidTable({ tableName: LegalGazetteModels.FORECLOSURE_PROPERTY })
 @DefaultScope(() => ({
   include: [],
   orderBy: [['propertyName', 'ASC']],
 }))
-export class ForeclosurePropertyModel extends BaseModel<
+export class ForeclosurePropertyModel extends ParanoidModel<
   ForeclosurePropertyModelAttributes,
   ForeclosurePropertyModelCreateAttributes
 > {

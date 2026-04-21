@@ -7,7 +7,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { AdvertPublicationModel } from './advert-publication.model'
@@ -16,8 +16,8 @@ export type BackfilledPublicationAttributes = {
   publicationId: string
 }
 
-@BaseTable({ tableName: LegalGazetteModels.BACKFILLED_PUBLICATION })
-export class BackfilledPublicationModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.BACKFILLED_PUBLICATION })
+export class BackfilledPublicationModel extends ParanoidModel<
   BackfilledPublicationAttributes,
   BackfilledPublicationAttributes
 > {

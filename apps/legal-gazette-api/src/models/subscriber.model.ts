@@ -11,7 +11,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 import { Paging } from '@dmr.is/shared-dto'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { SubscriberTransactionModel } from './subscriber-transaction.model'
@@ -36,7 +36,7 @@ export type SubscriberCreateAttributes = {
   subscribedTo?: Date | null
 }
 
-@BaseTable({ tableName: LegalGazetteModels.SUBSCRIBER })
+@ParanoidTable({ tableName: LegalGazetteModels.SUBSCRIBER })
 @DefaultScope(() => ({
   attributes: [
     'id',
@@ -48,7 +48,7 @@ export type SubscriberCreateAttributes = {
     'subscribedTo',
   ],
 }))
-export class SubscriberModel extends BaseModel<
+export class SubscriberModel extends ParanoidModel<
   SubscriberAttributes,
   SubscriberCreateAttributes
 > {

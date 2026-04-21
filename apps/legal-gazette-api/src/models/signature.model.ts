@@ -5,7 +5,7 @@ import {
   ApiOptionalString,
   ApiUUId,
 } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
@@ -27,8 +27,8 @@ export type SignatureCreationAttributes = {
   advertId?: string
 }
 
-@BaseTable({ tableName: LegalGazetteModels.SIGNATURE })
-export class SignatureModel extends BaseModel<
+@ParanoidTable({ tableName: LegalGazetteModels.SIGNATURE })
+export class SignatureModel extends ParanoidModel<
   SignatureAttributes,
   SignatureCreationAttributes
 > {

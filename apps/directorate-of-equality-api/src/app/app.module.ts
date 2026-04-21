@@ -6,6 +6,23 @@ import { LoggingModule } from '@dmr.is/logging'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { CLS_NAMESPACE } from '../core/constants'
+import { CompanyModel } from '../modules/company/models/company.model'
+import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { PublicReportModel } from '../modules/public-report/models/public-report.model'
+import { ReportModel } from '../modules/report/models/report.model'
+import { ReportCommentModel } from '../modules/report/models/report-comment.model'
+import { ReportEventModel } from '../modules/report/models/report-event.model'
+import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
+import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
+import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
+import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
+import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/report-employee-deviation.model'
+import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
+import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
+import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
+import { ReportResultModel } from '../modules/report-result/models/report-result.model'
+import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
+import { UserModel } from '../modules/user/models/user.model'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 
@@ -26,7 +43,25 @@ import { AppService } from './app.service'
           clsNamespace: CLS_NAMESPACE,
           debugLog: process.env.DB_DEBUG === 'true',
           autoLoadModels: false,
-          models: [],
+          models: [
+            UserModel,
+            CompanyModel,
+            ReportEmployeeRoleModel,
+            ReportModel,
+            CompanyReportModel,
+            ReportCriterionModel,
+            ReportSubCriterionModel,
+            ReportSubCriterionStepModel,
+            ReportEmployeeModel,
+            ReportEmployeeDeviationModel,
+            ReportEmployeeRoleCriterionStepModel,
+            ReportEmployeePersonalCriterionStepModel,
+            ReportResultModel,
+            ReportRoleResultModel,
+            PublicReportModel,
+            ReportEventModel,
+            ReportCommentModel,
+          ],
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>

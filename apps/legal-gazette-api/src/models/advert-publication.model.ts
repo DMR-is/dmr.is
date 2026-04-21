@@ -16,7 +16,7 @@ import { BadRequestException } from '@nestjs/common'
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger'
 
 import { ApiDateTime, ApiOptionalDateTime } from '@dmr.is/decorators'
-import { BaseModel, BaseTable } from '@dmr.is/shared-models-base'
+import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import { mapVersionToIndex } from '../core/utils'
@@ -49,7 +49,7 @@ export type AdvertPublicationsCreateAttributes = {
   publishedHtml?: string | null
 }
 
-@BaseTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATION })
+@ParanoidTable({ tableName: LegalGazetteModels.ADVERT_PUBLICATION })
 @DefaultScope(() => ({
   order: [['scheduledAt', 'ASC']],
 }))
@@ -163,7 +163,7 @@ export type AdvertPublicationsCreateAttributes = {
     }
   },
 }))
-export class AdvertPublicationModel extends BaseModel<
+export class AdvertPublicationModel extends ParanoidModel<
   AdvertPublicationsAttributes,
   AdvertPublicationsCreateAttributes
 > {

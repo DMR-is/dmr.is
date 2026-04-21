@@ -1,14 +1,14 @@
 import { Column, DataType } from 'sequelize-typescript'
 
-import { BaseModel, BaseModelAttributes } from './base.model'
 import { BaseEntityTable } from './decorators'
+import { ParanoidModel, ParanoidModelAttributes } from './paranoid.model'
 
 type BaseEntityModelCreateAttributes = {
   title: string
   slug: string
 }
 
-export type BaseEntityModelAttributes = BaseModelAttributes &
+export type BaseEntityModelAttributes = ParanoidModelAttributes &
   BaseEntityModelCreateAttributes
 
 export type BaseEntityAttributes = Pick<
@@ -21,7 +21,7 @@ export type BaseEntityAttributesDetailed = BaseEntityModelAttributes
 @BaseEntityTable()
 export class BaseEntityModel<
   ReturnDtoType = BaseEntityAttributes,
-> extends BaseModel<
+> extends ParanoidModel<
   BaseEntityModelAttributes,
   BaseEntityModelCreateAttributes
 > {
