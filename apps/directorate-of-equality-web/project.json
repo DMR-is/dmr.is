@@ -7,8 +7,8 @@
   "targets": {
     "tsc": {
       "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
       "options": {
-        "dependsOn": ["codegen"],
         "commands": ["tsc -p tsconfig.json --noEmit"],
         "cwd": "apps/directorate-of-equality-web",
         "forwardAllArgs": false
