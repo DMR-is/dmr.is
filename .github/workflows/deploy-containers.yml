@@ -148,7 +148,7 @@ jobs:
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_TAGS: ${{ steps.meta.outputs.tags }}
-          INPUT_PUSH: true
+          INPUT_PUSH: false
 
   retag-unaffected:
     needs: detect-affected
@@ -173,39 +173,35 @@ jobs:
 
       - name: Copy latest tag to sha-${{ github.sha }}
         run: |
-          SHA="${{ github.sha }}"
-          REPO="${{ matrix.container }}"
-
-          echo "Re-tagging ${REPO}:latest as sha-${SHA}"
-
-          MANIFEST=$(aws ecr batch-get-image \
-            --repository-name "$REPO" \
-            --image-ids imageTag=latest \
-            --query 'images[].imageManifest' \
-            --output text)
-
-          if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
-            echo "::error::No 'latest' image found for ${REPO}. Cannot re-tag."
-            exit 1
-          fi
-
-          aws ecr put-image \
-            --repository-name "$REPO" \
-            --image-tag "sha-${SHA}" \
-            --image-manifest "$MANIFEST" 2>/dev/null || {
-              echo "::warning::Tag sha-${SHA} may already exist for ${REPO}, verifying..."
-              EXISTING=$(aws ecr batch-get-image \
-                --repository-name "$REPO" \
-                --image-ids imageTag="sha-${SHA}" \
-                --query 'images[].imageManifest' \
-                --output text)
-              if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
-                echo "Tag already exists, continuing."
-              else
-                echo "::error::Failed to re-tag ${REPO}"
-                exit 1
-              fi
-            }
+          echo "[DRY RUN] Would re-tag ${{ matrix.container }}:latest as sha-${{ github.sha }}"
+          # SHA="${{ github.sha }}"
+          # REPO="${{ matrix.container }}"
+          # MANIFEST=$(aws ecr batch-get-image \
+          #   --repository-name "$REPO" \
+          #   --image-ids imageTag=latest \
+          #   --query 'images[].imageManifest' \
+          #   --output text)
+          # if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
+          #   echo "::error::No 'latest' image found for ${REPO}. Cannot re-tag."
+          #   exit 1
+          # fi
+          # aws ecr put-image \
+          #   --repository-name "$REPO" \
+          #   --image-tag "sha-${SHA}" \
+          #   --image-manifest "$MANIFEST" 2>/dev/null || {
+          #     echo "::warning::Tag sha-${SHA} may already exist for ${REPO}, verifying..."
+          #     EXISTING=$(aws ecr batch-get-image \
+          #       --repository-name "$REPO" \
+          #       --image-ids imageTag="sha-${SHA}" \
+          #       --query 'images[].imageManifest' \
+          #       --output text)
+          #     if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
+          #       echo "Tag already exists, continuing."
+          #     else
+          #       echo "::error::Failed to re-tag ${REPO}"
+          #       exit 1
+          #     fi
+          #   }
 
   deploy-to-dev:
     runs-on: ubuntu-latest
@@ -234,13 +230,8 @@ jobs:
 
       - name: Deploy to Amazon ECS
         run: |
-          aws ecs update-service \
-            --cluster ${{ matrix.container.cluster }} \
-            --service ${{ matrix.container.name }} \
-            --force-new-deployment
+          echo "[DRY RUN] Would run: aws ecs update-service --cluster ${{ matrix.container.cluster }} --service ${{ matrix.container.name }} --force-new-deployment"
 
       - name: Wait for service to stabilize
         run: |
-          aws ecs wait services-stable \
-            --cluster ${{ matrix.container.cluster }} \
-            --services ${{ matrix.container.name }}
+          echo "[DRY RUN] Would run: aws ecs wait services-stable --cluster ${{ matrix.container.cluster }} --services ${{ matrix.container.name }}"
