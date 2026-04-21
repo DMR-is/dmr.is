@@ -20,7 +20,7 @@ module.exports = {
           LAST_NAME,
           EMAIL,
           PHONE,
-          ACTIVE
+          IS_ACTIVE
         )
       VALUES
         (
