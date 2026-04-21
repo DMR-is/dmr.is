@@ -1,11 +1,17 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
+import { APP_FILTER } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
 import { LoggingModule } from '@dmr.is/logging'
+import {
+  GlobalExceptionFilter,
+  HttpExceptionFilter,
+  SequelizeExceptionFilter,
+} from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
-import { CLS_NAMESPACE } from '../core/constants'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
@@ -23,9 +29,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { UserModel } from '../modules/user/models/user.model'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
-
+import { UserModule } from '../modules/user/user.module'
 @Module({
   imports: [
     LoggingModule,
@@ -68,9 +72,23 @@ import { AppService } from './app.service'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    UserModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SequelizeExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   async configure(consumer: MiddlewareConsumer) {

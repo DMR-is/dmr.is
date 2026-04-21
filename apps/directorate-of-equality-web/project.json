@@ -49,6 +49,39 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "curl http://localhost:5100/swagger/json > clientConfig.json",
+          "prettier --write clientConfig.json"
+        ],
+        "parallel": true,
+        "cwd": "apps/directorate-of-equality-web"
+      }
+    },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema"],
+      "options": {
+        "commands": [
+          "rm -rf apps/directorate-of-equality-web/src/gen/fetch",
+          "yarn openapi-generator -o apps/directorate-of-equality-web/src/gen/fetch -i apps/directorate-of-equality-web/clientConfig.json"
+        ]
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/clientConfig.json"],
+      "options": {
+        "commands": [
+          "rm -rf apps/directorate-of-equality-web/src/gen/fetch",
+          "yarn openapi-generator -o apps/directorate-of-equality-web/src/gen/fetch -i apps/directorate-of-equality-web/clientConfig.json"
+        ]
+      },
+      "outputs": ["{projectRoot}/gen/fetch"]
     }
   }
 }

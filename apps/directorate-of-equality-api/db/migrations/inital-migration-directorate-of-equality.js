@@ -63,7 +63,7 @@ module.exports = {
     -- Tables
     -- ============================================================
 
-    CREATE TABLE "user" (
+    CREATE TABLE doe_user (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +126,7 @@ module.exports = {
       identifier TEXT DEFAULT NULL,
 
       equality_report_id UUID DEFAULT NULL REFERENCES report(id),
-      reviewer_user_id UUID DEFAULT NULL REFERENCES "user"(id),
+      reviewer_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
 
       denial_reason TEXT DEFAULT NULL,
       approved_at TIMESTAMPTZ DEFAULT NULL,
@@ -321,11 +321,11 @@ module.exports = {
 
       report_id UUID NOT NULL REFERENCES report(id),
       event_type report_event_type_enum NOT NULL,
-      actor_user_id UUID DEFAULT NULL REFERENCES "user"(id),
+      actor_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
       report_status report_status_enum NOT NULL,
       from_status report_status_enum DEFAULT NULL,
       to_status report_status_enum DEFAULT NULL,
-      assigned_user_id UUID DEFAULT NULL REFERENCES "user"(id),
+      assigned_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
 
       CONSTRAINT report_event_status_changed_chk CHECK (
         event_type <> 'STATUS_CHANGED' OR (
@@ -347,7 +347,7 @@ module.exports = {
 
       report_id UUID NOT NULL REFERENCES report(id),
       author_kind comment_author_kind_enum NOT NULL,
-      author_user_id UUID DEFAULT NULL REFERENCES "user"(id),
+      author_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
       visibility comment_visibility_enum NOT NULL,
       body TEXT NOT NULL,
       report_status report_status_enum NOT NULL,
@@ -490,7 +490,7 @@ module.exports = {
     DROP TABLE IF EXISTS report;
     DROP TABLE IF EXISTS report_employee_role;
     DROP TABLE IF EXISTS company;
-    DROP TABLE IF EXISTS "user";
+    DROP TABLE IF EXISTS doe_user;
 
     DROP TYPE IF EXISTS comment_author_kind_enum;
     DROP TYPE IF EXISTS comment_visibility_enum;

@@ -8,14 +8,19 @@ type WebClient =
   | 'LGWeb'
   | 'LGApplicationWeb'
   | 'LGPublicWeb'
+  | 'DoEWeb'
 
 const getPath = (client: WebClient) => {
   if (process.env.NODE_ENV !== 'production') {
-    const port = client === 'OJOIAdmin' ? 4000 : 4100
-    return `http://localhost:${port}`
+    if (client === 'OJOIAdmin') return 'http://localhost:4000'
+    if (client === 'DoEWeb') return 'http://localhost:5100'
+    return 'http://localhost:4100'
   }
 
   if (typeof window === 'undefined') {
+    if (client === 'DoEWeb') {
+      return process.env.DOE_API_BASE_PATH as string
+    }
     return process.env.DMR_ADMIN_API_BASE_PATH as string
   }
   const url = createUrlFromHost(

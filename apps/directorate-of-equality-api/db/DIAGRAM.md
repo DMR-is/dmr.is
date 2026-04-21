@@ -10,7 +10,7 @@ Relationship labels are the FK column name. Cardinality notation:
 
 ```mermaid
 erDiagram
-    user {
+    doe_user {
         uuid id PK
         text national_id
         text email
@@ -132,7 +132,7 @@ erDiagram
     report ||--o{ company_report : "report_id"
     company |o--o{ company_report : "parent_company_id"
 
-    user |o--o{ report : "reviewer_user_id"
+    doe_user |o--o{ report : "reviewer_user_id"
     report |o--o{ report : "equality_report_id"
 
     report ||--o{ report_criterion : "report_id"
@@ -156,9 +156,9 @@ erDiagram
     report ||--o| public_report : "source_report_id"
 
     report ||--o{ report_event : "report_id"
-    user |o--o{ report_event : "actor_user_id"
-    user |o--o{ report_event : "assigned_user_id"
+    doe_user |o--o{ report_event : "actor_user_id"
+    doe_user |o--o{ report_event : "assigned_user_id"
 
     report ||--o{ report_comment : "report_id"
-    user |o--o{ report_comment : "author_user_id"
+    doe_user |o--o{ report_comment : "author_user_id"
 ```
