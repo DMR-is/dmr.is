@@ -44,7 +44,19 @@ jobs:
       - name: Determine affected containers
         id: set-affected
         run: |
-          ALL_CONTAINERS='["official-journal-api","official-journal-admin-api","official-journal-application-api","official-journal-web","regulations-api","legal-gazette-api","legal-gazette-web","legal-gazette-application-web","legal-gazette-public-web","directorate-of-equality-api","directorate-of-equality-web"]'
+          ALL_CONTAINERS='[
+            {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"official-journal-application-api",  "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"official-journal-web",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"regulations-api",                   "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"legal-gazette-api",                 "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"legal-gazette-web",                 "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"legal-gazette-application-web",     "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"legal-gazette-public-web",          "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",              "cluster":"dev-dmr-utgafa"},
+            {"name":"directorate-of-equality-api",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
+            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
+          ]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
@@ -58,9 +70,10 @@ jobs:
           AFFECTED_CONTAINERS="[]"
           UNAFFECTED_CONTAINERS="[]"
 
-          for container in $(echo $ALL_CONTAINERS | jq -r '.[]'); do
+          for row in $(echo "$ALL_CONTAINERS" | jq -c '.[]'); do
+            container=$(echo "$row" | jq -r '.name')
             if echo "$AFFECTED_PROJECTS" | grep -q "^${container}$"; then
-              AFFECTED_CONTAINERS=$(echo $AFFECTED_CONTAINERS | jq -c --arg c "$container" '. + [$c]')
+              AFFECTED_CONTAINERS=$(echo $AFFECTED_CONTAINERS | jq -c --argjson r "$row" '. + [$r]')
             else
               UNAFFECTED_CONTAINERS=$(echo $UNAFFECTED_CONTAINERS | jq -c --arg c "$container" '. + [$c]')
             fi
@@ -76,7 +89,7 @@ jobs:
           echo "has_unaffected=$HAS_UNAFFECTED" >> $GITHUB_OUTPUT
 
           echo "### Affected Containers" >> $GITHUB_STEP_SUMMARY
-          echo "$AFFECTED_CONTAINERS" | jq -r '.[]' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "$AFFECTED_CONTAINERS" | jq -r '.[].name' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Unaffected Containers (will re-tag)" >> $GITHUB_STEP_SUMMARY
           echo "$UNAFFECTED_CONTAINERS" | jq -r '.[]' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
@@ -88,7 +101,7 @@ jobs:
       matrix:
         container: ${{ fromJson(needs.detect-affected.outputs.affected) }}
       fail-fast: false
-    name: 'Build: ${{ matrix.container }}'
+    name: 'Build: ${{ matrix.container.name }}'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -119,7 +132,7 @@ jobs:
         uses: docker/metadata-action@v4
         id: meta
         with:
-          images: '${{ steps.login-ecr.outputs.registry }}/${{ matrix.container }}'
+          images: '${{ steps.login-ecr.outputs.registry }}/${{ matrix.container.name }}'
           tags: |
             latest
             type=sha,prefix=sha-,format=long
@@ -131,7 +144,7 @@ jobs:
         run: yarn run postinstall
 
       - name: Build and push image
-        run: yarn nx run ${{ matrix.container }}:container
+        run: yarn nx run ${{ matrix.container.name }}:container
         env:
           INPUT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_TAGS: ${{ steps.meta.outputs.tags }}
@@ -207,7 +220,7 @@ jobs:
       matrix:
         container: ${{ fromJson(needs.detect-affected.outputs.affected) }}
       fail-fast: false
-    name: Deploy to ${{ matrix.container }} - dev
+    name: Deploy to ${{ matrix.container.name }} - dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -215,73 +228,19 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
+          role-to-assume: arn:aws:iam::${{ matrix.container.account_id }}:role/dev-github-ci-role
           role-session-name: GitHub-Action-Role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy to Amazon ECS
         run: |
           aws ecs update-service \
-            --cluster dev-dmr-utgafa \
-            --service ${{ matrix.container }} \
+            --cluster ${{ matrix.container.cluster }} \
+            --service ${{ matrix.container.name }} \
             --force-new-deployment
 
       - name: Wait for service to stabilize
         run: |
           aws ecs wait services-stable \
-            --cluster dev-dmr-utgafa \
-            --services ${{ matrix.container }}
-
-  deploy-to-dev-jafnrettisstofa:
-    runs-on: ubuntu-latest
-    needs: [detect-affected, build-affected, retag-unaffected]
-    if: |
-      always() &&
-      (
-        contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-api') ||
-        contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-web')
-      ) &&
-      (needs.build-affected.result == 'success' || needs.build-affected.result == 'skipped') &&
-      (needs.retag-unaffected.result == 'success' || needs.retag-unaffected.result == 'skipped')
-    environment: development
-    name: Deploy DOE services to dev (Jafnréttisstofa)
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}:role/dev-github-ci-role
-          role-session-name: GitHub-Action-Role
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Deploy directorate-of-equality-api if affected
-        if: contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-api')
-        run: |
-          aws ecs update-service \
-            --cluster dev-dmr-jafnrettisstofa \
-            --service directorate-of-equality-api \
-            --force-new-deployment
-
-      - name: Deploy directorate-of-equality-web if affected
-        if: contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-web')
-        run: |
-          aws ecs update-service \
-            --cluster dev-dmr-jafnrettisstofa \
-            --service directorate-of-equality-web \
-            --force-new-deployment
-
-      - name: Wait for directorate-of-equality-api to stabilize
-        if: contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-api')
-        run: |
-          aws ecs wait services-stable \
-            --cluster dev-dmr-jafnrettisstofa \
-            --services directorate-of-equality-api
-
-      - name: Wait for directorate-of-equality-web to stabilize
-        if: contains(needs.detect-affected.outputs.affected, 'directorate-of-equality-web')
-        run: |
-          aws ecs wait services-stable \
-            --cluster dev-dmr-jafnrettisstofa \
-            --services directorate-of-equality-web
+            --cluster ${{ matrix.container.cluster }} \
+            --services ${{ matrix.container.name }}
