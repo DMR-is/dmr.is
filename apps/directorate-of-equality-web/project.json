@@ -83,6 +83,17 @@
         ]
       },
       "outputs": ["{projectRoot}/gen/fetch"]
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        },
+        "file": "apps/directorate-of-equality-web/Dockerfile"
+      }
     }
   }
 }

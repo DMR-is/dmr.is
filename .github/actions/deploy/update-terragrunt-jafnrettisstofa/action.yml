@@ -1,0 +1,93 @@
+name: '🚀 Update Terragrunt Jafnréttisstofa Deployment'
+description: 'Deploy DOE services using Terragrunt apply in DMR-Jafnrettisstofa workload'
+
+inputs:
+  PAT:
+    description: 'The personal access token to use'
+    required: true
+  ENV:
+    description: 'The environment to deploy to'
+    required: true
+  VERSION_TAG:
+    description: 'The version tag to deploy'
+    required: true
+  AWS_ENV_ROLE_ARN:
+    description: 'The AWS IAM role ARN to assume for the target environment'
+    required: true
+  INFRA_REPO:
+    description: 'The infrastructure repository to deploy to'
+    required: true
+    default: 'DMR-is/infrastructure'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: Homebrew/actions/setup-homebrew@master
+      name: ☕️Set up Homebrew
+      id: set-up-homebrew
+
+    - name: 🗄️Cache Homebrew Bundler RubyGems
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.set-up-homebrew.outputs.gems-path }}
+        key: ubuntu-latest-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
+        restore-keys: ubuntu-latest-rubygems-
+
+    - name: 📥 Install Terragrunt
+      shell: bash
+      run: brew install terragrunt tfenv
+
+    - name: Setup Terraform v1.11.2
+      uses: hashicorp/setup-Terraform@v3
+      with:
+        terraform_version: 1.11.2
+
+    - name: Terragrunt version
+      shell: bash
+      run: terragrunt --version
+
+    - name: Terraform version
+      shell: bash
+      run: terraform --version
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.AWS_ENV_ROLE_ARN }}
+        role-session-name: GitHub-Action-Role
+        aws-region: eu-west-1
+
+    - name: 📁 Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.INFRA_REPO }}
+        token: ${{ inputs.PAT }}
+        path: infrastructure
+
+    - name: 🚀 Deploy services with Terragrunt
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd infrastructure/DMR-Jafnrettisstofa
+
+        echo "🚀 Deploying DOE services with Terragrunt run --all..."
+
+        ../scripts/apply_services.sh \
+          --environment ${{ inputs.ENV }} \
+          --version ${{ inputs.VERSION_TAG }} \
+          --parallelism 2 \
+          --commit false \
+          --ignore-dirty true \
+          --service doe_api:doe_api_version_tag \
+          --service doe_web:doe_web_version_tag
+
+        echo "✅ All DOE services deployed successfully!"
+
+    - name: 💾 Commit
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: 'chore: update Jafnréttisstofa to ${{ inputs.VERSION_TAG }}'
+        branch: main
+        skip_fetch: false
+        repository: infrastructure
