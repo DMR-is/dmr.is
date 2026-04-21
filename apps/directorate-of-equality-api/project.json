@@ -95,6 +95,17 @@
         ],
         "parallel": false
       }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "metadata": {
+          "load": true
+        },
+        "file": "apps/directorate-of-equality-api/Dockerfile"
+      }
     }
   }
 }

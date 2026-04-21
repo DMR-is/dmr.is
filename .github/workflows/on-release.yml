@@ -8,6 +8,7 @@ permissions:
   contents: write
 env:
   AWS_PROD_ACCOUNT_ID: 704383808130
+  AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID: 048844501286
   ENV: prod
 
 jobs:
@@ -27,6 +28,8 @@ jobs:
             legal-gazette-web,
             legal-gazette-application-web,
             legal-gazette-public-web,
+            directorate-of-equality-api,
+            directorate-of-equality-web,
           ]
     steps:
       - name: 📁 Checkout
@@ -52,4 +55,20 @@ jobs:
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
           SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api legal-gazette-api legal-gazette-web legal-gazette-application-web legal-gazette-public-web
+
+  deploy-jafnrettisstofa:
+    name: 🚀 Deploy Jafnréttisstofa to Prod
+    runs-on: ubuntu-latest
+    environment: production
+    needs: version-tag
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🚀 Deploy to Prod
+        uses: ./.github/actions/deploy/update-terragrunt-jafnrettisstofa
+        with:
+          ENV: ${{ env.ENV }}
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          VERSION_TAG: ${{ github.ref_name }}
+          PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
 
