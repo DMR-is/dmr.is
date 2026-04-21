@@ -1,5 +1,5 @@
 {
-  "name": "directorate-of-equality-api",
+  "name": "doe-api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/directorate-of-equality-api/src",
   "projectType": "application",

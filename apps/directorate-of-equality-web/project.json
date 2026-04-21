@@ -1,5 +1,5 @@
 {
-  "name": "directorate-of-equality-web",
+  "name": "doe-web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/directorate-of-equality-web",
   "projectType": "application",
