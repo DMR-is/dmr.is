@@ -27,7 +27,7 @@ Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
 ## Actors
 
 - **Company admin** — fills out and submits reports on behalf of a company. In parent/subsidiary groups, one company acts as the parent and reports on its daughter companies in the same submission.
-- **DoE reviewer (admin)** — reads submitted reports, denies with reason, approves when valid, flags fine accrual. Identified by a row in the `user` table.
+- **DoE reviewer (admin)** — reads submitted reports, denies with reason, approves when valid, flags fine accrual. Identified by a row in the `doe_user` table.
 - **Public consumer** — browses anonymized aggregates on the public site. Has no access to PII or to denied/draft reports.
 
 ## Eligibility
@@ -89,10 +89,10 @@ Two parallel streams capture what happens to a report after draft. The admin UI 
 
 ### Author model
 
-- `report_event.actor_user_id` — fk → `user` (nullable). Null means company admin (e.g. `SUBMITTED`) or cron/system.
+- `report_event.actor_user_id` — fk → `doe_user` (nullable). Null means company admin (e.g. `SUBMITTED`) or cron/system.
 - `report_comment.author_kind` — `REVIEWER` or `COMPANY_ADMIN`:
-  - `REVIEWER` → `author_user_id` points to the reviewer's `user` row.
-  - `COMPANY_ADMIN` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `user` (see Tables → `user`).
+  - `REVIEWER` → `author_user_id` points to the reviewer's `doe_user` row.
+  - `COMPANY_ADMIN` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `doe_user` (see Tables → `doe_user`).
 
 ### Visibility
 
@@ -197,9 +197,9 @@ Notes for reviewers mapping a CV:
 
 ## Naming conventions
 
-- **Singular table names** (`report`, `company`, `user`, `report_employee`, ...). One row = one entity, which maps 1:1 to the ORM class name (`ReportModel` ↔ `report`) and avoids the mental flip when reading code vs. SQL.
-- **No app-level prefix** (e.g. no `doe_` in front of every table). The schema lives in its own DB namespace for this service — cross-app collisions aren't a concern here.
-- **FK columns use `<referenced_table>_id`** (e.g. `report_id`, `report_criterion_id`, `reviewer_user_id` points to `user`).
+- **Singular table names** (`report`, `company`, `report_employee`, ...). One row = one entity, which maps 1:1 to the ORM class name (`ReportModel` ↔ `report`) and avoids the mental flip when reading code vs. SQL.
+- **No app-level prefix** (e.g. no `doe_` in front of every table). The schema lives in its own DB namespace for this service — cross-app collisions aren't a concern here. **Exception:** `doe_user` is prefixed because `user` is a reserved word in Postgres.
+- **FK columns use `<referenced_table>_id`** (e.g. `report_id`, `report_criterion_id`, `reviewer_user_id` points to `doe_user`). For `doe_user`, FK columns drop the `doe_` prefix (`reviewer_user_id`, not `reviewer_doe_user_id`) since `user_id` is unambiguous in context.
 - **Join tables are also singular**, named after both sides or their relationship (e.g. `company_report`, `report_employee_role_criterion_step`).
 - **Latin plurals normalized to singular** — `criteria` → `criterion`, `results` → `result`. Even when awkward to English ear, consistency wins.
 - **Enums named in PascalCase with `Enum` suffix** (`GenderEnum`, `ReportStatusEnum`). This doc keeps enum casing as-is (not singularized).
@@ -226,7 +226,7 @@ Exceptions:
 
 ## Tables
 
-### `user`
+### `doe_user`
 
 DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `legal-gazette-api/users`). Company admins are **not** captured here — their identity is cached as raw fields on `report` at submission time.
 
@@ -294,7 +294,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `identifier`                     | `text`                                                                                                                         |
 | `status`                         | `ReportStatusEnum`                                                                                                             |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
-| `reviewer_user_id`               | `fk → user` (nullable)                                                                                                         |
+| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                         |
 | `denial_reason`                  | `text` (nullable)                                                                                                              |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
 | `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
@@ -467,11 +467,11 @@ Immutable audit row emitted on state-changing actions. Insert-only. See "Audit t
 | `id`               | `uuid` PK                                                                  |
 | `report_id`        | `fk → report`                                                              |
 | `event_type`       | `ReportEventTypeEnum`                                                      |
-| `actor_user_id`    | `fk → user` (nullable — null for company admin or cron)                    |
+| `actor_user_id`    | `fk → doe_user` (nullable — null for company admin or cron)                    |
 | `report_status`    | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
 | `from_status`      | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
 | `to_status`        | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
-| `assigned_user_id` | `fk → user` (nullable — set on `ASSIGNED`)                                 |
+| `assigned_user_id` | `fk → doe_user` (nullable — set on `ASSIGNED`)                                 |
 
 Invariants (enforce via CHECK):
 
@@ -487,7 +487,7 @@ Human-written message on a report. Immutable after insert (no edit). Soft-deleta
 | `id`             | `uuid` PK                                                  |
 | `report_id`      | `fk → report`                                              |
 | `author_kind`    | `CommentAuthorKindEnum`                                    |
-| `author_user_id` | `fk → user` (nullable — set when `author_kind = REVIEWER`) |
+| `author_user_id` | `fk → doe_user` (nullable — set when `author_kind = REVIEWER`) |
 | `visibility`     | `CommentVisibilityEnum`                                    |
 | `body`           | `text`                                                     |
 | `report_status`  | `ReportStatusEnum` (snapshot at insert)                    |
@@ -509,9 +509,11 @@ Invariants (enforce via CHECK):
 - `report` 1:1 `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
-- `report` N:1 `user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
-- `report` 1:N `report_event`; `user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
-- `report` 1:N `report_comment`; `user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
+- `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
+- `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
+- `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
+
+
 
 ## Notes / open questions
 

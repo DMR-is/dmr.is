@@ -12,7 +12,28 @@ module.exports = {
     const seed = `
       BEGIN;
 
-      COMMIT;
+      INSERT INTO
+        DOE_USER (
+          ID,
+          NATIONAL_ID,
+          FIRST_NAME,
+          LAST_NAME,
+          EMAIL,
+          PHONE,
+          ACTIVE
+        )
+      VALUES
+        (
+          'b4e98cee-a4d8-4924-90df-b820c4bc0801',
+          '0101302399',
+          'Gervimaður',
+          'Færeyjar',
+          'gm@faereyjar.is',
+          '555-1234',
+          TRUE
+        );
+
+COMMIT;
       `
 
     return await queryInterface.sequelize.query(seed)

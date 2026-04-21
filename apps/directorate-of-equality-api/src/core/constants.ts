@@ -1,7 +1,7 @@
 export const CLS_NAMESPACE = 'directory-of-equality-api:transaction'
 
 export enum DoeModels {
-  USER = 'user',
+  USER = 'doe_user',
   COMPANY = 'company',
   COMPANY_REPORT = 'company_report',
   REPORT = 'report',

@@ -1,0 +1,59 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "getMyUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Directorate of Equality API"]
+      }
+    }
+  },
+  "info": {
+    "title": "Directorate of Equality API",
+    "description": "The API for the Directorate of Equality",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [{ "name": "Directorate of Equality API" }],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
+    },
+    "schemas": {
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "isActive": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "email",
+          "isActive"
+        ]
+      }
+    }
+  }
+}
