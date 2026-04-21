@@ -105,6 +105,26 @@ erDiagram
         text isat_category
         timestamp published_at
     }
+    report_event {
+        uuid id PK
+        uuid report_id FK
+        ReportEventTypeEnum event_type
+        uuid actor_user_id FK "nullable"
+        uuid assigned_user_id FK "nullable, on ASSIGNED"
+        ReportStatusEnum report_status "snapshot"
+        ReportStatusEnum from_status "nullable, on STATUS_CHANGED"
+        ReportStatusEnum to_status "nullable, on STATUS_CHANGED"
+    }
+    report_comment {
+        uuid id PK
+        uuid report_id FK
+        CommentAuthorKindEnum author_kind
+        uuid author_user_id FK "nullable, REVIEWER only"
+        CommentVisibilityEnum visibility
+        ReportStatusEnum report_status "snapshot"
+        text body
+        timestamp deleted_at "nullable, soft delete"
+    }
 
     company ||--o{ company_report : "company_id"
     report ||--o{ company_report : "report_id"
@@ -132,4 +152,11 @@ erDiagram
     report_employee_role ||--o{ report_role_result : "report_employee_role_id"
 
     report ||--o| public_report : "source_report_id"
+
+    report ||--o{ report_event : "report_id"
+    user |o--o{ report_event : "actor_user_id"
+    user |o--o{ report_event : "assigned_user_id"
+
+    report ||--o{ report_comment : "report_id"
+    user |o--o{ report_comment : "author_user_id"
 ```

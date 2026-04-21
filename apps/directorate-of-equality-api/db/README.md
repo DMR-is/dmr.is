@@ -74,6 +74,39 @@ Two resubmission triggers:
 1. **Denial** — reviewer denied the current submission. Company edits, re-submits as a new `DRAFT` → `SUBMITTED` row.
 2. **Three-year expiry** — approved report is aging out. Companies are notified ~3 months before `valid_until`. A new report is drafted and submitted. On approval, the old report transitions to `SUPERSEDED`.
 
+## Audit timeline (events + comments)
+
+Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
+
+- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment, status transitions (future: fines started, retraction). Never edited, never deleted.
+- **`report_comment`** — human-written messages. Either **internal** (reviewer-to-reviewer, hidden from the company) or **external** (reviewer ↔ company admin, visible to both sides). Company admins can post on external comments only.
+
+### Mutability
+- Events are insert-only. No edits, no deletes.
+- Comments are **immutable after insert** (no edit flow). Authors may soft-delete their own comment (`deleted_at` stamped); deleted rows are hidden entirely from the rendered thread — no tombstone. Reviewers delete only their own comments; company admins ditto. System events cannot be deleted regardless of actor.
+
+### Author model
+- `report_event.actor_user_id` — fk → `user` (nullable). Null means company admin (e.g. `SUBMITTED`) or cron/system.
+- `report_comment.author_kind` — `REVIEWER` or `COMPANY_ADMIN`:
+  - `REVIEWER` → `author_user_id` points to the reviewer's `user` row.
+  - `COMPANY_ADMIN` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `user` (see Tables → `user`).
+
+### Visibility
+- `report_event` is reviewer-facing only. Company admins don't see the event stream.
+- `report_comment.visibility`:
+  - `INTERNAL` — reviewer-only. Valid only when `author_kind = REVIEWER`.
+  - `EXTERNAL` — visible to reviewers and the company admin. Both sides can post.
+
+Notification / email side effect on `EXTERNAL` insert is a service-layer concern, not modeled in the schema.
+
+### Timeline grouping by status
+Both tables carry a `report_status` snapshot stamped at insert time. The admin UI groups the timeline into buckets per lifecycle state (`DRAFT`, `SUBMITTED`, `IN_REVIEW`, …).
+
+- For regular events and all comments, `report_status = report.status` at the moment of insert.
+- For `STATUS_CHANGED` events, `report_status = to_status` — the transition row opens the bucket for the new status rather than closing the old one, so each bucket reads top-down starting with "moved to X".
+
+The snapshot never mutates; buckets remain stable as the report moves through later states.
+
 ## Public snapshot flow
 
 On the `APPROVED` transition, the system inserts a row into `public_report`. This row is:
@@ -130,6 +163,9 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 | `EducationEnum` | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
 | `ReportStatusEnum` | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED` |
 | `ReportTypeEnum` | `SALARY`, `EQUALITY` |
+| `ReportEventTypeEnum` | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED` |
+| `CommentVisibilityEnum` | `INTERNAL`, `EXTERNAL` |
+| `CommentAuthorKindEnum` | `REVIEWER`, `COMPANY_ADMIN` |
 
 ### `EducationEnum` — Iceland to Western mapping
 
@@ -178,6 +214,8 @@ No `deleted_at`. Report lifecycle handled via `report.status` enum — children 
 Exceptions:
 - **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`): only `created_at`. Join rows don't mutate — existence is the state.
 - **`public_report`**: insert-only, `created_at` only. No `updated_at`. Retraction flow deferred (see Notes).
+- **`report_event`**: insert-only, `created_at` only. Immutable audit row — never edited, never deleted.
+- **`report_comment`**: `created_at` + `deleted_at` only. No `updated_at` — comments are immutable after insert. Soft-delete hides the row from the rendered thread (no tombstone).
 
 ## Tables
 
@@ -397,6 +435,42 @@ Insert-only snapshot published when a private report is approved. No PII, no FK 
 
 Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — minimum/maximum/median and role-level breakdown probably omitted, confirm with stakeholders.
 
+### `report_event`
+Immutable audit row emitted on state-changing actions. Insert-only. See "Audit timeline" for semantics.
+
+| Column | Type |
+|--------|------|
+| `id` | `uuid` PK |
+| `report_id` | `fk → report` |
+| `event_type` | `ReportEventTypeEnum` |
+| `actor_user_id` | `fk → user` (nullable — null for company admin or cron) |
+| `report_status` | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
+| `from_status` | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`) |
+| `to_status` | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`) |
+| `assigned_user_id` | `fk → user` (nullable — set on `ASSIGNED`) |
+
+Invariants (enforce via CHECK):
+- `event_type = 'STATUS_CHANGED'` ⇒ `from_status IS NOT NULL AND to_status IS NOT NULL AND report_status = to_status`.
+- `event_type = 'ASSIGNED'` ⇒ `assigned_user_id IS NOT NULL`.
+
+### `report_comment`
+Human-written message on a report. Immutable after insert (no edit). Soft-deletable by author; deleted rows hidden from the rendered thread.
+
+| Column | Type |
+|--------|------|
+| `id` | `uuid` PK |
+| `report_id` | `fk → report` |
+| `author_kind` | `CommentAuthorKindEnum` |
+| `author_user_id` | `fk → user` (nullable — set when `author_kind = REVIEWER`) |
+| `visibility` | `CommentVisibilityEnum` |
+| `body` | `text` |
+| `report_status` | `ReportStatusEnum` (snapshot at insert) |
+| `deleted_at` | `timestamp` (nullable — soft delete by author) |
+
+Invariants (enforce via CHECK):
+- `author_kind = 'REVIEWER'` ⇒ `author_user_id IS NOT NULL`.
+- `author_kind = 'COMPANY_ADMIN'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
+
 ## Relationships (summary)
 
 - `company` ⟷ `report` via `company_report` (per-submission snapshot, with optional parent company).
@@ -409,6 +483,8 @@ Full six permutations precomputed — public consumer does no math. Exact aggreg
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
 - `report` N:1 `user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
+- `report` 1:N `report_event`; `user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
+- `report` 1:N `report_comment`; `user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
 
 ## Notes / open questions
 
