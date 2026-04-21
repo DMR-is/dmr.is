@@ -79,9 +79,9 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "yarn nx run directorate-of-equality-api:dev-services",
-          "yarn nx run directorate-of-equality-api:migrate",
-          "yarn nx run directorate-of-equality-api:seed"
+          "yarn nx run doe-api:dev-services",
+          "yarn nx run doe-api:migrate",
+          "yarn nx run doe-api:seed"
         ],
         "parallel": false
       }

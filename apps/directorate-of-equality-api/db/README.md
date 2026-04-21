@@ -230,6 +230,7 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `last_name` | `text` |
 | `email` | `text` (unique) |
 | `phone` | `text` (nullable) |
+| `is_active` | `boolean` (default `true`) |
 
 ### `company`
 | Column | Type |
@@ -321,7 +322,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | Column | Type |
 |--------|------|
 | `id` | `uuid` PK |
-| `index` | `int` |
+| `ordinal` | `int` |
 | `education` | `EducationEnum` |
 | `field` | `text` |
 | `department` | `text` |
