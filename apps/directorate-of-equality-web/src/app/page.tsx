@@ -1,4 +1,3 @@
-// trigger rebuild
 import { getServerSession } from 'next-auth'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
