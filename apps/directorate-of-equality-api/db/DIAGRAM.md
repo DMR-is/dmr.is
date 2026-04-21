@@ -3,6 +3,7 @@
 Entity-relationship diagram of the DoE salary equality reporting schema. Entities show only PK + FK columns + a few key fields for readability. Full column lists live in [`README.md`](./README.md) under the Tables section.
 
 Relationship labels are the FK column name. Cardinality notation:
+
 - `|o` = zero-or-one (nullable FK)
 - `||` = exactly one
 - `o{` = zero-or-many
@@ -123,6 +124,7 @@ erDiagram
         CommentVisibilityEnum visibility
         ReportStatusEnum report_status "snapshot"
         text body
+        timestamp updated_at "unused; present for ParanoidModel fit"
         timestamp deleted_at "nullable, soft delete"
     }
 

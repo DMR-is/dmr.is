@@ -342,6 +342,7 @@ module.exports = {
     CREATE TABLE report_comment (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       deleted_at TIMESTAMPTZ DEFAULT NULL,
 
       report_id UUID NOT NULL REFERENCES report(id),

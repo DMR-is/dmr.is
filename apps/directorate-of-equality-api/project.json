@@ -33,6 +33,16 @@
         "production": {}
       }
     },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx run doe-api:lint --fix=true",
+          "nx format:write --projects=doe-api"
+        ],
+        "parallel": false
+      }
+    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",

@@ -20,6 +20,7 @@ Columns on `report` that are specific to one type (demographic counts, `equality
 **Gating rule — equality precedes salary.** Every company must submit an `EQUALITY` report. Only companies flagged by `salary_report_required` must additionally submit a `SALARY` report, and a `SALARY` row cannot be submitted until a matching `EQUALITY` row exists with `status = 'APPROVED'` and `valid_until > now()`. The dependency is captured on the salary row via `equality_report_id` — a self-FK back to `report` that points to the approved equality the salary was audited against. Snapshot, not tracking: once set it's never rewired, so later supersedes of the equality don't rewrite the salary's audit trail.
 
 Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
+
 - `equality_report_id IS NOT NULL` ⇒ `type = 'SALARY'`.
 - Referenced row must have `type = 'EQUALITY'` and must have been `APPROVED` (not just `SUBMITTED`) at the moment the salary row was inserted.
 
@@ -82,16 +83,19 @@ Two parallel streams capture what happens to a report after draft. The admin UI 
 - **`report_comment`** — human-written messages. Either **internal** (reviewer-to-reviewer, hidden from the company) or **external** (reviewer ↔ company admin, visible to both sides). Company admins can post on external comments only.
 
 ### Mutability
+
 - Events are insert-only. No edits, no deletes.
 - Comments are **immutable after insert** (no edit flow). Authors may soft-delete their own comment (`deleted_at` stamped); deleted rows are hidden entirely from the rendered thread — no tombstone. Reviewers delete only their own comments; company admins ditto. System events cannot be deleted regardless of actor.
 
 ### Author model
+
 - `report_event.actor_user_id` — fk → `user` (nullable). Null means company admin (e.g. `SUBMITTED`) or cron/system.
 - `report_comment.author_kind` — `REVIEWER` or `COMPANY_ADMIN`:
   - `REVIEWER` → `author_user_id` points to the reviewer's `user` row.
   - `COMPANY_ADMIN` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `user` (see Tables → `user`).
 
 ### Visibility
+
 - `report_event` is reviewer-facing only. Company admins don't see the event stream.
 - `report_comment.visibility`:
   - `INTERNAL` — reviewer-only. Valid only when `author_kind = REVIEWER`.
@@ -100,6 +104,7 @@ Two parallel streams capture what happens to a report after draft. The admin UI 
 Notification / email side effect on `EXTERNAL` insert is a service-layer concern, not modeled in the schema.
 
 ### Timeline grouping by status
+
 Both tables carry a `report_status` snapshot stamped at insert time. The admin UI groups the timeline into buckets per lifecycle state (`DRAFT`, `SUBMITTED`, `IN_REVIEW`, …).
 
 - For regular events and all comments, `report_status = report.status` at the moment of insert.
@@ -155,33 +160,34 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Enums
 
-| Enum | Values |
-|------|--------|
-| `GenderEnum` | `MALE`, `FEMALE`, `NEUTRAL` |
-| `ReportProviderEnum` | `SYSTEM`, `ISLAND_IS`, `OTHER` |
-| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL` |
-| `EducationEnum` | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
-| `ReportStatusEnum` | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED` |
-| `ReportTypeEnum` | `SALARY`, `EQUALITY` |
-| `ReportEventTypeEnum` | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED` |
-| `CommentVisibilityEnum` | `INTERNAL`, `EXTERNAL` |
-| `CommentAuthorKindEnum` | `REVIEWER`, `COMPANY_ADMIN` |
+| Enum                      | Values                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                      |
+| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
+| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
+| `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                            |
+| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED`                                                        |
+| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
+| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY_ADMIN`                                                                      |
 
 ### `EducationEnum` — Iceland to Western mapping
 
 Salary equality reports can be submitted by both Icelandic-resident employees and foreign staff, so education levels are stored in a Western-generic enum rather than raw Icelandic school names. The mapping follows [UNESCO ISCED 2011](https://uis.unesco.org/en/topic/international-standard-classification-education-isced) (the international standard for classifying education levels) so translation to/from other countries is unambiguous.
 
-| Enum value | ISCED | Icelandic | English (approx.) |
-|------------|-------|-----------|-------------------|
-| `COMPULSORY` | 1–2 | grunnskóli | Primary + lower secondary (compulsory, ages 6–16) |
-| `UPPER_SECONDARY` | 3 | menntaskóli / framhaldsskóli (general track) | Upper secondary / high school |
-| `VOCATIONAL` | 3–4 | iðnskóli / iðnnám / starfsnám | Vocational or trade education (welder, electrician, hairdresser, etc.) |
-| `BACHELOR` | 6 | háskóli (BA / BS / B.Ed) | University undergraduate degree |
-| `MASTER` | 7 | háskóli (MA / MS / M.Ed / integrated master) | University graduate degree |
-| `DOCTORATE` | 8 | háskóli (PhD / doktorsgráða) | Research doctorate |
-| `PROFESSIONAL` | post-6, non-ISCED-standard | sérfræðinám / sérnám | Specialized post-tertiary certification (medical specialty, chartered accounting, bar exam, etc.) — not a research degree but above bachelor level |
+| Enum value        | ISCED                      | Icelandic                                    | English (approx.)                                                                                                                                  |
+| ----------------- | -------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COMPULSORY`      | 1–2                        | grunnskóli                                   | Primary + lower secondary (compulsory, ages 6–16)                                                                                                  |
+| `UPPER_SECONDARY` | 3                          | menntaskóli / framhaldsskóli (general track) | Upper secondary / high school                                                                                                                      |
+| `VOCATIONAL`      | 3–4                        | iðnskóli / iðnnám / starfsnám                | Vocational or trade education (welder, electrician, hairdresser, etc.)                                                                             |
+| `BACHELOR`        | 6                          | háskóli (BA / BS / B.Ed)                     | University undergraduate degree                                                                                                                    |
+| `MASTER`          | 7                          | háskóli (MA / MS / M.Ed / integrated master) | University graduate degree                                                                                                                         |
+| `DOCTORATE`       | 8                          | háskóli (PhD / doktorsgráða)                 | Research doctorate                                                                                                                                 |
+| `PROFESSIONAL`    | post-6, non-ISCED-standard | sérfræðinám / sérnám                         | Specialized post-tertiary certification (medical specialty, chartered accounting, bar exam, etc.) — not a research degree but above bachelor level |
 
 Notes for reviewers mapping a CV:
+
 - A candidate who finished only grunnskóli (no further schooling) → `COMPULSORY`.
 - Someone who completed menntaskóli but not university → `UPPER_SECONDARY`.
 - A trained electrician / plumber / hairdresser who went through iðnnám → `VOCATIONAL`, even if they also attended menntaskóli alongside.
@@ -204,271 +210,291 @@ Repo-wide context: other DMR apps (Legal Gazette, Official Journal) have histori
 
 Default (most tables):
 
-| Column | Type |
-|--------|------|
+| Column       | Type        |
+| ------------ | ----------- |
 | `created_at` | `timestamp` |
 | `updated_at` | `timestamp` |
 
 No `deleted_at`. Report lifecycle handled via `report.status` enum — children filtered via parent report status, never soft-deleted independently.
 
 Exceptions:
+
 - **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`): only `created_at`. Join rows don't mutate — existence is the state.
 - **`public_report`**: insert-only, `created_at` only. No `updated_at`. Retraction flow deferred (see Notes).
 - **`report_event`**: insert-only, `created_at` only. Immutable audit row — never edited, never deleted.
-- **`report_comment`**: `created_at` + `deleted_at` only. No `updated_at` — comments are immutable after insert. Soft-delete hides the row from the rendered thread (no tombstone).
+- **`report_comment`**: `created_at` + `updated_at` + `deleted_at`. Comments are immutable after insert in application logic (no edit endpoint) — `updated_at` is present only to fit the `ParanoidModel` base shape. Soft-delete hides the row from the rendered thread (no tombstone).
 
 ## Tables
 
 ### `user`
+
 DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `legal-gazette-api/users`). Company admins are **not** captured here — their identity is cached as raw fields on `report` at submission time.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `national_id` | `text` (unique) |
-| `first_name` | `text` |
-| `last_name` | `text` |
-| `email` | `text` (unique) |
-| `phone` | `text` (nullable) |
-| `is_active` | `boolean` (default `true`) |
+| Column        | Type                       |
+| ------------- | -------------------------- |
+| `id`          | `uuid` PK                  |
+| `national_id` | `text` (unique)            |
+| `first_name`  | `text`                     |
+| `last_name`   | `text`                     |
+| `email`       | `text` (unique)            |
+| `phone`       | `text` (nullable)          |
+| `is_active`   | `boolean` (default `true`) |
 
 ### `company`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `name` | `text` |
-| `address` | `text` |
-| `city` | `text` |
-| `postcode` | `text` |
-| `average_employee_count_from_rsk` | `int` |
-| `national_id` | `text` |
-| `isat_category` | `text` |
-| `salary_report_required` | `boolean` |
+
+| Column                            | Type      |
+| --------------------------------- | --------- |
+| `id`                              | `uuid` PK |
+| `name`                            | `text`    |
+| `address`                         | `text`    |
+| `city`                            | `text`    |
+| `postcode`                        | `text`    |
+| `average_employee_count_from_rsk` | `int`     |
+| `national_id`                     | `text`    |
+| `isat_category`                   | `text`    |
+| `salary_report_required`          | `boolean` |
 | `salary_report_required_override` | `boolean` |
 
 ### `company_report`
+
 Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all identity and demographic fields are frozen at submission so audits reflect the company as it looked then, not as it looks now. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `company_id` | `fk → company` |
-| `report_id` | `fk → report` |
-| `parent_company_id` | `fk → company` (nullable) |
-| `name` | `text` (snapshot at submission) |
-| `national_id` | `text` (snapshot at submission) |
-| `address` | `text` (snapshot at submission) |
-| `city` | `text` (snapshot at submission) |
-| `postcode` | `text` (snapshot at submission) |
-| `average_employee_count_from_rsk` | `int` (snapshot at submission) |
-| `isat_category` | `text` (snapshot at submission) |
+| Column                            | Type                            |
+| --------------------------------- | ------------------------------- |
+| `id`                              | `uuid` PK                       |
+| `company_id`                      | `fk → company`                  |
+| `report_id`                       | `fk → report`                   |
+| `parent_company_id`               | `fk → company` (nullable)       |
+| `name`                            | `text` (snapshot at submission) |
+| `national_id`                     | `text` (snapshot at submission) |
+| `address`                         | `text` (snapshot at submission) |
+| `city`                            | `text` (snapshot at submission) |
+| `postcode`                        | `text` (snapshot at submission) |
+| `average_employee_count_from_rsk` | `int` (snapshot at submission)  |
+| `isat_category`                   | `text` (snapshot at submission) |
 
 ### `report`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `type` | `ReportTypeEnum` |
-| `company_admin_name` | `text` |
-| `company_admin_email` | `text` |
-| `company_admin_gender` | `GenderEnum` |
-| `contact_name` | `text` |
-| `contact_email` | `text` |
-| `contact_phone` | `text` |
-| `average_employee_male_count` | `decimal(10, 2)` |
-| `average_employee_female_count` | `decimal(10, 2)` |
-| `average_employee_neutral_count` | `decimal(10, 2)` |
-| `provider_type` | `ReportProviderEnum` |
-| `provider_id` | `text` (nullable) |
-| `imported_from_excel` | `boolean` |
-| `identifier` | `text` |
-| `status` | `ReportStatusEnum` |
-| `equality_report_id` | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
-| `reviewer_user_id` | `fk → user` (nullable) |
-| `denial_reason` | `text` (nullable) |
-| `approved_at` | `timestamp` (nullable) |
-| `valid_until` | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede) |
-| `correction_deadline` | `timestamp` (nullable) |
-| `equality_report_content` | `text` (nullable — narrative body for `type = EQUALITY`) |
+
+| Column                           | Type                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                             | `uuid` PK                                                                                                                      |
+| `type`                           | `ReportTypeEnum`                                                                                                               |
+| `company_admin_name`             | `text`                                                                                                                         |
+| `company_admin_email`            | `text`                                                                                                                         |
+| `company_admin_gender`           | `GenderEnum`                                                                                                                   |
+| `contact_name`                   | `text`                                                                                                                         |
+| `contact_email`                  | `text`                                                                                                                         |
+| `contact_phone`                  | `text`                                                                                                                         |
+| `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
+| `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
+| `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
+| `provider_type`                  | `ReportProviderEnum`                                                                                                           |
+| `provider_id`                    | `text` (nullable)                                                                                                              |
+| `imported_from_excel`            | `boolean`                                                                                                                      |
+| `identifier`                     | `text`                                                                                                                         |
+| `status`                         | `ReportStatusEnum`                                                                                                             |
+| `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
+| `reviewer_user_id`               | `fk → user` (nullable)                                                                                                         |
+| `denial_reason`                  | `text` (nullable)                                                                                                              |
+| `approved_at`                    | `timestamp` (nullable)                                                                                                         |
+| `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
+| `correction_deadline`            | `timestamp` (nullable)                                                                                                         |
+| `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
 
 ### `report_criterion`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `title` | `text` |
-| `weight` | `decimal(6, 4)` |
-| `description` | `text` |
-| `type` | `ReportCriterionTypeEnum` |
-| `report_id` | `fk → report` |
+
+| Column        | Type                      |
+| ------------- | ------------------------- |
+| `id`          | `uuid` PK                 |
+| `title`       | `text`                    |
+| `weight`      | `decimal(6, 4)`           |
+| `description` | `text`                    |
+| `type`        | `ReportCriterionTypeEnum` |
+| `report_id`   | `fk → report`             |
 
 ### `report_sub_criterion`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `title` | `text` |
-| `description` | `text` |
-| `weight` | `decimal(6, 4)` |
+
+| Column                | Type                    |
+| --------------------- | ----------------------- |
+| `id`                  | `uuid` PK               |
+| `title`               | `text`                  |
+| `description`         | `text`                  |
+| `weight`              | `decimal(6, 4)`         |
 | `report_criterion_id` | `fk → report_criterion` |
 
 ### `report_sub_criterion_step`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `order` | `int` |
-| `description` | `text` |
+
+| Column                    | Type                        |
+| ------------------------- | --------------------------- |
+| `id`                      | `uuid` PK                   |
+| `order`                   | `int`                       |
+| `description`             | `text`                      |
 | `report_sub_criterion_id` | `fk → report_sub_criterion` |
-| `score` | `decimal(6, 2)` |
+| `score`                   | `decimal(6, 2)`             |
 
 ### `report_employee`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `ordinal` | `int` |
-| `education` | `EducationEnum` |
-| `field` | `text` |
-| `department` | `text` |
-| `start_date` | `date` |
-| `work_ratio` | `decimal(5, 4)` |
-| `base_salary` | `decimal(14, 2)` |
-| `additional_salary` | `decimal(14, 2)` |
-| `bonus_salary` | `decimal(14, 2)` (nullable) |
-| `gender` | `GenderEnum` |
+
+| Column                    | Type                        |
+| ------------------------- | --------------------------- |
+| `id`                      | `uuid` PK                   |
+| `ordinal`                 | `int`                       |
+| `education`               | `EducationEnum`             |
+| `field`                   | `text`                      |
+| `department`              | `text`                      |
+| `start_date`              | `date`                      |
+| `work_ratio`              | `decimal(5, 4)`             |
+| `base_salary`             | `decimal(14, 2)`            |
+| `additional_salary`       | `decimal(14, 2)`            |
+| `bonus_salary`            | `decimal(14, 2)` (nullable) |
+| `gender`                  | `GenderEnum`                |
 | `report_employee_role_id` | `fk → report_employee_role` |
-| `report_id` | `fk → report` |
-| `score` | `decimal(6, 2)` |
+| `report_id`               | `fk → report`               |
+| `score`                   | `decimal(6, 2)`             |
 
 ### `report_employee_role`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `title` | `text` |
+
+| Column  | Type      |
+| ------- | --------- |
+| `id`    | `uuid` PK |
+| `title` | `text`    |
 
 ### `report_employee_deviation`
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
+
+| Column               | Type                   |
+| -------------------- | ---------------------- |
+| `id`                 | `uuid` PK              |
 | `report_employee_id` | `fk → report_employee` |
-| `reason` | `text` |
-| `action` | `text` |
-| `signature_name` | `text` |
-| `signature_role` | `text` |
+| `reason`             | `text`                 |
+| `action`             | `text`                 |
+| `signature_name`     | `text`                 |
+| `signature_role`     | `text`                 |
 
 ### `report_employee_role_criterion_step`
+
 Join: which sub-criteria steps apply to a given role.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_employee_role_id` | `fk → report_employee_role` |
+| Column                         | Type                             |
+| ------------------------------ | -------------------------------- |
+| `id`                           | `uuid` PK                        |
+| `report_employee_role_id`      | `fk → report_employee_role`      |
 | `report_sub_criterion_step_id` | `fk → report_sub_criterion_step` |
 
 ### `report_employee_personal_criterion_step`
+
 Join: which sub-criteria steps apply to a given employee personally.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_employee_id` | `fk → report_employee` |
+| Column                         | Type                             |
+| ------------------------------ | -------------------------------- |
+| `id`                           | `uuid` PK                        |
+| `report_employee_id`           | `fk → report_employee`           |
 | `report_sub_criterion_step_id` | `fk → report_sub_criterion_step` |
 
 ### `report_result`
+
 Aggregated per-report salary stats.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_id` | `fk → report` |
-| `average_male_salary` | `decimal(14, 2)` |
-| `average_female_salary` | `decimal(14, 2)` |
-| `average_neutral_salary` | `decimal(14, 2)` |
-| `average_salary` | `decimal(14, 2)` |
-| `minimum_salary` | `decimal(14, 2)` |
-| `maximum_salary` | `decimal(14, 2)` |
-| `median_salary` | `decimal(14, 2)` |
-| `salary_difference_male_female` | `decimal(14, 2)` |
-| `salary_difference_male_neutral` | `decimal(14, 2)` |
-| `salary_difference_female_male` | `decimal(14, 2)` |
-| `salary_difference_female_neutral` | `decimal(14, 2)` |
-| `salary_difference_neutral_male` | `decimal(14, 2)` |
-| `salary_difference_neutral_female` | `decimal(14, 2)` |
+| Column                             | Type              |
+| ---------------------------------- | ----------------- |
+| `id`                               | `uuid` PK         |
+| `report_id`                        | `fk → report`     |
+| `average_male_salary`              | `decimal(14, 2)`  |
+| `average_female_salary`            | `decimal(14, 2)`  |
+| `average_neutral_salary`           | `decimal(14, 2)`  |
+| `average_salary`                   | `decimal(14, 2)`  |
+| `minimum_salary`                   | `decimal(14, 2)`  |
+| `maximum_salary`                   | `decimal(14, 2)`  |
+| `median_salary`                    | `decimal(14, 2)`  |
+| `salary_difference_male_female`    | `decimal(14, 2)`  |
+| `salary_difference_male_neutral`   | `decimal(14, 2)`  |
+| `salary_difference_female_male`    | `decimal(14, 2)`  |
+| `salary_difference_female_neutral` | `decimal(14, 2)`  |
+| `salary_difference_neutral_male`   |  `decimal(14, 2)` |
+| `salary_difference_neutral_female` |  `decimal(14, 2)` |
 
 ### `report_role_result`
+
 Same salary stats broken down per role. Whiteboard used ditto marks (`==`) — expanded below.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_result_id` | `fk → report_result` |
+| Column                    | Type                        |
+| ------------------------- | --------------------------- |
+| `id`                      | `uuid` PK                   |
+| `report_result_id`        | `fk → report_result`        |
 | `report_employee_role_id` | `fk → report_employee_role` |
-| `average_salary` | `decimal(14, 2)` |
-| `minimum_salary` | `decimal(14, 2)` |
-| `maximum_salary` | `decimal(14, 2)` |
-| `median_salary` | `decimal(14, 2)` |
-| `average_male_salary` | `decimal(14, 2)` |
-| `average_female_salary` | `decimal(14, 2)` |
-| `average_neutral_salary` | `decimal(14, 2)` |
-| `minimum_male_salary` | `decimal(14, 2)` |
-| `minimum_female_salary` | `decimal(14, 2)` |
-| `minimum_neutral_salary` | `decimal(14, 2)` |
-| `maximum_male_salary` | `decimal(14, 2)` |
-| `maximum_female_salary` | `decimal(14, 2)` |
-| `maximum_neutral_salary` | `decimal(14, 2)` |
+| `average_salary`          | `decimal(14, 2)`            |
+| `minimum_salary`          | `decimal(14, 2)`            |
+| `maximum_salary`          | `decimal(14, 2)`            |
+| `median_salary`           | `decimal(14, 2)`            |
+| `average_male_salary`     | `decimal(14, 2)`            |
+| `average_female_salary`   | `decimal(14, 2)`            |
+| `average_neutral_salary`  | `decimal(14, 2)`            |
+| `minimum_male_salary`     | `decimal(14, 2)`            |
+| `minimum_female_salary`   | `decimal(14, 2)`            |
+| `minimum_neutral_salary`  | `decimal(14, 2)`            |
+| `maximum_male_salary`     | `decimal(14, 2)`            |
+| `maximum_female_salary`   | `decimal(14, 2)`            |
+| `maximum_neutral_salary`  | `decimal(14, 2)`            |
 
 ### `public_report`
+
 Insert-only snapshot published when a private report is approved. No PII, no FK to `company`. Anonymized aggregate shown on public site. Immutable by design.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `source_report_id` | `fk → report` (internal trace only, not exposed publicly) |
-| `size_bucket` | `text` (company size bracket, e.g. `50-99`, `100+`) |
-| `isat_category` | `text` (industry field) |
-| `published_at` | `timestamp` |
-| `valid_until` | `timestamp` |
-| `average_male_salary` | `decimal(14, 2)` |
-| `average_female_salary` | `decimal(14, 2)` |
-| `average_neutral_salary` | `decimal(14, 2)` |
-| `salary_difference_male_female` | `decimal(14, 2)` |
-| `salary_difference_male_neutral` | `decimal(14, 2)` |
-| `salary_difference_female_male` | `decimal(14, 2)` |
-| `salary_difference_female_neutral` | `decimal(14, 2)` |
-| `salary_difference_neutral_male` | `decimal(14, 2)` |
-| `salary_difference_neutral_female` | `decimal(14, 2)` |
+| Column                             | Type                                                      |
+| ---------------------------------- | --------------------------------------------------------- |
+| `id`                               | `uuid` PK                                                 |
+| `source_report_id`                 | `fk → report` (internal trace only, not exposed publicly) |
+| `size_bucket`                      | `text` (company size bracket, e.g. `50-99`, `100+`)       |
+| `isat_category`                    | `text` (industry field)                                   |
+| `published_at`                     | `timestamp`                                               |
+| `valid_until`                      | `timestamp`                                               |
+| `average_male_salary`              | `decimal(14, 2)`                                          |
+| `average_female_salary`            | `decimal(14, 2)`                                          |
+| `average_neutral_salary`           | `decimal(14, 2)`                                          |
+| `salary_difference_male_female`    | `decimal(14, 2)`                                          |
+| `salary_difference_male_neutral`   | `decimal(14, 2)`                                          |
+| `salary_difference_female_male`    | `decimal(14, 2)`                                          |
+| `salary_difference_female_neutral` | `decimal(14, 2)`                                          |
+| `salary_difference_neutral_male`   | `decimal(14, 2)`                                          |
+| `salary_difference_neutral_female` | `decimal(14, 2)`                                          |
 
 Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — minimum/maximum/median and role-level breakdown probably omitted, confirm with stakeholders.
 
 ### `report_event`
+
 Immutable audit row emitted on state-changing actions. Insert-only. See "Audit timeline" for semantics.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_id` | `fk → report` |
-| `event_type` | `ReportEventTypeEnum` |
-| `actor_user_id` | `fk → user` (nullable — null for company admin or cron) |
-| `report_status` | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
-| `from_status` | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`) |
-| `to_status` | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`) |
-| `assigned_user_id` | `fk → user` (nullable — set on `ASSIGNED`) |
+| Column             | Type                                                                       |
+| ------------------ | -------------------------------------------------------------------------- |
+| `id`               | `uuid` PK                                                                  |
+| `report_id`        | `fk → report`                                                              |
+| `event_type`       | `ReportEventTypeEnum`                                                      |
+| `actor_user_id`    | `fk → user` (nullable — null for company admin or cron)                    |
+| `report_status`    | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
+| `from_status`      | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
+| `to_status`        | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
+| `assigned_user_id` | `fk → user` (nullable — set on `ASSIGNED`)                                 |
 
 Invariants (enforce via CHECK):
+
 - `event_type = 'STATUS_CHANGED'` ⇒ `from_status IS NOT NULL AND to_status IS NOT NULL AND report_status = to_status`.
 - `event_type = 'ASSIGNED'` ⇒ `assigned_user_id IS NOT NULL`.
 
 ### `report_comment`
+
 Human-written message on a report. Immutable after insert (no edit). Soft-deletable by author; deleted rows hidden from the rendered thread.
 
-| Column | Type |
-|--------|------|
-| `id` | `uuid` PK |
-| `report_id` | `fk → report` |
-| `author_kind` | `CommentAuthorKindEnum` |
+| Column           | Type                                                       |
+| ---------------- | ---------------------------------------------------------- |
+| `id`             | `uuid` PK                                                  |
+| `report_id`      | `fk → report`                                              |
+| `author_kind`    | `CommentAuthorKindEnum`                                    |
 | `author_user_id` | `fk → user` (nullable — set when `author_kind = REVIEWER`) |
-| `visibility` | `CommentVisibilityEnum` |
-| `body` | `text` |
-| `report_status` | `ReportStatusEnum` (snapshot at insert) |
-| `deleted_at` | `timestamp` (nullable — soft delete by author) |
+| `visibility`     | `CommentVisibilityEnum`                                    |
+| `body`           | `text`                                                     |
+| `report_status`  | `ReportStatusEnum` (snapshot at insert)                    |
+| `deleted_at`     | `timestamp` (nullable — soft delete by author)             |
 
 Invariants (enforce via CHECK):
+
 - `author_kind = 'REVIEWER'` ⇒ `author_user_id IS NOT NULL`.
 - `author_kind = 'COMPANY_ADMIN'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
 
