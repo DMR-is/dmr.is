@@ -3,9 +3,7 @@ import {
   Get,
   Inject,
   MaxFileSizeValidator,
-  Param,
   ParseFilePipe,
-  ParseUUIDPipe,
   Post,
   StreamableFile,
   UploadedFile,
@@ -38,7 +36,7 @@ const MAX_UPLOAD_BYTES = ONE_MB * 20
   version: '1',
 })
 @ApiBearerAuth()
-// @UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard)
 export class ReportExcelController {
   constructor(
     @Inject(IReportExcelService)

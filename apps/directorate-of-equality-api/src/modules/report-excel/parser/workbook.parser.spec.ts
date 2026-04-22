@@ -177,9 +177,7 @@ describe('parseWorkbook', () => {
     it('extracts the 6 default criteria + 11 sub-criteria even with no employees', async () => {
       // Semantics will reject (no roles, no employees), but the extracted
       // structure is still observable via the error payload.
-      const { errors } = await expectBadRequest(
-        parseWorkbook(templateBuffer()),
-      )
+      const { errors } = await expectBadRequest(parseWorkbook(templateBuffer()))
       expect(errors).toEqual([
         expect.objectContaining({ message: 'At least one role is required' }),
         expect.objectContaining({
