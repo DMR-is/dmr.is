@@ -14,7 +14,6 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Hidden } from '@dmr.is/ui/components/island-is/Hidden'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Logo } from '@dmr.is/ui/components/island-is/Logo'
 
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
@@ -45,7 +44,7 @@ export const Header = () => {
                   <FocusableBox href="/" data-testid="link-back-home">
                     <Hidden above="md">
                       <img
-                        src={'./assets/jafnrettisstofa-logo.svg'}
+                        src={'/assets/jafnrettisstofa-logo.svg'}
                         alt="Skjaldarmerki"
                         height={20}
                         style={{ maxHeight: '20px' }}
@@ -53,9 +52,9 @@ export const Header = () => {
                     </Hidden>
                     <Hidden below="lg">
                       <img
-                        src={'./assets/jafnrettisstofa-logo.svg'}
+                        src={'/assets/jafnrettisstofa-logo.svg'}
                         alt="Skjaldarmerki"
-                        height={20}
+                        height={44}
                         style={{ maxHeight: '44px' }}
                       />
                     </Hidden>

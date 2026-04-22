@@ -1,7 +1,3 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
-
 import { FocusableBox } from '../../island-is'
 import { Box } from '../../island-is/lib/Box'
 import { GridColumn } from '../../island-is/lib/GridColumn'
@@ -17,14 +13,12 @@ export type LinkCardProps = {
   image?: ImageProps
 }
 
-// TODO: CHECK LINK CARD IN OTHER PROJECTS
 export const LinkCard = ({
   href,
   title,
   description,
   image,
 }: LinkCardProps) => {
-  const router = useRouter()
   const hasImage = !!(image && image.src)
   const columnSpan: Record<
     string,
@@ -45,7 +39,7 @@ export const LinkCard = ({
       background="white"
       display="flex"
       alignItems="center"
-      onClick={() => router.push(href)}
+      href={href}
     >
       <GridContainer>
         <GridRow alignItems={'center'}>

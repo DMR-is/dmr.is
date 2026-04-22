@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export const getBaseUrlFromServerSide = (includePrefix = false): string => {
   let url = ''
   if (process.env.NODE_ENV === 'development') {

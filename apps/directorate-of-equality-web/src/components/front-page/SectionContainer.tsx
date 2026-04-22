@@ -15,18 +15,17 @@ import { Section } from '@dmr.is/ui/components/Section/Section'
 import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
+const PieChart = dynamic(
+  () =>
+    import('@dmr.is/ui-lazy/components/PieChart/PieChart').then(
+      (mod) => mod.PieChart,
+    ),
+  { ssr: false },
+)
+
 export const SectionContainer = () => {
   const [selectedTab, setSelectedTab] = useState('almennt')
 
-  const PieChart = dynamic(
-    () =>
-      import('@dmr.is/ui-lazy/components/PieChart/PieChart').then(
-        (mod) => mod.PieChart,
-      ),
-    {
-      ssr: false,
-    },
-  )
   return (
     <Section bleed variant="blue">
       <GridContainer>

@@ -1,4 +1,4 @@
-import { theme } from 'libs/shared/dmr-ui/src/lib/island-is/theme'
+import { theme } from '@dmr.is/island-ui-theme'
 
 import { style } from '@vanilla-extract/css'
 
