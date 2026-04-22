@@ -14,6 +14,8 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { ConfigModule } from '../modules/config/config.module'
+import { ConfigModel } from '../modules/config/models/config.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
 import { ReportCommentModel } from '../modules/report/models/report-comment.model'
@@ -65,6 +67,7 @@ import { UserModule } from '../modules/user/user.module'
             PublicReportModel,
             ReportEventModel,
             ReportCommentModel,
+            ConfigModel,
           ],
         }),
       ],
@@ -73,6 +76,7 @@ import { UserModule } from '../modules/user/user.module'
       inject: [DMRSequelizeConfigService],
     }),
     UserModule,
+    ConfigModule,
   ],
   controllers: [],
   providers: [

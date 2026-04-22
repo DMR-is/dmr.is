@@ -18,4 +18,5 @@ export enum DoeModels {
   PUBLIC_REPORT = 'public_report',
   REPORT_EVENT = 'report_event',
   REPORT_COMMENT = 'report_comment',
+  CONFIG = 'config',
 }

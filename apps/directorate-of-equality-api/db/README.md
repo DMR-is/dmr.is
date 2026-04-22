@@ -410,6 +410,7 @@ Aggregated per-report salary stats.
 | `salary_difference_female_neutral` | `decimal(14, 2)`  |
 | `salary_difference_neutral_male`   |  `decimal(14, 2)` |
 | `salary_difference_neutral_female` |  `decimal(14, 2)` |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` (nullable — threshold snapshot from `config` at time of creation) |
 
 ### `report_role_result`
 
@@ -497,6 +498,28 @@ Invariants (enforce via CHECK):
 
 - `author_kind = 'REVIEWER'` ⇒ `author_user_id IS NOT NULL`.
 - `author_kind = 'COMPANY_ADMIN'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
+
+### `config`
+
+Generic key-value configuration table for admin-managed settings that change infrequently (e.g. once a year) but should not require a code deploy to update. New keys are added via migration/seed; admins update values via API.
+
+Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped and a new row is inserted. This preserves a full history of every value a key has held. A partial unique index (`config_active_key_idx`) ensures at most one active (non-superseded) entry per key.
+
+| Column          | Type          | Notes                                           |
+|-----------------|---------------|-------------------------------------------------|
+| `id`            | `uuid` PK     |                                                  |
+| `key`           | `text`        | NOT NULL — machine-readable config key           |
+| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer   |
+| `description`   | `text`        | Nullable — human-readable explanation            |
+| `superseded_at` | `timestamptz` | Nullable — null = current active entry           |
+
+Current entries:
+
+| key                                   | value | description                                                        |
+|---------------------------------------|-------|--------------------------------------------------------------------|
+| `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
+
+No FKs, no relationships. Standalone lookup table.
 
 ## Relationships (summary)
 
