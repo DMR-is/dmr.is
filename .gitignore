@@ -122,3 +122,4 @@ apps/official-journal-api-export/sql/*
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 backup-json/all-extra.json
+apps/directorate-of-equality-api/src/modules/report-excel/template.numbers
