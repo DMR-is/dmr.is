@@ -2,8 +2,8 @@ import { getServerSession } from 'next-auth'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
-import { ApplicationContainer } from '../../components/front-page/ApplicationContainer'
 import { HeroContainer } from '../../components/front-page/HeroContainer'
+import { PanelsContainer } from '../../components/front-page/PanelsContainer'
 import { SectionContainer } from '../../components/front-page/SectionContainer'
 import { authOptions } from '../../lib/auth/authOptions'
 
@@ -14,7 +14,7 @@ export default async function IndexPage() {
     <Box marginTop={[2, 4]}>
       <HeroContainer userName={session?.user?.name} />
       <SectionContainer />
-      <ApplicationContainer />
+      <PanelsContainer />
     </Box>
   )
 }
