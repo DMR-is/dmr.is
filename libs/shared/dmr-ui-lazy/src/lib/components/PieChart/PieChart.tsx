@@ -3,13 +3,13 @@
 import * as Recharts from 'recharts'
 
 import { theme } from '@dmr.is/island-ui-theme'
-
-import * as styles from './PieChart.css'
 import { Box, type ResponsiveSpace } from '@dmr.is/ui/components/island-is/Box'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+
+import * as styles from './PieChart.css'
 
 export type PieChartItem = {
   color: string
