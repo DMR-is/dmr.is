@@ -1,6 +1,6 @@
 'use client'
 
-import { Header } from '@dmr.is/ui/components/Header/Header'
+import { Header } from '../../components/header/Header'
 
 export default function ProtectedLayout({
   children,
@@ -9,7 +9,7 @@ export default function ProtectedLayout({
 }) {
   return (
     <>
-      <Header info={{ title: 'Jafnréttisstofa' }} variant="blue" />
+      <Header />
       {children}
     </>
   )
