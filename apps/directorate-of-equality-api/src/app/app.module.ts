@@ -28,6 +28,7 @@ import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
+import { ReportExcelModule } from '../modules/report-excel/report-excel.module'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { UserModel } from '../modules/user/models/user.model'
@@ -77,6 +78,7 @@ import { UserModule } from '../modules/user/user.module'
     }),
     UserModule,
     ConfigModule,
+    ReportExcelModule,
   ],
   controllers: [],
   providers: [

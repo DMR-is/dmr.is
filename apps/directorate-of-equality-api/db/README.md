@@ -294,7 +294,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `identifier`                     | `text`                                                                                                                         |
 | `status`                         | `ReportStatusEnum`                                                                                                             |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
-| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                         |
+| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `denial_reason`                  | `text` (nullable)                                                                                                              |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
 | `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
@@ -468,11 +468,11 @@ Immutable audit row emitted on state-changing actions. Insert-only. See "Audit t
 | `id`               | `uuid` PK                                                                  |
 | `report_id`        | `fk → report`                                                              |
 | `event_type`       | `ReportEventTypeEnum`                                                      |
-| `actor_user_id`    | `fk → doe_user` (nullable — null for company admin or cron)                    |
+| `actor_user_id`    | `fk → doe_user` (nullable — null for company admin or cron)                |
 | `report_status`    | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
 | `from_status`      | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
 | `to_status`        | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
-| `assigned_user_id` | `fk → doe_user` (nullable — set on `ASSIGNED`)                                 |
+| `assigned_user_id` | `fk → doe_user` (nullable — set on `ASSIGNED`)                             |
 
 Invariants (enforce via CHECK):
 
@@ -483,16 +483,16 @@ Invariants (enforce via CHECK):
 
 Human-written message on a report. Immutable after insert (no edit). Soft-deletable by author; deleted rows hidden from the rendered thread.
 
-| Column           | Type                                                       |
-| ---------------- | ---------------------------------------------------------- |
-| `id`             | `uuid` PK                                                  |
-| `report_id`      | `fk → report`                                              |
-| `author_kind`    | `CommentAuthorKindEnum`                                    |
+| Column           | Type                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| `id`             | `uuid` PK                                                      |
+| `report_id`      | `fk → report`                                                  |
+| `author_kind`    | `CommentAuthorKindEnum`                                        |
 | `author_user_id` | `fk → doe_user` (nullable — set when `author_kind = REVIEWER`) |
-| `visibility`     | `CommentVisibilityEnum`                                    |
-| `body`           | `text`                                                     |
-| `report_status`  | `ReportStatusEnum` (snapshot at insert)                    |
-| `deleted_at`     | `timestamp` (nullable — soft delete by author)             |
+| `visibility`     | `CommentVisibilityEnum`                                        |
+| `body`           | `text`                                                         |
+| `report_status`  | `ReportStatusEnum` (snapshot at insert)                        |
+| `deleted_at`     | `timestamp` (nullable — soft delete by author)                 |
 
 Invariants (enforce via CHECK):
 
@@ -535,8 +535,6 @@ No FKs, no relationships. Standalone lookup table.
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
 - `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
-
-
 
 ## Notes / open questions
 
