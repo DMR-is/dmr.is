@@ -63,7 +63,7 @@ export const controlPanelChevron = recipe({
 
 export const dropdownMenu = style({
   position: 'absolute',
-  top: '100%',
+  top: '82%', // 82% is used to position the dropdown menu right below the control panel button, taking into account the padding and the height of the button
   left: 0,
   overflow: 'hidden',
   width: 300,
