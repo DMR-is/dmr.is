@@ -31,6 +31,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee
 import { ReportExcelModule } from '../modules/report-excel/report-excel.module'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
+import { ReportStatisticsModule } from '../modules/report-statistics/report-statistics.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { UserModule } from '../modules/user/user.module'
 @Module({
@@ -79,6 +80,7 @@ import { UserModule } from '../modules/user/user.module'
     UserModule,
     ConfigModule,
     ReportExcelModule,
+    ReportStatisticsModule,
   ],
   controllers: [],
   providers: [
