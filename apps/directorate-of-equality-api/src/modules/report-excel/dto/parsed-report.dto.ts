@@ -75,6 +75,17 @@ export class ParsedEmployeeDto {
   @ApiNumber()
   ordinal!: number
 
+  /**
+   * Pseudonymous display handle the app-system uses in place of the
+   * employee's real name. Format: `{3-uppercase-letters}-{padded-ordinal}`
+   * e.g. `KVZ-001`. The prefix is a random 3-letter code generated once per
+   * `/import` request (same for every employee in that import). It is NOT a
+   * stable key across imports — the app-system attaches its own stable
+   * identity when it persists the report.
+   */
+  @ApiString()
+  identifier!: string
+
   @ApiString()
   roleTitle!: string
 
