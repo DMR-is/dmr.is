@@ -44,6 +44,7 @@ const employee = (
   personalStepAssignments: ParsedEmployeeDto['personalStepAssignments'] = [],
 ): ParsedEmployeeDto => ({
   ordinal,
+  identifier: `XXX-${String(ordinal).padStart(3, '0')}`,
   roleTitle,
   education: EducationEnum.BACHELOR,
   gender: GenderEnum.NEUTRAL,

@@ -5,9 +5,10 @@
  * ## PII handling
  *
  * The `Nafn` column is deliberately **not** carried into the parsed output.
- * DoE policy prohibits persisting personal names; the application system
- * matches employees by ordinal against its own records. The name only
- * exists in the workbook for the employer's convenience while filling it.
+ * Each employee gets a synthesised pseudonymous `identifier` instead
+ * (`{randomPrefix}-{paddedOrdinal}`, e.g. `KVZ-001`), used by the app-system
+ * as a display handle in the UI where a real name would normally appear.
+ * The prefix is random per import and is not a stable key across imports.
  *
  * ## Starfshlutfall (work ratio)
  *
@@ -56,7 +57,39 @@ const COLS = {
   startDate: 'L',
 } as const
 
-const MAX_EMPLOYEE_ROWS = 60
+/**
+ * Safety ceiling on rows scanned. Real companies can easily exceed
+ * 2 000 employees, so we avoid a hard cap — iteration bounds come from
+ * `sheet.actualRowCount`. This number only kicks in for defensively broken
+ * files where every cell reports populated. 50k rows is ~3 orders of
+ * magnitude above real submissions; hitting it is almost certainly a
+ * corrupt or adversarial upload.
+ */
+const ABSOLUTE_MAX_EMPLOYEE_ROWS = 50000
+
+/** Minimum padding for the ordinal portion of the identifier — always ≥3 digits so small imports read as "ABC-001", large ones naturally grow ("ABC-2000"). */
+const IDENTIFIER_MIN_ORDINAL_DIGITS = 3
+
+/** Random uppercase 3-letter prefix, e.g. "KVZ". 26³ = 17 576 combinations — collision doesn't matter because the prefix only has to be unique-ish for human readability, not a key. */
+export const makeIdentifierPrefix = (): string => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  return Array.from(
+    { length: 3 },
+    () => letters[Math.floor(Math.random() * letters.length)],
+  ).join('')
+}
+
+export const formatEmployeeIdentifier = (
+  prefix: string,
+  ordinal: number,
+  maxOrdinal: number,
+): string => {
+  const width = Math.max(
+    IDENTIFIER_MIN_ORDINAL_DIGITS,
+    String(maxOrdinal).length,
+  )
+  return `${prefix}-${String(ordinal).padStart(width, '0')}`
+}
 
 export type EmployeesParseResult = {
   employees: ParsedEmployeeDto[]
@@ -205,6 +238,8 @@ const buildEmployee = (
 
   return {
     ordinal,
+    // Populated after all employees are parsed so width can scale with max ordinal.
+    identifier: '',
     roleTitle: role,
     education,
     gender,
@@ -219,9 +254,15 @@ const buildEmployee = (
   }
 }
 
+export type ParseEmployeesOptions = {
+  /** Override the random identifier prefix. Used by tests for determinism. */
+  identifierPrefix?: string
+}
+
 export const parseEmployees = (
   workbook: ExcelJS.Workbook,
   errors: ErrorBag,
+  options: ParseEmployeesOptions = {},
 ): EmployeesParseResult => {
   const sheet = workbook.getWorksheet(SHEETS.EMPLOYEES)
   if (!sheet) {
@@ -235,11 +276,18 @@ export const parseEmployees = (
   const employees: ParsedEmployeeDto[] = []
   const rolesByTitle = new Map<string, ParsedRoleDto>()
 
-  for (
-    let r = TABLE_FIRST_DATA_ROW;
-    r < TABLE_FIRST_DATA_ROW + MAX_EMPLOYEE_ROWS;
-    r++
-  ) {
+  // Use `rowCount`, not `actualRowCount`. exceljs's `actualRowCount`
+  // under-reports when trailing rows lack certain cell types — observed
+  // returning 103 on a file with populated rows up to 105, silently
+  // dropping the last two employees. `rowCount` is the highest row index
+  // the workbook knows about; `isEmptyRow` handles any trailing blanks.
+  // Capped at ABSOLUTE_MAX_EMPLOYEE_ROWS as a sanity guard on malformed uploads.
+  const lastRow = Math.min(
+    sheet.rowCount,
+    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_EMPLOYEE_ROWS - 1,
+  )
+
+  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const row = readRow(sheet, r)
     if (isEmptyRow(row)) continue
 
@@ -253,6 +301,14 @@ export const parseEmployees = (
       })
     }
     employees.push(employee)
+  }
+
+  if (employees.length > 0) {
+    const prefix = options.identifierPrefix ?? makeIdentifierPrefix()
+    const maxOrdinal = Math.max(...employees.map((e) => e.ordinal))
+    for (const e of employees) {
+      e.identifier = formatEmployeeIdentifier(prefix, e.ordinal, maxOrdinal)
+    }
   }
 
   return { employees, roles: [...rolesByTitle.values()] }

@@ -96,6 +96,43 @@ const fillEmployeeClassification = (
   })
 }
 
+/**
+ * The bundled template ships with 4 job-based criteria (90% total weight)
+ * and empty personal slots. Tests that need a submission that clears the
+ * weight-sum validator add a personal criterion + sub via these helpers.
+ */
+const addPersonalCriterion = (
+  wb: ExcelJS.Workbook,
+  viðmiðRow: number,
+  title: string,
+  weightPct: number,
+) => {
+  const s = wb.getWorksheet('Viðmið')!
+  s.getCell(`C${viðmiðRow}`).value = title
+  s.getCell(`D${viðmiðRow}`).value = `${title} description`
+  s.getCell(`E${viðmiðRow}`).value = weightPct
+}
+
+const addPersonalSub = (
+  wb: ExcelJS.Workbook,
+  undirviðmiðRow: number,
+  parentTitle: string,
+  subTitle: string,
+  weightPct: number,
+  stepDescriptions: string[],
+) => {
+  const s = wb.getWorksheet('Undirviðmið')!
+  s.getCell(`B${undirviðmiðRow}`).value = parentTitle
+  s.getCell(`C${undirviðmiðRow}`).value = subTitle
+  s.getCell(`D${undirviðmiðRow}`).value = `${subTitle} description`
+  s.getCell(`E${undirviðmiðRow}`).value = weightPct
+  s.getCell(`F${undirviðmiðRow}`).value = stepDescriptions.length
+  // Step descriptions live in columns J…S (Þrep 1…10). Col index 10 = J.
+  stepDescriptions.forEach((desc, i) => {
+    s.getCell(undirviðmiðRow, 10 + i).value = desc
+  })
+}
+
 const expectBadRequest = async (
   promise: Promise<unknown>,
 ): Promise<{
@@ -156,34 +193,45 @@ const buildValidFilled = async (): Promise<Buffer> => {
     startDate: new Date('2022-03-15'),
   })
 
+  // Template ships without default personal criteria; add one totalling
+  // the missing 10% so weight sums hit 100.
+  addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+  addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
+    'Engin sérstök',
+    'Grunnkunnátta',
+    'Góð kunnátta',
+    'Mjög góð kunnátta',
+    'Sérfræðikunnátta',
+  ])
+
   // Template has 7 job-based sub-criteria; 3 distinct roles.
   fillRoleClassification(wb, [
     [3, 3, 3, 3, 3, 3, 3], // Forstöðumaður
     [2, 2, 2, 2, 2, 2, 2], // Sérfræðingur
     [1, 1, 1, 1, 1, 1, 1], // Verkstjóri
   ])
-  // Template has 4 personal sub-criteria; 3 employees.
-  fillEmployeeClassification(wb, [
-    [1, 2, 3, 4],
-    [2, 3, 4, 1],
-    [3, 4, 1, 2],
-  ])
+  // 1 personal sub-criterion, 3 employees.
+  fillEmployeeClassification(wb, [[1], [3], [5]])
 
   return serialize(wb)
 }
 
 describe('parseWorkbook', () => {
   describe('empty template', () => {
-    it('extracts the 6 default criteria + 11 sub-criteria even with no employees', async () => {
-      // Semantics will reject (no roles, no employees), but the extracted
-      // structure is still observable via the error payload.
+    it('rejects with weight-sum + minimum-population errors', async () => {
+      // Empty template ships with 4 job-based criteria (90% total weight)
+      // and 7 job-based sub-criteria (also 90% total) — employer is
+      // expected to fill a personal criterion for the remaining 10%.
       const { errors } = await expectBadRequest(parseWorkbook(templateBuffer()))
-      expect(errors).toEqual([
-        expect.objectContaining({ message: 'At least one role is required' }),
-        expect.objectContaining({
-          message: 'At least one employee is required',
-        }),
-      ])
+      const messages = errors.map((e) => e.message)
+      expect(messages).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Criterion weights sum to 90%'),
+          expect.stringContaining('Sub-criterion weights sum to 90%'),
+          'At least one role is required',
+          'At least one employee is required',
+        ]),
+      )
     })
   })
 
@@ -195,8 +243,8 @@ describe('parseWorkbook', () => {
       report = await parseWorkbook(buf)
     })
 
-    it('parses all 6 criteria with computed step scores', () => {
-      expect(report.criteria).toHaveLength(6)
+    it('parses all 5 criteria (4 mandatory + 1 employer-added personal)', () => {
+      expect(report.criteria).toHaveLength(5)
       const types = report.criteria.map((c) => c.type).sort()
       expect(types).toEqual(
         [
@@ -204,7 +252,6 @@ describe('parseWorkbook', () => {
           ReportCriterionTypeEnum.STRAIN,
           ReportCriterionTypeEnum.CONDITION,
           ReportCriterionTypeEnum.COMPETENCE,
-          ReportCriterionTypeEnum.PERSONAL,
           ReportCriterionTypeEnum.PERSONAL,
         ].sort(),
       )
@@ -255,9 +302,22 @@ describe('parseWorkbook', () => {
       expect(serialized).not.toMatch(/Nafn [123]/)
     })
 
-    it('attaches 4 personal step assignments per employee', () => {
+    it('attaches 1 personal step assignment per employee (one personal sub defined)', () => {
       report.employees.forEach((e) => {
-        expect(e.personalStepAssignments).toHaveLength(4)
+        expect(e.personalStepAssignments).toHaveLength(1)
+      })
+    })
+
+    it('assigns each employee a pseudonymous identifier, same prefix across the import', () => {
+      const identifiers = report.employees.map((e) => e.identifier)
+      identifiers.forEach((id) => expect(id).toMatch(/^[A-Z]{3}-\d{3,}$/))
+      const prefixes = new Set(identifiers.map((id) => id.slice(0, 3)))
+      expect(prefixes.size).toBe(1)
+      // Ordinal portion matches the employee's ordinal
+      report.employees.forEach((e) => {
+        expect(e.identifier.endsWith(String(e.ordinal).padStart(3, '0'))).toBe(
+          true,
+        )
       })
     })
   })
