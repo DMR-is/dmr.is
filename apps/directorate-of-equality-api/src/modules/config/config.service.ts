@@ -71,10 +71,9 @@ export class ConfigService implements IConfigService {
       context: LOGGING_CONTEXT,
     })
 
-    return this.sequelize.transaction(async (t) => {
+    return this.sequelize.transaction(async () => {
       const current = await this.configModel.findOne({
         where: { key, supersededAt: null },
-        transaction: t,
       })
 
       if (!current) {
@@ -83,19 +82,16 @@ export class ConfigService implements IConfigService {
         )
       }
 
-      await current.update({ supersededAt: new Date() }, { transaction: t })
+      await current.update({ supersededAt: new Date() })
 
-      const newEntry = await this.configModel.create(
-        {
-          key,
-          value: dto.value,
-          description:
-            dto.description !== undefined
-              ? dto.description
-              : current.description,
-        },
-        { transaction: t },
-      )
+      const newEntry = await this.configModel.create({
+        key,
+        value: dto.value,
+        description:
+          dto.description !== undefined
+            ? dto.description
+            : current.description,
+      })
 
       return newEntry.fromModel()
     })
