@@ -111,6 +111,19 @@ export class ReportService implements IReportService {
     // present — if this throws, the DB has a report without a snapshot,
     // which is invariant-breaking and deserves a loud error.
     if (!report.companyReport) {
+      this.logger.error(
+        'Report has no companyReport snapshot — data integrity violation',
+        {
+          context: LOGGING_CONTEXT,
+          category: 'getById',
+          reportId: report.id,
+          reportType: report.type,
+          reportStatus: report.status,
+          reportIdentifier: report.identifier,
+          createdAt: report.createdAt,
+          updatedAt: report.updatedAt,
+        },
+      )
       throw new InternalServerErrorException(
         `Report ${report.id} has no companyReport snapshot — data integrity issue`,
       )
@@ -253,6 +266,19 @@ export class ReportService implements IReportService {
     }
 
     if (!report.equalityReportId) {
+      this.logger.error(
+        'Salary report has no linked equality report — data integrity violation',
+        {
+          context: LOGGING_CONTEXT,
+          category: 'resolveEqualityReport',
+          reportId: report.id,
+          reportType: report.type,
+          reportStatus: report.status,
+          reportIdentifier: report.identifier,
+          createdAt: report.createdAt,
+          updatedAt: report.updatedAt,
+        },
+      )
       throw new InternalServerErrorException(
         `Salary report ${report.id} has no linked equality report — data integrity issue`,
       )
@@ -271,6 +297,18 @@ export class ReportService implements IReportService {
     })
 
     if (!equality) {
+      this.logger.error(
+        'Salary report references non-existent equality report — data integrity violation (dangling FK)',
+        {
+          context: LOGGING_CONTEXT,
+          category: 'resolveEqualityReport',
+          reportId: report.id,
+          reportType: report.type,
+          reportStatus: report.status,
+          reportIdentifier: report.identifier,
+          danglingEqualityReportId: report.equalityReportId,
+        },
+      )
       throw new InternalServerErrorException(
         `Salary report ${report.id} references equality report ${report.equalityReportId} which does not exist — data integrity issue`,
       )

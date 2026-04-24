@@ -22,28 +22,50 @@ type FindAndCountAllMock = jest.Mock<
 >
 type FindByPkOrThrowMock = jest.Mock
 
-const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => ({
-  id: '00000000-0000-0000-0000-000000000001',
-  identifier: 'ABC-001',
-  type: ReportTypeEnum.SALARY,
-  status: ReportStatusEnum.SUBMITTED,
-  createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  correctionDeadline: null,
-  validUntil: null,
-  equalityReportId: null,
-  companyReport: {
-    name: 'Blámi hf.',
-    nationalId: '4703013920',
-  },
-  reviewer: null,
-  ...overrides,
-})
+const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
+  const row: Record<string, unknown> = {
+    id: '00000000-0000-0000-0000-000000000001',
+    identifier: 'ABC-001',
+    type: ReportTypeEnum.SALARY,
+    status: ReportStatusEnum.SUBMITTED,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    correctionDeadline: null,
+    validUntil: null,
+    equalityReportId: null,
+    companyReport: {
+      name: 'Blámi hf.',
+      nationalId: '4703013920',
+    },
+    reviewer: null,
+    ...overrides,
+  }
+  // Instance methods the service calls — projections the real model
+  // provides via BaseModel. Tests only need something that returns a
+  // plain object shape-compatible with the DTO.
+  row.fromModelToListItem = () => ({
+    id: row.id,
+    identifier: row.identifier,
+    type: row.type,
+    status: row.status,
+    companyName: (row.companyReport as { name?: string } | null)?.name ?? null,
+    companyNationalId:
+      (row.companyReport as { nationalId?: string } | null)?.nationalId ?? null,
+    reviewer: row.reviewer,
+    createdAt: row.createdAt,
+    correctionDeadline: row.correctionDeadline,
+    validUntil: row.validUntil,
+  })
+  return row
+}
 
 const makeService = () => {
   const findAndCountAll: FindAndCountAllMock = jest.fn()
   const findByPkOrThrow: FindByPkOrThrowMock = jest.fn()
   const findByPk = jest.fn()
-  const logger = { debug: jest.fn() } as unknown as Logger
+  const logger = {
+    debug: jest.fn(),
+    error: jest.fn(),
+  } as unknown as Logger
 
   // Build the model mock first, then make `.scope()` / `.withScope()`
   // return the same object so chained calls (`model.scope('x').findAndCountAll`)
@@ -85,6 +107,7 @@ const makeService = () => {
     findByPkOrThrow,
     roleResultFindAll,
     deviationFindAll,
+    logger,
   }
 }
 
@@ -300,7 +323,7 @@ describe('ReportService.list — filter & query building', () => {
 })
 
 describe('ReportService.getById', () => {
-  const baseReport = {
+  const baseReportShape = {
     id: '00000000-0000-0000-0000-000000000001',
     identifier: 'ABC-001',
     type: ReportTypeEnum.SALARY,
@@ -342,14 +365,72 @@ describe('ReportService.getById', () => {
     comments: [],
   }
 
+  // The service now calls instance methods on the model (`report.fromModel()`,
+  // `linkedEquality.fromModelToEqualityReport()`); the tests run against plain
+  // objects, so we attach stub implementations that return DTO-shaped payloads.
+  const withFromModel = <T extends Record<string, unknown>>(
+    row: T,
+  ): T & { fromModel: () => Omit<T, 'fromModel' | 'fromModelToEqualityReport'> } =>
+    Object.assign(row, {
+      fromModel: () => {
+        const { fromModel, fromModelToEqualityReport, ...plain } = row as T & {
+          fromModel?: unknown
+          fromModelToEqualityReport?: unknown
+        }
+        return plain
+      },
+    })
+
+  const withEqualityProjection = <T extends Record<string, unknown>>(
+    row: T,
+  ): T & { fromModelToEqualityReport: () => unknown } =>
+    Object.assign(row, {
+      fromModelToEqualityReport: () => ({
+        id: row.id,
+        identifier: row.identifier ?? null,
+        status: row.status,
+        content: row.equalityReportContent ?? null,
+        approvedAt: row.approvedAt ?? null,
+        validUntil: row.validUntil ?? null,
+        correctionDeadline: row.correctionDeadline ?? null,
+      }),
+    })
+
+  const makeDetailedReportRow = (
+    overrides: Partial<Record<string, unknown>> = {},
+  ) =>
+    withEqualityProjection(
+      withFromModel({
+        ...baseReportShape,
+        ...overrides,
+      }),
+    )
+
+  const makeLinkedEqualityRow = (
+    overrides: Partial<Record<string, unknown>> = {},
+  ) =>
+    withEqualityProjection({
+      id: '00000000-0000-0000-0000-000000000099',
+      identifier: 'ABC-000',
+      status: ReportStatusEnum.APPROVED,
+      equalityReportContent: null,
+      approvedAt: null,
+      validUntil: null,
+      correctionDeadline: null,
+      ...overrides,
+    })
+
+  const baseReport = makeDetailedReportRow()
+
   describe('equality detail', () => {
     it('returns the report itself as equalityReport when type=EQUALITY', async () => {
       const { service, findByPkOrThrow } = makeService()
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.EQUALITY,
-        equalityReportContent: 'Jafnréttisáætlun body',
-      } as unknown as ReportModel)
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.EQUALITY,
+          equalityReportContent: 'Jafnréttisáætlun body',
+        }) as unknown as ReportModel,
+      )
 
       const detail = await service.getById(baseReport.id)
 
@@ -368,25 +449,24 @@ describe('ReportService.getById', () => {
     it('loads the linked equality report via equalityReportId', async () => {
       const { service, findByPkOrThrow } = makeService()
       const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.SALARY,
-        equalityReportId: linkedEqualityId,
-      } as unknown as ReportModel)
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: linkedEqualityId,
+        }) as unknown as ReportModel,
+      )
 
       // Service calls reportModel.findByPk internally to load the equality
       const serviceAny = service as unknown as {
         reportModel: { findByPk: jest.Mock }
       }
-      serviceAny.reportModel.findByPk.mockResolvedValueOnce({
-        id: linkedEqualityId,
-        identifier: 'ABC-000',
-        status: ReportStatusEnum.APPROVED,
-        equalityReportContent: 'Linked equality text',
-        approvedAt: new Date('2026-02-01'),
-        validUntil: null,
-        correctionDeadline: null,
-      })
+      serviceAny.reportModel.findByPk.mockResolvedValueOnce(
+        makeLinkedEqualityRow({
+          id: linkedEqualityId,
+          equalityReportContent: 'Linked equality text',
+          approvedAt: new Date('2026-02-01'),
+        }),
+      )
 
       const detail = await service.getById(baseReport.id)
 
@@ -401,25 +481,35 @@ describe('ReportService.getById', () => {
     })
 
     it('throws when a salary report has no equalityReportId (data integrity)', async () => {
-      const { service, findByPkOrThrow } = makeService()
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.SALARY,
-        equalityReportId: null,
-      } as unknown as ReportModel)
+      const { service, findByPkOrThrow, logger } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: null,
+        }) as unknown as ReportModel,
+      )
 
       await expect(service.getById(baseReport.id)).rejects.toThrow(
         /no linked equality report/,
       )
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('no linked equality report'),
+        expect.objectContaining({
+          category: 'resolveEqualityReport',
+          reportId: baseReport.id,
+          reportType: ReportTypeEnum.SALARY,
+        }),
+      )
     })
 
     it('throws when equalityReportId points to a nonexistent report', async () => {
-      const { service, findByPkOrThrow } = makeService()
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.SALARY,
-        equalityReportId: '00000000-0000-0000-0000-000000000abc',
-      } as unknown as ReportModel)
+      const { service, findByPkOrThrow, logger } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: '00000000-0000-0000-0000-000000000abc',
+        }) as unknown as ReportModel,
+      )
 
       const serviceAny = service as unknown as {
         reportModel: { findByPk: jest.Mock }
@@ -429,19 +519,36 @@ describe('ReportService.getById', () => {
       await expect(service.getById(baseReport.id)).rejects.toThrow(
         /does not exist/,
       )
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('non-existent equality report'),
+        expect.objectContaining({
+          category: 'resolveEqualityReport',
+          reportId: baseReport.id,
+          danglingEqualityReportId: '00000000-0000-0000-0000-000000000abc',
+        }),
+      )
     })
   })
 
   it('throws when companyReport snapshot is missing (data integrity guard)', async () => {
-    const { service, findByPkOrThrow } = makeService()
-    findByPkOrThrow.mockResolvedValueOnce({
-      ...baseReport,
-      type: ReportTypeEnum.EQUALITY,
-      companyReport: null,
-    } as unknown as ReportModel)
+    const { service, findByPkOrThrow, logger } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce(
+      makeDetailedReportRow({
+        type: ReportTypeEnum.EQUALITY,
+        companyReport: null,
+      }) as unknown as ReportModel,
+    )
 
     await expect(service.getById(baseReport.id)).rejects.toThrow(
       /has no companyReport snapshot/,
+    )
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('has no companyReport snapshot'),
+      expect.objectContaining({
+        category: 'getById',
+        reportId: baseReport.id,
+        reportIdentifier: baseReport.identifier,
+      }),
     )
   })
 
@@ -449,11 +556,12 @@ describe('ReportService.getById', () => {
     it('returns null/empty calc blocks for equality reports without querying role results or deviations', async () => {
       const { service, findByPkOrThrow, roleResultFindAll, deviationFindAll } =
         makeService()
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.EQUALITY,
-        result: null,
-      } as unknown as ReportModel)
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.EQUALITY,
+          result: null,
+        }) as unknown as ReportModel,
+      )
 
       const detail = await service.getById(baseReport.id)
 
@@ -467,25 +575,20 @@ describe('ReportService.getById', () => {
     it('returns null/empty calc blocks for salary reports before scoring has run (result missing)', async () => {
       const { service, findByPkOrThrow, roleResultFindAll, deviationFindAll } =
         makeService()
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.SALARY,
-        equalityReportId: '00000000-0000-0000-0000-000000000099',
-        result: null,
-      } as unknown as ReportModel)
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: '00000000-0000-0000-0000-000000000099',
+          result: null,
+        }) as unknown as ReportModel,
+      )
 
       const serviceAny = service as unknown as {
         reportModel: { findByPk: jest.Mock }
       }
-      serviceAny.reportModel.findByPk.mockResolvedValueOnce({
-        id: '00000000-0000-0000-0000-000000000099',
-        identifier: 'ABC-000',
-        status: ReportStatusEnum.APPROVED,
-        equalityReportContent: null,
-        approvedAt: null,
-        validUntil: null,
-        correctionDeadline: null,
-      })
+      serviceAny.reportModel.findByPk.mockResolvedValueOnce(
+        makeLinkedEqualityRow(),
+      )
 
       const detail = await service.getById(baseReport.id)
 
@@ -501,44 +604,44 @@ describe('ReportService.getById', () => {
         makeService()
 
       const resultId = '00000000-0000-0000-0000-000000000111'
-      findByPkOrThrow.mockResolvedValueOnce({
-        ...baseReport,
-        type: ReportTypeEnum.SALARY,
-        equalityReportId: '00000000-0000-0000-0000-000000000099',
-        result: {
-          id: resultId,
-          reportId: baseReport.id,
-          averageMaleSalary: 1000,
-          averageFemaleSalary: 900,
-          averageNeutralSalary: 0,
-          averageSalary: 950,
-          minimumSalary: 500,
-          maximumSalary: 2000,
-          medianSalary: 950,
-          salaryDifferenceMaleFemale: 10,
-          salaryDifferenceMaleNeutral: 0,
-          salaryDifferenceFemaleMale: -10,
-          salaryDifferenceFemaleNeutral: 0,
-          salaryDifferenceNeutralMale: 0,
-          salaryDifferenceNeutralFemale: 0,
-          salaryDifferenceThresholdPercent: 5,
-        },
-      } as unknown as ReportModel)
+      const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: linkedEqualityId,
+          result: withFromModel({
+            id: resultId,
+            reportId: baseReport.id,
+            averageMaleSalary: 1000,
+            averageFemaleSalary: 900,
+            averageNeutralSalary: 0,
+            averageSalary: 950,
+            minimumSalary: 500,
+            maximumSalary: 2000,
+            medianSalary: 950,
+            salaryDifferenceMaleFemale: 10,
+            salaryDifferenceMaleNeutral: 0,
+            salaryDifferenceFemaleMale: -10,
+            salaryDifferenceFemaleNeutral: 0,
+            salaryDifferenceNeutralMale: 0,
+            salaryDifferenceNeutralFemale: 0,
+            salaryDifferenceThresholdPercent: 5,
+          }),
+        }) as unknown as ReportModel,
+      )
 
       const serviceAny = service as unknown as {
         reportModel: { findByPk: jest.Mock }
       }
-      serviceAny.reportModel.findByPk.mockResolvedValueOnce({
-        id: '00000000-0000-0000-0000-000000000099',
-        identifier: 'ABC-000',
-        status: ReportStatusEnum.APPROVED,
-        equalityReportContent: null,
-        approvedAt: null,
-        validUntil: null,
-        correctionDeadline: null,
-      })
+      serviceAny.reportModel.findByPk.mockResolvedValueOnce(
+        makeLinkedEqualityRow({
+          id: linkedEqualityId,
+          equalityReportContent: 'Linked equality text',
+          approvedAt: new Date('2026-02-01'),
+        }),
+      )
 
-      const roleResultRow = {
+      const roleResultRow = withFromModel({
         id: 'rr1',
         reportResultId: resultId,
         reportEmployeeRoleId: 'role1',
@@ -555,15 +658,15 @@ describe('ReportService.getById', () => {
         maximumMaleSalary: 1500,
         maximumFemaleSalary: 1200,
         maximumNeutralSalary: 0,
-      }
-      const deviationRow = {
+      })
+      const deviationRow = withFromModel({
         id: 'd1',
         reportEmployeeId: 'e1',
         reason: 'Seniority premium',
         action: 'Reviewed and accepted',
         signatureName: 'Admin',
         signatureRole: 'HR',
-      }
+      })
       roleResultFindAll.mockResolvedValueOnce([roleResultRow])
       deviationFindAll.mockResolvedValueOnce([deviationRow])
 
