@@ -264,7 +264,8 @@ module.exports = {
       salary_difference_female_male DECIMAL(14, 2) NOT NULL,
       salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
       salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL
+      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL,
+      salary_difference_threshold_percent DECIMAL(5, 2) DEFAULT NULL
     );
 
     CREATE TABLE report_role_result (
@@ -313,6 +314,17 @@ module.exports = {
       salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
       salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
       salary_difference_neutral_female DECIMAL(14, 2) NOT NULL
+    );
+
+    CREATE TABLE config (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      description TEXT DEFAULT NULL,
+      superseded_at TIMESTAMPTZ DEFAULT NULL
     );
 
     CREATE TABLE report_event (
@@ -404,6 +416,11 @@ module.exports = {
     CREATE INDEX public_report_source_report_id_idx
       ON public_report (source_report_id);
 
+    -- Only one active (non-superseded) entry per key at any time
+    CREATE UNIQUE INDEX config_active_key_idx
+      ON config (key)
+      WHERE superseded_at IS NULL;
+
     CREATE INDEX report_event_report_id_idx
       ON report_event (report_id);
     CREATE INDEX report_event_actor_user_id_idx
@@ -476,6 +493,7 @@ module.exports = {
 
     DROP TABLE IF EXISTS report_comment;
     DROP TABLE IF EXISTS report_event;
+    DROP TABLE IF EXISTS config;
     DROP TABLE IF EXISTS public_report;
     DROP TABLE IF EXISTS report_role_result;
     DROP TABLE IF EXISTS report_result;

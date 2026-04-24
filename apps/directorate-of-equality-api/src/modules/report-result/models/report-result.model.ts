@@ -24,9 +24,15 @@ type ReportResultAttributes = {
   salaryDifferenceFemaleNeutral: number
   salaryDifferenceNeutralMale: number
   salaryDifferenceNeutralFemale: number
+  salaryDifferenceThresholdPercent: number | null
 }
 
-type ReportResultCreateAttributes = ReportResultAttributes
+type ReportResultCreateAttributes = Omit<
+  ReportResultAttributes,
+  'salaryDifferenceThresholdPercent'
+> & {
+  salaryDifferenceThresholdPercent?: number | null
+}
 
 @MutableTable({ tableName: DoeModels.REPORT_RESULT })
 export class ReportResultModel extends MutableModel<
@@ -172,6 +178,18 @@ export class ReportResultModel extends MutableModel<
   })
   salaryDifferenceNeutralFemale!: number
 
+  @Column({
+    type: DataType.DECIMAL(5, 2),
+    allowNull: true,
+    field: 'salary_difference_threshold_percent',
+    get() {
+      return parseDecimal(
+        this.getDataValue('salaryDifferenceThresholdPercent'),
+      )
+    },
+  })
+  salaryDifferenceThresholdPercent!: number | null
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -192,6 +210,8 @@ export class ReportResultModel extends MutableModel<
       salaryDifferenceFemaleNeutral: model.salaryDifferenceFemaleNeutral,
       salaryDifferenceNeutralMale: model.salaryDifferenceNeutralMale,
       salaryDifferenceNeutralFemale: model.salaryDifferenceNeutralFemale,
+      salaryDifferenceThresholdPercent:
+        model.salaryDifferenceThresholdPercent,
     }
   }
 

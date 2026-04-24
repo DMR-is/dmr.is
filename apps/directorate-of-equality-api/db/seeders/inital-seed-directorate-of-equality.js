@@ -33,6 +33,21 @@ module.exports = {
           TRUE
         );
 
+      INSERT INTO
+        CONFIG (
+          ID,
+          KEY,
+          VALUE,
+          DESCRIPTION
+        )
+      VALUES
+        (
+          'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          'salary_difference_threshold_percent',
+          '3.9',
+          'Annual gender salary difference threshold (%). Updated each February.'
+        );
+
 COMMIT;
       `
 

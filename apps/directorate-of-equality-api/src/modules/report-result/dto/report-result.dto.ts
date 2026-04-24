@@ -1,4 +1,4 @@
-import { ApiNumber, ApiUUId } from '@dmr.is/decorators'
+import { ApiNumber, ApiOptionalNumber, ApiUUId } from '@dmr.is/decorators'
 
 export class ReportResultDto {
   @ApiUUId()
@@ -45,4 +45,7 @@ export class ReportResultDto {
 
   @ApiNumber()
   salaryDifferenceNeutralFemale!: number
+
+  @ApiOptionalNumber({ nullable: true })
+  salaryDifferenceThresholdPercent!: number | null
 }
