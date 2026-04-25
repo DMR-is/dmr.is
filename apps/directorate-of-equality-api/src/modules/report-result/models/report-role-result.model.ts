@@ -3,29 +3,17 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
-import type { ReportRoleResultDto } from '../dto/report-role-result.dto'
+import type { ReportRoleResultDto } from '../dto/report-result.dto'
 import { ReportResultModel } from './report-result.model'
-
-const parseDecimal = (raw: unknown): number | null =>
-  raw === null || raw === undefined ? null : parseFloat(raw as string)
 
 type ReportRoleResultAttributes = {
   reportResultId: string
   reportEmployeeRoleId: string
-  averageSalary: number
-  minimumSalary: number
-  maximumSalary: number
-  medianSalary: number
-  averageMaleSalary: number
-  averageFemaleSalary: number
-  averageNeutralSalary: number
-  minimumMaleSalary: number
-  minimumFemaleSalary: number
-  minimumNeutralSalary: number
-  maximumMaleSalary: number
-  maximumFemaleSalary: number
-  maximumNeutralSalary: number
+  roleTitle: string
+  baseSnapshot: SalaryResultSnapshot
+  fullSnapshot: SalaryResultSnapshot
 }
 
 type ReportRoleResultCreateAttributes = ReportRoleResultAttributes
@@ -52,134 +40,25 @@ export class ReportRoleResultModel extends MutableModel<
   reportEmployeeRoleId!: string
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.TEXT,
     allowNull: false,
-    field: 'average_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageSalary'))
-    },
+    field: 'role_title',
   })
-  averageSalary!: number
+  roleTitle!: string
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.JSONB,
     allowNull: false,
-    field: 'minimum_salary',
-    get() {
-      return parseDecimal(this.getDataValue('minimumSalary'))
-    },
+    field: 'base_snapshot',
   })
-  minimumSalary!: number
+  baseSnapshot!: SalaryResultSnapshot
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.JSONB,
     allowNull: false,
-    field: 'maximum_salary',
-    get() {
-      return parseDecimal(this.getDataValue('maximumSalary'))
-    },
+    field: 'full_snapshot',
   })
-  maximumSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'median_salary',
-    get() {
-      return parseDecimal(this.getDataValue('medianSalary'))
-    },
-  })
-  medianSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_male_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageMaleSalary'))
-    },
-  })
-  averageMaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_female_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageFemaleSalary'))
-    },
-  })
-  averageFemaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_neutral_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageNeutralSalary'))
-    },
-  })
-  averageNeutralSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'minimum_male_salary',
-    get() {
-      return parseDecimal(this.getDataValue('minimumMaleSalary'))
-    },
-  })
-  minimumMaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'minimum_female_salary',
-    get() {
-      return parseDecimal(this.getDataValue('minimumFemaleSalary'))
-    },
-  })
-  minimumFemaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'minimum_neutral_salary',
-    get() {
-      return parseDecimal(this.getDataValue('minimumNeutralSalary'))
-    },
-  })
-  minimumNeutralSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'maximum_male_salary',
-    get() {
-      return parseDecimal(this.getDataValue('maximumMaleSalary'))
-    },
-  })
-  maximumMaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'maximum_female_salary',
-    get() {
-      return parseDecimal(this.getDataValue('maximumFemaleSalary'))
-    },
-  })
-  maximumFemaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'maximum_neutral_salary',
-    get() {
-      return parseDecimal(this.getDataValue('maximumNeutralSalary'))
-    },
-  })
-  maximumNeutralSalary!: number
+  fullSnapshot!: SalaryResultSnapshot
 
   @BelongsTo(() => ReportResultModel, {
     foreignKey: 'reportResultId',
@@ -198,19 +77,9 @@ export class ReportRoleResultModel extends MutableModel<
       id: model.id,
       reportResultId: model.reportResultId,
       reportEmployeeRoleId: model.reportEmployeeRoleId,
-      averageSalary: model.averageSalary,
-      minimumSalary: model.minimumSalary,
-      maximumSalary: model.maximumSalary,
-      medianSalary: model.medianSalary,
-      averageMaleSalary: model.averageMaleSalary,
-      averageFemaleSalary: model.averageFemaleSalary,
-      averageNeutralSalary: model.averageNeutralSalary,
-      minimumMaleSalary: model.minimumMaleSalary,
-      minimumFemaleSalary: model.minimumFemaleSalary,
-      minimumNeutralSalary: model.minimumNeutralSalary,
-      maximumMaleSalary: model.maximumMaleSalary,
-      maximumFemaleSalary: model.maximumFemaleSalary,
-      maximumNeutralSalary: model.maximumNeutralSalary,
+      roleTitle: model.roleTitle,
+      base: model.baseSnapshot,
+      full: model.fullSnapshot,
     }
   }
 
