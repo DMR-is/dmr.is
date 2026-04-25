@@ -1,5 +1,7 @@
 import { GenderEnum } from '../models/report.model'
 import {
+  assessSalaryDeviationFromReference,
+  assessSalaryDeviationInBucket,
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
   roundSalaryAggregateSnapshot,
@@ -227,6 +229,81 @@ describe('compensation-aggregates', () => {
       median: 10.56,
       minimum: 10.56,
       maximum: 10.56,
+    })
+  })
+
+  it('marks salaries outside half the threshold from a reference as deviations', () => {
+    expect(
+      assessSalaryDeviationFromReference({
+        salary: 102000,
+        referenceSalary: 100000,
+        thresholdPercent: 3.9,
+      }),
+    ).toMatchObject({
+      isDeviation: true,
+      direction: 'ABOVE',
+      allowedDifferencePercent: 1.95,
+      referenceSalary: 100000,
+    })
+
+    expect(
+      assessSalaryDeviationFromReference({
+        salary: 98100,
+        referenceSalary: 100000,
+        thresholdPercent: 3.9,
+      }),
+    ).toMatchObject({
+      isDeviation: false,
+      direction: 'BELOW',
+      allowedDifferencePercent: 1.95,
+    })
+  })
+
+  it('assesses salary deviation against a score bucket median', () => {
+    const aggregates = computeCompensationAggregates({
+      employees: [
+        {
+          reportEmployeeRoleId: 'role-a',
+          score: 120,
+          gender: GenderEnum.MALE,
+          workRatio: 1,
+          baseSalary: 100000,
+          additionalSalary: 0,
+          bonusSalary: null,
+        },
+        {
+          reportEmployeeRoleId: 'role-b',
+          score: 120,
+          gender: GenderEnum.FEMALE,
+          workRatio: 1,
+          baseSalary: 104000,
+          additionalSalary: 0,
+          bonusSalary: null,
+        },
+        {
+          reportEmployeeRoleId: 'role-c',
+          score: 120,
+          gender: GenderEnum.MALE,
+          workRatio: 1,
+          baseSalary: 500000,
+          additionalSalary: 0,
+          bonusSalary: null,
+        },
+      ],
+    })
+
+    const bucket = aggregates.report.base.scoreBuckets[0]
+
+    expect(
+      assessSalaryDeviationInBucket({
+        salary: 104000,
+        bucket,
+        thresholdPercent: 3.9,
+      }),
+    ).toMatchObject({
+      isDeviation: false,
+      direction: 'EQUAL',
+      referenceSalary: 104000,
     })
   })
 })
