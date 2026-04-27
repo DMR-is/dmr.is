@@ -177,9 +177,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     return buildWageGapResponse(points)
   }
 
-  async getBenefitsBreakdown(
-    reportId: string,
-  ): Promise<BenefitsBreakdownDto> {
+  async getBenefitsBreakdown(reportId: string): Promise<BenefitsBreakdownDto> {
     this.logger.debug(
       'Computing benefits breakdown (additional + bonus) by gender',
       { context: LOGGING_CONTEXT, reportId },
@@ -248,9 +246,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     })
 
     if (employees.length === 0) {
-      throw new NotFoundException(
-        `No employees found for report "${reportId}"`,
-      )
+      throw new NotFoundException(`No employees found for report "${reportId}"`)
     }
 
     return employees
@@ -446,36 +442,37 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
     salary: point.adjustedSalary,
   }))
 
-  return computeSalaryScoreBucketSnapshots(
-    salaryPoints,
-    BUCKET_WIDTH,
-  ).map((bucket) => {
-    const snapshot = bucket.totals
+  return computeSalaryScoreBucketSnapshots(salaryPoints, BUCKET_WIDTH).map(
+    (bucket) => {
+      const snapshot = bucket.totals
 
-    return {
-      rangeFrom: bucket.rangeFrom,
-      rangeTo: bucket.rangeTo,
-      maleAverageSalary:
-        snapshot.male.average !== null
-          ? Math.round(snapshot.male.average)
-          : null,
-      femaleAverageSalary:
-        snapshot.female.average !== null
-          ? Math.round(snapshot.female.average)
-          : null,
-      overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
-      maleMedianSalary:
-        snapshot.male.median !== null ? Math.round(snapshot.male.median) : null,
-      femaleMedianSalary:
-        snapshot.female.median !== null
-          ? Math.round(snapshot.female.median)
-          : null,
-      overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
-      wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
-      maleCount: bucket.counts.male,
-      femaleCount: bucket.counts.female,
-    }
-  })
+      return {
+        rangeFrom: bucket.rangeFrom,
+        rangeTo: bucket.rangeTo,
+        maleAverageSalary:
+          snapshot.male.average !== null
+            ? Math.round(snapshot.male.average)
+            : null,
+        femaleAverageSalary:
+          snapshot.female.average !== null
+            ? Math.round(snapshot.female.average)
+            : null,
+        overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
+        maleMedianSalary:
+          snapshot.male.median !== null
+            ? Math.round(snapshot.male.median)
+            : null,
+        femaleMedianSalary:
+          snapshot.female.median !== null
+            ? Math.round(snapshot.female.median)
+            : null,
+        overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+        wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
+        maleCount: bucket.counts.male,
+        femaleCount: bucket.counts.female,
+      }
+    },
+  )
 }
 
 function computeTotals(points: EmployeeDataPoint[]): SalaryTotalsDto {

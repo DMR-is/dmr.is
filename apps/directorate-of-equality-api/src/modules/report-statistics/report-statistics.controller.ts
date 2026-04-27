@@ -3,6 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
+
 import { BenefitsBreakdownDto } from './dto/benefits-breakdown.dto'
 import { GenderWageGapDto } from './dto/gender-wage-gap.dto'
 import { SalaryByGenderAndScoreDto } from './dto/salary-by-gender-and-score.dto'
@@ -13,7 +15,7 @@ import { IReportStatisticsService } from './report-statistics.service.interface'
   version: '1',
 })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ReportStatisticsController {
   constructor(
     @Inject(IReportStatisticsService)

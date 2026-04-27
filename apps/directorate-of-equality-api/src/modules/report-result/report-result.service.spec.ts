@@ -78,26 +78,24 @@ describe('ReportResultService', () => {
       id: REPORT_ID,
       type: ReportTypeEnum.SALARY,
     })
-    resultFindOne
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
+    resultFindOne.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: 'result-1',
+      reportId: REPORT_ID,
+      fromModel: jest.fn().mockReturnValue({
         id: 'result-1',
         reportId: REPORT_ID,
-        fromModel: jest.fn().mockReturnValue({
-          id: 'result-1',
-          reportId: REPORT_ID,
-          salaryDifferenceThresholdPercent: 3.9,
-          calculationVersion: 'v1',
-          base: {
-            totals: { overall: { average: 500000 } },
-            scoreBuckets: [],
-          },
-          full: {
-            totals: { overall: { average: 625000 } },
-            scoreBuckets: [],
-          },
-        }),
-      })
+        salaryDifferenceThresholdPercent: 3.9,
+        calculationVersion: 'v1',
+        base: {
+          totals: { overall: { average: 500000 } },
+          scoreBuckets: [],
+        },
+        full: {
+          totals: { overall: { average: 625000 } },
+          scoreBuckets: [],
+        },
+      }),
+    })
     employeeFindAll.mockResolvedValue([
       makeEmployee('role-b', 120, GenderEnum.MALE, 1, 400000, 100000, 50000),
       makeEmployee('role-a', 220, GenderEnum.FEMALE, 0.5, 300000, 50000, null),

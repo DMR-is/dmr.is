@@ -342,7 +342,6 @@ describe('ReportService.getById', () => {
     importedFromExcel: false,
     equalityReportId: null,
     reviewerUserId: null,
-    denialReason: null,
     approvedAt: null,
     validUntil: null,
     correctionDeadline: null,

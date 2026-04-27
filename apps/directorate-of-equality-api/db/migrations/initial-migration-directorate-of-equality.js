@@ -52,7 +52,8 @@ module.exports = {
     CREATE TYPE report_event_type_enum AS ENUM (
       'SUBMITTED',
       'ASSIGNED',
-      'STATUS_CHANGED'
+      'STATUS_CHANGED',
+      'SUPERSEDED'
     );
 
     CREATE TYPE comment_visibility_enum AS ENUM ('INTERNAL', 'EXTERNAL');
@@ -129,7 +130,6 @@ module.exports = {
       equality_report_id UUID DEFAULT NULL REFERENCES report(id),
       reviewer_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
 
-      denial_reason TEXT DEFAULT NULL,
       approved_at TIMESTAMPTZ DEFAULT NULL,
       valid_until TIMESTAMPTZ DEFAULT NULL,
       correction_deadline TIMESTAMPTZ DEFAULT NULL,
@@ -303,6 +303,8 @@ module.exports = {
       from_status report_status_enum DEFAULT NULL,
       to_status report_status_enum DEFAULT NULL,
       assigned_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
+      reason TEXT DEFAULT NULL,
+      related_report_id UUID DEFAULT NULL REFERENCES report(id),
 
       CONSTRAINT report_event_status_changed_chk CHECK (
         event_type <> 'STATUS_CHANGED' OR (
@@ -313,6 +315,9 @@ module.exports = {
       ),
       CONSTRAINT report_event_assigned_chk CHECK (
         event_type <> 'ASSIGNED' OR assigned_user_id IS NOT NULL
+      ),
+      CONSTRAINT report_event_superseded_chk CHECK (
+        event_type <> 'SUPERSEDED' OR related_report_id IS NOT NULL
       )
     );
 
@@ -394,6 +399,8 @@ module.exports = {
       ON report_event (actor_user_id);
     CREATE INDEX report_event_assigned_user_id_idx
       ON report_event (assigned_user_id);
+    CREATE INDEX report_event_related_report_id_idx
+      ON report_event (related_report_id);
 
     CREATE INDEX report_comment_report_id_idx
       ON report_comment (report_id);

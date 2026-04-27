@@ -11,6 +11,7 @@ export enum ReportEventTypeEnum {
   SUBMITTED = 'SUBMITTED',
   ASSIGNED = 'ASSIGNED',
   STATUS_CHANGED = 'STATUS_CHANGED',
+  SUPERSEDED = 'SUPERSEDED',
 }
 
 type ReportEventAttributes = {
@@ -21,6 +22,8 @@ type ReportEventAttributes = {
   fromStatus: ReportStatusEnum | null
   toStatus: ReportStatusEnum | null
   assignedUserId: string | null
+  reason: string | null
+  relatedReportId: string | null
 }
 
 type ReportEventCreateAttributes = {
@@ -31,6 +34,8 @@ type ReportEventCreateAttributes = {
   fromStatus?: ReportStatusEnum | null
   toStatus?: ReportStatusEnum | null
   assignedUserId?: string | null
+  reason?: string | null
+  relatedReportId?: string | null
 }
 
 @ImmutableTable({ tableName: DoeModels.REPORT_EVENT })
@@ -78,6 +83,13 @@ export class ReportEventModel extends ImmutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'assigned_user_id' })
   assignedUserId!: string | null
 
+  @Column({ type: DataType.TEXT, allowNull: true })
+  reason!: string | null
+
+  @ForeignKey(() => ReportModel)
+  @Column({ type: DataType.UUID, allowNull: true, field: 'related_report_id' })
+  relatedReportId!: string | null
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -86,6 +98,12 @@ export class ReportEventModel extends ImmutableModel<
 
   @BelongsTo(() => UserModel, { foreignKey: 'assignedUserId', as: 'assignee' })
   assignee?: UserModel | null
+
+  @BelongsTo(() => ReportModel, {
+    foreignKey: 'relatedReportId',
+    as: 'relatedReport',
+  })
+  relatedReport?: ReportModel | null
 
   static fromModel(model: ReportEventModel): ReportEventDto {
     return {
@@ -97,6 +115,8 @@ export class ReportEventModel extends ImmutableModel<
       fromStatus: model.fromStatus,
       toStatus: model.toStatus,
       assignedUserId: model.assignedUserId,
+      reason: model.reason,
+      relatedReportId: model.relatedReportId,
     }
   }
 

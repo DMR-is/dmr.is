@@ -59,7 +59,6 @@ type ReportAttributes = {
   equalityReportId: string | null
   reviewerUserId: string | null
 
-  denialReason: string | null
   approvedAt: Date | null
   validUntil: Date | null
   correctionDeadline: Date | null
@@ -92,7 +91,6 @@ type ReportCreateAttributes = {
   equalityReportId?: string | null
   reviewerUserId?: string | null
 
-  denialReason?: string | null
   approvedAt?: Date | null
   validUntil?: Date | null
   correctionDeadline?: Date | null
@@ -257,9 +255,6 @@ export class ReportModel extends MutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'reviewer_user_id' })
   reviewerUserId!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: true, field: 'denial_reason' })
-  denialReason!: string | null
-
   @Column({ type: DataType.DATE, allowNull: true, field: 'approved_at' })
   approvedAt!: Date | null
 
@@ -327,7 +322,6 @@ export class ReportModel extends MutableModel<
       identifier: model.identifier,
       equalityReportId: model.equalityReportId,
       reviewerUserId: model.reviewerUserId,
-      denialReason: model.denialReason,
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,
       correctionDeadline: model.correctionDeadline,
