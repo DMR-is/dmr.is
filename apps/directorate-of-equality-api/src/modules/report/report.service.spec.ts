@@ -370,7 +370,9 @@ describe('ReportService.getById', () => {
   // objects, so we attach stub implementations that return DTO-shaped payloads.
   const withFromModel = <T extends Record<string, unknown>>(
     row: T,
-  ): T & { fromModel: () => Omit<T, 'fromModel' | 'fromModelToEqualityReport'> } =>
+  ): T & {
+    fromModel: () => Omit<T, 'fromModel' | 'fromModelToEqualityReport'>
+  } =>
     Object.assign(row, {
       fromModel: () => {
         const { fromModel, fromModelToEqualityReport, ...plain } = row as T & {

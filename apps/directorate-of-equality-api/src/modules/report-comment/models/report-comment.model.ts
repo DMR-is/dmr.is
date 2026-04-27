@@ -3,13 +3,10 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
-import type { ReportCommentDto } from '../../report-comment/dto/report-comment.dto'
+import { ReportModel, ReportStatusEnum } from '../../report/models/report.model'
+import { ReportRoleEnum } from '../../report/types/report-resource-context'
 import { UserModel } from '../../user/models/user.model'
-import { ReportRoleEnum } from '../types/report-resource-context'
-import { ReportStatusEnum } from './report.enums'
-import { ReportModel } from './report.model'
-
-export { ReportRoleEnum }
+import type { ReportCommentDto } from '../dto/report-comment.dto'
 
 export enum CommentVisibilityEnum {
   INTERNAL = 'INTERNAL',
@@ -79,13 +76,13 @@ export class ReportCommentModel extends ParanoidModel<
   static fromModel(model: ReportCommentModel): ReportCommentDto {
     return {
       id: model.id,
-      createdAt: model.createdAt,
       reportId: model.reportId,
       authorKind: model.authorKind,
       authorUserId: model.authorUserId,
       visibility: model.visibility,
       body: model.body,
       reportStatus: model.reportStatus,
+      createdAt: model.createdAt,
     }
   }
 

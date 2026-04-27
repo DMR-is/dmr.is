@@ -1,12 +1,12 @@
 import { ApiDto, ApiDtoArray, ApiOptionalDto } from '@dmr.is/decorators'
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
+import { ReportCommentDto } from '../../report-comment/dto/report-comment.dto'
 import { ReportEmployeeDeviationDto } from '../../report-employee/dto/report-employee-deviation.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
 import { ReportRoleResultDto } from '../../report-result/dto/report-role-result.dto'
 import { EqualityReportDto } from './equality-report.dto'
 import { ReportDto } from './report.dto'
-import { ReportCommentDto } from './report-comment.dto'
 
 /**
  * Full detail payload for a single report. Extends the base `ReportDto`

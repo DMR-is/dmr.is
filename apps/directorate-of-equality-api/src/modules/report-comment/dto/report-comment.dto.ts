@@ -1,15 +1,14 @@
 import {
+  ApiDateTime,
   ApiEnum,
   ApiOptionalUuid,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import { ReportStatusEnum } from '../models/report.model'
-import {
-  CommentAuthorKindEnum,
-  CommentVisibilityEnum,
-} from '../models/report-comment.model'
+import { ReportStatusEnum } from '../../report/models/report.model'
+import { ReportRoleEnum } from '../../report/types/report-resource-context'
+import { CommentVisibilityEnum } from '../models/report-comment.model'
 
 export class ReportCommentDto {
   @ApiUUId()
@@ -18,8 +17,10 @@ export class ReportCommentDto {
   @ApiUUId()
   reportId!: string
 
-  @ApiEnum(CommentAuthorKindEnum, { enumName: 'CommentAuthorKindEnum' })
-  authorKind!: CommentAuthorKindEnum
+  @ApiEnum(ReportRoleEnum, {
+    enumName: 'ReportRoleEnum',
+  })
+  authorKind!: ReportRoleEnum
 
   @ApiOptionalUuid({ nullable: true })
   authorUserId!: string | null
@@ -32,4 +33,7 @@ export class ReportCommentDto {
 
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   reportStatus!: ReportStatusEnum
+
+  @ApiDateTime()
+  createdAt!: Date
 }

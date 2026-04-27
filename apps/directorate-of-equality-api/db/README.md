@@ -283,6 +283,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `company_admin_email`            | `text`                                                                                                                         |
 | `company_admin_gender`           | `GenderEnum`                                                                                                                   |
 | `contact_name`                   | `text`                                                                                                                         |
+| `contact_national_id`            | `text`                                                                                                                         |
 | `contact_email`                  | `text`                                                                                                                         |
 | `contact_phone`                  | `text`                                                                                                                         |
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |

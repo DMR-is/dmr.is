@@ -45,7 +45,7 @@
       "options": {
         "commands": [
           "nx run doe-api:lint --fix=true",
-          "nx format:write --projects=doe-api"
+          "nx format:write --projects=doe-api --since=main"
         ],
         "parallel": false
       }
