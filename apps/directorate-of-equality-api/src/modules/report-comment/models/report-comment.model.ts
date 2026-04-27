@@ -4,13 +4,9 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
 import { ReportModel, ReportStatusEnum } from '../../report/models/report.model'
+import { ReportRoleEnum } from '../../report/types/report-resource-context'
 import { UserModel } from '../../user/models/user.model'
 import type { ReportCommentDto } from '../dto/report-comment.dto'
-
-export enum CommentAuthorKindEnum {
-  REVIEWER = 'REVIEWER',
-  COMPANY_ADMIN = 'COMPANY_ADMIN',
-}
 
 export enum CommentVisibilityEnum {
   INTERNAL = 'INTERNAL',
@@ -19,7 +15,7 @@ export enum CommentVisibilityEnum {
 
 type ReportCommentAttributes = {
   reportId: string
-  authorKind: CommentAuthorKindEnum
+  authorKind: ReportRoleEnum
   authorUserId: string | null
   visibility: CommentVisibilityEnum
   body: string
@@ -28,7 +24,7 @@ type ReportCommentAttributes = {
 
 type ReportCommentCreateAttributes = {
   reportId: string
-  authorKind: CommentAuthorKindEnum
+  authorKind: ReportRoleEnum
   authorUserId?: string | null
   visibility: CommentVisibilityEnum
   body: string
@@ -45,11 +41,11 @@ export class ReportCommentModel extends ParanoidModel<
   reportId!: string
 
   @Column({
-    type: DataType.ENUM(...Object.values(CommentAuthorKindEnum)),
+    type: DataType.ENUM(...Object.values(ReportRoleEnum)),
     allowNull: false,
     field: 'author_kind',
   })
-  authorKind!: CommentAuthorKindEnum
+  authorKind!: ReportRoleEnum
 
   @ForeignKey(() => UserModel)
   @Column({ type: DataType.UUID, allowNull: true, field: 'author_user_id' })

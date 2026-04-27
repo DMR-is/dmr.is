@@ -57,7 +57,7 @@ module.exports = {
 
     CREATE TYPE comment_visibility_enum AS ENUM ('INTERNAL', 'EXTERNAL');
 
-    CREATE TYPE comment_author_kind_enum AS ENUM ('REVIEWER', 'COMPANY_ADMIN');
+    CREATE TYPE comment_author_kind_enum AS ENUM ('REVIEWER', 'COMPANY');
 
     -- ============================================================
     -- Tables
@@ -333,7 +333,7 @@ module.exports = {
         author_kind <> 'REVIEWER' OR author_user_id IS NOT NULL
       ),
       CONSTRAINT report_comment_company_admin_chk CHECK (
-        author_kind <> 'COMPANY_ADMIN' OR (
+        author_kind <> 'COMPANY' OR (
           author_user_id IS NULL AND visibility = 'EXTERNAL'
         )
       )

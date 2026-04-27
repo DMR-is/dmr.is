@@ -12,7 +12,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ReportModel } from '../../../modules/report/models/report.model'
 import {
-  ReportResourceActorKindEnum,
+  ReportRoleEnum,
   type ReportResourceContext,
 } from '../../../modules/report/types/report-resource-context'
 import { UserModel } from '../../../modules/user/models/user.model'
@@ -59,14 +59,14 @@ export class ReportResourceGuard implements CanActivate {
 
     if (reviewer) {
       return {
-        kind: ReportResourceActorKindEnum.REVIEWER,
+        kind: ReportRoleEnum.REVIEWER,
         userId: reviewer.id,
       }
     }
 
     if (report.companyNationalId === user.nationalId) {
       return {
-        kind: ReportResourceActorKindEnum.CONTACT,
+        kind: ReportRoleEnum.COMPANY,
         nationalId: user.nationalId,
       }
     }

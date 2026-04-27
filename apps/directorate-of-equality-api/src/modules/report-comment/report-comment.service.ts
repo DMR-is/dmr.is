@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
-  ReportResourceActorKindEnum,
+  ReportRoleEnum,
   type ReportResourceContext,
 } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
@@ -18,7 +18,6 @@ import {
   CommentVisibilityEnum,
   ReportCommentModel,
 } from './models/report-comment.model'
-import { CommentAuthorKindEnum } from './models/report-comment.model'
 import { IReportCommentService } from './report-comment.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCommentService'
@@ -40,7 +39,7 @@ export class ReportCommentService implements IReportCommentService {
 
     const comments = await this.reportCommentModel.findAll({
       where:
-        context.actor.kind === ReportResourceActorKindEnum.REVIEWER
+        context.actor.kind === ReportRoleEnum.REVIEWER
           ? { reportId: context.reportId }
           : {
               reportId: context.reportId,
@@ -67,7 +66,7 @@ export class ReportCommentService implements IReportCommentService {
     }
 
     if (
-      context.actor.kind !== ReportResourceActorKindEnum.REVIEWER &&
+      context.actor.kind !== ReportRoleEnum.REVIEWER &&
       dto.visibility !== CommentVisibilityEnum.EXTERNAL
     ) {
       throw new ForbiddenException(
@@ -78,15 +77,15 @@ export class ReportCommentService implements IReportCommentService {
     const comment = await this.reportCommentModel.create({
       reportId: context.reportId,
       authorKind:
-        context.actor.kind === ReportResourceActorKindEnum.REVIEWER
-          ? CommentAuthorKindEnum.REVIEWER
-          : CommentAuthorKindEnum.COMPANY_ADMIN,
+        context.actor.kind === ReportRoleEnum.REVIEWER
+          ? ReportRoleEnum.REVIEWER
+          : ReportRoleEnum.COMPANY,
       authorUserId:
-        context.actor.kind === ReportResourceActorKindEnum.REVIEWER
+        context.actor.kind === ReportRoleEnum.REVIEWER
           ? context.actor.userId
           : null,
       visibility:
-        context.actor.kind !== ReportResourceActorKindEnum.REVIEWER
+        context.actor.kind !== ReportRoleEnum.REVIEWER
           ? CommentVisibilityEnum.EXTERNAL
           : dto.visibility,
       body,
@@ -112,8 +111,8 @@ export class ReportCommentService implements IReportCommentService {
     })
 
     if (
-      context.actor.kind === ReportResourceActorKindEnum.REVIEWER &&
-      (comment.authorKind !== CommentAuthorKindEnum.REVIEWER ||
+      context.actor.kind === ReportRoleEnum.REVIEWER &&
+      (comment.authorKind !== ReportRoleEnum.REVIEWER ||
         comment.authorUserId !== context.actor.userId)
     ) {
       throw new ForbiddenException(
@@ -125,8 +124,8 @@ export class ReportCommentService implements IReportCommentService {
     // individual person level, so the authenticated reporting company may
     // delete company-authored comments on its own report.
     if (
-      context.actor.kind !== ReportResourceActorKindEnum.REVIEWER &&
-      comment.authorKind !== CommentAuthorKindEnum.COMPANY_ADMIN
+      context.actor.kind !== ReportRoleEnum.REVIEWER &&
+      comment.authorKind !== ReportRoleEnum.COMPANY
     ) {
       throw new ForbiddenException(
         'Company admins may only delete their own comments',

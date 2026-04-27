@@ -1,12 +1,11 @@
 import { BadRequestException } from '@nestjs/common'
 
 import {
-  ReportResourceActorKindEnum,
+  ReportRoleEnum,
   type ReportResourceContext,
 } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { CommentVisibilityEnum } from './models/report-comment.model'
-import { CommentAuthorKindEnum } from './models/report-comment.model'
 import { ReportCommentService } from './report-comment.service'
 
 describe('ReportCommentService', () => {
@@ -37,7 +36,7 @@ describe('ReportCommentService', () => {
       reportId: 'report-1',
       reportStatus: 'IN_REVIEW' as never,
       actor: {
-        kind: ReportResourceActorKindEnum.REVIEWER,
+        kind: ReportRoleEnum.REVIEWER,
         userId: 'reviewer-1',
       },
     }
@@ -45,7 +44,7 @@ describe('ReportCommentService', () => {
       reportId: 'report-1',
       reportStatus: 'SUBMITTED' as never,
       actor: {
-        kind: ReportResourceActorKindEnum.CONTACT,
+        kind: ReportRoleEnum.COMPANY,
         nationalId: '5500000000',
       },
     }
@@ -67,7 +66,7 @@ describe('ReportCommentService', () => {
 
     expect(reportCommentModel.create).toHaveBeenCalledWith({
       reportId: 'report-1',
-      authorKind: CommentAuthorKindEnum.REVIEWER,
+      authorKind: ReportRoleEnum.REVIEWER,
       authorUserId: 'reviewer-1',
       visibility: CommentVisibilityEnum.INTERNAL,
       body: 'Needs follow-up',
@@ -111,7 +110,7 @@ describe('ReportCommentService', () => {
 
     expect(reportCommentModel.create).toHaveBeenCalledWith({
       reportId: 'report-1',
-      authorKind: CommentAuthorKindEnum.COMPANY_ADMIN,
+      authorKind: ReportRoleEnum.COMPANY,
       authorUserId: null,
       visibility: CommentVisibilityEnum.EXTERNAL,
       body: 'Reply from company',
@@ -146,7 +145,7 @@ describe('ReportCommentService', () => {
     const destroy = jest.fn().mockResolvedValue(undefined)
 
     reportCommentModel.findOneOrThrow.mockResolvedValue({
-      authorKind: CommentAuthorKindEnum.REVIEWER,
+      authorKind: ReportRoleEnum.REVIEWER,
       authorUserId: 'reviewer-1',
       destroy,
     })

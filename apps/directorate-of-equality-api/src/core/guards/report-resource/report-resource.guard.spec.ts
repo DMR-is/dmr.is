@@ -4,7 +4,7 @@ import { ForbiddenException } from '@nestjs/common'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
 import { ReportStatusEnum } from '../../../modules/report/models/report.model'
-import { ReportResourceActorKindEnum } from '../../../modules/report/types/report-resource-context'
+import { ReportRoleEnum } from '../../../modules/report/types/report-resource-context'
 import { ReportResourceGuard } from './report-resource.guard'
 
 const createUser = (nationalId: string): DMRUser =>
@@ -71,7 +71,7 @@ describe('ReportResourceGuard', () => {
       reportId: 'report-1',
       reportStatus: ReportStatusEnum.IN_REVIEW,
       actor: {
-        kind: ReportResourceActorKindEnum.REVIEWER,
+        kind: ReportRoleEnum.REVIEWER,
         userId: 'reviewer-1',
       },
     })
@@ -97,7 +97,7 @@ describe('ReportResourceGuard', () => {
       reportId: 'report-1',
       reportStatus: ReportStatusEnum.SUBMITTED,
       actor: {
-        kind: ReportResourceActorKindEnum.CONTACT,
+        kind: ReportRoleEnum.COMPANY,
         nationalId: '5500000000',
       },
     })

@@ -1,17 +1,17 @@
 import { ReportStatusEnum } from '../models/report.model'
 
-export enum ReportResourceActorKindEnum {
+export enum ReportRoleEnum {
   REVIEWER = 'REVIEWER',
-  CONTACT = 'CONTACT',
+  COMPANY = 'COMPANY',
 }
 
 export type ReportResourceActor =
   | {
-      kind: ReportResourceActorKindEnum.REVIEWER
+      kind: ReportRoleEnum.REVIEWER
       userId: string
     }
   | {
-      kind: ReportResourceActorKindEnum.CONTACT
+      kind: ReportRoleEnum.COMPANY
       nationalId: string
     }
 
