@@ -6,7 +6,7 @@ import {
 } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { CommentVisibilityEnum } from './models/report-comment.model'
-import { CommentAuthorKindEnum } from './types/report-comment-context'
+import { CommentAuthorKindEnum } from './models/report-comment.model'
 import { ReportCommentService } from './report-comment.service'
 
 describe('ReportCommentService', () => {

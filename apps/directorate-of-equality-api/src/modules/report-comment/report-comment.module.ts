@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { ReportResourceGuard } from '../report/guards/report-resource.guard'
+import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
 import { ReportModel } from '../report/models/report.model'
 import { UserModel } from '../user/models/user.model'
 import { ReportCommentModel } from './models/report-comment.model'

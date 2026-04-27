@@ -3,8 +3,8 @@ import { ForbiddenException } from '@nestjs/common'
 
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-import { ReportStatusEnum } from '../models/report.model'
-import { ReportResourceActorKindEnum } from '../types/report-resource-context'
+import { ReportStatusEnum } from '../../../modules/report/models/report.model'
+import { ReportResourceActorKindEnum } from '../../../modules/report/types/report-resource-context'
 import { ReportResourceGuard } from './report-resource.guard'
 
 const createUser = (nationalId: string): DMRUser =>

@@ -6,9 +6,11 @@ import { DoeModels } from '../../../core/constants'
 import { ReportModel, ReportStatusEnum } from '../../report/models/report.model'
 import { UserModel } from '../../user/models/user.model'
 import type { ReportCommentDto } from '../dto/report-comment.dto'
-import { CommentAuthorKindEnum } from '../types/report-comment-context'
 
-export { CommentAuthorKindEnum } from '../types/report-comment-context'
+export enum CommentAuthorKindEnum {
+  REVIEWER = 'REVIEWER',
+  COMPANY_ADMIN = 'COMPANY_ADMIN',
+}
 
 export enum CommentVisibilityEnum {
   INTERNAL = 'INTERNAL',

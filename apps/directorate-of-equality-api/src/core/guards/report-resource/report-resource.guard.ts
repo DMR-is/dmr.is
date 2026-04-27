@@ -10,12 +10,12 @@ import { InjectModel } from '@nestjs/sequelize'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { UserModel } from '../../user/models/user.model'
-import { ReportModel } from '../models/report.model'
+import { UserModel } from '../../../modules/user/models/user.model'
+import { ReportModel } from '../../../modules/report/models/report.model'
 import {
   ReportResourceActorKindEnum,
   type ReportResourceContext,
-} from '../types/report-resource-context'
+} from '../../../modules/report/types/report-resource-context'
 
 const LOGGING_CONTEXT = 'ReportResourceGuard'
 

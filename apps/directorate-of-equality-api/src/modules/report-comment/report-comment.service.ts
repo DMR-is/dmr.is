@@ -18,7 +18,7 @@ import {
   CommentVisibilityEnum,
   ReportCommentModel,
 } from './models/report-comment.model'
-import { CommentAuthorKindEnum } from './types/report-comment-context'
+import { CommentAuthorKindEnum } from './models/report-comment.model'
 import { IReportCommentService } from './report-comment.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCommentService'
