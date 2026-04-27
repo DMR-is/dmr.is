@@ -3,8 +3,8 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import type { ReportCommentDto } from '../../report-comment/dto/report-comment.dto'
 import { UserModel } from '../../user/models/user.model'
-import type { ReportCommentDto } from '../dto/report-comment.dto'
 import { ReportStatusEnum } from './report.enums'
 import { ReportModel } from './report.model'
 
@@ -81,6 +81,7 @@ export class ReportCommentModel extends ParanoidModel<
   static fromModel(model: ReportCommentModel): ReportCommentDto {
     return {
       id: model.id,
+      createdAt: model.createdAt,
       reportId: model.reportId,
       authorKind: model.authorKind,
       authorUserId: model.authorUserId,
