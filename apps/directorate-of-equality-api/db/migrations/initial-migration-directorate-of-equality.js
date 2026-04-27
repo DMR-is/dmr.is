@@ -113,6 +113,7 @@ module.exports = {
       company_admin_gender gender_enum DEFAULT NULL,
 
       contact_name TEXT DEFAULT NULL,
+      contact_national_id TEXT DEFAULT NULL,
       contact_email TEXT DEFAULT NULL,
       contact_phone TEXT DEFAULT NULL,
 

@@ -35,6 +35,7 @@ erDiagram
         uuid id PK
         ReportTypeEnum type
         ReportStatusEnum status
+        text contact_national_id
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"
         timestamp approved_at

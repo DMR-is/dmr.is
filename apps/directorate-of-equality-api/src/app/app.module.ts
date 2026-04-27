@@ -18,8 +18,9 @@ import { ConfigModule } from '../modules/config/config.module'
 import { ConfigModel } from '../modules/config/models/config.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
-import { ReportCommentModel } from '../modules/report/models/report-comment.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
+import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
+import { ReportCommentModule } from '../modules/report-comment/report-comment.module'
 import { ReportModule } from '../modules/report/report.module'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
@@ -82,6 +83,7 @@ import { UserModule } from '../modules/user/user.module'
     UserModule,
     ConfigModule,
     ReportExcelModule,
+    ReportCommentModule,
     ReportResultModule,
     ReportStatisticsModule,
     ReportModule,
