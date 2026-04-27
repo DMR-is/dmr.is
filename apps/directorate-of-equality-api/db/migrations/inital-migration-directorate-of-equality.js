@@ -251,21 +251,10 @@ module.exports = {
 
       report_id UUID NOT NULL UNIQUE REFERENCES report(id),
 
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
-      average_salary DECIMAL(14, 2) NOT NULL,
-      minimum_salary DECIMAL(14, 2) NOT NULL,
-      maximum_salary DECIMAL(14, 2) NOT NULL,
-      median_salary DECIMAL(14, 2) NOT NULL,
-
-      salary_difference_male_female DECIMAL(14, 2) NOT NULL,
-      salary_difference_male_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL,
-      salary_difference_threshold_percent DECIMAL(5, 2) DEFAULT NULL
+      salary_difference_threshold_percent DECIMAL(5, 2) DEFAULT NULL,
+      calculation_version TEXT NOT NULL DEFAULT 'v1',
+      base_snapshot JSONB NOT NULL,
+      full_snapshot JSONB NOT NULL
     );
 
     CREATE TABLE report_role_result (
@@ -275,23 +264,9 @@ module.exports = {
 
       report_result_id UUID NOT NULL REFERENCES report_result(id),
       report_employee_role_id UUID NOT NULL REFERENCES report_employee_role(id),
-
-      average_salary DECIMAL(14, 2) NOT NULL,
-      minimum_salary DECIMAL(14, 2) NOT NULL,
-      maximum_salary DECIMAL(14, 2) NOT NULL,
-      median_salary DECIMAL(14, 2) NOT NULL,
-
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
-
-      minimum_male_salary DECIMAL(14, 2) NOT NULL,
-      minimum_female_salary DECIMAL(14, 2) NOT NULL,
-      minimum_neutral_salary DECIMAL(14, 2) NOT NULL,
-
-      maximum_male_salary DECIMAL(14, 2) NOT NULL,
-      maximum_female_salary DECIMAL(14, 2) NOT NULL,
-      maximum_neutral_salary DECIMAL(14, 2) NOT NULL
+      role_title TEXT NOT NULL,
+      base_snapshot JSONB NOT NULL,
+      full_snapshot JSONB NOT NULL
     );
 
     CREATE TABLE public_report (
@@ -412,6 +387,8 @@ module.exports = {
       ON report_role_result (report_result_id);
     CREATE INDEX report_role_result_report_employee_role_id_idx
       ON report_role_result (report_employee_role_id);
+    CREATE UNIQUE INDEX report_role_result_report_result_role_uidx
+      ON report_role_result (report_result_id, report_employee_role_id);
 
     CREATE INDEX public_report_source_report_id_idx
       ON public_report (source_report_id);

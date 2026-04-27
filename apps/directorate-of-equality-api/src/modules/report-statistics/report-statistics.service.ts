@@ -5,6 +5,15 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import {
+  computeSalaryAggregateSnapshot,
+  computeSalaryScoreBucketSnapshots,
+  computeWageGapPercent,
+  getAdjustedBaseSalary,
+  getAdjustedFullSalary,
+  roundNullable,
+  type SalaryScorePoint,
+} from '../report/lib/compensation-aggregates'
 import { GenderEnum } from '../report/models/report.model'
 import {
   ReportCriterionModel,
@@ -68,7 +77,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: e.score,
-      adjustedSalary: e.baseSalary / e.workRatio,
+      adjustedSalary: getAdjustedBaseSalary(e),
       gender: e.gender,
     }))
 
@@ -103,7 +112,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
       return {
         score: workScore,
-        adjustedSalary: e.baseSalary / e.workRatio,
+        adjustedSalary: getAdjustedBaseSalary(e),
         gender: e.gender,
       }
     })
@@ -123,9 +132,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: e.score,
-      adjustedSalary:
-        (e.baseSalary + e.additionalSalary + (e.bonusSalary ?? 0)) /
-        e.workRatio,
+      adjustedSalary: getAdjustedFullSalary(e),
       gender: e.gender,
     }))
 
@@ -144,7 +151,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: 0,
-      adjustedSalary: e.baseSalary / e.workRatio,
+      adjustedSalary: getAdjustedBaseSalary(e),
       gender: e.gender,
     }))
 
@@ -163,9 +170,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: 0,
-      adjustedSalary:
-        (e.baseSalary + e.additionalSalary + (e.bonusSalary ?? 0)) /
-        e.workRatio,
+      adjustedSalary: getAdjustedFullSalary(e),
       gender: e.gender,
     }))
 
@@ -354,28 +359,29 @@ export class ReportStatisticsService implements IReportStatisticsService {
 // ── Pure computation helpers ────────────────────────────────────────
 
 function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
-  const males = points.filter((p) => p.gender === GenderEnum.MALE)
-  const females = points.filter((p) => p.gender === GenderEnum.FEMALE)
-
-  const maleAvg = males.length > 0 ? average(males) : 0
-  const femaleAvg = females.length > 0 ? average(females) : 0
-  const maleMed = males.length > 0 ? median(males) : 0
-  const femaleMed = females.length > 0 ? median(females) : 0
+  const males = points.filter((point) => point.gender === GenderEnum.MALE)
+  const females = points.filter((point) => point.gender === GenderEnum.FEMALE)
+  const snapshot = computeSalaryAggregateSnapshot(
+    points.map((point) => ({
+      gender: point.gender,
+      salary: point.adjustedSalary,
+    })),
+  )
 
   return {
-    maleAverageSalary: Math.round(maleAvg),
-    femaleAverageSalary: Math.round(femaleAvg),
-    overallAverageSalary: Math.round(average(points)),
-    maleMedianSalary: Math.round(maleMed),
-    femaleMedianSalary: Math.round(femaleMed),
-    overallMedianSalary: Math.round(median(points)),
-    averageWageGapPercent: computeWageGap(
-      males.length > 0 ? maleAvg : null,
-      females.length > 0 ? femaleAvg : null,
+    maleAverageSalary: Math.round(snapshot.male.average ?? 0),
+    femaleAverageSalary: Math.round(snapshot.female.average ?? 0),
+    overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
+    maleMedianSalary: Math.round(snapshot.male.median ?? 0),
+    femaleMedianSalary: Math.round(snapshot.female.median ?? 0),
+    overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+    averageWageGapPercent: roundNullable(
+      snapshot.salaryDifferences.maleFemale,
+      1,
     ),
-    medianWageGapPercent: computeWageGap(
-      males.length > 0 ? maleMed : null,
-      females.length > 0 ? femaleMed : null,
+    medianWageGapPercent: roundNullable(
+      computeWageGapPercent(snapshot.male.median, snapshot.female.median),
+      1,
     ),
     maleCount: males.length,
     femaleCount: females.length,
@@ -434,91 +440,65 @@ function computeLinearRegression(
 }
 
 function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
-  if (points.length === 0) return []
+  const salaryPoints: SalaryScorePoint[] = points.map((point) => ({
+    score: point.score,
+    gender: point.gender,
+    salary: point.adjustedSalary,
+  }))
 
-  const minScore = Math.min(...points.map((p) => p.score))
-  const maxScore = Math.max(...points.map((p) => p.score))
+  return computeSalaryScoreBucketSnapshots(
+    salaryPoints,
+    BUCKET_WIDTH,
+  ).map((bucket) => {
+    const snapshot = bucket.totals
 
-  const bucketStart = Math.floor(minScore / BUCKET_WIDTH) * BUCKET_WIDTH
-  const bucketEnd =
-    Math.floor(maxScore / BUCKET_WIDTH) * BUCKET_WIDTH + BUCKET_WIDTH
-
-  const buckets: ScoreBucketDto[] = []
-
-  for (
-    let rangeFrom = bucketStart;
-    rangeFrom < bucketEnd;
-    rangeFrom += BUCKET_WIDTH
-  ) {
-    const rangeTo = rangeFrom + BUCKET_WIDTH
-    const inBucket = points.filter(
-      (p) => p.score >= rangeFrom && p.score < rangeTo,
-    )
-
-    if (inBucket.length === 0) continue
-
-    const males = inBucket.filter((p) => p.gender === GenderEnum.MALE)
-    const females = inBucket.filter((p) => p.gender === GenderEnum.FEMALE)
-
-    const maleAvg = males.length > 0 ? average(males) : null
-    const femaleAvg = females.length > 0 ? average(females) : null
-    const overallAvg = average(inBucket)
-
-    buckets.push({
-      rangeFrom,
-      rangeTo,
-      maleAverageSalary: maleAvg !== null ? Math.round(maleAvg) : null,
-      femaleAverageSalary: femaleAvg !== null ? Math.round(femaleAvg) : null,
-      overallAverageSalary: Math.round(overallAvg),
-      maleMedianSalary: males.length > 0 ? Math.round(median(males)) : null,
+    return {
+      rangeFrom: bucket.rangeFrom,
+      rangeTo: bucket.rangeTo,
+      maleAverageSalary:
+        snapshot.male.average !== null
+          ? Math.round(snapshot.male.average)
+          : null,
+      femaleAverageSalary:
+        snapshot.female.average !== null
+          ? Math.round(snapshot.female.average)
+          : null,
+      overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
+      maleMedianSalary:
+        snapshot.male.median !== null ? Math.round(snapshot.male.median) : null,
       femaleMedianSalary:
-        females.length > 0 ? Math.round(median(females)) : null,
-      overallMedianSalary: Math.round(median(inBucket)),
-      wageGapPercent: computeWageGap(maleAvg, femaleAvg),
-      maleCount: males.length,
-      femaleCount: females.length,
-    })
-  }
-
-  return buckets
+        snapshot.female.median !== null
+          ? Math.round(snapshot.female.median)
+          : null,
+      overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+      wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
+      maleCount: bucket.counts.male,
+      femaleCount: bucket.counts.female,
+    }
+  })
 }
 
 function computeTotals(points: EmployeeDataPoint[]): SalaryTotalsDto {
-  const males = points.filter((p) => p.gender === GenderEnum.MALE)
-  const females = points.filter((p) => p.gender === GenderEnum.FEMALE)
-
-  const maleAvg = males.length > 0 ? average(males) : 0
-  const femaleAvg = females.length > 0 ? average(females) : 0
-  const overallAvg = average(points)
+  const males = points.filter((point) => point.gender === GenderEnum.MALE)
+  const females = points.filter((point) => point.gender === GenderEnum.FEMALE)
+  const snapshot = computeSalaryAggregateSnapshot(
+    points.map((point) => ({
+      gender: point.gender,
+      salary: point.adjustedSalary,
+    })),
+  )
 
   return {
-    maleAverageSalary: Math.round(maleAvg),
-    femaleAverageSalary: Math.round(femaleAvg),
-    overallAverageSalary: Math.round(overallAvg),
-    maleMedianSalary: males.length > 0 ? Math.round(median(males)) : 0,
-    femaleMedianSalary: females.length > 0 ? Math.round(median(females)) : 0,
-    overallMedianSalary: Math.round(median(points)),
-    wageGapPercent: computeWageGap(
-      males.length > 0 ? maleAvg : null,
-      females.length > 0 ? femaleAvg : null,
-    ),
+    maleAverageSalary: Math.round(snapshot.male.average ?? 0),
+    femaleAverageSalary: Math.round(snapshot.female.average ?? 0),
+    overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
+    maleMedianSalary: Math.round(snapshot.male.median ?? 0),
+    femaleMedianSalary: Math.round(snapshot.female.median ?? 0),
+    overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+    wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
     maleCount: males.length,
     femaleCount: females.length,
   }
-}
-
-function average(points: EmployeeDataPoint[]): number {
-  return (
-    points.reduce((sum, p) => sum + p.adjustedSalary, 0) / points.length
-  )
-}
-
-function median(points: EmployeeDataPoint[]): number {
-  const sorted = points.map((p) => p.adjustedSalary).sort((a, b) => a - b)
-  const mid = Math.floor(sorted.length / 2)
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid]
 }
 
 /** Average/median for raw number arrays (used by benefits breakdown). */
@@ -538,6 +518,5 @@ function computeWageGap(
   maleAvg: number | null,
   femaleAvg: number | null,
 ): number | null {
-  if (maleAvg === null || femaleAvg === null || maleAvg === 0) return null
-  return Math.round(((maleAvg - femaleAvg) / maleAvg) * 1000) / 10
+  return roundNullable(computeWageGapPercent(maleAvg, femaleAvg), 1)
 }
