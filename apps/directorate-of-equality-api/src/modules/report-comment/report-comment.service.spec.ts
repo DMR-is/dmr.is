@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common'
 
 import {
-  ReportRoleEnum,
   type ReportResourceContext,
+  ReportRoleEnum,
 } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { CommentVisibilityEnum } from './models/report-comment.model'

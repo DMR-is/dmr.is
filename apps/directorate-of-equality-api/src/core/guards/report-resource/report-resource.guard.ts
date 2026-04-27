@@ -12,8 +12,8 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ReportModel } from '../../../modules/report/models/report.model'
 import {
-  ReportRoleEnum,
   type ReportResourceContext,
+  ReportRoleEnum,
 } from '../../../modules/report/types/report-resource-context'
 import { UserModel } from '../../../modules/user/models/user.model'
 

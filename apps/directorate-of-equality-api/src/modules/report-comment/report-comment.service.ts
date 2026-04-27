@@ -9,8 +9,8 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import {
-  ReportRoleEnum,
   type ReportResourceContext,
+  ReportRoleEnum,
 } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { ReportCommentDto } from './dto/report-comment.dto'
