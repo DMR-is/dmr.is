@@ -41,6 +41,9 @@ export class ReportDto {
   contactName!: string | null
 
   @ApiOptionalString({ nullable: true })
+  companyNationalId!: string | null
+
+  @ApiOptionalString({ nullable: true })
   contactEmail!: string | null
 
   @ApiOptionalString({ nullable: true })

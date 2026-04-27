@@ -14,7 +14,11 @@
 
 import { Op, Order, WhereOptions } from 'sequelize'
 
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
