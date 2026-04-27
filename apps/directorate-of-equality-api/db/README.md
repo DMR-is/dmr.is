@@ -393,23 +393,23 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 Aggregated per-report salary stats.
 
-| Column                             | Type              |
-| ---------------------------------- | ----------------- |
-| `id`                               | `uuid` PK         |
-| `report_id`                        | `fk → report`     |
-| `average_male_salary`              | `decimal(14, 2)`  |
-| `average_female_salary`            | `decimal(14, 2)`  |
-| `average_neutral_salary`           | `decimal(14, 2)`  |
-| `average_salary`                   | `decimal(14, 2)`  |
-| `minimum_salary`                   | `decimal(14, 2)`  |
-| `maximum_salary`                   | `decimal(14, 2)`  |
-| `median_salary`                    | `decimal(14, 2)`  |
-| `salary_difference_male_female`    | `decimal(14, 2)`  |
-| `salary_difference_male_neutral`   | `decimal(14, 2)`  |
-| `salary_difference_female_male`    | `decimal(14, 2)`  |
-| `salary_difference_female_neutral` | `decimal(14, 2)`  |
-| `salary_difference_neutral_male`   |  `decimal(14, 2)` |
-| `salary_difference_neutral_female` |  `decimal(14, 2)` |
+| Column                                | Type                                                                              |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                         |
+| `report_id`                           | `fk → report`                                                                     |
+| `average_male_salary`                 | `decimal(14, 2)`                                                                  |
+| `average_female_salary`               | `decimal(14, 2)`                                                                  |
+| `average_neutral_salary`              | `decimal(14, 2)`                                                                  |
+| `average_salary`                      | `decimal(14, 2)`                                                                  |
+| `minimum_salary`                      | `decimal(14, 2)`                                                                  |
+| `maximum_salary`                      | `decimal(14, 2)`                                                                  |
+| `median_salary`                       | `decimal(14, 2)`                                                                  |
+| `salary_difference_male_female`       | `decimal(14, 2)`                                                                  |
+| `salary_difference_male_neutral`      | `decimal(14, 2)`                                                                  |
+| `salary_difference_female_male`       | `decimal(14, 2)`                                                                  |
+| `salary_difference_female_neutral`    | `decimal(14, 2)`                                                                  |
+| `salary_difference_neutral_male`      |  `decimal(14, 2)`                                                                 |
+| `salary_difference_neutral_female`    |  `decimal(14, 2)`                                                                 |
 | `salary_difference_threshold_percent` | `decimal(5, 2)` (nullable — threshold snapshot from `config` at time of creation) |
 
 ### `report_role_result`
@@ -505,18 +505,18 @@ Generic key-value configuration table for admin-managed settings that change inf
 
 Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped and a new row is inserted. This preserves a full history of every value a key has held. A partial unique index (`config_active_key_idx`) ensures at most one active (non-superseded) entry per key.
 
-| Column          | Type          | Notes                                           |
-|-----------------|---------------|-------------------------------------------------|
-| `id`            | `uuid` PK     |                                                  |
-| `key`           | `text`        | NOT NULL — machine-readable config key           |
-| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer   |
-| `description`   | `text`        | Nullable — human-readable explanation            |
-| `superseded_at` | `timestamptz` | Nullable — null = current active entry           |
+| Column          | Type          | Notes                                          |
+| --------------- | ------------- | ---------------------------------------------- |
+| `id`            | `uuid` PK     |                                                |
+| `key`           | `text`        | NOT NULL — machine-readable config key         |
+| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer |
+| `description`   | `text`        | Nullable — human-readable explanation          |
+| `superseded_at` | `timestamptz` | Nullable — null = current active entry         |
 
 Current entries:
 
-| key                                   | value | description                                                        |
-|---------------------------------------|-------|--------------------------------------------------------------------|
+| key                                   | value | description                                                           |
+| ------------------------------------- | ----- | --------------------------------------------------------------------- |
 | `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
 
 No FKs, no relationships. Standalone lookup table.

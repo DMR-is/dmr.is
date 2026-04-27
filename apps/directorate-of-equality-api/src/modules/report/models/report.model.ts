@@ -1,36 +1,38 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  HasMany,
+  HasOne,
+  Scopes,
+} from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import { CompanyReportModel } from '../../company/models/company-report.model'
+import { ReportResultModel } from '../../report-result/models/report-result.model'
 import { UserModel } from '../../user/models/user.model'
+import type { EqualityReportDto } from '../dto/equality-report.dto'
 import type { ReportDto } from '../dto/report.dto'
+import { ReportListItemDto } from '../dto/report-list-item.dto'
+import {
+  GenderEnum,
+  ReportProviderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './report.enums'
+import { ReportCommentModel } from './report-comment.model'
 
-export enum ReportTypeEnum {
-  SALARY = 'SALARY',
-  EQUALITY = 'EQUALITY',
-}
-
-export enum ReportStatusEnum {
-  DRAFT = 'DRAFT',
-  SUBMITTED = 'SUBMITTED',
-  IN_REVIEW = 'IN_REVIEW',
-  DENIED = 'DENIED',
-  APPROVED = 'APPROVED',
-  SUPERSEDED = 'SUPERSEDED',
-}
-
-export enum GenderEnum {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-  NEUTRAL = 'NEUTRAL',
-}
-
-export enum ReportProviderEnum {
-  SYSTEM = 'SYSTEM',
-  ISLAND_IS = 'ISLAND_IS',
-  OTHER = 'OTHER',
-}
+// Re-export for backwards compatibility — many callers import these enums
+// from `report.model.ts` directly. New code should prefer `report.enums.ts`.
+export {
+  GenderEnum,
+  ReportProviderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './report.enums'
 
 type ReportAttributes = {
   type: ReportTypeEnum
@@ -96,6 +98,44 @@ type ReportCreateAttributes = {
   finesStartedAt?: Date | null
 }
 
+/**
+ * Sequelize scopes bundle the include shapes for common read patterns.
+ * Filters / sort / pagination stay on the caller — those are dynamic per
+ * request — but the relation graph is the same every time, so it lives
+ * here.
+ *
+ * - `listview`: trimmed relations for the admin list table — company
+ *   snapshot (drives the name/kennitala columns) and reviewer.
+ * - `detailed`: everything the detail screen needs — same includes as
+ *   listview plus comments, newest-first, not paranoid-deleted.
+ */
+@Scopes(() => ({
+  listview: {
+    include: [
+      { model: CompanyReportModel, as: 'companyReport', required: false },
+      { model: UserModel, as: 'reviewer', required: false },
+    ],
+  },
+  detailed: {
+    include: [
+      { model: CompanyReportModel, as: 'companyReport', required: true },
+      { model: UserModel, as: 'reviewer', required: false },
+      {
+        model: ReportCommentModel,
+        as: 'comments',
+        required: false,
+        separate: true,
+        order: [['createdAt', 'DESC']],
+      },
+      // Salary-only aggregate — null for equality reports. Per-role
+      // breakdown + employee deviations are loaded via separate queries
+      // in the service (keyed off `result.id` and `report.id`) to avoid
+      // modifying the report-result / report-employee modules owned by
+      // teammates.
+      { model: ReportResultModel, as: 'result', required: false },
+    ],
+  },
+}))
 @MutableTable({ tableName: DoeModels.REPORT })
 export class ReportModel extends MutableModel<
   ReportAttributes,
@@ -243,6 +283,20 @@ export class ReportModel extends MutableModel<
   @BelongsTo(() => UserModel, { foreignKey: 'reviewerUserId', as: 'reviewer' })
   reviewer?: UserModel | null
 
+  // One-to-one snapshot of company info taken when the report is created.
+  // Declared HasOne because the immutable snapshot is created once per report.
+  @HasOne(() => CompanyReportModel, {
+    foreignKey: 'reportId',
+    as: 'companyReport',
+  })
+  companyReport?: CompanyReportModel
+
+  @HasMany(() => ReportCommentModel, { foreignKey: 'reportId', as: 'comments' })
+  comments?: ReportCommentModel[]
+
+  @HasOne(() => ReportResultModel, { foreignKey: 'reportId', as: 'result' })
+  result?: ReportResultModel | null
+
   static fromModel(model: ReportModel): ReportDto {
     return {
       id: model.id,
@@ -276,6 +330,53 @@ export class ReportModel extends MutableModel<
             ? null
             : UserModel.fromModel(model.reviewer),
     }
+  }
+
+  /**
+   * Project this report's fields into the `EqualityReportDto` shape — the
+   * uniform equality-content block every detail view carries. Used in two
+   * places by the service:
+   *
+   * - Equality-type reports → project themselves (self-reference, cheap).
+   * - Salary-type reports   → project the *linked* equality report loaded
+   *                           via `equalityReportId`.
+   *
+   * Kept as a static on the model so it lives next to `fromModel` — it IS
+   * a DTO projection, just a different shape, and follows the same pattern.
+   */
+  static fromModelToEqualityReport(model: ReportModel): EqualityReportDto {
+    return {
+      id: model.id,
+      identifier: model.identifier,
+      status: model.status,
+      content: model.equalityReportContent,
+      approvedAt: model.approvedAt,
+      validUntil: model.validUntil,
+      correctionDeadline: model.correctionDeadline,
+    }
+  }
+
+  static fromModelToListItem(model: ReportModel): ReportListItemDto {
+    return {
+      id: model.id,
+      identifier: model.identifier,
+      type: model.type,
+      status: model.status,
+      companyName: model.companyReport?.name ?? null,
+      companyNationalId: model.companyReport?.nationalId ?? null,
+      reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,
+      createdAt: model.createdAt,
+      correctionDeadline: model.correctionDeadline,
+      validUntil: model.validUntil,
+    }
+  }
+
+  fromModelToEqualityReport(): EqualityReportDto {
+    return ReportModel.fromModelToEqualityReport(this)
+  }
+
+  fromModelToListItem(): ReportListItemDto {
+    return ReportModel.fromModelToListItem(this)
   }
 
   fromModel(): ReportDto {
