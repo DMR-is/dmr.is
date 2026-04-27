@@ -499,18 +499,18 @@ Generic key-value configuration table for admin-managed settings that change inf
 
 Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped and a new row is inserted. This preserves a full history of every value a key has held. A partial unique index (`config_active_key_idx`) ensures at most one active (non-superseded) entry per key.
 
-| Column          | Type          | Notes                                           |
-|-----------------|---------------|-------------------------------------------------|
-| `id`            | `uuid` PK     |                                                  |
-| `key`           | `text`        | NOT NULL — machine-readable config key           |
-| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer   |
-| `description`   | `text`        | Nullable — human-readable explanation            |
-| `superseded_at` | `timestamptz` | Nullable — null = current active entry           |
+| Column          | Type          | Notes                                          |
+| --------------- | ------------- | ---------------------------------------------- |
+| `id`            | `uuid` PK     |                                                |
+| `key`           | `text`        | NOT NULL — machine-readable config key         |
+| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer |
+| `description`   | `text`        | Nullable — human-readable explanation          |
+| `superseded_at` | `timestamptz` | Nullable — null = current active entry         |
 
 Current entries:
 
-| key                                   | value | description                                                        |
-|---------------------------------------|-------|--------------------------------------------------------------------|
+| key                                   | value | description                                                           |
+| ------------------------------------- | ----- | --------------------------------------------------------------------- |
 | `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
 
 No FKs, no relationships. Standalone lookup table.

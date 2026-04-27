@@ -77,9 +77,7 @@ export class ConfigService implements IConfigService {
       })
 
       if (!current) {
-        throw new NotFoundException(
-          `Config entry with key "${key}" not found`,
-        )
+        throw new NotFoundException(`Config entry with key "${key}" not found`)
       }
 
       await current.update({ supersededAt: new Date() })
@@ -88,9 +86,7 @@ export class ConfigService implements IConfigService {
         key,
         value: dto.value,
         description:
-          dto.description !== undefined
-            ? dto.description
-            : current.description,
+          dto.description !== undefined ? dto.description : current.description,
       })
 
       return newEntry.fromModel()

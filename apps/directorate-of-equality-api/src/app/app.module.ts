@@ -20,6 +20,7 @@ import { PublicReportModel } from '../modules/public-report/models/public-report
 import { ReportModel } from '../modules/report/models/report.model'
 import { ReportCommentModel } from '../modules/report/models/report-comment.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
+import { ReportModule } from '../modules/report/report.module'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
@@ -83,6 +84,7 @@ import { UserModule } from '../modules/user/user.module'
     ReportExcelModule,
     ReportResultModule,
     ReportStatisticsModule,
+    ReportModule,
   ],
   controllers: [],
   providers: [

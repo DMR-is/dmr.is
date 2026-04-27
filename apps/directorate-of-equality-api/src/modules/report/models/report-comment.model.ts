@@ -5,7 +5,8 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../../core/constants'
 import { UserModel } from '../../user/models/user.model'
 import type { ReportCommentDto } from '../dto/report-comment.dto'
-import { ReportModel, ReportStatusEnum } from './report.model'
+import { ReportStatusEnum } from './report.enums'
+import { ReportModel } from './report.model'
 
 export enum CommentAuthorKindEnum {
   REVIEWER = 'REVIEWER',

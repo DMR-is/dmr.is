@@ -44,9 +44,7 @@ export class ReportResultModel extends MutableModel<
     allowNull: true,
     field: 'salary_difference_threshold_percent',
     get() {
-      return parseDecimal(
-        this.getDataValue('salaryDifferenceThresholdPercent'),
-      )
+      return parseDecimal(this.getDataValue('salaryDifferenceThresholdPercent'))
     },
   })
   salaryDifferenceThresholdPercent!: number | null
