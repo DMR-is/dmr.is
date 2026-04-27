@@ -157,10 +157,19 @@ export class PublishingTaskService implements IPublishingTaskService {
             ? await this.getNextPublicationNumber(pub.scheduledAt, transaction)
             : advert.publicationNumber
 
+          const now = new Date()
+
+          // Set publishedAt in memory before generating HTML so the template
+          // renders "Útgáfud." instead of "Áætlaður útgáfud." for the date label
+          const inMemoryPub = advert.publications.find((p) => p.id === pub.id)
+          if (inMemoryPub) {
+            inMemoryPub.publishedAt = now
+          }
+
           const html = advert.htmlMarkup(pub.versionLetter)
 
           await pub.update(
-            { publishedAt: new Date(), publishedHtml: html },
+            { publishedAt: now, publishedHtml: html },
             { transaction: transaction },
           )
 

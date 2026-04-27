@@ -25,11 +25,12 @@ describe('PublishingTaskService - Event Emission', () => {
   let sequelize: jest.Mocked<Sequelize>
   let mockLogger: Record<string, jest.Mock>
   // Test data factories
-  const createMockAdvert = (overrides = {}) => ({
+  const createMockAdvert = (overrides: any = {}) => ({
     id: 'advert-123',
     title: 'Test Advert',
     publicationNumber: '',
     type: { title: 'Skipti' },
+    publications: overrides.publications ?? [],
     fromModelToDetailed: jest.fn().mockReturnValue({
       id: 'advert-123',
       title: 'Test Advert',
