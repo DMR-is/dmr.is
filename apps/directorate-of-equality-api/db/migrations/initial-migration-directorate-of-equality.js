@@ -278,17 +278,6 @@ module.exports = {
       isat_category TEXT NOT NULL,
       published_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
       valid_until TIMESTAMPTZ NOT NULL,
-
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
-
-      salary_difference_male_female DECIMAL(14, 2) NOT NULL,
-      salary_difference_male_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL
     );
 
     CREATE TABLE config (

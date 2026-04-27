@@ -441,15 +441,6 @@ Insert-only snapshot published when a private report is approved. No PII, no FK 
 | `isat_category`                    | `text` (industry field)                                   |
 | `published_at`                     | `timestamp`                                               |
 | `valid_until`                      | `timestamp`                                               |
-| `average_male_salary`              | `decimal(14, 2)`                                          |
-| `average_female_salary`            | `decimal(14, 2)`                                          |
-| `average_neutral_salary`           | `decimal(14, 2)`                                          |
-| `salary_difference_male_female`    | `decimal(14, 2)`                                          |
-| `salary_difference_male_neutral`   | `decimal(14, 2)`                                          |
-| `salary_difference_female_male`    | `decimal(14, 2)`                                          |
-| `salary_difference_female_neutral` | `decimal(14, 2)`                                          |
-| `salary_difference_neutral_male`   | `decimal(14, 2)`                                          |
-| `salary_difference_neutral_female` | `decimal(14, 2)`                                          |
 
 Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — minimum/maximum/median and role-level breakdown probably omitted, confirm with stakeholders.
 
