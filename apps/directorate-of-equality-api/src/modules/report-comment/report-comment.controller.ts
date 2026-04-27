@@ -13,11 +13,11 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { CurrentReportResourceContext } from '../report/decorators/current-report-resource-context.decorator'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
+import { CurrentReportResourceContext } from '../report/decorators/current-report-resource-context.decorator'
+import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { ReportCommentDto } from './dto/report-comment.dto'
-import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { IReportCommentService } from './report-comment.service.interface'
 
 @Controller({
