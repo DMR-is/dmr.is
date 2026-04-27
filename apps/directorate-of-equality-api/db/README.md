@@ -156,7 +156,7 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds report-level salary aggregates (overall average/minimum/maximum/median, per-gender breakdowns, and six directional salary gap pairs). `report_role_result` holds the same breakdown per role. Both tables are write-once per approval — computed as part of the approval pipeline, not edited by humans.
+`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once per approval — computed as part of the approval pipeline, not edited by humans.
 
 ## Enums
 
@@ -391,49 +391,43 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 ### `report_result`
 
-Aggregated per-report salary stats.
+Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                                | Type                                                                              |
-| ------------------------------------- | --------------------------------------------------------------------------------- |
-| `id`                                  | `uuid` PK                                                                         |
-| `report_id`                           | `fk → report`                                                                     |
-| `average_male_salary`                 | `decimal(14, 2)`                                                                  |
-| `average_female_salary`               | `decimal(14, 2)`                                                                  |
-| `average_neutral_salary`              | `decimal(14, 2)`                                                                  |
-| `average_salary`                      | `decimal(14, 2)`                                                                  |
-| `minimum_salary`                      | `decimal(14, 2)`                                                                  |
-| `maximum_salary`                      | `decimal(14, 2)`                                                                  |
-| `median_salary`                       | `decimal(14, 2)`                                                                  |
-| `salary_difference_male_female`       | `decimal(14, 2)`                                                                  |
-| `salary_difference_male_neutral`      | `decimal(14, 2)`                                                                  |
-| `salary_difference_female_male`       | `decimal(14, 2)`                                                                  |
-| `salary_difference_female_neutral`    | `decimal(14, 2)`                                                                  |
-| `salary_difference_neutral_male`      |  `decimal(14, 2)`                                                                 |
-| `salary_difference_neutral_female`    |  `decimal(14, 2)`                                                                 |
-| `salary_difference_threshold_percent` | `decimal(5, 2)` (nullable — threshold snapshot from `config` at time of creation) |
+| Column                              | Type                                  |
+| ----------------------------------- | ------------------------------------- |
+| `id`                                | `uuid` PK                             |
+| `report_id`                         | `fk → report` (unique)                |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation |
+| `calculation_version`               | `text` (default `v1`)                 |
+| `base_snapshot`                     | `jsonb` adjusted base salary snapshot |
+| `full_snapshot`                     | `jsonb` adjusted full salary snapshot |
+
+`base_snapshot` and `full_snapshot` share the same shape:
+
+- `totals`
+  - `overall`, `male`, `female`, `neutral` — each contains `average`, `median`, `minimum`, `maximum`.
+  - `salaryDifferences` — contains `maleFemale`, `maleNeutral`, `femaleMale`, `femaleNeutral`, `neutralMale`, `neutralFemale`.
+- `scoreBuckets[]`
+  - `rangeFrom`, `rangeTo`
+  - `totals` with the same aggregate shape as above
+  - `counts` for `overall`, `male`, `female`, `neutral`
+
+Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
 
 ### `report_role_result`
 
-Same salary stats broken down per role. Whiteboard used ditto marks (`==`) — expanded below.
+Reserved table for salary stats broken down per role. Role title is snapshotted because result rows must not change if the role table is later edited. This table is intentionally not part of the first report-result read response while score-bucket breakdowns are the primary requirement.
 
-| Column                    | Type                        |
-| ------------------------- | --------------------------- |
-| `id`                      | `uuid` PK                   |
-| `report_result_id`        | `fk → report_result`        |
-| `report_employee_role_id` | `fk → report_employee_role` |
-| `average_salary`          | `decimal(14, 2)`            |
-| `minimum_salary`          | `decimal(14, 2)`            |
-| `maximum_salary`          | `decimal(14, 2)`            |
-| `median_salary`           | `decimal(14, 2)`            |
-| `average_male_salary`     | `decimal(14, 2)`            |
-| `average_female_salary`   | `decimal(14, 2)`            |
-| `average_neutral_salary`  | `decimal(14, 2)`            |
-| `minimum_male_salary`     | `decimal(14, 2)`            |
-| `minimum_female_salary`   | `decimal(14, 2)`            |
-| `minimum_neutral_salary`  | `decimal(14, 2)`            |
-| `maximum_male_salary`     | `decimal(14, 2)`            |
-| `maximum_female_salary`   | `decimal(14, 2)`            |
-| `maximum_neutral_salary`  | `decimal(14, 2)`            |
+| Column                    | Type                                  |
+| ------------------------- | ------------------------------------- |
+| `id`                      | `uuid` PK                             |
+| `report_result_id`        | `fk → report_result`                  |
+| `report_employee_role_id` | `fk → report_employee_role`           |
+| `role_title`              | `text` snapshot at calculation time   |
+| `base_snapshot`           | `jsonb` adjusted base salary snapshot |
+| `full_snapshot`           | `jsonb` adjusted full salary snapshot |
+
+Unique constraint: `(report_result_id, report_employee_role_id)`.
 
 ### `public_report`
 
@@ -529,7 +523,7 @@ No FKs, no relationships. Standalone lookup table.
 - `report_employee` 1:N `report_employee_deviation`.
 - `report_employee_role` ⟷ `report_sub_criterion_step` via `report_employee_role_criterion_step`.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
-- `report` 1:1 `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
+- `report` 1:1 `report_result`; optional future role snapshots are `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
