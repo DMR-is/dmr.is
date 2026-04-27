@@ -60,7 +60,7 @@ describe('ReportResourceGuard', () => {
     reportModel.findByPkOrThrow.mockResolvedValue({
       id: 'report-1',
       status: ReportStatusEnum.IN_REVIEW,
-      contactNationalId: '9999999999',
+      companyNationalId: '9999999999',
     })
     userModel.findOne.mockResolvedValue({ id: 'reviewer-1' })
 
@@ -86,7 +86,7 @@ describe('ReportResourceGuard', () => {
     reportModel.findByPkOrThrow.mockResolvedValue({
       id: 'report-1',
       status: ReportStatusEnum.SUBMITTED,
-      contactNationalId: '5500000000',
+      companyNationalId: '5500000000',
     })
     userModel.findOne.mockResolvedValue(null)
 
@@ -112,7 +112,7 @@ describe('ReportResourceGuard', () => {
     reportModel.findByPkOrThrow.mockResolvedValue({
       id: 'report-1',
       status: ReportStatusEnum.SUBMITTED,
-      contactNationalId: '5500000000',
+      companyNationalId: '5500000000',
     })
     userModel.findOne.mockResolvedValue(null)
 

@@ -64,7 +64,7 @@ export class ReportResourceGuard implements CanActivate {
       }
     }
 
-    if (report.contactNationalId === user.nationalId) {
+    if (report.companyNationalId === user.nationalId) {
       return {
         kind: ReportResourceActorKindEnum.CONTACT,
         nationalId: user.nationalId,
@@ -75,7 +75,7 @@ export class ReportResourceGuard implements CanActivate {
       context: LOGGING_CONTEXT,
       reportId: report.id,
       nationalId: user.nationalId,
-      reportContactNationalId: report.contactNationalId,
+      reportCompanyNationalId: report.companyNationalId,
     })
 
     throw new ForbiddenException(

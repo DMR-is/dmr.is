@@ -43,7 +43,7 @@ type ReportAttributes = {
   companyAdminGender: GenderEnum | null
 
   contactName: string | null
-  contactNationalId: string | null
+  companyNationalId: string | null
   contactEmail: string | null
   contactPhone: string | null
 
@@ -76,7 +76,7 @@ type ReportCreateAttributes = {
   companyAdminGender?: GenderEnum | null
 
   contactName?: string | null
-  contactNationalId?: string | null
+  companyNationalId?: string | null
   contactEmail?: string | null
   contactPhone?: string | null
 
@@ -179,9 +179,9 @@ export class ReportModel extends MutableModel<
   @Column({
     type: DataType.TEXT,
     allowNull: true,
-    field: 'contact_national_id',
+    field: 'company_national_id',
   })
-  contactNationalId!: string | null
+  companyNationalId!: string | null
 
   @Column({ type: DataType.TEXT, allowNull: true, field: 'contact_email' })
   contactEmail!: string | null
@@ -315,7 +315,7 @@ export class ReportModel extends MutableModel<
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       contactName: model.contactName,
-      contactNationalId: model.contactNationalId,
+      companyNationalId: model.companyNationalId,
       contactEmail: model.contactEmail,
       contactPhone: model.contactPhone,
       averageEmployeeMaleCount: model.averageEmployeeMaleCount,
