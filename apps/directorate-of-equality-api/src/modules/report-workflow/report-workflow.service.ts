@@ -1,12 +1,10 @@
-import { Sequelize } from 'sequelize-typescript'
-
 import {
   BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
 } from '@nestjs/common'
-import { InjectConnection, InjectModel } from '@nestjs/sequelize'
+import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -32,7 +30,6 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
-    @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
   async assign(context: ReportResourceContext): Promise<void> {
@@ -52,18 +49,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     const actorUserId = context.actor.userId
 
-    await this.sequelize.transaction(async () => {
-      await this.reportModel.update(
-        { status: ReportStatusEnum.IN_REVIEW },
-        { where: { id: context.reportId } },
-      )
+    await this.reportModel.update(
+      { status: ReportStatusEnum.IN_REVIEW },
+      { where: { id: context.reportId } },
+    )
 
-      await this.reportEventService.emitAssigned(
-        context.reportId,
-        actorUserId,
-        actorUserId,
-      )
-    })
+    await this.reportEventService.emitAssigned(
+      context.reportId,
+      actorUserId,
+      actorUserId,
+    )
   }
 
   async deny(
@@ -92,23 +87,21 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     const actorUserId = context.actor.userId
 
-    await this.sequelize.transaction(async () => {
-      await this.reportModel.update(
-        {
-          status: ReportStatusEnum.DENIED,
-          reviewerUserId: actorUserId,
-        },
-        { where: { id: context.reportId } },
-      )
+    await this.reportModel.update(
+      {
+        status: ReportStatusEnum.DENIED,
+        reviewerUserId: actorUserId,
+      },
+      { where: { id: context.reportId } },
+    )
 
-      await this.reportEventService.emitStatusChanged(
-        context.reportId,
-        ReportStatusEnum.IN_REVIEW,
-        ReportStatusEnum.DENIED,
-        actorUserId,
-        denialReason,
-      )
-    })
+    await this.reportEventService.emitStatusChanged(
+      context.reportId,
+      ReportStatusEnum.IN_REVIEW,
+      ReportStatusEnum.DENIED,
+      actorUserId,
+      denialReason,
+    )
   }
 
   async approve(context: ReportResourceContext): Promise<void> {
@@ -131,28 +124,26 @@ export class ReportWorkflowService implements IReportWorkflowService {
     const validUntil = new Date(now)
     validUntil.setFullYear(validUntil.getFullYear() + 3)
 
-    await this.sequelize.transaction(async () => {
-      await this.reportModel.update(
-        {
-          status: ReportStatusEnum.APPROVED,
-          approvedAt: now,
-          validUntil,
-          reviewerUserId: actorUserId,
-        },
-        { where: { id: context.reportId } },
-      )
+    await this.reportModel.update(
+      {
+        status: ReportStatusEnum.APPROVED,
+        approvedAt: now,
+        validUntil,
+        reviewerUserId: actorUserId,
+      },
+      { where: { id: context.reportId } },
+    )
 
-      await this.supersedePreviousApproved(context.reportId)
+    await this.supersedePreviousApproved(context.reportId)
 
-      await this.reportEventService.emitStatusChanged(
-        context.reportId,
-        ReportStatusEnum.IN_REVIEW,
-        ReportStatusEnum.APPROVED,
-        actorUserId,
-      )
+    await this.reportEventService.emitStatusChanged(
+      context.reportId,
+      ReportStatusEnum.IN_REVIEW,
+      ReportStatusEnum.APPROVED,
+      actorUserId,
+    )
 
-      // TODO: insert public_report row as part of approval pipeline
-    })
+    // TODO: insert public_report row as part of approval pipeline
   }
 
   async startFines(context: ReportResourceContext): Promise<void> {
