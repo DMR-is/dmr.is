@@ -1,6 +1,3 @@
-import { Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
-
 import {
   BadRequestException,
   ConflictException,
@@ -44,16 +41,11 @@ export class ReportResultService implements IReportResultService {
     private readonly reportResultModel: typeof ReportResultModel,
     @InjectModel(ConfigModel)
     private readonly configModel: typeof ConfigModel,
-    private readonly sequelize: Sequelize,
   ) {}
 
-  async getByReportId(
-    reportId: string,
-    transaction?: Transaction,
-  ): Promise<ReportResultDto> {
+  async getByReportId(reportId: string): Promise<ReportResultDto> {
     const result = await this.reportResultModel.findOne({
       where: { reportId },
-      transaction,
     })
 
     if (!result) {
@@ -65,32 +57,13 @@ export class ReportResultService implements IReportResultService {
     return result.fromModel()
   }
 
-  async createForReport(
-    reportId: string,
-    transaction?: Transaction,
-  ): Promise<ReportResultDto> {
-    if (transaction) {
-      return this.createForReportInTransaction(reportId, transaction)
-    }
-
-    return this.sequelize.transaction((innerTransaction) =>
-      this.createForReportInTransaction(reportId, innerTransaction),
-    )
-  }
-
-  private async createForReportInTransaction(
-    reportId: string,
-    transaction: Transaction,
-  ): Promise<ReportResultDto> {
+  async createForReport(reportId: string): Promise<ReportResultDto> {
     this.logger.info(`Creating persisted result for report "${reportId}"`, {
       context: LOGGING_CONTEXT,
       reportId,
     })
 
-    const report = await this.reportModel.findOne({
-      where: { id: reportId },
-      transaction,
-    })
+    const report = await this.reportModel.findOne({ where: { id: reportId } })
 
     if (!report) {
       throw new NotFoundException(`Report "${reportId}" not found`)
@@ -104,7 +77,6 @@ export class ReportResultService implements IReportResultService {
 
     const existingResult = await this.reportResultModel.findOne({
       where: { reportId },
-      transaction,
     })
 
     if (existingResult) {
@@ -115,7 +87,6 @@ export class ReportResultService implements IReportResultService {
 
     const employees = await this.reportEmployeeModel.findAll({
       where: { reportId },
-      transaction,
     })
 
     if (employees.length === 0) {
@@ -127,7 +98,6 @@ export class ReportResultService implements IReportResultService {
         key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
         supersededAt: null,
       },
-      transaction,
     })
 
     if (!thresholdConfig) {
@@ -164,10 +134,8 @@ export class ReportResultService implements IReportResultService {
       fullSnapshot: roundSalaryResultSnapshot(aggregates.report.full, 2),
     } satisfies ReportResultCreateAttributes
 
-    await this.reportResultModel.create(resultValues, {
-      transaction,
-    })
+    await this.reportResultModel.create(resultValues)
 
-    return this.getByReportId(reportId, transaction)
+    return this.getByReportId(reportId)
   }
 }

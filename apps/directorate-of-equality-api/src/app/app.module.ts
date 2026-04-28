@@ -22,6 +22,7 @@ import { ReportEventModel } from '../modules/report/models/report-event.model'
 import { ReportModule } from '../modules/report/report.module'
 import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
 import { ReportCommentModule } from '../modules/report-comment/report-comment.module'
+import { ReportCreateModule } from '../modules/report-create/report-create.module'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
@@ -89,6 +90,7 @@ import { UserModule } from '../modules/user/user.module'
     ReportStatisticsModule,
     ReportWorkflowModule,
     ReportModule,
+    ReportCreateModule,
   ],
   controllers: [],
   providers: [

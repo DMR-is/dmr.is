@@ -1,5 +1,3 @@
-import { Sequelize } from 'sequelize-typescript'
-
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -17,7 +15,6 @@ export class ConfigService implements IConfigService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(ConfigModel)
     private readonly configModel: typeof ConfigModel,
-    private readonly sequelize: Sequelize,
   ) {}
 
   async getAll(): Promise<ConfigDto[]> {
@@ -71,25 +68,23 @@ export class ConfigService implements IConfigService {
       context: LOGGING_CONTEXT,
     })
 
-    return this.sequelize.transaction(async () => {
-      const current = await this.configModel.findOne({
-        where: { key, supersededAt: null },
-      })
-
-      if (!current) {
-        throw new NotFoundException(`Config entry with key "${key}" not found`)
-      }
-
-      await current.update({ supersededAt: new Date() })
-
-      const newEntry = await this.configModel.create({
-        key,
-        value: dto.value,
-        description:
-          dto.description !== undefined ? dto.description : current.description,
-      })
-
-      return newEntry.fromModel()
+    const current = await this.configModel.findOne({
+      where: { key, supersededAt: null },
     })
+
+    if (!current) {
+      throw new NotFoundException(`Config entry with key "${key}" not found`)
+    }
+
+    await current.update({ supersededAt: new Date() })
+
+    const newEntry = await this.configModel.create({
+      key,
+      value: dto.value,
+      description:
+        dto.description !== undefined ? dto.description : current.description,
+    })
+
+    return newEntry.fromModel()
   }
 }
