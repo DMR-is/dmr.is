@@ -45,4 +45,7 @@ export class ReportEventDto {
 
   @ApiOptionalUuid({ nullable: true })
   relatedReportId!: string | null
+
+  @ApiOptionalUuid({ nullable: true })
+  companyId!: string | null
 }

@@ -305,6 +305,7 @@ module.exports = {
       assigned_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
       reason TEXT DEFAULT NULL,
       related_report_id UUID DEFAULT NULL REFERENCES report(id),
+      company_id UUID DEFAULT NULL REFERENCES company(id),
 
       CONSTRAINT report_event_status_changed_chk CHECK (
         event_type <> 'STATUS_CHANGED' OR (
@@ -318,6 +319,9 @@ module.exports = {
       ),
       CONSTRAINT report_event_superseded_chk CHECK (
         event_type <> 'SUPERSEDED' OR related_report_id IS NOT NULL
+      ),
+      CONSTRAINT report_event_submitted_company_chk CHECK (
+        event_type <> 'SUBMITTED' OR company_id IS NOT NULL
       )
     );
 
@@ -401,6 +405,8 @@ module.exports = {
       ON report_event (assigned_user_id);
     CREATE INDEX report_event_related_report_id_idx
       ON report_event (related_report_id);
+    CREATE INDEX report_event_company_id_idx
+      ON report_event (company_id);
 
     CREATE INDEX report_comment_report_id_idx
       ON report_comment (report_id);

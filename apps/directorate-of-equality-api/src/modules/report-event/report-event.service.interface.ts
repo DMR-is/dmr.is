@@ -1,7 +1,7 @@
 import { ReportStatusEnum } from '../report/models/report.model'
 
 export interface IReportEventService {
-  emitSubmitted(reportId: string): Promise<void>
+  emitSubmitted(reportId: string, companyId: string): Promise<void>
   emitAssigned(
     reportId: string,
     actorUserId: string,

@@ -3,6 +3,7 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import { CompanyModel } from '../../company/models/company.model'
 import { UserModel } from '../../user/models/user.model'
 import type { ReportEventDto } from '../dto/report-event.dto'
 import { ReportModel, ReportStatusEnum } from './report.model'
@@ -24,6 +25,7 @@ type ReportEventAttributes = {
   assignedUserId: string | null
   reason: string | null
   relatedReportId: string | null
+  companyId: string | null
 }
 
 type ReportEventCreateAttributes = {
@@ -36,6 +38,7 @@ type ReportEventCreateAttributes = {
   assignedUserId?: string | null
   reason?: string | null
   relatedReportId?: string | null
+  companyId?: string | null
 }
 
 @ImmutableTable({ tableName: DoeModels.REPORT_EVENT })
@@ -90,6 +93,10 @@ export class ReportEventModel extends ImmutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'related_report_id' })
   relatedReportId!: string | null
 
+  @ForeignKey(() => CompanyModel)
+  @Column({ type: DataType.UUID, allowNull: true, field: 'company_id' })
+  companyId!: string | null
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -105,6 +112,9 @@ export class ReportEventModel extends ImmutableModel<
   })
   relatedReport?: ReportModel | null
 
+  @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
+  company?: CompanyModel | null
+
   static fromModel(model: ReportEventModel): ReportEventDto {
     return {
       id: model.id,
@@ -117,6 +127,7 @@ export class ReportEventModel extends ImmutableModel<
       assignedUserId: model.assignedUserId,
       reason: model.reason,
       relatedReportId: model.relatedReportId,
+      companyId: model.companyId,
     }
   }
 

@@ -460,12 +460,14 @@ Immutable audit row emitted on state-changing actions. Insert-only. See "Audit t
 | `assigned_user_id`  | `fk → doe_user` (nullable — set on `ASSIGNED`)                                                                  |
 | `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                               |
 | `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession) |
+| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)             |
 
 Invariants (enforce via CHECK):
 
 - `event_type = 'STATUS_CHANGED'` ⇒ `from_status IS NOT NULL AND to_status IS NOT NULL AND report_status = to_status`.
 - `event_type = 'ASSIGNED'` ⇒ `assigned_user_id IS NOT NULL`.
 - `event_type = 'SUPERSEDED'` ⇒ `related_report_id IS NOT NULL`.
+- `event_type = 'SUBMITTED'` ⇒ `company_id IS NOT NULL`.
 
 ### `report_comment`
 
@@ -521,7 +523,7 @@ No FKs, no relationships. Standalone lookup table.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
-- `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
+- `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`); `company` 1:N `report_event` via `company_id` (nullable, set on `SUBMITTED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
 
 ## Notes / open questions

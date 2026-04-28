@@ -125,6 +125,7 @@ erDiagram
         ReportStatusEnum to_status "nullable, on STATUS_CHANGED"
         text reason "nullable, on STATUS_CHANGED→DENIED"
         uuid related_report_id FK "nullable, on SUPERSEDED"
+        uuid company_id FK "nullable, on SUBMITTED"
     }
     report_comment {
         uuid id PK
@@ -169,6 +170,7 @@ erDiagram
     doe_user |o--o{ report_event : "actor_user_id"
     doe_user |o--o{ report_event : "assigned_user_id"
     report |o--o{ report_event : "related_report_id"
+    company |o--o{ report_event : "company_id"
 
     report ||--o{ report_comment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"

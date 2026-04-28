@@ -22,16 +22,17 @@ describe('ReportEventService', () => {
   })
 
   describe('emitSubmitted', () => {
-    it('creates a SUBMITTED event with null actor', async () => {
+    it('creates a SUBMITTED event with null actor and company reference', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitSubmitted('report-1')
+      await service.emitSubmitted('report-1', 'company-1')
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
         eventType: ReportEventTypeEnum.SUBMITTED,
         actorUserId: null,
         reportStatus: ReportStatusEnum.SUBMITTED,
+        companyId: 'company-1',
       })
     })
   })

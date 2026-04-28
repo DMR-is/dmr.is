@@ -20,7 +20,7 @@ export class ReportEventService implements IReportEventService {
     private readonly reportEventModel: typeof ReportEventModel,
   ) {}
 
-  async emitSubmitted(reportId: string): Promise<void> {
+  async emitSubmitted(reportId: string, companyId: string): Promise<void> {
     this.logger.info(`Emitting SUBMITTED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
       reportId: reportId,
@@ -31,6 +31,7 @@ export class ReportEventService implements IReportEventService {
       eventType: ReportEventTypeEnum.SUBMITTED,
       actorUserId: null,
       reportStatus: ReportStatusEnum.SUBMITTED,
+      companyId,
     })
   }
 
@@ -62,7 +63,7 @@ export class ReportEventService implements IReportEventService {
   ): Promise<void> {
     this.logger.info(
       `Emitting STATUS_CHANGED event for report ${reportId}: ${fromStatus} → ${toStatus}`,
-      { context: LOGGING_CONTEXT },
+      { context: LOGGING_CONTEXT, reportId: reportId, fromStatus, toStatus },
     )
 
     await this.reportEventModel.create({
@@ -82,6 +83,8 @@ export class ReportEventService implements IReportEventService {
   ): Promise<void> {
     this.logger.info(`Emitting SUPERSEDED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
+      reportId: reportId,
+      relatedReportId: relatedReportId,
     })
 
     await this.reportEventModel.create({
