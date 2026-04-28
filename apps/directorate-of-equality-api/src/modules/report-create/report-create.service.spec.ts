@@ -20,6 +20,7 @@ import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-c
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { EducationEnum } from '../report-employee/models/report-employee.model'
+import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
@@ -50,6 +51,7 @@ describe('ReportCreateService', () => {
   let employeeBulkCreate: jest.Mock
   let roleStepBulkCreate: jest.Mock
   let personalStepBulkCreate: jest.Mock
+  let deviationBulkCreate: jest.Mock
   let criterionCreate: jest.Mock
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
@@ -74,6 +76,9 @@ describe('ReportCreateService', () => {
     )
     personalStepBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `ps-${i}` })),
+    )
+    deviationBulkCreate = jest.fn(async (rows) =>
+      rows.map((r: object, i: number) => ({ ...r, id: `dev-${i}` })),
     )
     criterionCreate = jest.fn(async (input) => ({ ...input, id: `cri-${Date.now()}-${Math.random()}` }))
     subCriterionCreate = jest.fn(async (input) => ({
@@ -118,6 +123,10 @@ describe('ReportCreateService', () => {
         {
           provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
           useValue: { bulkCreate: personalStepBulkCreate },
+        },
+        {
+          provide: getModelToken(ReportEmployeeDeviationModel),
+          useValue: { bulkCreate: deviationBulkCreate },
         },
         {
           provide: getModelToken(ReportCriterionModel),
@@ -293,6 +302,58 @@ describe('ReportCreateService', () => {
 
     expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
     expect(reportEventCreate).not.toHaveBeenCalled()
+  })
+
+  it('skips the deviation insert when none are flagged', async () => {
+    const input = makeInput()
+    input.deviations = []
+
+    await service.createSalary(input)
+
+    expect(deviationBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('persists deviations resolving employeeOrdinal to the new employee id', async () => {
+    const input = makeInput()
+    input.deviations = [
+      {
+        employeeOrdinal: 1,
+        reason: 'On parental leave for 6 months',
+        action: 'No adjustment, salary frozen for the period',
+        signatureName: 'Anna Admin',
+        signatureRole: 'HR Manager',
+      },
+    ]
+
+    await service.createSalary(input)
+
+    expect(deviationBulkCreate).toHaveBeenCalledTimes(1)
+    expect(deviationBulkCreate.mock.calls[0][0]).toEqual([
+      expect.objectContaining({
+        reportEmployeeId: 'emp-0',
+        reason: 'On parental leave for 6 months',
+        action: 'No adjustment, salary frozen for the period',
+        signatureName: 'Anna Admin',
+        signatureRole: 'HR Manager',
+      }),
+    ])
+  })
+
+  it('rejects deviations referencing an unknown employee ordinal', async () => {
+    const input = makeInput()
+    input.deviations = [
+      {
+        employeeOrdinal: 999,
+        reason: 'r',
+        action: 'a',
+        signatureName: 'n',
+        signatureRole: 'role',
+      },
+    ]
+
+    await expect(service.createSalary(input)).rejects.toThrow(BadRequestException)
+    expect(reportCreate).not.toHaveBeenCalled()
+    expect(deviationBulkCreate).not.toHaveBeenCalled()
   })
 
   // ── createEquality path ────────────────────────────────────────────

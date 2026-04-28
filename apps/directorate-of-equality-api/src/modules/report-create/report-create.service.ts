@@ -25,6 +25,7 @@ import { ReportCriterionModel } from '../report-criterion/models/report-criterio
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
@@ -62,6 +63,8 @@ export class ReportCreateService implements IReportCreateService {
     private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
     @InjectModel(ReportEmployeePersonalCriterionStepModel)
     private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
+    @InjectModel(ReportEmployeeDeviationModel)
+    private readonly reportEmployeeDeviationModel: typeof ReportEmployeeDeviationModel,
     @InjectModel(ReportCriterionModel)
     private readonly reportCriterionModel: typeof ReportCriterionModel,
     @InjectModel(ReportSubCriterionModel)
@@ -93,6 +96,7 @@ export class ReportCreateService implements IReportCreateService {
   ): Promise<CreateReportResponseDto> {
     const stepScoreByKey = this.assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = this.computeEmployeeScores(input.parsed, stepScoreByKey)
+    this.assertDeviationsReferenceParsedEmployees(input)
 
     await this.assertEqualityReportApproved(input.equalityReportId, transaction)
 
@@ -247,12 +251,35 @@ export class ReportCreateService implements IReportCreateService {
       await this.personalStepModel.bulkCreate(personalStepRows, { transaction })
     }
 
-    // 8. Persisted snapshot — reviewers need the computed aggregates available
+    // 8. Salary-outlier deviations — only employees the company flagged
+    //    via the outlier-preview flow get a row here.
+    if (input.deviations && input.deviations.length > 0) {
+      const employeeOrdinalToId = new Map<number, string>()
+      input.parsed.employees.forEach((employee, index) => {
+        employeeOrdinalToId.set(employee.ordinal, employeeRows[index].id)
+      })
+
+      await this.reportEmployeeDeviationModel.bulkCreate(
+        input.deviations.map((deviation) => ({
+          // Pre-flight already verified every ordinal resolves.
+          reportEmployeeId: employeeOrdinalToId.get(
+            deviation.employeeOrdinal,
+          ) as string,
+          reason: deviation.reason,
+          action: deviation.action,
+          signatureName: deviation.signatureName,
+          signatureRole: deviation.signatureRole,
+        })),
+        { transaction },
+      )
+    }
+
+    // 9. Persisted snapshot — reviewers need the computed aggregates available
     //    immediately on the SUBMITTED row. Runs inside the same transaction so
     //    a snapshot failure rolls the whole submission back.
     await this.reportResultService.createForReport(report.id, transaction)
 
-    // 9. SUBMITTED audit event — actorUserId null = company admin.
+    // 10. SUBMITTED audit event — actorUserId null = company admin.
     await this.reportEventModel.create(
       {
         reportId: report.id,
@@ -422,6 +449,26 @@ export class ReportCreateService implements IReportCreateService {
     }
 
     return stepScoreByKey
+  }
+
+  /**
+   * Each `deviations[].employeeOrdinal` must match an `ordinal` in the parsed
+   * employees array. Outlier detection is the application's responsibility
+   * (planned outlier-preview endpoint — see `db/README.md` Notes); this
+   * service trusts the caller's flagging but rejects orphan references.
+   */
+  private assertDeviationsReferenceParsedEmployees(input: CreateReportDto) {
+    if (!input.deviations || input.deviations.length === 0) {
+      return
+    }
+    const knownOrdinals = new Set(input.parsed.employees.map((e) => e.ordinal))
+    for (const deviation of input.deviations) {
+      if (!knownOrdinals.has(deviation.employeeOrdinal)) {
+        throw new BadRequestException(
+          `Deviation references unknown employee ordinal ${deviation.employeeOrdinal}`,
+        )
+      }
+    }
   }
 
   /**

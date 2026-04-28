@@ -8,6 +8,7 @@ import { ReportCriterionModel } from '../report-criterion/models/report-criterio
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
@@ -24,6 +25,7 @@ import { IReportCreateService } from './report-create.service.interface'
       CompanyReportModel,
       ReportEmployeeRoleModel,
       ReportEmployeeModel,
+      ReportEmployeeDeviationModel,
       ReportEmployeeRoleCriterionStepModel,
       ReportEmployeePersonalCriterionStepModel,
       ReportCriterionModel,

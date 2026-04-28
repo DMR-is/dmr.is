@@ -6,6 +6,7 @@ import {
   ApiDtoArray,
   ApiEnum,
   ApiNumber,
+  ApiOptionalDtoArray,
   ApiOptionalString,
   ApiOptionalUUID,
   ApiString,
@@ -17,6 +18,31 @@ import {
   ReportProviderEnum,
 } from '../../report/models/report.enums'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
+
+/**
+ * One row per employee flagged as a salary outlier — populated by the company
+ * after the outlier-preview step (see `db/README.md` Notes / open questions).
+ * Persisted into `report_employee_deviation`.
+ */
+export class CreateReportDeviationDto {
+  @ApiNumber({
+    description:
+      'Ordinal of the employee in `parsed.employees[]` this deviation applies to.',
+  })
+  employeeOrdinal!: number
+
+  @ApiString()
+  reason!: string
+
+  @ApiString()
+  action!: string
+
+  @ApiString()
+  signatureName!: string
+
+  @ApiString()
+  signatureRole!: string
+}
 
 export class CreateReportCompanySnapshotDto {
   @ApiUUID({ description: 'FK to the live company row' })
@@ -116,4 +142,12 @@ export class CreateReportDto {
   @ApiDtoArray(CreateReportCompanySnapshotDto)
   @ArrayMinSize(1)
   companies!: CreateReportCompanySnapshotDto[]
+
+  /**
+   * Salary outliers the company has justified. Optional — empty/undefined is
+   * fine when no outliers were flagged. Each entry references its employee
+   * by `ordinal` from `parsed.employees[]`.
+   */
+  @ApiOptionalDtoArray(CreateReportDeviationDto)
+  deviations?: CreateReportDeviationDto[]
 }
