@@ -1,5 +1,3 @@
-import { Sequelize } from 'sequelize-typescript'
-
 import {
   BadRequestException,
   ConflictException,
@@ -36,7 +34,6 @@ describe('ReportResultService', () => {
   let resultFindOne: jest.Mock
   let resultCreate: jest.Mock
   let configFindOne: jest.Mock
-  let sequelizeTransaction: jest.Mock
 
   beforeEach(async () => {
     reportFindOne = jest.fn()
@@ -44,13 +41,11 @@ describe('ReportResultService', () => {
     resultFindOne = jest.fn()
     resultCreate = jest.fn()
     configFindOne = jest.fn()
-    sequelizeTransaction = jest.fn(async (callback) => callback({ id: 'tx-1' }))
 
     const module = await Test.createTestingModule({
       providers: [
         ReportResultService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        { provide: Sequelize, useValue: { transaction: sequelizeTransaction } },
         {
           provide: getModelToken(ReportModel),
           useValue: { findOne: reportFindOne },
@@ -107,7 +102,6 @@ describe('ReportResultService', () => {
 
     const result = await service.createForReport(REPORT_ID)
 
-    expect(sequelizeTransaction).toHaveBeenCalled()
     expect(resultCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         reportId: REPORT_ID,
@@ -138,7 +132,6 @@ describe('ReportResultService', () => {
           }),
         }),
       }),
-      expect.objectContaining({ transaction: { id: 'tx-1' } }),
     )
     expect(result.base.totals.overall.average).toBe(500000)
   })

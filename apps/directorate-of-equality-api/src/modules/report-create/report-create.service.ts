@@ -1,5 +1,4 @@
-import { Op, Transaction } from 'sequelize'
-import { Sequelize } from 'sequelize-typescript'
+import { Op } from 'sequelize'
 
 import {
   BadRequestException,
@@ -73,32 +72,26 @@ export class ReportCreateService implements IReportCreateService {
     private readonly reportSubCriterionStepModel: typeof ReportSubCriterionStepModel,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
-    private readonly sequelize: Sequelize,
   ) {}
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
-    return this.sequelize.transaction((transaction) =>
-      this.createSalaryInTransaction(input, transaction),
-    )
+    return this.createSalaryReport(input)
   }
 
   async createEquality(
     input: CreateEqualityReportDto,
   ): Promise<CreateReportResponseDto> {
-    return this.sequelize.transaction((transaction) =>
-      this.createEqualityInTransaction(input, transaction),
-    )
+    return this.createEqualityReport(input)
   }
 
-  private async createSalaryInTransaction(
+  private async createSalaryReport(
     input: CreateReportDto,
-    transaction: Transaction,
   ): Promise<CreateReportResponseDto> {
     const stepScoreByKey = this.assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = this.computeEmployeeScores(input.parsed, stepScoreByKey)
     this.assertDeviationsReferenceParsedEmployees(input)
 
-    await this.assertEqualityReportApproved(input.equalityReportId, transaction)
+    await this.assertEqualityReportApproved(input.equalityReportId)
 
     // 1. report row — status SUBMITTED so it lands in the reviewer queue.
     const report = await this.reportModel.create(
@@ -120,7 +113,6 @@ export class ReportCreateService implements IReportCreateService {
         averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
         averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
       },
-      { transaction },
     )
 
     this.logger.info(`Created SALARY report row "${report.id}"`, {
@@ -142,13 +134,11 @@ export class ReportCreateService implements IReportCreateService {
         averageEmployeeCountFromRsk: company.averageEmployeeCountFromRsk,
         isatCategory: company.isatCategory,
       })),
-      { transaction },
     )
 
     // 3. roles — one row per parsed role. Map by title for FK resolution.
     const roleRows = await this.reportEmployeeRoleModel.bulkCreate(
       input.parsed.roles.map((role) => ({ title: role.title })),
-      { transaction },
     )
     const roleTitleToId = new Map<string, string>()
     input.parsed.roles.forEach((role, index) => {
@@ -166,7 +156,6 @@ export class ReportCreateService implements IReportCreateService {
           type: criterion.type,
           reportId: report.id,
         },
-        { transaction },
       )
 
       for (const subCriterion of criterion.subCriteria) {
@@ -177,7 +166,6 @@ export class ReportCreateService implements IReportCreateService {
             weight: subCriterion.weight,
             reportCriterionId: criterionRow.id,
           },
-          { transaction },
         )
 
         const stepRows = await this.reportSubCriterionStepModel.bulkCreate(
@@ -187,7 +175,6 @@ export class ReportCreateService implements IReportCreateService {
             score: step.score,
             reportSubCriterionId: subCriterionRow.id,
           })),
-          { transaction },
         )
 
         subCriterion.steps.forEach((step, index) => {
@@ -207,7 +194,7 @@ export class ReportCreateService implements IReportCreateService {
       })),
     )
     if (roleStepRows.length > 0) {
-      await this.roleStepModel.bulkCreate(roleStepRows, { transaction })
+      await this.roleStepModel.bulkCreate(roleStepRows)
     }
 
     // 6. employees — score is the precomputed total (sum of step scores from
@@ -233,7 +220,6 @@ export class ReportCreateService implements IReportCreateService {
         reportId: report.id,
         score: employeeScores[index],
       })),
-      { transaction },
     )
 
     // 7. employee ↔ step personal joins.
@@ -248,7 +234,7 @@ export class ReportCreateService implements IReportCreateService {
         })),
     )
     if (personalStepRows.length > 0) {
-      await this.personalStepModel.bulkCreate(personalStepRows, { transaction })
+      await this.personalStepModel.bulkCreate(personalStepRows)
     }
 
     // 8. Salary-outlier deviations — only employees the company flagged
@@ -270,14 +256,13 @@ export class ReportCreateService implements IReportCreateService {
           signatureName: deviation.signatureName,
           signatureRole: deviation.signatureRole,
         })),
-        { transaction },
       )
     }
 
     // 9. Persisted snapshot — reviewers need the computed aggregates available
-    //    immediately on the SUBMITTED row. Runs inside the same transaction so
-    //    a snapshot failure rolls the whole submission back.
-    await this.reportResultService.createForReport(report.id, transaction)
+    //    immediately on the SUBMITTED row. Runs in the same CLS-managed request
+    //    transaction so a snapshot failure rolls the whole submission back.
+    await this.reportResultService.createForReport(report.id)
 
     // 10. SUBMITTED audit event — actorUserId null = company admin.
     await this.reportEventModel.create(
@@ -287,7 +272,6 @@ export class ReportCreateService implements IReportCreateService {
         reportStatus: ReportStatusEnum.SUBMITTED,
         actorUserId: null,
       },
-      { transaction },
     )
 
     return { reportId: report.id }
@@ -298,9 +282,8 @@ export class ReportCreateService implements IReportCreateService {
    * snapshot. Just the `report` row, the `company_report` snapshots, and the
    * SUBMITTED audit event.
    */
-  private async createEqualityInTransaction(
+  private async createEqualityReport(
     input: CreateEqualityReportDto,
-    transaction: Transaction,
   ): Promise<CreateReportResponseDto> {
     const report = await this.reportModel.create(
       {
@@ -318,7 +301,6 @@ export class ReportCreateService implements IReportCreateService {
         contactPhone: input.contactPhone,
         equalityReportContent: input.equalityReportContent,
       },
-      { transaction },
     )
 
     this.logger.info(`Created EQUALITY report row "${report.id}"`, {
@@ -339,7 +321,6 @@ export class ReportCreateService implements IReportCreateService {
         averageEmployeeCountFromRsk: company.averageEmployeeCountFromRsk,
         isatCategory: company.isatCategory,
       })),
-      { transaction },
     )
 
     await this.reportEventModel.create(
@@ -349,7 +330,6 @@ export class ReportCreateService implements IReportCreateService {
         reportStatus: ReportStatusEnum.SUBMITTED,
         actorUserId: null,
       },
-      { transaction },
     )
 
     return { reportId: report.id }
@@ -510,10 +490,7 @@ export class ReportCreateService implements IReportCreateService {
    * EQUALITY row that was APPROVED at the moment of insert and is still
    * within its three-year validity window.
    */
-  private async assertEqualityReportApproved(
-    equalityReportId: string,
-    transaction: Transaction,
-  ) {
+  private async assertEqualityReportApproved(equalityReportId: string) {
     const equalityReport = await this.reportModel.findOne({
       where: {
         id: equalityReportId,
@@ -521,7 +498,6 @@ export class ReportCreateService implements IReportCreateService {
         status: ReportStatusEnum.APPROVED,
         validUntil: { [Op.gt]: new Date() },
       },
-      transaction,
     })
 
     if (!equalityReport) {

@@ -1,5 +1,3 @@
-import { Sequelize } from 'sequelize-typescript'
-
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
@@ -56,7 +54,6 @@ describe('ReportCreateService', () => {
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
-  let sequelizeTransaction: jest.Mock
 
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
@@ -89,13 +86,11 @@ describe('ReportCreateService', () => {
       rows.map((r: object, i: number) => ({ ...r, id: `step-${Date.now()}-${i}` })),
     )
     reportResultCreateForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
-    sequelizeTransaction = jest.fn(async (callback) => callback({ id: 'tx-1' }))
 
     const module = await Test.createTestingModule({
       providers: [
         ReportCreateService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        { provide: Sequelize, useValue: { transaction: sequelizeTransaction } },
         {
           provide: getModelToken(ReportModel),
           useValue: { create: reportCreate, findOne: reportFindOne },
@@ -150,11 +145,10 @@ describe('ReportCreateService', () => {
     service = module.get(ReportCreateService)
   })
 
-  it('creates a SALARY report with all child rows in a transaction', async () => {
+  it('creates a SALARY report with all child rows', async () => {
     const result = await service.createSalary(makeInput())
 
     expect(result).toEqual({ reportId: REPORT_ID })
-    expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
 
     expect(reportFindOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -162,7 +156,6 @@ describe('ReportCreateService', () => {
           id: EQUALITY_REPORT_ID,
           type: ReportTypeEnum.EQUALITY,
         }),
-        transaction: { id: 'tx-1' },
       }),
     )
 
@@ -173,7 +166,6 @@ describe('ReportCreateService', () => {
         equalityReportId: EQUALITY_REPORT_ID,
         companyAdminEmail: 'admin@example.is',
       }),
-      expect.objectContaining({ transaction: { id: 'tx-1' } }),
     )
 
     expect(companyReportBulkCreate).toHaveBeenCalledTimes(1)
@@ -210,9 +202,7 @@ describe('ReportCreateService', () => {
       score: 60,
     })
 
-    expect(reportResultCreateForReport).toHaveBeenCalledWith(REPORT_ID, {
-      id: 'tx-1',
-    })
+    expect(reportResultCreateForReport).toHaveBeenCalledWith(REPORT_ID)
 
     expect(reportEventCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -221,7 +211,6 @@ describe('ReportCreateService', () => {
         reportStatus: 'SUBMITTED',
         actorUserId: null,
       }),
-      expect.objectContaining({ transaction: { id: 'tx-1' } }),
     )
   })
 
@@ -282,25 +271,21 @@ describe('ReportCreateService', () => {
     expect(reportCreate).not.toHaveBeenCalled()
   })
 
-  it('rolls back the transaction when a child insert fails', async () => {
+  it('propagates child insert failures before snapshot and event creation', async () => {
     employeeBulkCreate.mockRejectedValue(new Error('db boom'))
 
     await expect(service.createSalary(makeInput())).rejects.toThrow('db boom')
 
-    // The transaction wrapper was entered, the report row was attempted, but
-    // the failure propagates out of the callback so Sequelize will roll back.
-    expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
     expect(reportCreate).toHaveBeenCalled()
     expect(reportResultCreateForReport).not.toHaveBeenCalled()
     expect(reportEventCreate).not.toHaveBeenCalled()
   })
 
-  it('rolls back the whole submission when snapshot creation fails', async () => {
+  it('propagates snapshot creation failures before event creation', async () => {
     reportResultCreateForReport.mockRejectedValue(new Error('snapshot boom'))
 
     await expect(service.createSalary(makeInput())).rejects.toThrow('snapshot boom')
 
-    expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
     expect(reportEventCreate).not.toHaveBeenCalled()
   })
 
@@ -362,7 +347,6 @@ describe('ReportCreateService', () => {
     const result = await service.createEquality(makeEqualityInput())
 
     expect(result).toEqual({ reportId: REPORT_ID })
-    expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
 
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -371,7 +355,6 @@ describe('ReportCreateService', () => {
         importedFromExcel: false,
         equalityReportContent: 'A narrative gender-equality plan.',
       }),
-      expect.objectContaining({ transaction: { id: 'tx-1' } }),
     )
 
     // Equality submissions never set equalityReportId — that FK is SALARY-only.
@@ -403,7 +386,6 @@ describe('ReportCreateService', () => {
         reportStatus: 'SUBMITTED',
         actorUserId: null,
       }),
-      expect.objectContaining({ transaction: { id: 'tx-1' } }),
     )
   })
 
@@ -424,14 +406,13 @@ describe('ReportCreateService', () => {
     })
   })
 
-  it('rolls back the EQUALITY submission when company_report bulkCreate fails', async () => {
+  it('propagates EQUALITY company_report failures before event creation', async () => {
     companyReportBulkCreate.mockRejectedValue(new Error('cr boom'))
 
     await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
       'cr boom',
     )
 
-    expect(sequelizeTransaction).toHaveBeenCalledTimes(1)
     expect(reportCreate).toHaveBeenCalled()
     expect(reportEventCreate).not.toHaveBeenCalled()
   })
