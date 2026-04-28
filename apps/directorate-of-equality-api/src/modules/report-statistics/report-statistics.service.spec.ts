@@ -61,7 +61,11 @@ const makeSubCriterion = (id: string, reportCriterionId: string) =>
   ({ id, reportCriterionId }) as unknown as ReportSubCriterionModel
 
 const makeStep = (id: string, reportSubCriterionId: string, score: number) =>
-  ({ id, reportSubCriterionId, score }) as unknown as ReportSubCriterionStepModel
+  ({
+    id,
+    reportSubCriterionId,
+    score,
+  }) as unknown as ReportSubCriterionStepModel
 
 const makeRoleStepLink = (roleId: string, stepId: string) =>
   ({
@@ -358,8 +362,7 @@ describe('ReportStatisticsService', () => {
       ])
       personalStepFindAll.mockResolvedValue([])
 
-      const result =
-        await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
 
       expect(result.dataPoints).toHaveLength(1)
       expect(result.dataPoints[0].score).toBe(500) // 200 + 300
@@ -383,8 +386,7 @@ describe('ReportStatisticsService', () => {
       ])
       personalStepFindAll.mockResolvedValue([])
 
-      const result =
-        await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
 
       // Only STEP_WORK_A counts (score 200), STEP_PERSONAL is excluded
       expect(result.dataPoints[0].score).toBe(200)
@@ -408,8 +410,7 @@ describe('ReportStatisticsService', () => {
         makePersonalStepLink('emp-1', STEP_WORK_B),
       ])
 
-      const result =
-        await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
 
       // 200 (role) + 300 (personal, but work-type) = 500
       expect(result.dataPoints[0].score).toBe(500)
@@ -433,8 +434,7 @@ describe('ReportStatisticsService', () => {
         makePersonalStepLink('emp-1', STEP_WORK_A),
       ])
 
-      const result =
-        await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
 
       // Step A (200) counted once, not twice
       expect(result.dataPoints[0].score).toBe(200)
@@ -453,8 +453,7 @@ describe('ReportStatisticsService', () => {
       roleStepFindAll.mockResolvedValue([])
       personalStepFindAll.mockResolvedValue([])
 
-      const result =
-        await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
 
       expect(result.dataPoints[0].score).toBe(0)
     })
@@ -473,8 +472,7 @@ describe('ReportStatisticsService', () => {
         }),
       ])
 
-      const result =
-        await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
 
       expect(result.dataPoints).toHaveLength(1)
       expect(result.dataPoints[0].adjustedSalary).toBe(1250000)
@@ -490,8 +488,7 @@ describe('ReportStatisticsService', () => {
         }),
       ])
 
-      const result =
-        await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
 
       expect(result.dataPoints[0].adjustedSalary).toBe(1000000)
     })
@@ -503,8 +500,7 @@ describe('ReportStatisticsService', () => {
         }),
       ])
 
-      const result =
-        await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
 
       expect(result.dataPoints[0].score).toBe(450)
     })

@@ -9,6 +9,7 @@ import { ReportRoleResultModel } from '../report-result/models/report-role-resul
 import { UserModel } from '../user/models/user.model'
 import { ReportModel } from './models/report.model'
 import { ReportCommentModel } from './models/report-comment.model'
+import { ReportEventModel } from './models/report-event.model'
 import { ReportController } from './report.controller'
 import { ReportService } from './report.service'
 import { IReportService } from './report.service.interface'
@@ -19,6 +20,7 @@ import { IReportService } from './report.service.interface'
       ReportModel,
       CompanyReportModel,
       ReportCommentModel,
+      ReportEventModel,
       UserModel,
       ReportResultModel,
       ReportRoleResultModel,

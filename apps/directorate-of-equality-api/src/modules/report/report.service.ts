@@ -38,9 +38,14 @@ import {
 } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
+import {
+  ReportTimelineItemDto,
+  ReportTimelineItemKindEnum,
+} from './dto/report-timeline-item.dto'
 import { ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportCommentModel } from './models/report-comment.model'
+import { ReportEventModel } from './models/report-event.model'
 import { buildFreeTextWhere, dateRangeFilter } from './utils/filters'
 import { IReportService } from './report.service.interface'
 
@@ -57,6 +62,8 @@ export class ReportService implements IReportService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(ReportModel) private readonly reportModel: typeof ReportModel,
+    @InjectModel(ReportEventModel)
+    private readonly reportEventModel: typeof ReportEventModel,
     @InjectModel(ReportRoleResultModel)
     private readonly reportRoleResultModel: typeof ReportRoleResultModel,
     @InjectModel(ReportEmployeeDeviationModel)
@@ -133,20 +140,49 @@ export class ReportService implements IReportService {
       )
     }
 
-    const { result, roleResults, employeeDeviations } =
-      await this.loadSalaryCalculations(report)
+    const [{ result, roleResults, employeeDeviations }, timeline] =
+      await Promise.all([
+        this.loadSalaryCalculations(report),
+        this.buildTimeline(id, report.comments ?? []),
+      ])
 
     return {
       ...base,
       company: CompanyReportModel.fromModel(report.companyReport),
       equalityReport,
-      comments: (report.comments ?? []).map((c: ReportCommentModel) =>
-        ReportCommentModel.fromModel(c),
-      ),
+      timeline,
       result,
       roleResults,
       employeeDeviations,
     }
+  }
+
+  private async buildTimeline(
+    reportId: string,
+    comments: ReportCommentModel[],
+  ): Promise<ReportTimelineItemDto[]> {
+    const events = await this.reportEventModel.findAll({
+      where: { reportId },
+      order: [['createdAt', 'ASC']],
+    })
+
+    const eventItems: ReportTimelineItemDto[] = events.map((e) => ({
+      kind: ReportTimelineItemKindEnum.EVENT,
+      createdAt: e.createdAt,
+      event: ReportEventModel.fromModel(e),
+      comment: null,
+    }))
+
+    const commentItems: ReportTimelineItemDto[] = comments.map((c) => ({
+      kind: ReportTimelineItemKindEnum.COMMENT,
+      createdAt: c.createdAt,
+      event: null,
+      comment: ReportCommentModel.fromModel(c),
+    }))
+
+    return [...eventItems, ...commentItems].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    )
   }
 
   /**

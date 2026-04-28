@@ -35,6 +35,7 @@ import { ReportResultModel } from '../modules/report-result/models/report-result
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { ReportResultModule } from '../modules/report-result/report-result.module'
 import { ReportStatisticsModule } from '../modules/report-statistics/report-statistics.module'
+import { ReportWorkflowModule } from '../modules/report-workflow/report-workflow.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { UserModule } from '../modules/user/user.module'
 @Module({
@@ -86,6 +87,7 @@ import { UserModule } from '../modules/user/user.module'
     ReportCommentModule,
     ReportResultModule,
     ReportStatisticsModule,
+    ReportWorkflowModule,
     ReportModule,
   ],
   controllers: [],

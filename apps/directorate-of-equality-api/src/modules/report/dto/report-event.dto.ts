@@ -1,6 +1,8 @@
 import {
+  ApiDateTime,
   ApiEnum,
   ApiOptionalEnum,
+  ApiOptionalString,
   ApiOptionalUuid,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -38,4 +40,16 @@ export class ReportEventDto {
 
   @ApiOptionalUuid({ nullable: true })
   assignedUserId!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  reason!: string | null
+
+  @ApiOptionalUuid({ nullable: true })
+  relatedReportId!: string | null
+
+  @ApiOptionalUuid({ nullable: true })
+  companyId!: string | null
+
+  @ApiDateTime()
+  createdAt!: Date
 }

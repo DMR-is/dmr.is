@@ -88,6 +88,9 @@ const makeService = () => {
   // outputs unless a test overrides.
   const roleResultFindAll = jest.fn().mockResolvedValue([])
   const deviationFindAll = jest.fn().mockResolvedValue([])
+  const reportEventModel = {
+    findAll: jest.fn().mockResolvedValue([]),
+  } as unknown as typeof import('./models/report-event.model').ReportEventModel
   const reportRoleResultModel = {
     findAll: roleResultFindAll,
   } as unknown as typeof import('../report-result/models/report-role-result.model').ReportRoleResultModel
@@ -98,6 +101,7 @@ const makeService = () => {
   const service = new ReportService(
     logger,
     reportModel,
+    reportEventModel,
     reportRoleResultModel,
     reportEmployeeDeviationModel,
   )
@@ -342,7 +346,6 @@ describe('ReportService.getById', () => {
     importedFromExcel: false,
     equalityReportId: null,
     reviewerUserId: null,
-    denialReason: null,
     approvedAt: null,
     validUntil: null,
     correctionDeadline: null,

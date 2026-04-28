@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { UserModel } from './models/user.model'
 import { UserController } from './user.controller'
 import { UserService } from './user.service'
@@ -10,6 +11,7 @@ import { IUserService } from './user.service.interface'
   imports: [SequelizeModule.forFeature([UserModel])],
   controllers: [UserController],
   providers: [
+    AdminGuard,
     {
       provide: IUserService,
       useClass: UserService,

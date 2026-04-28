@@ -83,7 +83,12 @@ describe('compensation-aggregates', () => {
 
   it('rounds aggregate snapshots for persistence', () => {
     const rounded = roundSalaryAggregateSnapshot({
-      overall: { average: 1.234, median: 2.345, minimum: 0.555, maximum: 9.999 },
+      overall: {
+        average: 1.234,
+        median: 2.345,
+        minimum: 0.555,
+        maximum: 9.999,
+      },
       male: { average: 1.111, median: 2.222, minimum: 0.333, maximum: 9.444 },
       female: { average: null, median: null, minimum: null, maximum: null },
       neutral: { average: null, median: null, minimum: null, maximum: null },

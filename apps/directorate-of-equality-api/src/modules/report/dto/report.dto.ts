@@ -79,9 +79,6 @@ export class ReportDto {
   @ApiOptionalUuid({ nullable: true })
   reviewerUserId!: string | null
 
-  @ApiOptionalString({ nullable: true })
-  denialReason!: string | null
-
   @ApiOptionalDateTime({ nullable: true })
   approvedAt!: Date | null
 

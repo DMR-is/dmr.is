@@ -225,14 +225,26 @@ export function roundSalaryAggregateSnapshot(
     female: roundMetrics(snapshot.female, precision),
     neutral: roundMetrics(snapshot.neutral, precision),
     salaryDifferences: {
-      maleFemale: roundNullable(snapshot.salaryDifferences.maleFemale, precision),
-      maleNeutral: roundNullable(snapshot.salaryDifferences.maleNeutral, precision),
-      femaleMale: roundNullable(snapshot.salaryDifferences.femaleMale, precision),
+      maleFemale: roundNullable(
+        snapshot.salaryDifferences.maleFemale,
+        precision,
+      ),
+      maleNeutral: roundNullable(
+        snapshot.salaryDifferences.maleNeutral,
+        precision,
+      ),
+      femaleMale: roundNullable(
+        snapshot.salaryDifferences.femaleMale,
+        precision,
+      ),
       femaleNeutral: roundNullable(
         snapshot.salaryDifferences.femaleNeutral,
         precision,
       ),
-      neutralMale: roundNullable(snapshot.salaryDifferences.neutralMale, precision),
+      neutralMale: roundNullable(
+        snapshot.salaryDifferences.neutralMale,
+        precision,
+      ),
       neutralFemale: roundNullable(
         snapshot.salaryDifferences.neutralFemale,
         precision,
@@ -260,9 +272,10 @@ export function assessSalaryDeviationFromReference(input: {
   thresholdPercent: number
   useHalfThreshold?: boolean
 }): SalaryDeviationAssessment {
-  const allowedDifferencePercent = input.useHalfThreshold === false
-    ? input.thresholdPercent
-    : input.thresholdPercent / 2
+  const allowedDifferencePercent =
+    input.useHalfThreshold === false
+      ? input.thresholdPercent
+      : input.thresholdPercent / 2
 
   if (input.referenceSalary === null || input.referenceSalary === 0) {
     return {
@@ -363,7 +376,9 @@ function groupSalaries(samples: GenderSalarySample[]): AggregateGroup {
   return grouped
 }
 
-function countSamplesByCohort(samples: GenderSalarySample[]): SalaryCohortCounts {
+function countSamplesByCohort(
+  samples: GenderSalarySample[],
+): SalaryCohortCounts {
   return {
     overall: samples.length,
     male: samples.filter((sample) => sample.gender === GenderEnum.MALE).length,
