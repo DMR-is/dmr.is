@@ -278,7 +278,7 @@ module.exports = {
       size_bucket TEXT NOT NULL,
       isat_category TEXT NOT NULL,
       published_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      valid_until TIMESTAMPTZ NOT NULL,
+      valid_until TIMESTAMPTZ NOT NULL
     );
 
     CREATE TABLE config (
