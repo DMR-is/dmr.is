@@ -42,10 +42,11 @@
     },
     "format": {
       "executor": "nx:run-commands",
+      "cache": false,
       "options": {
         "commands": [
-          "nx run doe-api:lint --fix=true",
-          "nx format:write --projects=doe-api --since=main"
+          "nx format:write --projects=doe-api",
+          "nx run doe-api:lint --fix=true --skip-nx-cache"
         ],
         "parallel": false
       }

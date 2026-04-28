@@ -460,7 +460,7 @@ Immutable audit row emitted on state-changing actions. Insert-only. See "Audit t
 | `assigned_user_id`  | `fk → doe_user` (nullable — set on `ASSIGNED`)                                                                  |
 | `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                               |
 | `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession) |
-| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)             |
+| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)            |
 
 Invariants (enforce via CHECK):
 

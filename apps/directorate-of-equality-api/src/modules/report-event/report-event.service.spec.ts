@@ -1,5 +1,5 @@
-import { ReportEventTypeEnum } from '../report/models/report-event.model'
 import { ReportStatusEnum } from '../report/models/report.model'
+import { ReportEventTypeEnum } from '../report/models/report-event.model'
 import { ReportEventService } from './report-event.service'
 
 describe('ReportEventService', () => {

@@ -6,7 +6,6 @@ import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-
 import { UserDto } from './dto/user.dto'
 import { IUserService } from './user.service.interface'
 

@@ -4,7 +4,6 @@ import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-
 import { BenefitsBreakdownDto } from './dto/benefits-breakdown.dto'
 import { GenderWageGapDto } from './dto/gender-wage-gap.dto'
 import { SalaryByGenderAndScoreDto } from './dto/salary-by-gender-and-score.dto'
