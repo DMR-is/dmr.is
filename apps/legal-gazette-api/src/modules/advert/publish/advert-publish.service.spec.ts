@@ -24,6 +24,7 @@ const createMockAdvert = (overrides: any = {}) => ({
   id: overrides.id || 'advert-123',
   publicationNumber: overrides.publicationNumber ?? null,
   statusId: overrides.statusId || StatusIdEnum.READY_FOR_PUBLICATION,
+  publications: overrides.publications ?? [],
   update: jest.fn().mockResolvedValue(undefined),
   reload: jest.fn().mockResolvedValue(undefined),
   htmlMarkup: jest.fn().mockReturnValue('<html>test</html>'),

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { fastify as fast } from 'fastify'
 
+import { cacheRoutes } from './routes/cacheRoutes'
 import { changeSuggestionRoutes } from './routes/changeSuggestionRoutes'
 import { fileUploadRoutes } from './routes/fileUploadRoutes'
 import { healthCheck } from './routes/health'
@@ -108,6 +109,7 @@ fastify.register(yearsRoutes, { prefix: '/api/v1' })
 fastify.register(redirectsRoutes, { prefix: '/api/v1' })
 fastify.register(changeSuggestionRoutes, { prefix: '/api/v1' })
 fastify.register(publishRoutes, { prefix: '/api/v1' })
+fastify.register(cacheRoutes, { prefix: '/api/v1' })
 fastify.register(healthCheck)
 
 serveRobotsTxt(fastify, 'static/robots-api.txt')

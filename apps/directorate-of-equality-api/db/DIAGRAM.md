@@ -35,6 +35,7 @@ erDiagram
         uuid id PK
         ReportTypeEnum type
         ReportStatusEnum status
+        text contact_national_id
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"
         timestamp approved_at
@@ -93,11 +94,18 @@ erDiagram
     report_result {
         uuid id PK
         uuid report_id FK
+        decimal salary_difference_threshold_percent
+        text calculation_version
+        jsonb base_snapshot
+        jsonb full_snapshot
     }
     report_role_result {
         uuid id PK
         uuid report_result_id FK
         uuid report_employee_role_id FK
+        text role_title "snapshot"
+        jsonb base_snapshot
+        jsonb full_snapshot
     }
     public_report {
         uuid id PK

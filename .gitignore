@@ -125,3 +125,5 @@ backup-json/all-extra.json
 
 # AI setup
 AGENTS.md
+
+apps/directorate-of-equality-api/src/modules/report-excel/template.numbers

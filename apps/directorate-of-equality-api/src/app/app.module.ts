@@ -14,10 +14,14 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { ConfigModule } from '../modules/config/config.module'
+import { ConfigModel } from '../modules/config/models/config.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
-import { ReportCommentModel } from '../modules/report/models/report-comment.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
+import { ReportModule } from '../modules/report/report.module'
+import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
+import { ReportCommentModule } from '../modules/report-comment/report-comment.module'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
@@ -26,8 +30,11 @@ import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
+import { ReportExcelModule } from '../modules/report-excel/report-excel.module'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
+import { ReportResultModule } from '../modules/report-result/report-result.module'
+import { ReportStatisticsModule } from '../modules/report-statistics/report-statistics.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { UserModule } from '../modules/user/user.module'
 @Module({
@@ -65,6 +72,7 @@ import { UserModule } from '../modules/user/user.module'
             PublicReportModel,
             ReportEventModel,
             ReportCommentModel,
+            ConfigModel,
           ],
         }),
       ],
@@ -73,6 +81,12 @@ import { UserModule } from '../modules/user/user.module'
       inject: [DMRSequelizeConfigService],
     }),
     UserModule,
+    ConfigModule,
+    ReportExcelModule,
+    ReportCommentModule,
+    ReportResultModule,
+    ReportStatisticsModule,
+    ReportModule,
   ],
   controllers: [],
   providers: [

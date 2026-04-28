@@ -153,10 +153,21 @@ export class AdvertPublishService implements IAdvertPublishService {
         )
       }
 
+      const now = new Date()
+
+      // Set publishedAt in memory before generating HTML so the template
+      // renders "Útgáfud." instead of "Áætlaður útgáfud." for the date label
+      const inMemoryPub = advert.publications.find(
+        (p) => p.id === publication.id,
+      )
+      if (inMemoryPub) {
+        inMemoryPub.publishedAt = now
+      }
+
       const html = advert.htmlMarkup(publication.versionLetter)
 
       await publication.update({
-        publishedAt: new Date(),
+        publishedAt: now,
         publishedHtml: html,
       })
       await Promise.all([publication.reload(), advert.reload()])

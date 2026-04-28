@@ -68,101 +68,11 @@ export class PublicReportModel extends ImmutableModel<
   @Column({ type: DataType.DATE, allowNull: false, field: 'valid_until' })
   validUntil!: Date
 
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_male_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageMaleSalary'))
-    },
-  })
-  averageMaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_female_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageFemaleSalary'))
-    },
-  })
-  averageFemaleSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_neutral_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageNeutralSalary'))
-    },
-  })
-  averageNeutralSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_male_female',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceMaleFemale'))
-    },
-  })
-  salaryDifferenceMaleFemale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_male_neutral',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceMaleNeutral'))
-    },
-  })
-  salaryDifferenceMaleNeutral!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_female_male',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceFemaleMale'))
-    },
-  })
-  salaryDifferenceFemaleMale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_female_neutral',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceFemaleNeutral'))
-    },
-  })
-  salaryDifferenceFemaleNeutral!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_neutral_male',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceNeutralMale'))
-    },
-  })
-  salaryDifferenceNeutralMale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_neutral_female',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceNeutralFemale'))
-    },
-  })
-  salaryDifferenceNeutralFemale!: number
-
   @BelongsTo(() => ReportModel, {
     foreignKey: 'sourceReportId',
     as: 'sourceReport',
   })
-  sourceReport?: ReportModel
+  sourceReport!: ReportModel
 
   static fromModel(model: PublicReportModel): PublicReportDto {
     return {
@@ -171,15 +81,6 @@ export class PublicReportModel extends ImmutableModel<
       isatCategory: model.isatCategory,
       publishedAt: model.publishedAt,
       validUntil: model.validUntil,
-      averageMaleSalary: model.averageMaleSalary,
-      averageFemaleSalary: model.averageFemaleSalary,
-      averageNeutralSalary: model.averageNeutralSalary,
-      salaryDifferenceMaleFemale: model.salaryDifferenceMaleFemale,
-      salaryDifferenceMaleNeutral: model.salaryDifferenceMaleNeutral,
-      salaryDifferenceFemaleMale: model.salaryDifferenceFemaleMale,
-      salaryDifferenceFemaleNeutral: model.salaryDifferenceFemaleNeutral,
-      salaryDifferenceNeutralMale: model.salaryDifferenceNeutralMale,
-      salaryDifferenceNeutralFemale: model.salaryDifferenceNeutralFemale,
     }
   }
 
