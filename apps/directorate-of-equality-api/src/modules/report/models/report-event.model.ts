@@ -128,6 +128,7 @@ export class ReportEventModel extends ImmutableModel<
       reason: model.reason,
       relatedReportId: model.relatedReportId,
       companyId: model.companyId,
+      createdAt: model.createdAt,
     }
   }
 

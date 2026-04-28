@@ -1,4 +1,5 @@
 import {
+  ApiDateTime,
   ApiEnum,
   ApiOptionalEnum,
   ApiOptionalString,
@@ -48,4 +49,7 @@ export class ReportEventDto {
 
   @ApiOptionalUuid({ nullable: true })
   companyId!: string | null
+
+  @ApiDateTime()
+  createdAt!: Date
 }
