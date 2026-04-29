@@ -31,6 +31,7 @@ import { ReportResultModel } from '../modules/report-result/models/report-result
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
+import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
