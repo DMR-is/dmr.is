@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -22,6 +22,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
   version: '1',
 })
 @ApiTags('Report Workflow')
+@ApiParam({ name: 'reportId', type: String })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ReportWorkflowController {

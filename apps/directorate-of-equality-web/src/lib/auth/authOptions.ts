@@ -4,11 +4,11 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
-import { serverFetcher } from '@dmr.is/api-client/fetchers'
 import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { getLogger } from '@dmr.is/logging-next'
 
+import { getMyUser } from '../../gen/fetch'
 import { getDoEClient } from '../api/createClient'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30
@@ -44,9 +44,7 @@ async function authorize(nationalId?: string, idToken?: string) {
   const dmrClient = getDoEClient(idToken)
 
   try {
-    const { data: member, error } = await serverFetcher(() =>
-      dmrClient.getMyUser(),
-    )
+    const { data: member, error } = await getMyUser({ client: dmrClient })
     if (!member) {
       const logger = getLogger('authorize')
 
