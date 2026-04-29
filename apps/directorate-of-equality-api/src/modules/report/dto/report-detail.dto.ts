@@ -1,7 +1,7 @@
 import { ApiDto, ApiDtoArray, ApiOptionalDto } from '@dmr.is/decorators'
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
-import { ReportEmployeeDeviationDto } from '../../report-employee/dto/report-employee-deviation.dto'
+import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
 import { ReportRoleResultDto } from '../../report-result/dto/report-role-result.dto'
 import { EqualityReportDto } from './equality-report.dto'
@@ -27,11 +27,11 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
  *   (`EVENT` | `COMMENT`) and exactly one of `event` / `comment`
  *   populated. Paranoid-deleted comments are excluded.
  *
- * - `result` / `roleResults` / `employeeDeviations`: salary-only calculation
+ * - `result` / `roleResults` / `employeeOutliers`: salary-only calculation
  *   outputs. For equality reports these are `null` / `[]`; for salary reports
  *   they're populated once the scoring engine has run. The UI uses them to
  *   render the Launagreining charts: `result` → gender-gap summary, `roleResults`
- *   → scatter-plot points per role, `employeeDeviations` → the Úrbótaáætlun
+ *   → scatter-plot points per role, `employeeOutliers` → the Úrbótaáætlun
  *   table listing employees who fall outside the acceptable pay-gap threshold.
  */
 export class ReportDetailDto extends ReportDto {
@@ -50,6 +50,6 @@ export class ReportDetailDto extends ReportDto {
   @ApiDtoArray(ReportRoleResultDto)
   roleResults!: ReportRoleResultDto[]
 
-  @ApiDtoArray(ReportEmployeeDeviationDto)
-  employeeDeviations!: ReportEmployeeDeviationDto[]
+  @ApiDtoArray(ReportEmployeeOutlierDto)
+  employeeOutliers!: ReportEmployeeOutlierDto[]
 }

@@ -1,7 +1,7 @@
 import { GenderEnum } from '../models/report.model'
 import {
-  assessSalaryDeviationFromReference,
-  assessSalaryDeviationInBucket,
+  assessSalaryOutlierFromReference,
+  assessSalaryOutlierInBucket,
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
   roundSalaryAggregateSnapshot,
@@ -237,34 +237,34 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('marks salaries outside half the threshold from a reference as deviations', () => {
+  it('marks salaries outside half the threshold from a reference as outliers', () => {
     expect(
-      assessSalaryDeviationFromReference({
+      assessSalaryOutlierFromReference({
         salary: 102000,
         referenceSalary: 100000,
         thresholdPercent: 3.9,
       }),
     ).toMatchObject({
-      isDeviation: true,
+      isOutlier: true,
       direction: 'ABOVE',
       allowedDifferencePercent: 1.95,
       referenceSalary: 100000,
     })
 
     expect(
-      assessSalaryDeviationFromReference({
+      assessSalaryOutlierFromReference({
         salary: 98100,
         referenceSalary: 100000,
         thresholdPercent: 3.9,
       }),
     ).toMatchObject({
-      isDeviation: false,
+      isOutlier: false,
       direction: 'BELOW',
       allowedDifferencePercent: 1.95,
     })
   })
 
-  it('assesses salary deviation against a score bucket median', () => {
+  it('assesses salary outlier against a score bucket median', () => {
     const aggregates = computeCompensationAggregates({
       employees: [
         {
@@ -300,13 +300,13 @@ describe('compensation-aggregates', () => {
     const bucket = aggregates.report.base.scoreBuckets[0]
 
     expect(
-      assessSalaryDeviationInBucket({
+      assessSalaryOutlierInBucket({
         salary: 104000,
         bucket,
         thresholdPercent: 3.9,
       }),
     ).toMatchObject({
-      isDeviation: false,
+      isOutlier: false,
       direction: 'EQUAL',
       referenceSalary: 104000,
     })

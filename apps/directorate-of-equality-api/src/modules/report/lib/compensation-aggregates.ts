@@ -62,11 +62,11 @@ export type SalaryResultSnapshot = {
   scoreBuckets: SalaryScoreBucketSnapshot[]
 }
 
-export type SalaryDeviationDirection = 'ABOVE' | 'BELOW' | 'EQUAL'
+export type SalaryOutlierDirection = 'ABOVE' | 'BELOW' | 'EQUAL'
 
-export type SalaryDeviationAssessment = {
-  isDeviation: boolean
-  direction: SalaryDeviationDirection | null
+export type SalaryOutlierAssessment = {
+  isOutlier: boolean
+  direction: SalaryOutlierDirection | null
   differencePercent: number | null
   allowedDifferencePercent: number
   referenceSalary: number | null
@@ -266,12 +266,12 @@ export function roundSalaryResultSnapshot(
   }
 }
 
-export function assessSalaryDeviationFromReference(input: {
+export function assessSalaryOutlierFromReference(input: {
   salary: number
   referenceSalary: number | null
   thresholdPercent: number
   useHalfThreshold?: boolean
-}): SalaryDeviationAssessment {
+}): SalaryOutlierAssessment {
   const allowedDifferencePercent =
     input.useHalfThreshold === false
       ? input.thresholdPercent
@@ -279,7 +279,7 @@ export function assessSalaryDeviationFromReference(input: {
 
   if (input.referenceSalary === null || input.referenceSalary === 0) {
     return {
-      isDeviation: false,
+      isOutlier: false,
       direction: null,
       differencePercent: null,
       allowedDifferencePercent,
@@ -292,8 +292,8 @@ export function assessSalaryDeviationFromReference(input: {
   const absoluteDifferencePercent = Math.abs(differencePercent)
 
   return {
-    isDeviation: absoluteDifferencePercent >= allowedDifferencePercent,
-    direction: getSalaryDeviationDirection(differencePercent),
+    isOutlier: absoluteDifferencePercent >= allowedDifferencePercent,
+    direction: getSalaryOutlierDirection(differencePercent),
     differencePercent,
     allowedDifferencePercent,
     referenceSalary: input.referenceSalary,
@@ -301,22 +301,22 @@ export function assessSalaryDeviationFromReference(input: {
 }
 
 /**
- * Salary deviation/outlier rule for a score bucket:
+ * Salary outlier rule for a score bucket:
  *
  * 1. Place the employee in a score bucket.
  * 2. Use the bucket's overall median salary as the reference salary.
  * 3. Use half of the configured salary-difference threshold by default.
  *    Example: `3.9` becomes an allowed +/- `1.95%` band around the median.
- * 4. Mark the employee as a deviation when their adjusted salary is greater
+ * 4. Mark the employee as an outlier when their adjusted salary is greater
  *    than or equal to that allowed percentage above or below the bucket median.
  */
-export function assessSalaryDeviationInBucket(input: {
+export function assessSalaryOutlierInBucket(input: {
   salary: number
   bucket: SalaryScoreBucketSnapshot
   thresholdPercent: number
   useHalfThreshold?: boolean
-}): SalaryDeviationAssessment {
-  return assessSalaryDeviationFromReference({
+}): SalaryOutlierAssessment {
+  return assessSalaryOutlierFromReference({
     salary: input.salary,
     referenceSalary: input.bucket.totals.overall.median,
     thresholdPercent: input.thresholdPercent,
@@ -389,9 +389,9 @@ function countSamplesByCohort(
   }
 }
 
-function getSalaryDeviationDirection(
+function getSalaryOutlierDirection(
   differencePercent: number,
-): SalaryDeviationDirection {
+): SalaryOutlierDirection {
   if (differencePercent > 0) {
     return 'ABOVE'
   }
