@@ -5,7 +5,7 @@ import { globalStyles } from '@dmr.is/ui/globalStyles'
 import { RootProviders } from '../components/providers/RootProviders'
 import { authOptions } from '../lib/auth/authOptions'
 
-import './global.css'
+import '../styles/global.css'
 
 globalStyles()
 

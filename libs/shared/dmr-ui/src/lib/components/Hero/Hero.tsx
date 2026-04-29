@@ -69,12 +69,16 @@ export const Hero = ({
                 <Stack space={2}>
                   {breadcrumbs && <Breadcrumbs {...breadcrumbs} />}
 
-                  <Stack space={4}>
+                  <Stack space={2}>
                     {title && (
                       <Text variant={isDefault ? 'h1' : 'h2'}>{title}</Text>
                     )}
 
-                    {description && <Text variant="intro" as="span">{description}</Text>}
+                    {description && (
+                      <Text variant="intro" as="span">
+                        {description}
+                      </Text>
+                    )}
                     {button && <Inline space={2}>{button}</Inline>}
                   </Stack>
 

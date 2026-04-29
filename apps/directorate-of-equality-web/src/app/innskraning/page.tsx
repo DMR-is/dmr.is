@@ -34,8 +34,7 @@ export default function Login() {
             <Stack space={2}>
               <Text variant="h2">Innskráning</Text>
               <Text variant="intro">
-                Skráðu þig inn í kerfi Jafnréttisstofu með rafrænum
-                skilríkjum.
+                Skráðu þig inn í kerfi Jafnréttisstofu með rafrænum skilríkjum.
               </Text>
               <Box marginTop={[2, 2, 3]}>
                 <Button

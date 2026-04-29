@@ -9,6 +9,8 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Table as T } from '@dmr.is/ui/components/island-is/Table'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import * as styles from './PieChart.css'
+
 export type PieChartItem = {
   color: string
   title: string
@@ -53,71 +55,69 @@ export const PieChart = ({
           />
         </Recharts.PieChart>
       </Inline>
-        <T.Table>
-          <T.Body>
-            {items.map((item, index) => (
-              <T.Row key={index}>
-                <T.Data align="left" box={TABLE_CELL_STYLE}>
-                  <Inline space={1} alignY="center">
-                    <Box
-                      borderRadius="full"
-                      style={{
-                        width: 12,
-                        height: 12,
-                        backgroundColor: item.color,
-                      }}
-                    />
-                    <Text variant="small" fontWeight="medium">
-                      {item.title}
-                    </Text>
-                  </Inline>
-                </T.Data>
-                <T.Data
-                  align="right"
-                  style={{
-                    paddingBlock: theme.spacing[1],
-                    paddingInlineEnd: theme.spacing[1],
-                  }}
-                >
-                  {item.count}
-                </T.Data>
-                <T.Data
-                  align="right"
-                  style={{
-                    paddingBlock: theme.spacing[1],
-                    paddingInlineEnd: theme.spacing[1],
-                  }}
-                >
-                  {item.percentage}%
-                </T.Data>
-              </T.Row>
-            ))}
-            <T.Row>
+      <T.Table>
+        <T.Body>
+          {items.map((item, index) => (
+            <T.Row key={index}>
               <T.Data align="left" box={TABLE_CELL_STYLE}>
                 <Inline space={1} alignY="center">
                   <Box
-                    background="roseTinted400"
                     borderRadius="full"
-                    style={{ width: 12, height: 12 }}
+                    style={{
+                      width: 12,
+                      height: 12,
+                      backgroundColor: item.color,
+                    }}
                   />
-                  <Text variant="small" fontWeight="medium">
-                    Alls
+                  <Text variant="medium" fontWeight="light">
+                    {item.title}
                   </Text>
                 </Inline>
               </T.Data>
-              <T.Data align="right" box={TABLE_CELL_STYLE}>
-                <Text variant="small" fontWeight="medium">
-                  {items.reduce((acc, item) => acc + (item.count ?? 0), 0)}
+              <T.Data
+                align="right"
+                style={{
+                  paddingBlock: theme.spacing[1],
+                  paddingInlineEnd: theme.spacing[1],
+                }}
+              >
+                <Text variant="medium" fontWeight="light">
+                  {item.count}
                 </Text>
               </T.Data>
-              <T.Data align="right" box={TABLE_CELL_STYLE}>
-                <Text variant="small" fontWeight="medium">
-                  100%
+              <T.Data
+                align="right"
+                style={{
+                  paddingBlock: theme.spacing[1],
+                  paddingInlineEnd: theme.spacing[1],
+                }}
+              >
+                <Text variant="medium" fontWeight="light">
+                  {item.percentage}%
                 </Text>
               </T.Data>
             </T.Row>
-          </T.Body>
-        </T.Table>
-      </Stack>
+          ))}
+          <tr className={styles.totalRow}>
+            <T.Data align="left" box={TABLE_CELL_STYLE}>
+              <Inline space={1} alignY="center">
+                <Box style={{ width: 12, height: 12 }} />
+                <Text variant="medium" fontWeight="medium">
+                  Alls
+                </Text>
+              </Inline>
+            </T.Data>
+            <T.Data align="right" box={TABLE_CELL_STYLE}>
+              <Text variant="medium">
+                {items.reduce((acc, item) => acc + (item.count ?? 0), 0)}
+              </Text>
+            </T.Data>
+            <T.Data align="right" box={TABLE_CELL_STYLE}>
+              <Text variant="medium">100%</Text>
+            </T.Data>
+          </tr>
+        </T.Body>
+      </T.Table>
+    </Stack>
   )
 }
