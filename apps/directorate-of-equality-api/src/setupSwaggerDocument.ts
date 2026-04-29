@@ -24,13 +24,13 @@ export const setupSwaggerDocument = (
     autoTagControllers: options.autoTagControllers ?? false,
   })
 
-  document.tags = [{ name: options.tag }]
-
   if (options.filterPaths) {
     document.paths = options.filterPaths(document.paths)
   }
 
   if (!options.autoTagControllers) {
+    document.tags = [{ name: options.tag }]
+
     // tag routes
     Object.values(document.paths).forEach((path) => {
       for (const method of Object.values(path)) {

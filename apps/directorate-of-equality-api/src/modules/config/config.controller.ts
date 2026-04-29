@@ -7,7 +7,7 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -18,6 +18,7 @@ import { IConfigService } from './config.service.interface'
   path: 'config',
   version: '1',
 })
+@ApiTags('Config')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
 export class ConfigController {

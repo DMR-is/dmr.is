@@ -150,7 +150,7 @@ Each report is evaluated against a set of weighted criteria:
 - `report_sub_criterion_step` — ordered scoring steps within a sub-criterion. Each step has a `score`.
 - Which steps apply to which role is captured in `report_employee_role_criterion_step`.
 - Which steps apply to a specific employee personally is captured in `report_employee_personal_criterion_step`.
-- Deviations from the standard evaluation (special circumstances for a specific employee) are recorded in `report_employee_deviation` with `reason`, `action`, and signatures.
+- Salary outlier justifications (special circumstances for a specific employee) are recorded in `report_employee_outlier` with `reason`, `action`, and signatures.
 
 The final `score` on `report_employee` is derived from the steps that apply to that employee — the sum of `report_sub_criterion_step.score` across the steps reachable via the employee's role (`report_employee_role_criterion_step`) and via their personal assignments (`report_employee_personal_criterion_step`), with steps assigned through both sources counted once. The total is computed at submission and persisted on the row; reviewers read it as-is.
 
@@ -358,14 +358,14 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `id`    | `uuid` PK |
 | `title` | `text`    |
 
-### `report_employee_deviation`
+### `report_employee_outlier`
 
 One row per outlier the company has acknowledged at submission. Two shapes share the table:
 
 - **Filled** (`postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
 - **Postponed** (`postponed = true`) — company acknowledges the outlier but defers the explanation. Explanation columns may be null. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
 
-The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (deviations for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
+The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (rows for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
 
 | Column               | Type                                                                  |
 | -------------------- | --------------------------------------------------------------------- |
@@ -528,7 +528,7 @@ No FKs, no relationships. Standalone lookup table.
 - `company` ⟷ `report` via `company_report` (per-submission snapshot, with optional parent company).
 - `report` 1:N `report_criterion` 1:N `report_sub_criterion` 1:N `report_sub_criterion_step`.
 - `report` 1:N `report_employee` N:1 `report_employee_role`.
-- `report_employee` 1:N `report_employee_deviation`.
+- `report_employee` 1:N `report_employee_outlier`.
 - `report_employee_role` ⟷ `report_sub_criterion_step` via `report_employee_role_criterion_step`.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
 - `report` 1:1 `report_result`; optional future role snapshots are `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
@@ -544,5 +544,5 @@ No FKs, no relationships. Standalone lookup table.
 - **Fines cron.** Daily job: `SELECT * FROM report WHERE fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')`. Accrual table (`report_fine` or similar) not yet designed.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
-- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the new `application` module. Takes the unsaved parsed payload, runs `assessSalaryDeviationInBucket` from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees alongside the calculations driving the verdict so the company can verify before submitting.
-- **Submit-side outlier-vs-deviation guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has a `deviations[]` row (postponed or filled), and every `deviations[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The `postponed` flag on `report_employee_deviation` lets a company acknowledge an outlier without filling the explanation immediately.
+- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the new `application` module. Takes the unsaved parsed payload, runs `assessSalaryOutlierInBucket` from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees alongside the calculations driving the verdict so the company can verify before submitting.
+- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row (postponed or filled), and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The `postponed` flag on `report_employee_outlier` lets a company acknowledge an outlier without filling the explanation immediately.

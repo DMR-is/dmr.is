@@ -14,33 +14,24 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
-import { ConfigModule } from '../modules/config/config.module'
 import { ConfigModel } from '../modules/config/models/config.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
-import { ReportModule } from '../modules/report/report.module'
 import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
-import { ReportCommentModule } from '../modules/report-comment/report-comment.module'
-import { ReportCreateModule } from '../modules/report-create/report-create.module'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
-import { ReportExcelModule } from '../modules/report-excel/report-excel.module'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
-import { ReportResultModule } from '../modules/report-result/report-result.module'
-import { ReportStatisticsModule } from '../modules/report-statistics/report-statistics.module'
-import { ReportWorkflowModule } from '../modules/report-workflow/report-workflow.module'
+import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
-import { UserModule } from '../modules/user/user.module'
 import { HealthController } from './health.controller'
-
 @Module({
   imports: [
     LoggingModule,
@@ -68,7 +59,7 @@ import { HealthController } from './health.controller'
             ReportSubCriterionModel,
             ReportSubCriterionStepModel,
             ReportEmployeeModel,
-            ReportEmployeeDeviationModel,
+            ReportEmployeeOutlierModel,
             ReportEmployeeRoleCriterionStepModel,
             ReportEmployeePersonalCriterionStepModel,
             ReportResultModel,
@@ -84,15 +75,7 @@ import { HealthController } from './health.controller'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    UserModule,
-    ConfigModule,
-    ReportExcelModule,
-    ReportCommentModule,
-    ReportResultModule,
-    ReportStatisticsModule,
-    ReportWorkflowModule,
-    ReportModule,
-    ReportCreateModule,
+    DoeWebSwaggerModule,
   ],
   controllers: [HealthController],
   providers: [

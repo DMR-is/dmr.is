@@ -19,8 +19,7 @@ const nextConfig = {
       'react-select': 'react-select/dist/react-select.esm.js',
       'react-select/creatable':
         'react-select/creatable/dist/react-select-creatable.esm.js',
-      'react-select/async':
-        'react-select/async/dist/react-select-async.esm.js',
+      'react-select/async': 'react-select/async/dist/react-select-async.esm.js',
       'react-select/animated':
         'react-select/animated/dist/react-select-animated.esm.js',
       'react-select/async-creatable':

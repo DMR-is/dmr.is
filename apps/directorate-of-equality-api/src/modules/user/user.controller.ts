@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
@@ -13,6 +13,7 @@ import { IUserService } from './user.service.interface'
   path: 'users',
   version: '1',
 })
+@ApiTags('Users')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class UserController {

@@ -17,7 +17,471 @@
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Directorate of Equality API"]
+        "tags": ["Users"]
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "operationId": "getAllConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ConfigDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/config/{key}": {
+      "get": {
+        "operationId": "getConfigByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConfigDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      },
+      "patch": {
+        "operationId": "updateConfigByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateConfigDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConfigDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/config/{key}/history": {
+      "get": {
+        "operationId": "getConfigHistoryByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ConfigDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "operationId": "listReports",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportStatusEnum" }
+            }
+          },
+          {
+            "name": "reviewerUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" }
+            }
+          },
+          {
+            "name": "unassignedReviewer",
+            "required": false,
+            "in": "query",
+            "description": "When true, returns only reports with no reviewer assigned. Overrides `reviewerUserId` if both are set.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "createdFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search across company name, kennitala, report identifier, contact name, and contact email. Case-insensitive partial match.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReportSortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{id}": {
+      "get": {
+        "operationId": "getReportById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportDetailDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{reportId}/comments": {
+      "get": {
+        "operationId": "getReportComments",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReportCommentDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      },
+      "post": {
+        "operationId": "createReportComment",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportCommentDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      }
+    },
+    "/api/v1/reports/{reportId}/comments/{commentId}": {
+      "delete": {
+        "operationId": "deleteReportComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      }
+    },
+    "/api/v1/reports/{reportId}/assign": {
+      "post": {
+        "operationId": "assignReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/deny": {
+      "post": {
+        "operationId": "denyReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DenyReportDto" }
+            }
+          }
+        },
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/approve": {
+      "post": {
+        "operationId": "approveReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/start-fines": {
+      "post": {
+        "operationId": "startReportFines",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
       }
     }
   },
@@ -27,7 +491,7 @@
     "version": "1.0",
     "contact": {}
   },
-  "tags": [{ "name": "Directorate of Equality API" }],
+  "tags": [],
   "servers": [],
   "components": {
     "securitySchemes": {
@@ -53,6 +517,571 @@
           "email",
           "isActive"
         ]
+      },
+      "ConfigDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "key": { "type": "string" },
+          "value": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "supersededAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "key", "value"]
+      },
+      "UpdateConfigDto": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string" },
+          "description": { "type": "string", "nullable": true }
+        },
+        "required": ["value"]
+      },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "ReportStatusEnum": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "IN_REVIEW",
+          "DENIED",
+          "APPROVED",
+          "SUPERSEDED"
+        ]
+      },
+      "ReportSortByEnum": {
+        "type": "string",
+        "enum": [
+          "createdAt",
+          "updatedAt",
+          "approvedAt",
+          "validUntil",
+          "correctionDeadline",
+          "identifier"
+        ]
+      },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "ReportListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "companyName": { "type": "string", "nullable": true },
+          "companyNationalId": { "type": "string", "nullable": true },
+          "reviewer": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "type", "status"]
+      },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1 },
+          "totalPages": { "type": "number", "example": 10 },
+          "totalItems": { "type": "number", "example": 1000 },
+          "nextPage": { "type": "number", "example": 2, "nullable": true },
+          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": { "type": "boolean", "example": true },
+          "hasPreviousPage": { "type": "boolean", "example": false }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "GetReportsResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportListItemDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["reports", "paging"]
+      },
+      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+      "ReportProviderEnum": {
+        "type": "string",
+        "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+      },
+      "CompanyReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "parentCompanyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "postcode": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" },
+          "isatCategory": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "reportId",
+          "name",
+          "nationalId",
+          "address",
+          "city",
+          "postcode",
+          "averageEmployeeCountFromRsk",
+          "isatCategory"
+        ]
+      },
+      "EqualityReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "content": { "type": "string", "nullable": true },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "status"]
+      },
+      "ReportTimelineItemKindEnum": {
+        "type": "string",
+        "enum": ["EVENT", "COMMENT"]
+      },
+      "ReportEventTypeEnum": {
+        "type": "string",
+        "enum": ["SUBMITTED", "ASSIGNED", "STATUS_CHANGED", "SUPERSEDED"]
+      },
+      "ReportEventDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "eventType": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportEventTypeEnum" }]
+          },
+          "actorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reportStatus": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "fromStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "toStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "assignedUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reason": { "type": "string", "nullable": true },
+          "relatedReportId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "companyId": { "type": "string", "format": "uuid", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "reportId", "eventType", "reportStatus", "createdAt"]
+      },
+      "ReportRoleEnum": { "type": "string", "enum": ["REVIEWER", "COMPANY"] },
+      "CommentVisibilityEnum": {
+        "type": "string",
+        "enum": ["INTERNAL", "EXTERNAL"]
+      },
+      "ReportCommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "authorKind": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportRoleEnum" }]
+          },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "visibility": {
+            "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
+          },
+          "body": { "type": "string" },
+          "reportStatus": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "reportId",
+          "authorKind",
+          "visibility",
+          "body",
+          "reportStatus",
+          "createdAt"
+        ]
+      },
+      "ReportTimelineItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              { "$ref": "#/components/schemas/ReportTimelineItemKindEnum" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "event": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportEventDto" }]
+          },
+          "comment": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportCommentDto" }]
+          }
+        },
+        "required": ["kind", "createdAt"]
+      },
+      "SalaryAggregateMetricsDto": {
+        "type": "object",
+        "properties": {
+          "average": { "type": "number", "nullable": true },
+          "median": { "type": "number", "nullable": true },
+          "minimum": { "type": "number", "nullable": true },
+          "maximum": { "type": "number", "nullable": true }
+        }
+      },
+      "SalaryDifferencesDto": {
+        "type": "object",
+        "properties": {
+          "maleFemale": { "type": "number", "nullable": true },
+          "maleNeutral": { "type": "number", "nullable": true },
+          "femaleMale": { "type": "number", "nullable": true },
+          "femaleNeutral": { "type": "number", "nullable": true },
+          "neutralMale": { "type": "number", "nullable": true },
+          "neutralFemale": { "type": "number", "nullable": true }
+        }
+      },
+      "ReportSalaryAggregateDto": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "male": { "$ref": "#/components/schemas/SalaryAggregateMetricsDto" },
+          "female": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "neutral": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "salaryDifferences": {
+            "$ref": "#/components/schemas/SalaryDifferencesDto"
+          }
+        },
+        "required": [
+          "overall",
+          "male",
+          "female",
+          "neutral",
+          "salaryDifferences"
+        ]
+      },
+      "SalaryCohortCountsDto": {
+        "type": "object",
+        "properties": {
+          "overall": { "type": "number" },
+          "male": { "type": "number" },
+          "female": { "type": "number" },
+          "neutral": { "type": "number" }
+        },
+        "required": ["overall", "male", "female", "neutral"]
+      },
+      "SalaryScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "totals": { "$ref": "#/components/schemas/ReportSalaryAggregateDto" },
+          "counts": { "$ref": "#/components/schemas/SalaryCohortCountsDto" }
+        },
+        "required": ["rangeFrom", "rangeTo", "totals", "counts"]
+      },
+      "ReportSalaryResultSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "totals": { "$ref": "#/components/schemas/ReportSalaryAggregateDto" },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SalaryScoreBucketDto" }
+          }
+        },
+        "required": ["totals", "scoreBuckets"]
+      },
+      "ReportResultDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "salaryDifferenceThresholdPercent": {
+            "type": "number",
+            "nullable": true
+          },
+          "calculationVersion": { "type": "string" },
+          "base": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "full": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          }
+        },
+        "required": ["id", "reportId", "calculationVersion", "base", "full"]
+      },
+      "ReportRoleResultDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportResultId": { "type": "string", "format": "uuid" },
+          "reportEmployeeRoleId": { "type": "string", "format": "uuid" },
+          "roleTitle": { "type": "string" },
+          "base": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "full": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          }
+        },
+        "required": [
+          "id",
+          "reportResultId",
+          "reportEmployeeRoleId",
+          "roleTitle",
+          "base",
+          "full"
+        ]
+      },
+      "ReportEmployeeDeviationDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportEmployeeId": { "type": "string", "format": "uuid" },
+          "reason": { "type": "string" },
+          "action": { "type": "string" },
+          "signatureName": { "type": "string" },
+          "signatureRole": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "reportEmployeeId",
+          "reason",
+          "action",
+          "signatureName",
+          "signatureRole"
+        ]
+      },
+      "ReportDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminEmail": { "type": "string", "nullable": true },
+          "companyAdminGender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
+          "contactName": { "type": "string", "nullable": true },
+          "companyNationalId": { "type": "string", "nullable": true },
+          "contactEmail": { "type": "string", "nullable": true },
+          "contactPhone": { "type": "string", "nullable": true },
+          "averageEmployeeMaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeFemaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeNeutralCount": { "type": "number", "nullable": true },
+          "providerType": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportProviderEnum" }]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "importedFromExcel": { "type": "boolean" },
+          "identifier": { "type": "string", "nullable": true },
+          "equalityReportId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reviewerUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "equalityReportContent": { "type": "string", "nullable": true },
+          "finesStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "reviewer": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "company": { "$ref": "#/components/schemas/CompanyReportDto" },
+          "equalityReport": {
+            "$ref": "#/components/schemas/EqualityReportDto"
+          },
+          "timeline": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportTimelineItemDto" }
+          },
+          "result": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
+          },
+          "roleResults": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
+          },
+          "employeeDeviations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportEmployeeDeviationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "importedFromExcel",
+          "company",
+          "equalityReport",
+          "timeline",
+          "roleResults",
+          "employeeDeviations"
+        ]
+      },
+      "CreateReportCommentDto": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
+          },
+          "body": { "type": "string" }
+        },
+        "required": ["visibility", "body"]
+      },
+      "DenyReportDto": {
+        "type": "object",
+        "properties": { "denialReason": { "type": "string" } },
+        "required": ["denialReason"]
       }
     }
   }

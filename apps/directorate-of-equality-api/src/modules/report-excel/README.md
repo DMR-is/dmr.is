@@ -107,4 +107,4 @@ report-excel/
   `@CurrentUser()` is wired back to extract company context from the token.
 - **Export**: `GET /reports/:id/export` deferred — needs persisted reports
   to exist first (future `/reports` endpoint).
-- **Deviations**: handled post-scoring on the `/reports` side, not here.
+- **Outliers**: handled post-scoring on the `/reports` side, not here.

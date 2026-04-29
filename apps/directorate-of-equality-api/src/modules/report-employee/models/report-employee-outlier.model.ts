@@ -3,10 +3,10 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
-import type { ReportEmployeeDeviationDto } from '../dto/report-employee-deviation.dto'
+import type { ReportEmployeeOutlierDto } from '../dto/report-employee-outlier.dto'
 import { ReportEmployeeModel } from './report-employee.model'
 
-type ReportEmployeeDeviationAttributes = {
+type ReportEmployeeOutlierAttributes = {
   reportEmployeeId: string
   postponed: boolean
   reason: string | null
@@ -15,7 +15,7 @@ type ReportEmployeeDeviationAttributes = {
   signatureRole: string | null
 }
 
-type ReportEmployeeDeviationCreateAttributes = {
+type ReportEmployeeOutlierCreateAttributes = {
   reportEmployeeId: string
   postponed?: boolean
   reason?: string | null
@@ -24,10 +24,10 @@ type ReportEmployeeDeviationCreateAttributes = {
   signatureRole?: string | null
 }
 
-@MutableTable({ tableName: DoeModels.REPORT_EMPLOYEE_DEVIATION })
-export class ReportEmployeeDeviationModel extends MutableModel<
-  ReportEmployeeDeviationAttributes,
-  ReportEmployeeDeviationCreateAttributes
+@MutableTable({ tableName: DoeModels.REPORT_EMPLOYEE_OUTLIER })
+export class ReportEmployeeOutlierModel extends MutableModel<
+  ReportEmployeeOutlierAttributes,
+  ReportEmployeeOutlierCreateAttributes
 > {
   @ForeignKey(() => ReportEmployeeModel)
   @Column({
@@ -59,8 +59,8 @@ export class ReportEmployeeDeviationModel extends MutableModel<
   reportEmployee?: ReportEmployeeModel
 
   static fromModel(
-    model: ReportEmployeeDeviationModel,
-  ): ReportEmployeeDeviationDto {
+    model: ReportEmployeeOutlierModel,
+  ): ReportEmployeeOutlierDto {
     return {
       id: model.id,
       reportEmployeeId: model.reportEmployeeId,
@@ -72,7 +72,7 @@ export class ReportEmployeeDeviationModel extends MutableModel<
     }
   }
 
-  fromModel(): ReportEmployeeDeviationDto {
-    return ReportEmployeeDeviationModel.fromModel(this)
+  fromModel(): ReportEmployeeOutlierDto {
+    return ReportEmployeeOutlierModel.fromModel(this)
   }
 }

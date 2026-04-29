@@ -3,7 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportResultModel } from '../report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { UserModel } from '../user/models/user.model'
@@ -25,7 +25,7 @@ import { IReportService } from './report.service.interface'
       ReportResultModel,
       ReportRoleResultModel,
       ReportEmployeeModel,
-      ReportEmployeeDeviationModel,
+      ReportEmployeeOutlierModel,
     ]),
   ],
   controllers: [ReportController],

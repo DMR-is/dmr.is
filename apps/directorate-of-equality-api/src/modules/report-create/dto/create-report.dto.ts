@@ -23,17 +23,17 @@ import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 /**
  * One row per employee flagged as a salary outlier. Populated by the company
  * after the salary-analysis preview step (see `db/README.md` Notes / open
- * questions). Persisted into `report_employee_deviation`.
+ * questions). Persisted into `report_employee_outlier`.
  *
  * `postponed = true` means the company has acknowledged the outlier but is
  * deferring the explanation; `reason`, `action`, and the signature fields may
  * be omitted in that case. When `postponed = false`, all explanation fields
  * are required (validated server-side and at the DB CHECK constraint).
  */
-export class CreateReportDeviationDto {
+export class CreateReportOutlierDto {
   @ApiNumber({
     description:
-      'Ordinal of the employee in `parsed.employees[]` this deviation applies to.',
+      'Ordinal of the employee in `parsed.employees[]` this outlier justification applies to.',
   })
   employeeOrdinal!: number
 
@@ -168,6 +168,6 @@ export class CreateReportDto {
    * fine when no outliers were flagged. Each entry references its employee
    * by `ordinal` from `parsed.employees[]`.
    */
-  @ApiOptionalDtoArray(CreateReportDeviationDto)
-  deviations?: CreateReportDeviationDto[]
+  @ApiOptionalDtoArray(CreateReportOutlierDto)
+  outliers?: CreateReportOutlierDto[]
 }

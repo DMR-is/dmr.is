@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -17,6 +17,7 @@ import { CreateReportResponseDto } from './dto/create-report-response.dto'
 import { IReportCreateService } from './report-create.service.interface'
 
 @Controller({ path: 'reports', version: '1' })
+@ApiTags('Reports')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
 export class ReportCreateController {

@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -24,6 +24,8 @@ import { IReportCommentService } from './report-comment.service.interface'
   path: 'reports/:reportId/comments',
   version: '1',
 })
+@ApiTags('Report Comments')
+@ApiParam({ name: 'reportId', type: String })
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, ReportResourceGuard)
 export class ReportCommentController {
@@ -54,6 +56,7 @@ export class ReportCommentController {
   @Delete(':commentId')
   @HttpCode(204)
   @ApiOperation({ operationId: 'deleteReportComment' })
+  @ApiParam({ name: 'commentId', type: String })
   @ApiResponse({ status: 204 })
   async delete(
     @CurrentReportResourceContext() context: ReportResourceContext,
