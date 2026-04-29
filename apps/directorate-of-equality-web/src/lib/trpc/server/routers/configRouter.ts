@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-import { getAllConfig, getConfigByKey, getConfigHistoryByKey, updateConfigByKey } from '../../../../gen/fetch'
+import {
+  getAllConfig,
+  getConfigByKey,
+  getConfigHistoryByKey,
+  updateConfigByKey,
+} from '../../../../gen/fetch'
 import { apiCall } from '../../../api/apiCall'
 import { protectedProcedure, router } from '../trpc'
 
@@ -12,11 +17,19 @@ export const configRouter = router({
   getByKey: protectedProcedure
     .input(z.object({ key: z.string() }))
     .query(async ({ ctx, input }) => {
-      return apiCall(getConfigByKey({ client: ctx.client, path: { key: input.key } }))
+      return apiCall(
+        getConfigByKey({ client: ctx.client, path: { key: input.key } }),
+      )
     }),
 
   updateByKey: protectedProcedure
-    .input(z.object({ key: z.string(), value: z.string(), description: z.string().nullish() }))
+    .input(
+      z.object({
+        key: z.string(),
+        value: z.string(),
+        description: z.string().nullish(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       return apiCall(
         updateConfigByKey({
@@ -30,6 +43,8 @@ export const configRouter = router({
   getHistoryByKey: protectedProcedure
     .input(z.object({ key: z.string() }))
     .query(async ({ ctx, input }) => {
-      return apiCall(getConfigHistoryByKey({ client: ctx.client, path: { key: input.key } }))
+      return apiCall(
+        getConfigHistoryByKey({ client: ctx.client, path: { key: input.key } }),
+      )
     }),
 })

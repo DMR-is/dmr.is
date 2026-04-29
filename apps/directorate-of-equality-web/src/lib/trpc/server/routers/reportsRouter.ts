@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-import { ReportSortByEnum, ReportStatusEnum, ReportTypeEnum, SortDirectionEnum } from '../../../../gen/fetch'
+import {
+  ReportSortByEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+  SortDirectionEnum,
+} from '../../../../gen/fetch'
 import { getReportById, listReports } from '../../../../gen/fetch'
 import { apiCall } from '../../../api/apiCall'
 import { protectedProcedure, router } from '../trpc'
@@ -35,6 +40,8 @@ export const reportsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      return apiCall(getReportById({ client: ctx.client, path: { id: input.id } }))
+      return apiCall(
+        getReportById({ client: ctx.client, path: { id: input.id } }),
+      )
     }),
 })

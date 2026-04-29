@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-import { approveReport, assignReport, denyReport, startReportFines } from '../../../../gen/fetch'
+import {
+  approveReport,
+  assignReport,
+  denyReport,
+  startReportFines,
+} from '../../../../gen/fetch'
 import { apiCall } from '../../../api/apiCall'
 import { protectedProcedure, router } from '../trpc'
 
@@ -8,7 +13,12 @@ export const reportWorkflowRouter = router({
   assign: protectedProcedure
     .input(z.object({ reportId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return apiCall(assignReport({ client: ctx.client, path: { reportId: input.reportId } }))
+      return apiCall(
+        assignReport({
+          client: ctx.client,
+          path: { reportId: input.reportId },
+        }),
+      )
     }),
 
   deny: protectedProcedure
@@ -26,12 +36,22 @@ export const reportWorkflowRouter = router({
   approve: protectedProcedure
     .input(z.object({ reportId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return apiCall(approveReport({ client: ctx.client, path: { reportId: input.reportId } }))
+      return apiCall(
+        approveReport({
+          client: ctx.client,
+          path: { reportId: input.reportId },
+        }),
+      )
     }),
 
   startFines: protectedProcedure
     .input(z.object({ reportId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return apiCall(startReportFines({ client: ctx.client, path: { reportId: input.reportId } }))
+      return apiCall(
+        startReportFines({
+          client: ctx.client,
+          path: { reportId: input.reportId },
+        }),
+      )
     }),
 })

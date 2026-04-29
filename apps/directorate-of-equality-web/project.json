@@ -48,6 +48,17 @@
         }
       }
     },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "nx format:write --projects=directorate-of-equality-web",
+          "nx run directorate-of-equality-web:lint --fix=true --skip-nx-cache"
+        ],
+        "parallel": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
