@@ -98,6 +98,20 @@ function isTRPCError(
   return false
 }
 
+type ApiErrorShape = {
+  details?: string[]
+  message?: string
+  name?: string
+  statusCode: number
+}
+
+function isApiErrorDto(error: unknown): error is ApiErrorShape {
+  if (error === null || typeof error !== 'object') return false
+
+  const errorObj = error as Record<string, unknown>
+  return typeof errorObj.statusCode === 'number'
+}
+
 /**
  * Recursively search for a TRPCError in the error chain.
  * Handles cases where tanstack-query or other libraries wrap the error.
@@ -235,6 +249,19 @@ export async function createTRPCError(error: unknown): Promise<ApiTRPCError> {
     })
   }
 
+  if (isApiErrorDto(error)) {
+    const trpcErrorCode =
+      HTTP_CODE_TO_TRPC_ERROR_CODE[
+        error.statusCode as keyof typeof HTTP_CODE_TO_TRPC_ERROR_CODE
+      ] ?? 'INTERNAL_SERVER_ERROR'
+
+    return new ApiTRPCError({
+      code: trpcErrorCode,
+      message: error.details?.[0] ?? error.message ?? `API Error (${error.statusCode})`,
+      cause: error,
+    })
+  }
+
   // Handle Response objects (thrown by OpenAPI client)
   if (isResponseLike(error)) {
     // Get status from Response (handles node-fetch symbol properties)
@@ -318,13 +345,15 @@ export const apiErrorMiddleware = async <T>(opts: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   next: () => Promise<{ ok: boolean; error?: any; [key: string]: any }>
 }): Promise<T> => {
-  const result = await opts.next()
+  try {
+    const result = await opts.next()
 
-  if (!result.ok && result.error?.cause) {
-    // Extract status from Response internals in the cause
+    if (!result.ok && result.error?.cause) {
+      return { ...result, error: await createTRPCError(result.error.cause) } as T
+    }
 
-    return { ...result, error: await createTRPCError(result.error.cause) } as T
+    return result as T
+  } catch (error) {
+    throw await createTRPCError(error)
   }
-
-  return result as T
 }

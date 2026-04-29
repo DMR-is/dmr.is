@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
@@ -30,6 +31,7 @@ export class ConfigController {
   @Get()
   @ApiOperation({ operationId: 'getAllConfig' })
   @ApiResponse({ status: 200, type: [ConfigDto] })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
   async getAll(): Promise<ConfigDto[]> {
     return this.configService.getAll()
   }
@@ -37,6 +39,8 @@ export class ConfigController {
   @Get(':key')
   @ApiOperation({ operationId: 'getConfigByKey' })
   @ApiResponse({ status: 200, type: ConfigDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async getByKey(@Param('key') key: string): Promise<ConfigDto> {
     return this.configService.getByKey(key)
   }
@@ -44,6 +48,8 @@ export class ConfigController {
   @Get(':key/history')
   @ApiOperation({ operationId: 'getConfigHistoryByKey' })
   @ApiResponse({ status: 200, type: [ConfigDto] })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async getHistoryByKey(@Param('key') key: string): Promise<ConfigDto[]> {
     return this.configService.getHistoryByKey(key)
   }
@@ -51,6 +57,9 @@ export class ConfigController {
   @Patch(':key')
   @ApiOperation({ operationId: 'updateConfigByKey' })
   @ApiResponse({ status: 200, type: ConfigDto })
+  @ApiResponse({ status: 400, type: ApiErrorDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async updateByKey(
     @Param('key') key: string,
     @Body() dto: UpdateConfigDto,

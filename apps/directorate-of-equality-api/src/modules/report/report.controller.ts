@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
@@ -28,6 +29,8 @@ export class ReportController {
   @Get()
   @ApiOperation({ operationId: 'listReports' })
   @ApiResponse({ status: 200, type: GetReportsResponseDto })
+  @ApiResponse({ status: 400, type: ApiErrorDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
   async list(
     @Query() query: GetReportsQueryDto,
   ): Promise<GetReportsResponseDto> {
@@ -37,6 +40,8 @@ export class ReportController {
   @Get(':id')
   @ApiOperation({ operationId: 'getReportById' })
   @ApiResponse({ status: 200, type: ReportDetailDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async getById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ReportDetailDto> {

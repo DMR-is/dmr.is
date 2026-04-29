@@ -13,6 +13,30 @@
                 "schema": { "$ref": "#/components/schemas/UserDto" }
               }
             }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         },
         "security": [{ "bearer": [] }],
@@ -33,6 +57,14 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ConfigDto" }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
               }
             }
           }
@@ -59,6 +91,22 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ConfigDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
               }
             }
           }
@@ -93,6 +141,30 @@
                 "schema": { "$ref": "#/components/schemas/ConfigDto" }
               }
             }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         },
         "security": [{ "bearer": [] }],
@@ -120,6 +192,22 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ConfigDto" }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
               }
             }
           }
@@ -289,6 +377,22 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         },
         "security": [{ "bearer": [] }],
@@ -313,6 +417,22 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ReportDetailDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
               }
             }
           }
@@ -342,6 +462,30 @@
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ReportCommentDto" }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
               }
             }
           }
@@ -378,6 +522,38 @@
                 "schema": { "$ref": "#/components/schemas/ReportCommentDto" }
               }
             }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         },
         "security": [{ "bearer": [] }],
@@ -402,7 +578,33 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Report Comments"]
@@ -419,7 +621,33 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Report Workflow"]
@@ -444,7 +672,41 @@
             }
           }
         },
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Report Workflow"]
@@ -461,7 +723,33 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Report Workflow"]
@@ -478,7 +766,33 @@
             "schema": { "type": "string" }
           }
         ],
-        "responses": { "204": { "description": "" } },
+        "responses": {
+          "204": { "description": "" },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Report Workflow"]
@@ -517,6 +831,45 @@
           "email",
           "isActive"
         ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "number" },
+          "timestamp": { "type": "string" },
+          "name": {
+            "type": "string",
+            "enum": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ],
+            "example": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ]
+          },
+          "message": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["statusCode", "timestamp"]
       },
       "ConfigDto": {
         "type": "object",
@@ -945,7 +1298,7 @@
           "full"
         ]
       },
-      "ReportEmployeeDeviationDto": {
+      "ReportEmployeeOutlierDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
@@ -1049,11 +1402,9 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
           },
-          "employeeDeviations": {
+          "employeeOutliers": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReportEmployeeDeviationDto"
-            }
+            "items": { "$ref": "#/components/schemas/ReportEmployeeOutlierDto" }
           }
         },
         "required": [
@@ -1065,7 +1416,7 @@
           "equalityReport",
           "timeline",
           "roleResults",
-          "employeeDeviations"
+          "employeeOutliers"
         ]
       },
       "CreateReportCommentDto": {
