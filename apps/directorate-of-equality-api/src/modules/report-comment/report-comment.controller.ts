@@ -9,7 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -24,6 +24,7 @@ import { IReportCommentService } from './report-comment.service.interface'
   path: 'reports/:reportId/comments',
   version: '1',
 })
+@ApiTags('Report Comments')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard, ReportResourceGuard)
 export class ReportCommentController {
