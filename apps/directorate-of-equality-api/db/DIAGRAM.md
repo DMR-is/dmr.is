@@ -73,7 +73,7 @@ erDiagram
         uuid id PK
         text title
     }
-    report_employee_deviation {
+    report_employee_outlier {
         uuid id PK
         uuid report_employee_id FK
         text reason
@@ -152,7 +152,7 @@ erDiagram
 
     report ||--o{ report_employee : "report_id"
     report_employee_role ||--o{ report_employee : "report_employee_role_id"
-    report_employee ||--o{ report_employee_deviation : "report_employee_id"
+    report_employee ||--o{ report_employee_outlier : "report_employee_id"
 
     report_employee_role ||--o{ report_employee_role_criterion_step : "report_employee_role_id"
     report_sub_criterion_step ||--o{ report_employee_role_criterion_step : "report_sub_criterion_step_id"

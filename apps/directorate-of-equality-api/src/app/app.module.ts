@@ -27,7 +27,7 @@ import { ReportCriterionModel } from '../modules/report-criterion/models/report-
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
@@ -66,7 +66,7 @@ import { UserModule } from '../modules/user/user.module'
             ReportSubCriterionModel,
             ReportSubCriterionStepModel,
             ReportEmployeeModel,
-            ReportEmployeeDeviationModel,
+            ReportEmployeeOutlierModel,
             ReportEmployeeRoleCriterionStepModel,
             ReportEmployeePersonalCriterionStepModel,
             ReportResultModel,

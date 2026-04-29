@@ -213,7 +213,7 @@ module.exports = {
       score DECIMAL(6, 2) NOT NULL
     );
 
-    CREATE TABLE report_employee_deviation (
+    CREATE TABLE report_employee_outlier (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -374,8 +374,8 @@ module.exports = {
       ON report_employee (report_id);
     CREATE INDEX report_employee_role_id_idx
       ON report_employee (report_employee_role_id);
-    CREATE INDEX report_employee_deviation_report_employee_id_idx
-      ON report_employee_deviation (report_employee_id);
+    CREATE INDEX report_employee_outlier_report_employee_id_idx
+      ON report_employee_outlier (report_employee_id);
 
     CREATE INDEX report_employee_role_criterion_step_step_idx
       ON report_employee_role_criterion_step (report_sub_criterion_step_id);
@@ -479,7 +479,7 @@ module.exports = {
     DROP TABLE IF EXISTS report_result;
     DROP TABLE IF EXISTS report_employee_personal_criterion_step;
     DROP TABLE IF EXISTS report_employee_role_criterion_step;
-    DROP TABLE IF EXISTS report_employee_deviation;
+    DROP TABLE IF EXISTS report_employee_outlier;
     DROP TABLE IF EXISTS report_employee;
     DROP TABLE IF EXISTS report_sub_criterion_step;
     DROP TABLE IF EXISTS report_sub_criterion;

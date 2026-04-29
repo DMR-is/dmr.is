@@ -128,7 +128,7 @@ type ReportCreateAttributes = {
         order: [['createdAt', 'DESC']],
       },
       // Salary-only aggregate — null for equality reports. Per-role
-      // breakdown + employee deviations are loaded via separate queries
+      // breakdown + employee outliers are loaded via separate queries
       // in the service (keyed off `result.id` and `report.id`) to avoid
       // modifying the report-result / report-employee modules owned by
       // teammates.

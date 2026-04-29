@@ -18,7 +18,7 @@ import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-c
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { EducationEnum } from '../report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
@@ -49,7 +49,7 @@ describe('ReportCreateService', () => {
   let employeeBulkCreate: jest.Mock
   let roleStepBulkCreate: jest.Mock
   let personalStepBulkCreate: jest.Mock
-  let deviationBulkCreate: jest.Mock
+  let outlierBulkCreate: jest.Mock
   let criterionCreate: jest.Mock
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
@@ -74,7 +74,7 @@ describe('ReportCreateService', () => {
     personalStepBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `ps-${i}` })),
     )
-    deviationBulkCreate = jest.fn(async (rows) =>
+    outlierBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `dev-${i}` })),
     )
     criterionCreate = jest.fn(async (input) => ({ ...input, id: `cri-${Date.now()}-${Math.random()}` }))
@@ -120,8 +120,8 @@ describe('ReportCreateService', () => {
           useValue: { bulkCreate: personalStepBulkCreate },
         },
         {
-          provide: getModelToken(ReportEmployeeDeviationModel),
-          useValue: { bulkCreate: deviationBulkCreate },
+          provide: getModelToken(ReportEmployeeOutlierModel),
+          useValue: { bulkCreate: outlierBulkCreate },
         },
         {
           provide: getModelToken(ReportCriterionModel),
@@ -289,18 +289,18 @@ describe('ReportCreateService', () => {
     expect(reportEventCreate).not.toHaveBeenCalled()
   })
 
-  it('skips the deviation insert when none are flagged', async () => {
+  it('skips the outlier insert when none are flagged', async () => {
     const input = makeInput()
-    input.deviations = []
+    input.outliers = []
 
     await service.createSalary(input)
 
-    expect(deviationBulkCreate).not.toHaveBeenCalled()
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('persists deviations resolving employeeOrdinal to the new employee id', async () => {
+  it('persists outliers resolving employeeOrdinal to the new employee id', async () => {
     const input = makeInput()
-    input.deviations = [
+    input.outliers = [
       {
         employeeOrdinal: 1,
         reason: 'On parental leave for 6 months',
@@ -312,8 +312,8 @@ describe('ReportCreateService', () => {
 
     await service.createSalary(input)
 
-    expect(deviationBulkCreate).toHaveBeenCalledTimes(1)
-    expect(deviationBulkCreate.mock.calls[0][0]).toEqual([
+    expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
+    expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
         reason: 'On parental leave for 6 months',
@@ -324,9 +324,9 @@ describe('ReportCreateService', () => {
     ])
   })
 
-  it('rejects deviations referencing an unknown employee ordinal', async () => {
+  it('rejects outliers referencing an unknown employee ordinal', async () => {
     const input = makeInput()
-    input.deviations = [
+    input.outliers = [
       {
         employeeOrdinal: 999,
         reason: 'r',
@@ -338,7 +338,7 @@ describe('ReportCreateService', () => {
 
     await expect(service.createSalary(input)).rejects.toThrow(BadRequestException)
     expect(reportCreate).not.toHaveBeenCalled()
-    expect(deviationBulkCreate).not.toHaveBeenCalled()
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
   // ── createEquality path ────────────────────────────────────────────

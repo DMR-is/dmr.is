@@ -1,6 +1,6 @@
 import { ApiString, ApiUUId } from '@dmr.is/decorators'
 
-export class ReportEmployeeDeviationDto {
+export class ReportEmployeeOutlierDto {
   @ApiUUId()
   id!: string
 

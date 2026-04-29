@@ -29,7 +29,7 @@ import {
 
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
 import {
@@ -66,8 +66,8 @@ export class ReportService implements IReportService {
     private readonly reportEventModel: typeof ReportEventModel,
     @InjectModel(ReportRoleResultModel)
     private readonly reportRoleResultModel: typeof ReportRoleResultModel,
-    @InjectModel(ReportEmployeeDeviationModel)
-    private readonly reportEmployeeDeviationModel: typeof ReportEmployeeDeviationModel,
+    @InjectModel(ReportEmployeeOutlierModel)
+    private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
   ) {}
 
   async list(query: GetReportsQueryDto): Promise<GetReportsResponseDto> {
@@ -140,7 +140,7 @@ export class ReportService implements IReportService {
       )
     }
 
-    const [{ result, roleResults, employeeDeviations }, timeline] =
+    const [{ result, roleResults, employeeOutliers }, timeline] =
       await Promise.all([
         this.loadSalaryCalculations(report),
         this.buildTimeline(id, report.comments ?? []),
@@ -153,7 +153,7 @@ export class ReportService implements IReportService {
       timeline,
       result,
       roleResults,
-      employeeDeviations,
+      employeeOutliers,
     }
   }
 
@@ -197,17 +197,17 @@ export class ReportService implements IReportService {
   private async loadSalaryCalculations(report: ReportModel): Promise<{
     result: ReportDetailDto['result']
     roleResults: ReportDetailDto['roleResults']
-    employeeDeviations: ReportDetailDto['employeeDeviations']
+    employeeOutliers: ReportDetailDto['employeeOutliers']
   }> {
     if (report.type !== ReportTypeEnum.SALARY || !report.result) {
-      return { result: null, roleResults: [], employeeDeviations: [] }
+      return { result: null, roleResults: [], employeeOutliers: [] }
     }
 
-    const [roleResultRows, deviationRows] = await Promise.all([
+    const [roleResultRows, outlierRows] = await Promise.all([
       this.reportRoleResultModel.findAll({
         where: { reportResultId: report.result.id },
       }),
-      this.reportEmployeeDeviationModel.findAll({
+      this.reportEmployeeOutlierModel.findAll({
         include: [
           {
             model: ReportEmployeeModel,
@@ -223,7 +223,7 @@ export class ReportService implements IReportService {
     return {
       result: report.result.fromModel(),
       roleResults: roleResultRows.map((r) => r.fromModel()),
-      employeeDeviations: deviationRows.map((d) => d.fromModel()),
+      employeeOutliers: outlierRows.map((d) => d.fromModel()),
     }
   }
 

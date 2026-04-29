@@ -87,30 +87,30 @@ const makeService = () => {
   // paths don't touch them and salary paths return predictable zero-value
   // outputs unless a test overrides.
   const roleResultFindAll = jest.fn().mockResolvedValue([])
-  const deviationFindAll = jest.fn().mockResolvedValue([])
+  const outlierFindAll = jest.fn().mockResolvedValue([])
   const reportEventModel = {
     findAll: jest.fn().mockResolvedValue([]),
   } as unknown as typeof import('./models/report-event.model').ReportEventModel
   const reportRoleResultModel = {
     findAll: roleResultFindAll,
   } as unknown as typeof import('../report-result/models/report-role-result.model').ReportRoleResultModel
-  const reportEmployeeDeviationModel = {
-    findAll: deviationFindAll,
-  } as unknown as typeof import('../report-employee/models/report-employee-deviation.model').ReportEmployeeDeviationModel
+  const reportEmployeeOutlierModel = {
+    findAll: outlierFindAll,
+  } as unknown as typeof import('../report-employee/models/report-employee-outlier.model').ReportEmployeeOutlierModel
 
   const service = new ReportService(
     logger,
     reportModel,
     reportEventModel,
     reportRoleResultModel,
-    reportEmployeeDeviationModel,
+    reportEmployeeOutlierModel,
   )
   return {
     service,
     findAndCountAll,
     findByPkOrThrow,
     roleResultFindAll,
-    deviationFindAll,
+    outlierFindAll,
     logger,
   }
 }
@@ -558,8 +558,8 @@ describe('ReportService.getById', () => {
   })
 
   describe('salary calculations', () => {
-    it('returns null/empty calc blocks for equality reports without querying role results or deviations', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, deviationFindAll } =
+    it('returns null/empty calc blocks for equality reports without querying role results or outliers', async () => {
+      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
         makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
@@ -572,13 +572,13 @@ describe('ReportService.getById', () => {
 
       expect(detail.result).toBeNull()
       expect(detail.roleResults).toEqual([])
-      expect(detail.employeeDeviations).toEqual([])
+      expect(detail.employeeOutliers).toEqual([])
       expect(roleResultFindAll).not.toHaveBeenCalled()
-      expect(deviationFindAll).not.toHaveBeenCalled()
+      expect(outlierFindAll).not.toHaveBeenCalled()
     })
 
     it('returns null/empty calc blocks for salary reports before scoring has run (result missing)', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, deviationFindAll } =
+      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
         makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
@@ -599,13 +599,13 @@ describe('ReportService.getById', () => {
 
       expect(detail.result).toBeNull()
       expect(detail.roleResults).toEqual([])
-      expect(detail.employeeDeviations).toEqual([])
+      expect(detail.employeeOutliers).toEqual([])
       expect(roleResultFindAll).not.toHaveBeenCalled()
-      expect(deviationFindAll).not.toHaveBeenCalled()
+      expect(outlierFindAll).not.toHaveBeenCalled()
     })
 
-    it('loads role results and employee deviations when result exists on salary report', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, deviationFindAll } =
+    it('loads role results and employee outliers when result exists on salary report', async () => {
+      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
         makeService()
 
       const resultId = '00000000-0000-0000-0000-000000000111'
@@ -664,7 +664,7 @@ describe('ReportService.getById', () => {
         maximumFemaleSalary: 1200,
         maximumNeutralSalary: 0,
       })
-      const deviationRow = withFromModel({
+      const outlierRow = withFromModel({
         id: 'd1',
         reportEmployeeId: 'e1',
         reason: 'Seniority premium',
@@ -673,7 +673,7 @@ describe('ReportService.getById', () => {
         signatureRole: 'HR',
       })
       roleResultFindAll.mockResolvedValueOnce([roleResultRow])
-      deviationFindAll.mockResolvedValueOnce([deviationRow])
+      outlierFindAll.mockResolvedValueOnce([outlierRow])
 
       const detail = await service.getById(baseReport.id)
 
@@ -684,15 +684,15 @@ describe('ReportService.getById', () => {
       expect(detail.roleResults[0]).toEqual(
         expect.objectContaining({ reportResultId: resultId }),
       )
-      expect(detail.employeeDeviations).toHaveLength(1)
-      expect(detail.employeeDeviations[0]).toEqual(
+      expect(detail.employeeOutliers).toHaveLength(1)
+      expect(detail.employeeOutliers[0]).toEqual(
         expect.objectContaining({ reason: 'Seniority premium' }),
       )
 
       expect(roleResultFindAll).toHaveBeenCalledWith({
         where: { reportResultId: resultId },
       })
-      expect(deviationFindAll).toHaveBeenCalledWith(
+      expect(outlierFindAll).toHaveBeenCalledWith(
         expect.objectContaining({
           include: expect.any(Array),
         }),
