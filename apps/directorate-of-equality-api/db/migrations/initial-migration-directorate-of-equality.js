@@ -219,10 +219,20 @@ module.exports = {
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
       report_employee_id UUID NOT NULL REFERENCES report_employee(id),
-      reason TEXT NOT NULL,
-      action TEXT NOT NULL,
-      signature_name TEXT NOT NULL,
-      signature_role TEXT NOT NULL
+      postponed BOOLEAN NOT NULL DEFAULT false,
+      reason TEXT DEFAULT NULL,
+      action TEXT DEFAULT NULL,
+      signature_name TEXT DEFAULT NULL,
+      signature_role TEXT DEFAULT NULL,
+
+      CONSTRAINT report_employee_deviation_explanation_chk CHECK (
+        postponed = true OR (
+          reason IS NOT NULL AND reason <> ''
+          AND action IS NOT NULL AND action <> ''
+          AND signature_name IS NOT NULL AND signature_name <> ''
+          AND signature_role IS NOT NULL AND signature_role <> ''
+        )
+      )
     );
 
     CREATE TABLE report_employee_role_criterion_step (

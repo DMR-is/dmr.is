@@ -6,6 +6,7 @@ import {
   ApiDtoArray,
   ApiEnum,
   ApiNumber,
+  ApiOptionalBoolean,
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiOptionalUUID,
@@ -20,9 +21,14 @@ import {
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
 /**
- * One row per employee flagged as a salary outlier — populated by the company
- * after the outlier-preview step (see `db/README.md` Notes / open questions).
- * Persisted into `report_employee_deviation`.
+ * One row per employee flagged as a salary outlier. Populated by the company
+ * after the salary-analysis preview step (see `db/README.md` Notes / open
+ * questions). Persisted into `report_employee_deviation`.
+ *
+ * `postponed = true` means the company has acknowledged the outlier but is
+ * deferring the explanation; `reason`, `action`, and the signature fields may
+ * be omitted in that case. When `postponed = false`, all explanation fields
+ * are required (validated server-side and at the DB CHECK constraint).
  */
 export class CreateReportDeviationDto {
   @ApiNumber({
@@ -31,17 +37,31 @@ export class CreateReportDeviationDto {
   })
   employeeOrdinal!: number
 
-  @ApiString()
-  reason!: string
+  @ApiOptionalBoolean({
+    description:
+      'When true, defers the explanation. Other fields may be omitted. Defaults to false.',
+  })
+  postponed?: boolean
 
-  @ApiString()
-  action!: string
+  @ApiOptionalString({
+    description: 'Required when `postponed` is false.',
+  })
+  reason?: string
 
-  @ApiString()
-  signatureName!: string
+  @ApiOptionalString({
+    description: 'Required when `postponed` is false.',
+  })
+  action?: string
 
-  @ApiString()
-  signatureRole!: string
+  @ApiOptionalString({
+    description: 'Required when `postponed` is false.',
+  })
+  signatureName?: string
+
+  @ApiOptionalString({
+    description: 'Required when `postponed` is false.',
+  })
+  signatureRole?: string
 }
 
 export class CreateReportCompanySnapshotDto {

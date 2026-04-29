@@ -360,14 +360,26 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report_employee_deviation`
 
-| Column               | Type                   |
-| -------------------- | ---------------------- |
-| `id`                 | `uuid` PK              |
-| `report_employee_id` | `fk → report_employee` |
-| `reason`             | `text`                 |
-| `action`             | `text`                 |
-| `signature_name`     | `text`                 |
-| `signature_role`     | `text`                 |
+One row per outlier the company has acknowledged at submission. Two shapes share the table:
+
+- **Filled** (`postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
+- **Postponed** (`postponed = true`) — company acknowledges the outlier but defers the explanation. Explanation columns may be null. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
+
+The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (deviations for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
+
+| Column               | Type                                                                  |
+| -------------------- | --------------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                             |
+| `report_employee_id` | `fk → report_employee`                                                |
+| `postponed`          | `boolean` (default `false`)                                           |
+| `reason`             | `text` (nullable — required when `postponed = false`)                 |
+| `action`             | `text` (nullable — required when `postponed = false`)                 |
+| `signature_name`     | `text` (nullable — required when `postponed = false`)                 |
+| `signature_role`     | `text` (nullable — required when `postponed = false`)                 |
+
+Invariant (enforced via CHECK):
+
+- `postponed = true OR (reason, action, signature_name, signature_role all non-null and non-empty)`.
 
 ### `report_employee_role_criterion_step`
 
@@ -532,5 +544,5 @@ No FKs, no relationships. Standalone lookup table.
 - **Fines cron.** Daily job: `SELECT * FROM report WHERE fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')`. Accrual table (`report_fine` or similar) not yet designed.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
-- **Outlier-preview endpoint (planned).** `report_employee_deviation` rows are populated at submission, but the company needs to know *which* employees are outliers before they can justify them. The plan is a dedicated API endpoint (separate from `POST /reports/salary`) that takes the unsaved parsed payload, runs `assessSalaryDeviationInBucket` from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees alongside the calculations driving the verdict so the company can verify before submitting. Endpoint shape, response payload, and home module are TBD.
-- **Submit-side outlier-vs-deviation guard (planned, ships with the preview endpoint).** The submit endpoint currently trusts whatever `deviations[]` the caller sends — it only verifies each entry's `employeeOrdinal` resolves to a real employee, not that the employee is actually an outlier. A company could (intentionally or not) submit deviations for non-outliers, or omit deviations for actual outliers. The detection rule needs to live in one place across both endpoints, so the planned approach is: extract a helper `detectOutlierOrdinals(parsed, threshold) → Set<number>` from the same `assessSalaryDeviationInBucket` machinery, then call it from both the preview endpoint (returns it to the caller with calculations) and the submit pre-flight (asserts `deviations[].employeeOrdinal` matches the detected set; reject extras and/or missing per policy). Until this guard lands, the mismatch is reviewer-visible (the snapshot's score-bucket data exposes outliers) but not API-enforced.
+- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the new `application` module. Takes the unsaved parsed payload, runs `assessSalaryDeviationInBucket` from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees alongside the calculations driving the verdict so the company can verify before submitting.
+- **Submit-side outlier-vs-deviation guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has a `deviations[]` row (postponed or filled), and every `deviations[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The `postponed` flag on `report_employee_deviation` lets a company acknowledge an outlier without filling the explanation immediately.

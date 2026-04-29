@@ -251,10 +251,11 @@ export class ReportCreateService implements IReportCreateService {
           reportEmployeeId: employeeOrdinalToId.get(
             deviation.employeeOrdinal,
           ) as string,
-          reason: deviation.reason,
-          action: deviation.action,
-          signatureName: deviation.signatureName,
-          signatureRole: deviation.signatureRole,
+          postponed: deviation.postponed ?? false,
+          reason: deviation.reason ?? null,
+          action: deviation.action ?? null,
+          signatureName: deviation.signatureName ?? null,
+          signatureRole: deviation.signatureRole ?? null,
         })),
       )
     }
