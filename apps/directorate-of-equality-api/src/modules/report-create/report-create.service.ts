@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -11,6 +12,13 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { IConfigService } from '../config/config.service.interface'
+import { detectOutliers } from '../report/lib/compensation-aggregates'
+import {
+  assertParsedPayloadIntegrity,
+  computeEmployeeScores,
+  stepKey,
+} from '../report/lib/employee-scores'
 import {
   ReportModel,
   ReportStatusEnum,
@@ -28,11 +36,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
-import {
-  ParsedReportDto,
-  ParsedRoleDto,
-  ParsedStepAssignmentDto,
-} from '../report-excel/dto/parsed-report.dto'
+import { ParsedStepAssignmentDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -40,9 +44,6 @@ import { CreateReportResponseDto } from './dto/create-report-response.dto'
 import { IReportCreateService } from './report-create.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCreateService'
-
-const stepKey = (criterionTitle: string, subTitle: string, stepOrder: number) =>
-  `${criterionTitle}|${subTitle}|${stepOrder}`
 
 @Injectable()
 export class ReportCreateService implements IReportCreateService {
@@ -72,6 +73,8 @@ export class ReportCreateService implements IReportCreateService {
     private readonly reportSubCriterionStepModel: typeof ReportSubCriterionStepModel,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
+    @Inject(IConfigService)
+    private readonly configService: IConfigService,
   ) {}
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
@@ -87,33 +90,32 @@ export class ReportCreateService implements IReportCreateService {
   private async createSalaryReport(
     input: CreateReportDto,
   ): Promise<CreateReportResponseDto> {
-    const stepScoreByKey = this.assertParsedPayloadIntegrity(input.parsed)
-    const employeeScores = this.computeEmployeeScores(input.parsed, stepScoreByKey)
+    const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
+    const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     this.assertOutliersReferenceParsedEmployees(input)
+    await this.assertOutliersMatchDetectedOutliers(input, employeeScores)
 
     await this.assertEqualityReportApproved(input.equalityReportId)
 
     // 1. report row — status SUBMITTED so it lands in the reviewer queue.
-    const report = await this.reportModel.create(
-      {
-        type: ReportTypeEnum.SALARY,
-        status: ReportStatusEnum.SUBMITTED,
-        equalityReportId: input.equalityReportId,
-        identifier: input.identifier,
-        importedFromExcel: input.importedFromExcel,
-        providerType: input.providerType,
-        providerId: input.providerId,
-        companyAdminName: input.companyAdminName,
-        companyAdminEmail: input.companyAdminEmail,
-        companyAdminGender: input.companyAdminGender,
-        contactName: input.contactName,
-        contactEmail: input.contactEmail,
-        contactPhone: input.contactPhone,
-        averageEmployeeMaleCount: input.averageEmployeeMaleCount,
-        averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
-        averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
-      },
-    )
+    const report = await this.reportModel.create({
+      type: ReportTypeEnum.SALARY,
+      status: ReportStatusEnum.SUBMITTED,
+      equalityReportId: input.equalityReportId,
+      identifier: input.identifier,
+      importedFromExcel: input.importedFromExcel,
+      providerType: input.providerType,
+      providerId: input.providerId,
+      companyAdminName: input.companyAdminName,
+      companyAdminEmail: input.companyAdminEmail,
+      companyAdminGender: input.companyAdminGender,
+      contactName: input.contactName,
+      contactEmail: input.contactEmail,
+      contactPhone: input.contactPhone,
+      averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+      averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+      averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+    })
 
     this.logger.info(`Created SALARY report row "${report.id}"`, {
       context: LOGGING_CONTEXT,
@@ -148,25 +150,21 @@ export class ReportCreateService implements IReportCreateService {
     // 4. criteria → sub_criteria → steps. Capture step ids by composite key.
     const stepKeyToId = new Map<string, string>()
     for (const criterion of input.parsed.criteria) {
-      const criterionRow = await this.reportCriterionModel.create(
-        {
-          title: criterion.title,
-          weight: criterion.weight,
-          description: criterion.description,
-          type: criterion.type,
-          reportId: report.id,
-        },
-      )
+      const criterionRow = await this.reportCriterionModel.create({
+        title: criterion.title,
+        weight: criterion.weight,
+        description: criterion.description,
+        type: criterion.type,
+        reportId: report.id,
+      })
 
       for (const subCriterion of criterion.subCriteria) {
-        const subCriterionRow = await this.reportSubCriterionModel.create(
-          {
-            title: subCriterion.title,
-            description: subCriterion.description,
-            weight: subCriterion.weight,
-            reportCriterionId: criterionRow.id,
-          },
-        )
+        const subCriterionRow = await this.reportSubCriterionModel.create({
+          title: subCriterion.title,
+          description: subCriterion.description,
+          weight: subCriterion.weight,
+          reportCriterionId: criterionRow.id,
+        })
 
         const stepRows = await this.reportSubCriterionStepModel.bulkCreate(
           subCriterion.steps.map((step) => ({
@@ -223,15 +221,11 @@ export class ReportCreateService implements IReportCreateService {
     )
 
     // 7. employee ↔ step personal joins.
-    const personalStepRows = input.parsed.employees.flatMap(
-      (employee, index) =>
-        employee.personalStepAssignments.map((assignment) => ({
-          reportEmployeeId: employeeRows[index].id,
-          reportSubCriterionStepId: this.requireStepId(
-            stepKeyToId,
-            assignment,
-          ),
-        })),
+    const personalStepRows = input.parsed.employees.flatMap((employee, index) =>
+      employee.personalStepAssignments.map((assignment) => ({
+        reportEmployeeId: employeeRows[index].id,
+        reportSubCriterionStepId: this.requireStepId(stepKeyToId, assignment),
+      })),
     )
     if (personalStepRows.length > 0) {
       await this.personalStepModel.bulkCreate(personalStepRows)
@@ -266,14 +260,12 @@ export class ReportCreateService implements IReportCreateService {
     await this.reportResultService.createForReport(report.id)
 
     // 10. SUBMITTED audit event — actorUserId null = company admin.
-    await this.reportEventModel.create(
-      {
-        reportId: report.id,
-        eventType: ReportEventTypeEnum.SUBMITTED,
-        reportStatus: ReportStatusEnum.SUBMITTED,
-        actorUserId: null,
-      },
-    )
+    await this.reportEventModel.create({
+      reportId: report.id,
+      eventType: ReportEventTypeEnum.SUBMITTED,
+      reportStatus: ReportStatusEnum.SUBMITTED,
+      actorUserId: null,
+    })
 
     return { reportId: report.id }
   }
@@ -286,23 +278,21 @@ export class ReportCreateService implements IReportCreateService {
   private async createEqualityReport(
     input: CreateEqualityReportDto,
   ): Promise<CreateReportResponseDto> {
-    const report = await this.reportModel.create(
-      {
-        type: ReportTypeEnum.EQUALITY,
-        status: ReportStatusEnum.SUBMITTED,
-        identifier: input.identifier,
-        importedFromExcel: false,
-        providerType: input.providerType,
-        providerId: input.providerId,
-        companyAdminName: input.companyAdminName,
-        companyAdminEmail: input.companyAdminEmail,
-        companyAdminGender: input.companyAdminGender,
-        contactName: input.contactName,
-        contactEmail: input.contactEmail,
-        contactPhone: input.contactPhone,
-        equalityReportContent: input.equalityReportContent,
-      },
-    )
+    const report = await this.reportModel.create({
+      type: ReportTypeEnum.EQUALITY,
+      status: ReportStatusEnum.SUBMITTED,
+      identifier: input.identifier,
+      importedFromExcel: false,
+      providerType: input.providerType,
+      providerId: input.providerId,
+      companyAdminName: input.companyAdminName,
+      companyAdminEmail: input.companyAdminEmail,
+      companyAdminGender: input.companyAdminGender,
+      contactName: input.contactName,
+      contactEmail: input.contactEmail,
+      contactPhone: input.contactPhone,
+      equalityReportContent: input.equalityReportContent,
+    })
 
     this.logger.info(`Created EQUALITY report row "${report.id}"`, {
       context: LOGGING_CONTEXT,
@@ -324,112 +314,14 @@ export class ReportCreateService implements IReportCreateService {
       })),
     )
 
-    await this.reportEventModel.create(
-      {
-        reportId: report.id,
-        eventType: ReportEventTypeEnum.SUBMITTED,
-        reportStatus: ReportStatusEnum.SUBMITTED,
-        actorUserId: null,
-      },
-    )
+    await this.reportEventModel.create({
+      reportId: report.id,
+      eventType: ReportEventTypeEnum.SUBMITTED,
+      reportStatus: ReportStatusEnum.SUBMITTED,
+      actorUserId: null,
+    })
 
     return { reportId: report.id }
-  }
-
-  /**
-   * Pre-flight integrity checks on the parsed payload — surfaces malformed
-   * input as a 400 before any DB writes. Catches duplicate titles, unknown
-   * role references in employees, and step assignments that don't resolve to
-   * a node in the parsed criteria tree.
-   *
-   * Returns a `(criterionTitle|subTitle|stepOrder) → step score` map so the
-   * caller can compute employee total scores in memory without re-walking
-   * the criteria tree.
-   */
-  private assertParsedPayloadIntegrity(
-    parsed: ParsedReportDto,
-  ): Map<string, number> {
-    const roleTitles = new Set<string>()
-    for (const role of parsed.roles) {
-      if (roleTitles.has(role.title)) {
-        throw new BadRequestException(
-          `Duplicate role title in parsed payload: "${role.title}"`,
-        )
-      }
-      roleTitles.add(role.title)
-    }
-
-    const stepScoreByKey = new Map<string, number>()
-    const criterionTitles = new Set<string>()
-    for (const criterion of parsed.criteria) {
-      if (criterionTitles.has(criterion.title)) {
-        throw new BadRequestException(
-          `Duplicate criterion title in parsed payload: "${criterion.title}"`,
-        )
-      }
-      criterionTitles.add(criterion.title)
-
-      const subTitlesInCriterion = new Set<string>()
-      for (const sub of criterion.subCriteria) {
-        if (subTitlesInCriterion.has(sub.title)) {
-          throw new BadRequestException(
-            `Duplicate sub-criterion title under "${criterion.title}": "${sub.title}"`,
-          )
-        }
-        subTitlesInCriterion.add(sub.title)
-
-        const stepOrders = new Set<number>()
-        for (const step of sub.steps) {
-          if (stepOrders.has(step.order)) {
-            throw new BadRequestException(
-              `Duplicate step order under "${criterion.title} / ${sub.title}": ${step.order}`,
-            )
-          }
-          stepOrders.add(step.order)
-          stepScoreByKey.set(
-            stepKey(criterion.title, sub.title, step.order),
-            step.score,
-          )
-        }
-      }
-    }
-
-    for (const role of parsed.roles) {
-      for (const assignment of role.stepAssignments) {
-        const key = stepKey(
-          assignment.criterionTitle,
-          assignment.subTitle,
-          assignment.stepOrder,
-        )
-        if (!stepScoreByKey.has(key)) {
-          throw new BadRequestException(
-            `Role "${role.title}" references unknown step ${key}`,
-          )
-        }
-      }
-    }
-
-    for (const employee of parsed.employees) {
-      if (!roleTitles.has(employee.roleTitle)) {
-        throw new BadRequestException(
-          `Employee ordinal ${employee.ordinal} references unknown role "${employee.roleTitle}"`,
-        )
-      }
-      for (const assignment of employee.personalStepAssignments) {
-        const key = stepKey(
-          assignment.criterionTitle,
-          assignment.subTitle,
-          assignment.stepOrder,
-        )
-        if (!stepScoreByKey.has(key)) {
-          throw new BadRequestException(
-            `Employee ordinal ${employee.ordinal} references unknown step ${key}`,
-          )
-        }
-      }
-    }
-
-    return stepScoreByKey
   }
 
   /**
@@ -453,37 +345,94 @@ export class ReportCreateService implements IReportCreateService {
   }
 
   /**
-   * Total score per employee = sum of step scores assigned to them, dedup'd
-   * across role and personal assignments (one stepKey contributes once even
-   * if both the role and the employee personally reference it). Mirrors the
-   * Set-based dedup used by `report-statistics.computeEmployeeWorkScore`.
+   * Submit-side outlier guard. Recomputes the canonical outlier set with
+   * `detectOutliers` (same helper the application-side preview uses) and
+   * asserts:
+   *
+   * - Every detected outlier has an `outliers[]` row (postponed or filled).
+   *   Missing rows reject — postponement is acknowledgement-with-deferred-
+   *   explanation, not skip-the-row.
+   * - Every `outliers[]` row references a detected outlier. Extras reject.
+   * - Each non-postponed row has all four explanation columns filled.
+   *
+   * Threshold is re-read from `config` here, so a tiny drift between preview
+   * and submit is possible — rejection in that case just means "re-run
+   * preview".
    */
-  private computeEmployeeScores(
-    parsed: ParsedReportDto,
-    stepScoreByKey: Map<string, number>,
-  ): number[] {
-    const rolesByTitle = new Map<string, ParsedRoleDto>()
-    for (const role of parsed.roles) {
-      rolesByTitle.set(role.title, role)
+  private async assertOutliersMatchDetectedOutliers(
+    input: CreateReportDto,
+    employeeScores: number[],
+  ) {
+    const submittedOutliers = input.outliers ?? []
+    const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
+
+    const detected = detectOutliers({
+      employees: input.parsed.employees.map((employee, index) => ({
+        ordinal: employee.ordinal,
+        score: employeeScores[index],
+        gender: employee.gender,
+        workRatio: employee.workRatio,
+        baseSalary: employee.baseSalary,
+      })),
+      thresholdPercent,
+    })
+
+    const detectedOrdinals = new Set(detected.map((d) => d.ordinal))
+    const submittedOrdinals = new Set(
+      submittedOutliers.map((o) => o.employeeOrdinal),
+    )
+
+    const extras = [...submittedOrdinals].filter(
+      (ordinal) => !detectedOrdinals.has(ordinal),
+    )
+    if (extras.length > 0) {
+      throw new BadRequestException(
+        `Outlier row(s) submitted for non-outlier employee ordinal(s): ${extras.join(', ')}`,
+      )
     }
 
-    return parsed.employees.map((employee) => {
-      const role = rolesByTitle.get(employee.roleTitle)
-      const stepKeys = new Set<string>()
-      if (role) {
-        for (const a of role.stepAssignments) {
-          stepKeys.add(stepKey(a.criterionTitle, a.subTitle, a.stepOrder))
-        }
+    const missing = [...detectedOrdinals].filter(
+      (ordinal) => !submittedOrdinals.has(ordinal),
+    )
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Detected outlier(s) missing acknowledgement (filled or postponed) for employee ordinal(s): ${missing.join(', ')}`,
+      )
+    }
+
+    for (const outlier of submittedOutliers) {
+      const isPostponed = outlier.postponed ?? false
+      if (isPostponed) {
+        continue
       }
-      for (const a of employee.personalStepAssignments) {
-        stepKeys.add(stepKey(a.criterionTitle, a.subTitle, a.stepOrder))
+      const missingFields = [
+        ['reason', outlier.reason],
+        ['action', outlier.action],
+        ['signatureName', outlier.signatureName],
+        ['signatureRole', outlier.signatureRole],
+      ].filter(([, value]) => !value || (value as string).length === 0)
+
+      if (missingFields.length > 0) {
+        throw new BadRequestException(
+          `Non-postponed outlier for employee ordinal ${outlier.employeeOrdinal} is missing required field(s): ${missingFields.map(([name]) => name).join(', ')}`,
+        )
       }
-      let total = 0
-      for (const key of stepKeys) {
-        total += stepScoreByKey.get(key) ?? 0
-      }
-      return total
-    })
+    }
+  }
+
+  private async getSalaryDifferenceThresholdPercent(): Promise<number> {
+    const config = await this.configService.getByKey(
+      'salary_difference_threshold_percent',
+    )
+    const parsed = parseFloat(config.value)
+
+    if (!Number.isFinite(parsed)) {
+      throw new InternalServerErrorException(
+        'Config entry "salary_difference_threshold_percent" must be numeric',
+      )
+    }
+
+    return parsed
   }
 
   /**

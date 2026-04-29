@@ -27,6 +27,7 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { EqualityReportSummaryDto } from '../application/dto/equality-report-summary.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
@@ -42,7 +43,7 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
-import { ReportTypeEnum } from './models/report.enums'
+import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportCommentModel } from './models/report-comment.model'
 import { ReportEventModel } from './models/report-event.model'
@@ -154,6 +155,47 @@ export class ReportService implements IReportService {
       result,
       roleResults,
       employeeOutliers,
+    }
+  }
+
+  /**
+   * Find the company's currently-active EQUALITY report. "Active" means
+   * APPROVED with a `valid_until` strictly in the future. Prefer the most
+   * recently approved report if more than one active row exists.
+   *
+   * Returns null when there's no active equality — callers translate that
+   * into a 404 at the API surface.
+   */
+  async getActiveEqualityForCompany(
+    companyId: string,
+  ): Promise<EqualityReportSummaryDto | null> {
+    const report = await this.reportModel.findOne({
+      where: {
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.APPROVED,
+        validUntil: { [Op.gt]: new Date() },
+      },
+      include: [
+        {
+          model: CompanyReportModel,
+          as: 'companyReport',
+          where: { companyId },
+          required: true,
+          attributes: [],
+        },
+      ],
+      order: [['approvedAt', 'DESC']],
+    })
+
+    if (!report) {
+      return null
+    }
+
+    return {
+      id: report.id,
+      identifier: report.identifier,
+      approvedAt: report.approvedAt,
+      validUntil: report.validUntil,
     }
   }
 

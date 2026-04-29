@@ -12,6 +12,8 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { ApplicationModule } from '../modules/application/application.module'
+import { CompanyModule } from '../modules/company/company.module'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
 import { ConfigModel } from '../modules/config/models/config.model'
@@ -75,6 +77,8 @@ import { HealthController } from './health.controller'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
+    CompanyModule,
+    ApplicationModule,
     DoeWebSwaggerModule,
   ],
   controllers: [HealthController],

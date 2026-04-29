@@ -62,6 +62,7 @@ const makeService = () => {
   const findAndCountAll: FindAndCountAllMock = jest.fn()
   const findByPkOrThrow: FindByPkOrThrowMock = jest.fn()
   const findByPk = jest.fn()
+  const findOne = jest.fn()
   const logger = {
     debug: jest.fn(),
     error: jest.fn(),
@@ -74,6 +75,7 @@ const makeService = () => {
     findAndCountAll,
     findByPkOrThrow,
     findByPk,
+    findOne,
   } as unknown as typeof ReportModel & {
     scope: jest.Mock
     withScope: jest.Mock
@@ -109,6 +111,7 @@ const makeService = () => {
     service,
     findAndCountAll,
     findByPkOrThrow,
+    findOne,
     roleResultFindAll,
     outlierFindAll,
     logger,
@@ -698,5 +701,88 @@ describe('ReportService.getById', () => {
         }),
       )
     })
+  })
+})
+
+describe('ReportService.getActiveEqualityForCompany', () => {
+  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
+
+  it('returns a slim summary when an APPROVED EQUALITY report still in its validity window exists for the company', async () => {
+    const { service, findOne } = makeService()
+    const approvedAt = new Date('2025-06-01T00:00:00.000Z')
+    const validUntil = new Date('2028-06-01T00:00:00.000Z')
+    findOne.mockResolvedValueOnce({
+      id: 'eq-1',
+      identifier: 'EQ-2025-001',
+      approvedAt,
+      validUntil,
+    })
+
+    const result = await service.getActiveEqualityForCompany(COMPANY_ID)
+
+    expect(result).toEqual({
+      id: 'eq-1',
+      identifier: 'EQ-2025-001',
+      approvedAt,
+      validUntil,
+    })
+
+    // Verify the where-clause filters the way the README describes.
+    const callArg = findOne.mock.calls[0][0]
+    expect(callArg.where).toEqual(
+      expect.objectContaining({
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.APPROVED,
+      }),
+    )
+    expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
+    expect(callArg.order).toEqual([['approvedAt', 'DESC']])
+    expect(callArg.include[0]).toEqual(
+      expect.objectContaining({
+        as: 'companyReport',
+        where: { companyId: COMPANY_ID },
+        required: true,
+      }),
+    )
+  })
+
+  it('returns null when no equality report matches the requested company', async () => {
+    const { service, findOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+
+    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
+
+    const callArg = findOne.mock.calls[0][0]
+    expect(callArg.include[0]).toEqual(
+      expect.objectContaining({
+        where: { companyId: COMPANY_ID },
+        required: true,
+      }),
+    )
+  })
+
+  it('returns null when the matching equality report is not APPROVED', async () => {
+    const { service, findOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+
+    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
+
+    const callArg = findOne.mock.calls[0][0]
+    expect(callArg.where).toEqual(
+      expect.objectContaining({
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.APPROVED,
+      }),
+    )
+  })
+
+  it('returns null when the matching equality report is expired', async () => {
+    const { service, findOne } = makeService()
+    findOne.mockResolvedValueOnce(null)
+
+    expect(await service.getActiveEqualityForCompany(COMPANY_ID)).toBeNull()
+
+    const callArg = findOne.mock.calls[0][0]
+    expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
   })
 })
