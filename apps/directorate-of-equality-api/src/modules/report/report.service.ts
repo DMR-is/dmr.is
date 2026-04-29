@@ -27,12 +27,12 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
-import { EqualityReportSummaryDto } from '../application/dto/equality-report-summary.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
+import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import {
   GetReportsQueryDto,
   SortDirectionEnum,

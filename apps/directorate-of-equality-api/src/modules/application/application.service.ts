@@ -14,6 +14,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
   type DetectedOutlier,
   detectOutliers,
@@ -51,7 +52,6 @@ import {
   type EmployeeDataPoint,
 } from '../report-statistics/lib/build-chart'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
-import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import {
   SalaryAnalysisOutlierDirectionEnum,

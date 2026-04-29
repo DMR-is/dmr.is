@@ -1,4 +1,4 @@
-import { EqualityReportSummaryDto } from '../application/dto/equality-report-summary.dto'
+import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'

@@ -13,9 +13,9 @@ export const stepKey = (
 
 /**
  * Pre-flight integrity checks on the parsed payload — surfaces malformed
- * input as a 400 before any DB writes. Catches duplicate titles, unknown
- * role references in employees, and step assignments that don't resolve to
- * a node in the parsed criteria tree.
+ * input as a 400 before any DB writes. Catches duplicate titles/employee
+ * ordinals, invalid work ratios, unknown role references in employees, and
+ * step assignments that don't resolve to a node in the parsed criteria tree.
  *
  * Returns a `(criterionTitle|subTitle|stepOrder) → step score` map so the
  * caller can compute employee total scores in memory without re-walking
@@ -84,7 +84,21 @@ export function assertParsedPayloadIntegrity(
     }
   }
 
+  const employeeOrdinals = new Set<number>()
   for (const employee of parsed.employees) {
+    if (employeeOrdinals.has(employee.ordinal)) {
+      throw new BadRequestException(
+        `Duplicate employee ordinal in parsed payload: ${employee.ordinal}`,
+      )
+    }
+    employeeOrdinals.add(employee.ordinal)
+
+    if (!Number.isFinite(employee.workRatio) || employee.workRatio <= 0) {
+      throw new BadRequestException(
+        `Employee ordinal ${employee.ordinal} has invalid work ratio ${employee.workRatio}; expected a value greater than 0`,
+      )
+    }
+
     if (!roleTitles.has(employee.roleTitle)) {
       throw new BadRequestException(
         `Employee ordinal ${employee.ordinal} references unknown role "${employee.roleTitle}"`,

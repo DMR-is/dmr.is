@@ -8,6 +8,7 @@ import {
 } from '@dmr.is/decorators'
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
+import { EqualityReportSummaryDto } from '../../report/dto/equality-report-summary.dto'
 import {
   ReportStatusEnum,
   ReportTypeEnum,
@@ -15,7 +16,6 @@ import {
 import { ReportCommentDto } from '../../report-comment/dto/report-comment.dto'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
-import { EqualityReportSummaryDto } from './equality-report-summary.dto'
 
 export class ApplicationReportDetailDto {
   @ApiUUId()
