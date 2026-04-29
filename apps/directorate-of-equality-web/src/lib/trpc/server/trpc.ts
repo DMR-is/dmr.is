@@ -19,7 +19,7 @@ export const createTRPCContext = cache(async () => {
   }
 
   return {
-    api: await getServerClient(session.idToken),
+    client: await getServerClient(session.idToken),
   }
 })
 
@@ -56,14 +56,14 @@ export const publicProcedure = t.procedure.use(({ ctx, next }) => {
 
 export const protectedProcedure = publicProcedure
   .use(({ ctx, next }) => {
-    if (!ctx.api) {
+    if (!ctx.client) {
       throw new TRPCError({ code: 'UNAUTHORIZED' })
     }
 
     return next({
       ctx: {
         ...ctx,
-        api: ctx.api,
+        client: ctx.client,
       },
     })
   })

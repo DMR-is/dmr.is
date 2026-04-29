@@ -18,6 +18,7 @@ import {
   ApiOperation,
   ApiProduces,
   ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
@@ -35,6 +36,7 @@ const MAX_UPLOAD_BYTES = ONE_MB * 20
   path: 'reports/excel',
   version: '1',
 })
+@ApiTags('Report Excel')
 @ApiBearerAuth()
 @UseGuards(TokenJwtAuthGuard)
 export class ReportExcelController {
