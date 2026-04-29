@@ -39,7 +39,6 @@ import { ReportStatisticsModule } from '../modules/report-statistics/report-stat
 import { ReportWorkflowModule } from '../modules/report-workflow/report-workflow.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { UserModule } from '../modules/user/user.module'
-
 import { HealthController } from './health.controller'
 
 @Module({
