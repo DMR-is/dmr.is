@@ -7,11 +7,12 @@ export default defineConfig({
     clean: true,
   },
   plugins: [
+    'zod',
     '@hey-api/client-fetch',
+    '@hey-api/sdk',
     {
       name: '@hey-api/typescript',
-      enums: 'typescript',
+      enums: 'javascript',
     },
-    '@hey-api/sdk',
   ],
 })

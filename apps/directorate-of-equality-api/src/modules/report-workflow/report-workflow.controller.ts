@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
@@ -35,6 +36,9 @@ export class ReportWorkflowController {
   @HttpCode(204)
   @ApiOperation({ operationId: 'assignReport' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async assign(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -45,6 +49,10 @@ export class ReportWorkflowController {
   @HttpCode(204)
   @ApiOperation({ operationId: 'denyReport' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 400, type: ApiErrorDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async deny(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Body() dto: DenyReportDto,
@@ -56,6 +64,9 @@ export class ReportWorkflowController {
   @HttpCode(204)
   @ApiOperation({ operationId: 'approveReport' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async approve(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -66,6 +77,9 @@ export class ReportWorkflowController {
   @HttpCode(204)
   @ApiOperation({ operationId: 'startReportFines' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async startFines(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {

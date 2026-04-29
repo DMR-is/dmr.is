@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
 
+import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
@@ -37,6 +38,9 @@ export class ReportCommentController {
   @Get()
   @ApiOperation({ operationId: 'getReportComments' })
   @ApiResponse({ status: 200, type: [ReportCommentDto] })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async getByReportId(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<ReportCommentDto[]> {
@@ -46,6 +50,10 @@ export class ReportCommentController {
   @Post()
   @ApiOperation({ operationId: 'createReportComment' })
   @ApiResponse({ status: 201, type: ReportCommentDto })
+  @ApiResponse({ status: 400, type: ApiErrorDto })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async create(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Body() dto: CreateReportCommentDto,
@@ -58,6 +66,9 @@ export class ReportCommentController {
   @ApiOperation({ operationId: 'deleteReportComment' })
   @ApiParam({ name: 'commentId', type: String })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @ApiResponse({ status: 403, type: ApiErrorDto })
+  @ApiResponse({ status: 404, type: ApiErrorDto })
   async delete(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Param('commentId') commentId: string,

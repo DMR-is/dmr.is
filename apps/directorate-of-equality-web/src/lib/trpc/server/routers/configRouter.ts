@@ -1,50 +1,36 @@
-import { z } from 'zod'
-
 import {
-  getAllConfig,
-  getConfigByKey,
-  getConfigHistoryByKey,
-  updateConfigByKey,
-} from '../../../../gen/fetch'
-import { apiCall } from '../../../api/apiCall'
+  zGetConfigByKeyPath,
+  zGetConfigHistoryByKeyPath,
+  zUpdateConfigByKeyBody,
+  zUpdateConfigByKeyPath,
+} from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
 export const configRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    return apiCall(getAllConfig({ client: ctx.client }))
-  }),
+  getAll: protectedProcedure.query(({ ctx }) => ctx.api.getAllConfig()),
 
   getByKey: protectedProcedure
-    .input(z.object({ key: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return apiCall(
-        getConfigByKey({ client: ctx.client, path: { key: input.key } }),
-      )
-    }),
+    .input(zGetConfigByKeyPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getConfigByKey({
+        path: { key: input.key },
+      }),
+    ),
 
   updateByKey: protectedProcedure
-    .input(
-      z.object({
-        key: z.string(),
-        value: z.string(),
-        description: z.string().nullish(),
+    .input(zUpdateConfigByKeyPath.extend(zUpdateConfigByKeyBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateConfigByKey({
+        path: { key: input.key },
+        body: { value: input.value, description: input.description },
       }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      return apiCall(
-        updateConfigByKey({
-          client: ctx.client,
-          path: { key: input.key },
-          body: { value: input.value, description: input.description },
-        }),
-      )
-    }),
+    ),
 
   getHistoryByKey: protectedProcedure
-    .input(z.object({ key: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return apiCall(
-        getConfigHistoryByKey({ client: ctx.client, path: { key: input.key } }),
-      )
-    }),
+    .input(zGetConfigHistoryByKeyPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getConfigHistoryByKey({
+        path: { key: input.key },
+      }),
+    ),
 })

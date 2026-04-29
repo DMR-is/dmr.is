@@ -11,6 +11,7 @@ export const getDoEClient = (token: string): Client => {
     createConfig({
       baseUrl: getBaseUrl(),
       auth: token,
+      throwOnError: true,
     }),
   )
 }
