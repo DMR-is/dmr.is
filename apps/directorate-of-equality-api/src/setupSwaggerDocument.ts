@@ -1,13 +1,12 @@
 import { INestApplication } from '@nestjs/common'
-import { SwaggerModule } from '@nestjs/swagger'
-
-import { openApi } from './openApi'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 export type SetupSwaggerOptions = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   modules: Function[]
   tag: string
   swaggerTitle: string
+  swaggerDescription: string
   swaggerPath: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filterPaths?: (path: Record<string, any>) => Record<string, any>
@@ -18,6 +17,13 @@ export const setupSwaggerDocument = (
   app: INestApplication,
   options: SetupSwaggerOptions,
 ) => {
+  const openApi = new DocumentBuilder()
+    .setTitle(options.swaggerTitle)
+    .setDescription(options.swaggerDescription)
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build()
+
   const document = SwaggerModule.createDocument(app, openApi, {
     deepScanRoutes: true,
     include: options.modules,
