@@ -1,6 +1,6 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import { useState } from 'react'
 
@@ -16,6 +16,7 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   Case,
+  CATEGORY_LABEL_TO_SLUG,
   CATEGORY_SLUG_MAP,
   COLUMNS,
   DETAIL_FIELDS,
@@ -69,20 +70,34 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
 
 type TabContentProps = {
   initialData: Case[]
-  initialCategory?: string[]
 }
 
 const PAGE_SIZE = 10
 
-const TabContent = ({ initialData, initialCategory }: TabContentProps) => {
-  const [filterState, setFilterState] = useState<CaseFilterState>(() => ({
-    category: initialCategory?.length ? initialCategory : undefined,
-  }))
+const TabContent = ({ initialData }: TabContentProps) => {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [filterState, setFilterState] = useState<CaseFilterState>(() => {
+    const slugs = searchParams.getAll('category')
+    const category = slugs.map((s) => CATEGORY_SLUG_MAP[s]).filter(Boolean) as string[]
+    return { category: category.length ? category : undefined }
+  })
   const [page, setPage] = useState(1)
 
   const handleChange = (key: keyof CaseFilterState, values?: string[]) => {
     setFilterState((prev) => ({ ...prev, [key]: values }))
     setPage(1)
+
+    if (key === 'category') {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('category')
+      values?.forEach((label) => {
+        const slug = CATEGORY_LABEL_TO_SLUG[label]
+        if (slug) params.append('category', slug)
+      })
+      router.replace(`?${params.toString()}`, { scroll: false })
+    }
   }
 
   const handleQueryChange = (value: string) => {
@@ -98,6 +113,9 @@ const TabContent = ({ initialData, initialCategory }: TabContentProps) => {
   const handleReset = () => {
     setFilterState({})
     setPage(1)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('category')
+    router.replace(`?${params.toString()}`, { scroll: false })
   }
 
   const filtered = applyFilter(initialData, filterState)
@@ -143,12 +161,6 @@ const TabContent = ({ initialData, initialCategory }: TabContentProps) => {
 }
 
 export const TabsContainer = () => {
-  const searchParams = useSearchParams()
-  const initialCategory = searchParams
-    .getAll('category')
-    .map((slug) => CATEGORY_SLUG_MAP[slug])
-    .filter(Boolean) as string[]
-
   return (
     <GridContainer>
       <Tabs
@@ -159,32 +171,17 @@ export const TabsContainer = () => {
           {
             id: 'innsendingar',
             label: `Innsendingar (${MOCK_DATA.length})`,
-            content: (
-              <TabContent
-                initialData={MOCK_DATA}
-                initialCategory={initialCategory}
-              />
-            ),
+            content: <TabContent initialData={MOCK_DATA} />,
           },
           {
             id: 'i-vinnslu',
             label: 'Í vinnslu (5)',
-            content: (
-              <TabContent
-                initialData={MOCK_DATA.slice(0, 5)}
-                initialCategory={initialCategory}
-              />
-            ),
+            content: <TabContent initialData={MOCK_DATA.slice(0, 5)} />,
           },
           {
             id: 'afgreitt',
             label: 'Afgreitt (3)',
-            content: (
-              <TabContent
-                initialData={MOCK_DATA.slice(0, 3)}
-                initialCategory={initialCategory}
-              />
-            ),
+            content: <TabContent initialData={MOCK_DATA.slice(0, 3)} />,
           },
         ]}
       />
