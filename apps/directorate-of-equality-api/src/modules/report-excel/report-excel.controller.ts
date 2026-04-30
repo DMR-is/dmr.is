@@ -47,7 +47,10 @@ export class ReportExcelController {
 
   @Get('template')
   @ApiProduces(XLSX_MIME)
-  @DoeResponse({ operationId: 'getBlankExcelTemplate', successDescription: 'Blank salary report template' })
+  @DoeResponse({
+    operationId: 'getBlankExcelTemplate',
+    successDescription: 'Blank salary report template',
+  })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()
     return new StreamableFile(buf, {
@@ -67,7 +70,10 @@ export class ReportExcelController {
       required: ['file'],
     },
   })
-  @DoeResponse({ operationId: 'importSalaryReportWorkbook', type: ParsedReportDto })
+  @DoeResponse({
+    operationId: 'importSalaryReportWorkbook',
+    type: ParsedReportDto,
+  })
   @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
     @UploadedFile(

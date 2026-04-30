@@ -294,7 +294,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `company_admin_email`            | `text`                                                                                                                         |
 | `company_admin_gender`           | `GenderEnum`                                                                                                                   |
 | `contact_name`                   | `text`                                                                                                                         |
-| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                           |
+| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                          |
 | `contact_email`                  | `text`                                                                                                                         |
 | `contact_phone`                  | `text`                                                                                                                         |
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
@@ -379,15 +379,15 @@ One row per outlier the company has acknowledged at submission. Two shapes share
 
 The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (rows for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
 
-| Column               | Type                                                                  |
-| -------------------- | --------------------------------------------------------------------- |
-| `id`                 | `uuid` PK                                                             |
-| `report_employee_id` | `fk → report_employee`                                                |
-| `postponed`          | `boolean` (default `false`)                                           |
-| `reason`             | `text` (nullable — required when `postponed = false`)                 |
-| `action`             | `text` (nullable — required when `postponed = false`)                 |
-| `signature_name`     | `text` (nullable — required when `postponed = false`)                 |
-| `signature_role`     | `text` (nullable — required when `postponed = false`)                 |
+| Column               | Type                                                  |
+| -------------------- | ----------------------------------------------------- |
+| `id`                 | `uuid` PK                                             |
+| `report_employee_id` | `fk → report_employee`                                |
+| `postponed`          | `boolean` (default `false`)                           |
+| `reason`             | `text` (nullable — required when `postponed = false`) |
+| `action`             | `text` (nullable — required when `postponed = false`) |
+| `signature_name`     | `text` (nullable — required when `postponed = false`) |
+| `signature_role`     | `text` (nullable — required when `postponed = false`) |
 
 Invariant (enforced via CHECK):
 

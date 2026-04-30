@@ -10,8 +10,8 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { DenyReportDto } from './dto/deny-report.dto'

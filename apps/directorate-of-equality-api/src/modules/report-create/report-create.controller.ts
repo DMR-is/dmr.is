@@ -30,7 +30,11 @@ export class ReportCreateController {
 
   @Post('salary')
   @HttpCode(HttpStatus.CREATED)
-  @DoeResponse({ operationId: 'createSalaryReport', status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'createSalaryReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async createSalary(
     @Body() body: CreateReportDto,
   ): Promise<CreateReportResponseDto> {
@@ -39,7 +43,11 @@ export class ReportCreateController {
 
   @Post('equality')
   @HttpCode(HttpStatus.CREATED)
-  @DoeResponse({ operationId: 'createEqualityReport', status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'createEqualityReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async createEquality(
     @Body() body: CreateEqualityReportDto,
   ): Promise<CreateReportResponseDto> {

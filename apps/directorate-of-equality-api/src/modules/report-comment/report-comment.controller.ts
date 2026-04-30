@@ -13,8 +13,8 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
@@ -44,7 +44,11 @@ export class ReportCommentController {
   }
 
   @Post()
-  @DoeResponse({ operationId: 'createReportComment', status: 201, type: ReportCommentDto })
+  @DoeResponse({
+    operationId: 'createReportComment',
+    status: 201,
+    type: ReportCommentDto,
+  })
   async create(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Body() dto: CreateReportCommentDto,
