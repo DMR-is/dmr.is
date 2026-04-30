@@ -54,7 +54,7 @@ const renderItem = (item: TableCellItem, i: number) => {
       )
     case 'tag':
       return (
-        <Tag key={i} variant={item.variant} colored={item.colored}>
+        <Tag key={i} variant={item.variant}>
           {item.children}
         </Tag>
       )
