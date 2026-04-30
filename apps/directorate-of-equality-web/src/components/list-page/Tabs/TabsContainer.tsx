@@ -18,7 +18,7 @@ import {
   DETAIL_FIELDS,
   MOCK_DATA,
 } from '../../../app/(protected)/mal/mocks'
-import { CaseFilter, CaseFilterState } from './CaseFilter'
+import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
@@ -54,8 +54,13 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
     }
     if (filter.category?.length && !filter.category.includes(row.category))
       return false
-    if (filter.ceoGender?.length && !filter.ceoGender.includes(row.ceoGender))
-      return false
+
+    if (filter.dateFrom || filter.dateTo) {
+      const [d, m, y] = row.date.split('.')
+      const rowDate = new Date(Number(y), Number(m) - 1, Number(d))
+      if (filter.dateFrom && rowDate < filter.dateFrom) return false
+      if (filter.dateTo && rowDate > filter.dateTo) return false
+    }
     return true
   })
 
@@ -63,20 +68,35 @@ type TabContentProps = {
   initialData: Case[]
 }
 
+const PAGE_SIZE = 10
+
 const TabContent = ({ initialData }: TabContentProps) => {
   const [filterState, setFilterState] = useState<CaseFilterState>({})
+  const [page, setPage] = useState(1)
 
   const handleChange = (key: keyof CaseFilterState, values?: string[]) => {
     setFilterState((prev) => ({ ...prev, [key]: values }))
+    setPage(1)
   }
 
   const handleQueryChange = (value: string) => {
     setFilterState((prev) => ({ ...prev, query: value || undefined }))
+    setPage(1)
   }
 
-  const handleReset = () => setFilterState({})
+  const handleDateChange = (key: 'dateFrom' | 'dateTo', value?: Date) => {
+    setFilterState((prev) => ({ ...prev, [key]: value }))
+    setPage(1)
+  }
+
+  const handleReset = () => {
+    setFilterState({})
+    setPage(1)
+  }
 
   const filtered = applyFilter(initialData, filterState)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <Box marginTop={3}>
@@ -86,6 +106,7 @@ const TabContent = ({ initialData }: TabContentProps) => {
             filterState={filterState}
             onChange={handleChange}
             onQueryChange={handleQueryChange}
+            onDateChange={handleDateChange}
             onReset={handleReset}
           />
         </GridColumn>
@@ -97,14 +118,15 @@ const TabContent = ({ initialData }: TabContentProps) => {
             </Inline>
             <Table
               columns={COLUMNS}
-              data={filtered}
+              data={pageData}
               getRowExpanded={(row) => <ExpandedRow row={row} />}
               paging={{
-                page: 1,
-                pageSize: 10,
+                page,
+                pageSize: PAGE_SIZE,
                 totalItems: filtered.length,
-                totalPages: 1,
+                totalPages,
               }}
+              onPageChange={setPage}
               showPageSizeSelect={false}
             />
           </Stack>

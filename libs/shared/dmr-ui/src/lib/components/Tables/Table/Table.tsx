@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import AnimateHeight from 'react-animate-height'
 
 import { Box } from '../../../island-is/lib/Box'
@@ -40,7 +40,7 @@ export type TableProps<TData extends object> = {
 }
 
 export const Table = <TData extends object>({
-  columns,
+  columns: providedColumns,
   data,
   getRowExpanded,
   paging,
@@ -49,12 +49,28 @@ export const Table = <TData extends object>({
   showPageSizeSelect = true,
   loading = false,
   noDataMessage = 'Engar niðurstöður fundust',
-  layout = 'auto',
+  layout = 'fixed',
 }: TableProps<TData>) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
+  const [collapsingRows, setCollapsingRows] = useState<Set<string>>(new Set())
 
-  const hasExpandable = !!getRowExpanded
+  useEffect(() => {
+    setCollapsingRows(new Set())
+  }, [data])
+
+  const columns = useMemo<ColumnDef<TData>[]>(() => {
+    if (!getRowExpanded) return providedColumns
+    return [
+      {
+        id: 'expander',
+        header: () => null,
+        cell: () => null,
+        enableSorting: false,
+      },
+      ...providedColumns,
+    ]
+  }, [providedColumns, getRowExpanded])
 
   const table = useReactTable({
     data,
@@ -65,7 +81,7 @@ export const Table = <TData extends object>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
-    getRowCanExpand: () => hasExpandable,
+    getRowCanExpand: () => !!getRowExpanded,
   })
 
   if (loading) {
@@ -79,18 +95,21 @@ export const Table = <TData extends object>({
     )
   }
 
-  const colSpan = columns.length + (hasExpandable ? 1 : 0)
-
   return (
     <Stack space={3}>
       <T.Table style={{ tableLayout: layout, width: '100%' }}>
         <T.Head>
           {table.getHeaderGroups().map((headerGroup) => (
             <T.Row key={headerGroup.id}>
-              {hasExpandable && (
-                <T.HeadData style={{ width: 48, padding: 0 }} />
-              )}
               {headerGroup.headers.map((header) => {
+                if (header.column.id === 'expander') {
+                  return (
+                    <T.HeadData
+                      key={header.id}
+                      style={{ width: 48, padding: 0 }}
+                    />
+                  )
+                }
                 const canSort = header.column.getCanSort()
                 const sorted = header.column.getIsSorted()
                 return (
@@ -151,82 +170,128 @@ export const Table = <TData extends object>({
         <T.Body>
           {table.getRowModel().rows.length === 0 ? (
             <tr>
-              <td colSpan={colSpan} className={styles.emptyCell}>
+              <td colSpan={columns.length} className={styles.emptyCell}>
                 <Text color="dark400">{noDataMessage}</Text>
               </td>
             </tr>
           ) : (
             table.getRowModel().rows.map((row) => {
               const isExpanded = row.getIsExpanded()
-              const expandedContent = getRowExpanded?.(row.original)
+              const isCollapsing = collapsingRows.has(row.id)
+              const isActive = isExpanded || isCollapsing
+              const rowBackground = isActive ? 'blue100' : 'white'
 
               return (
-                <>
+                <Fragment key={row.id}>
                   <tr
-                    key={row.id}
                     className={styles.tableRow({
-                      expandable: hasExpandable,
-                      expanded: isExpanded,
+                      expandable: !!getRowExpanded,
+                      expanded: isActive,
                     })}
                     onClick={
-                      hasExpandable ? () => row.toggleExpanded() : undefined
+                      getRowExpanded ? () => row.toggleExpanded() : undefined
                     }
                   >
-                    {hasExpandable && (
-                      <T.Data align="center">
-                        <button
-                          type="button"
-                          className={styles.expandButton}
-                          aria-expanded={isExpanded}
-                          aria-label={isExpanded ? 'Loka' : 'Opna'}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            row.toggleExpanded()
+                    {row.getVisibleCells().map((cell, i) =>
+                      i === 0 && getRowExpanded ? (
+                        <T.Data
+                          key={cell.id}
+                          align="center"
+                          style={{ width: 48, padding: 0 }}
+                          box={{
+                            position: 'relative',
+                            background: rowBackground,
                           }}
                         >
-                          <Icon
-                            color="blue400"
-                            size="small"
-                            icon={isExpanded ? 'remove' : 'add'}
-                          />
-                        </button>
-                      </T.Data>
+                          {isActive && <div className={styles.line} />}
+                          <button
+                            type="button"
+                            className={styles.expandButton}
+                            aria-expanded={isExpanded}
+                            aria-label={isExpanded ? 'Loka' : 'Opna'}
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation()
+                              if (isExpanded) {
+                                setCollapsingRows((prev) =>
+                                  new Set(prev).add(row.id),
+                                )
+                              }
+                              row.toggleExpanded()
+                            }}
+                          >
+                            {/* Uses this to avoid the icons flickering when opening/closing */}
+                            <span
+                              style={{ display: isExpanded ? 'none' : 'flex' }}
+                            >
+                              <Icon
+                                color="blue400"
+                                size="small"
+                                icon="add"
+                                type="filled"
+                              />
+                            </span>
+                            <span
+                              style={{ display: isExpanded ? 'flex' : 'none' }}
+                            >
+                              <Icon
+                                color="blue400"
+                                size="small"
+                                icon="remove"
+                                type="filled"
+                              />
+                            </span>
+                          </button>
+                        </T.Data>
+                      ) : (
+                        <T.Data
+                          key={cell.id}
+                          box={{
+                            paddingLeft: [1, 2],
+                            paddingRight: [1, 2],
+                            paddingTop: [1, 2],
+                            paddingBottom: [1, 2],
+                            background: rowBackground,
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </T.Data>
+                      ),
                     )}
-                    {row.getVisibleCells().map((cell) => (
-                      <T.Data
-                        key={cell.id}
-                        box={{
-                          paddingLeft: [1, 2],
-                          paddingRight: [1, 2],
-                          paddingTop: [1, 2],
-                          paddingBottom: [1, 2],
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </T.Data>
-                    ))}
                   </tr>
-                  {hasExpandable && (
-                    <tr
-                      key={`${row.id}-expanded`}
-                      className={styles.expandedContentRow({
-                        expanded: isExpanded,
-                      })}
-                    >
-                      <td colSpan={colSpan} style={{ padding: 0 }}>
+                  {getRowExpanded && (
+                    <tr>
+                      <T.Data
+                        colSpan={columns.length}
+                        style={{ padding: 0 }}
+                        box={{ position: 'relative' }}
+                      >
                         <AnimateHeight
                           duration={300}
                           height={isExpanded ? 'auto' : 0}
+                          onHeightAnimationEnd={(newHeight) => {
+                            if (newHeight === 0) {
+                              setCollapsingRows((prev) => {
+                                const next = new Set(prev)
+                                next.delete(row.id)
+                                return next
+                              })
+                            }
+                          }}
                         >
-                          {expandedContent}
+                          {isActive && (
+                            <>
+                              <div className={styles.line} />
+                              {getRowExpanded(row.original)}
+                            </>
+                          )}
                         </AnimateHeight>
-                      </td>
+                      </T.Data>
                     </tr>
                   )}
-                </>
+                </Fragment>
               )
             })
           )}

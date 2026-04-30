@@ -29,13 +29,7 @@ export const sortIcon = recipe({
 
 export const tableRow = recipe({
   base: {
-    backgroundColor: theme.color.white,
     transition: 'background-color 0.15s',
-    selectors: {
-      '&:hover': {
-        backgroundColor: theme.color.blue100,
-      },
-    },
   },
   variants: {
     expandable: {
@@ -43,23 +37,21 @@ export const tableRow = recipe({
       false: { cursor: 'default' },
     },
     expanded: {
-      true: {
-        borderLeft: `4px solid ${theme.color.blue400}`,
-        backgroundColor: theme.color.blue100,
-      },
+      true: {},
       false: {},
     },
   },
 })
 
-export const expandedContentRow = recipe({
-  base: {},
-  variants: {
-    expanded: {
-      true: { borderLeft: `4px solid ${theme.color.blue400}` },
-      false: {},
-    },
-  },
+export const line = style({
+  position: 'absolute',
+  left: 0,
+  top: -1,
+  bottom: 0,
+  width: 2,
+  zIndex: 1,
+  height: 'calc(100% + 2px)',
+  backgroundColor: theme.color.blue400,
 })
 
 export const expandButton = style({
@@ -67,6 +59,7 @@ export const expandButton = style({
   border: 'none',
   padding: 0,
   margin: 0,
+  marginLeft: theme.spacing[2],
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
