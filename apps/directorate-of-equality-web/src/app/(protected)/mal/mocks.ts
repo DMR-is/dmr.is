@@ -21,6 +21,7 @@ export type Case = {
   isat: string
   ceoGender: string
   employees: number
+  status?: string
 }
 
 export const MOCK_DATA: Case[] = [
@@ -34,6 +35,7 @@ export const MOCK_DATA: Case[] = [
     isat: '62010 Hugbúnaðargerð',
     ceoGender: 'Karl',
     employees: 32,
+    status: 'Samþykkt',
   },
   {
     date: '06.12.2025',
@@ -45,6 +47,7 @@ export const MOCK_DATA: Case[] = [
     isat: '62010 Hugbúnaðargerð',
     ceoGender: 'Kona',
     employees: 45,
+    status: 'Hafnað',
   },
   {
     date: '06.12.2025',
@@ -56,6 +59,7 @@ export const MOCK_DATA: Case[] = [
     isat: '45200 Viðgerð ökutækja',
     ceoGender: 'Kona',
     employees: 78,
+    status: 'Lokið',
   },
   {
     date: '06.12.2025',
@@ -67,6 +71,7 @@ export const MOCK_DATA: Case[] = [
     isat: '47710 Verslun með fatnað',
     ceoGender: 'Karl',
     employees: 14,
+    status: 'Í vinnslu',
   },
   {
     date: '06.12.2025',
@@ -78,6 +83,7 @@ export const MOCK_DATA: Case[] = [
     isat: '73110 Auglýsingastarfsemi',
     ceoGender: 'Kona',
     employees: 22,
+    status: 'Bíður gagna',
   },
   {
     date: '06.12.2025',
@@ -89,6 +95,7 @@ export const MOCK_DATA: Case[] = [
     isat: '56101 Veitingastaðir',
     ceoGender: 'Karl',
     employees: 9,
+    status: 'Til skoðunar',
   },
   {
     date: '29.11.2025',
@@ -100,6 +107,7 @@ export const MOCK_DATA: Case[] = [
     isat: '85200 Grunnskólakennsla',
     ceoGender: 'Kona',
     employees: 61,
+    status: 'Til skoðunar',
   },
   {
     date: '07.11.2025',
@@ -111,6 +119,7 @@ export const MOCK_DATA: Case[] = [
     isat: '72200 Rannsókna- og þróunarstarfsemi',
     ceoGender: 'Karl',
     employees: 37,
+    status: 'Í vinnslu',
   },
   {
     date: '07.11.2025',
@@ -214,22 +223,22 @@ export const MOCK_DATA: Case[] = [
 ]
 
 export const COLUMNS: ColumnDef<Case>[] = [
-  {
-    accessorKey: 'date',
-    header: 'Dagsetning',
-    enableSorting: true,
-  },
-  {
-    accessorKey: 'category',
-    header: 'Flokkur',
-    enableSorting: true,
-  },
-  {
-    accessorKey: 'company',
-    header: 'Fyrirtæki',
-    enableSorting: true,
-  },
+  { accessorKey: 'date', header: 'Dagsetning', enableSorting: true },
+  { accessorKey: 'category', header: 'Flokkur', enableSorting: true },
+  { accessorKey: 'company', header: 'Fyrirtæki', enableSorting: true },
 ]
+
+export const COLUMN_STATUS: ColumnDef<Case> = {
+  accessorKey: 'status',
+  header: 'Staða',
+  enableSorting: true,
+}
+
+export const COLUMN_EMPLOYEES: ColumnDef<Case> = {
+  accessorKey: 'employees',
+  header: 'Starfsmenn',
+  enableSorting: true,
+}
 
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
   { label: 'Fyrirtæki', key: 'company' },

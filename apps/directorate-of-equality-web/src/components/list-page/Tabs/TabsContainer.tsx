@@ -18,11 +18,15 @@ import {
   Case,
   CATEGORY_LABEL_TO_SLUG,
   CATEGORY_SLUG_MAP,
+  COLUMN_EMPLOYEES,
+  COLUMN_STATUS,
   COLUMNS,
   DETAIL_FIELDS,
   MOCK_DATA,
 } from '../../../app/(protected)/mal/mocks'
 import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
+
+import { type ColumnDef } from '@tanstack/react-table'
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
@@ -49,6 +53,14 @@ const ExpandedRow = ({ row }: { row: Case }) => (
   </Box>
 )
 
+const employeeRange = (value: string, count: number): boolean => {
+  if (value === '1-25') return count >= 1 && count <= 25
+  if (value === '26-50') return count >= 26 && count <= 50
+  if (value === '51-100') return count >= 51 && count <= 100
+  if (value === '101+') return count >= 101
+  return false
+}
+
 const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
   data.filter((row) => {
     if (filter.query) {
@@ -58,7 +70,13 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
     }
     if (filter.category?.length && !filter.category.includes(row.category))
       return false
-
+    if (filter.status?.length && !filter.status.includes(row.status ?? ''))
+      return false
+    if (
+      filter.employees?.length &&
+      !filter.employees.some((range) => employeeRange(range, row.employees))
+    )
+      return false
     if (filter.dateFrom || filter.dateTo) {
       const [d, m, y] = row.date.split('.')
       const rowDate = new Date(Number(y), Number(m) - 1, Number(d))
@@ -70,17 +88,23 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
 
 type TabContentProps = {
   initialData: Case[]
+  extraColumns?: ColumnDef<Case>[]
 }
 
 const PAGE_SIZE = 10
 
-const TabContent = ({ initialData }: TabContentProps) => {
+const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
+  const columns = extraColumns ? [...COLUMNS, ...extraColumns] : COLUMNS
+  const showStatusFilter = extraColumns?.includes(COLUMN_STATUS) ?? false
+  const showEmployeesFilter = extraColumns?.includes(COLUMN_EMPLOYEES) ?? false
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [filterState, setFilterState] = useState<CaseFilterState>(() => {
     const slugs = searchParams.getAll('category')
-    const category = slugs.map((s) => CATEGORY_SLUG_MAP[s]).filter(Boolean) as string[]
+    const category = slugs
+      .map((s) => CATEGORY_SLUG_MAP[s])
+      .filter(Boolean) as string[]
     return { category: category.length ? category : undefined }
   })
   const [page, setPage] = useState(1)
@@ -132,6 +156,8 @@ const TabContent = ({ initialData }: TabContentProps) => {
             onQueryChange={handleQueryChange}
             onDateChange={handleDateChange}
             onReset={handleReset}
+            showStatusFilter={showStatusFilter}
+            showEmployeesFilter={showEmployeesFilter}
           />
         </GridColumn>
         <GridColumn span={['12/12', '9/12']}>
@@ -141,7 +167,7 @@ const TabContent = ({ initialData }: TabContentProps) => {
               <Text>færslur fundust</Text>
             </Inline>
             <Table
-              columns={COLUMNS}
+              columns={columns}
               data={pageData}
               getRowExpanded={(row) => <ExpandedRow row={row} />}
               paging={{
@@ -176,12 +202,22 @@ export const TabsContainer = () => {
           {
             id: 'i-vinnslu',
             label: 'Í vinnslu (5)',
-            content: <TabContent initialData={MOCK_DATA.slice(0, 5)} />,
+            content: (
+              <TabContent
+                initialData={MOCK_DATA.slice(0, 5)}
+                extraColumns={[COLUMN_STATUS, COLUMN_EMPLOYEES]}
+              />
+            ),
           },
           {
             id: 'afgreitt',
             label: 'Afgreitt (3)',
-            content: <TabContent initialData={MOCK_DATA.slice(0, 3)} />,
+            content: (
+              <TabContent
+                initialData={MOCK_DATA.slice(0, 3)}
+                extraColumns={[COLUMN_EMPLOYEES]}
+              />
+            ),
           },
         ]}
       />
