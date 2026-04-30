@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
@@ -29,17 +30,15 @@ import {
 } from '../report/types/report-resource-context'
 import { CommentVisibilityEnum } from '../report-comment/models/report-comment.model'
 import { IReportCommentService } from '../report-comment/report-comment.service.interface'
-import { CreateEqualityReportDto } from '../report-create/dto/create-equality-report.dto'
-import {
-  CreateReportCompanySnapshotDto,
-  CreateReportDto,
-} from '../report-create/dto/create-report.dto'
+import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
+import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { ApplicationService } from './application.service'
 
 const mockLogger = {
@@ -52,12 +51,8 @@ const mockLogger = {
 const COMPANY: CompanyDto = {
   id: 'company-1',
   name: 'Acme ehf.',
-  address: 'Laugavegur 1',
-  city: 'Reykjavík',
-  postcode: '101',
   averageEmployeeCountFromRsk: 3,
   nationalId: '5501234567',
-  isatCategory: '62.0',
   salaryReportRequired: true,
   salaryReportRequiredOverride: false,
 }
@@ -65,6 +60,7 @@ const COMPANY: CompanyDto = {
 describe('ApplicationService', () => {
   let service: ApplicationService
   let configGetByKey: jest.Mock
+  let getOrCreateReportSnapshotSource: jest.Mock
   let getActiveEqualityForCompany: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
@@ -80,6 +76,9 @@ describe('ApplicationService', () => {
       key: 'salary_difference_threshold_percent',
       value: '3.9',
     })
+    getOrCreateReportSnapshotSource = jest
+      .fn()
+      .mockResolvedValue(makeCompanySnapshotSource())
     getActiveEqualityForCompany = jest.fn()
     createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
     createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
@@ -97,6 +96,13 @@ describe('ApplicationService', () => {
         {
           provide: IConfigService,
           useValue: { getByKey: configGetByKey },
+        },
+        {
+          provide: ICompanyService,
+          useValue: {
+            getByNationalId: jest.fn(),
+            getOrCreateReportSnapshotSource,
+          },
         },
         {
           provide: IReportService,
@@ -213,137 +219,217 @@ describe('ApplicationService', () => {
   })
 
   describe('submitSalary', () => {
-    it('delegates to IReportCreateService.createSalary on a valid body', async () => {
+    it('maps the application body to the internal salary create DTO', async () => {
       const input = makeSubmitSalaryInput()
 
       const result = await service.submitSalary(input, COMPANY)
 
-      expect(createSalary).toHaveBeenCalledWith(input)
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(createSalary).toHaveBeenCalledWith({
+        equalityReportId: input.equalityReportId,
+        identifier: input.identifier,
+        importedFromExcel: input.importedFromExcel,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        companyAdminName: input.companyAdminName,
+        companyAdminEmail: input.companyAdminEmail,
+        companyAdminGender: input.companyAdminGender,
+        contactName: input.contactName,
+        contactEmail: input.contactEmail,
+        contactPhone: input.contactPhone,
+        averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+        averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+        averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+        parsed: input.parsed,
+        companies: [makeCompanySnapshot()],
+        outliers: undefined,
+      })
       expect(result).toEqual({ reportId: 'report-1' })
     })
 
-    it('rejects when no parent row is present in companies[]', async () => {
+    it('resolves subsidiary snapshot details through the company service', async () => {
       const input = makeSubmitSalaryInput()
-      input.companies = input.companies.map((c) => ({
-        ...c,
-        parentCompanyId: COMPANY.id,
-      }))
-
-      await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
-        /exactly one parent company/,
-      )
-      expect(createSalary).not.toHaveBeenCalled()
-    })
-
-    it('rejects when more than one parent row is present', async () => {
-      const input = makeSubmitSalaryInput()
-      input.companies = [
-        makeCompanySnapshot({ parentCompanyId: null }),
-        makeCompanySnapshot({ parentCompanyId: null, companyId: 'c-extra' }),
+      input.subsidiaries = [
+        {
+          name: 'Subsidiary ehf.',
+          nationalId: '6601234567',
+        },
       ]
+      const source = makeCompanySnapshotSource({
+        companyId: 'subsidiary-1',
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+      })
+      getOrCreateReportSnapshotSource.mockResolvedValueOnce(source)
 
-      await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
-        /exactly one parent company/,
-      )
-      expect(createSalary).not.toHaveBeenCalled()
-    })
+      await service.submitSalary(input, COMPANY)
 
-    it('rejects when the parent row is not the resolved company', async () => {
-      const input = makeSubmitSalaryInput()
-      input.companies = [
-        makeCompanySnapshot({
-          parentCompanyId: null,
-          companyId: 'someone-else',
+      expect(getOrCreateReportSnapshotSource).toHaveBeenCalledWith({
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+      })
+      expect(createSalary).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companies: [
+            makeCompanySnapshot(),
+            {
+              ...source,
+              parentCompanyId: COMPANY.id,
+            },
+          ],
         }),
-      ]
+      )
+    })
+
+    it('rejects when the submitted parent is not the authenticated company', async () => {
+      const input = makeSubmitSalaryInput()
+      input.company.nationalId = '0000000000'
 
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
         /does not match the authenticated company/,
       )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
     })
 
-    it('rejects when a subsidiary points at the wrong parent', async () => {
+    it('rejects when a subsidiary is the authenticated parent company', async () => {
       const input = makeSubmitSalaryInput()
-      input.companies = [
-        makeCompanySnapshot({ parentCompanyId: null }),
-        makeCompanySnapshot({
-          parentCompanyId: 'someone-else',
-          companyId: 'c-sub',
-        }),
+      input.subsidiaries = [
+        {
+          name: COMPANY.name,
+          nationalId: COMPANY.nationalId,
+        },
       ]
 
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
-        /must point at the authenticated company as its parent/,
+        /cannot be the authenticated parent company/,
       )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(createSalary).not.toHaveBeenCalled()
+    })
+
+    it('rejects duplicate subsidiaries', async () => {
+      const input = makeSubmitSalaryInput()
+      input.subsidiaries = [
+        {
+          name: 'Subsidiary ehf.',
+          nationalId: '6601234567',
+        },
+        {
+          name: 'Duplicate ehf.',
+          nationalId: '6601234567',
+        },
+      ]
+
+      await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
+        /Duplicate company national id/,
+      )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
     })
   })
 
   describe('submitEquality', () => {
-    it('delegates to IReportCreateService.createEquality on a valid body', async () => {
+    it('maps the application body to the internal equality create DTO', async () => {
       const input = makeSubmitEqualityInput()
 
       const result = await service.submitEquality(input, COMPANY)
 
-      expect(createEquality).toHaveBeenCalledWith(input)
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(createEquality).toHaveBeenCalledWith({
+        identifier: input.identifier,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        companyAdminName: input.companyAdminName,
+        companyAdminEmail: input.companyAdminEmail,
+        companyAdminGender: input.companyAdminGender,
+        contactName: input.contactName,
+        contactEmail: input.contactEmail,
+        contactPhone: input.contactPhone,
+        equalityReportContent: input.equalityReportContent,
+        companies: [makeCompanySnapshot()],
+      })
       expect(result).toEqual({ reportId: 'report-1' })
     })
 
-    it('rejects when no parent row is present in companies[]', async () => {
+    it('resolves subsidiary snapshot details through the company service', async () => {
       const input = makeSubmitEqualityInput()
-      input.companies = input.companies.map((c) => ({
-        ...c,
-        parentCompanyId: COMPANY.id,
-      }))
-
-      await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
-        /exactly one parent company/,
-      )
-      expect(createEquality).not.toHaveBeenCalled()
-    })
-
-    it('rejects when more than one parent row is present', async () => {
-      const input = makeSubmitEqualityInput()
-      input.companies = [
-        makeCompanySnapshot({ parentCompanyId: null }),
-        makeCompanySnapshot({ parentCompanyId: null, companyId: 'c-extra' }),
+      input.subsidiaries = [
+        {
+          name: 'Subsidiary ehf.',
+          nationalId: '6601234567',
+        },
       ]
+      const source = makeCompanySnapshotSource({
+        companyId: 'subsidiary-1',
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+      })
+      getOrCreateReportSnapshotSource.mockResolvedValueOnce(source)
 
-      await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
-        /exactly one parent company/,
-      )
-      expect(createEquality).not.toHaveBeenCalled()
-    })
+      await service.submitEquality(input, COMPANY)
 
-    it('rejects when the parent row is not the resolved company', async () => {
-      const input = makeSubmitEqualityInput()
-      input.companies = [
-        makeCompanySnapshot({
-          parentCompanyId: null,
-          companyId: 'someone-else',
+      expect(getOrCreateReportSnapshotSource).toHaveBeenCalledWith({
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+      })
+      expect(createEquality).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companies: [
+            makeCompanySnapshot(),
+            {
+              ...source,
+              parentCompanyId: COMPANY.id,
+            },
+          ],
         }),
-      ]
+      )
+    })
+
+    it('rejects when the submitted parent is not the authenticated company', async () => {
+      const input = makeSubmitEqualityInput()
+      input.company.nationalId = '0000000000'
 
       await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
         /does not match the authenticated company/,
       )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
     })
 
-    it('rejects when a subsidiary points at the wrong parent', async () => {
+    it('rejects when a subsidiary is the authenticated parent company', async () => {
       const input = makeSubmitEqualityInput()
-      input.companies = [
-        makeCompanySnapshot({ parentCompanyId: null }),
-        makeCompanySnapshot({
-          parentCompanyId: 'someone-else',
-          companyId: 'c-sub',
-        }),
+      input.subsidiaries = [
+        {
+          name: COMPANY.name,
+          nationalId: COMPANY.nationalId,
+        },
       ]
 
       await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
-        /must point at the authenticated company as its parent/,
+        /cannot be the authenticated parent company/,
       )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(createEquality).not.toHaveBeenCalled()
+    })
+
+    it('rejects duplicate subsidiaries', async () => {
+      const input = makeSubmitEqualityInput()
+      input.subsidiaries = [
+        {
+          name: 'Subsidiary ehf.',
+          nationalId: '6601234567',
+        },
+        {
+          name: 'Duplicate ehf.',
+          nationalId: '6601234567',
+        },
+      ]
+
+      await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
+        /Duplicate company national id/,
+      )
+      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
     })
   })
@@ -643,13 +729,27 @@ function makeCompanySnapshot(
     address: 'Laugavegur 1',
     city: 'Reykjavík',
     postcode: '101',
-    averageEmployeeCountFromRsk: 3,
     isatCategory: '62.0',
     ...overrides,
   }
 }
 
-function makeSubmitSalaryInput(): CreateReportDto {
+function makeCompanySnapshotSource(
+  overrides: Partial<Omit<CreateReportCompanySnapshotDto, 'parentCompanyId'>> = {},
+): Omit<CreateReportCompanySnapshotDto, 'parentCompanyId'> {
+  return {
+    companyId: 'subsidiary-1',
+    name: 'Subsidiary ehf.',
+    nationalId: '6601234567',
+    address: '',
+    city: '',
+    postcode: '',
+    isatCategory: '',
+    ...overrides,
+  }
+}
+
+function makeSubmitSalaryInput(): SubmitSalaryReportDto {
   return {
     equalityReportId: '00000000-0000-0000-0000-00000000eee1',
     identifier: 'SAL-2026-001',
@@ -666,11 +766,18 @@ function makeSubmitSalaryInput(): CreateReportDto {
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
     parsed: makeRequest().parsed,
-    companies: [makeCompanySnapshot()],
+    company: {
+      name: 'Acme ehf.',
+      nationalId: COMPANY.nationalId,
+      address: 'Laugavegur 1',
+      city: 'Reykjavík',
+      postcode: '101',
+      isatCategory: '62.0',
+    },
   }
 }
 
-function makeSubmitEqualityInput(): CreateEqualityReportDto {
+function makeSubmitEqualityInput(): SubmitEqualityReportDto {
   return {
     identifier: 'EQ-2026-001',
     providerType: ReportProviderEnum.SYSTEM,
@@ -682,7 +789,14 @@ function makeSubmitEqualityInput(): CreateEqualityReportDto {
     contactEmail: 'contact@example.is',
     contactPhone: '+354 555 0000',
     equalityReportContent: 'A narrative gender-equality plan.',
-    companies: [makeCompanySnapshot()],
+    company: {
+      name: 'Acme ehf.',
+      nationalId: COMPANY.nationalId,
+      address: 'Laugavegur 1',
+      city: 'Reykjavík',
+      postcode: '101',
+      isatCategory: '62.0',
+    },
   }
 }
 
@@ -714,11 +828,11 @@ function makeCompanyReportRow(
     parentCompanyId: null,
     name: COMPANY.name,
     nationalId: COMPANY.nationalId,
-    address: COMPANY.address,
-    city: COMPANY.city,
-    postcode: COMPANY.postcode,
+    address: 'Laugavegur 1',
+    city: 'Reykjavík',
+    postcode: '101',
     averageEmployeeCountFromRsk: COMPANY.averageEmployeeCountFromRsk,
-    isatCategory: COMPANY.isatCategory,
+    isatCategory: '62.0',
     ...overrides,
   } as unknown as CompanyReportModel
 }

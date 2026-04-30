@@ -7,23 +7,11 @@ export class CompanyDto {
   @ApiString()
   name!: string
 
-  @ApiString()
-  address!: string
-
-  @ApiString()
-  city!: string
-
-  @ApiString()
-  postcode!: string
-
   @ApiNumber()
   averageEmployeeCountFromRsk!: number
 
   @ApiString()
   nationalId!: string
-
-  @ApiString()
-  isatCategory!: string
 
   @ApiBoolean()
   salaryReportRequired!: boolean

@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import {
@@ -45,6 +46,7 @@ describe('ReportCreateService', () => {
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
   let reportEventCreate: jest.Mock
+  let companyFindAll: jest.Mock
   let companyReportBulkCreate: jest.Mock
   let roleBulkCreate: jest.Mock
   let employeeBulkCreate: jest.Mock
@@ -61,6 +63,12 @@ describe('ReportCreateService', () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue({ id: EQUALITY_REPORT_ID })
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
+    companyFindAll = jest
+      .fn()
+      .mockResolvedValue([
+        makeCompanyRow(PARENT_COMPANY_ID, 75),
+        makeCompanyRow(SUBSIDIARY_COMPANY_ID, 25),
+      ])
     companyReportBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `cr-${i}` })),
     )
@@ -115,6 +123,10 @@ describe('ReportCreateService', () => {
         {
           provide: getModelToken(ReportEventModel),
           useValue: { create: reportEventCreate },
+        },
+        {
+          provide: getModelToken(CompanyModel),
+          useValue: { findAll: companyFindAll },
         },
         {
           provide: getModelToken(CompanyReportModel),
@@ -186,6 +198,7 @@ describe('ReportCreateService', () => {
         status: 'SUBMITTED',
         equalityReportId: EQUALITY_REPORT_ID,
         companyAdminEmail: 'admin@example.is',
+        companyNationalId: '5500000000',
       }),
     )
 
@@ -195,6 +208,7 @@ describe('ReportCreateService', () => {
       reportId: REPORT_ID,
       companyId: PARENT_COMPANY_ID,
       parentCompanyId: null,
+      averageEmployeeCountFromRsk: 75,
     })
 
     // 1 role, 1 criterion, 1 sub_criterion, 2 steps, 1 employee.
@@ -231,6 +245,7 @@ describe('ReportCreateService', () => {
         eventType: 'SUBMITTED',
         reportStatus: 'SUBMITTED',
         actorUserId: null,
+        companyId: PARENT_COMPANY_ID,
       }),
     )
   })
@@ -266,6 +281,7 @@ describe('ReportCreateService', () => {
     expect(rows[1]).toMatchObject({
       companyId: SUBSIDIARY_COMPANY_ID,
       parentCompanyId: PARENT_COMPANY_ID,
+      averageEmployeeCountFromRsk: 25,
     })
   })
 
@@ -460,6 +476,7 @@ describe('ReportCreateService', () => {
         status: 'SUBMITTED',
         importedFromExcel: false,
         equalityReportContent: 'A narrative gender-equality plan.',
+        companyNationalId: '5500000000',
       }),
     )
 
@@ -471,6 +488,7 @@ describe('ReportCreateService', () => {
       reportId: REPORT_ID,
       companyId: PARENT_COMPANY_ID,
       parentCompanyId: null,
+      averageEmployeeCountFromRsk: 75,
     })
 
     // No criteria, no employees, no role/personal joins, no snapshot.
@@ -491,6 +509,7 @@ describe('ReportCreateService', () => {
         eventType: 'SUBMITTED',
         reportStatus: 'SUBMITTED',
         actorUserId: null,
+        companyId: PARENT_COMPANY_ID,
       }),
     )
   })
@@ -509,6 +528,7 @@ describe('ReportCreateService', () => {
     expect(rows[1]).toMatchObject({
       companyId: SUBSIDIARY_COMPANY_ID,
       parentCompanyId: PARENT_COMPANY_ID,
+      averageEmployeeCountFromRsk: 25,
     })
   })
 
@@ -536,9 +556,18 @@ function makeCompanySnapshot(
     address: 'Hofdabakki 9',
     city: 'Reykjavik',
     postcode: '110',
-    averageEmployeeCountFromRsk: 75,
     isatCategory: 'J62.01',
   }
+}
+
+function makeCompanyRow(
+  id: string,
+  averageEmployeeCountFromRsk: number,
+): CompanyModel {
+  return {
+    id,
+    averageEmployeeCountFromRsk,
+  } as CompanyModel
 }
 
 function makeInput(): CreateReportDto {

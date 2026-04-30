@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { detectOutliers } from '../report/lib/compensation-aggregates'
@@ -39,7 +40,10 @@ import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/
 import { ParsedStepAssignmentDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
-import { CreateReportDto } from './dto/create-report.dto'
+import {
+  CreateReportCompanySnapshotDto,
+  CreateReportDto,
+} from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
 import { IReportCreateService } from './report-create.service.interface'
 
@@ -53,6 +57,8 @@ export class ReportCreateService implements IReportCreateService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEventModel)
     private readonly reportEventModel: typeof ReportEventModel,
+    @InjectModel(CompanyModel)
+    private readonly companyModel: typeof CompanyModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(ReportEmployeeRoleModel)
@@ -96,6 +102,7 @@ export class ReportCreateService implements IReportCreateService {
     await this.assertOutliersMatchDetectedOutliers(input, employeeScores)
 
     await this.assertEqualityReportApproved(input.equalityReportId)
+    const submittingCompany = this.getSubmittingCompany(input.companies)
 
     // 1. report row — status SUBMITTED so it lands in the reviewer queue.
     const report = await this.reportModel.create({
@@ -109,6 +116,7 @@ export class ReportCreateService implements IReportCreateService {
       companyAdminName: input.companyAdminName,
       companyAdminEmail: input.companyAdminEmail,
       companyAdminGender: input.companyAdminGender,
+      companyNationalId: submittingCompany.nationalId,
       contactName: input.contactName,
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
@@ -123,20 +131,7 @@ export class ReportCreateService implements IReportCreateService {
     })
 
     // 2. company_report snapshots — one row per participating company.
-    await this.companyReportModel.bulkCreate(
-      input.companies.map((company) => ({
-        companyId: company.companyId,
-        reportId: report.id,
-        parentCompanyId: company.parentCompanyId,
-        name: company.name,
-        nationalId: company.nationalId,
-        address: company.address,
-        city: company.city,
-        postcode: company.postcode,
-        averageEmployeeCountFromRsk: company.averageEmployeeCountFromRsk,
-        isatCategory: company.isatCategory,
-      })),
-    )
+    await this.createCompanyReportSnapshots(report.id, input.companies)
 
     // 3. roles — one row per parsed role. Map by title for FK resolution.
     const roleRows = await this.reportEmployeeRoleModel.bulkCreate(
@@ -265,6 +260,7 @@ export class ReportCreateService implements IReportCreateService {
       eventType: ReportEventTypeEnum.SUBMITTED,
       reportStatus: ReportStatusEnum.SUBMITTED,
       actorUserId: null,
+      companyId: submittingCompany.companyId,
     })
 
     return { reportId: report.id }
@@ -278,6 +274,8 @@ export class ReportCreateService implements IReportCreateService {
   private async createEqualityReport(
     input: CreateEqualityReportDto,
   ): Promise<CreateReportResponseDto> {
+    const submittingCompany = this.getSubmittingCompany(input.companies)
+
     const report = await this.reportModel.create({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
@@ -288,6 +286,7 @@ export class ReportCreateService implements IReportCreateService {
       companyAdminName: input.companyAdminName,
       companyAdminEmail: input.companyAdminEmail,
       companyAdminGender: input.companyAdminGender,
+      companyNationalId: submittingCompany.nationalId,
       contactName: input.contactName,
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
@@ -299,29 +298,77 @@ export class ReportCreateService implements IReportCreateService {
       reportId: report.id,
     })
 
-    await this.companyReportModel.bulkCreate(
-      input.companies.map((company) => ({
-        companyId: company.companyId,
-        reportId: report.id,
-        parentCompanyId: company.parentCompanyId,
-        name: company.name,
-        nationalId: company.nationalId,
-        address: company.address,
-        city: company.city,
-        postcode: company.postcode,
-        averageEmployeeCountFromRsk: company.averageEmployeeCountFromRsk,
-        isatCategory: company.isatCategory,
-      })),
-    )
+    await this.createCompanyReportSnapshots(report.id, input.companies)
 
     await this.reportEventModel.create({
       reportId: report.id,
       eventType: ReportEventTypeEnum.SUBMITTED,
       reportStatus: ReportStatusEnum.SUBMITTED,
       actorUserId: null,
+      companyId: submittingCompany.companyId,
     })
 
     return { reportId: report.id }
+  }
+
+  private getSubmittingCompany(
+    companies: Array<{
+      companyId: string
+      nationalId: string
+      parentCompanyId: string | null
+    }>,
+  ): { companyId: string; nationalId: string } {
+    const parentCompanies = companies.filter(
+      (company) => company.parentCompanyId === null,
+    )
+
+    if (parentCompanies.length !== 1) {
+      throw new BadRequestException(
+        `Expected exactly one parent company in companies[] (parentCompanyId=null), found ${parentCompanies.length}`,
+      )
+    }
+
+    return {
+      companyId: parentCompanies[0].companyId,
+      nationalId: parentCompanies[0].nationalId,
+    }
+  }
+
+  private async createCompanyReportSnapshots(
+    reportId: string,
+    companies: CreateReportCompanySnapshotDto[],
+  ) {
+    const companyIds = [
+      ...new Set(companies.map((company) => company.companyId)),
+    ]
+    const companyRows = await this.companyModel.findAll({
+      where: { id: { [Op.in]: companyIds } },
+    })
+    const companyById = new Map(
+      companyRows.map((company) => [company.id, company]),
+    )
+
+    for (const companyId of companyIds) {
+      if (!companyById.has(companyId)) {
+        throw new BadRequestException(`Company "${companyId}" not found`)
+      }
+    }
+
+    await this.companyReportModel.bulkCreate(
+      companies.map((company) => ({
+        companyId: company.companyId,
+        reportId,
+        parentCompanyId: company.parentCompanyId,
+        name: company.name,
+        nationalId: company.nationalId,
+        address: company.address,
+        city: company.city,
+        postcode: company.postcode,
+        averageEmployeeCountFromRsk:
+          companyById.get(company.companyId)!.averageEmployeeCountFromRsk,
+        isatCategory: company.isatCategory,
+      })),
+    )
   }
 
   /**

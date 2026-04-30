@@ -5,7 +5,11 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from './dto/company.dto'
 import { CompanyModel } from './models/company.model'
-import { ICompanyService } from './company.service.interface'
+import {
+  CompanyReportSnapshotLookup,
+  CompanyReportSnapshotSourceDto,
+  ICompanyService,
+} from './company.service.interface'
 
 const LOGGING_CONTEXT = 'CompanyService'
 
@@ -28,5 +32,47 @@ export class CompanyService implements ICompanyService {
     )
 
     return company.fromModel()
+  }
+
+  async getOrCreateReportSnapshotSource(
+    input: CompanyReportSnapshotLookup,
+  ): Promise<CompanyReportSnapshotSourceDto> {
+    this.logger.debug(
+      `Resolving report company snapshot source by national id "${input.nationalId}"`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    const existingCompany = await this.companyModel.findOne({
+      where: { nationalId: input.nationalId },
+    })
+
+    if (existingCompany) {
+      return toPlaceholderReportSnapshotSource(existingCompany)
+    }
+
+    // TODO: Replace this placeholder with the external company API once wired.
+    // Until then we create the live company row from the minimal submitted
+    // identity and leave snapshot-only details blank/zero.
+    const company = await this.companyModel.create({
+      name: input.name,
+      nationalId: input.nationalId,
+      averageEmployeeCountFromRsk: 0,
+    })
+
+    return toPlaceholderReportSnapshotSource(company)
+  }
+}
+
+function toPlaceholderReportSnapshotSource(
+  company: CompanyModel,
+): CompanyReportSnapshotSourceDto {
+  return {
+    companyId: company.id,
+    name: company.name,
+    nationalId: company.nationalId,
+    address: '',
+    city: '',
+    postcode: '',
+    isatCategory: '',
   }
 }

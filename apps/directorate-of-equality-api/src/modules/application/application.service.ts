@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
@@ -58,6 +59,12 @@ import {
   SalaryAnalysisOutlierDto,
   SalaryAnalysisResponseDto,
 } from './dto/salary-analysis.response.dto'
+import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import type {
+  SubmitReportCompanyDto,
+  SubmitReportSubsidiaryDto,
+} from './dto/submit-report-company.dto'
+import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
@@ -69,6 +76,7 @@ export class ApplicationService implements IApplicationService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IConfigService) private readonly configService: IConfigService,
+    @Inject(ICompanyService) private readonly companyService: ICompanyService,
     @Inject(IReportService) private readonly reportService: IReportService,
     @Inject(IReportCreateService)
     private readonly reportCreateService: IReportCreateService,
@@ -145,7 +153,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async submitSalary(
-    input: CreateReportDto,
+    input: SubmitSalaryReportDto,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
@@ -153,12 +161,13 @@ export class ApplicationService implements IApplicationService {
       companyId: company.id,
       identifier: input.identifier,
     })
-    this.assertCompaniesBelongToResolvedCompany(input.companies, company)
-    return this.reportCreateService.createSalary(input)
+
+    const createInput = await this.createSalaryReportInput(input, company)
+    return this.reportCreateService.createSalary(createInput)
   }
 
   async submitEquality(
-    input: CreateEqualityReportDto,
+    input: SubmitEqualityReportDto,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting equality report from application portal', {
@@ -166,8 +175,9 @@ export class ApplicationService implements IApplicationService {
       companyId: company.id,
       identifier: input.identifier,
     })
-    this.assertCompaniesBelongToResolvedCompany(input.companies, company)
-    return this.reportCreateService.createEquality(input)
+
+    const createInput = await this.createEqualityReportInput(input, company)
+    return this.reportCreateService.createEquality(createInput)
   }
 
   async getActiveEqualityReport(
@@ -240,50 +250,118 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
-  /**
-   * Body-shape check on `companies[]`:
-   *
-   * - Exactly one row has `parentCompanyId === null` (the parent), and its
-   *   `companyId` matches the JWT-resolved company.
-   * - Every other row points at the resolved company via `parentCompanyId`.
-   *
-   * This catches the obvious "wrong companyId in body" case. The deeper
-   * "are these listed subsidiaries actually this company's gov-registered
-   * subsidiaries" check requires an external registry call we don't have
-   * wired up yet — see TODO below.
-   */
-  private assertCompaniesBelongToResolvedCompany(
-    companies: CreateReportCompanySnapshotDto[],
+  private async createSalaryReportInput(
+    input: SubmitSalaryReportDto,
     company: CompanyDto,
-  ) {
-    const parents = companies.filter((c) => c.parentCompanyId === null)
+  ): Promise<CreateReportDto> {
+    const companies = await this.createReportCompanySnapshots(input, company)
 
-    if (parents.length !== 1) {
+    return {
+      equalityReportId: input.equalityReportId,
+      identifier: input.identifier,
+      importedFromExcel: input.importedFromExcel,
+      providerType: input.providerType,
+      providerId: input.providerId,
+      companyAdminName: input.companyAdminName,
+      companyAdminEmail: input.companyAdminEmail,
+      companyAdminGender: input.companyAdminGender,
+      contactName: input.contactName,
+      contactEmail: input.contactEmail,
+      contactPhone: input.contactPhone,
+      averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+      averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+      averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+      parsed: input.parsed,
+      companies,
+      outliers: input.outliers,
+    }
+  }
+
+  private async createEqualityReportInput(
+    input: SubmitEqualityReportDto,
+    company: CompanyDto,
+  ): Promise<CreateEqualityReportDto> {
+    const companies = await this.createReportCompanySnapshots(input, company)
+
+    return {
+      identifier: input.identifier,
+      providerType: input.providerType,
+      providerId: input.providerId,
+      companyAdminName: input.companyAdminName,
+      companyAdminEmail: input.companyAdminEmail,
+      companyAdminGender: input.companyAdminGender,
+      contactName: input.contactName,
+      contactEmail: input.contactEmail,
+      contactPhone: input.contactPhone,
+      equalityReportContent: input.equalityReportContent,
+      companies,
+    }
+  }
+
+  private async createReportCompanySnapshots(
+    input: {
+      company: SubmitReportCompanyDto
+      subsidiaries?: SubmitReportSubsidiaryDto[]
+    },
+    company: CompanyDto,
+  ): Promise<CreateReportCompanySnapshotDto[]> {
+    const parentNationalId = input.company.nationalId.trim()
+
+    if (parentNationalId !== company.nationalId) {
       throw new BadRequestException(
-        `Expected exactly one parent company in companies[] (parentCompanyId=null), found ${parents.length}`,
+        'Submitted parent company does not match the authenticated company',
       )
     }
 
-    const [parent] = parents
-    if (parent.companyId !== company.id) {
-      throw new BadRequestException(
-        `Parent company in companies[] does not match the authenticated company`,
-      )
-    }
+    const seenNationalIds = new Set([parentNationalId])
+    const subsidiaries = input.subsidiaries ?? []
 
-    for (const subsidiary of companies) {
-      if (subsidiary.parentCompanyId === null) continue
-      if (subsidiary.parentCompanyId !== company.id) {
+    for (const subsidiary of subsidiaries) {
+      const nationalId = subsidiary.nationalId.trim()
+
+      if (nationalId === parentNationalId) {
         throw new BadRequestException(
-          `Subsidiary company "${subsidiary.companyId}" must point at the authenticated company as its parent`,
+          `Subsidiary company "${nationalId}" cannot be the authenticated parent company`,
         )
       }
+
+      if (seenNationalIds.has(nationalId)) {
+        throw new BadRequestException(
+          `Duplicate company national id "${nationalId}" in subsidiaries[]`,
+        )
+      }
+
+      seenNationalIds.add(nationalId)
     }
 
-    // TODO: external API call — verify each subsidiary in `companies[]` is
-    // actually a gov-registered subsidiary of the authenticated company.
-    // The third-party wiring is not yet available; until it lands the
-    // checks above are body-shape only.
+    const subsidiarySnapshots = await Promise.all(
+      subsidiaries.map(async (subsidiary) => {
+        const source =
+          await this.companyService.getOrCreateReportSnapshotSource({
+            name: subsidiary.name.trim(),
+            nationalId: subsidiary.nationalId.trim(),
+          })
+
+        return {
+          ...source,
+          parentCompanyId: company.id,
+        }
+      }),
+    )
+
+    return [
+      {
+        companyId: company.id,
+        parentCompanyId: null,
+        name: input.company.name,
+        nationalId: parentNationalId,
+        address: input.company.address,
+        city: input.company.city,
+        postcode: input.company.postcode,
+        isatCategory: input.company.isatCategory,
+      },
+      ...subsidiarySnapshots,
+    ]
   }
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
