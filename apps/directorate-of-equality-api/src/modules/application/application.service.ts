@@ -313,34 +313,32 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
+    const subsidiaries = (input.subsidiaries ?? []).map((subsidiary) => ({
+      name: subsidiary.name,
+      nationalId: subsidiary.nationalId.trim(),
+    }))
+
     const seenNationalIds = new Set([parentNationalId])
-    const subsidiaries = input.subsidiaries ?? []
-
     for (const subsidiary of subsidiaries) {
-      const nationalId = subsidiary.nationalId.trim()
-
-      if (nationalId === parentNationalId) {
+      if (subsidiary.nationalId === parentNationalId) {
         throw new BadRequestException(
-          `Subsidiary company "${nationalId}" cannot be the authenticated parent company`,
+          `Subsidiary company "${subsidiary.nationalId}" cannot be the authenticated parent company`,
         )
       }
 
-      if (seenNationalIds.has(nationalId)) {
+      if (seenNationalIds.has(subsidiary.nationalId)) {
         throw new BadRequestException(
-          `Duplicate company national id "${nationalId}" in subsidiaries[]`,
+          `Duplicate company national id "${subsidiary.nationalId}" in subsidiaries[]`,
         )
       }
 
-      seenNationalIds.add(nationalId)
+      seenNationalIds.add(subsidiary.nationalId)
     }
 
     const subsidiarySnapshots = await Promise.all(
       subsidiaries.map(async (subsidiary) => {
         const source =
-          await this.companyService.getOrCreateReportSnapshotSource({
-            name: subsidiary.name.trim(),
-            nationalId: subsidiary.nationalId.trim(),
-          })
+          await this.companyService.getOrCreateReportSnapshotSource(subsidiary)
 
         return {
           ...source,
