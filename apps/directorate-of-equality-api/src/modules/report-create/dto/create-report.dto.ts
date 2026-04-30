@@ -90,9 +90,6 @@ export class CreateReportCompanySnapshotDto {
   @ApiString()
   postcode!: string
 
-  @ApiNumber()
-  averageEmployeeCountFromRsk!: number
-
   @ApiString()
   isatCategory!: string
 }

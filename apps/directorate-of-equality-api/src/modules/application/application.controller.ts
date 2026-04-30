@@ -32,14 +32,14 @@ import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
-import { CreateEqualityReportDto } from '../report-create/dto/create-equality-report.dto'
-import { CreateReportDto } from '../report-create/dto/create-report.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
+import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { IApplicationService } from './application.service.interface'
 
 const XLSX_MIME =
@@ -146,7 +146,7 @@ export class ApplicationController {
   })
   async submitSalary(
     @CurrentCompany() company: CompanyDto,
-    @Body() input: CreateReportDto,
+    @Body() input: SubmitSalaryReportDto,
   ): Promise<CreateReportResponseDto> {
     return this.applicationService.submitSalary(input, company)
   }
@@ -160,7 +160,7 @@ export class ApplicationController {
   })
   async submitEquality(
     @CurrentCompany() company: CompanyDto,
-    @Body() input: CreateEqualityReportDto,
+    @Body() input: SubmitEqualityReportDto,
   ): Promise<CreateReportResponseDto> {
     return this.applicationService.submitEquality(input, company)
   }

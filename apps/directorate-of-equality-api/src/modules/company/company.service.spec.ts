@@ -17,9 +17,13 @@ const mockLogger = {
 describe('CompanyService', () => {
   let service: CompanyService
   let findOneOrThrow: jest.Mock
+  let findOne: jest.Mock
+  let create: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
+    findOne = jest.fn()
+    create = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -27,7 +31,7 @@ describe('CompanyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(CompanyModel),
-          useValue: { findOneOrThrow },
+          useValue: { findOneOrThrow, findOne, create },
         },
       ],
     }).compile()
@@ -64,4 +68,80 @@ describe('CompanyService', () => {
       NotFoundException,
     )
   })
+
+  describe('getOrCreateReportSnapshotSource', () => {
+    it('returns existing company data with placeholder snapshot-only fields', async () => {
+      findOne.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-1',
+          name: 'Acme ehf.',
+          nationalId: '5501234567',
+          averageEmployeeCountFromRsk: 12,
+        }),
+      )
+
+      const result = await service.getOrCreateReportSnapshotSource({
+        name: 'Ignored name',
+        nationalId: '5501234567',
+      })
+
+      expect(findOne).toHaveBeenCalledWith({
+        where: { nationalId: '5501234567' },
+      })
+      expect(create).not.toHaveBeenCalled()
+      expect(result).toEqual({
+        companyId: 'company-1',
+        name: 'Acme ehf.',
+        nationalId: '5501234567',
+        address: '',
+        city: '',
+        postcode: '',
+        isatCategory: '',
+      })
+    })
+
+    it('creates a minimal live company row while the external lookup is a placeholder', async () => {
+      findOne.mockResolvedValue(null)
+      create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-2',
+          name: 'Subsidiary ehf.',
+          nationalId: '6601234567',
+          averageEmployeeCountFromRsk: 0,
+        }),
+      )
+
+      const result = await service.getOrCreateReportSnapshotSource({
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+      })
+
+      expect(create).toHaveBeenCalledWith({
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+        averageEmployeeCountFromRsk: 0,
+      })
+      expect(result).toEqual({
+        companyId: 'company-2',
+        name: 'Subsidiary ehf.',
+        nationalId: '6601234567',
+        address: '',
+        city: '',
+        postcode: '',
+        isatCategory: '',
+      })
+    })
+  })
 })
+
+function makeCompanyModel(
+  overrides: Partial<CompanyModel> = {},
+): CompanyModel {
+  return {
+    id: 'company-1',
+    name: 'Acme ehf.',
+    nationalId: '5501234567',
+    averageEmployeeCountFromRsk: 3,
+    ...overrides,
+  } as CompanyModel
+}

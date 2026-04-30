@@ -137,18 +137,18 @@ The `application` module is the company-admin API surface. It reuses reviewer-si
 
 - `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
 - `GET /api/v1/application/reports/equality/active` returns the company's active equality report: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row.
-- `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept the same create DTOs as the report-create service after validating the parent/subsidiary shape of `companies[]`.
+- `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept application-facing bodies with one explicit `company` object for the authenticated parent and an optional `subsidiaries[]` array containing subsidiary names/national IDs. Missing or empty `subsidiaries` means no subsidiaries. The application service maps that to the internal `companies[]` snapshot shape before delegating to report-create.
 - `GET /api/v1/application/reports/:reportId` is company-facing detail, not the reviewer detail DTO. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
 
 ## Daughter companies
 
-Large companies often report on behalf of their corporate group. The `company_report` table captures this — one row per participating company per submission, with the company's identity and demographics (name, national ID, address, headcount, ISAT category) snapshotted so later mutations to `company` don't rewrite history:
+Large companies often report on behalf of their corporate group. The `company_report` table captures this — one row per participating company per submission, with the submitted company identity and details (name, national ID, address, headcount, ISAT category) snapshotted so later third-party changes don't rewrite history:
 
 - One row per (company, report) pair.
 - `parent_company_id` (nullable) points to the parent company in the group. A row with `parent_company_id = NULL` is the top-level reporter; rows with it set are subsidiaries.
 - All employees of all companies in the group are listed on the same `report`. Reviewers see the full company list by reading `company_report` for that report.
 
-Application-side submit validates the shape of this list before delegating to the report-create service: exactly one parent row must have `parent_company_id = NULL` and that row's `company_id` must match the JWT-resolved company; every subsidiary row must point back to that same parent via `parent_company_id`. The deeper "are these companies actually registered subsidiaries" check is intentionally left for a future external registry integration.
+Application-side submit receives the parent as `company` and subsidiaries as `subsidiaries[]`. The parent national ID must match the JWT-resolved company; subsidiary national IDs must be unique and cannot be the parent. Subsidiary snapshot details are resolved through the company module, which currently has a placeholder implementation until the external company API is wired in. `average_employee_count_from_rsk` is not accepted in submit payloads; report creation snapshots it from the live `company` row, where it is admin-controlled.
 
 The schema does **not** track which specific company paid which specific employee. Aggregate visibility (the list of participating companies) is sufficient for the audit.
 
@@ -257,18 +257,14 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | --------------------------------- | --------- |
 | `id`                              | `uuid` PK |
 | `name`                            | `text`    |
-| `address`                         | `text`    |
-| `city`                            | `text`    |
-| `postcode`                        | `text`    |
 | `average_employee_count_from_rsk` | `int`     |
 | `national_id`                     | `text`    |
-| `isat_category`                   | `text`    |
 | `salary_report_required`          | `boolean` |
 | `salary_report_required_override` | `boolean` |
 
 ### `company_report`
 
-Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all identity and demographic fields are frozen at submission so audits reflect the company as it looked then, not as it looks now. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`.
+Submission-time snapshot of a company participating in a report. `company_id` points to the current (mutable) row in `company`; all submitted identity and detail fields are frozen at submission so audits reflect the company data supplied then, not later third-party values. `parent_company_id` allows a parent company to be linked alongside a subsidiary. The `salary_report_required*` flags are admin/gating state, not historical data, and are intentionally not snapshotted — read them off `company`.
 
 | Column                            | Type                            |
 | --------------------------------- | ------------------------------- |

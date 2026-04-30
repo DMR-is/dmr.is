@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
@@ -22,6 +23,7 @@ import { IReportCreateService } from './report-create.service.interface'
     SequelizeModule.forFeature([
       ReportModel,
       ReportEventModel,
+      CompanyModel,
       CompanyReportModel,
       ReportEmployeeRoleModel,
       ReportEmployeeModel,

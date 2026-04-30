@@ -83,12 +83,8 @@ module.exports = {
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
       name TEXT NOT NULL,
-      address TEXT NOT NULL,
-      city TEXT NOT NULL,
-      postcode TEXT NOT NULL,
       average_employee_count_from_rsk INTEGER NOT NULL,
       national_id TEXT NOT NULL UNIQUE,
-      isat_category TEXT NOT NULL,
       salary_report_required BOOLEAN NOT NULL DEFAULT FALSE,
       salary_report_required_override BOOLEAN NOT NULL DEFAULT FALSE
     );
