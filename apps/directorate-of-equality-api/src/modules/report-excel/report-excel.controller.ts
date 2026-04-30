@@ -15,14 +15,13 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
-  ApiOperation,
   ApiProduces,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ParsedReportDto } from './dto/parsed-report.dto'
 import { IReportExcelService } from './report-excel.service.interface'
@@ -47,9 +46,8 @@ export class ReportExcelController {
   ) {}
 
   @Get('template')
-  @ApiOperation({ operationId: 'getBlankExcelTemplate' })
   @ApiProduces(XLSX_MIME)
-  @ApiResponse({ status: 200, description: 'Blank salary report template' })
+  @DoeResponse({ operationId: 'getBlankExcelTemplate', successDescription: 'Blank salary report template' })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()
     return new StreamableFile(buf, {
@@ -59,7 +57,6 @@ export class ReportExcelController {
   }
 
   @Post('import')
-  @ApiOperation({ operationId: 'importSalaryReportWorkbook' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -70,7 +67,7 @@ export class ReportExcelController {
       required: ['file'],
     },
   })
-  @ApiResponse({ status: 200, type: ParsedReportDto })
+  @DoeResponse({ operationId: 'importSalaryReportWorkbook', type: ParsedReportDto })
   @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
     @UploadedFile(

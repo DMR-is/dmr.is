@@ -20,16 +20,15 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
-  ApiOperation,
   ApiParam,
   ApiProduces,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
@@ -65,16 +64,17 @@ export class ApplicationController {
   ) {}
 
   @Get('company')
-  @ApiOperation({ operationId: 'getApplicationCompany' })
-  @ApiResponse({ status: 200, type: CompanyDto })
+  @DoeResponse({ operationId: 'getApplicationCompany', type: CompanyDto })
   async getCompany(@CurrentCompany() company: CompanyDto): Promise<CompanyDto> {
     return company
   }
 
   @Get('reports/excel/template')
-  @ApiOperation({ operationId: 'getApplicationBlankExcelTemplate' })
   @ApiProduces(XLSX_MIME)
-  @ApiResponse({ status: 200, description: 'Blank salary report template' })
+  @DoeResponse({
+    operationId: 'getApplicationBlankExcelTemplate',
+    successDescription: 'Blank salary report template',
+  })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()
 
@@ -85,7 +85,6 @@ export class ApplicationController {
   }
 
   @Post('reports/excel/import')
-  @ApiOperation({ operationId: 'importApplicationSalaryReportWorkbook' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -96,7 +95,10 @@ export class ApplicationController {
       required: ['file'],
     },
   })
-  @ApiResponse({ status: 200, type: ParsedReportDto })
+  @DoeResponse({
+    operationId: 'importApplicationSalaryReportWorkbook',
+    type: ParsedReportDto,
+  })
   @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
     @UploadedFile(
@@ -111,8 +113,10 @@ export class ApplicationController {
 
   @Post('reports/salary-analysis')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ operationId: 'analyzeApplicationSalaryReport' })
-  @ApiResponse({ status: 200, type: SalaryAnalysisResponseDto })
+  @DoeResponse({
+    operationId: 'analyzeApplicationSalaryReport',
+    type: SalaryAnalysisResponseDto,
+  })
   async salaryAnalysis(
     @CurrentCompany() company: CompanyDto,
     @Body() input: SalaryAnalysisRequestDto,
@@ -121,12 +125,12 @@ export class ApplicationController {
   }
 
   @Get('reports/equality/active')
-  @ApiOperation({
+  @DoeResponse({
     operationId: 'getApplicationActiveEqualityReport',
     description:
-      'Returns the resolved company\'s currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report.',
+      "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report.",
+    type: EqualityReportSummaryDto,
   })
-  @ApiResponse({ status: 200, type: EqualityReportSummaryDto })
   async getActiveEqualityReport(
     @CurrentCompany() company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
@@ -135,8 +139,11 @@ export class ApplicationController {
 
   @Post('reports/salary')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ operationId: 'submitApplicationSalaryReport' })
-  @ApiResponse({ status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'submitApplicationSalaryReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async submitSalary(
     @CurrentCompany() company: CompanyDto,
     @Body() input: CreateReportDto,
@@ -146,8 +153,11 @@ export class ApplicationController {
 
   @Post('reports/equality')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ operationId: 'submitApplicationEqualityReport' })
-  @ApiResponse({ status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'submitApplicationEqualityReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async submitEquality(
     @CurrentCompany() company: CompanyDto,
     @Body() input: CreateEqualityReportDto,
@@ -156,13 +166,13 @@ export class ApplicationController {
   }
 
   @Get('reports/:reportId')
-  @ApiOperation({
+  @ApiParam({ name: 'reportId', type: String })
+  @DoeResponse({
     operationId: 'getApplicationReport',
     description:
       'Returns company-facing report detail with external comments only.',
+    type: ApplicationReportDetailDto,
   })
-  @ApiParam({ name: 'reportId', type: String })
-  @ApiResponse({ status: 200, type: ApplicationReportDetailDto })
   async getReport(
     @Param('reportId', ParseUUIDPipe) reportId: string,
     @CurrentCompany() company: CompanyDto,

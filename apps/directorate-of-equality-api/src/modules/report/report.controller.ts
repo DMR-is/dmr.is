@@ -7,16 +7,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
-import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
@@ -33,10 +28,7 @@ export class ReportController {
   ) {}
 
   @Get()
-  @ApiOperation({ operationId: 'listReports' })
-  @ApiResponse({ status: 200, type: GetReportsResponseDto })
-  @ApiResponse({ status: 400, type: ApiErrorDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'listReports', type: GetReportsResponseDto })
   async list(
     @Query() query: GetReportsQueryDto,
   ): Promise<GetReportsResponseDto> {
@@ -44,10 +36,7 @@ export class ReportController {
   }
 
   @Get(':id')
-  @ApiOperation({ operationId: 'getReportById' })
-  @ApiResponse({ status: 200, type: ReportDetailDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'getReportById', type: ReportDetailDto })
   async getById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ReportDetailDto> {
