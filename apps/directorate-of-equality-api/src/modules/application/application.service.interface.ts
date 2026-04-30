@@ -20,7 +20,9 @@ export interface IApplicationService {
     input: SubmitEqualityReportDto,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto>
-  getActiveEqualityReport(company: CompanyDto): Promise<EqualityReportSummaryDto>
+  getActiveEqualityReport(
+    company: CompanyDto,
+  ): Promise<EqualityReportSummaryDto>
   getReport(
     reportId: string,
     company: CompanyDto,

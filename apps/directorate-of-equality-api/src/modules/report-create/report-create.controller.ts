@@ -7,10 +7,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
@@ -19,7 +21,7 @@ import { IReportCreateService } from './report-create.service.interface'
 @Controller({ path: 'reports', version: '1' })
 @ApiTags('Reports')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, CompanyResourceGuard)
 export class ReportCreateController {
   constructor(
     @Inject(IReportCreateService)
@@ -28,8 +30,11 @@ export class ReportCreateController {
 
   @Post('salary')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ operationId: 'createSalaryReport' })
-  @ApiResponse({ status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'createSalaryReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async createSalary(
     @Body() body: CreateReportDto,
   ): Promise<CreateReportResponseDto> {
@@ -38,8 +43,11 @@ export class ReportCreateController {
 
   @Post('equality')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ operationId: 'createEqualityReport' })
-  @ApiResponse({ status: 201, type: CreateReportResponseDto })
+  @DoeResponse({
+    operationId: 'createEqualityReport',
+    status: 201,
+    type: CreateReportResponseDto,
+  })
   async createEquality(
     @Body() body: CreateEqualityReportDto,
   ): Promise<CreateReportResponseDto> {

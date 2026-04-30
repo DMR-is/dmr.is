@@ -407,9 +407,9 @@ describe('compensation-aggregates', () => {
     })
 
     it('returns an empty array on empty input', () => {
-      expect(
-        detectOutliers({ thresholdPercent: 3.9, employees: [] }),
-      ).toEqual([])
+      expect(detectOutliers({ thresholdPercent: 3.9, employees: [] })).toEqual(
+        [],
+      )
     })
 
     it('uses the full threshold when useHalfThreshold is false', () => {
@@ -422,7 +422,9 @@ describe('compensation-aggregates', () => {
       ]
 
       expect(
-        detectOutliers({ thresholdPercent: 3.9, employees }).map((o) => o.ordinal),
+        detectOutliers({ thresholdPercent: 3.9, employees }).map(
+          (o) => o.ordinal,
+        ),
       ).toEqual([1])
 
       expect(
