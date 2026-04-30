@@ -6,7 +6,7 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 
-import { type ReportResourceContext } from '../types/report-resource-context'
+import { ReportResourceContext } from '../../modules/report/types/report-resource-context'
 
 export const CurrentReportResourceContext = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): ReportResourceContext => {

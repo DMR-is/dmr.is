@@ -6,14 +6,19 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 
 import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
-import { CurrentReportResourceContext } from '../report/decorators/current-report-resource-context.decorator'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { DenyReportDto } from './dto/deny-report.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'

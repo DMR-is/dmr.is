@@ -7,11 +7,17 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 
 import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
 import { IConfigService } from './config.service.interface'
 
@@ -21,7 +27,7 @@ import { IConfigService } from './config.service.interface'
 })
 @ApiTags('Config')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ConfigController {
   constructor(
     @Inject(IConfigService)

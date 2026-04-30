@@ -1,8 +1,14 @@
 import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ReportResultDto } from './dto/report-result.dto'
 import { IReportResultService } from './report-result.service.interface'
 
@@ -12,7 +18,7 @@ import { IReportResultService } from './report-result.service.interface'
 })
 @ApiTags('Report Results')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ReportResultController {
   constructor(
     @Inject(IReportResultService)

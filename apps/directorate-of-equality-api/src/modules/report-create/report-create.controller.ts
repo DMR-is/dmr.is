@@ -7,10 +7,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
@@ -19,7 +25,7 @@ import { IReportCreateService } from './report-create.service.interface'
 @Controller({ path: 'reports', version: '1' })
 @ApiTags('Reports')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, CompanyResourceGuard)
 export class ReportCreateController {
   constructor(
     @Inject(IReportCreateService)

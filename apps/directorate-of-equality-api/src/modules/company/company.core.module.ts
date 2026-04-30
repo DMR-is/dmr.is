@@ -15,4 +15,4 @@ import { ICompanyService } from './company.service.interface'
   ],
   exports: [ICompanyService],
 })
-export class CompanyModule {}
+export class CompanyCoreModule {}

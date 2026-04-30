@@ -23,6 +23,7 @@ import {
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ParsedReportDto } from './dto/parsed-report.dto'
 import { IReportExcelService } from './report-excel.service.interface'
 
@@ -38,7 +39,7 @@ const MAX_UPLOAD_BYTES = ONE_MB * 20
 })
 @ApiTags('Report Excel')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ReportExcelController {
   constructor(
     @Inject(IReportExcelService)
