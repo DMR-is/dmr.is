@@ -1,11 +1,11 @@
 import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
-import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { UserDto } from './dto/user.dto'
 import { IUserService } from './user.service.interface'
@@ -23,11 +23,7 @@ export class UserController {
   ) {}
 
   @Get('me')
-  @ApiOperation({ operationId: 'getMyUser' })
-  @ApiResponse({ status: 200, type: UserDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 403, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'getMyUser', type: UserDto })
   async getMyUser(@CurrentUser() user: DMRUser): Promise<UserDto> {
     return this.userService.getMyUser(user.nationalId)
   }

@@ -1,8 +1,4 @@
-import {
-  ApiBoolean,
-  ApiOptionalString,
-  ApiUUId,
-} from '@dmr.is/decorators'
+import { ApiBoolean, ApiOptionalString, ApiUUId } from '@dmr.is/decorators'
 
 export class ReportEmployeeOutlierDto {
   @ApiUUId()

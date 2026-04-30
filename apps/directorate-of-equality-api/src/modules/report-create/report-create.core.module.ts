@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { ConfigModule } from '../config/config.module'
+import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
@@ -13,8 +13,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
-import { ReportResultModule } from '../report-result/report-result.module'
-import { ReportCreateController } from './report-create.controller'
+import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportCreateService } from './report-create.service'
 import { IReportCreateService } from './report-create.service.interface'
 
@@ -33,10 +32,9 @@ import { IReportCreateService } from './report-create.service.interface'
       ReportSubCriterionModel,
       ReportSubCriterionStepModel,
     ]),
-    ReportResultModule,
-    ConfigModule,
+    ReportResultCoreModule,
+    ConfigCoreModule,
   ],
-  controllers: [ReportCreateController],
   providers: [
     {
       provide: IReportCreateService,
@@ -45,4 +43,4 @@ import { IReportCreateService } from './report-create.service.interface'
   ],
   exports: [IReportCreateService],
 })
-export class ReportCreateModule {}
+export class ReportCreateCoreModule {}

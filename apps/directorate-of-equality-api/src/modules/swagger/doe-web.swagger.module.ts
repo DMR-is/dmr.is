@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common'
 
-import { ConfigModule } from '../config/config.module'
-import { ReportModule } from '../report/report.module'
-import { ReportCommentModule } from '../report-comment/report-comment.module'
-import { ReportWorkflowModule } from '../report-workflow/report-workflow.module'
-import { UserModule } from '../user/user.module'
+import { ConfigApiModule } from '../config/config.api.module'
+import { ReportApiModule } from '../report/report.api.module'
+import { ReportCommentApiModule } from '../report-comment/report-comment.api.module'
+import { ReportWorkflowApiModule } from '../report-workflow/report-workflow.api.module'
+import { UserApiModule } from '../user/user.api.module'
 
 @Module({
   imports: [
-    UserModule,
-    ConfigModule,
-    ReportModule,
-    ReportCommentModule,
-    ReportWorkflowModule,
+    UserApiModule,
+    ConfigApiModule,
+    ReportApiModule,
+    ReportCommentApiModule,
+    ReportWorkflowApiModule,
   ],
 })
 export class DoeWebSwaggerModule {}

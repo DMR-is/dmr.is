@@ -13,22 +13,25 @@ import { initTRPC, TRPCError } from '@trpc/server'
 
 type SdkFunction = (...args: any[]) => any
 
-type DataResponse<T> = T extends Promise<infer TResult>
-  ? TResult extends { data: infer TData }
-    ? Promise<Exclude<TData, undefined>>
-    : Promise<TResult>
-  : T
+type DataResponse<T> =
+  T extends Promise<infer TResult>
+    ? TResult extends { data: infer TData }
+      ? Promise<Exclude<TData, undefined>>
+      : Promise<TResult>
+    : T
 
-type BoundSdkOptions<T> = Omit<
-  T,
-  'client' | 'responseStyle' | 'throwOnError'
->
+type BoundSdkOptions<T> = Omit<T, 'client' | 'responseStyle' | 'throwOnError'>
 
-type BoundSdkFn<T extends SdkFunction> = Parameters<T> extends []
-  ? () => DataResponse<ReturnType<T>>
-  : undefined extends Parameters<T>[0]
-    ? (options?: BoundSdkOptions<NonNullable<Parameters<T>[0]>>) => DataResponse<ReturnType<T>>
-    : (options: BoundSdkOptions<Parameters<T>[0]>) => DataResponse<ReturnType<T>>
+type BoundSdkFn<T extends SdkFunction> =
+  Parameters<T> extends []
+    ? () => DataResponse<ReturnType<T>>
+    : undefined extends Parameters<T>[0]
+      ? (
+          options?: BoundSdkOptions<NonNullable<Parameters<T>[0]>>,
+        ) => DataResponse<ReturnType<T>>
+      : (
+          options: BoundSdkOptions<Parameters<T>[0]>,
+        ) => DataResponse<ReturnType<T>>
 
 type BoundSdk<T extends Record<string, SdkFunction>> = {
   [K in keyof T]: BoundSdkFn<T[K]>

@@ -6,14 +6,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
-import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
-import { CurrentReportResourceContext } from '../report/decorators/current-report-resource-context.decorator'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { DenyReportDto } from './dto/deny-report.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
@@ -34,11 +33,7 @@ export class ReportWorkflowController {
 
   @Post('assign')
   @HttpCode(204)
-  @ApiOperation({ operationId: 'assignReport' })
-  @ApiResponse({ status: 204 })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 403, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'assignReport' })
   async assign(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -47,12 +42,7 @@ export class ReportWorkflowController {
 
   @Post('deny')
   @HttpCode(204)
-  @ApiOperation({ operationId: 'denyReport' })
-  @ApiResponse({ status: 204 })
-  @ApiResponse({ status: 400, type: ApiErrorDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 403, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'denyReport' })
   async deny(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Body() dto: DenyReportDto,
@@ -62,11 +52,7 @@ export class ReportWorkflowController {
 
   @Post('approve')
   @HttpCode(204)
-  @ApiOperation({ operationId: 'approveReport' })
-  @ApiResponse({ status: 204 })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 403, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'approveReport' })
   async approve(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -75,11 +61,7 @@ export class ReportWorkflowController {
 
   @Post('start-fines')
   @HttpCode(204)
-  @ApiOperation({ operationId: 'startReportFines' })
-  @ApiResponse({ status: 204 })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 403, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'startReportFines' })
   async startFines(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {

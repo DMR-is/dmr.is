@@ -7,11 +7,12 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
-import { ApiErrorDto } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { DoeResponse } from '../../core/decorators/doe-response.decorator'
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
 import { IConfigService } from './config.service.interface'
 
@@ -21,7 +22,7 @@ import { IConfigService } from './config.service.interface'
 })
 @ApiTags('Config')
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class ConfigController {
   constructor(
     @Inject(IConfigService)
@@ -29,37 +30,25 @@ export class ConfigController {
   ) {}
 
   @Get()
-  @ApiOperation({ operationId: 'getAllConfig' })
-  @ApiResponse({ status: 200, type: [ConfigDto] })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'getAllConfig', type: [ConfigDto] })
   async getAll(): Promise<ConfigDto[]> {
     return this.configService.getAll()
   }
 
   @Get(':key')
-  @ApiOperation({ operationId: 'getConfigByKey' })
-  @ApiResponse({ status: 200, type: ConfigDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'getConfigByKey', type: ConfigDto })
   async getByKey(@Param('key') key: string): Promise<ConfigDto> {
     return this.configService.getByKey(key)
   }
 
   @Get(':key/history')
-  @ApiOperation({ operationId: 'getConfigHistoryByKey' })
-  @ApiResponse({ status: 200, type: [ConfigDto] })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'getConfigHistoryByKey', type: [ConfigDto] })
   async getHistoryByKey(@Param('key') key: string): Promise<ConfigDto[]> {
     return this.configService.getHistoryByKey(key)
   }
 
   @Patch(':key')
-  @ApiOperation({ operationId: 'updateConfigByKey' })
-  @ApiResponse({ status: 200, type: ConfigDto })
-  @ApiResponse({ status: 400, type: ApiErrorDto })
-  @ApiResponse({ status: 401, type: ApiErrorDto })
-  @ApiResponse({ status: 404, type: ApiErrorDto })
+  @DoeResponse({ operationId: 'updateConfigByKey', type: ConfigDto })
   async updateByKey(
     @Param('key') key: string,
     @Body() dto: UpdateConfigDto,

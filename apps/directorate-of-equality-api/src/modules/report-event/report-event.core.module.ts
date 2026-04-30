@@ -15,4 +15,4 @@ import { IReportEventService } from './report-event.service.interface'
   ],
   exports: [IReportEventService],
 })
-export class ReportEventModule {}
+export class ReportEventCoreModule {}
