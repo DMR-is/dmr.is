@@ -324,6 +324,75 @@ export function assessSalaryOutlierInBucket(input: {
   })
 }
 
+export type OutlierDetectionEmployee = {
+  ordinal: number
+  score: number
+  gender: GenderEnum
+  workRatio: number
+  baseSalary: number
+}
+
+export type DetectedOutlier = {
+  ordinal: number
+  adjustedBaseSalary: number
+  bucket: SalaryScoreBucketSnapshot
+  assessment: SalaryOutlierAssessment
+}
+
+/**
+ * Canonical outlier detection. Single source of truth for the
+ * application-side preview endpoint and the submit-side guard:
+ *
+ * - Adjusts each employee's base salary (`baseSalary / workRatio`).
+ * - Buckets employees by score using the standard bucket width.
+ * - Runs `assessSalaryOutlierInBucket` on each (half threshold by default).
+ * - Returns the outlier rows with the bucket and full assessment, so the
+ *   caller can show the calculation that drove the verdict.
+ */
+export function detectOutliers(input: {
+  employees: OutlierDetectionEmployee[]
+  thresholdPercent: number
+  bucketWidth?: number
+  useHalfThreshold?: boolean
+}): DetectedOutlier[] {
+  const samples: SalaryScorePoint[] = input.employees.map((employee) => ({
+    score: employee.score,
+    gender: employee.gender,
+    salary: employee.baseSalary / employee.workRatio,
+  }))
+
+  const buckets = computeSalaryScoreBucketSnapshots(samples, input.bucketWidth)
+
+  const outliers: DetectedOutlier[] = []
+
+  for (let index = 0; index < input.employees.length; index += 1) {
+    const employee = input.employees[index]
+    const sample = samples[index]
+    const bucket = buckets.find(
+      (b) => sample.score >= b.rangeFrom && sample.score < b.rangeTo,
+    )
+    if (!bucket) continue
+
+    const assessment = assessSalaryOutlierInBucket({
+      salary: sample.salary,
+      bucket,
+      thresholdPercent: input.thresholdPercent,
+      useHalfThreshold: input.useHalfThreshold,
+    })
+
+    if (assessment.isOutlier) {
+      outliers.push({
+        ordinal: employee.ordinal,
+        adjustedBaseSalary: sample.salary,
+        bucket,
+        assessment,
+      })
+    }
+  }
+
+  return outliers
+}
+
 export function roundNullable(
   value: number | null,
   precision = 2,

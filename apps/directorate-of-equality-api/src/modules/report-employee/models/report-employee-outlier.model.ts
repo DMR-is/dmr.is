@@ -8,13 +8,21 @@ import { ReportEmployeeModel } from './report-employee.model'
 
 type ReportEmployeeOutlierAttributes = {
   reportEmployeeId: string
-  reason: string
-  action: string
-  signatureName: string
-  signatureRole: string
+  postponed: boolean
+  reason: string | null
+  action: string | null
+  signatureName: string | null
+  signatureRole: string | null
 }
 
-type ReportEmployeeOutlierCreateAttributes = ReportEmployeeOutlierAttributes
+type ReportEmployeeOutlierCreateAttributes = {
+  reportEmployeeId: string
+  postponed?: boolean
+  reason?: string | null
+  action?: string | null
+  signatureName?: string | null
+  signatureRole?: string | null
+}
 
 @MutableTable({ tableName: DoeModels.REPORT_EMPLOYEE_OUTLIER })
 export class ReportEmployeeOutlierModel extends MutableModel<
@@ -29,17 +37,20 @@ export class ReportEmployeeOutlierModel extends MutableModel<
   })
   reportEmployeeId!: string
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  reason!: string
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
+  postponed!: boolean
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  action!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  reason!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: false, field: 'signature_name' })
-  signatureName!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  action!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: false, field: 'signature_role' })
-  signatureRole!: string
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'signature_name' })
+  signatureName!: string | null
+
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'signature_role' })
+  signatureRole!: string | null
 
   @BelongsTo(() => ReportEmployeeModel, {
     foreignKey: 'reportEmployeeId',
@@ -53,6 +64,7 @@ export class ReportEmployeeOutlierModel extends MutableModel<
     return {
       id: model.id,
       reportEmployeeId: model.reportEmployeeId,
+      postponed: model.postponed,
       reason: model.reason,
       action: model.action,
       signatureName: model.signatureName,

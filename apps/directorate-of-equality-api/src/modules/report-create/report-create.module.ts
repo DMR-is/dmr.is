@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { ConfigModule } from '../config/config.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
@@ -33,6 +34,7 @@ import { IReportCreateService } from './report-create.service.interface'
       ReportSubCriterionStepModel,
     ]),
     ReportResultModule,
+    ConfigModule,
   ],
   controllers: [ReportCreateController],
   providers: [

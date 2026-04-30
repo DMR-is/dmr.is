@@ -4,6 +4,8 @@ import {
   assessSalaryOutlierInBucket,
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
+  detectOutliers,
+  type OutlierDetectionEmployee,
   roundSalaryAggregateSnapshot,
   roundSalaryResultSnapshot,
 } from './compensation-aggregates'
@@ -309,6 +311,127 @@ describe('compensation-aggregates', () => {
       isOutlier: false,
       direction: 'EQUAL',
       referenceSalary: 104000,
+    })
+  })
+
+  describe('detectOutliers', () => {
+    const baseEmployee = (
+      overrides: Partial<OutlierDetectionEmployee>,
+    ): OutlierDetectionEmployee => ({
+      ordinal: 0,
+      score: 100,
+      gender: GenderEnum.FEMALE,
+      workRatio: 1,
+      baseSalary: 1000000,
+      ...overrides,
+    })
+
+    it('returns the employees whose adjusted base salary deviates beyond the half-threshold band around the bucket median', () => {
+      // 3 employees in the same score bucket. Median = 1,200,000.
+      // Ordinal 1 is 16.7% below the median (deviates) — flagged.
+      // Ordinals 2 and 3 land within 0.84% of the median — not flagged.
+      const outliers = detectOutliers({
+        thresholdPercent: 3.9,
+        employees: [
+          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
+          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1200000 }),
+          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1210000 }),
+        ],
+      })
+
+      expect(outliers).toHaveLength(1)
+      expect(outliers[0]).toMatchObject({
+        ordinal: 1,
+        adjustedBaseSalary: 1000000,
+        assessment: {
+          isOutlier: true,
+          direction: 'BELOW',
+          referenceSalary: 1200000,
+        },
+      })
+    })
+
+    it('honours workRatio when adjusting base salary for detection', () => {
+      // Same baseSalary but ordinal 1 is part-time (workRatio 0.5), so
+      // adjusted base salary is 2x ordinal 2's. With 2 samples, the median
+      // is the midpoint and both deviate by 33% — both are flagged.
+      const outliers = detectOutliers({
+        thresholdPercent: 3.9,
+        employees: [
+          baseEmployee({
+            ordinal: 1,
+            score: 250,
+            workRatio: 0.5,
+            baseSalary: 800000,
+          }),
+          baseEmployee({
+            ordinal: 2,
+            score: 250,
+            workRatio: 1,
+            baseSalary: 800000,
+          }),
+        ],
+      })
+
+      expect(outliers.map((o) => o.ordinal).sort()).toEqual([1, 2])
+      const ordinal1 = outliers.find((o) => o.ordinal === 1)!
+      expect(ordinal1.adjustedBaseSalary).toBe(1600000)
+    })
+
+    it('reports the score-bucket each outlier landed in', () => {
+      const outliers = detectOutliers({
+        thresholdPercent: 3.9,
+        employees: [
+          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
+          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1200000 }),
+          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1210000 }),
+        ],
+      })
+
+      // Default bucket width is 100. Score 250 → bucket [200, 300).
+      expect(outliers[0].bucket.rangeFrom).toBe(200)
+      expect(outliers[0].bucket.rangeTo).toBe(300)
+    })
+
+    it('returns an empty array when no employees deviate beyond the band', () => {
+      const outliers = detectOutliers({
+        thresholdPercent: 3.9,
+        employees: [
+          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
+          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1010000 }),
+          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1005000 }),
+        ],
+      })
+
+      expect(outliers).toEqual([])
+    })
+
+    it('returns an empty array on empty input', () => {
+      expect(
+        detectOutliers({ thresholdPercent: 3.9, employees: [] }),
+      ).toEqual([])
+    })
+
+    it('uses the full threshold when useHalfThreshold is false', () => {
+      // Ordinal 1 deviates by 3% from the median. Half-threshold (1.95%)
+      // would flag it; full threshold (3.9%) wouldn't.
+      const employees = [
+        baseEmployee({ ordinal: 1, score: 250, baseSalary: 970000 }),
+        baseEmployee({ ordinal: 2, score: 250, baseSalary: 1000000 }),
+        baseEmployee({ ordinal: 3, score: 250, baseSalary: 1003000 }),
+      ]
+
+      expect(
+        detectOutliers({ thresholdPercent: 3.9, employees }).map((o) => o.ordinal),
+      ).toEqual([1])
+
+      expect(
+        detectOutliers({
+          thresholdPercent: 3.9,
+          employees,
+          useHalfThreshold: false,
+        }),
+      ).toEqual([])
     })
   })
 })

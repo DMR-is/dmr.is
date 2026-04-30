@@ -1,4 +1,8 @@
-import { ApiString, ApiUUId } from '@dmr.is/decorators'
+import {
+  ApiBoolean,
+  ApiOptionalString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 
 export class ReportEmployeeOutlierDto {
   @ApiUUId()
@@ -7,15 +11,21 @@ export class ReportEmployeeOutlierDto {
   @ApiUUId()
   reportEmployeeId!: string
 
-  @ApiString()
-  reason!: string
+  @ApiBoolean({
+    description:
+      'When true, the company has acknowledged the outlier but deferred the explanation. Reason/action/signatures may be null.',
+  })
+  postponed!: boolean
 
-  @ApiString()
-  action!: string
+  @ApiOptionalString({ nullable: true })
+  reason!: string | null
 
-  @ApiString()
-  signatureName!: string
+  @ApiOptionalString({ nullable: true })
+  action!: string | null
 
-  @ApiString()
-  signatureRole!: string
+  @ApiOptionalString({ nullable: true })
+  signatureName!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  signatureRole!: string | null
 }

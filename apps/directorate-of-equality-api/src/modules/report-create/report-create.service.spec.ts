@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { IConfigService } from '../config/config.service.interface'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -54,6 +55,7 @@ describe('ReportCreateService', () => {
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
+  let configGetByKey: jest.Mock
 
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
@@ -77,15 +79,30 @@ describe('ReportCreateService', () => {
     outlierBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `dev-${i}` })),
     )
-    criterionCreate = jest.fn(async (input) => ({ ...input, id: `cri-${Date.now()}-${Math.random()}` }))
+    criterionCreate = jest.fn(async (input) => ({
+      ...input,
+      id: `cri-${Date.now()}-${Math.random()}`,
+    }))
     subCriterionCreate = jest.fn(async (input) => ({
       ...input,
       id: `sub-${Date.now()}-${Math.random()}`,
     }))
     subCriterionStepBulkCreate = jest.fn(async (rows) =>
-      rows.map((r: object, i: number) => ({ ...r, id: `step-${Date.now()}-${i}` })),
+      rows.map((r: object, i: number) => ({
+        ...r,
+        id: `step-${Date.now()}-${i}`,
+      })),
     )
-    reportResultCreateForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
+    reportResultCreateForReport = jest
+      .fn()
+      .mockResolvedValue({ id: 'result-1' })
+    // Default to a generous threshold so existing fixtures (no salary
+    // outliers in their parsed payload) don't accidentally flip into
+    // outlier-detected territory and fail submit-side guard checks.
+    configGetByKey = jest.fn().mockResolvedValue({
+      key: 'salary_difference_threshold_percent',
+      value: '3.9',
+    })
 
     const module = await Test.createTestingModule({
       providers: [
@@ -138,6 +155,10 @@ describe('ReportCreateService', () => {
         {
           provide: IReportResultService,
           useValue: { createForReport: reportResultCreateForReport },
+        },
+        {
+          provide: IConfigService,
+          useValue: { getByKey: configGetByKey },
         },
       ],
     }).compile()
@@ -251,7 +272,9 @@ describe('ReportCreateService', () => {
   it('rejects when the referenced equality report is not APPROVED+valid', async () => {
     reportFindOne.mockResolvedValue(null)
 
-    await expect(service.createSalary(makeInput())).rejects.toThrow(NotFoundException)
+    await expect(service.createSalary(makeInput())).rejects.toThrow(
+      NotFoundException,
+    )
     expect(reportCreate).not.toHaveBeenCalled()
   })
 
@@ -259,7 +282,9 @@ describe('ReportCreateService', () => {
     const input = makeInput()
     input.parsed.employees[0].roleTitle = 'Phantom role'
 
-    await expect(service.createSalary(input)).rejects.toThrow(BadRequestException)
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
     expect(reportCreate).not.toHaveBeenCalled()
   })
 
@@ -267,7 +292,9 @@ describe('ReportCreateService', () => {
     const input = makeInput()
     input.parsed.roles[0].stepAssignments[0].stepOrder = 99
 
-    await expect(service.createSalary(input)).rejects.toThrow(BadRequestException)
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
     expect(reportCreate).not.toHaveBeenCalled()
   })
 
@@ -284,7 +311,9 @@ describe('ReportCreateService', () => {
   it('propagates snapshot creation failures before event creation', async () => {
     reportResultCreateForReport.mockRejectedValue(new Error('snapshot boom'))
 
-    await expect(service.createSalary(makeInput())).rejects.toThrow('snapshot boom')
+    await expect(service.createSalary(makeInput())).rejects.toThrow(
+      'snapshot boom',
+    )
 
     expect(reportEventCreate).not.toHaveBeenCalled()
   })
@@ -299,10 +328,11 @@ describe('ReportCreateService', () => {
   })
 
   it('persists outliers resolving employeeOrdinal to the new employee id', async () => {
-    const input = makeInput()
+    const input = makeInputWithDetectedOutlier()
     input.outliers = [
       {
         employeeOrdinal: 1,
+        postponed: false,
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
@@ -316,6 +346,7 @@ describe('ReportCreateService', () => {
     expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
+        postponed: false,
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
@@ -336,8 +367,83 @@ describe('ReportCreateService', () => {
       },
     ]
 
-    await expect(service.createSalary(input)).rejects.toThrow(BadRequestException)
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
     expect(reportCreate).not.toHaveBeenCalled()
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects an outlier row submitted for a non-outlier employee (extras)', async () => {
+    // The single-employee fixture has no detected outliers — submitting one
+    // row should be rejected as an extra by the submit-side guard.
+    const input = makeInput()
+    input.outliers = [
+      {
+        employeeOrdinal: 1,
+        postponed: false,
+        reason: 'r',
+        action: 'a',
+        signatureName: 'n',
+        signatureRole: 'role',
+      },
+    ]
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      /non-outlier employee ordinal/,
+    )
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects when a detected outlier has no acknowledgement row (missing)', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outliers = []
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      /missing acknowledgement/,
+    )
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('accepts a postponed outlier even with empty explanation fields', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outliers = [
+      {
+        employeeOrdinal: 1,
+        postponed: true,
+      },
+    ]
+
+    await service.createSalary(input)
+
+    expect(outlierBulkCreate).toHaveBeenCalledWith([
+      expect.objectContaining({
+        reportEmployeeId: 'emp-0',
+        postponed: true,
+        reason: null,
+        action: null,
+        signatureName: null,
+        signatureRole: null,
+      }),
+    ])
+  })
+
+  it('rejects a non-postponed outlier with missing explanation fields', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outliers = [
+      {
+        employeeOrdinal: 1,
+        postponed: false,
+        reason: '',
+        action: 'something',
+        signatureName: 'somebody',
+        signatureRole: '',
+      },
+    ]
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      /Non-postponed outlier .* missing required field\(s\): reason, signatureRole/,
+    )
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
@@ -509,6 +615,66 @@ function makeInput(): CreateReportDto {
       ],
     },
   }
+}
+
+/**
+ * Variant of makeInput with three same-bucket employees engineered so that
+ * `detectOutliers` flags ordinal 1 as the lone outlier under the default
+ * 3.9% threshold (= 1.95% half-band around the bucket median).
+ *
+ * Bucket overall median = 1,200,000. Ordinal 1 sits 16.7% below it, ordinals
+ * 2 and 3 are within 0.83% of the median.
+ */
+function makeInputWithDetectedOutlier(): CreateReportDto {
+  const base = makeInput()
+  base.parsed.employees = [
+    {
+      ordinal: 1,
+      identifier: 'TVE-001',
+      roleTitle: 'Framkvaemdastjori',
+      education: EducationEnum.MASTER,
+      gender: GenderEnum.FEMALE,
+      field: 'Mgmt',
+      department: 'Mgmt',
+      startDate: '2021-01-01',
+      workRatio: 1,
+      baseSalary: 1000000,
+      additionalSalary: 100000,
+      bonusSalary: null,
+      personalStepAssignments: [],
+    },
+    {
+      ordinal: 2,
+      identifier: 'TVE-002',
+      roleTitle: 'Framkvaemdastjori',
+      education: EducationEnum.MASTER,
+      gender: GenderEnum.MALE,
+      field: 'Mgmt',
+      department: 'Mgmt',
+      startDate: '2021-01-01',
+      workRatio: 1,
+      baseSalary: 1200000,
+      additionalSalary: 100000,
+      bonusSalary: null,
+      personalStepAssignments: [],
+    },
+    {
+      ordinal: 3,
+      identifier: 'TVE-003',
+      roleTitle: 'Framkvaemdastjori',
+      education: EducationEnum.MASTER,
+      gender: GenderEnum.MALE,
+      field: 'Mgmt',
+      department: 'Mgmt',
+      startDate: '2021-01-01',
+      workRatio: 1,
+      baseSalary: 1210000,
+      additionalSalary: 100000,
+      bonusSalary: null,
+      personalStepAssignments: [],
+    },
+  ]
+  return base
 }
 
 function makeEqualityInput(): CreateEqualityReportDto {
