@@ -8,9 +8,7 @@ export const reportsRouter = router({
   list: protectedProcedure
     .input(zListReportsQuery.optional())
     .query(({ ctx, input }) => {
-      const query = input
-        ? input
-        : undefined
+      const query = input ? input : undefined
 
       return ctx.api.listReports({ query })
     }),
