@@ -36,7 +36,11 @@ export class ReportCommentController {
   ) {}
 
   @Get()
-  @DoeResponse({ operationId: 'getReportComments', type: [ReportCommentDto] })
+  @DoeResponse({
+    operationId: 'getReportComments',
+    type: [ReportCommentDto],
+    errors: [400, 401, 403, 404, 500],
+  })
   async getByReportId(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<ReportCommentDto[]> {
@@ -48,6 +52,7 @@ export class ReportCommentController {
     operationId: 'createReportComment',
     status: 201,
     type: ReportCommentDto,
+    errors: [400, 401, 403, 404, 500],
   })
   async create(
     @CurrentReportResourceContext() context: ReportResourceContext,
@@ -59,7 +64,7 @@ export class ReportCommentController {
   @Delete(':commentId')
   @HttpCode(204)
   @ApiParam({ name: 'commentId', type: String })
-  @DoeResponse({ operationId: 'deleteReportComment' })
+  @DoeResponse({ operationId: 'deleteReportComment', errors: [400, 401, 403, 404, 500] })
   async delete(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Param('commentId') commentId: string,

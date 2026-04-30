@@ -7,6 +7,8 @@ import {
 
 import { ApiErrorDto } from '@dmr.is/shared-dto'
 
+const DEFAULT_ERRORS = [400, 401, 403, 500]
+
 type DoeResponseParams = {
   operationId: string
   description?: string
@@ -14,6 +16,7 @@ type DoeResponseParams = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type?: any
   successDescription?: string
+  errors?: number[]
 }
 
 export function DoeResponse({
@@ -22,6 +25,7 @@ export function DoeResponse({
   type,
   description,
   successDescription,
+  errors = DEFAULT_ERRORS,
 }: DoeResponseParams) {
   const successDecorator =
     type || successDescription
@@ -31,10 +35,6 @@ export function DoeResponse({
   return applyDecorators(
     ApiOperation({ operationId, description }),
     successDecorator,
-    ApiResponse({ status: 400, type: ApiErrorDto }),
-    ApiResponse({ status: 401, type: ApiErrorDto }),
-    ApiResponse({ status: 403, type: ApiErrorDto }),
-    ApiResponse({ status: 404, type: ApiErrorDto }),
-    ApiResponse({ status: 500, type: ApiErrorDto }),
+    ...errors.map((code) => ApiResponse({ status: code, type: ApiErrorDto })),
   )
 }

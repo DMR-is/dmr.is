@@ -24,6 +24,7 @@ export class ReportResultController {
   @Get()
   @DoeResponse({
     operationId: 'getReportResultByReportId',
+    errors: [400, 401, 403, 404, 500],
     description:
       'Returns the persisted report result snapshot for a salary report, including report-level and role-level base/full compensation aggregates.',
     type: ReportResultDto,

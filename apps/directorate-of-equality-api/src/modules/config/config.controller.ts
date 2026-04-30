@@ -36,19 +36,19 @@ export class ConfigController {
   }
 
   @Get(':key')
-  @DoeResponse({ operationId: 'getConfigByKey', type: ConfigDto })
+  @DoeResponse({ operationId: 'getConfigByKey', type: ConfigDto, errors: [400, 401, 403, 404, 500] })
   async getByKey(@Param('key') key: string): Promise<ConfigDto> {
     return this.configService.getByKey(key)
   }
 
   @Get(':key/history')
-  @DoeResponse({ operationId: 'getConfigHistoryByKey', type: [ConfigDto] })
+  @DoeResponse({ operationId: 'getConfigHistoryByKey', type: [ConfigDto], errors: [400, 401, 403, 404, 500] })
   async getHistoryByKey(@Param('key') key: string): Promise<ConfigDto[]> {
     return this.configService.getHistoryByKey(key)
   }
 
   @Patch(':key')
-  @DoeResponse({ operationId: 'updateConfigByKey', type: ConfigDto })
+  @DoeResponse({ operationId: 'updateConfigByKey', type: ConfigDto, errors: [400, 401, 403, 404, 500] })
   async updateByKey(
     @Param('key') key: string,
     @Body() dto: UpdateConfigDto,

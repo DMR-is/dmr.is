@@ -23,7 +23,7 @@ export class UserController {
   ) {}
 
   @Get('me')
-  @DoeResponse({ operationId: 'getMyUser', type: UserDto })
+  @DoeResponse({ operationId: 'getMyUser', type: UserDto, errors: [400, 401, 403, 404, 500] })
   async getMyUser(@CurrentUser() user: DMRUser): Promise<UserDto> {
     return this.userService.getMyUser(user.nationalId)
   }

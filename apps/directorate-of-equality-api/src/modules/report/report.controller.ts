@@ -36,7 +36,11 @@ export class ReportController {
   }
 
   @Get(':id')
-  @DoeResponse({ operationId: 'getReportById', type: ReportDetailDto })
+  @DoeResponse({
+    operationId: 'getReportById',
+    type: ReportDetailDto,
+    errors: [400, 401, 403, 404, 500],
+  })
   async getById(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ReportDetailDto> {
