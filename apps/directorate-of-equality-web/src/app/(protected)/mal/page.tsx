@@ -20,7 +20,7 @@ export default function MalPage() {
         variant="default"
         reverse
       />
-      <Box background="blue100" paddingTop={5}>
+      <Box background="blue100" paddingY={5}>
         <Suspense>
           <TabsContainer />
         </Suspense>
