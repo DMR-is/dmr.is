@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyModule } from '../company/company.module'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ConfigModule } from '../config/config.module'
@@ -15,7 +16,6 @@ import { ReportResultModule } from '../report-result/report-result.module'
 import { ApplicationController } from './application.controller'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
-import { CompanyResourceGuard } from './company-resource.guard'
 
 @Module({
   imports: [

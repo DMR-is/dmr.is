@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -22,13 +22,10 @@ export class CompanyService implements ICompanyService {
       context: LOGGING_CONTEXT,
     })
 
-    const company = await this.companyModel.findOne({ where: { nationalId } })
-
-    if (!company) {
-      throw new NotFoundException(
-        `Company with national id "${nationalId}" not found`,
-      )
-    }
+    const company = await this.companyModel.findOneOrThrow(
+      { where: { nationalId } },
+      `Company with national id "${nationalId}" not found`,
+    )
 
     return company.fromModel()
   }

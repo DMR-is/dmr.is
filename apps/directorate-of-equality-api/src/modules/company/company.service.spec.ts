@@ -16,10 +16,10 @@ const mockLogger = {
 
 describe('CompanyService', () => {
   let service: CompanyService
-  let findOne: jest.Mock
+  let findOneOrThrow: jest.Mock
 
   beforeEach(async () => {
-    findOne = jest.fn()
+    findOneOrThrow = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -27,7 +27,7 @@ describe('CompanyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(CompanyModel),
-          useValue: { findOne },
+          useValue: { findOneOrThrow },
         },
       ],
     }).compile()
@@ -36,7 +36,7 @@ describe('CompanyService', () => {
   })
 
   it('returns the company DTO when one is found by national id', async () => {
-    findOne.mockResolvedValue({
+    findOneOrThrow.mockResolvedValue({
       fromModel: () => ({
         id: 'company-1',
         name: 'Acme ehf.',
@@ -46,9 +46,10 @@ describe('CompanyService', () => {
 
     const result = await service.getByNationalId('5501234567')
 
-    expect(findOne).toHaveBeenCalledWith({
-      where: { nationalId: '5501234567' },
-    })
+    expect(findOneOrThrow).toHaveBeenCalledWith(
+      { where: { nationalId: '5501234567' } },
+      'Company with national id "5501234567" not found',
+    )
     expect(result).toEqual({
       id: 'company-1',
       name: 'Acme ehf.',
@@ -57,7 +58,7 @@ describe('CompanyService', () => {
   })
 
   it('throws NotFoundException when no company matches the national id', async () => {
-    findOne.mockResolvedValue(null)
+    findOneOrThrow.mockRejectedValue(new NotFoundException())
 
     await expect(service.getByNationalId('0000000000')).rejects.toThrow(
       NotFoundException,

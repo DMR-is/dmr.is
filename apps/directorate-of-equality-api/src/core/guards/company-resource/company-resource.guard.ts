@@ -9,8 +9,8 @@ import {
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { ICompanyService } from '../company/company.service.interface'
-import { CompanyDto } from '../company/dto/company.dto'
+import { ICompanyService } from '../../../modules/company/company.service.interface'
+import { CompanyDto } from '../../../modules/company/dto/company.dto'
 
 export type CompanyResourceRequest = {
   user?: DMRUser

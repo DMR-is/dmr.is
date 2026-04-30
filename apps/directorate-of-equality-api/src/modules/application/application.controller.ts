@@ -29,6 +29,8 @@ import {
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { CurrentCompany } from '../../core/decorators/current-company.decorator'
+import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { CreateEqualityReportDto } from '../report-create/dto/create-equality-report.dto'
@@ -40,8 +42,6 @@ import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
 import { IApplicationService } from './application.service.interface'
-import { CompanyResourceGuard } from './company-resource.guard'
-import { CurrentCompany } from './current-company.decorator'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

@@ -6,8 +6,8 @@ import {
 
 import { getLogger } from '@dmr.is/logging'
 
-import { CompanyDto } from '../company/dto/company.dto'
-import { CompanyResourceRequest } from './company-resource.guard'
+import { CompanyDto } from '../../modules/company/dto/company.dto'
+import { CompanyResourceRequest } from '../guards/company-resource/company-resource.guard'
 
 export const CurrentCompany = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): CompanyDto => {
