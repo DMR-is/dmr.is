@@ -1,5 +1,7 @@
 'use client'
 
+import { Suspense } from 'react'
+
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
@@ -19,7 +21,9 @@ export default function MalPage() {
         reverse
       />
       <Box background="blue100" paddingTop={5}>
-        <TabsContainer />
+        <Suspense>
+          <TabsContainer />
+        </Suspense>
       </Box>
     </>
   )

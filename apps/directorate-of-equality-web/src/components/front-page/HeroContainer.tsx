@@ -38,7 +38,7 @@ export const HeroContainer = ({ userName }: Props) => {
         </GridColumn>
         <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
           <LinkCard
-            href="/kvartanir"
+            href="/mal?category=jafnrettisaetlun"
             title="Jafnréttisáætlanir"
             description="Yfirlit jafnréttisáætlana og meðferð þeirra."
             image={{
@@ -48,7 +48,7 @@ export const HeroContainer = ({ userName }: Props) => {
         </GridColumn>
         <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
           <LinkCard
-            href="/yfirlit"
+            href="/mal?category=urbotaaetlun"
             title="Úrbótaáætlanir"
             description="Yfirlit úrbótaáætlana og meðferð þeirra."
             image={{

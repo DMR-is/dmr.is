@@ -1,5 +1,10 @@
 import { type ColumnDef } from '@tanstack/react-table'
 
+export const CATEGORY_SLUG_MAP: Record<string, string> = {
+  jafnrettisaetlun: 'Jafnréttisáætlun',
+  urbotaaaetlun: 'Úrbótaáætlun',
+}
+
 export type Case = {
   date: string
   category: string

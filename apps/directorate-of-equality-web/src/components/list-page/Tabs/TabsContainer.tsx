@@ -1,5 +1,7 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
+
 import { useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -14,6 +16,7 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   Case,
+  CATEGORY_SLUG_MAP,
   COLUMNS,
   DETAIL_FIELDS,
   MOCK_DATA,
@@ -66,12 +69,15 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
 
 type TabContentProps = {
   initialData: Case[]
+  initialCategory?: string[]
 }
 
 const PAGE_SIZE = 10
 
-const TabContent = ({ initialData }: TabContentProps) => {
-  const [filterState, setFilterState] = useState<CaseFilterState>({})
+const TabContent = ({ initialData, initialCategory }: TabContentProps) => {
+  const [filterState, setFilterState] = useState<CaseFilterState>(() => ({
+    category: initialCategory?.length ? initialCategory : undefined,
+  }))
   const [page, setPage] = useState(1)
 
   const handleChange = (key: keyof CaseFilterState, values?: string[]) => {
@@ -137,6 +143,12 @@ const TabContent = ({ initialData }: TabContentProps) => {
 }
 
 export const TabsContainer = () => {
+  const searchParams = useSearchParams()
+  const initialCategory = searchParams
+    .getAll('category')
+    .map((slug) => CATEGORY_SLUG_MAP[slug])
+    .filter(Boolean) as string[]
+
   return (
     <GridContainer>
       <Tabs
@@ -147,17 +159,32 @@ export const TabsContainer = () => {
           {
             id: 'innsendingar',
             label: `Innsendingar (${MOCK_DATA.length})`,
-            content: <TabContent initialData={MOCK_DATA} />,
+            content: (
+              <TabContent
+                initialData={MOCK_DATA}
+                initialCategory={initialCategory}
+              />
+            ),
           },
           {
             id: 'i-vinnslu',
             label: 'Í vinnslu (5)',
-            content: <TabContent initialData={MOCK_DATA.slice(0, 5)} />,
+            content: (
+              <TabContent
+                initialData={MOCK_DATA.slice(0, 5)}
+                initialCategory={initialCategory}
+              />
+            ),
           },
           {
             id: 'afgreitt',
             label: 'Afgreitt (3)',
-            content: <TabContent initialData={MOCK_DATA.slice(0, 3)} />,
+            content: (
+              <TabContent
+                initialData={MOCK_DATA.slice(0, 3)}
+                initialCategory={initialCategory}
+              />
+            ),
           },
         ]}
       />
