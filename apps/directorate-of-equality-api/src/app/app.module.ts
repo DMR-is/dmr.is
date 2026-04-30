@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
@@ -12,24 +12,28 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { AdminGuard } from '../core/guards/admin/admin.guard'
+import { ApplicationApiModule } from '../modules/application/application.api.module'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { ConfigModel } from '../modules/config/models/config.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
-import { ReportCommentModel } from '../modules/report/models/report-comment.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
+import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
-import { ReportEmployeeDeviationModel } from '../modules/report-employee/models/report-employee-deviation.model'
+import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
+import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
-import { UserModule } from '../modules/user/user.module'
+import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
@@ -57,7 +61,7 @@ import { UserModule } from '../modules/user/user.module'
             ReportSubCriterionModel,
             ReportSubCriterionStepModel,
             ReportEmployeeModel,
-            ReportEmployeeDeviationModel,
+            ReportEmployeeOutlierModel,
             ReportEmployeeRoleCriterionStepModel,
             ReportEmployeePersonalCriterionStepModel,
             ReportResultModel,
@@ -65,6 +69,7 @@ import { UserModule } from '../modules/user/user.module'
             PublicReportModel,
             ReportEventModel,
             ReportCommentModel,
+            ConfigModel,
           ],
         }),
       ],
@@ -72,9 +77,10 @@ import { UserModule } from '../modules/user/user.module'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    UserModule,
+    ApplicationApiModule,
+    DoeWebSwaggerModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_FILTER,

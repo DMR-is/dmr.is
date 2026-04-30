@@ -33,6 +33,7 @@
     "class-validator": "^0.14.1",
     "date-fns": "2.30.0",
     "deepmerge": "4.3.1",
+    "exceljs": "4.4.0",
     "express": "4.21.2",
     "kennitala": "^2.0.6",
     "lodash": "4.17.23",

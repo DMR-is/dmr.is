@@ -1,5 +1,5 @@
 {
-  "name": "doe-web",
+  "name": "directorate-of-equality-web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/directorate-of-equality-web",
   "projectType": "application",
@@ -33,19 +33,30 @@
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "doe-web:build",
+        "buildTarget": "directorate-of-equality-web:build",
         "dev": true,
         "port": 5200
       },
       "configurations": {
         "development": {
-          "buildTarget": "doe-web:build:development",
+          "buildTarget": "directorate-of-equality-web:build:development",
           "dev": true
         },
         "production": {
-          "buildTarget": "doe-web:build:production",
+          "buildTarget": "directorate-of-equality-web:build:production",
           "dev": false
         }
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": [
+          "nx format:write --projects=directorate-of-equality-web",
+          "nx run directorate-of-equality-web:lint --fix=true --skip-nx-cache"
+        ],
+        "parallel": false
       }
     },
     "lint": {
@@ -67,22 +78,20 @@
       "dependsOn": ["update-openapi-schema"],
       "options": {
         "commands": [
-          "rm -rf apps/directorate-of-equality-web/src/gen/fetch",
-          "yarn openapi-generator -o apps/directorate-of-equality-web/src/gen/fetch -i apps/directorate-of-equality-web/clientConfig.json"
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-web/openapi-ts.config.ts"
         ]
       },
-      "outputs": ["{projectRoot}/gen/fetch"]
+      "outputs": ["{projectRoot}/src/gen/fetch"]
     },
     "codegen": {
       "executor": "nx:run-commands",
       "inputs": ["{projectRoot}/clientConfig.json"],
       "options": {
         "commands": [
-          "rm -rf apps/directorate-of-equality-web/src/gen/fetch",
-          "yarn openapi-generator -o apps/directorate-of-equality-web/src/gen/fetch -i apps/directorate-of-equality-web/clientConfig.json"
+          "node_modules/.bin/openapi-ts -f apps/directorate-of-equality-web/openapi-ts.config.ts"
         ]
       },
-      "outputs": ["{projectRoot}/gen/fetch"]
+      "outputs": ["{projectRoot}/src/gen/fetch"]
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",

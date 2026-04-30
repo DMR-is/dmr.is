@@ -3,30 +3,27 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
 import { ReportModel } from '../../report/models/report.model'
 import type { ReportResultDto } from '../dto/report-result.dto'
 
 const parseDecimal = (raw: unknown): number | null =>
   raw === null || raw === undefined ? null : parseFloat(raw as string)
 
-type ReportResultAttributes = {
+export type ReportResultAttributes = {
   reportId: string
-  averageMaleSalary: number
-  averageFemaleSalary: number
-  averageNeutralSalary: number
-  averageSalary: number
-  minimumSalary: number
-  maximumSalary: number
-  medianSalary: number
-  salaryDifferenceMaleFemale: number
-  salaryDifferenceMaleNeutral: number
-  salaryDifferenceFemaleMale: number
-  salaryDifferenceFemaleNeutral: number
-  salaryDifferenceNeutralMale: number
-  salaryDifferenceNeutralFemale: number
+  salaryDifferenceThresholdPercent: number | null
+  calculationVersion: string
+  baseSnapshot: SalaryResultSnapshot
+  fullSnapshot: SalaryResultSnapshot
 }
 
-type ReportResultCreateAttributes = ReportResultAttributes
+export type ReportResultCreateAttributes = Omit<
+  ReportResultAttributes,
+  'calculationVersion'
+> & {
+  calculationVersion?: string
+}
 
 @MutableTable({ tableName: DoeModels.REPORT_RESULT })
 export class ReportResultModel extends MutableModel<
@@ -43,134 +40,36 @@ export class ReportResultModel extends MutableModel<
   reportId!: string
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'average_male_salary',
+    type: DataType.DECIMAL(5, 2),
+    allowNull: true,
+    field: 'salary_difference_threshold_percent',
     get() {
-      return parseDecimal(this.getDataValue('averageMaleSalary'))
+      return parseDecimal(this.getDataValue('salaryDifferenceThresholdPercent'))
     },
   })
-  averageMaleSalary!: number
+  salaryDifferenceThresholdPercent!: number | null
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.TEXT,
     allowNull: false,
-    field: 'average_female_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageFemaleSalary'))
-    },
+    defaultValue: 'v1',
+    field: 'calculation_version',
   })
-  averageFemaleSalary!: number
+  calculationVersion!: string
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.JSONB,
     allowNull: false,
-    field: 'average_neutral_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageNeutralSalary'))
-    },
+    field: 'base_snapshot',
   })
-  averageNeutralSalary!: number
+  baseSnapshot!: SalaryResultSnapshot
 
   @Column({
-    type: DataType.DECIMAL(14, 2),
+    type: DataType.JSONB,
     allowNull: false,
-    field: 'average_salary',
-    get() {
-      return parseDecimal(this.getDataValue('averageSalary'))
-    },
+    field: 'full_snapshot',
   })
-  averageSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'minimum_salary',
-    get() {
-      return parseDecimal(this.getDataValue('minimumSalary'))
-    },
-  })
-  minimumSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'maximum_salary',
-    get() {
-      return parseDecimal(this.getDataValue('maximumSalary'))
-    },
-  })
-  maximumSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'median_salary',
-    get() {
-      return parseDecimal(this.getDataValue('medianSalary'))
-    },
-  })
-  medianSalary!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_male_female',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceMaleFemale'))
-    },
-  })
-  salaryDifferenceMaleFemale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_male_neutral',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceMaleNeutral'))
-    },
-  })
-  salaryDifferenceMaleNeutral!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_female_male',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceFemaleMale'))
-    },
-  })
-  salaryDifferenceFemaleMale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_female_neutral',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceFemaleNeutral'))
-    },
-  })
-  salaryDifferenceFemaleNeutral!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_neutral_male',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceNeutralMale'))
-    },
-  })
-  salaryDifferenceNeutralMale!: number
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'salary_difference_neutral_female',
-    get() {
-      return parseDecimal(this.getDataValue('salaryDifferenceNeutralFemale'))
-    },
-  })
-  salaryDifferenceNeutralFemale!: number
+  fullSnapshot!: SalaryResultSnapshot
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
@@ -179,19 +78,10 @@ export class ReportResultModel extends MutableModel<
     return {
       id: model.id,
       reportId: model.reportId,
-      averageMaleSalary: model.averageMaleSalary,
-      averageFemaleSalary: model.averageFemaleSalary,
-      averageNeutralSalary: model.averageNeutralSalary,
-      averageSalary: model.averageSalary,
-      minimumSalary: model.minimumSalary,
-      maximumSalary: model.maximumSalary,
-      medianSalary: model.medianSalary,
-      salaryDifferenceMaleFemale: model.salaryDifferenceMaleFemale,
-      salaryDifferenceMaleNeutral: model.salaryDifferenceMaleNeutral,
-      salaryDifferenceFemaleMale: model.salaryDifferenceFemaleMale,
-      salaryDifferenceFemaleNeutral: model.salaryDifferenceFemaleNeutral,
-      salaryDifferenceNeutralMale: model.salaryDifferenceNeutralMale,
-      salaryDifferenceNeutralFemale: model.salaryDifferenceNeutralFemale,
+      salaryDifferenceThresholdPercent: model.salaryDifferenceThresholdPercent,
+      calculationVersion: model.calculationVersion,
+      base: model.baseSnapshot,
+      full: model.fullSnapshot,
     }
   }
 

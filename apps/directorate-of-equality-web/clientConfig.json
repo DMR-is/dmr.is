@@ -1,6 +1,532 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/application/company": {
+      "get": {
+        "operationId": "getApplicationCompany",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/excel/template": {
+      "get": {
+        "operationId": "getApplicationBlankExcelTemplate",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Blank salary report template" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/excel/import": {
+      "post": {
+        "operationId": "importApplicationSalaryReportWorkbook",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ParsedReportDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/salary-analysis": {
+      "post": {
+        "operationId": "analyzeApplicationSalaryReport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryAnalysisRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryAnalysisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/equality/active": {
+      "get": {
+        "description": "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report.",
+        "operationId": "getApplicationActiveEqualityReport",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EqualityReportSummaryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/salary": {
+      "post": {
+        "operationId": "submitApplicationSalaryReport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateReportDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/equality": {
+      "post": {
+        "operationId": "submitApplicationEqualityReport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEqualityReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
+    "/api/v1/application/reports/{reportId}": {
+      "get": {
+        "description": "Returns company-facing report detail with external comments only.",
+        "operationId": "getApplicationReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationReportDetailDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Application"]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "getMyUser",
@@ -13,11 +539,1045 @@
                 "schema": { "$ref": "#/components/schemas/UserDto" }
               }
             }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
           }
         },
         "security": [{ "bearer": [] }],
         "summary": "",
-        "tags": ["Directorate of Equality API"]
+        "tags": ["Users"]
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "operationId": "getAllConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ConfigDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/config/{key}": {
+      "get": {
+        "operationId": "getConfigByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConfigDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      },
+      "patch": {
+        "operationId": "updateConfigByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateConfigDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ConfigDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/config/{key}/history": {
+      "get": {
+        "operationId": "getConfigHistoryByKey",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ConfigDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Config"]
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "operationId": "listReports",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportTypeEnum" }
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/ReportStatusEnum" }
+            }
+          },
+          {
+            "name": "reviewerUserId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" }
+            }
+          },
+          {
+            "name": "unassignedReviewer",
+            "required": false,
+            "in": "query",
+            "description": "When true, returns only reports with no reviewer assigned. Overrides `reviewerUserId` if both are set.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "createdFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "createdTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "approvedTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "validUntilTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "correctionDeadlineTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "example": "2026-02-19T10:30:00.000Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search across company name, kennitala, report identifier, contact name, and contact email. Case-insensitive partial match.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReportSortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{id}": {
+      "get": {
+        "operationId": "getReportById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportDetailDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{reportId}/comments": {
+      "get": {
+        "operationId": "getReportComments",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ReportCommentDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      },
+      "post": {
+        "operationId": "createReportComment",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportCommentDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      }
+    },
+    "/api/v1/reports/{reportId}/comments/{commentId}": {
+      "delete": {
+        "operationId": "deleteReportComment",
+        "parameters": [
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Comments"]
+      }
+    },
+    "/api/v1/reports/{reportId}/assign": {
+      "post": {
+        "operationId": "assignReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/deny": {
+      "post": {
+        "operationId": "denyReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DenyReportDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/approve": {
+      "post": {
+        "operationId": "approveReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/start-fines": {
+      "post": {
+        "operationId": "startReportFines",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
       }
     }
   },
@@ -27,13 +1587,803 @@
     "version": "1.0",
     "contact": {}
   },
-  "tags": [{ "name": "Directorate of Equality API" }],
+  "tags": [],
   "servers": [],
   "components": {
     "securitySchemes": {
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "CompanyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "postcode": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" },
+          "nationalId": { "type": "string" },
+          "isatCategory": { "type": "string" },
+          "salaryReportRequired": { "type": "boolean" },
+          "salaryReportRequiredOverride": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "name",
+          "address",
+          "city",
+          "postcode",
+          "averageEmployeeCountFromRsk",
+          "nationalId",
+          "isatCategory",
+          "salaryReportRequired",
+          "salaryReportRequiredOverride"
+        ]
+      },
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "number" },
+          "timestamp": { "type": "string" },
+          "name": {
+            "type": "string",
+            "enum": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ],
+            "example": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ]
+          },
+          "message": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["statusCode", "timestamp"]
+      },
+      "ParsedSubCriterionStepDto": {
+        "type": "object",
+        "properties": {
+          "order": { "type": "number" },
+          "description": { "type": "string" },
+          "score": { "type": "number" }
+        },
+        "required": ["order", "description", "score"]
+      },
+      "ParsedSubCriterionDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "weight": { "type": "number" },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParsedSubCriterionStepDto"
+            }
+          }
+        },
+        "required": ["title", "description", "weight", "steps"]
+      },
+      "ParsedCriterionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "RESPONSIBILITY",
+              "STRAIN",
+              "CONDITION",
+              "COMPETENCE",
+              "PERSONAL"
+            ]
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "weight": { "type": "number" },
+          "subCriteria": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedSubCriterionDto" }
+          }
+        },
+        "required": ["type", "title", "description", "weight", "subCriteria"]
+      },
+      "ParsedStepAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "criterionTitle": { "type": "string" },
+          "subTitle": { "type": "string" },
+          "stepOrder": { "type": "number" }
+        },
+        "required": ["criterionTitle", "subTitle", "stepOrder"]
+      },
+      "ParsedRoleDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "stepAssignments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
+          }
+        },
+        "required": ["title", "stepAssignments"]
+      },
+      "ParsedEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "identifier": { "type": "string" },
+          "roleTitle": { "type": "string" },
+          "education": {
+            "type": "string",
+            "enum": [
+              "COMPULSORY",
+              "UPPER_SECONDARY",
+              "VOCATIONAL",
+              "BACHELOR",
+              "MASTER",
+              "DOCTORATE",
+              "PROFESSIONAL"
+            ]
+          },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "field": { "type": "string" },
+          "department": { "type": "string" },
+          "startDate": { "type": "string" },
+          "workRatio": { "type": "number" },
+          "baseSalary": { "type": "number" },
+          "additionalSalary": { "type": "number" },
+          "bonusSalary": { "type": "number", "nullable": true },
+          "personalStepAssignments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
+          }
+        },
+        "required": [
+          "ordinal",
+          "identifier",
+          "roleTitle",
+          "education",
+          "gender",
+          "field",
+          "department",
+          "startDate",
+          "workRatio",
+          "baseSalary",
+          "additionalSalary",
+          "personalStepAssignments"
+        ]
+      },
+      "ParsedReportDto": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedCriterionDto" }
+          },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedRoleDto" }
+          },
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedEmployeeDto" }
+          }
+        },
+        "required": ["criteria", "roles", "employees"]
+      },
+      "SalaryAnalysisRequestDto": {
+        "type": "object",
+        "properties": {
+          "parsed": {
+            "description": "Parsed workbook payload from `POST /application/reports/excel/import`.",
+            "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
+          }
+        },
+        "required": ["parsed"]
+      },
+      "SalaryAnalysisOutlierDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": { "type": "number" },
+          "adjustedBaseSalary": { "type": "number" },
+          "direction": {
+            "type": "string",
+            "enum": ["ABOVE", "BELOW", "EQUAL"]
+          },
+          "differencePercent": { "type": "number" },
+          "allowedDifferencePercent": { "type": "number" },
+          "referenceSalary": { "type": "number", "nullable": true },
+          "scoreBucketRangeFrom": { "type": "number" },
+          "scoreBucketRangeTo": { "type": "number" }
+        },
+        "required": [
+          "employeeOrdinal",
+          "adjustedBaseSalary",
+          "direction",
+          "differencePercent",
+          "allowedDifferencePercent",
+          "scoreBucketRangeFrom",
+          "scoreBucketRangeTo"
+        ]
+      },
+      "ScatterDataPointDto": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "number" },
+          "adjustedSalary": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
+        },
+        "required": ["score", "adjustedSalary", "gender"]
+      },
+      "RegressionLineDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number" },
+          "intercept": { "type": "number" }
+        },
+        "required": ["slope", "intercept"]
+      },
+      "ScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "maleAverageSalary": { "type": "number", "nullable": true },
+          "femaleAverageSalary": { "type": "number", "nullable": true },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number", "nullable": true },
+          "femaleMedianSalary": { "type": "number", "nullable": true },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "rangeFrom",
+          "rangeTo",
+          "overallAverageSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryTotalsDto": {
+        "type": "object",
+        "properties": {
+          "maleAverageSalary": { "type": "number" },
+          "femaleAverageSalary": { "type": "number" },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number" },
+          "femaleMedianSalary": { "type": "number" },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "maleAverageSalary",
+          "femaleAverageSalary",
+          "overallAverageSalary",
+          "maleMedianSalary",
+          "femaleMedianSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryByGenderAndScoreDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
+          },
+          "regressionLine": {
+            "$ref": "#/components/schemas/RegressionLineDto"
+          },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
+          },
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" }
+        },
+        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
+      },
+      "SalaryAnalysisResponseDto": {
+        "type": "object",
+        "properties": {
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SalaryAnalysisOutlierDto" }
+          },
+          "baseSalaryByGenderAndScoreAll": {
+            "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+          }
+        },
+        "required": ["outliers", "baseSalaryByGenderAndScoreAll"]
+      },
+      "EqualityReportSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id"]
+      },
+      "CreateReportCompanySnapshotDto": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "FK to the live company row"
+          },
+          "parentCompanyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Parent company FK (nullable). Null on the top-level reporting company; set on each subsidiary."
+          },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "postcode": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" },
+          "isatCategory": { "type": "string" }
+        },
+        "required": [
+          "companyId",
+          "name",
+          "nationalId",
+          "address",
+          "city",
+          "postcode",
+          "averageEmployeeCountFromRsk",
+          "isatCategory"
+        ]
+      },
+      "CreateReportOutlierDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": {
+            "type": "number",
+            "description": "Ordinal of the employee in `parsed.employees[]` this outlier justification applies to."
+          },
+          "postponed": {
+            "type": "boolean",
+            "description": "When true, defers the explanation. Other fields may be omitted. Defaults to false."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "action": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "signatureName": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "signatureRole": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          }
+        },
+        "required": ["employeeOrdinal"]
+      },
+      "CreateReportDto": {
+        "type": "object",
+        "properties": {
+          "equalityReportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "FK to the approved EQUALITY report this salary was audited against."
+          },
+          "identifier": { "type": "string" },
+          "importedFromExcel": { "type": "boolean" },
+          "providerType": {
+            "type": "string",
+            "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "companyAdminName": { "type": "string" },
+          "companyAdminEmail": { "type": "string" },
+          "companyAdminGender": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "NEUTRAL"]
+          },
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string" },
+          "contactPhone": { "type": "string" },
+          "averageEmployeeMaleCount": { "type": "number" },
+          "averageEmployeeFemaleCount": { "type": "number" },
+          "averageEmployeeNeutralCount": { "type": "number" },
+          "parsed": {
+            "description": "Parsed workbook payload from `POST /reports/excel/import`. Contains the criteria tree, role list, and employee rows.",
+            "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
+          },
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateReportCompanySnapshotDto"
+            }
+          },
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
+          }
+        },
+        "required": [
+          "equalityReportId",
+          "identifier",
+          "importedFromExcel",
+          "providerType",
+          "companyAdminName",
+          "companyAdminEmail",
+          "companyAdminGender",
+          "contactName",
+          "contactEmail",
+          "contactPhone",
+          "averageEmployeeMaleCount",
+          "averageEmployeeFemaleCount",
+          "averageEmployeeNeutralCount",
+          "parsed",
+          "companies"
+        ]
+      },
+      "CreateReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier of the newly created report row."
+          }
+        },
+        "required": ["reportId"]
+      },
+      "CreateEqualityReportDto": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string" },
+          "providerType": {
+            "type": "string",
+            "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "companyAdminName": { "type": "string" },
+          "companyAdminEmail": { "type": "string" },
+          "companyAdminGender": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "NEUTRAL"]
+          },
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string" },
+          "contactPhone": { "type": "string" },
+          "equalityReportContent": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Narrative gender-equality plan. Persisted as `report.equality_report_content`."
+          },
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateReportCompanySnapshotDto"
+            }
+          }
+        },
+        "required": [
+          "identifier",
+          "providerType",
+          "companyAdminName",
+          "companyAdminEmail",
+          "companyAdminGender",
+          "contactName",
+          "contactEmail",
+          "contactPhone",
+          "equalityReportContent",
+          "companies"
+        ]
+      },
+      "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
+      "ReportStatusEnum": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "SUBMITTED",
+          "IN_REVIEW",
+          "DENIED",
+          "APPROVED",
+          "SUPERSEDED"
+        ]
+      },
+      "CompanyReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "parentCompanyId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "address": { "type": "string" },
+          "city": { "type": "string" },
+          "postcode": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" },
+          "isatCategory": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "reportId",
+          "name",
+          "nationalId",
+          "address",
+          "city",
+          "postcode",
+          "averageEmployeeCountFromRsk",
+          "isatCategory"
+        ]
+      },
+      "ReportEmployeeOutlierDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportEmployeeId": { "type": "string", "format": "uuid" },
+          "postponed": {
+            "type": "boolean",
+            "description": "When true, the company has acknowledged the outlier but deferred the explanation. Reason/action/signatures may be null."
+          },
+          "reason": { "type": "string", "nullable": true },
+          "action": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureRole": { "type": "string", "nullable": true }
+        },
+        "required": ["id", "reportEmployeeId", "postponed"]
+      },
+      "SalaryAggregateMetricsDto": {
+        "type": "object",
+        "properties": {
+          "average": { "type": "number", "nullable": true },
+          "median": { "type": "number", "nullable": true },
+          "minimum": { "type": "number", "nullable": true },
+          "maximum": { "type": "number", "nullable": true }
+        }
+      },
+      "SalaryDifferencesDto": {
+        "type": "object",
+        "properties": {
+          "maleFemale": { "type": "number", "nullable": true },
+          "maleNeutral": { "type": "number", "nullable": true },
+          "femaleMale": { "type": "number", "nullable": true },
+          "femaleNeutral": { "type": "number", "nullable": true },
+          "neutralMale": { "type": "number", "nullable": true },
+          "neutralFemale": { "type": "number", "nullable": true }
+        }
+      },
+      "ReportSalaryAggregateDto": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "male": { "$ref": "#/components/schemas/SalaryAggregateMetricsDto" },
+          "female": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "neutral": {
+            "$ref": "#/components/schemas/SalaryAggregateMetricsDto"
+          },
+          "salaryDifferences": {
+            "$ref": "#/components/schemas/SalaryDifferencesDto"
+          }
+        },
+        "required": [
+          "overall",
+          "male",
+          "female",
+          "neutral",
+          "salaryDifferences"
+        ]
+      },
+      "SalaryCohortCountsDto": {
+        "type": "object",
+        "properties": {
+          "overall": { "type": "number" },
+          "male": { "type": "number" },
+          "female": { "type": "number" },
+          "neutral": { "type": "number" }
+        },
+        "required": ["overall", "male", "female", "neutral"]
+      },
+      "SalaryScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "totals": { "$ref": "#/components/schemas/ReportSalaryAggregateDto" },
+          "counts": { "$ref": "#/components/schemas/SalaryCohortCountsDto" }
+        },
+        "required": ["rangeFrom", "rangeTo", "totals", "counts"]
+      },
+      "ReportSalaryResultSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "totals": { "$ref": "#/components/schemas/ReportSalaryAggregateDto" },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SalaryScoreBucketDto" }
+          }
+        },
+        "required": ["totals", "scoreBuckets"]
+      },
+      "ReportResultDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "salaryDifferenceThresholdPercent": {
+            "type": "number",
+            "nullable": true
+          },
+          "calculationVersion": { "type": "string" },
+          "base": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "full": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          }
+        },
+        "required": ["id", "reportId", "calculationVersion", "base", "full"]
+      },
+      "ReportRoleEnum": { "type": "string", "enum": ["REVIEWER", "COMPANY"] },
+      "CommentVisibilityEnum": {
+        "type": "string",
+        "enum": ["INTERNAL", "EXTERNAL"]
+      },
+      "ReportCommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "authorKind": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportRoleEnum" }]
+          },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "visibility": {
+            "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
+          },
+          "body": { "type": "string" },
+          "reportStatus": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "reportId",
+          "authorKind",
+          "visibility",
+          "body",
+          "reportStatus",
+          "createdAt"
+        ]
+      },
+      "ApplicationReportDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "identifier": { "type": "string", "nullable": true },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompanyReportDto" }
+          },
+          "equalityReport": {
+            "nullable": true,
+            "allOf": [
+              { "$ref": "#/components/schemas/EqualityReportSummaryDto" }
+            ]
+          },
+          "equalityReportContent": { "type": "string", "nullable": true },
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportEmployeeOutlierDto" }
+          },
+          "result": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
+          },
+          "externalComments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportCommentDto" }
+          },
+          "denialReason": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "companies",
+          "outliers",
+          "externalComments"
+        ]
+      },
       "UserDto": {
         "type": "object",
         "properties": {
@@ -53,6 +2403,370 @@
           "email",
           "isActive"
         ]
+      },
+      "ConfigDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "key": { "type": "string" },
+          "value": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "supersededAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "key", "value"]
+      },
+      "UpdateConfigDto": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "string" },
+          "description": { "type": "string", "nullable": true }
+        },
+        "required": ["value"]
+      },
+      "ReportSortByEnum": {
+        "type": "string",
+        "enum": [
+          "createdAt",
+          "updatedAt",
+          "approvedAt",
+          "validUntil",
+          "correctionDeadline",
+          "identifier"
+        ]
+      },
+      "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "ReportListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "companyName": { "type": "string", "nullable": true },
+          "companyNationalId": { "type": "string", "nullable": true },
+          "reviewer": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "type", "status"]
+      },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1 },
+          "totalPages": { "type": "number", "example": 10 },
+          "totalItems": { "type": "number", "example": 1000 },
+          "nextPage": { "type": "number", "example": 2, "nullable": true },
+          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": { "type": "boolean", "example": true },
+          "hasPreviousPage": { "type": "boolean", "example": false }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "GetReportsResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportListItemDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["reports", "paging"]
+      },
+      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+      "ReportProviderEnum": {
+        "type": "string",
+        "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+      },
+      "EqualityReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string", "nullable": true },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "content": { "type": "string", "nullable": true },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["id", "status"]
+      },
+      "ReportTimelineItemKindEnum": {
+        "type": "string",
+        "enum": ["EVENT", "COMMENT"]
+      },
+      "ReportEventTypeEnum": {
+        "type": "string",
+        "enum": ["SUBMITTED", "ASSIGNED", "STATUS_CHANGED", "SUPERSEDED"]
+      },
+      "ReportEventDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "eventType": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportEventTypeEnum" }]
+          },
+          "actorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reportStatus": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "fromStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "toStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "assignedUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reason": { "type": "string", "nullable": true },
+          "relatedReportId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "companyId": { "type": "string", "format": "uuid", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "reportId", "eventType", "reportStatus", "createdAt"]
+      },
+      "ReportTimelineItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              { "$ref": "#/components/schemas/ReportTimelineItemKindEnum" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "event": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportEventDto" }]
+          },
+          "comment": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportCommentDto" }]
+          }
+        },
+        "required": ["kind", "createdAt"]
+      },
+      "ReportRoleResultDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportResultId": { "type": "string", "format": "uuid" },
+          "reportEmployeeRoleId": { "type": "string", "format": "uuid" },
+          "roleTitle": { "type": "string" },
+          "base": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "full": {
+            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          }
+        },
+        "required": [
+          "id",
+          "reportResultId",
+          "reportEmployeeRoleId",
+          "roleTitle",
+          "base",
+          "full"
+        ]
+      },
+      "ReportDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportTypeEnum" }]
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminEmail": { "type": "string", "nullable": true },
+          "companyAdminGender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
+          "contactName": { "type": "string", "nullable": true },
+          "companyNationalId": { "type": "string", "nullable": true },
+          "contactEmail": { "type": "string", "nullable": true },
+          "contactPhone": { "type": "string", "nullable": true },
+          "averageEmployeeMaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeFemaleCount": { "type": "number", "nullable": true },
+          "averageEmployeeNeutralCount": { "type": "number", "nullable": true },
+          "providerType": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportProviderEnum" }]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "importedFromExcel": { "type": "boolean" },
+          "identifier": { "type": "string", "nullable": true },
+          "equalityReportId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reviewerUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "correctionDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "equalityReportContent": { "type": "string", "nullable": true },
+          "finesStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "reviewer": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "company": { "$ref": "#/components/schemas/CompanyReportDto" },
+          "equalityReport": {
+            "$ref": "#/components/schemas/EqualityReportDto"
+          },
+          "timeline": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportTimelineItemDto" }
+          },
+          "result": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
+          },
+          "roleResults": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
+          },
+          "employeeOutliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportEmployeeOutlierDto" }
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "importedFromExcel",
+          "company",
+          "equalityReport",
+          "timeline",
+          "roleResults",
+          "employeeOutliers"
+        ]
+      },
+      "CreateReportCommentDto": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
+          },
+          "body": { "type": "string" }
+        },
+        "required": ["visibility", "body"]
+      },
+      "DenyReportDto": {
+        "type": "object",
+        "properties": { "denialReason": { "type": "string" } },
+        "required": ["denialReason"]
       }
     }
   }

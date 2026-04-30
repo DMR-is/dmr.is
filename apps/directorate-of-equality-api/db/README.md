@@ -60,15 +60,15 @@ Every company must submit an `EQUALITY` report — no gating column, no exceptio
 State-by-state:
 
 - **`DRAFT`** — company admin is still editing. Not visible to reviewers. Most columns may be null. Can transition to `SUBMITTED`.
-- **`SUBMITTED`** — company finalized the submission. `submitted_at` stamped. Waits in reviewer queue.
+- **`SUBMITTED`** — company finalized the submission. `created_at` is the submission timestamp for the row. Waits in reviewer queue.
 - **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.)
-- **`DENIED`** — reviewer rejected the submission. `reviewer_user_id`, `reviewed_at`, `denial_reason` set. The company must submit a new report (new row) — this denied row **stays forever** as audit.
+- **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. The company must submit a new report (new row) — this denied row **stays forever** as audit.
 - **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition.
 - **`SUPERSEDED`** — a newer report from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per company is "current" at any time.
 
 ## Resubmission
 
-A resubmission is always a **new row** in `report`. It is never an update of an existing report. There is no FK linking the new row back to the one it replaces — old and new are correlated via `company_report.company_id` + `submitted_at` ordering, not a direct reference. Children (`report_criterion`, `report_employee`, `report_result`, etc.) belong to the new row — old children stay with the old row.
+A resubmission is always a **new row** in `report`. It is never an update of an existing report. There is no FK linking the new row back to the one it replaces — old and new are correlated via `company_report.company_id` + `report.created_at` ordering, not a direct reference. Children (`report_criterion`, `report_employee`, `report_result`, etc.) belong to the new row — old children stay with the old row.
 
 Two resubmission triggers:
 
@@ -90,9 +90,9 @@ Two parallel streams capture what happens to a report after draft. The admin UI 
 ### Author model
 
 - `report_event.actor_user_id` — fk → `doe_user` (nullable). Null means company admin (e.g. `SUBMITTED`) or cron/system.
-- `report_comment.author_kind` — `REVIEWER` or `COMPANY_ADMIN`:
+- `report_comment.author_kind` — `REVIEWER` or `COMPANY`:
   - `REVIEWER` → `author_user_id` points to the reviewer's `doe_user` row.
-  - `COMPANY_ADMIN` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `doe_user` (see Tables → `doe_user`).
+  - `COMPANY` → `author_user_id` is null; display identity is hydrated from the parent `report.company_admin_*` cached fields. Company admins are intentionally not captured in `doe_user` (see Tables → `doe_user`).
 
 ### Visibility
 
@@ -131,6 +131,15 @@ A company that misses its deadline accrues daily fines.
 - A daily cron iterates reports where `fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')` and writes a fine row per day. (The `report_fine` accrual table is not yet designed.)
 - Grace is implicit: once the report transitions to `APPROVED` (or `SUPERSEDED`), the filter excludes it and accrual stops.
 
+## Application-facing reads and writes
+
+The `application` module is the company-admin API surface. It reuses reviewer-side domain services where possible, but applies company-specific ownership and visibility rules at the boundary:
+
+- `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
+- `GET /api/v1/application/reports/equality/active` returns the company's active equality report: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row.
+- `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept the same create DTOs as the report-create service after validating the parent/subsidiary shape of `companies[]`.
+- `GET /api/v1/application/reports/:reportId` is company-facing detail, not the reviewer detail DTO. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
+
 ## Daughter companies
 
 Large companies often report on behalf of their corporate group. The `company_report` table captures this — one row per participating company per submission, with the company's identity and demographics (name, national ID, address, headcount, ISAT category) snapshotted so later mutations to `company` don't rewrite history:
@@ -138,6 +147,8 @@ Large companies often report on behalf of their corporate group. The `company_re
 - One row per (company, report) pair.
 - `parent_company_id` (nullable) points to the parent company in the group. A row with `parent_company_id = NULL` is the top-level reporter; rows with it set are subsidiaries.
 - All employees of all companies in the group are listed on the same `report`. Reviewers see the full company list by reading `company_report` for that report.
+
+Application-side submit validates the shape of this list before delegating to the report-create service: exactly one parent row must have `parent_company_id = NULL` and that row's `company_id` must match the JWT-resolved company; every subsidiary row must point back to that same parent via `parent_company_id`. The deeper "are these companies actually registered subsidiaries" check is intentionally left for a future external registry integration.
 
 The schema does **not** track which specific company paid which specific employee. Aggregate visibility (the list of participating companies) is sufficient for the audit.
 
@@ -150,13 +161,13 @@ Each report is evaluated against a set of weighted criteria:
 - `report_sub_criterion_step` — ordered scoring steps within a sub-criterion. Each step has a `score`.
 - Which steps apply to which role is captured in `report_employee_role_criterion_step`.
 - Which steps apply to a specific employee personally is captured in `report_employee_personal_criterion_step`.
-- Deviations from the standard evaluation (special circumstances for a specific employee) are recorded in `report_employee_deviation` with `reason`, `action`, and signatures.
+- Salary outlier justifications (special circumstances for a specific employee) are recorded in `report_employee_outlier` with `reason`, `action`, and signatures.
 
-The final `score` on `report_employee` is derived from the steps that apply to that employee.
+The final `score` on `report_employee` is derived from the steps that apply to that employee — the sum of `report_sub_criterion_step.score` across the steps reachable via the employee's role (`report_employee_role_criterion_step`) and via their personal assignments (`report_employee_personal_criterion_step`), with steps assigned through both sources counted once. The total is computed at submission and persisted on the row; reviewers read it as-is.
 
 ## Results aggregation
 
-`report_result` holds report-level salary aggregates (overall average/minimum/maximum/median, per-gender breakdowns, and six directional salary gap pairs). `report_role_result` holds the same breakdown per role. Both tables are write-once per approval — computed as part of the approval pipeline, not edited by humans.
+`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
 
 ## Enums
 
@@ -168,9 +179,9 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 | `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
 | `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                            |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED`                                                        |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`                                          |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
-| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY_ADMIN`                                                                      |
+| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
 
 ### `EducationEnum` — Iceland to Western mapping
 
@@ -283,6 +294,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `company_admin_email`            | `text`                                                                                                                         |
 | `company_admin_gender`           | `GenderEnum`                                                                                                                   |
 | `contact_name`                   | `text`                                                                                                                         |
+| `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                          |
 | `contact_email`                  | `text`                                                                                                                         |
 | `contact_phone`                  | `text`                                                                                                                         |
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
@@ -294,12 +306,12 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `identifier`                     | `text`                                                                                                                         |
 | `status`                         | `ReportStatusEnum`                                                                                                             |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
-| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                         |
-| `denial_reason`                  | `text` (nullable)                                                                                                              |
+| `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
 | `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
 | `correction_deadline`            | `timestamp` (nullable)                                                                                                         |
 | `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
+| `fines_started_at`               | `timestamp` (nullable)                                                                                                         |
 
 ### `report_criterion`
 
@@ -358,16 +370,28 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `id`    | `uuid` PK |
 | `title` | `text`    |
 
-### `report_employee_deviation`
+### `report_employee_outlier`
 
-| Column               | Type                   |
-| -------------------- | ---------------------- |
-| `id`                 | `uuid` PK              |
-| `report_employee_id` | `fk → report_employee` |
-| `reason`             | `text`                 |
-| `action`             | `text`                 |
-| `signature_name`     | `text`                 |
-| `signature_role`     | `text`                 |
+One row per outlier the company has acknowledged at submission. Two shapes share the table:
+
+- **Filled** (`postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
+- **Postponed** (`postponed = true`) — company acknowledges the outlier but defers the explanation. Explanation columns may be null. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
+
+The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (rows for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
+
+| Column               | Type                                                  |
+| -------------------- | ----------------------------------------------------- |
+| `id`                 | `uuid` PK                                             |
+| `report_employee_id` | `fk → report_employee`                                |
+| `postponed`          | `boolean` (default `false`)                           |
+| `reason`             | `text` (nullable — required when `postponed = false`) |
+| `action`             | `text` (nullable — required when `postponed = false`) |
+| `signature_name`     | `text` (nullable — required when `postponed = false`) |
+| `signature_role`     | `text` (nullable — required when `postponed = false`) |
+
+Invariant (enforced via CHECK):
+
+- `postponed = true OR (reason, action, signature_name, signature_role all non-null and non-empty)`.
 
 ### `report_employee_role_criterion_step`
 
@@ -391,70 +415,56 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 ### `report_result`
 
-Aggregated per-report salary stats.
+Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                             | Type              |
-| ---------------------------------- | ----------------- |
-| `id`                               | `uuid` PK         |
-| `report_id`                        | `fk → report`     |
-| `average_male_salary`              | `decimal(14, 2)`  |
-| `average_female_salary`            | `decimal(14, 2)`  |
-| `average_neutral_salary`           | `decimal(14, 2)`  |
-| `average_salary`                   | `decimal(14, 2)`  |
-| `minimum_salary`                   | `decimal(14, 2)`  |
-| `maximum_salary`                   | `decimal(14, 2)`  |
-| `median_salary`                    | `decimal(14, 2)`  |
-| `salary_difference_male_female`    | `decimal(14, 2)`  |
-| `salary_difference_male_neutral`   | `decimal(14, 2)`  |
-| `salary_difference_female_male`    | `decimal(14, 2)`  |
-| `salary_difference_female_neutral` | `decimal(14, 2)`  |
-| `salary_difference_neutral_male`   |  `decimal(14, 2)` |
-| `salary_difference_neutral_female` |  `decimal(14, 2)` |
+| Column                                | Type                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                     |
+| `report_id`                           | `fk → report` (unique)                                                        |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation |
+| `calculation_version`                 | `text` (default `v1`)                                                         |
+| `base_snapshot`                       | `jsonb` adjusted base salary snapshot                                         |
+| `full_snapshot`                       | `jsonb` adjusted full salary snapshot                                         |
+
+`base_snapshot` and `full_snapshot` share the same shape:
+
+- `totals`
+  - `overall`, `male`, `female`, `neutral` — each contains `average`, `median`, `minimum`, `maximum`.
+  - `salaryDifferences` — contains `maleFemale`, `maleNeutral`, `femaleMale`, `femaleNeutral`, `neutralMale`, `neutralFemale`.
+- `scoreBuckets[]`
+  - `rangeFrom`, `rangeTo`
+  - `totals` with the same aggregate shape as above
+  - `counts` for `overall`, `male`, `female`, `neutral`
+
+Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
 
 ### `report_role_result`
 
-Same salary stats broken down per role. Whiteboard used ditto marks (`==`) — expanded below.
+Reserved table for salary stats broken down per role. Role title is snapshotted because result rows must not change if the role table is later edited. This table is intentionally not part of the first report-result read response while score-bucket breakdowns are the primary requirement.
 
-| Column                    | Type                        |
-| ------------------------- | --------------------------- |
-| `id`                      | `uuid` PK                   |
-| `report_result_id`        | `fk → report_result`        |
-| `report_employee_role_id` | `fk → report_employee_role` |
-| `average_salary`          | `decimal(14, 2)`            |
-| `minimum_salary`          | `decimal(14, 2)`            |
-| `maximum_salary`          | `decimal(14, 2)`            |
-| `median_salary`           | `decimal(14, 2)`            |
-| `average_male_salary`     | `decimal(14, 2)`            |
-| `average_female_salary`   | `decimal(14, 2)`            |
-| `average_neutral_salary`  | `decimal(14, 2)`            |
-| `minimum_male_salary`     | `decimal(14, 2)`            |
-| `minimum_female_salary`   | `decimal(14, 2)`            |
-| `minimum_neutral_salary`  | `decimal(14, 2)`            |
-| `maximum_male_salary`     | `decimal(14, 2)`            |
-| `maximum_female_salary`   | `decimal(14, 2)`            |
-| `maximum_neutral_salary`  | `decimal(14, 2)`            |
+| Column                    | Type                                  |
+| ------------------------- | ------------------------------------- |
+| `id`                      | `uuid` PK                             |
+| `report_result_id`        | `fk → report_result`                  |
+| `report_employee_role_id` | `fk → report_employee_role`           |
+| `role_title`              | `text` snapshot at calculation time   |
+| `base_snapshot`           | `jsonb` adjusted base salary snapshot |
+| `full_snapshot`           | `jsonb` adjusted full salary snapshot |
+
+Unique constraint: `(report_result_id, report_employee_role_id)`.
 
 ### `public_report`
 
 Insert-only snapshot published when a private report is approved. No PII, no FK to `company`. Anonymized aggregate shown on public site. Immutable by design.
 
-| Column                             | Type                                                      |
-| ---------------------------------- | --------------------------------------------------------- |
-| `id`                               | `uuid` PK                                                 |
-| `source_report_id`                 | `fk → report` (internal trace only, not exposed publicly) |
-| `size_bucket`                      | `text` (company size bracket, e.g. `50-99`, `100+`)       |
-| `isat_category`                    | `text` (industry field)                                   |
-| `published_at`                     | `timestamp`                                               |
-| `valid_until`                      | `timestamp`                                               |
-| `average_male_salary`              | `decimal(14, 2)`                                          |
-| `average_female_salary`            | `decimal(14, 2)`                                          |
-| `average_neutral_salary`           | `decimal(14, 2)`                                          |
-| `salary_difference_male_female`    | `decimal(14, 2)`                                          |
-| `salary_difference_male_neutral`   | `decimal(14, 2)`                                          |
-| `salary_difference_female_male`    | `decimal(14, 2)`                                          |
-| `salary_difference_female_neutral` | `decimal(14, 2)`                                          |
-| `salary_difference_neutral_male`   | `decimal(14, 2)`                                          |
-| `salary_difference_neutral_female` | `decimal(14, 2)`                                          |
+| Column             | Type                                                      |
+| ------------------ | --------------------------------------------------------- |
+| `id`               | `uuid` PK                                                 |
+| `source_report_id` | `fk → report` (internal trace only, not exposed publicly) |
+| `size_bucket`      | `text` (company size bracket, e.g. `50-99`, `100+`)       |
+| `isat_category`    | `text` (industry field)                                   |
+| `published_at`     | `timestamp`                                               |
+| `valid_until`      | `timestamp`                                               |
 
 Full six permutations precomputed — public consumer does no math. Exact aggregate column set still TBD — minimum/maximum/median and role-level breakdown probably omitted, confirm with stakeholders.
 
@@ -462,58 +472,83 @@ Full six permutations precomputed — public consumer does no math. Exact aggreg
 
 Immutable audit row emitted on state-changing actions. Insert-only. See "Audit timeline" for semantics.
 
-| Column             | Type                                                                       |
-| ------------------ | -------------------------------------------------------------------------- |
-| `id`               | `uuid` PK                                                                  |
-| `report_id`        | `fk → report`                                                              |
-| `event_type`       | `ReportEventTypeEnum`                                                      |
-| `actor_user_id`    | `fk → doe_user` (nullable — null for company admin or cron)                    |
-| `report_status`    | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`) |
-| `from_status`      | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
-| `to_status`        | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                    |
-| `assigned_user_id` | `fk → doe_user` (nullable — set on `ASSIGNED`)                                 |
+| Column              | Type                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `id`                | `uuid` PK                                                                                                       |
+| `report_id`         | `fk → report`                                                                                                   |
+| `event_type`        | `ReportEventTypeEnum`                                                                                           |
+| `actor_user_id`     | `fk → doe_user` (nullable — null for company admin, cron, or system)                                            |
+| `report_status`     | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`)                                      |
+| `from_status`       | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                         |
+| `to_status`         | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                         |
+| `assigned_user_id`  | `fk → doe_user` (nullable — set on `ASSIGNED`)                                                                  |
+| `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                               |
+| `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession) |
+| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)            |
 
 Invariants (enforce via CHECK):
 
 - `event_type = 'STATUS_CHANGED'` ⇒ `from_status IS NOT NULL AND to_status IS NOT NULL AND report_status = to_status`.
 - `event_type = 'ASSIGNED'` ⇒ `assigned_user_id IS NOT NULL`.
+- `event_type = 'SUPERSEDED'` ⇒ `related_report_id IS NOT NULL`.
+- `event_type = 'SUBMITTED'` ⇒ `company_id IS NOT NULL`.
 
 ### `report_comment`
 
 Human-written message on a report. Immutable after insert (no edit). Soft-deletable by author; deleted rows hidden from the rendered thread.
 
-| Column           | Type                                                       |
-| ---------------- | ---------------------------------------------------------- |
-| `id`             | `uuid` PK                                                  |
-| `report_id`      | `fk → report`                                              |
-| `author_kind`    | `CommentAuthorKindEnum`                                    |
+| Column           | Type                                                           |
+| ---------------- | -------------------------------------------------------------- |
+| `id`             | `uuid` PK                                                      |
+| `report_id`      | `fk → report`                                                  |
+| `author_kind`    | `CommentAuthorKindEnum` (`REVIEWER` or `COMPANY`)              |
 | `author_user_id` | `fk → doe_user` (nullable — set when `author_kind = REVIEWER`) |
-| `visibility`     | `CommentVisibilityEnum`                                    |
-| `body`           | `text`                                                     |
-| `report_status`  | `ReportStatusEnum` (snapshot at insert)                    |
-| `deleted_at`     | `timestamp` (nullable — soft delete by author)             |
+| `visibility`     | `CommentVisibilityEnum`                                        |
+| `body`           | `text`                                                         |
+| `report_status`  | `ReportStatusEnum` (snapshot at insert)                        |
+| `deleted_at`     | `timestamp` (nullable — soft delete by author)                 |
 
 Invariants (enforce via CHECK):
 
 - `author_kind = 'REVIEWER'` ⇒ `author_user_id IS NOT NULL`.
-- `author_kind = 'COMPANY_ADMIN'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
+- `author_kind = 'COMPANY'` ⇒ `author_user_id IS NULL AND visibility = 'EXTERNAL'` (company admins cannot post internal comments).
+
+### `config`
+
+Generic key-value configuration table for admin-managed settings that change infrequently (e.g. once a year) but should not require a code deploy to update. New keys are added via migration/seed; admins update values via API.
+
+Updates are **supersede-and-insert**: the old row gets `superseded_at` stamped and a new row is inserted. This preserves a full history of every value a key has held. A partial unique index (`config_active_key_idx`) ensures at most one active (non-superseded) entry per key.
+
+| Column          | Type          | Notes                                          |
+| --------------- | ------------- | ---------------------------------------------- |
+| `id`            | `uuid` PK     |                                                |
+| `key`           | `text`        | NOT NULL — machine-readable config key         |
+| `value`         | `text`        | NOT NULL — stored as text, parsed in app layer |
+| `description`   | `text`        | Nullable — human-readable explanation          |
+| `superseded_at` | `timestamptz` | Nullable — null = current active entry         |
+
+Current entries:
+
+| key                                   | value | description                                                           |
+| ------------------------------------- | ----- | --------------------------------------------------------------------- |
+| `salary_difference_threshold_percent` | `3.9` | Annual gender salary difference threshold (%). Updated each February. |
+
+No FKs, no relationships. Standalone lookup table.
 
 ## Relationships (summary)
 
 - `company` ⟷ `report` via `company_report` (per-submission snapshot, with optional parent company).
 - `report` 1:N `report_criterion` 1:N `report_sub_criterion` 1:N `report_sub_criterion_step`.
 - `report` 1:N `report_employee` N:1 `report_employee_role`.
-- `report_employee` 1:N `report_employee_deviation`.
+- `report_employee` 1:N `report_employee_outlier`.
 - `report_employee_role` ⟷ `report_sub_criterion_step` via `report_employee_role_criterion_step`.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
-- `report` 1:1 `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
+- `report` 1:1 `report_result`; optional future role snapshots are `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
-- `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`).
+- `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`); `company` 1:N `report_event` via `company_id` (nullable, set on `SUBMITTED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
-
-
 
 ## Notes / open questions
 
@@ -521,3 +556,5 @@ Invariants (enforce via CHECK):
 - **Fines cron.** Daily job: `SELECT * FROM report WHERE fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')`. Accrual table (`report_fine` or similar) not yet designed.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
+- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.
+- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row (postponed or filled), and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The `postponed` flag on `report_employee_outlier` lets a company acknowledge an outlier without filling the explanation immediately.

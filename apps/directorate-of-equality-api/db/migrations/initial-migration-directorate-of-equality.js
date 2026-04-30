@@ -52,12 +52,13 @@ module.exports = {
     CREATE TYPE report_event_type_enum AS ENUM (
       'SUBMITTED',
       'ASSIGNED',
-      'STATUS_CHANGED'
+      'STATUS_CHANGED',
+      'SUPERSEDED'
     );
 
     CREATE TYPE comment_visibility_enum AS ENUM ('INTERNAL', 'EXTERNAL');
 
-    CREATE TYPE comment_author_kind_enum AS ENUM ('REVIEWER', 'COMPANY_ADMIN');
+    CREATE TYPE comment_author_kind_enum AS ENUM ('REVIEWER', 'COMPANY');
 
     -- ============================================================
     -- Tables
@@ -111,6 +112,7 @@ module.exports = {
       company_admin_name TEXT DEFAULT NULL,
       company_admin_email TEXT DEFAULT NULL,
       company_admin_gender gender_enum DEFAULT NULL,
+      company_national_id TEXT DEFAULT NULL,
 
       contact_name TEXT DEFAULT NULL,
       contact_email TEXT DEFAULT NULL,
@@ -128,7 +130,6 @@ module.exports = {
       equality_report_id UUID DEFAULT NULL REFERENCES report(id),
       reviewer_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
 
-      denial_reason TEXT DEFAULT NULL,
       approved_at TIMESTAMPTZ DEFAULT NULL,
       valid_until TIMESTAMPTZ DEFAULT NULL,
       correction_deadline TIMESTAMPTZ DEFAULT NULL,
@@ -212,16 +213,26 @@ module.exports = {
       score DECIMAL(6, 2) NOT NULL
     );
 
-    CREATE TABLE report_employee_deviation (
+    CREATE TABLE report_employee_outlier (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
       report_employee_id UUID NOT NULL REFERENCES report_employee(id),
-      reason TEXT NOT NULL,
-      action TEXT NOT NULL,
-      signature_name TEXT NOT NULL,
-      signature_role TEXT NOT NULL
+      postponed BOOLEAN NOT NULL DEFAULT false,
+      reason TEXT DEFAULT NULL,
+      action TEXT DEFAULT NULL,
+      signature_name TEXT DEFAULT NULL,
+      signature_role TEXT DEFAULT NULL,
+
+      CONSTRAINT report_employee_outlier_explanation_chk CHECK (
+        postponed = true OR (
+          reason IS NOT NULL AND reason <> ''
+          AND action IS NOT NULL AND action <> ''
+          AND signature_name IS NOT NULL AND signature_name <> ''
+          AND signature_role IS NOT NULL AND signature_role <> ''
+        )
+      )
     );
 
     CREATE TABLE report_employee_role_criterion_step (
@@ -251,20 +262,10 @@ module.exports = {
 
       report_id UUID NOT NULL UNIQUE REFERENCES report(id),
 
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
-      average_salary DECIMAL(14, 2) NOT NULL,
-      minimum_salary DECIMAL(14, 2) NOT NULL,
-      maximum_salary DECIMAL(14, 2) NOT NULL,
-      median_salary DECIMAL(14, 2) NOT NULL,
-
-      salary_difference_male_female DECIMAL(14, 2) NOT NULL,
-      salary_difference_male_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL
+      salary_difference_threshold_percent DECIMAL(5, 2) DEFAULT NULL,
+      calculation_version TEXT NOT NULL DEFAULT 'v1',
+      base_snapshot JSONB NOT NULL,
+      full_snapshot JSONB NOT NULL
     );
 
     CREATE TABLE report_role_result (
@@ -274,23 +275,9 @@ module.exports = {
 
       report_result_id UUID NOT NULL REFERENCES report_result(id),
       report_employee_role_id UUID NOT NULL REFERENCES report_employee_role(id),
-
-      average_salary DECIMAL(14, 2) NOT NULL,
-      minimum_salary DECIMAL(14, 2) NOT NULL,
-      maximum_salary DECIMAL(14, 2) NOT NULL,
-      median_salary DECIMAL(14, 2) NOT NULL,
-
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
-
-      minimum_male_salary DECIMAL(14, 2) NOT NULL,
-      minimum_female_salary DECIMAL(14, 2) NOT NULL,
-      minimum_neutral_salary DECIMAL(14, 2) NOT NULL,
-
-      maximum_male_salary DECIMAL(14, 2) NOT NULL,
-      maximum_female_salary DECIMAL(14, 2) NOT NULL,
-      maximum_neutral_salary DECIMAL(14, 2) NOT NULL
+      role_title TEXT NOT NULL,
+      base_snapshot JSONB NOT NULL,
+      full_snapshot JSONB NOT NULL
     );
 
     CREATE TABLE public_report (
@@ -301,18 +288,18 @@ module.exports = {
       size_bucket TEXT NOT NULL,
       isat_category TEXT NOT NULL,
       published_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      valid_until TIMESTAMPTZ NOT NULL,
+      valid_until TIMESTAMPTZ NOT NULL
+    );
 
-      average_male_salary DECIMAL(14, 2) NOT NULL,
-      average_female_salary DECIMAL(14, 2) NOT NULL,
-      average_neutral_salary DECIMAL(14, 2) NOT NULL,
+    CREATE TABLE config (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
-      salary_difference_male_female DECIMAL(14, 2) NOT NULL,
-      salary_difference_male_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_female_neutral DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_male DECIMAL(14, 2) NOT NULL,
-      salary_difference_neutral_female DECIMAL(14, 2) NOT NULL
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      description TEXT DEFAULT NULL,
+      superseded_at TIMESTAMPTZ DEFAULT NULL
     );
 
     CREATE TABLE report_event (
@@ -326,6 +313,9 @@ module.exports = {
       from_status report_status_enum DEFAULT NULL,
       to_status report_status_enum DEFAULT NULL,
       assigned_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
+      reason TEXT DEFAULT NULL,
+      related_report_id UUID DEFAULT NULL REFERENCES report(id),
+      company_id UUID DEFAULT NULL REFERENCES company(id),
 
       CONSTRAINT report_event_status_changed_chk CHECK (
         event_type <> 'STATUS_CHANGED' OR (
@@ -336,6 +326,12 @@ module.exports = {
       ),
       CONSTRAINT report_event_assigned_chk CHECK (
         event_type <> 'ASSIGNED' OR assigned_user_id IS NOT NULL
+      ),
+      CONSTRAINT report_event_superseded_chk CHECK (
+        event_type <> 'SUPERSEDED' OR related_report_id IS NOT NULL
+      ),
+      CONSTRAINT report_event_submitted_company_chk CHECK (
+        event_type <> 'SUBMITTED' OR company_id IS NOT NULL
       )
     );
 
@@ -356,7 +352,7 @@ module.exports = {
         author_kind <> 'REVIEWER' OR author_user_id IS NOT NULL
       ),
       CONSTRAINT report_comment_company_admin_chk CHECK (
-        author_kind <> 'COMPANY_ADMIN' OR (
+        author_kind <> 'COMPANY' OR (
           author_user_id IS NULL AND visibility = 'EXTERNAL'
         )
       )
@@ -388,8 +384,8 @@ module.exports = {
       ON report_employee (report_id);
     CREATE INDEX report_employee_role_id_idx
       ON report_employee (report_employee_role_id);
-    CREATE INDEX report_employee_deviation_report_employee_id_idx
-      ON report_employee_deviation (report_employee_id);
+    CREATE INDEX report_employee_outlier_report_employee_id_idx
+      ON report_employee_outlier (report_employee_id);
 
     CREATE INDEX report_employee_role_criterion_step_step_idx
       ON report_employee_role_criterion_step (report_sub_criterion_step_id);
@@ -400,9 +396,16 @@ module.exports = {
       ON report_role_result (report_result_id);
     CREATE INDEX report_role_result_report_employee_role_id_idx
       ON report_role_result (report_employee_role_id);
+    CREATE UNIQUE INDEX report_role_result_report_result_role_uidx
+      ON report_role_result (report_result_id, report_employee_role_id);
 
     CREATE INDEX public_report_source_report_id_idx
       ON public_report (source_report_id);
+
+    -- Only one active (non-superseded) entry per key at any time
+    CREATE UNIQUE INDEX config_active_key_idx
+      ON config (key)
+      WHERE superseded_at IS NULL;
 
     CREATE INDEX report_event_report_id_idx
       ON report_event (report_id);
@@ -410,6 +413,10 @@ module.exports = {
       ON report_event (actor_user_id);
     CREATE INDEX report_event_assigned_user_id_idx
       ON report_event (assigned_user_id);
+    CREATE INDEX report_event_related_report_id_idx
+      ON report_event (related_report_id);
+    CREATE INDEX report_event_company_id_idx
+      ON report_event (company_id);
 
     CREATE INDEX report_comment_report_id_idx
       ON report_comment (report_id);
@@ -476,12 +483,13 @@ module.exports = {
 
     DROP TABLE IF EXISTS report_comment;
     DROP TABLE IF EXISTS report_event;
+    DROP TABLE IF EXISTS config;
     DROP TABLE IF EXISTS public_report;
     DROP TABLE IF EXISTS report_role_result;
     DROP TABLE IF EXISTS report_result;
     DROP TABLE IF EXISTS report_employee_personal_criterion_step;
     DROP TABLE IF EXISTS report_employee_role_criterion_step;
-    DROP TABLE IF EXISTS report_employee_deviation;
+    DROP TABLE IF EXISTS report_employee_outlier;
     DROP TABLE IF EXISTS report_employee;
     DROP TABLE IF EXISTS report_sub_criterion_step;
     DROP TABLE IF EXISTS report_sub_criterion;

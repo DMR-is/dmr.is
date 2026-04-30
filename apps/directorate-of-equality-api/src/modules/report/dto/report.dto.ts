@@ -41,6 +41,9 @@ export class ReportDto {
   contactName!: string | null
 
   @ApiOptionalString({ nullable: true })
+  companyNationalId!: string | null
+
+  @ApiOptionalString({ nullable: true })
   contactEmail!: string | null
 
   @ApiOptionalString({ nullable: true })
@@ -75,9 +78,6 @@ export class ReportDto {
 
   @ApiOptionalUuid({ nullable: true })
   reviewerUserId!: string | null
-
-  @ApiOptionalString({ nullable: true })
-  denialReason!: string | null
 
   @ApiOptionalDateTime({ nullable: true })
   approvedAt!: Date | null

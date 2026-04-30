@@ -35,6 +35,7 @@ erDiagram
         uuid id PK
         ReportTypeEnum type
         ReportStatusEnum status
+        text contact_national_id
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"
         timestamp approved_at
@@ -72,7 +73,7 @@ erDiagram
         uuid id PK
         text title
     }
-    report_employee_deviation {
+    report_employee_outlier {
         uuid id PK
         uuid report_employee_id FK
         text reason
@@ -93,11 +94,18 @@ erDiagram
     report_result {
         uuid id PK
         uuid report_id FK
+        decimal salary_difference_threshold_percent
+        text calculation_version
+        jsonb base_snapshot
+        jsonb full_snapshot
     }
     report_role_result {
         uuid id PK
         uuid report_result_id FK
         uuid report_employee_role_id FK
+        text role_title "snapshot"
+        jsonb base_snapshot
+        jsonb full_snapshot
     }
     public_report {
         uuid id PK
@@ -115,6 +123,9 @@ erDiagram
         ReportStatusEnum report_status "snapshot"
         ReportStatusEnum from_status "nullable, on STATUS_CHANGED"
         ReportStatusEnum to_status "nullable, on STATUS_CHANGED"
+        text reason "nullable, on STATUS_CHANGED→DENIED"
+        uuid related_report_id FK "nullable, on SUPERSEDED"
+        uuid company_id FK "nullable, on SUBMITTED"
     }
     report_comment {
         uuid id PK
@@ -141,7 +152,7 @@ erDiagram
 
     report ||--o{ report_employee : "report_id"
     report_employee_role ||--o{ report_employee : "report_employee_role_id"
-    report_employee ||--o{ report_employee_deviation : "report_employee_id"
+    report_employee ||--o{ report_employee_outlier : "report_employee_id"
 
     report_employee_role ||--o{ report_employee_role_criterion_step : "report_employee_role_id"
     report_sub_criterion_step ||--o{ report_employee_role_criterion_step : "report_sub_criterion_step_id"
@@ -158,6 +169,8 @@ erDiagram
     report ||--o{ report_event : "report_id"
     doe_user |o--o{ report_event : "actor_user_id"
     doe_user |o--o{ report_event : "assigned_user_id"
+    report |o--o{ report_event : "related_report_id"
+    company |o--o{ report_event : "company_id"
 
     report ||--o{ report_comment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"

@@ -54,3 +54,36 @@ export async function set<T>(
 
   return true;
 }
+
+export async function del(
+  client: FastifyRedis | null,
+  pattern: string,
+): Promise<number> {
+  if (!client || !pattern) {
+    return 0;
+  }
+
+  let deleted = 0;
+  let cursor = '0';
+
+  try {
+    do {
+      const [next, keys] = await client.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
+      cursor = next;
+      if (keys.length > 0) {
+        deleted += await client.del(...keys);
+      }
+    } while (cursor !== '0');
+  } catch (e) {
+    console.warn(`cache, unable to delete pattern ${pattern}`, e);
+    return deleted;
+  }
+
+  return deleted;
+}

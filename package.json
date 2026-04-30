@@ -81,6 +81,7 @@
   },
   "devDependencies": {
     "@formatjs/cli": "^6.2.9",
+    "@hey-api/openapi-ts": "0.97.0",
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.4.18",
     "@nx-tools/container-metadata": "^6.8.0",
