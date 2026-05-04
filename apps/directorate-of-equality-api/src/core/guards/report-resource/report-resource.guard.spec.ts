@@ -25,82 +25,56 @@ const createExecutionContext = (request: Record<string, unknown>) =>
   }) as never
 
 describe('ReportResourceGuard', () => {
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }
-
-  const reportModel = {
-    findByPkOrThrow: jest.fn(),
-  }
-
-  const userModel = {
-    findOne: jest.fn(),
+  const authorizationService = {
+    resolveReportResourceContext: jest.fn(),
   }
 
   let guard: ReportResourceGuard
 
   beforeEach(() => {
     jest.clearAllMocks()
-    guard = new ReportResourceGuard(
-      logger as never,
-      reportModel as never,
-      userModel as never,
-    )
+    guard = new ReportResourceGuard(authorizationService as never)
   })
 
   it('attaches reviewer resource context to the request', async () => {
+    const context = {
+      reportId: 'report-1',
+      reportStatus: ReportStatusEnum.IN_REVIEW,
+      actor: { kind: ReportRoleEnum.REVIEWER, userId: 'reviewer-1' },
+    }
     const request: Record<string, unknown> = {
       params: { reportId: 'report-1' },
       user: createUser('1201743399'),
     }
 
-    reportModel.findByPkOrThrow.mockResolvedValue({
-      id: 'report-1',
-      status: ReportStatusEnum.IN_REVIEW,
-      companyNationalId: '9999999999',
-    })
-    userModel.findOne.mockResolvedValue({ id: 'reviewer-1' })
+    authorizationService.resolveReportResourceContext.mockResolvedValue(context)
 
     const allowed = await guard.canActivate(createExecutionContext(request))
 
     expect(allowed).toBe(true)
-    expect(request.reportResourceContext).toEqual({
-      reportId: 'report-1',
-      reportStatus: ReportStatusEnum.IN_REVIEW,
-      actor: {
-        kind: ReportRoleEnum.REVIEWER,
-        userId: 'reviewer-1',
-      },
-    })
+    expect(request.reportResourceContext).toBe(context)
+    expect(
+      authorizationService.resolveReportResourceContext,
+    ).toHaveBeenCalledWith('report-1', '1201743399')
   })
 
   it('attaches contact resource context when the report contact matches', async () => {
+    const context = {
+      reportId: 'report-1',
+      reportStatus: ReportStatusEnum.SUBMITTED,
+      actor: { kind: ReportRoleEnum.COMPANY, nationalId: '5500000000' },
+    }
     const request: Record<string, unknown> = {
       params: { reportId: 'report-1' },
       user: createUser('5500000000'),
     }
 
-    reportModel.findByPkOrThrow.mockResolvedValue({
-      id: 'report-1',
-      status: ReportStatusEnum.SUBMITTED,
-      companyNationalId: '5500000000',
-    })
-    userModel.findOne.mockResolvedValue(null)
+    authorizationService.resolveReportResourceContext.mockResolvedValue(context)
 
     const allowed = await guard.canActivate(createExecutionContext(request))
 
     expect(allowed).toBe(true)
-    expect(request.reportResourceContext).toEqual({
-      reportId: 'report-1',
-      reportStatus: ReportStatusEnum.SUBMITTED,
-      actor: {
-        kind: ReportRoleEnum.COMPANY,
-        nationalId: '5500000000',
-      },
-    })
+    expect(request.reportResourceContext).toBe(context)
   })
 
   it('rejects users without report access', async () => {
@@ -109,12 +83,9 @@ describe('ReportResourceGuard', () => {
       user: createUser('1201743399'),
     }
 
-    reportModel.findByPkOrThrow.mockResolvedValue({
-      id: 'report-1',
-      status: ReportStatusEnum.SUBMITTED,
-      companyNationalId: '5500000000',
-    })
-    userModel.findOne.mockResolvedValue(null)
+    authorizationService.resolveReportResourceContext.mockRejectedValue(
+      new ForbiddenException('Current user is not allowed to access this report'),
+    )
 
     await expect(
       guard.canActivate(createExecutionContext(request)),

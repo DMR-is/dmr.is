@@ -1,16 +1,12 @@
 import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { UserModel } from '../user/models/user.model'
+import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ReportStatisticsController } from './report-statistics.controller'
 import { ReportStatisticsCoreModule } from './report-statistics.core.module'
 
 @Module({
-  imports: [
-    ReportStatisticsCoreModule,
-    SequelizeModule.forFeature([UserModel]),
-  ],
+  imports: [ReportStatisticsCoreModule, AuthorizationCoreModule],
   controllers: [ReportStatisticsController],
   providers: [AdminGuard],
 })

@@ -22,22 +22,15 @@ const createExecutionContext = (request: Record<string, unknown>) =>
   }) as never
 
 describe('AdminGuard', () => {
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  }
-
-  const userModel = {
-    findOne: jest.fn(),
+  const authorizationService = {
+    resolveAdminUser: jest.fn(),
   }
 
   let guard: AdminGuard
 
   beforeEach(() => {
     jest.clearAllMocks()
-    guard = new AdminGuard(logger as never, userModel as never)
+    guard = new AdminGuard(authorizationService as never)
   })
 
   it('allows an active reviewer and attaches adminUser to the request', async () => {
@@ -46,15 +39,15 @@ describe('AdminGuard', () => {
       user: createUser('1201743399'),
     }
 
-    userModel.findOne.mockResolvedValue(reviewer)
+    authorizationService.resolveAdminUser.mockResolvedValue(reviewer)
 
     const allowed = await guard.canActivate(createExecutionContext(request))
 
     expect(allowed).toBe(true)
     expect(request.adminUser).toBe(reviewer)
-    expect(userModel.findOne).toHaveBeenCalledWith({
-      where: { nationalId: '1201743399', isActive: true },
-    })
+    expect(authorizationService.resolveAdminUser).toHaveBeenCalledWith(
+      '1201743399',
+    )
   })
 
   it('throws ForbiddenException when user is not in doe_user', async () => {
@@ -62,7 +55,9 @@ describe('AdminGuard', () => {
       user: createUser('9999999999'),
     }
 
-    userModel.findOne.mockResolvedValue(null)
+    authorizationService.resolveAdminUser.mockRejectedValue(
+      new ForbiddenException('Access restricted to DoE reviewers'),
+    )
 
     await expect(
       guard.canActivate(createExecutionContext(request)),
@@ -76,7 +71,9 @@ describe('AdminGuard', () => {
       user: createUser('1201743399'),
     }
 
-    userModel.findOne.mockResolvedValue(null)
+    authorizationService.resolveAdminUser.mockRejectedValue(
+      new ForbiddenException('Access restricted to DoE reviewers'),
+    )
 
     await expect(
       guard.canActivate(createExecutionContext(request)),
