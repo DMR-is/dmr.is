@@ -22,7 +22,6 @@ import {
   ApiBody,
   ApiConsumes,
   ApiParam,
-  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger'
 
@@ -73,10 +72,10 @@ export class ApplicationController {
   }
 
   @Get('reports/excel/template')
-  @ApiProduces(XLSX_MIME)
   @DoeResponse({
     operationId: 'getApplicationBlankExcelTemplate',
     successDescription: 'Blank salary report template',
+    produces: XLSX_MIME,
   })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()
@@ -156,20 +155,20 @@ export class ApplicationController {
 
   @Get('reports/equality/template')
   @Header('Content-Type', 'text/html; charset=utf-8')
-  @ApiProduces('text/html')
   @DoeResponse({
     operationId: 'getApplicationEqualityReportTemplateHtml',
     successDescription: 'HTML version of the equality report template',
+    produces: 'text/html',
   })
   getEqualityTemplateHtml(): string {
     return this.applicationService.getEqualityTemplateHtml()
   }
 
   @Get('reports/equality/template/docx')
-  @ApiProduces(DOCX_MIME)
   @DoeResponse({
     operationId: 'getApplicationEqualityReportTemplateDocx',
     successDescription: 'Word (.docx) version of the equality report template',
+    produces: DOCX_MIME,
   })
   getEqualityTemplateDocx(): StreamableFile {
     const buf = this.applicationService.getEqualityTemplateDocx()
