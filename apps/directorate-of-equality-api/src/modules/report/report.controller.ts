@@ -39,7 +39,7 @@ export class ReportController {
   @DoeResponse({
     operationId: 'getReportById',
     type: ReportDetailDto,
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
   })
   async getById(
     @Param('id', ParseUUIDPipe) id: string,

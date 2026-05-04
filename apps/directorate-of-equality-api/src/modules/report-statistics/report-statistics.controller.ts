@@ -26,7 +26,7 @@ export class ReportStatisticsController {
   @Get('base-salary-by-gender-and-score-all')
   @DoeResponse({
     operationId: 'getBaseSalaryByGenderAndScoreAll',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). ' +
       'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
@@ -43,7 +43,7 @@ export class ReportStatisticsController {
   @Get('base-salary-by-gender-and-score-work')
   @DoeResponse({
     operationId: 'getBaseSalaryByGenderAndScoreWork',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Adjusted base salary (baseSalary / workRatio) by gender and work score (mandatory criteria only, excludes PERSONAL). ' +
       'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
@@ -60,7 +60,7 @@ export class ReportStatisticsController {
   @Get('full-salary-by-gender-and-score-all')
   @DoeResponse({
     operationId: 'getFullSalaryByGenderAndScoreAll',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio) by gender and total score (all criteria). ' +
       'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
@@ -77,7 +77,7 @@ export class ReportStatisticsController {
   @Get('base-salary-gender-wage-gap')
   @DoeResponse({
     operationId: 'getBaseSalaryGenderWageGap',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Gender wage gap for adjusted base salary (baseSalary / workRatio). ' +
       'Returns average and median salaries per gender with both average-based and median-based wage gap percentages.',
@@ -92,7 +92,7 @@ export class ReportStatisticsController {
   @Get('full-salary-gender-wage-gap')
   @DoeResponse({
     operationId: 'getFullSalaryGenderWageGap',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Gender wage gap for adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio). ' +
       'Returns average and median salaries per gender with both average-based and median-based wage gap percentages.',
@@ -107,7 +107,7 @@ export class ReportStatisticsController {
   @Get('benefits-breakdown')
   @DoeResponse({
     operationId: 'getBenefitsBreakdown',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Average bonus salary (viðbótarlaun) and additional salary (aukagreiðslur) by gender. ' +
       'Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.',

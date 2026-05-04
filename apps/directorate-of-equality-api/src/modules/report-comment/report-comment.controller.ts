@@ -39,7 +39,7 @@ export class ReportCommentController {
   @DoeResponse({
     operationId: 'getReportComments',
     type: [ReportCommentDto],
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
   })
   async getByReportId(
     @CurrentReportResourceContext() context: ReportResourceContext,
@@ -52,7 +52,7 @@ export class ReportCommentController {
     operationId: 'createReportComment',
     status: 201,
     type: ReportCommentDto,
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
   })
   async create(
     @CurrentReportResourceContext() context: ReportResourceContext,
@@ -64,7 +64,7 @@ export class ReportCommentController {
   @Delete(':commentId')
   @HttpCode(204)
   @ApiParam({ name: 'commentId', type: String })
-  @DoeResponse({ operationId: 'deleteReportComment', errors: [400, 401, 403, 404, 500] })
+  @DoeResponse({ operationId: 'deleteReportComment', include404: true })
   async delete(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Param('commentId') commentId: string,

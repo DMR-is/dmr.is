@@ -127,7 +127,7 @@ export class ApplicationController {
   @Get('reports/equality/active')
   @DoeResponse({
     operationId: 'getApplicationActiveEqualityReport',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report.",
     type: EqualityReportSummaryDto,
@@ -170,7 +170,7 @@ export class ApplicationController {
   @ApiParam({ name: 'reportId', type: String })
   @DoeResponse({
     operationId: 'getApplicationReport',
-    errors: [400, 401, 403, 404, 500],
+    include404: true,
     description:
       'Returns company-facing report detail with external comments only.',
     type: ApplicationReportDetailDto,

@@ -17,6 +17,7 @@ type DoeResponseParams = {
   type?: any
   successDescription?: string
   errors?: number[]
+  include404?: boolean
 }
 
 export function DoeResponse({
@@ -26,15 +27,18 @@ export function DoeResponse({
   description,
   successDescription,
   errors = DEFAULT_ERRORS,
+  include404 = false,
 }: DoeResponseParams) {
   const successDecorator =
     type || successDescription
       ? ApiResponse({ status, type, description: successDescription })
       : ApiNoContentResponse()
 
+  const effectiveErrors = include404 ? [...errors, 404] : errors
+
   return applyDecorators(
     ApiOperation({ operationId, description }),
     successDecorator,
-    ...errors.map((code) => ApiResponse({ status: code, type: ApiErrorDto })),
+    ...effectiveErrors.map((code) => ApiResponse({ status: code, type: ApiErrorDto })),
   )
 }

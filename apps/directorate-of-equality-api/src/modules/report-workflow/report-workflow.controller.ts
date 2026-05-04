@@ -33,7 +33,7 @@ export class ReportWorkflowController {
 
   @Post('assign')
   @HttpCode(204)
-  @DoeResponse({ operationId: 'assignReport', errors: [400, 401, 403, 404, 500] })
+  @DoeResponse({ operationId: 'assignReport', include404: true })
   async assign(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -42,7 +42,7 @@ export class ReportWorkflowController {
 
   @Post('deny')
   @HttpCode(204)
-  @DoeResponse({ operationId: 'denyReport', errors: [400, 401, 403, 404, 500] })
+  @DoeResponse({ operationId: 'denyReport', include404: true })
   async deny(
     @CurrentReportResourceContext() context: ReportResourceContext,
     @Body() dto: DenyReportDto,
@@ -52,7 +52,7 @@ export class ReportWorkflowController {
 
   @Post('approve')
   @HttpCode(204)
-  @DoeResponse({ operationId: 'approveReport', errors: [400, 401, 403, 404, 500] })
+  @DoeResponse({ operationId: 'approveReport', include404: true })
   async approve(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
@@ -61,7 +61,7 @@ export class ReportWorkflowController {
 
   @Post('start-fines')
   @HttpCode(204)
-  @DoeResponse({ operationId: 'startReportFines', errors: [400, 401, 403, 404, 500] })
+  @DoeResponse({ operationId: 'startReportFines', include404: true })
   async startFines(
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
