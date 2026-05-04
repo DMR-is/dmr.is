@@ -90,9 +90,14 @@ const PAGE_SIZE = 10
 export type TabContentProps = {
   initialData: Case[]
   extraColumns?: ColumnDef<Case>[]
+  expandable?: boolean
 }
 
-export const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
+export const TabContent = ({
+  initialData,
+  extraColumns,
+  expandable,
+}: TabContentProps) => {
   const columns = extraColumns ? [...COLUMNS, ...extraColumns] : COLUMNS
   const showStatusFilter = extraColumns?.includes(COLUMN_STATUS) ?? false
   const showEmployeesFilter = extraColumns?.includes(COLUMN_EMPLOYEES) ?? false
@@ -171,7 +176,9 @@ export const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
             <Table
               columns={columns}
               data={pageData}
-              getRowExpanded={(row) => <ExpandedRow row={row} />}
+              getRowExpanded={
+                expandable ? (row) => <ExpandedRow row={row} /> : undefined
+              }
               paging={{
                 page,
                 pageSize: PAGE_SIZE,

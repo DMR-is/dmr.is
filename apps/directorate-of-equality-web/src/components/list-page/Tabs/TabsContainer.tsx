@@ -2,7 +2,8 @@
 
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
-import { Tag, type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
+import { type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
+import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import { MOCK_DATA } from '../../../app/(protected)/mal/mocks'
 import { type Case, COLUMN_EMPLOYEES, COLUMN_STATUS } from '../constants'
@@ -25,9 +26,9 @@ const statusColumn: ColumnDef<Case> = {
     const status = getValue<string>()
     if (!status) return null
     return (
-      <Tag variant={STATUS_VARIANT[status] ?? 'blue'} disabled outlined>
-        {status}
-      </Tag>
+      <TableCell
+        items={{ type: 'tag', variant: STATUS_VARIANT[status] ?? 'blue', children: status }}
+      />
     )
   },
 }
@@ -47,7 +48,7 @@ export const TabsContainer = () => {
           {
             id: 'innsendingar',
             label: `Innsendingar (${MOCK_DATA.length})`,
-            content: <TabContent initialData={MOCK_DATA} />,
+            content: <TabContent initialData={MOCK_DATA} expandable />,
           },
           {
             id: 'i-vinnslu',

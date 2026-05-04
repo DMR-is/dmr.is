@@ -53,7 +53,7 @@ const renderItem = (item: TableCellItem, i: number) => {
       )
     case 'tag':
       return (
-        <Tag key={i} variant={item.variant}>
+        <Tag key={i} variant={item.variant} outlined disabled>
           {item.children}
         </Tag>
       )
