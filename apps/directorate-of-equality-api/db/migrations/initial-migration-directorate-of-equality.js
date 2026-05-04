@@ -122,6 +122,7 @@ module.exports = {
       provider_id TEXT DEFAULT NULL,
       imported_from_excel BOOLEAN NOT NULL DEFAULT FALSE,
       identifier TEXT DEFAULT NULL,
+      outliers_postponed BOOLEAN NOT NULL DEFAULT FALSE,
 
       equality_report_id UUID DEFAULT NULL REFERENCES report(id),
       reviewer_user_id UUID DEFAULT NULL REFERENCES doe_user(id),
@@ -215,14 +216,22 @@ module.exports = {
       updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
       report_employee_id UUID NOT NULL REFERENCES report_employee(id),
-      postponed BOOLEAN NOT NULL DEFAULT false,
       reason TEXT DEFAULT NULL,
       action TEXT DEFAULT NULL,
       signature_name TEXT DEFAULT NULL,
       signature_role TEXT DEFAULT NULL,
 
+      -- Postponement is an all-or-none property of the parent report
+      -- (report.outliers_postponed). Per-row guard: an outlier is either
+      -- fully explained (all four fields non-empty) or fully empty (all
+      -- four NULL — written this way when the parent report is postponed).
       CONSTRAINT report_employee_outlier_explanation_chk CHECK (
-        postponed = true OR (
+        (
+          reason IS NULL
+          AND action IS NULL
+          AND signature_name IS NULL
+          AND signature_role IS NULL
+        ) OR (
           reason IS NOT NULL AND reason <> ''
           AND action IS NOT NULL AND action <> ''
           AND signature_name IS NOT NULL AND signature_name <> ''

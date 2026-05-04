@@ -253,6 +253,8 @@ export class ApplicationService implements IApplicationService {
         report.type === ReportTypeEnum.EQUALITY
           ? report.equalityReportContent
           : null,
+      outliersPostponed:
+        report.type === ReportTypeEnum.SALARY ? report.outliersPostponed : null,
       outliers: salaryData.outliers,
       result: salaryData.result,
       externalComments,
@@ -283,6 +285,7 @@ export class ApplicationService implements IApplicationService {
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
       parsed: input.parsed,
       companies,
+      outliersPostponed: input.outliersPostponed,
       outliers: input.outliers,
     }
   }

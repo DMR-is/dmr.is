@@ -103,6 +103,7 @@ export class ReportCreateService implements IReportCreateService {
 
     await this.assertEqualityReportApproved(input.equalityReportId)
     const submittingCompany = this.getSubmittingCompany(input.companies)
+    const outliersPostponed = input.outliersPostponed ?? false
 
     // 1. report row — status SUBMITTED so it lands in the reviewer queue.
     const report = await this.reportModel.create({
@@ -111,6 +112,7 @@ export class ReportCreateService implements IReportCreateService {
       equalityReportId: input.equalityReportId,
       identifier: input.identifier,
       importedFromExcel: input.importedFromExcel,
+      outliersPostponed,
       providerType: input.providerType,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
@@ -227,7 +229,9 @@ export class ReportCreateService implements IReportCreateService {
     }
 
     // 8. Salary outliers — only employees the company flagged
-    //    via the outlier-preview flow get a row here.
+    //    via the outlier-preview flow get a row here. When the report is
+    //    postponed, every row's explanation columns are written as NULL
+    //    (the all-or-none invariant lives on report.outliersPostponed).
     if (input.outliers && input.outliers.length > 0) {
       const employeeOrdinalToId = new Map<number, string>()
       input.parsed.employees.forEach((employee, index) => {
@@ -240,11 +244,14 @@ export class ReportCreateService implements IReportCreateService {
           reportEmployeeId: employeeOrdinalToId.get(
             outlier.employeeOrdinal,
           ) as string,
-          postponed: outlier.postponed ?? false,
-          reason: outlier.reason ?? null,
-          action: outlier.action ?? null,
-          signatureName: outlier.signatureName ?? null,
-          signatureRole: outlier.signatureRole ?? null,
+          reason: outliersPostponed ? null : (outlier.reason ?? null),
+          action: outliersPostponed ? null : (outlier.action ?? null),
+          signatureName: outliersPostponed
+            ? null
+            : (outlier.signatureName ?? null),
+          signatureRole: outliersPostponed
+            ? null
+            : (outlier.signatureRole ?? null),
         })),
       )
     }
@@ -396,11 +403,12 @@ export class ReportCreateService implements IReportCreateService {
    * `detectOutliers` (same helper the application-side preview uses) and
    * asserts:
    *
-   * - Every detected outlier has an `outliers[]` row (postponed or filled).
-   *   Missing rows reject — postponement is acknowledgement-with-deferred-
-   *   explanation, not skip-the-row.
+   * - Every detected outlier has an `outliers[]` row. Missing rows reject —
+   *   postponement is acknowledgement-with-deferred-explanation, not skip-
+   *   the-row.
    * - Every `outliers[]` row references a detected outlier. Extras reject.
-   * - Each non-postponed row has all four explanation columns filled.
+   * - When `outliersPostponed` is false, every row has all four explanation
+   *   columns filled. When true, explanation fields are ignored.
    *
    * Threshold is re-read from `config` here, so a tiny drift between preview
    * and submit is possible — rejection in that case just means "re-run
@@ -411,6 +419,7 @@ export class ReportCreateService implements IReportCreateService {
     employeeScores: number[],
   ) {
     const submittedOutliers = input.outliers ?? []
+    const outliersPostponed = input.outliersPostponed ?? false
     const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
 
     const detected = detectOutliers({
@@ -443,15 +452,15 @@ export class ReportCreateService implements IReportCreateService {
     )
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Detected outlier(s) missing acknowledgement (filled or postponed) for employee ordinal(s): ${missing.join(', ')}`,
+        `Detected outlier(s) missing acknowledgement for employee ordinal(s): ${missing.join(', ')}`,
       )
     }
 
+    if (outliersPostponed) {
+      return
+    }
+
     for (const outlier of submittedOutliers) {
-      const isPostponed = outlier.postponed ?? false
-      if (isPostponed) {
-        continue
-      }
       const missingFields = [
         ['reason', outlier.reason],
         ['action', outlier.action],
@@ -461,7 +470,7 @@ export class ReportCreateService implements IReportCreateService {
 
       if (missingFields.length > 0) {
         throw new BadRequestException(
-          `Non-postponed outlier for employee ordinal ${outlier.employeeOrdinal} is missing required field(s): ${missingFields.map(([name]) => name).join(', ')}`,
+          `Outlier for employee ordinal ${outlier.employeeOrdinal} is missing required field(s): ${missingFields.map(([name]) => name).join(', ')}`,
         )
       }
     }

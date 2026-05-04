@@ -242,6 +242,7 @@ describe('ApplicationService', () => {
         averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
         parsed: input.parsed,
         companies: [makeCompanySnapshot()],
+        outliersPostponed: undefined,
         outliers: undefined,
       })
       expect(result).toEqual({ reportId: 'report-1' })
@@ -474,6 +475,7 @@ describe('ApplicationService', () => {
         identifier: 'SAL-2026-001',
         equalityReportId: EQUALITY_REPORT_ID,
         createdAt: submittedAt,
+        outliersPostponed: false,
       })
       const equalityReport = makeReportRow({
         id: EQUALITY_REPORT_ID,
@@ -516,6 +518,7 @@ describe('ApplicationService', () => {
         identifier: 'SAL-2026-001',
         submittedAt,
         equalityReportContent: null,
+        outliersPostponed: false,
         result: reportResult,
         externalComments: [externalComment],
         denialReason: null,
@@ -531,7 +534,6 @@ describe('ApplicationService', () => {
         {
           id: outlier.id,
           reportEmployeeId: outlier.reportEmployeeId,
-          postponed: outlier.postponed,
           reason: outlier.reason,
           action: outlier.action,
           signatureName: outlier.signatureName,
@@ -570,6 +572,7 @@ describe('ApplicationService', () => {
       expect(result.equalityReport).toBeNull()
       expect(result.equalityReportContent).toBe('Equality plan narrative')
       expect(result.outliers).toEqual([])
+      expect(result.outliersPostponed).toBeNull()
       expect(result.result).toBeNull()
       expect(getResultByReportId).not.toHaveBeenCalled()
       expect(outlierFindAll).not.toHaveBeenCalled()
@@ -843,7 +846,6 @@ function makeOutlierRow(
   return {
     id: 'outlier-1',
     reportEmployeeId: 'employee-1',
-    postponed: false,
     reason: 'Reason',
     action: 'Action',
     signatureName: 'Anna Admin',

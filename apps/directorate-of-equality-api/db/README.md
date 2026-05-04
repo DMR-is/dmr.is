@@ -300,6 +300,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `provider_id`                    | `text` (nullable)                                                                                                              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
 | `identifier`                     | `text`                                                                                                                         |
+| `outliers_postponed`             | `boolean` (default `false` — when true, the company has deferred every outlier explanation on this report)                     |
 | `status`                         | `ReportStatusEnum`                                                                                                             |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
@@ -368,26 +369,25 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report_employee_outlier`
 
-One row per outlier the company has acknowledged at submission. Two shapes share the table:
+One row per outlier the company has acknowledged at submission. Two shapes share the table, governed by the parent report's `outliers_postponed`:
 
-- **Filled** (`postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
-- **Postponed** (`postponed = true`) — company acknowledges the outlier but defers the explanation. Explanation columns may be null. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
+- **Filled** (parent `outliers_postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
+- **Postponed** (parent `outliers_postponed = true`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
 
-The submit-side outlier guard requires every detected outlier to have a row here (postponed or filled); extras (rows for non-outliers) are rejected. The CHECK constraint enforces "postponed = true OR all explanation columns non-empty" so the DB can't hold half-postponed rows.
+Postponement is all-or-none across the report — the API layer enforces uniformity before persisting. The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected.
 
-| Column               | Type                                                  |
-| -------------------- | ----------------------------------------------------- |
-| `id`                 | `uuid` PK                                             |
-| `report_employee_id` | `fk → report_employee`                                |
-| `postponed`          | `boolean` (default `false`)                           |
-| `reason`             | `text` (nullable — required when `postponed = false`) |
-| `action`             | `text` (nullable — required when `postponed = false`) |
-| `signature_name`     | `text` (nullable — required when `postponed = false`) |
-| `signature_role`     | `text` (nullable — required when `postponed = false`) |
+| Column               | Type                                                                   |
+| -------------------- | ---------------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                              |
+| `report_employee_id` | `fk → report_employee`                                                 |
+| `reason`             | `text` (nullable — null only when parent `outliers_postponed = true`)  |
+| `action`             | `text` (nullable — null only when parent `outliers_postponed = true`)  |
+| `signature_name`     | `text` (nullable — null only when parent `outliers_postponed = true`)  |
+| `signature_role`     | `text` (nullable — null only when parent `outliers_postponed = true`)  |
 
 Invariant (enforced via CHECK):
 
-- `postponed = true OR (reason, action, signature_name, signature_role all non-null and non-empty)`.
+- A row's explanation columns are either ALL non-null and non-empty, or ALL NULL — no half-filled rows.
 
 ### `report_employee_role_criterion_step`
 
@@ -553,4 +553,4 @@ No FKs, no relationships. Standalone lookup table.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
 - **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.
-- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row (postponed or filled), and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The `postponed` flag on `report_employee_outlier` lets a company acknowledge an outlier without filling the explanation immediately.
+- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row, and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The report-level `outliers_postponed` flag lets a company acknowledge every outlier without filling explanations immediately; postponement applies to the whole report, never to individual rows.
