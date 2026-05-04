@@ -65,6 +65,8 @@ import type {
   SubmitReportSubsidiaryDto,
 } from './dto/submit-report-company.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
+import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
+import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
@@ -194,6 +196,14 @@ export class ApplicationService implements IApplicationService {
     }
 
     return equality
+  }
+
+  getEqualityTemplateHtml(): string {
+    return buildEqualityReportTemplateHtml()
+  }
+
+  getEqualityTemplateDocx(): Buffer {
+    return Buffer.from(EQUALITY_REPORT_TEMPLATE_BASE64, 'base64')
   }
 
   async getReport(

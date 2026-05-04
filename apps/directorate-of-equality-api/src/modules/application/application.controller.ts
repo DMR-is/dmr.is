@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Inject,
@@ -44,6 +45,8 @@ import { IApplicationService } from './application.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+const DOCX_MIME =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
@@ -149,6 +152,32 @@ export class ApplicationController {
     @Body() input: SubmitSalaryReportDto,
   ): Promise<CreateReportResponseDto> {
     return this.applicationService.submitSalary(input, company)
+  }
+
+  @Get('reports/equality/template')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  @ApiProduces('text/html')
+  @DoeResponse({
+    operationId: 'getApplicationEqualityReportTemplateHtml',
+    successDescription: 'HTML version of the equality report template',
+  })
+  getEqualityTemplateHtml(): string {
+    return this.applicationService.getEqualityTemplateHtml()
+  }
+
+  @Get('reports/equality/template/docx')
+  @ApiProduces(DOCX_MIME)
+  @DoeResponse({
+    operationId: 'getApplicationEqualityReportTemplateDocx',
+    successDescription: 'Word (.docx) version of the equality report template',
+  })
+  getEqualityTemplateDocx(): StreamableFile {
+    const buf = this.applicationService.getEqualityTemplateDocx()
+
+    return new StreamableFile(buf, {
+      type: DOCX_MIME,
+      disposition: 'attachment; filename="equality-report-template.docx"',
+    })
   }
 
   @Post('reports/equality')
