@@ -1,6 +1,419 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/admin-report/companies/{companyId}/reports/excel/import": {
+      "post": {
+        "operationId": "importAdminSalaryReportWorkbook",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ParsedReportDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
+    "/api/v1/admin-report/companies/{companyId}/reports/salary": {
+      "post": {
+        "operationId": "submitAdminSalaryReport",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdminSalaryReportDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
+    "/api/v1/admin-report/companies/{companyId}/reports/equality": {
+      "post": {
+        "operationId": "submitAdminEqualityReport",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminEqualityReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateReportResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
+    "/api/v1/companies": {
+      "get": {
+        "operationId": "getCompanies",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search on company name or national ID.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "minEmployeeCount",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with averageEmployeeCountFromRsk >= this value.",
+            "schema": { "minimum": 0, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetCompaniesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      },
+      "post": {
+        "operationId": "createCompany",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCompanyDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/lookup/{nationalId}": {
+      "get": {
+        "operationId": "rskLookupCompany",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyLookupDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "getMyUser",
@@ -1052,25 +1465,136 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
-      "UserDto": {
+      "ParsedSubCriterionStepDto": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "nationalId": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string" },
-          "phone": { "type": "string", "nullable": true },
-          "isActive": { "type": "boolean" }
+          "order": { "type": "number" },
+          "description": { "type": "string" },
+          "score": { "type": "number" }
+        },
+        "required": ["order", "description", "score"]
+      },
+      "ParsedSubCriterionDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "weight": { "type": "number" },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParsedSubCriterionStepDto"
+            }
+          }
+        },
+        "required": ["title", "description", "weight", "steps"]
+      },
+      "ParsedCriterionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "RESPONSIBILITY",
+              "STRAIN",
+              "CONDITION",
+              "COMPETENCE",
+              "PERSONAL"
+            ]
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "weight": { "type": "number" },
+          "subCriteria": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedSubCriterionDto" }
+          }
+        },
+        "required": ["type", "title", "description", "weight", "subCriteria"]
+      },
+      "ParsedStepAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "criterionTitle": { "type": "string" },
+          "subTitle": { "type": "string" },
+          "stepOrder": { "type": "number" }
+        },
+        "required": ["criterionTitle", "subTitle", "stepOrder"]
+      },
+      "ParsedRoleDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "stepAssignments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
+          }
+        },
+        "required": ["title", "stepAssignments"]
+      },
+      "ParsedEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "identifier": { "type": "string" },
+          "roleTitle": { "type": "string" },
+          "education": {
+            "type": "string",
+            "enum": [
+              "COMPULSORY",
+              "UPPER_SECONDARY",
+              "VOCATIONAL",
+              "BACHELOR",
+              "MASTER",
+              "DOCTORATE",
+              "PROFESSIONAL"
+            ]
+          },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "field": { "type": "string" },
+          "department": { "type": "string" },
+          "startDate": { "type": "string" },
+          "workRatio": { "type": "number" },
+          "baseSalary": { "type": "number" },
+          "additionalSalary": { "type": "number" },
+          "bonusSalary": { "type": "number", "nullable": true },
+          "personalStepAssignments": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
+          }
         },
         "required": [
-          "id",
-          "nationalId",
-          "firstName",
-          "lastName",
-          "email",
-          "isActive"
+          "ordinal",
+          "identifier",
+          "roleTitle",
+          "education",
+          "gender",
+          "field",
+          "department",
+          "startDate",
+          "workRatio",
+          "baseSalary",
+          "additionalSalary",
+          "personalStepAssignments"
         ]
+      },
+      "ParsedReportDto": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedCriterionDto" }
+          },
+          "roles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedRoleDto" }
+          },
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedEmployeeDto" }
+          }
+        },
+        "required": ["criteria", "roles", "employees"]
       },
       "ApiErrorDto": {
         "type": "object",
@@ -1110,6 +1634,231 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "CreateReportOutlierDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": {
+            "type": "number",
+            "description": "Ordinal of the employee in `parsed.employees[]` this outlier justification applies to."
+          },
+          "postponed": {
+            "type": "boolean",
+            "description": "When true, defers the explanation. Other fields may be omitted. Defaults to false."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "action": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "signatureName": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          },
+          "signatureRole": {
+            "type": "string",
+            "description": "Required when `postponed` is false."
+          }
+        },
+        "required": ["employeeOrdinal"]
+      },
+      "AdminSalaryReportDto": {
+        "type": "object",
+        "properties": {
+          "equalityReportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "FK to the approved EQUALITY report this salary was audited against."
+          },
+          "identifier": { "type": "string" },
+          "importedFromExcel": { "type": "boolean" },
+          "providerType": {
+            "type": "string",
+            "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "companyAdminName": { "type": "string" },
+          "companyAdminEmail": { "type": "string" },
+          "companyAdminGender": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "NEUTRAL"]
+          },
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string" },
+          "contactPhone": { "type": "string" },
+          "averageEmployeeMaleCount": { "type": "number" },
+          "averageEmployeeFemaleCount": { "type": "number" },
+          "averageEmployeeNeutralCount": { "type": "number" },
+          "parsed": {
+            "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
+            "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
+          },
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
+          }
+        },
+        "required": [
+          "equalityReportId",
+          "identifier",
+          "importedFromExcel",
+          "providerType",
+          "companyAdminName",
+          "companyAdminEmail",
+          "companyAdminGender",
+          "contactName",
+          "contactEmail",
+          "contactPhone",
+          "averageEmployeeMaleCount",
+          "averageEmployeeFemaleCount",
+          "averageEmployeeNeutralCount",
+          "parsed"
+        ]
+      },
+      "CreateReportResponseDto": {
+        "type": "object",
+        "properties": {
+          "reportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifier of the newly created report row."
+          }
+        },
+        "required": ["reportId"]
+      },
+      "AdminEqualityReportDto": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string" },
+          "providerType": {
+            "type": "string",
+            "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
+          },
+          "providerId": { "type": "string", "nullable": true },
+          "companyAdminName": { "type": "string" },
+          "companyAdminEmail": { "type": "string" },
+          "companyAdminGender": {
+            "type": "string",
+            "enum": ["MALE", "FEMALE", "NEUTRAL"]
+          },
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string" },
+          "contactPhone": { "type": "string" },
+          "equalityReportContent": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Narrative gender-equality plan. Persisted as `report.equality_report_content`."
+          }
+        },
+        "required": [
+          "identifier",
+          "providerType",
+          "companyAdminName",
+          "companyAdminEmail",
+          "companyAdminGender",
+          "contactName",
+          "contactEmail",
+          "contactPhone",
+          "equalityReportContent"
+        ]
+      },
+      "CompanyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" },
+          "nationalId": { "type": "string" },
+          "salaryReportRequired": { "type": "boolean" },
+          "salaryReportRequiredOverride": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "name",
+          "averageEmployeeCountFromRsk",
+          "nationalId",
+          "salaryReportRequired",
+          "salaryReportRequiredOverride"
+        ]
+      },
+      "Paging": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1 },
+          "totalPages": { "type": "number", "example": 10 },
+          "totalItems": { "type": "number", "example": 1000 },
+          "nextPage": { "type": "number", "example": 2, "nullable": true },
+          "previousPage": { "type": "number", "example": 1, "nullable": true },
+          "pageSize": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "hasNextPage": { "type": "boolean", "example": true },
+          "hasPreviousPage": { "type": "boolean", "example": false }
+        },
+        "required": [
+          "page",
+          "totalPages",
+          "totalItems",
+          "nextPage",
+          "previousPage",
+          "pageSize",
+          "hasNextPage",
+          "hasPreviousPage"
+        ]
+      },
+      "GetCompaniesResponseDto": {
+        "type": "object",
+        "properties": {
+          "companies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompanyDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["companies", "paging"]
+      },
+      "CompanyLookupDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" }
+        },
+        "required": ["name", "nationalId"]
+      },
+      "CreateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "name": { "type": "string" },
+          "averageEmployeeCountFromRsk": { "type": "number" }
+        },
+        "required": ["nationalId", "name", "averageEmployeeCountFromRsk"]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "nationalId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string", "nullable": true },
+          "isActive": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "nationalId",
+          "firstName",
+          "lastName",
+          "email",
+          "isActive"
+        ]
       },
       "ConfigDto": {
         "type": "object",
@@ -1196,34 +1945,6 @@
           }
         },
         "required": ["id", "type", "status"]
-      },
-      "Paging": {
-        "type": "object",
-        "properties": {
-          "page": { "type": "number", "example": 1 },
-          "totalPages": { "type": "number", "example": 10 },
-          "totalItems": { "type": "number", "example": 1000 },
-          "nextPage": { "type": "number", "example": 2, "nullable": true },
-          "previousPage": { "type": "number", "example": 1, "nullable": true },
-          "pageSize": {
-            "type": "number",
-            "example": 10,
-            "minimum": 1,
-            "maximum": 100
-          },
-          "hasNextPage": { "type": "boolean", "example": true },
-          "hasPreviousPage": { "type": "boolean", "example": false }
-        },
-        "required": [
-          "page",
-          "totalPages",
-          "totalItems",
-          "nextPage",
-          "previousPage",
-          "pageSize",
-          "hasNextPage",
-          "hasPreviousPage"
-        ]
       },
       "GetReportsResponseDto": {
         "type": "object",

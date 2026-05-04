@@ -1,3 +1,5 @@
+import { Op, Order, WhereOptions } from 'sequelize'
+
 import {
   ConflictException,
   Inject,
@@ -8,16 +10,23 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { INationalRegistryService } from '@dmr.is/clients-national-registry'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { CompanyModel } from './models/company.model'
 import {
   CompanyReportSnapshotLookup,
   CompanyReportSnapshotSourceDto,
   CreateCompanyInput,
+  GetCompaniesQueryDto,
   ICompanyService,
 } from './company.service.interface'
+import { CompanySortByEnum, CompanySortDirectionEnum } from './dto/get-companies-query.dto'
 
 const LOGGING_CONTEXT = 'CompanyService'
 
@@ -31,11 +40,46 @@ export class CompanyService implements ICompanyService {
     private readonly companyModel: typeof CompanyModel,
   ) {}
 
-  async getAll(): Promise<CompanyDto[]> {
-    const companies = await this.companyModel.findAll({
-      order: [['name', 'ASC']],
+  async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const where: WhereOptions = {}
+
+    if (query.q) {
+      const pattern = `%${query.q.trim()}%`
+      Object.assign(where, {
+        [Op.or]: [
+          { name: { [Op.iLike]: pattern } },
+          { nationalId: { [Op.iLike]: pattern } },
+        ],
+      })
+    }
+
+    if (query.minEmployeeCount !== undefined) {
+      Object.assign(where, {
+        averageEmployeeCountFromRsk: { [Op.gte]: query.minEmployeeCount },
+      })
+    }
+
+    const sortCol =
+      query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
+        ? 'averageEmployeeCountFromRsk'
+        : 'name'
+    const sortDir = (query.direction ?? CompanySortDirectionEnum.ASC).toUpperCase()
+    const order: Order = [[sortCol, sortDir]]
+
+    const { rows, count } = await this.companyModel.findAndCountAll({
+      where,
+      order,
+      limit,
+      offset,
+      distinct: true,
+      col: 'id',
     })
-    return companies.map((c) => c.fromModel())
+
+    const companies = rows.map((c) => c.fromModel())
+    const paging = generatePaging(companies, query.page, query.pageSize, count)
+    return { companies, paging }
   }
 
   async getById(id: string): Promise<CompanyDto> {

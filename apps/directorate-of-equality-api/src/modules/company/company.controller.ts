@@ -7,6 +7,7 @@ import {
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
@@ -15,10 +16,13 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ICompanyService } from './company.service.interface'
+import { ParseNationalIdPipe } from '../../core/pipes/parse-national-id.pipe'
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
 import { CreateCompanyDto } from './dto/create-company.dto'
+import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
+import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { ICompanyService } from './company.service.interface'
 
 @Controller({
   path: 'companies',
@@ -34,9 +38,11 @@ export class CompanyController {
   ) {}
 
   @Get()
-  @DoeResponse({ operationId: 'getCompanies', type: [CompanyDto] })
-  async getCompanies(): Promise<CompanyDto[]> {
-    return this.companyService.getAll()
+  @DoeResponse({ operationId: 'getCompanies', type: GetCompaniesResponseDto })
+  async getCompanies(
+    @Query() query: GetCompaniesQueryDto,
+  ): Promise<GetCompaniesResponseDto> {
+    return this.companyService.getAll(query)
   }
 
   @Get('lookup/:nationalId')
@@ -47,7 +53,7 @@ export class CompanyController {
     include404: true,
   })
   async rskLookup(
-    @Param('nationalId') nationalId: string,
+    @Param('nationalId', ParseNationalIdPipe) nationalId: string,
   ): Promise<CompanyLookupDto> {
     return this.companyService.rskLookup(nationalId)
   }
