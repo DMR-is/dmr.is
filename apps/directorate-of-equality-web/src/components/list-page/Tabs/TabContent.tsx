@@ -165,7 +165,7 @@ export const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
             </Inline>
             <Table
               columns={columns}
-              data={pageData}
+              data={filtered}
               getRowExpanded={(row) => <ExpandedRow row={row} />}
               paging={{
                 page,

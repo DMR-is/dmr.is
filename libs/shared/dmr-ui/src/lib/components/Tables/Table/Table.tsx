@@ -28,7 +28,7 @@ import {
 export type TableProps<TData extends object> = {
   columns: ColumnDef<TData>[]
   data: TData[]
-  /** Return content to render inside the expanded row. Return null to make a row non-expandable. */
+  /** Return content to render inside the expanded row. Rows are expandable when this prop is provided. */
   getRowExpanded?: (row: TData) => React.ReactNode
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
@@ -57,6 +57,7 @@ export const Table = <TData extends object>({
 
   useEffect(() => {
     setCollapsingRows(new Set())
+    setExpanded({})
   }, [data])
 
   const columns = useMemo<ColumnDef<TData>[]>(() => {

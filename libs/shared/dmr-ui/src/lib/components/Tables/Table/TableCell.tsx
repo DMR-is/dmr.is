@@ -18,7 +18,6 @@ type TagItem = {
   type: 'tag'
   children: React.ReactNode
   variant?: React.ComponentProps<typeof Tag>['variant']
-  colored?: boolean
 }
 
 type IconItem = {
