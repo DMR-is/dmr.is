@@ -11,6 +11,7 @@ import { authOptions } from '../../auth/authOptions'
 
 import { initTRPC, TRPCError } from '@trpc/server'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SdkFunction = (...args: any[]) => any
 
 type DataResponse<T> =

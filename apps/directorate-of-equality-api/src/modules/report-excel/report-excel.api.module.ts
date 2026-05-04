@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common'
-import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { UserModel } from '../user/models/user.model'
+import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ReportExcelController } from './report-excel.controller'
 import { ReportExcelCoreModule } from './report-excel.core.module'
 
 @Module({
-  imports: [ReportExcelCoreModule, SequelizeModule.forFeature([UserModel])],
+  imports: [ReportExcelCoreModule, AuthorizationCoreModule],
   controllers: [ReportExcelController],
   providers: [AdminGuard],
 })

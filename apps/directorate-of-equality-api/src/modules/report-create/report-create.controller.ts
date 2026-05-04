@@ -33,6 +33,7 @@ export class ReportCreateController {
   @DoeResponse({
     operationId: 'createSalaryReport',
     status: 201,
+    include404: true,
     type: CreateReportResponseDto,
   })
   async createSalary(

@@ -7,6 +7,8 @@ import {
 
 import { ApiErrorDto } from '@dmr.is/shared-dto'
 
+const DEFAULT_ERRORS = [400, 401, 403, 500]
+
 type DoeResponseParams = {
   operationId: string
   description?: string
@@ -24,6 +26,8 @@ type DoeResponseParams = {
    * keeps errors as `application/json`.
    */
   produces?: string
+  errors?: number[]
+  include404?: boolean
 }
 
 function buildSuccessContentSchema(produces: string) {
@@ -39,6 +43,8 @@ export function DoeResponse({
   description,
   successDescription,
   produces,
+  errors = DEFAULT_ERRORS,
+  include404 = false,
 }: DoeResponseParams) {
   let successDecorator: ReturnType<typeof ApiResponse>
 
@@ -56,13 +62,11 @@ export function DoeResponse({
     successDecorator = ApiNoContentResponse()
   }
 
+  const effectiveErrors = include404 ? [...errors, 404] : errors
+
   return applyDecorators(
     ApiOperation({ operationId, description }),
     successDecorator,
-    ApiResponse({ status: 400, type: ApiErrorDto }),
-    ApiResponse({ status: 401, type: ApiErrorDto }),
-    ApiResponse({ status: 403, type: ApiErrorDto }),
-    ApiResponse({ status: 404, type: ApiErrorDto }),
-    ApiResponse({ status: 500, type: ApiErrorDto }),
+    ...effectiveErrors.map((code) => ApiResponse({ status: code, type: ApiErrorDto })),
   )
 }
