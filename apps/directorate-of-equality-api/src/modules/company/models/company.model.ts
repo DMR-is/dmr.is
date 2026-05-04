@@ -3,6 +3,7 @@ import { Column, DataType } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
 
 type CompanyAttributes = {
@@ -63,6 +64,19 @@ export class CompanyModel extends MutableModel<
       nationalId: model.nationalId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
+    }
+  }
+
+  static toSnapshot(dto: CompanyDto): CreateReportCompanySnapshotDto {
+    return {
+      companyId: dto.id,
+      parentCompanyId: null,
+      name: dto.name,
+      nationalId: dto.nationalId,
+      address: '',
+      city: '',
+      postcode: '',
+      isatCategory: '',
     }
   }
 
