@@ -61,6 +61,7 @@ export const CaseFilter = ({
             placeholder="Leita að máli..."
             value={filterState.query ?? ''}
             onChange={onQueryChange}
+            backgroundColor="white"
           />
         }
       >

@@ -3,12 +3,12 @@
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 
-import {
-  COLUMN_EMPLOYEES,
-  COLUMN_STATUS,
-  MOCK_DATA,
-} from '../../../app/(protected)/mal/mocks'
+import { MOCK_DATA } from '../../../app/(protected)/mal/mocks'
+import { COLUMN_EMPLOYEES, COLUMN_STATUS } from '../constants'
 import { TabContent } from './TabContent'
+
+const iVinnsluData = MOCK_DATA.slice(0, 5)
+const afgreittData = MOCK_DATA.slice(0, 3)
 
 export const TabsContainer = () => {
   return (
@@ -17,6 +17,7 @@ export const TabsContainer = () => {
         label="Mál"
         selected="innsendingar"
         contentBackground="blue100"
+        size="sm"
         tabs={[
           {
             id: 'innsendingar',
@@ -25,20 +26,20 @@ export const TabsContainer = () => {
           },
           {
             id: 'i-vinnslu',
-            label: 'Í vinnslu (5)',
+            label: `Í vinnslu (${iVinnsluData.length})`,
             content: (
               <TabContent
-                initialData={MOCK_DATA.slice(0, 5)}
+                initialData={iVinnsluData}
                 extraColumns={[COLUMN_STATUS, COLUMN_EMPLOYEES]}
               />
             ),
           },
           {
             id: 'afgreitt',
-            label: 'Afgreitt (3)',
+            label: `Afgreitt (${afgreittData.length})`,
             content: (
               <TabContent
-                initialData={MOCK_DATA.slice(0, 3)}
+                initialData={afgreittData}
                 extraColumns={[COLUMN_EMPLOYEES]}
               />
             ),

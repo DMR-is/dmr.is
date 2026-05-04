@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -13,40 +13,41 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import {
-  Case,
+  type Case,
   CATEGORY_LABEL_TO_SLUG,
   CATEGORY_SLUG_MAP,
   COLUMN_EMPLOYEES,
   COLUMN_STATUS,
   COLUMNS,
   DETAIL_FIELDS,
-} from '../../../app/(protected)/mal/mocks'
+} from '../constants'
 import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
+import * as styles from './TabContent.css'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
-    <Box display="flex" flexWrap="wrap" style={{ columnGap: 16 }}>
+    <div className={styles.expandedRowGrid}>
       {DETAIL_FIELDS.map(({ label, key }, index) => (
         <Box
           key={key}
           background={Math.floor(index / 2) % 2 === 0 ? 'white' : 'blue100'}
           paddingX={1}
           paddingY={1}
-          style={{ flex: '0 0 calc(50% - 8px)' }}
+          className={styles.expandedRowItem}
         >
           <Box display="flex">
-            <Box style={{ minWidth: 220 }}>
+            <div className={styles.expandedRowLabel}>
               <Text variant="small" fontWeight="semiBold">
                 {label}
               </Text>
-            </Box>
+            </div>
             <Text variant="small">{String(row[key])}</Text>
           </Box>
         </Box>
       ))}
-    </Box>
+    </div>
   </Box>
 )
 
@@ -75,6 +76,7 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
     )
       return false
     if (filter.dateFrom || filter.dateTo) {
+      // date field format is DD.MM.YYYY
       const [d, m, y] = row.date.split('.')
       const rowDate = new Date(Number(y), Number(m) - 1, Number(d))
       if (filter.dateFrom && rowDate < filter.dateFrom) return false
@@ -139,7 +141,10 @@ export const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
     router.replace(`?${params.toString()}`, { scroll: false })
   }
 
-  const filtered = applyFilter(initialData, filterState)
+  const filtered = useMemo(
+    () => applyFilter(initialData, filterState),
+    [initialData, filterState],
+  )
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -165,7 +170,7 @@ export const TabContent = ({ initialData, extraColumns }: TabContentProps) => {
             </Inline>
             <Table
               columns={columns}
-              data={filtered}
+              data={pageData}
               getRowExpanded={(row) => <ExpandedRow row={row} />}
               paging={{
                 page,

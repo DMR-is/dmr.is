@@ -1,5 +1,3 @@
-'use client'
-
 import { Suspense } from 'react'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
