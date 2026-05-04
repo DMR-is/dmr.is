@@ -27,6 +27,7 @@ export type HeroProps = {
   imageSpan?: SpanType
   button?: React.ReactNode
   centerImage?: boolean
+  reverse?: boolean
   alignHeader?: ResponsiveProp<keyof typeof justifyContent>
 }
 
@@ -51,6 +52,7 @@ export const Hero = ({
   button,
   alignHeader = 'flexStart',
   centerImage = false,
+  reverse = false,
 }: HeroProps) => {
   const hasTitleOrDescription = !!(title || description || breadcrumbs)
   const hasImage = !!(image && image.src)
@@ -64,7 +66,11 @@ export const Hero = ({
       <Stack space={4}>
         <GridRow align={alignHeader}>
           {hasTitleOrDescription && (
-            <GridColumn offset={offset} span={contentSpan}>
+            <GridColumn
+              offset={offset}
+              span={contentSpan}
+              order={reverse ? 2 : 1}
+            >
               <Box height="full" display="flex" alignItems="center">
                 <Stack space={2}>
                   {breadcrumbs && <Breadcrumbs {...breadcrumbs} />}
@@ -88,7 +94,11 @@ export const Hero = ({
             </GridColumn>
           )}
           {hasImage && (
-            <GridColumn hiddenBelow="lg" span={imageSpan}>
+            <GridColumn
+              hiddenBelow="lg"
+              span={imageSpan}
+              order={reverse ? 1 : 2}
+            >
               <Inline align={centerImage ? 'center' : 'left'}>
                 <img src={image.src} alt={image.alt} />
               </Inline>

@@ -12,9 +12,10 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import * as styles from './ControlPanel.css'
 
 const NAV_PATHS = [
+  { title: 'Forsíða', href: '/' },
   { title: 'Heildarlisti', href: '/mal' },
-  { title: 'Jafnréttisáætlanir', href: '/kvartanir' },
-  { title: 'Úrbótaáætlanir', href: '/yfirlit' },
+  { title: 'Jafnréttisáætlanir', href: '/mal?category=jafnrettisaetlun' },
+  { title: 'Úrbótaáætlanir', href: '/mal?category=urbotaaaetlun' },
 ]
 
 export const ControlPanel = () => {
