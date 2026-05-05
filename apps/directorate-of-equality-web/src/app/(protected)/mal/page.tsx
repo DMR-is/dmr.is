@@ -19,7 +19,7 @@ export default function MalPage() {
         reverse
       />
       <Box background="blue100" paddingY={5}>
-        <Suspense>
+        <Suspense fallback={<div>Loading...</div>}>
           <TabsContainer />
         </Suspense>
       </Box>

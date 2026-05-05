@@ -5,19 +5,21 @@ import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
-import { MOCK_DATA } from '../../../app/(protected)/mal/mocks'
-import { type Case, COLUMN_EMPLOYEES, COLUMN_STATUS } from '../constants'
+import { ReportStatusEnum } from '../../../gen/fetch/types.gen'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { type Case, COLUMN_STATUS } from '../constants'
 import { TabContent } from './TabContent'
 
+import { useQuery } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const STATUS_VARIANT: Record<string, TagVariant> = {
   Samþykkt: 'mint',
   Hafnað: 'red',
-  Lokið: 'dark',
+  Úrelt: 'dark',
   'Í vinnslu': 'blue',
-  'Bíður gagna': 'rose',
-  'Til skoðunar': 'purple',
+  Innsent: 'rose',
+  Drög: 'purple',
 }
 
 const statusColumn: ColumnDef<Case> = {
@@ -27,16 +29,40 @@ const statusColumn: ColumnDef<Case> = {
     if (!status) return null
     return (
       <TableCell
-        items={{ type: 'tag', variant: STATUS_VARIANT[status] ?? 'blue', children: status }}
+        items={{
+          type: 'tag',
+          variant: STATUS_VARIANT[status] ?? 'blue',
+          children: status,
+        }}
       />
     )
   },
 }
 
-const iVinnsluData = MOCK_DATA.slice(0, 5)
-const afgreittData = MOCK_DATA.slice(0, 3)
+const IN_REVIEW = [ReportStatusEnum.IN_REVIEW]
+const PROCESSED = [
+  ReportStatusEnum.APPROVED,
+  ReportStatusEnum.DENIED,
+  ReportStatusEnum.SUPERSEDED,
+]
 
 export const TabsContainer = () => {
+  const trpc = useTRPC()
+
+  const { data: allData } = useQuery(
+    trpc.reports.list.queryOptions({ pageSize: 1 }),
+  )
+  const { data: inReviewData } = useQuery(
+    trpc.reports.list.queryOptions({ pageSize: 1, status: IN_REVIEW }),
+  )
+  const { data: processedData } = useQuery(
+    trpc.reports.list.queryOptions({ pageSize: 1, status: PROCESSED }),
+  )
+
+  const allCount = allData?.paging.totalItems ?? '0'
+  const inReviewCount = inReviewData?.paging.totalItems ?? '0'
+  const processedCount = processedData?.paging.totalItems ?? '0'
+
   return (
     <GridContainer>
       <Tabs
@@ -47,26 +73,26 @@ export const TabsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `Innsendingar (${MOCK_DATA.length})`,
-            content: <TabContent initialData={MOCK_DATA} expandable />,
+            label: `Innsendingar (${allCount})`,
+            content: <TabContent expandable />,
           },
           {
             id: 'i-vinnslu',
-            label: `Í vinnslu (${iVinnsluData.length})`,
+            label: `Í vinnslu (${inReviewCount})`,
             content: (
               <TabContent
-                initialData={iVinnsluData}
-                extraColumns={[statusColumn, COLUMN_EMPLOYEES]}
+                fixedQuery={{ status: IN_REVIEW }}
+                extraColumns={[statusColumn]}
               />
             ),
           },
           {
             id: 'afgreitt',
-            label: `Afgreitt (${afgreittData.length})`,
+            label: `Afgreitt (${processedCount})`,
             content: (
               <TabContent
-                initialData={afgreittData}
-                extraColumns={[COLUMN_EMPLOYEES]}
+                fixedQuery={{ status: PROCESSED }}
+                extraColumns={[statusColumn]}
               />
             ),
           },

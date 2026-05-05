@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import AnimateHeight from 'react-animate-height'
 
@@ -30,6 +32,8 @@ export type TableProps<TData extends object> = {
   data: TData[]
   /** Return content to render inside the expanded row. Rows are expandable when this prop is provided. */
   getRowExpanded?: (row: TData) => React.ReactNode
+  /** When provided, clicking a row navigates SPA-style to this href. */
+  getRowHref?: (row: TData) => string
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
@@ -43,6 +47,7 @@ export const Table = <TData extends object>({
   columns: providedColumns,
   data,
   getRowExpanded,
+  getRowHref,
   paging,
   onPageChange,
   onPageSizeChange,
@@ -51,6 +56,7 @@ export const Table = <TData extends object>({
   noDataMessage = 'Engar niðurstöður fundust',
   layout = 'fixed',
 }: TableProps<TData>) => {
+  const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [collapsingRows, setCollapsingRows] = useState<Set<string>>(new Set())
@@ -182,6 +188,8 @@ export const Table = <TData extends object>({
               const isActive = isExpanded || isCollapsing
               const rowBackground = isActive ? 'blue100' : 'white'
 
+              const href = getRowHref ? getRowHref(row.original) : undefined
+
               return (
                 <Fragment key={row.id}>
                   <tr
@@ -190,7 +198,14 @@ export const Table = <TData extends object>({
                       expanded: isActive,
                     })}
                     onClick={
-                      getRowExpanded ? () => row.toggleExpanded() : undefined
+                      !getRowExpanded && href
+                        ? () => router.push(href)
+                        : getRowExpanded && !href
+                          ? () => row.toggleExpanded()
+                          : undefined
+                    }
+                    style={
+                      !getRowExpanded && href ? { cursor: 'pointer' } : undefined
                     }
                   >
                     {row.getVisibleCells().map((cell, i) =>
@@ -253,6 +268,16 @@ export const Table = <TData extends object>({
                             paddingBottom: [1, 2],
                             background: rowBackground,
                           }}
+                          onClick={
+                            getRowExpanded && href
+                              ? () => router.push(href)
+                              : undefined
+                          }
+                          style={
+                            getRowExpanded && href
+                              ? { cursor: 'pointer' }
+                              : undefined
+                          }
                         >
                           {flexRender(
                             cell.column.columnDef.cell,

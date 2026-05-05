@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { useMemo, useState } from 'react'
+import { type z } from 'zod'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -10,13 +11,19 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { Table } from '@dmr.is/ui/components/Tables/Table'
+import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
+import { MOCK_DATA } from '../../../app/(protected)/mal/mocks'
+// TODO: restore when dev data is seeded
+// import { type ReportListItemDto } from '../../../gen/fetch/types.gen'
+// import { useReportsFilter } from '../../../hooks/useReportsFilter'
+// import { useTRPC } from '../../../lib/trpc/client/trpc'
+// import { useQuery } from '@tanstack/react-query'
+import { type zListReportsQuery } from '../../../gen/fetch/zod.gen'
 import {
   type Case,
   CATEGORY_LABEL_TO_SLUG,
   CATEGORY_SLUG_MAP,
-  COLUMN_EMPLOYEES,
   COLUMN_STATUS,
   COLUMNS,
   DETAIL_FIELDS,
@@ -25,6 +32,48 @@ import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
 import * as styles from './TabContent.css'
 
 import { type ColumnDef } from '@tanstack/react-table'
+
+type ListReportsQuery = z.infer<typeof zListReportsQuery>
+
+// TODO: restore when dev data is seeded
+// const TYPE_TO_CATEGORY: Record<string, string> = {
+//   EQUALITY: 'Jafnréttisáætlun',
+//   SALARY: 'Launagreining',
+// }
+
+const STATUS_TO_ICELANDIC: Record<string, string> = {
+  DRAFT: 'Drög',
+  SUBMITTED: 'Innsent',
+  IN_REVIEW: 'Í vinnslu',
+  DENIED: 'Hafnað',
+  APPROVED: 'Samþykkt',
+  SUPERSEDED: 'Úrelt',
+}
+
+// TODO: restore when dev data is seeded
+// function mapReportToCase(report: ReportListItemDto): Case {
+//   const reviewer = report.reviewer
+//     ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
+//     : ''
+//   return {
+//     id: report.id,
+//     identifier: report.identifier ?? null,
+//     date: report.createdAt
+//       ? new Date(report.createdAt).toLocaleDateString('is-IS')
+//       : '',
+//     type: TYPE_TO_CATEGORY[report.type] ?? report.type,
+//     company: report.companyName ?? '',
+//     kennitala: report.companyNationalId ?? '',
+//     status: STATUS_TO_ICELANDIC[report.status] ?? report.status,
+//     reviewer,
+//     correctionDeadline: report.correctionDeadline
+//       ? new Date(report.correctionDeadline).toLocaleDateString('is-IS')
+//       : null,
+//     validUntil: report.validUntil
+//       ? new Date(report.validUntil).toLocaleDateString('is-IS')
+//       : null,
+//   }
+// }
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
@@ -51,14 +100,6 @@ const ExpandedRow = ({ row }: { row: Case }) => (
   </Box>
 )
 
-const employeeRange = (value: string, count: number): boolean => {
-  if (value === '1-25') return count >= 1 && count <= 25
-  if (value === '26-50') return count >= 26 && count <= 50
-  if (value === '51-100') return count >= 51 && count <= 100
-  if (value === '101+') return count >= 101
-  return false
-}
-
 const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
   data.filter((row) => {
     if (filter.query) {
@@ -66,14 +107,9 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
       const searchable = Object.values(row).join(' ').toLowerCase()
       if (!searchable.includes(q)) return false
     }
-    if (filter.category?.length && !filter.category.includes(row.category))
+    if (filter.category?.length && !filter.category.includes(row.type))
       return false
-    if (filter.status?.length && !filter.status.includes(row.status ?? ''))
-      return false
-    if (
-      filter.employees?.length &&
-      !filter.employees.some((range) => employeeRange(range, row.employees))
-    )
+    if (filter.status?.length && !filter.status.includes(row.status))
       return false
     if (filter.dateFrom || filter.dateTo) {
       // date field format is DD.MM.YYYY
@@ -88,21 +124,35 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
 const PAGE_SIZE = 10
 
 export type TabContentProps = {
-  initialData: Case[]
+  fixedQuery?: Partial<ListReportsQuery>
   extraColumns?: ColumnDef<Case>[]
   expandable?: boolean
 }
 
 export const TabContent = ({
-  initialData,
+  fixedQuery,
   extraColumns,
   expandable,
 }: TabContentProps) => {
   const columns = extraColumns ? [...COLUMNS, ...extraColumns] : COLUMNS
   const showStatusFilter = extraColumns?.includes(COLUMN_STATUS) ?? false
-  const showEmployeesFilter = extraColumns?.includes(COLUMN_EMPLOYEES) ?? false
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // TODO: restore when dev data is seeded
+  // const trpc = useTRPC()
+  // const { query } = useReportsFilter()
+  // const mergedQuery: ListReportsQuery = { ...query, ...fixedQuery }
+  // const { data } = useQuery(trpc.reports.list.queryOptions(mergedQuery))
+  // const cases = useMemo(() => data?.reports.map(mapReportToCase) ?? [], [data])
+
+  const cases = useMemo(() => {
+    if (!fixedQuery?.status?.length) return MOCK_DATA
+    const allowed = new Set(
+      fixedQuery.status.map((s) => STATUS_TO_ICELANDIC[s] ?? s),
+    )
+    return MOCK_DATA.filter((c) => allowed.has(c.status))
+  }, [fixedQuery])
 
   const [filterState, setFilterState] = useState<CaseFilterState>(() => {
     const slugs = searchParams.getAll('category')
@@ -147,8 +197,8 @@ export const TabContent = ({
   }
 
   const filtered = useMemo(
-    () => applyFilter(initialData, filterState),
-    [initialData, filterState],
+    () => applyFilter(cases, filterState),
+    [cases, filterState],
   )
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -164,7 +214,6 @@ export const TabContent = ({
             onDateChange={handleDateChange}
             onReset={handleReset}
             showStatusFilter={showStatusFilter}
-            showEmployeesFilter={showEmployeesFilter}
           />
         </GridColumn>
         <GridColumn span={['12/12', '9/12']}>
@@ -176,6 +225,7 @@ export const TabContent = ({
             <Table
               columns={columns}
               data={pageData}
+              getRowHref={(row) => `/mal/${row.id}`}
               getRowExpanded={
                 expandable ? (row) => <ExpandedRow row={row} /> : undefined
               }
