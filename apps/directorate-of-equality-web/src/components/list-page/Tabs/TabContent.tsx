@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { useMemo, useState } from 'react'
+import { type z } from 'zod'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -10,8 +11,12 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { Table } from '@dmr.is/ui/components/Tables/Table'
+import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
+import { type ReportListItemDto } from '../../../gen/fetch/types.gen'
+import { type zListReportsQuery } from '../../../gen/fetch/zod.gen'
+import { useReportsFilter } from '../../../hooks/useReportsFilter'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
 import {
   type Case,
   CATEGORY_LABEL_TO_SLUG,
@@ -24,7 +29,41 @@ import {
 import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
 import * as styles from './TabContent.css'
 
+import { useQuery } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
+
+type ListReportsQuery = z.infer<typeof zListReportsQuery>
+
+const TYPE_TO_CATEGORY: Record<string, string> = {
+  EQUALITY: 'Jafnréttisáætlun',
+  SALARY: 'Launagreining',
+}
+
+const STATUS_TO_ICELANDIC: Record<string, string> = {
+  DRAFT: 'Drög',
+  SUBMITTED: 'Innsent',
+  IN_REVIEW: 'Í vinnslu',
+  DENIED: 'Hafnað',
+  APPROVED: 'Samþykkt',
+  SUPERSEDED: 'Úrelt',
+}
+
+function mapReportToCase(report: ReportListItemDto): Case {
+  return {
+    date: report.createdAt
+      ? new Date(report.createdAt).toLocaleDateString('is-IS')
+      : '',
+    category: TYPE_TO_CATEGORY[report.type] ?? report.type,
+    company: report.companyName ?? '',
+    ceo: '',
+    kennitala: report.companyNationalId ?? '',
+    email: '',
+    isat: '',
+    ceoGender: '',
+    employees: 0,
+    status: report.status ? STATUS_TO_ICELANDIC[report.status] : undefined,
+  }
+}
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
@@ -88,13 +127,13 @@ const applyFilter = (data: Case[], filter: CaseFilterState): Case[] =>
 const PAGE_SIZE = 10
 
 export type TabContentProps = {
-  initialData: Case[]
+  fixedQuery?: Partial<ListReportsQuery>
   extraColumns?: ColumnDef<Case>[]
   expandable?: boolean
 }
 
 export const TabContent = ({
-  initialData,
+  fixedQuery,
   extraColumns,
   expandable,
 }: TabContentProps) => {
@@ -103,6 +142,14 @@ export const TabContent = ({
   const showEmployeesFilter = extraColumns?.includes(COLUMN_EMPLOYEES) ?? false
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const trpc = useTRPC()
+
+  const { query } = useReportsFilter()
+  const mergedQuery: ListReportsQuery = { ...query, ...fixedQuery }
+  const { data } = useQuery(trpc.reports.list.queryOptions(mergedQuery))
+
+  const cases = useMemo(() => data?.reports.map(mapReportToCase) ?? [], [data])
 
   const [filterState, setFilterState] = useState<CaseFilterState>(() => {
     const slugs = searchParams.getAll('category')
@@ -147,8 +194,8 @@ export const TabContent = ({
   }
 
   const filtered = useMemo(
-    () => applyFilter(initialData, filterState),
-    [initialData, filterState],
+    () => applyFilter(cases, filterState),
+    [cases, filterState],
   )
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
