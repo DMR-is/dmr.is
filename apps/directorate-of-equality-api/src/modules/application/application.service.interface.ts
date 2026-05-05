@@ -27,6 +27,8 @@ export interface IApplicationService {
     reportId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
+  getEqualityTemplateHtml(): string
+  getEqualityTemplateDocx(): Buffer
 }
 
 export const IApplicationService = Symbol('IApplicationService')

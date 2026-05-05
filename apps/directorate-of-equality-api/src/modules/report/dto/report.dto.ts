@@ -1,6 +1,7 @@
 import {
   ApiBoolean,
   ApiEnum,
+  ApiOptionalBoolean,
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalEnum,
@@ -72,6 +73,13 @@ export class ReportDto {
 
   @ApiOptionalString({ nullable: true })
   identifier!: string | null
+
+  @ApiOptionalBoolean({
+    nullable: true,
+    description:
+      'Salary-only. Null on equality reports. When true, the company has acknowledged every outlier on this salary report but deferred the explanations — all outlier rows are persisted with NULL explanation columns.',
+  })
+  outliersPostponed!: boolean | null
 
   @ApiOptionalUuid({ nullable: true })
   equalityReportId!: string | null

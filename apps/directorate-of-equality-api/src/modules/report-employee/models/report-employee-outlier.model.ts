@@ -8,7 +8,6 @@ import { ReportEmployeeModel } from './report-employee.model'
 
 type ReportEmployeeOutlierAttributes = {
   reportEmployeeId: string
-  postponed: boolean
   reason: string | null
   action: string | null
   signatureName: string | null
@@ -17,7 +16,6 @@ type ReportEmployeeOutlierAttributes = {
 
 type ReportEmployeeOutlierCreateAttributes = {
   reportEmployeeId: string
-  postponed?: boolean
   reason?: string | null
   action?: string | null
   signatureName?: string | null
@@ -36,9 +34,6 @@ export class ReportEmployeeOutlierModel extends MutableModel<
     field: 'report_employee_id',
   })
   reportEmployeeId!: string
-
-  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
-  postponed!: boolean
 
   @Column({ type: DataType.TEXT, allowNull: true })
   reason!: string | null
@@ -64,7 +59,6 @@ export class ReportEmployeeOutlierModel extends MutableModel<
     return {
       id: model.id,
       reportEmployeeId: model.reportEmployeeId,
-      postponed: model.postponed,
       reason: model.reason,
       action: model.action,
       signatureName: model.signatureName,
