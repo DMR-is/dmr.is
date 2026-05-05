@@ -738,7 +738,9 @@ function makeCompanySnapshot(
 }
 
 function makeCompanySnapshotSource(
-  overrides: Partial<Omit<CreateReportCompanySnapshotDto, 'parentCompanyId'>> = {},
+  overrides: Partial<
+    Omit<CreateReportCompanySnapshotDto, 'parentCompanyId'>
+  > = {},
 ): Omit<CreateReportCompanySnapshotDto, 'parentCompanyId'> {
   return {
     companyId: 'subsidiary-1',

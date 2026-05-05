@@ -10,21 +10,27 @@ export const makeQueryClient = () => {
         staleTime: 30 * 1000,
         retry(failureCount, error) {
           if (error instanceof TRPCClientError) {
-            if (error.data.httpStatus === 404) {
+            if (error.data?.httpStatus === 404) {
+              return false
+            }
+            if (error.data?.httpStatus === 401) {
+              if (typeof window !== 'undefined') {
+                forceLogin(window.location.pathname)
+              }
               return false
             }
           }
 
-          if (error.message === 'UNAUTHORIZED') {
-            return false
-          } else if (error.message === 'No session found') {
-            // Force login when no session is found
+          if (
+            error.message === 'UNAUTHORIZED' ||
+            error.message === 'No session found'
+          ) {
             if (typeof window !== 'undefined') {
               forceLogin(window.location.pathname)
             }
-
             return false
           }
+
           return failureCount < 3
         },
       },

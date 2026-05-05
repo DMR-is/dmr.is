@@ -84,7 +84,9 @@ describe('ReportResourceGuard', () => {
     }
 
     authorizationService.resolveReportResourceContext.mockRejectedValue(
-      new ForbiddenException('Current user is not allowed to access this report'),
+      new ForbiddenException(
+        'Current user is not allowed to access this report',
+      ),
     )
 
     await expect(

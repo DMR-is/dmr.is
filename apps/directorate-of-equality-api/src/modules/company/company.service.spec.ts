@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
+import { INationalRegistryService } from '@dmr.is/clients-national-registry'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from './models/company.model'
@@ -29,6 +30,10 @@ describe('CompanyService', () => {
       providers: [
         CompanyService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        {
+          provide: INationalRegistryService,
+          useValue: { getEntityByNationalId: jest.fn() },
+        },
         {
           provide: getModelToken(CompanyModel),
           useValue: { findOneOrThrow, findOne, create },
@@ -134,9 +139,7 @@ describe('CompanyService', () => {
   })
 })
 
-function makeCompanyModel(
-  overrides: Partial<CompanyModel> = {},
-): CompanyModel {
+function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
   return {
     id: 'company-1',
     name: 'Acme ehf.',

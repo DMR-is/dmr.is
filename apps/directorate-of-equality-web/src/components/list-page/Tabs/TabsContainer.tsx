@@ -1,6 +1,8 @@
 'use client'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
@@ -8,6 +10,8 @@ import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 import { ReportStatusEnum } from '../../../gen/fetch/types.gen'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { type Case, COLUMN_STATUS } from '../constants'
+import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
+import { CreateSalaryReportDrawer } from '../CreateSalaryReportDrawer'
 import { TabContent } from './TabContent'
 
 import { useQuery } from '@tanstack/react-query'
@@ -65,6 +69,12 @@ export const TabsContainer = () => {
 
   return (
     <GridContainer>
+      <Box display="flex" justifyContent="flexEnd" marginBottom={3}>
+        <Inline space={2}>
+          <CreateEqualityReportDrawer />
+          <CreateSalaryReportDrawer />
+        </Inline>
+      </Box>
       <Tabs
         label="Mál"
         selected="innsendingar"

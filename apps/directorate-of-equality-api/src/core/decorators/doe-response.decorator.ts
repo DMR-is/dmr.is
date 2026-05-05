@@ -67,6 +67,8 @@ export function DoeResponse({
   return applyDecorators(
     ApiOperation({ operationId, description }),
     successDecorator,
-    ...effectiveErrors.map((code) => ApiResponse({ status: code, type: ApiErrorDto })),
+    ...effectiveErrors.map((code) =>
+      ApiResponse({ status: code, type: ApiErrorDto }),
+    ),
   )
 }
