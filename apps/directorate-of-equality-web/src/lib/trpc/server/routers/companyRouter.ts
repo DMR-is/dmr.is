@@ -8,7 +8,7 @@ import { protectedProcedure, router } from '../trpc'
 
 const zGetCompaniesQuery = z.object({
   page: z.number().min(1).optional(),
-  pageSize: z.number().min(1).max(100).optional(),
+  pageSize: z.number().min(1).optional(),
   q: z.string().optional(),
   minEmployeeCount: z.number().min(0).optional(),
   sortBy: z.enum(['name', 'employeeCount']).optional(),

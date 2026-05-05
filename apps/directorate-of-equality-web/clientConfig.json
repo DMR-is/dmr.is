@@ -240,6 +240,20 @@
             "in": "query",
             "description": "Return only companies with averageEmployeeCountFromRsk >= this value.",
             "schema": { "minimum": 0, "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/CompanySortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CompanySortDirectionEnum"
+            }
           }
         ],
         "responses": {
@@ -1668,12 +1682,6 @@
       "AdminSalaryReportDto": {
         "type": "object",
         "properties": {
-          "equalityReportId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "FK to the approved EQUALITY report this salary was audited against."
-          },
-          "identifier": { "type": "string" },
           "importedFromExcel": { "type": "boolean" },
           "providerType": {
             "type": "string",
@@ -1702,8 +1710,6 @@
           }
         },
         "required": [
-          "equalityReportId",
-          "identifier",
           "importedFromExcel",
           "providerType",
           "companyAdminName",
@@ -1732,7 +1738,6 @@
       "AdminEqualityReportDto": {
         "type": "object",
         "properties": {
-          "identifier": { "type": "string" },
           "providerType": {
             "type": "string",
             "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
@@ -1754,7 +1759,6 @@
           }
         },
         "required": [
-          "identifier",
           "providerType",
           "companyAdminName",
           "companyAdminEmail",
@@ -1765,6 +1769,11 @@
           "equalityReportContent"
         ]
       },
+      "CompanySortByEnum": {
+        "type": "string",
+        "enum": ["name", "employeeCount"]
+      },
+      "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "CompanyDto": {
         "type": "object",
         "properties": {

@@ -6,9 +6,6 @@ import {
 } from '../../report/models/report.enums'
 
 export class AdminEqualityReportDto {
-  @ApiString()
-  identifier!: string
-
   @ApiEnum(ReportProviderEnum)
   providerType!: ReportProviderEnum
 

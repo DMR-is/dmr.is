@@ -6,7 +6,6 @@ import {
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiString,
-  ApiUUID,
 } from '@dmr.is/decorators'
 
 import {
@@ -17,15 +16,6 @@ import { CreateReportOutlierDto } from '../../report-create/dto/create-report.dt
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
 export class AdminSalaryReportDto {
-  @ApiUUID({
-    description:
-      'FK to the approved EQUALITY report this salary was audited against.',
-  })
-  equalityReportId!: string
-
-  @ApiString()
-  identifier!: string
-
   @ApiBoolean()
   importedFromExcel!: boolean
 

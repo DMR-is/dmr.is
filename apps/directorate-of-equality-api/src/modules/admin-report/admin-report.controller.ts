@@ -1,8 +1,6 @@
 import {
   Body,
   Controller,
-  HttpCode,
-  HttpStatus,
   Inject,
   MaxFileSizeValidator,
   Param,
@@ -26,17 +24,12 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ICompanyService } from '../company/company.service.interface'
-import { CompanyModel } from '../company/models/company.model'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
 import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
-
-const XLSX_MIME =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+import { IAdminReportService } from './admin-report.service.interface'
 
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
@@ -50,12 +43,10 @@ const MAX_UPLOAD_BYTES = ONE_MB * 20
 @UseGuards(TokenJwtAuthGuard, AdminGuard)
 export class AdminReportController {
   constructor(
-    @Inject(ICompanyService)
-    private readonly companyService: ICompanyService,
+    @Inject(IAdminReportService)
+    private readonly adminReportService: IAdminReportService,
     @Inject(IReportExcelService)
     private readonly reportExcelService: IReportExcelService,
-    @Inject(IReportCreateService)
-    private readonly reportCreateService: IReportCreateService,
   ) {}
 
   @Post('companies/:companyId/reports/excel/import')
@@ -86,7 +77,6 @@ export class AdminReportController {
   }
 
   @Post('companies/:companyId/reports/salary')
-  @HttpCode(HttpStatus.CREATED)
   @ApiParam({ name: 'companyId', type: String })
   @DoeResponse({
     operationId: 'submitAdminSalaryReport',
@@ -97,15 +87,10 @@ export class AdminReportController {
     @Param('companyId', ParseUUIDPipe) companyId: string,
     @Body() input: AdminSalaryReportDto,
   ): Promise<CreateReportResponseDto> {
-    const company = await this.companyService.getById(companyId)
-    return this.reportCreateService.createSalary({
-      ...input,
-      companies: [CompanyModel.toSnapshot(company)],
-    })
+    return this.adminReportService.submitSalary(companyId, input)
   }
 
   @Post('companies/:companyId/reports/equality')
-  @HttpCode(HttpStatus.CREATED)
   @ApiParam({ name: 'companyId', type: String })
   @DoeResponse({
     operationId: 'submitAdminEqualityReport',
@@ -116,10 +101,6 @@ export class AdminReportController {
     @Param('companyId', ParseUUIDPipe) companyId: string,
     @Body() input: AdminEqualityReportDto,
   ): Promise<CreateReportResponseDto> {
-    const company = await this.companyService.getById(companyId)
-    return this.reportCreateService.createEquality({
-      ...input,
-      companies: [CompanyModel.toSnapshot(company)],
-    })
+    return this.adminReportService.submitEquality(companyId, input)
   }
 }
