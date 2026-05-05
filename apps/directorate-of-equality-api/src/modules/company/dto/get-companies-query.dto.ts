@@ -1,7 +1,11 @@
 import { Transform } from 'class-transformer'
 import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator'
 
-import { ApiOptionalEnum, ApiOptionalNumber, ApiOptionalString } from '@dmr.is/decorators'
+import {
+  ApiOptionalEnum,
+  ApiOptionalNumber,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 export enum CompanySortByEnum {
@@ -15,12 +19,18 @@ export enum CompanySortDirectionEnum {
 }
 
 export class GetCompaniesQueryDto extends PagingQuery {
-  @ApiOptionalString({ description: 'Free-text search on company name or national ID.' })
+  @ApiOptionalString({
+    description: 'Free-text search on company name or national ID.',
+  })
   @IsOptional()
   @IsString()
   q?: string
 
-  @ApiOptionalNumber({ description: 'Return only companies with averageEmployeeCountFromRsk >= this value.', minimum: 0 })
+  @ApiOptionalNumber({
+    description:
+      'Return only companies with averageEmployeeCountFromRsk >= this value.',
+    minimum: 0,
+  })
   @Transform(({ value }) => {
     if (value == null) return undefined
     const n = parseInt(value, 10)
@@ -36,7 +46,9 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsEnum(CompanySortByEnum)
   sortBy?: CompanySortByEnum
 
-  @ApiOptionalEnum(CompanySortDirectionEnum, { enumName: 'CompanySortDirectionEnum' })
+  @ApiOptionalEnum(CompanySortDirectionEnum, {
+    enumName: 'CompanySortDirectionEnum',
+  })
   @IsOptional()
   @IsEnum(CompanySortDirectionEnum)
   direction?: CompanySortDirectionEnum

@@ -134,9 +134,7 @@ describe('CompanyService', () => {
   })
 })
 
-function makeCompanyModel(
-  overrides: Partial<CompanyModel> = {},
-): CompanyModel {
+function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
   return {
     id: 'company-1',
     name: 'Acme ehf.',

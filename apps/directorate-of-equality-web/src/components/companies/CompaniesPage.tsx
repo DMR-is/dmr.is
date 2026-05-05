@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from 'react'
 
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { type ColumnDef } from '@tanstack/react-table'
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Filter } from '@dmr.is/ui/components/island-is/Filter'
@@ -19,6 +16,9 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CreateCompanyModal } from './CreateCompanyModal'
+
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { type ColumnDef } from '@tanstack/react-table'
 
 type CompanyRow = {
   name: string
@@ -105,7 +105,12 @@ export const CompaniesPage = () => {
       <GridContainer>
         <GridRow>
           <GridColumn span="12/12">
-            <Box display="flex" justifyContent="spaceBetween" alignItems="center" marginBottom={3}>
+            <Box
+              display="flex"
+              justifyContent="spaceBetween"
+              alignItems="center"
+              marginBottom={3}
+            >
               <Text variant="h2">Fyrirtæki</Text>
               <Button
                 icon="add"

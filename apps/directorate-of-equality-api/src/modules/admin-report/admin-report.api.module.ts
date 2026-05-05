@@ -7,7 +7,11 @@ import { AdminReportController } from './admin-report.controller'
 import { AdminReportCoreModule } from './admin-report.core.module'
 
 @Module({
-  imports: [AuthorizationCoreModule, AdminReportCoreModule, ReportExcelCoreModule],
+  imports: [
+    AuthorizationCoreModule,
+    AdminReportCoreModule,
+    ReportExcelCoreModule,
+  ],
   controllers: [AdminReportController],
   providers: [AdminGuard],
 })

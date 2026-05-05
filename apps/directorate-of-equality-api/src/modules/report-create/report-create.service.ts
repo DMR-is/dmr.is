@@ -371,8 +371,8 @@ export class ReportCreateService implements IReportCreateService {
         address: company.address,
         city: company.city,
         postcode: company.postcode,
-        averageEmployeeCountFromRsk:
-          companyById.get(company.companyId)!.averageEmployeeCountFromRsk,
+        averageEmployeeCountFromRsk: companyById.get(company.companyId)!
+          .averageEmployeeCountFromRsk,
         isatCategory: company.isatCategory,
       })),
     )

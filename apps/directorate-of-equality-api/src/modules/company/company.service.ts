@@ -17,6 +17,10 @@ import {
 
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import {
+  CompanySortByEnum,
+  CompanySortDirectionEnum,
+} from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { CompanyModel } from './models/company.model'
 import {
@@ -26,7 +30,6 @@ import {
   GetCompaniesQueryDto,
   ICompanyService,
 } from './company.service.interface'
-import { CompanySortByEnum, CompanySortDirectionEnum } from './dto/get-companies-query.dto'
 
 const LOGGING_CONTEXT = 'CompanyService'
 
@@ -65,7 +68,9 @@ export class CompanyService implements ICompanyService {
       query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
         ? 'averageEmployeeCountFromRsk'
         : 'name'
-    const sortDir = (query.direction ?? CompanySortDirectionEnum.ASC).toUpperCase()
+    const sortDir = (
+      query.direction ?? CompanySortDirectionEnum.ASC
+    ).toUpperCase()
     const order: Order = [[sortCol, sortDir]]
 
     const { rows, count } = await this.companyModel.findAndCountAll({

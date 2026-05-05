@@ -5,10 +5,9 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 function randomAlpha(length = 6): string {
-  return Array.from(
-    randomBytes(length),
-    (b) => ALPHA[b % ALPHA.length],
-  ).join('')
+  return Array.from(randomBytes(length), (b) => ALPHA[b % ALPHA.length]).join(
+    '',
+  )
 }
 
 import { ICompanyService } from '../company/company.service.interface'

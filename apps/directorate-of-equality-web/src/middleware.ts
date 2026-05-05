@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import type { NextRequestWithAuth } from 'next-auth/middleware'
 import { withAuth } from 'next-auth/middleware'
 
-import { tryToUpdateCookie, updateCookie } from '@dmr.is/auth/middleware-helpers'
+import {
+  tryToUpdateCookie,
+  updateCookie,
+} from '@dmr.is/auth/middleware-helpers'
 import { isExpired } from '@dmr.is/auth/token-service'
 
 import { identityServerConfig } from './lib/auth/authOptions'
@@ -14,7 +17,10 @@ export default withAuth(
 
     if (!token) return response
 
-    const accessExpired = isExpired(token.accessToken as string, !!token.invalid)
+    const accessExpired = isExpired(
+      token.accessToken as string,
+      !!token.invalid,
+    )
     const idTokenExpired = token.idToken
       ? isExpired(token.idToken as string, !!token.invalid)
       : false

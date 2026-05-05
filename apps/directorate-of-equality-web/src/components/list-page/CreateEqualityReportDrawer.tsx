@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -14,11 +15,10 @@ import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
-import { Box } from '@dmr.is/ui/components/island-is/Box'
-import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const GENDER_OPTIONS = [
   { label: 'Karl', value: 'MALE' },
@@ -123,7 +123,9 @@ export const CreateEqualityReportDrawer = () => {
                 name="company"
                 label="Veldu fyrirtæki"
                 options={companyOptions}
-                value={companyOptions.find((o) => o.value === companyId) ?? null}
+                value={
+                  companyOptions.find((o) => o.value === companyId) ?? null
+                }
                 onChange={(opt) => setCompanyId(opt?.value ?? null)}
                 isLoading={companiesQuery.isLoading}
                 backgroundColor="blue"
@@ -162,9 +164,7 @@ export const CreateEqualityReportDrawer = () => {
                 value={GENDER_OPTIONS.find(
                   (o) => o.value === form.companyAdminGender,
                 )}
-                onChange={(opt) =>
-                  opt && set('companyAdminGender')(opt.value)
-                }
+                onChange={(opt) => opt && set('companyAdminGender')(opt.value)}
                 backgroundColor="blue"
               />
             </GridColumn>

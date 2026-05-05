@@ -18,9 +18,7 @@ const zGetCompaniesQuery = z.object({
 export const companyRouter = router({
   list: protectedProcedure
     .input(zGetCompaniesQuery.optional())
-    .query(({ ctx, input }) =>
-      ctx.api.getCompanies({ query: input as never }),
-    ),
+    .query(({ ctx, input }) => ctx.api.getCompanies({ query: input as never })),
 
   rskLookup: protectedProcedure
     .input(zRskLookupCompanyPath)
@@ -30,7 +28,5 @@ export const companyRouter = router({
 
   create: protectedProcedure
     .input(zCreateCompanyBody)
-    .mutation(({ ctx, input }) =>
-      ctx.api.createCompany({ body: input }),
-    ),
+    .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
 })

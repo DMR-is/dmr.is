@@ -2,18 +2,18 @@
 
 import { useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   isOpen: boolean
@@ -71,8 +71,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
   }
 
   const lookedUp = !!lookupQuery.data
-  const canCreate =
-    lookedUp && !!employeeCount && Number(employeeCount) > 0
+  const canCreate = lookedUp && !!employeeCount && Number(employeeCount) > 0
 
   return (
     <Modal

@@ -2,8 +2,7 @@
 
 import { useRef, useState } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-
+import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
@@ -16,10 +15,11 @@ import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
-import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 
 import { type ParsedReportDto } from '../../gen/fetch/types.gen'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const GENDER_OPTIONS = [
   { label: 'Karl', value: 'MALE' },
@@ -146,7 +146,7 @@ export const CreateSalaryReportDrawer = () => {
 
       if (!postpone) {
         toast.error(
-          `Útlægar niðurstöður fundust fyrir ${ordinals.length} starfsmenn. Merktu "Fresta útlágum" og gefðu ástæðu til að senda inn.`,
+          `Frávik fundust fyrir ${ordinals.length} starfsmenn. Merktu "Fresta skilum frávika" og gefðu ástæðu til að senda inn.`,
         )
         return
       }
@@ -208,7 +208,9 @@ export const CreateSalaryReportDrawer = () => {
                 name="company"
                 label="Veldu fyrirtæki"
                 options={companyOptions}
-                value={companyOptions.find((o) => o.value === companyId) ?? null}
+                value={
+                  companyOptions.find((o) => o.value === companyId) ?? null
+                }
                 onChange={(opt) => {
                   setCompanyId(opt?.value ?? null)
                   setParsedReport(null)
@@ -262,12 +264,12 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Útlægar niðurstöður
+                Frávik
               </Text>
             </GridColumn>
             <GridColumn span="12/12">
               <Checkbox
-                label="Fresta útlágum"
+                label="Fresta skilum frávika"
                 checked={postpone}
                 onChange={(e) => setPostpone(e.target.checked)}
                 disabled={!companyId}
@@ -318,9 +320,7 @@ export const CreateSalaryReportDrawer = () => {
                 value={GENDER_OPTIONS.find(
                   (o) => o.value === form.companyAdminGender,
                 )}
-                onChange={(opt) =>
-                  opt && set('companyAdminGender')(opt.value)
-                }
+                onChange={(opt) => opt && set('companyAdminGender')(opt.value)}
                 backgroundColor="blue"
               />
             </GridColumn>
