@@ -17,7 +17,6 @@ export type CaseFilterState = {
   query?: string
   category?: string[]
   status?: string[]
-  employees?: string[]
   dateFrom?: Date
   dateTo?: Date
 }
@@ -29,7 +28,6 @@ type Props = {
   onDateChange: (key: 'dateFrom' | 'dateTo', value?: Date) => void
   onReset: () => void
   showStatusFilter?: boolean
-  showEmployeesFilter?: boolean
 }
 
 export const CaseFilter = ({
@@ -39,7 +37,6 @@ export const CaseFilter = ({
   onDateChange,
   onReset,
   showStatusFilter,
-  showEmployeesFilter,
 }: Props) => {
   return (
     <Box>
@@ -83,7 +80,7 @@ export const CaseFilter = ({
               selected: filterState.category ?? [],
               filters: [
                 { value: 'Jafnréttisáætlun', label: 'Jafnréttisáætlun' },
-                { value: 'Úrbótaáætlun', label: 'Úrbótaáætlun' },
+                { value: 'Launagreining', label: 'Launagreining' },
               ],
             },
             ...(showStatusFilter
@@ -93,27 +90,12 @@ export const CaseFilter = ({
                     label: 'Staða',
                     selected: filterState.status ?? [],
                     filters: [
+                      { value: 'Drög', label: 'Drög' },
+                      { value: 'Innsent', label: 'Innsent' },
                       { value: 'Í vinnslu', label: 'Í vinnslu' },
-                      { value: 'Bíður gagna', label: 'Bíður gagna' },
-                      { value: 'Til skoðunar', label: 'Til skoðunar' },
                       { value: 'Samþykkt', label: 'Samþykkt' },
                       { value: 'Hafnað', label: 'Hafnað' },
-                      { value: 'Lokið', label: 'Lokið' },
-                    ],
-                  },
-                ]
-              : []),
-            ...(showEmployeesFilter
-              ? [
-                  {
-                    id: 'employees',
-                    label: 'Starfsmenn',
-                    selected: filterState.employees ?? [],
-                    filters: [
-                      { value: '1-25', label: '1–25' },
-                      { value: '26-50', label: '26–50' },
-                      { value: '51-100', label: '51–100' },
-                      { value: '101+', label: '101+' },
+                      { value: 'Úrelt', label: 'Úrelt' },
                     ],
                   },
                 ]

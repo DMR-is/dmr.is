@@ -2,7 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 
 export const CATEGORY_SLUG_MAP: Record<string, string> = {
   jafnrettisaetlun: 'Jafnréttisáætlun',
-  urbotaaaetlun: 'Úrbótaáætlun',
+  launagreining: 'Launagreining',
 }
 
 export const CATEGORY_LABEL_TO_SLUG: Record<string, string> =
@@ -11,21 +11,21 @@ export const CATEGORY_LABEL_TO_SLUG: Record<string, string> =
   )
 
 export type Case = {
+  id: string
+  identifier: string | null
   date: string
-  category: string
+  type: string
   company: string
-  ceo: string
   kennitala: string
-  email: string
-  isat: string
-  ceoGender: string
-  employees: number
-  status?: string
+  status: string
+  reviewer: string
+  correctionDeadline: string | null
+  validUntil: string | null
 }
 
 export const COLUMNS: ColumnDef<Case>[] = [
   { accessorKey: 'date', header: 'Dagsetning', enableSorting: true },
-  { accessorKey: 'category', header: 'Flokkur', enableSorting: true },
+  { accessorKey: 'type', header: 'Flokkur', enableSorting: true },
   { accessorKey: 'company', header: 'Fyrirtæki', enableSorting: true },
 ]
 
@@ -35,18 +35,11 @@ export const COLUMN_STATUS: ColumnDef<Case> = {
   enableSorting: true,
 }
 
-export const COLUMN_EMPLOYEES: ColumnDef<Case> = {
-  accessorKey: 'employees',
-  header: 'Starfsmenn',
-  enableSorting: true,
-}
-
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
   { label: 'Fyrirtæki', key: 'company' },
-  { label: 'Æðsti stjórnandi', key: 'ceo' },
   { label: 'Kennitala', key: 'kennitala' },
-  { label: 'Netfang', key: 'email' },
-  { label: 'ÍSAT atvinnugreinaflokkun', key: 'isat' },
-  { label: 'Kyn æðsta stjórnanda', key: 'ceoGender' },
-  { label: 'Fjöldi starfsmanna', key: 'employees' },
+  { label: 'Málsnúmer', key: 'identifier' },
+  { label: 'Umsjónarmaður', key: 'reviewer' },
+  { label: 'Leiðréttingarfrestur', key: 'correctionDeadline' },
+  { label: 'Gildir til', key: 'validUntil' },
 ]
