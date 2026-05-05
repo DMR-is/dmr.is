@@ -1,6 +1,7 @@
 import {
   ApiDtoArray,
   ApiEnum,
+  ApiOptionalBoolean,
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalString,
@@ -50,6 +51,13 @@ export class ApplicationReportDetailDto {
 
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiOptionalBoolean({
+    nullable: true,
+    description:
+      'Salary-only. Null on equality reports. When true, every outlier on this salary report is postponed (explanation columns are NULL on each row). All-or-none — postponement applies to the whole report.',
+  })
+  outliersPostponed!: boolean | null
 
   @ApiDtoArray(ReportEmployeeOutlierDto)
   outliers!: ReportEmployeeOutlierDto[]

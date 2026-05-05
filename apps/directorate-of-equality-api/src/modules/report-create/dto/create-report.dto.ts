@@ -25,10 +25,11 @@ import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
  * after the salary-analysis preview step (see `db/README.md` Notes / open
  * questions). Persisted into `report_employee_outlier`.
  *
- * `postponed = true` means the company has acknowledged the outlier but is
- * deferring the explanation; `reason`, `action`, and the signature fields may
- * be omitted in that case. When `postponed = false`, all explanation fields
- * are required (validated server-side and at the DB CHECK constraint).
+ * Postponement is an all-or-none property of the parent report — see
+ * `CreateReportDto.outliersPostponed`. When the parent is postponed, this
+ * row's explanation fields are ignored and persisted as NULL. When the parent
+ * is not postponed, all four explanation fields are required (validated
+ * server-side and at the DB CHECK constraint).
  */
 export class CreateReportOutlierDto {
   @ApiNumber({
@@ -37,29 +38,27 @@ export class CreateReportOutlierDto {
   })
   employeeOrdinal!: number
 
-  @ApiOptionalBoolean({
-    description:
-      'When true, defers the explanation. Other fields may be omitted. Defaults to false.',
-  })
-  postponed?: boolean
-
   @ApiOptionalString({
-    description: 'Required when `postponed` is false.',
+    description:
+      'Required when the parent report is not postponed; ignored when it is.',
   })
   reason?: string
 
   @ApiOptionalString({
-    description: 'Required when `postponed` is false.',
+    description:
+      'Required when the parent report is not postponed; ignored when it is.',
   })
   action?: string
 
   @ApiOptionalString({
-    description: 'Required when `postponed` is false.',
+    description:
+      'Required when the parent report is not postponed; ignored when it is.',
   })
   signatureName?: string
 
   @ApiOptionalString({
-    description: 'Required when `postponed` is false.',
+    description:
+      'Required when the parent report is not postponed; ignored when it is.',
   })
   signatureRole?: string
 }
@@ -159,6 +158,18 @@ export class CreateReportDto {
   @ApiDtoArray(CreateReportCompanySnapshotDto)
   @ArrayMinSize(1)
   companies!: CreateReportCompanySnapshotDto[]
+
+  /**
+   * All-or-none. When true, the company is acknowledging every detected
+   * outlier but deferring the explanations — explanation fields on each
+   * `outliers[]` row are ignored and persisted as NULL. When false (default)
+   * each `outliers[]` row must carry all four explanation fields.
+   */
+  @ApiOptionalBoolean({
+    description:
+      'When true, defers every outlier explanation on this report. Defaults to false.',
+  })
+  outliersPostponed?: boolean
 
   /**
    * Salary outliers the company has justified. Optional — empty/undefined is

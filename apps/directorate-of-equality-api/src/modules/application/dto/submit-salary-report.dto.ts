@@ -3,6 +3,7 @@ import {
   ApiDto,
   ApiEnum,
   ApiNumber,
+  ApiOptionalBoolean,
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiString,
@@ -77,6 +78,12 @@ export class SubmitSalaryReportDto {
 
   @ApiOptionalDtoArray(SubmitReportSubsidiaryDto)
   subsidiaries?: SubmitReportSubsidiaryDto[]
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, defers every outlier explanation on this report. Defaults to false. All-or-none — postponement applies to the whole report, not individual rows.',
+  })
+  outliersPostponed?: boolean
 
   @ApiOptionalDtoArray(CreateReportOutlierDto)
   outliers?: CreateReportOutlierDto[]

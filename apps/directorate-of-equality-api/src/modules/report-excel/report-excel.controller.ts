@@ -15,7 +15,6 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
-  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger'
 
@@ -46,10 +45,10 @@ export class ReportExcelController {
   ) {}
 
   @Get('template')
-  @ApiProduces(XLSX_MIME)
   @DoeResponse({
     operationId: 'getBlankExcelTemplate',
     successDescription: 'Blank salary report template',
+    produces: XLSX_MIME,
   })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()

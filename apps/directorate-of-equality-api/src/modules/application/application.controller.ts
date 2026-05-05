@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Inject,
@@ -21,7 +22,6 @@ import {
   ApiBody,
   ApiConsumes,
   ApiParam,
-  ApiProduces,
   ApiTags,
 } from '@nestjs/swagger'
 
@@ -44,6 +44,8 @@ import { IApplicationService } from './application.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+const DOCX_MIME =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
@@ -70,10 +72,10 @@ export class ApplicationController {
   }
 
   @Get('reports/excel/template')
-  @ApiProduces(XLSX_MIME)
   @DoeResponse({
     operationId: 'getApplicationBlankExcelTemplate',
     successDescription: 'Blank salary report template',
+    produces: XLSX_MIME,
   })
   async getTemplate(): Promise<StreamableFile> {
     const buf = await this.reportExcelService.generateBlankTemplate()
@@ -116,6 +118,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'analyzeApplicationSalaryReport',
     type: SalaryAnalysisResponseDto,
+    include404: true,
   })
   async salaryAnalysis(
     @CurrentCompany() company: CompanyDto,
@@ -143,6 +146,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'submitApplicationSalaryReport',
     status: 201,
+    include404: true,
     type: CreateReportResponseDto,
   })
   async submitSalary(
@@ -150,6 +154,32 @@ export class ApplicationController {
     @Body() input: SubmitSalaryReportDto,
   ): Promise<CreateReportResponseDto> {
     return this.applicationService.submitSalary(input, company)
+  }
+
+  @Get('reports/equality/template')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  @DoeResponse({
+    operationId: 'getApplicationEqualityReportTemplateHtml',
+    successDescription: 'HTML version of the equality report template',
+    produces: 'text/html',
+  })
+  getEqualityTemplateHtml(): string {
+    return this.applicationService.getEqualityTemplateHtml()
+  }
+
+  @Get('reports/equality/template/docx')
+  @DoeResponse({
+    operationId: 'getApplicationEqualityReportTemplateDocx',
+    successDescription: 'Word (.docx) version of the equality report template',
+    produces: DOCX_MIME,
+  })
+  getEqualityTemplateDocx(): StreamableFile {
+    const buf = this.applicationService.getEqualityTemplateDocx()
+
+    return new StreamableFile(buf, {
+      type: DOCX_MIME,
+      disposition: 'attachment; filename="equality-report-template.docx"',
+    })
   }
 
   @Post('reports/equality')

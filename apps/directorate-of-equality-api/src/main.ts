@@ -1,3 +1,4 @@
+import { json, urlencoded } from 'express'
 import { WinstonModule } from 'nest-winston'
 
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
@@ -19,6 +20,9 @@ async function bootstrap() {
       instance: logger,
     }),
   })
+
+  app.use(json({ limit: '6mb' }))
+  app.use(urlencoded({ extended: true, limit: '6mb' }))
 
   app.useGlobalPipes(
     new ValidationPipe({

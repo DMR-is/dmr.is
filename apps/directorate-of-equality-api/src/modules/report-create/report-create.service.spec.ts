@@ -348,7 +348,6 @@ describe('ReportCreateService', () => {
     input.outliers = [
       {
         employeeOrdinal: 1,
-        postponed: false,
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
@@ -358,17 +357,22 @@ describe('ReportCreateService', () => {
 
     await service.createSalary(input)
 
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ outliersPostponed: false }),
+    )
     expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
     expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
-        postponed: false,
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
         signatureRole: 'HR Manager',
       }),
     ])
+    expect(outlierBulkCreate.mock.calls[0][0][0]).not.toHaveProperty(
+      'postponed',
+    )
   })
 
   it('rejects outliers referencing an unknown employee ordinal', async () => {
@@ -397,7 +401,6 @@ describe('ReportCreateService', () => {
     input.outliers = [
       {
         employeeOrdinal: 1,
-        postponed: false,
         reason: 'r',
         action: 'a',
         signatureName: 'n',
@@ -421,21 +424,46 @@ describe('ReportCreateService', () => {
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('accepts a postponed outlier even with empty explanation fields', async () => {
+  it('persists every outlier with NULL explanation columns when the report is postponed', async () => {
     const input = makeInputWithDetectedOutlier()
+    input.outliersPostponed = true
     input.outliers = [
       {
         employeeOrdinal: 1,
-        postponed: true,
+        // Explanation fields supplied here are ignored when the report is postponed.
+        reason: 'should be discarded',
+        action: 'should be discarded',
+        signatureName: 'should be discarded',
+        signatureRole: 'should be discarded',
       },
     ]
+
+    await service.createSalary(input)
+
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ outliersPostponed: true }),
+    )
+    expect(outlierBulkCreate).toHaveBeenCalledWith([
+      expect.objectContaining({
+        reportEmployeeId: 'emp-0',
+        reason: null,
+        action: null,
+        signatureName: null,
+        signatureRole: null,
+      }),
+    ])
+  })
+
+  it('accepts a postponed report with bare acknowledgement rows (no explanations supplied)', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outliersPostponed = true
+    input.outliers = [{ employeeOrdinal: 1 }]
 
     await service.createSalary(input)
 
     expect(outlierBulkCreate).toHaveBeenCalledWith([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
-        postponed: true,
         reason: null,
         action: null,
         signatureName: null,
@@ -449,7 +477,6 @@ describe('ReportCreateService', () => {
     input.outliers = [
       {
         employeeOrdinal: 1,
-        postponed: false,
         reason: '',
         action: 'something',
         signatureName: 'somebody',
@@ -458,7 +485,7 @@ describe('ReportCreateService', () => {
     ]
 
     await expect(service.createSalary(input)).rejects.toThrow(
-      /Non-postponed outlier .* missing required field\(s\): reason, signatureRole/,
+      /Outlier for employee ordinal .* missing required field\(s\): reason, signatureRole/,
     )
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })

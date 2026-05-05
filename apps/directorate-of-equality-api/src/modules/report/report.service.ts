@@ -91,8 +91,10 @@ export class ReportService implements IReportService {
         limit,
         offset,
         // distinct + col avoids row duplication from the include inflating count.
+        // Qualify with the model alias — the listview scope joins tables that
+        // also have an `id` column, so a bare `id` is ambiguous in Postgres.
         distinct: true,
-        col: 'id',
+        col: `${ReportModel.name}.id`,
         // Subquery off so the nested-where syntax works against joined cols.
         subQuery: false,
       })
