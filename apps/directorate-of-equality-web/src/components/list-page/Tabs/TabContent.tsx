@@ -225,6 +225,7 @@ export const TabContent = ({
             <Table
               columns={columns}
               data={pageData}
+              getRowHref={(row) => `/mal/${row.id}`}
               getRowExpanded={
                 expandable ? (row) => <ExpandedRow row={row} /> : undefined
               }

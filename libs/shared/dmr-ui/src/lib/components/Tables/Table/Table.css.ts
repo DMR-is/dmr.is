@@ -33,7 +33,7 @@ export const tableRow = recipe({
   },
   variants: {
     expandable: {
-      true: { cursor: 'pointer' },
+      true: { cursor: 'default' },
       false: { cursor: 'default' },
     },
     expanded: {
