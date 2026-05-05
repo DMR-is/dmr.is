@@ -1,4 +1,4 @@
-export class CompanyReportSnapshotSourceDto {
+export class SubsidiaryReportSnapshotSourceDto {
   companyId!: string
   name!: string
   nationalId!: string

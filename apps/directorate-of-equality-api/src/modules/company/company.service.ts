@@ -24,11 +24,11 @@ import {
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { CompanyModel } from './models/company.model'
 import {
-  CompanyReportSnapshotLookup,
-  CompanyReportSnapshotSourceDto,
   CreateCompanyInput,
   GetCompaniesQueryDto,
   ICompanyService,
+  SubsidiaryReportSnapshotLookup,
+  SubsidiaryReportSnapshotSourceDto,
 } from './company.service.interface'
 
 const LOGGING_CONTEXT = 'CompanyService'
@@ -156,45 +156,44 @@ export class CompanyService implements ICompanyService {
     return company.fromModel()
   }
 
-  async getOrCreateReportSnapshotSource(
-    input: CompanyReportSnapshotLookup,
-  ): Promise<CompanyReportSnapshotSourceDto> {
+  async getOrCreateSubsidiaryReportSnapshotSource(
+    input: SubsidiaryReportSnapshotLookup,
+  ): Promise<SubsidiaryReportSnapshotSourceDto> {
     this.logger.debug(
       `Resolving report company snapshot source by national id "${input.nationalId}"`,
       { context: LOGGING_CONTEXT },
     )
 
+    const registry = await this.nationalRegistryService.getEntityByNationalId(
+      input.nationalId,
+    )
+
+    if (!registry.entity) {
+      throw new NotFoundException(
+        `No entity found in national registry for "${input.nationalId}"`,
+      )
+    }
+
     const existingCompany = await this.companyModel.findOne({
       where: { nationalId: input.nationalId },
     })
 
-    if (existingCompany) {
-      return toPlaceholderReportSnapshotSource(existingCompany)
+    const company =
+      existingCompany ??
+      (await this.companyModel.create({
+        name: registry.entity.nafn,
+        nationalId: input.nationalId,
+        averageEmployeeCountFromRsk: 0,
+      }))
+
+    return {
+      companyId: company.id,
+      name: company.name,
+      nationalId: company.nationalId,
+      address: registry.entity.heimili,
+      city: registry.entity.sveitarfelag,
+      postcode: registry.entity.postaritun,
+      isatCategory: '',
     }
-
-    // TODO: Replace this placeholder with the external company API once wired.
-    // Until then we create the live company row from the minimal submitted
-    // identity and leave snapshot-only details blank/zero.
-    const company = await this.companyModel.create({
-      name: input.name,
-      nationalId: input.nationalId,
-      averageEmployeeCountFromRsk: 0,
-    })
-
-    return toPlaceholderReportSnapshotSource(company)
-  }
-}
-
-function toPlaceholderReportSnapshotSource(
-  company: CompanyModel,
-): CompanyReportSnapshotSourceDto {
-  return {
-    companyId: company.id,
-    name: company.name,
-    nationalId: company.nationalId,
-    address: '',
-    city: '',
-    postcode: '',
-    isatCategory: '',
   }
 }
