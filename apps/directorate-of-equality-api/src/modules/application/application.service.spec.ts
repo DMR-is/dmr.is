@@ -60,7 +60,7 @@ const COMPANY: CompanyDto = {
 describe('ApplicationService', () => {
   let service: ApplicationService
   let configGetByKey: jest.Mock
-  let getOrCreateReportSnapshotSource: jest.Mock
+  let getOrCreateSubsidiaryReportSnapshotSource: jest.Mock
   let getActiveEqualityForCompany: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
@@ -76,7 +76,7 @@ describe('ApplicationService', () => {
       key: 'salary_difference_threshold_percent',
       value: '3.9',
     })
-    getOrCreateReportSnapshotSource = jest
+    getOrCreateSubsidiaryReportSnapshotSource = jest
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
     getActiveEqualityForCompany = jest.fn()
@@ -101,7 +101,7 @@ describe('ApplicationService', () => {
           provide: ICompanyService,
           useValue: {
             getByNationalId: jest.fn(),
-            getOrCreateReportSnapshotSource,
+            getOrCreateSubsidiaryReportSnapshotSource,
           },
         },
         {
@@ -224,7 +224,7 @@ describe('ApplicationService', () => {
 
       const result = await service.submitSalary(input, COMPANY)
 
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).toHaveBeenCalledWith({
         equalityReportId: input.equalityReportId,
         identifier: input.identifier,
@@ -261,11 +261,11 @@ describe('ApplicationService', () => {
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
       })
-      getOrCreateReportSnapshotSource.mockResolvedValueOnce(source)
+      getOrCreateSubsidiaryReportSnapshotSource.mockResolvedValueOnce(source)
 
       await service.submitSalary(input, COMPANY)
 
-      expect(getOrCreateReportSnapshotSource).toHaveBeenCalledWith({
+      expect(getOrCreateSubsidiaryReportSnapshotSource).toHaveBeenCalledWith({
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
       })
@@ -289,7 +289,7 @@ describe('ApplicationService', () => {
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
         /does not match the authenticated company/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
     })
 
@@ -305,7 +305,7 @@ describe('ApplicationService', () => {
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
         /cannot be the authenticated parent company/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
     })
 
@@ -325,7 +325,7 @@ describe('ApplicationService', () => {
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow(
         /Duplicate company national id/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
     })
   })
@@ -336,7 +336,7 @@ describe('ApplicationService', () => {
 
       const result = await service.submitEquality(input, COMPANY)
 
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).toHaveBeenCalledWith({
         identifier: input.identifier,
         providerType: input.providerType,
@@ -366,11 +366,11 @@ describe('ApplicationService', () => {
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
       })
-      getOrCreateReportSnapshotSource.mockResolvedValueOnce(source)
+      getOrCreateSubsidiaryReportSnapshotSource.mockResolvedValueOnce(source)
 
       await service.submitEquality(input, COMPANY)
 
-      expect(getOrCreateReportSnapshotSource).toHaveBeenCalledWith({
+      expect(getOrCreateSubsidiaryReportSnapshotSource).toHaveBeenCalledWith({
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
       })
@@ -394,7 +394,7 @@ describe('ApplicationService', () => {
       await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
         /does not match the authenticated company/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
     })
 
@@ -410,7 +410,7 @@ describe('ApplicationService', () => {
       await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
         /cannot be the authenticated parent company/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
     })
 
@@ -430,7 +430,7 @@ describe('ApplicationService', () => {
       await expect(service.submitEquality(input, COMPANY)).rejects.toThrow(
         /Duplicate company national id/,
       )
-      expect(getOrCreateReportSnapshotSource).not.toHaveBeenCalled()
+      expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).not.toHaveBeenCalled()
     })
   })

@@ -351,7 +351,9 @@ export class ApplicationService implements IApplicationService {
     const subsidiarySnapshots = await Promise.all(
       subsidiaries.map(async (subsidiary) => {
         const source =
-          await this.companyService.getOrCreateReportSnapshotSource(subsidiary)
+          await this.companyService.getOrCreateSubsidiaryReportSnapshotSource(
+            subsidiary,
+          )
 
         return {
           ...source,

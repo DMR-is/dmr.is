@@ -2,7 +2,10 @@ import { NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { INationalRegistryService } from '@dmr.is/clients-national-registry'
+import {
+  INationalRegistryService,
+  NationalRegistryEntityDto,
+} from '@dmr.is/clients-national-registry'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from './models/company.model'
@@ -20,11 +23,13 @@ describe('CompanyService', () => {
   let findOneOrThrow: jest.Mock
   let findOne: jest.Mock
   let create: jest.Mock
+  let getEntityByNationalId: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
+    getEntityByNationalId = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -32,7 +37,7 @@ describe('CompanyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: INationalRegistryService,
-          useValue: { getEntityByNationalId: jest.fn() },
+          useValue: { getEntityByNationalId },
         },
         {
           provide: getModelToken(CompanyModel),
@@ -74,8 +79,17 @@ describe('CompanyService', () => {
     )
   })
 
-  describe('getOrCreateReportSnapshotSource', () => {
-    it('returns existing company data with placeholder snapshot-only fields', async () => {
+  describe('getOrCreateSubsidiaryReportSnapshotSource', () => {
+    it('returns existing company data with address fields seeded from the national registry', async () => {
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: '5501234567',
+          nafn: 'Acme ehf.',
+          heimili: 'Suðurgata 1',
+          sveitarfelag: 'Reykjavík',
+          postaritun: '101',
+        }),
+      })
       findOne.mockResolvedValue(
         makeCompanyModel({
           id: 'company-1',
@@ -85,11 +99,12 @@ describe('CompanyService', () => {
         }),
       )
 
-      const result = await service.getOrCreateReportSnapshotSource({
+      const result = await service.getOrCreateSubsidiaryReportSnapshotSource({
         name: 'Ignored name',
         nationalId: '5501234567',
       })
 
+      expect(getEntityByNationalId).toHaveBeenCalledWith('5501234567')
       expect(findOne).toHaveBeenCalledWith({
         where: { nationalId: '5501234567' },
       })
@@ -98,14 +113,23 @@ describe('CompanyService', () => {
         companyId: 'company-1',
         name: 'Acme ehf.',
         nationalId: '5501234567',
-        address: '',
-        city: '',
-        postcode: '',
+        address: 'Suðurgata 1',
+        city: 'Reykjavík',
+        postcode: '101',
         isatCategory: '',
       })
     })
 
-    it('creates a minimal live company row while the external lookup is a placeholder', async () => {
+    it('creates a live company row from the national registry name when no match exists', async () => {
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: '6601234567',
+          nafn: 'Subsidiary ehf.',
+          heimili: 'Hafnarstræti 5',
+          sveitarfelag: 'Akureyri',
+          postaritun: '600',
+        }),
+      })
       findOne.mockResolvedValue(null)
       create.mockResolvedValue(
         makeCompanyModel({
@@ -116,8 +140,8 @@ describe('CompanyService', () => {
         }),
       )
 
-      const result = await service.getOrCreateReportSnapshotSource({
-        name: 'Subsidiary ehf.',
+      const result = await service.getOrCreateSubsidiaryReportSnapshotSource({
+        name: 'Submitted name',
         nationalId: '6601234567',
       })
 
@@ -130,14 +154,45 @@ describe('CompanyService', () => {
         companyId: 'company-2',
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
-        address: '',
-        city: '',
-        postcode: '',
+        address: 'Hafnarstræti 5',
+        city: 'Akureyri',
+        postcode: '600',
         isatCategory: '',
       })
     })
+
+    it('throws NotFoundException when the national registry has no matching entity', async () => {
+      getEntityByNationalId.mockResolvedValue({ entity: null })
+
+      await expect(
+        service.getOrCreateSubsidiaryReportSnapshotSource({
+          name: 'Anything',
+          nationalId: '0000000000',
+        }),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(findOne).not.toHaveBeenCalled()
+      expect(create).not.toHaveBeenCalled()
+    })
   })
 })
+
+function makeRegistryEntity(
+  overrides: Partial<NationalRegistryEntityDto> = {},
+): NationalRegistryEntityDto {
+  return {
+    stada: 'A',
+    kennitala: '5501234567',
+    nafn: 'Acme ehf.',
+    loghHusk: '',
+    heimili: 'Suðurgata 1',
+    postaritun: '101',
+    sveitarfelag: 'Reykjavík',
+    svfNr: '0000',
+    kynkodi: 0,
+    ...overrides,
+  }
+}
 
 function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
   return {
