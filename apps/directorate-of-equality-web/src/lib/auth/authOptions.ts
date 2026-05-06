@@ -8,7 +8,7 @@ import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { getLogger } from '@dmr.is/logging-next'
 
-import { getMyUser } from '../../gen/fetch'
+import { getMyUser } from '../../gen/fetch/sdk.gen'
 import { getDoEClient } from '../api/createClient'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30

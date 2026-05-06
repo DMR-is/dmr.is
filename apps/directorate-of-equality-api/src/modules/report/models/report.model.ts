@@ -12,6 +12,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
 import { CompanyReportModel } from '../../company/models/company-report.model'
+import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
 import { ReportResultModel } from '../../report-result/models/report-result.model'
 import { UserModel } from '../../user/models/user.model'
 import type { EqualityReportDto } from '../dto/equality-report.dto'
@@ -23,7 +24,6 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from './report.enums'
-import { ReportCommentModel } from './report-comment.model'
 
 // Re-export for backwards compatibility — many callers import these enums
 // from `report.model.ts` directly. New code should prefer `report.enums.ts`.

@@ -1700,6 +1700,7 @@
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
             "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
           },
+          "postponed": { "type": "boolean" },
           "outliers": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
@@ -1951,6 +1952,15 @@
         },
         "required": ["id", "type", "status"]
       },
+      "ReportStatusCountsDto": {
+        "type": "object",
+        "properties": {
+          "submitted": { "type": "number" },
+          "inReview": { "type": "number" },
+          "processed": { "type": "number" }
+        },
+        "required": ["submitted", "inReview", "processed"]
+      },
       "GetReportsResponseDto": {
         "type": "object",
         "properties": {
@@ -1958,9 +1968,12 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ReportListItemDto" }
           },
-          "paging": { "$ref": "#/components/schemas/Paging" }
+          "paging": { "$ref": "#/components/schemas/Paging" },
+          "statusCounts": {
+            "$ref": "#/components/schemas/ReportStatusCountsDto"
+          }
         },
-        "required": ["reports", "paging"]
+        "required": ["reports", "paging", "statusCounts"]
       },
       "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportProviderEnum": {

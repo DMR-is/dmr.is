@@ -17,6 +17,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -102,11 +103,7 @@ export const CreateEqualityReportDrawer = () => {
     <Drawer
       ariaLabel="Skrá jafnréttisáætlun"
       baseId="create-equality-report-drawer"
-      disclosure={
-        <Button variant="utility" icon="add" iconType="outline">
-          Jafnréttisáætlun
-        </Button>
-      }
+      disclosure={<UtilityButton icon="add">Jafnréttisáætlun</UtilityButton>}
     >
       <GridContainer>
         <Stack space={4}>
