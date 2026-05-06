@@ -14,12 +14,10 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
 import { MOCK_DATA } from '../../../app/(protected)/mal/mocks'
-// TODO: restore when dev data is seeded
-// import { type ReportListItemDto } from '../../../gen/fetch/types.gen'
-// import { useReportsFilter } from '../../../hooks/useReportsFilter'
-// import { useTRPC } from '../../../lib/trpc/client/trpc'
-// import { useQuery } from '@tanstack/react-query'
+import { type ReportListItemDto } from '../../../gen/fetch/types.gen'
 import { type zListReportsQuery } from '../../../gen/fetch/zod.gen'
+import { useReportsFilter } from '../../../hooks/useReportsFilter'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
 import {
   type Case,
   CATEGORY_LABEL_TO_SLUG,
@@ -31,15 +29,15 @@ import {
 import { CaseFilter, CaseFilterState } from '../Filter/CaseFilter'
 import * as styles from './TabContent.css'
 
+import { useQuery } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 type ListReportsQuery = z.infer<typeof zListReportsQuery>
 
-// TODO: restore when dev data is seeded
-// const TYPE_TO_CATEGORY: Record<string, string> = {
-//   EQUALITY: 'Jafnréttisáætlun',
-//   SALARY: 'Launagreining',
-// }
+const TYPE_TO_CATEGORY: Record<string, string> = {
+  EQUALITY: 'Jafnréttisáætlun',
+  SALARY: 'Launagreining',
+}
 
 const STATUS_TO_ICELANDIC: Record<string, string> = {
   DRAFT: 'Drög',
@@ -50,30 +48,29 @@ const STATUS_TO_ICELANDIC: Record<string, string> = {
   SUPERSEDED: 'Úrelt',
 }
 
-// TODO: restore when dev data is seeded
-// function mapReportToCase(report: ReportListItemDto): Case {
-//   const reviewer = report.reviewer
-//     ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
-//     : ''
-//   return {
-//     id: report.id,
-//     identifier: report.identifier ?? null,
-//     date: report.createdAt
-//       ? new Date(report.createdAt).toLocaleDateString('is-IS')
-//       : '',
-//     type: TYPE_TO_CATEGORY[report.type] ?? report.type,
-//     company: report.companyName ?? '',
-//     kennitala: report.companyNationalId ?? '',
-//     status: STATUS_TO_ICELANDIC[report.status] ?? report.status,
-//     reviewer,
-//     correctionDeadline: report.correctionDeadline
-//       ? new Date(report.correctionDeadline).toLocaleDateString('is-IS')
-//       : null,
-//     validUntil: report.validUntil
-//       ? new Date(report.validUntil).toLocaleDateString('is-IS')
-//       : null,
-//   }
-// }
+function mapReportToCase(report: ReportListItemDto): Case {
+  const reviewer = report.reviewer
+    ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
+    : ''
+  return {
+    id: report.id,
+    identifier: report.identifier ?? null,
+    date: report.createdAt
+      ? new Date(report.createdAt).toLocaleDateString('is-IS')
+      : '',
+    type: TYPE_TO_CATEGORY[report.type] ?? report.type,
+    company: report.companyName ?? '',
+    kennitala: report.companyNationalId ?? '',
+    status: STATUS_TO_ICELANDIC[report.status] ?? report.status,
+    reviewer,
+    correctionDeadline: report.correctionDeadline
+      ? new Date(report.correctionDeadline).toLocaleDateString('is-IS')
+      : null,
+    validUntil: report.validUntil
+      ? new Date(report.validUntil).toLocaleDateString('is-IS')
+      : null,
+  }
+}
 
 const ExpandedRow = ({ row }: { row: Case }) => (
   <Box background="blue100" padding={2}>
@@ -140,19 +137,11 @@ export const TabContent = ({
   const searchParams = useSearchParams()
 
   // TODO: restore when dev data is seeded
-  // const trpc = useTRPC()
-  // const { query } = useReportsFilter()
-  // const mergedQuery: ListReportsQuery = { ...query, ...fixedQuery }
-  // const { data } = useQuery(trpc.reports.list.queryOptions(mergedQuery))
-  // const cases = useMemo(() => data?.reports.map(mapReportToCase) ?? [], [data])
-
-  const cases = useMemo(() => {
-    if (!fixedQuery?.status?.length) return MOCK_DATA
-    const allowed = new Set(
-      fixedQuery.status.map((s) => STATUS_TO_ICELANDIC[s] ?? s),
-    )
-    return MOCK_DATA.filter((c) => allowed.has(c.status))
-  }, [fixedQuery])
+  const trpc = useTRPC()
+  const { query } = useReportsFilter()
+  const mergedQuery: ListReportsQuery = { ...query, ...fixedQuery }
+  const { data } = useQuery(trpc.reports.list.queryOptions(mergedQuery))
+  const cases = useMemo(() => data?.reports.map(mapReportToCase) ?? [], [data])
 
   const [filterState, setFilterState] = useState<CaseFilterState>(() => {
     const slugs = searchParams.getAll('category')
