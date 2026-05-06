@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { ReportModel } from './models/report.model'
@@ -15,6 +16,7 @@ import { IReportService } from './report.service.interface'
       ReportEventModel,
       ReportRoleResultModel,
       ReportEmployeeOutlierModel,
+      ReportCommentModel,
     ]),
   ],
   providers: [

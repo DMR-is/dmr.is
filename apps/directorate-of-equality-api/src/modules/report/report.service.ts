@@ -12,7 +12,7 @@
  * by other modules. This service never mutates report data.
  */
 
-import { Op, Order, WhereOptions } from 'sequelize'
+import { col, fn, Op, Order, WhereOptions } from 'sequelize'
 
 import {
   Inject,
@@ -29,6 +29,13 @@ import {
 
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
+import { UserModel } from '../user/models/user.model'
+import { ReportOverviewDto } from './dto/report-overview.dto'
+import {
+  ReportOverviewStatisticsDto,
+  ReportStatisticsItemDto,
+  ReportStatisticsWindowDto,
+} from './dto/report-overview-statistics.dto'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
@@ -197,6 +204,144 @@ export class ReportService implements IReportService {
       roleResults,
       employeeOutliers,
     }
+  }
+
+  async getOverview(nationalId: string): Promise<ReportOverviewDto> {
+    this.logger.debug('Fetching report overview', {
+      context: LOGGING_CONTEXT,
+      nationalId,
+    })
+
+    const activeStatuses = [
+      ReportStatusEnum.SUBMITTED,
+      ReportStatusEnum.IN_REVIEW,
+    ]
+
+    const todayStart = new Date()
+    todayStart.setUTCHours(0, 0, 0, 0)
+    const todayEnd = new Date()
+    todayEnd.setUTCHours(23, 59, 59, 999)
+
+    const reviewerInclude = {
+      model: UserModel,
+      as: 'reviewer',
+      required: true,
+      attributes: [],
+      where: { nationalId },
+    }
+
+    const [
+      submittedToday,
+      inProgress,
+      reportsWithComments,
+      reportsWithoutEmployee,
+      totalAssigned,
+      assignedWithComments,
+    ] = await Promise.all([
+      this.reportModel.count({
+        where: {
+          status: ReportStatusEnum.SUBMITTED,
+          createdAt: { [Op.between]: [todayStart, todayEnd] },
+        },
+      }),
+      this.reportModel.count({
+        where: { status: ReportStatusEnum.IN_REVIEW },
+      }),
+      this.reportModel.count({
+        where: { status: { [Op.in]: activeStatuses } },
+        include: [
+          { model: ReportCommentModel, as: 'comments', required: true, attributes: [] },
+        ],
+        distinct: true,
+      }),
+      this.reportModel.count({
+        where: {
+          status: { [Op.in]: activeStatuses },
+          reviewerUserId: { [Op.is]: null },
+        },
+      }),
+      this.reportModel.count({
+        where: { status: { [Op.in]: activeStatuses } },
+        include: [reviewerInclude],
+        distinct: true,
+      }),
+      this.reportModel.count({
+        where: { status: { [Op.in]: activeStatuses } },
+        include: [
+          reviewerInclude,
+          { model: ReportCommentModel, as: 'comments', required: true, attributes: [] },
+        ],
+        distinct: true,
+      }),
+    ])
+
+    return {
+      general: { submittedToday, inProgress, reportsWithComments, reportsWithoutEmployee },
+      assigned: { totalAssigned, assignedWithComments },
+    }
+  }
+
+  async getOverviewStatistics(): Promise<ReportOverviewStatisticsDto> {
+    this.logger.debug('Fetching report overview statistics', {
+      context: LOGGING_CONTEXT,
+    })
+
+    const nonDraftStatuses = [
+      ReportStatusEnum.SUBMITTED,
+      ReportStatusEnum.IN_REVIEW,
+      ReportStatusEnum.APPROVED,
+      ReportStatusEnum.DENIED,
+      ReportStatusEnum.SUPERSEDED,
+    ]
+
+    const now = new Date()
+
+    const last30DaysStart = new Date(now)
+    last30DaysStart.setUTCDate(last30DaysStart.getUTCDate() - 30)
+    last30DaysStart.setUTCHours(0, 0, 0, 0)
+
+    const currentYearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1))
+
+    const groupByStatus = async (from?: Date) => {
+      const rows = (await this.reportModel.findAll({
+        attributes: ['status', [fn('COUNT', col(`${ReportModel.name}.id`)), 'count']],
+        where: {
+          status: { [Op.in]: nonDraftStatuses },
+          ...(from ? { createdAt: { [Op.gte]: from } } : {}),
+        },
+        group: ['status'],
+        raw: true,
+      })) as unknown as { status: ReportStatusEnum; count: string }[]
+
+      return this.buildStatisticsWindow(rows)
+    }
+
+    const [last30Days, currentYear, allTime] = await Promise.all([
+      groupByStatus(last30DaysStart),
+      groupByStatus(currentYearStart),
+      groupByStatus(),
+    ])
+
+    return { last30Days, currentYear, allTime }
+  }
+
+  private buildStatisticsWindow(
+    rows: { status: ReportStatusEnum; count: string }[],
+  ): ReportStatisticsWindowDto {
+    const items: ReportStatisticsItemDto[] = rows.map((r) => ({
+      status: r.status,
+      count: parseInt(r.count, 10),
+      percentage: 0,
+    }))
+
+    const total = items.reduce((sum, i) => sum + i.count, 0)
+
+    for (const item of items) {
+      item.percentage =
+        total > 0 ? Math.round((item.count / total) * 100) : 0
+    }
+
+    return { items, total }
   }
 
   /**
