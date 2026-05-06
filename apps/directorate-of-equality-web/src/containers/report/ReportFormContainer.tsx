@@ -17,12 +17,17 @@ type ReportFormContainerProps = {
 export function ReportFormContainer({ id }: ReportFormContainerProps) {
   const trpc = useTRPC()
 
-  const { data: report } = useQuery(
-    trpc.reports.getById.queryOptions({ id }),
-  ) as { data: ReportDetailDto }
+  // const { data: report } = useQuery(
+  //   trpc.reports.getById.queryOptions({ id: id }),
+  // ) as { data: ReportDetailDto }
 
-  if (!report) return null
+  // if (!report) return null
 
+  const title = <>
+    <Text variant="h2">Vinnslusvæði</Text>
+          <Text>Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</Text>
+
+  </>
   return (
     <Box background="white" padding={[4, 6, 8]} borderRadius="large">
       <Stack space={[3, 4]}>
@@ -31,10 +36,10 @@ export function ReportFormContainer({ id }: ReportFormContainerProps) {
             items={[
               { title: 'Forsíða', href: '/' },
               { title: 'Mál', href: '/mal' },
-              { title: report.company.name, href: `/mal/${report.id}` },
+              { title: 'Flott fyrirtæki', href: `/mal/${id}` },
             ]}
           />
-          <Text variant="h2">{report.company.name}</Text>
+        {title}
         </Stack>
       </Stack>
     </Box>

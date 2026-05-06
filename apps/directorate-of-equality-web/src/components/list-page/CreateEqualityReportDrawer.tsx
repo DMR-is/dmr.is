@@ -166,6 +166,7 @@ export const CreateEqualityReportDrawer = () => {
                 )}
                 onChange={(opt) => opt && set('companyAdminGender')(opt.value)}
                 backgroundColor="blue"
+
               />
             </GridColumn>
 

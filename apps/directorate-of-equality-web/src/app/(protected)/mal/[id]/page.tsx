@@ -10,9 +10,11 @@ export default async function CasePage({
 }) {
   const { id } = await params
   return (
+    <Box background='purple100' style={{ minHeight: '100dvh' }} paddingY={4} paddingX={6}>
+
     <GridContainer>
-      <h1>Mál {id}</h1>
       <ReportContainer id={id} />
     </GridContainer>
+    </Box>
   )
 }
