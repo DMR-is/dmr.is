@@ -43,6 +43,7 @@ const statusColumn: ColumnDef<Case> = {
   },
 }
 
+const SUBMITTED = [ReportStatusEnum.SUBMITTED]
 const IN_REVIEW = [ReportStatusEnum.IN_REVIEW]
 const PROCESSED = [
   ReportStatusEnum.APPROVED,
@@ -53,9 +54,12 @@ const PROCESSED = [
 export const TabsContainer = () => {
   const trpc = useTRPC()
 
-  const { data: allData } = useQuery(
-    trpc.reports.list.queryOptions({ pageSize: 1 }),
-  )
+  // const { data: allData } = useQuery(
+  //   trpc.reports.list.queryOptions({ pageSize: 1 }),
+  // )
+
+  const { data: submittedData } = useQuery(
+    trpc.reports.list.queryOptions({ pageSize: 1, status: SUBMITTED }),)
   const { data: inReviewData } = useQuery(
     trpc.reports.list.queryOptions({ pageSize: 1, status: IN_REVIEW }),
   )
@@ -63,7 +67,7 @@ export const TabsContainer = () => {
     trpc.reports.list.queryOptions({ pageSize: 1, status: PROCESSED }),
   )
 
-  const allCount = allData?.paging.totalItems ?? '0'
+  const submittedCount = submittedData?.paging.totalItems ?? '0'
   const inReviewCount = inReviewData?.paging.totalItems ?? '0'
   const processedCount = processedData?.paging.totalItems ?? '0'
 
@@ -83,8 +87,9 @@ export const TabsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `Innsendingar (${allCount})`,
-            content: <TabContent expandable />,
+            label: `Innsendingar (${submittedCount})`,
+            content: <TabContent expandable
+            fixedQuery={{status: SUBMITTED }}/>,
           },
           {
             id: 'i-vinnslu',

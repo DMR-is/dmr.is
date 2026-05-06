@@ -136,7 +136,6 @@ export const TabContent = ({
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // TODO: restore when dev data is seeded
   const trpc = useTRPC()
   const { query } = useReportsFilter()
   const mergedQuery: ListReportsQuery = { ...query, ...fixedQuery }
