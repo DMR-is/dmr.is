@@ -3,6 +3,7 @@ import {
   ApiDto,
   ApiEnum,
   ApiNumber,
+  ApiOptionalBoolean,
   ApiOptionalDtoArray,
   ApiOptionalString,
   ApiString,
@@ -57,6 +58,9 @@ export class AdminSalaryReportDto {
       'Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.',
   })
   parsed!: ParsedReportDto
+
+  @ApiOptionalBoolean()
+  postponed?: boolean
 
   @ApiOptionalDtoArray(CreateReportOutlierDto)
   outliers?: CreateReportOutlierDto[]

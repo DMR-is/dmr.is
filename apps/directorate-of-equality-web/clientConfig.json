@@ -1656,25 +1656,21 @@
             "type": "number",
             "description": "Ordinal of the employee in `parsed.employees[]` this outlier justification applies to."
           },
-          "postponed": {
-            "type": "boolean",
-            "description": "When true, defers the explanation. Other fields may be omitted. Defaults to false."
-          },
           "reason": {
             "type": "string",
-            "description": "Required when `postponed` is false."
+            "description": "Required when the parent report is not postponed; ignored when it is."
           },
           "action": {
             "type": "string",
-            "description": "Required when `postponed` is false."
+            "description": "Required when the parent report is not postponed; ignored when it is."
           },
           "signatureName": {
             "type": "string",
-            "description": "Required when `postponed` is false."
+            "description": "Required when the parent report is not postponed; ignored when it is."
           },
           "signatureRole": {
             "type": "string",
-            "description": "Required when `postponed` is false."
+            "description": "Required when the parent report is not postponed; ignored when it is."
           }
         },
         "required": ["employeeOrdinal"]
@@ -1704,6 +1700,7 @@
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",
             "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
           },
+          "postponed": { "type": "boolean" },
           "outliers": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
@@ -2273,16 +2270,16 @@
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "reportEmployeeId": { "type": "string", "format": "uuid" },
-          "postponed": {
-            "type": "boolean",
-            "description": "When true, the company has acknowledged the outlier but deferred the explanation. Reason/action/signatures may be null."
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null only when the parent report has `outliersPostponed = true`. Otherwise required and non-empty."
           },
-          "reason": { "type": "string", "nullable": true },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
           "signatureRole": { "type": "string", "nullable": true }
         },
-        "required": ["id", "reportEmployeeId", "postponed"]
+        "required": ["id", "reportEmployeeId"]
       },
       "ReportDetailDto": {
         "type": "object",
@@ -2314,6 +2311,11 @@
           "providerId": { "type": "string", "nullable": true },
           "importedFromExcel": { "type": "boolean" },
           "identifier": { "type": "string", "nullable": true },
+          "outliersPostponed": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Salary-only. Null on equality reports. When true, the company has acknowledged every outlier on this salary report but deferred the explanations — all outlier rows are persisted with NULL explanation columns."
+          },
           "equalityReportId": {
             "type": "string",
             "format": "uuid",
