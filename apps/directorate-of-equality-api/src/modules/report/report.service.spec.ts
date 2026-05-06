@@ -71,11 +71,13 @@ const makeService = () => {
   // Build the model mock first, then make `.scope()` / `.withScope()`
   // return the same object so chained calls (`model.scope('x').findAndCountAll`)
   // resolve to the same mock functions we assert against.
+  const count = jest.fn().mockResolvedValue(0)
   const reportModel = {
     findAndCountAll,
     findByPkOrThrow,
     findByPk,
     findOne,
+    count,
   } as unknown as typeof ReportModel & {
     scope: jest.Mock
     withScope: jest.Mock
