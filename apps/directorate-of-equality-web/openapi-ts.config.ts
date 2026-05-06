@@ -1,3 +1,5 @@
+import nuqsParsersPlugin from './openapi-ts.nuqs-plugin'
+
 import { defineConfig } from '@hey-api/openapi-ts'
 
 export default defineConfig({
@@ -14,5 +16,6 @@ export default defineConfig({
       name: '@hey-api/typescript',
       enums: 'javascript',
     },
+    nuqsParsersPlugin(),
   ],
 })

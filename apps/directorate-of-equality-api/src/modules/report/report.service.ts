@@ -37,7 +37,10 @@ import {
   GetReportsQueryDto,
   SortDirectionEnum,
 } from './dto/get-reports.query.dto'
-import { GetReportsResponseDto } from './dto/get-reports-response.dto'
+import {
+  GetReportsResponseDto,
+  ReportStatusCountsDto,
+} from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
 import {
   ReportTimelineItemDto,
@@ -83,26 +86,62 @@ export class ReportService implements IReportService {
     const order = this.buildOrder(query)
     const { limit, offset } = getLimitAndOffset(query)
 
-    const { rows, count } = await this.reportModel
-      .scope('listview')
-      .findAndCountAll({
-        where,
-        order,
-        limit,
-        offset,
-        // distinct + col avoids row duplication from the include inflating count.
-        // Qualify with the model alias — the listview scope joins tables that
-        // also have an `id` column, so a bare `id` is ambiguous in Postgres.
-        distinct: true,
-        col: `${ReportModel.name}.id`,
-        // Subquery off so the nested-where syntax works against joined cols.
-        subQuery: false,
-      })
+    // For tab counts: apply all filters except status so each group count
+    // reflects the user's active search/filter state regardless of active tab.
+    const whereForCounts = this.buildWhere({ ...query, status: undefined })
+    const countCol = `${ReportModel.name}.id`
+
+    const [{ rows, count }, submittedCount, inReviewCount, processedCount] =
+      await Promise.all([
+        this.reportModel.scope('listview').findAndCountAll({
+          where,
+          order,
+          limit,
+          offset,
+          // distinct + col avoids row duplication from the include inflating count.
+          // Qualify with the model alias — the listview scope joins tables that
+          // also have an `id` column, so a bare `id` is ambiguous in Postgres.
+          distinct: true,
+          col: countCol,
+          // Subquery off so the nested-where syntax works against joined cols.
+          subQuery: false,
+        }),
+        this.reportModel.scope('listview').count({
+          where: { ...whereForCounts, status: ReportStatusEnum.SUBMITTED },
+          distinct: true,
+          col: countCol,
+        }),
+        this.reportModel.scope('listview').count({
+          where: { ...whereForCounts, status: ReportStatusEnum.IN_REVIEW },
+          distinct: true,
+          col: countCol,
+        }),
+        this.reportModel.scope('listview').count({
+          where: {
+            ...whereForCounts,
+            status: {
+              [Op.in]: [
+                ReportStatusEnum.APPROVED,
+                ReportStatusEnum.DENIED,
+                ReportStatusEnum.SUPERSEDED,
+              ],
+            },
+          },
+          distinct: true,
+          col: countCol,
+        }),
+      ])
 
     const reports = rows.map((r) => r.fromModelToListItem())
-
     const paging = generatePaging(reports, query.page, query.pageSize, count)
-    return { reports, paging }
+
+    const statusCounts: ReportStatusCountsDto = {
+      submitted: submittedCount,
+      inReview: inReviewCount,
+      processed: processedCount,
+    }
+
+    return { reports, paging, statusCounts }
   }
 
   async getById(id: string): Promise<ReportDetailDto> {
