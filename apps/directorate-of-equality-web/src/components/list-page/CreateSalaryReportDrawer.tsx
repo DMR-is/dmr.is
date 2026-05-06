@@ -156,11 +156,8 @@ export const CreateSalaryReportDrawer = () => {
           path: { companyId },
           body: {
             ...body,
-            outliers: ordinals.map((employeeOrdinal) => ({
-              employeeOrdinal,
-              postponed: true,
-              reason: postponeReason,
-            })),
+            postponed: true,
+            outliers: ordinals.map((employeeOrdinal) => ({ employeeOrdinal })),
           },
         })
         onSuccess()

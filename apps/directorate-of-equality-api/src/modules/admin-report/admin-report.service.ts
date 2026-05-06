@@ -60,6 +60,7 @@ export class AdminReportService implements IAdminReportService {
 
     return this.reportCreateService.createSalary({
       ...dto,
+      outliersPostponed: dto.postponed,
       identifier: randomAlpha(),
       equalityReportId: equalityReport.id,
       companies: [CompanyModel.toSnapshot(company)],
