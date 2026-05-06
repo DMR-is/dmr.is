@@ -23,7 +23,7 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from './report.enums'
-import { ReportCommentModel } from './report-comment.model'
+import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
 
 // Re-export for backwards compatibility — many callers import these enums
 // from `report.model.ts` directly. New code should prefer `report.enums.ts`.

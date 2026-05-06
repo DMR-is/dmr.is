@@ -28,6 +28,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
@@ -48,7 +49,6 @@ import {
 } from './dto/report-timeline-item.dto'
 import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
-import { ReportCommentModel } from './models/report-comment.model'
 import { ReportEventModel } from './models/report-event.model'
 import { buildFreeTextWhere, dateRangeFilter } from './utils/filters'
 import { IReportService } from './report.service.interface'
