@@ -46,6 +46,7 @@ import { CreateReportResponseDto } from '../report-create/dto/create-report-resp
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import {
@@ -421,9 +422,17 @@ export class ApplicationService implements IApplicationService {
           {
             model: ReportEmployeeModel,
             as: 'reportEmployee',
-            attributes: [],
+            attributes: ['gender'],
             where: { reportId: report.id },
             required: true,
+            include: [
+              {
+                model: ReportEmployeeRoleModel,
+                as: 'role',
+                attributes: ['title'],
+                required: true,
+              },
+            ],
           },
         ],
       }),

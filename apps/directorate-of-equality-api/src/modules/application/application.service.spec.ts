@@ -534,6 +534,8 @@ describe('ApplicationService', () => {
         {
           id: outlier.id,
           reportEmployeeId: outlier.reportEmployeeId,
+          gender: GenderEnum.FEMALE,
+          roleTitle: 'Manager',
           reason: outlier.reason,
           action: outlier.action,
           signatureName: outlier.signatureName,
@@ -886,6 +888,10 @@ function makeOutlierRow(
     action: 'Action',
     signatureName: 'Anna Admin',
     signatureRole: 'HR',
+    reportEmployee: {
+      gender: GenderEnum.FEMALE,
+      role: { title: 'Manager' },
+    },
     ...overrides,
   } as unknown as ReportEmployeeOutlierModel
 }
