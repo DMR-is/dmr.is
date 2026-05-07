@@ -98,6 +98,7 @@ erDiagram
         text calculation_version
         jsonb base_snapshot
         jsonb full_snapshot
+        jsonb outlier_analysis_snapshot
     }
     report_role_result {
         uuid id PK

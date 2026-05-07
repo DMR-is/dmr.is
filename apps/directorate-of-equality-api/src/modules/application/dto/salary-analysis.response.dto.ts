@@ -1,10 +1,4 @@
-import {
-  ApiDto,
-  ApiDtoArray,
-  ApiEnum,
-  ApiNumber,
-  ApiOptionalNumber,
-} from '@dmr.is/decorators'
+import { ApiDto, ApiDtoArray, ApiEnum, ApiNumber } from '@dmr.is/decorators'
 
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 
@@ -30,8 +24,8 @@ export class SalaryAnalysisOutlierDto {
   @ApiNumber()
   allowedDifferencePercent!: number
 
-  @ApiOptionalNumber({ nullable: true })
-  referenceSalary!: number | null
+  @ApiNumber()
+  predictedBaseSalary!: number
 
   @ApiNumber()
   scoreBucketRangeFrom!: number

@@ -1,9 +1,9 @@
 import { GenderEnum } from '../models/report.model'
 import {
-  assessSalaryOutlierFromReference,
-  assessSalaryOutlierInBucket,
+  assessSalaryOutlierFromPrediction,
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
+  computeSalaryOutlierAnalysis,
   detectOutliers,
   type OutlierDetectionEmployee,
   roundSalaryAggregateSnapshot,
@@ -239,25 +239,25 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('marks salaries outside half the threshold from a reference as outliers', () => {
+  it('marks salaries outside half the threshold from a prediction as outliers', () => {
     expect(
-      assessSalaryOutlierFromReference({
+      assessSalaryOutlierFromPrediction({
         salary: 102000,
-        referenceSalary: 100000,
-        thresholdPercent: 3.9,
+        predictedSalary: 100000,
+        allowedDifferencePercent: 1.95,
       }),
     ).toMatchObject({
       isOutlier: true,
       direction: 'ABOVE',
       allowedDifferencePercent: 1.95,
-      referenceSalary: 100000,
+      predictedSalary: 100000,
     })
 
     expect(
-      assessSalaryOutlierFromReference({
+      assessSalaryOutlierFromPrediction({
         salary: 98100,
-        referenceSalary: 100000,
-        thresholdPercent: 3.9,
+        predictedSalary: 100000,
+        allowedDifferencePercent: 1.95,
       }),
     ).toMatchObject({
       isOutlier: false,
@@ -266,52 +266,66 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('assesses salary outlier against a score bucket median', () => {
-    const aggregates = computeCompensationAggregates({
+  it('computes a regression analysis with predicted base salary per exact score', () => {
+    const analysis = computeSalaryOutlierAnalysis({
+      thresholdPercent: 3.9,
       employees: [
-        {
-          reportEmployeeRoleId: 'role-a',
-          score: 120,
-          gender: GenderEnum.MALE,
-          workRatio: 1,
-          baseSalary: 100000,
-          additionalSalary: 0,
-          bonusSalary: null,
-        },
-        {
-          reportEmployeeRoleId: 'role-b',
-          score: 120,
-          gender: GenderEnum.FEMALE,
-          workRatio: 1,
-          baseSalary: 104000,
-          additionalSalary: 0,
-          bonusSalary: null,
-        },
-        {
-          reportEmployeeRoleId: 'role-c',
-          score: 120,
-          gender: GenderEnum.MALE,
-          workRatio: 1,
-          baseSalary: 500000,
-          additionalSalary: 0,
-          bonusSalary: null,
-        },
+        makeOutlierEmployee({ ordinal: 1, score: 100, baseSalary: 1000000 }),
+        makeOutlierEmployee({ ordinal: 2, score: 200, baseSalary: 1100000 }),
+        makeOutlierEmployee({ ordinal: 3, score: 300, baseSalary: 1200000 }),
       ],
     })
 
-    const bucket = aggregates.report.base.scoreBuckets[0]
-
-    expect(
-      assessSalaryOutlierInBucket({
-        salary: 104000,
-        bucket,
-        thresholdPercent: 3.9,
-      }),
-    ).toMatchObject({
+    expect(analysis.regressions.overall.slope).toBeCloseTo(1000, 4)
+    expect(analysis.regressions.overall.intercept).toBeCloseTo(900000, 4)
+    expect(analysis.employees[1]).toMatchObject({
+      ordinal: 2,
+      score: 200,
+      adjustedBaseSalary: 1100000,
+      predictedBaseSalary: 1100000,
       isOutlier: false,
-      direction: 'EQUAL',
-      referenceSalary: 104000,
     })
+  })
+
+  it('snapshots per-gender regressions for visualisation', () => {
+    const analysis = computeSalaryOutlierAnalysis({
+      thresholdPercent: 3.9,
+      employees: [
+        makeOutlierEmployee({
+          ordinal: 1,
+          score: 100,
+          gender: GenderEnum.FEMALE,
+          baseSalary: 800000,
+        }),
+        makeOutlierEmployee({
+          ordinal: 2,
+          score: 200,
+          gender: GenderEnum.FEMALE,
+          baseSalary: 900000,
+        }),
+        makeOutlierEmployee({
+          ordinal: 3,
+          score: 100,
+          gender: GenderEnum.MALE,
+          baseSalary: 1000000,
+        }),
+        makeOutlierEmployee({
+          ordinal: 4,
+          score: 200,
+          gender: GenderEnum.MALE,
+          baseSalary: 1100000,
+        }),
+      ],
+    })
+
+    expect(analysis.regressions.female.sampleCount).toBe(2)
+    expect(analysis.regressions.female.slope).toBeCloseTo(1000, 4)
+    expect(analysis.regressions.male.sampleCount).toBe(2)
+    expect(analysis.regressions.male.slope).toBeCloseTo(1000, 4)
+    expect(analysis.regressions.male.intercept).toBeCloseTo(900000, 4)
+    expect(analysis.regressions.female.intercept).toBeCloseTo(700000, 4)
+    expect(analysis.regressions.neutral.sampleCount).toBe(0)
+    expect(analysis.regressions.neutral.slope).toBeNull()
   })
 
   describe('detectOutliers', () => {
@@ -326,80 +340,77 @@ describe('compensation-aggregates', () => {
       ...overrides,
     })
 
-    it('returns the employees whose adjusted base salary deviates beyond the half-threshold band around the bucket median', () => {
-      // 3 employees in the same score bucket. Median = 1,200,000.
-      // Ordinal 1 is 16.7% below the median (deviates) — flagged.
-      // Ordinals 2 and 3 land within 0.84% of the median — not flagged.
+    const regressionEmployees = () => [
+      baseEmployee({ ordinal: 1, score: 100, baseSalary: 850000 }),
+      baseEmployee({ ordinal: 2, score: 200, baseSalary: 1000000 }),
+      baseEmployee({ ordinal: 3, score: 300, baseSalary: 1100000 }),
+      baseEmployee({ ordinal: 4, score: 400, baseSalary: 1200000 }),
+      baseEmployee({ ordinal: 5, score: 500, baseSalary: 1300000 }),
+      baseEmployee({ ordinal: 6, score: 600, baseSalary: 1400000 }),
+      baseEmployee({ ordinal: 7, score: 700, baseSalary: 1500000 }),
+    ]
+
+    it('returns employees whose adjusted base salary deviates beyond the half-threshold band around the regression prediction', () => {
       const outliers = detectOutliers({
         thresholdPercent: 3.9,
-        employees: [
-          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
-          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1200000 }),
-          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1210000 }),
-        ],
+        employees: regressionEmployees(),
       })
 
       expect(outliers).toHaveLength(1)
       expect(outliers[0]).toMatchObject({
         ordinal: 1,
-        adjustedBaseSalary: 1000000,
+        score: 100,
+        adjustedBaseSalary: 850000,
         assessment: {
           isOutlier: true,
           direction: 'BELOW',
-          referenceSalary: 1200000,
+          predictedSalary: expect.any(Number),
         },
+        scoreBucketRangeFrom: 100,
+        scoreBucketRangeTo: 200,
       })
+      expect(outliers[0].predictedBaseSalary).toBeCloseTo(876785.71, 2)
+      expect(outliers[0].assessment.differencePercent).toBeCloseTo(-3.055, 3)
     })
 
     it('honours workRatio when adjusting base salary for detection', () => {
-      // Same baseSalary but ordinal 1 is part-time (workRatio 0.5), so
-      // adjusted base salary is 2x ordinal 2's. With 2 samples, the median
-      // is the midpoint and both deviate by 33% — both are flagged.
-      const outliers = detectOutliers({
+      const analysis = computeSalaryOutlierAnalysis({
         thresholdPercent: 3.9,
         employees: [
           baseEmployee({
             ordinal: 1,
             score: 250,
-            workRatio: 0.5,
-            baseSalary: 800000,
+            workRatio: 1,
+            baseSalary: 1000000,
           }),
           baseEmployee({
             ordinal: 2,
             score: 250,
-            workRatio: 1,
-            baseSalary: 800000,
+            workRatio: 0.5,
+            baseSalary: 500000,
           }),
         ],
       })
 
-      expect(outliers.map((o) => o.ordinal).sort()).toEqual([1, 2])
-      const ordinal1 = outliers.find((o) => o.ordinal === 1)!
-      expect(ordinal1.adjustedBaseSalary).toBe(1600000)
-    })
-
-    it('reports the score-bucket each outlier landed in', () => {
-      const outliers = detectOutliers({
-        thresholdPercent: 3.9,
-        employees: [
-          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
-          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1200000 }),
-          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1210000 }),
-        ],
-      })
-
-      // Default bucket width is 100. Score 250 → bucket [200, 300).
-      expect(outliers[0].bucket.rangeFrom).toBe(200)
-      expect(outliers[0].bucket.rangeTo).toBe(300)
+      expect(
+        analysis.employees.map((employee) => employee.adjustedBaseSalary),
+      ).toEqual([1000000, 1000000])
+      expect(
+        analysis.employees.map((employee) => employee.scoreBucketRangeFrom),
+      ).toEqual([200, 200])
+      expect(analysis.employees.map((employee) => employee.isOutlier)).toEqual([
+        false,
+        false,
+      ])
     })
 
     it('returns an empty array when no employees deviate beyond the band', () => {
       const outliers = detectOutliers({
         thresholdPercent: 3.9,
         employees: [
-          baseEmployee({ ordinal: 1, score: 250, baseSalary: 1000000 }),
-          baseEmployee({ ordinal: 2, score: 250, baseSalary: 1010000 }),
-          baseEmployee({ ordinal: 3, score: 250, baseSalary: 1005000 }),
+          baseEmployee({ ordinal: 1, score: 100, baseSalary: 1000000 }),
+          baseEmployee({ ordinal: 2, score: 200, baseSalary: 1100000 }),
+          baseEmployee({ ordinal: 3, score: 300, baseSalary: 1200000 }),
         ],
       })
 
@@ -413,13 +424,10 @@ describe('compensation-aggregates', () => {
     })
 
     it('uses the full threshold when useHalfThreshold is false', () => {
-      // Ordinal 1 deviates by 3% from the median. Half-threshold (1.95%)
+      // Ordinal 1 deviates by about 3% from the regression prediction.
+      // Half-threshold (1.95%)
       // would flag it; full threshold (3.9%) wouldn't.
-      const employees = [
-        baseEmployee({ ordinal: 1, score: 250, baseSalary: 970000 }),
-        baseEmployee({ ordinal: 2, score: 250, baseSalary: 1000000 }),
-        baseEmployee({ ordinal: 3, score: 250, baseSalary: 1003000 }),
-      ]
+      const employees = regressionEmployees()
 
       expect(
         detectOutliers({ thresholdPercent: 3.9, employees }).map(
@@ -437,3 +445,16 @@ describe('compensation-aggregates', () => {
     })
   })
 })
+
+function makeOutlierEmployee(
+  overrides: Partial<OutlierDetectionEmployee>,
+): OutlierDetectionEmployee {
+  return {
+    ordinal: 0,
+    score: 100,
+    gender: GenderEnum.FEMALE,
+    workRatio: 1,
+    baseSalary: 1000000,
+    ...overrides,
+  }
+}

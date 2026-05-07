@@ -13,6 +13,8 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ConfigModel } from '../config/models/config.model'
 import {
   computeCompensationAggregates,
+  computeSalaryOutlierAnalysis,
+  roundSalaryOutlierAnalysisSnapshot,
   roundSalaryResultSnapshot,
 } from '../report/lib/compensation-aggregates'
 import { ReportModel, ReportTypeEnum } from '../report/models/report.model'
@@ -125,6 +127,16 @@ export class ReportResultService implements IReportResultService {
         bonusSalary: employee.bonusSalary,
       })),
     })
+    const outlierAnalysis = computeSalaryOutlierAnalysis({
+      employees: employees.map((employee) => ({
+        ordinal: employee.ordinal,
+        score: employee.score,
+        gender: employee.gender,
+        workRatio: employee.workRatio,
+        baseSalary: employee.baseSalary,
+      })),
+      thresholdPercent: threshold,
+    })
 
     const resultValues = {
       reportId,
@@ -132,6 +144,8 @@ export class ReportResultService implements IReportResultService {
       calculationVersion: REPORT_RESULT_CALCULATION_VERSION,
       baseSnapshot: roundSalaryResultSnapshot(aggregates.report.base, 2),
       fullSnapshot: roundSalaryResultSnapshot(aggregates.report.full, 2),
+      outlierAnalysisSnapshot:
+        roundSalaryOutlierAnalysisSnapshot(outlierAnalysis),
     } satisfies ReportResultCreateAttributes
 
     await this.reportResultModel.create(resultValues)

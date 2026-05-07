@@ -674,62 +674,51 @@ function makeInput(): CreateReportDto {
 }
 
 /**
- * Variant of makeInput with three same-bucket employees engineered so that
- * `detectOutliers` flags ordinal 1 as the lone outlier under the default
- * 3.9% threshold (= 1.95% half-band around the bucket median).
- *
- * Bucket overall median = 1,200,000. Ordinal 1 sits 16.7% below it, ordinals
- * 2 and 3 are within 0.83% of the median.
+ * Variant of makeInput engineered so that `detectOutliers` flags ordinal 1 as
+ * the lone outlier under the default 3.9% threshold (= 1.95% half-band around
+ * the regression prediction at that exact score).
  */
 function makeInputWithDetectedOutlier(): CreateReportDto {
   const base = makeInput()
-  base.parsed.employees = [
-    {
-      ordinal: 1,
-      identifier: 'TVE-001',
-      roleTitle: 'Framkvaemdastjori',
-      education: EducationEnum.MASTER,
-      gender: GenderEnum.FEMALE,
-      field: 'Mgmt',
-      department: 'Mgmt',
-      startDate: '2021-01-01',
-      workRatio: 1,
-      baseSalary: 1000000,
-      additionalSalary: 100000,
-      bonusSalary: null,
-      personalStepAssignments: [],
-    },
-    {
-      ordinal: 2,
-      identifier: 'TVE-002',
-      roleTitle: 'Framkvaemdastjori',
-      education: EducationEnum.MASTER,
-      gender: GenderEnum.MALE,
-      field: 'Mgmt',
-      department: 'Mgmt',
-      startDate: '2021-01-01',
-      workRatio: 1,
-      baseSalary: 1200000,
-      additionalSalary: 100000,
-      bonusSalary: null,
-      personalStepAssignments: [],
-    },
-    {
-      ordinal: 3,
-      identifier: 'TVE-003',
-      roleTitle: 'Framkvaemdastjori',
-      education: EducationEnum.MASTER,
-      gender: GenderEnum.MALE,
-      field: 'Mgmt',
-      department: 'Mgmt',
-      startDate: '2021-01-01',
-      workRatio: 1,
-      baseSalary: 1210000,
-      additionalSalary: 100000,
-      bonusSalary: null,
-      personalStepAssignments: [],
-    },
+  base.parsed.criteria[0].subCriteria[0].steps = [
+    { order: 1, description: 'score 100', score: 100 },
+    { order: 2, description: 'score 200', score: 200 },
+    { order: 3, description: 'score 300', score: 300 },
+    { order: 4, description: 'score 400', score: 400 },
+    { order: 5, description: 'score 500', score: 500 },
+    { order: 6, description: 'score 600', score: 600 },
+    { order: 7, description: 'score 700', score: 700 },
   ]
+  base.parsed.roles[0].stepAssignments = []
+  base.parsed.employees = [
+    [1, GenderEnum.FEMALE, 850000],
+    [2, GenderEnum.MALE, 1000000],
+    [3, GenderEnum.MALE, 1100000],
+    [4, GenderEnum.MALE, 1200000],
+    [5, GenderEnum.MALE, 1300000],
+    [6, GenderEnum.MALE, 1400000],
+    [7, GenderEnum.MALE, 1500000],
+  ].map(([ordinal, gender, baseSalary]) => ({
+    ordinal: ordinal as number,
+    identifier: `TVE-00${ordinal}`,
+    roleTitle: 'Framkvaemdastjori',
+    education: EducationEnum.MASTER,
+    gender: gender as GenderEnum,
+    field: 'Mgmt',
+    department: 'Mgmt',
+    startDate: '2021-01-01',
+    workRatio: 1,
+    baseSalary: baseSalary as number,
+    additionalSalary: 100000,
+    bonusSalary: null,
+    personalStepAssignments: [
+      {
+        criterionTitle: 'Abyrgd',
+        subTitle: 'Abyrgd a fólki',
+        stepOrder: ordinal as number,
+      },
+    ],
+  }))
   return base
 }
 

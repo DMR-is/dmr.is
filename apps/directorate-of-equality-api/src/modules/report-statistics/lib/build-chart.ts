@@ -1,8 +1,10 @@
 import {
   computeSalaryAggregateSnapshot,
+  computeSalaryRegression,
   computeSalaryScoreBucketSnapshots,
   roundNullable,
   type SalaryScorePoint,
+  SCORE_BUCKET_WIDTH,
 } from '../../report/lib/compensation-aggregates'
 import { GenderEnum } from '../../report/models/report.model'
 import {
@@ -18,8 +20,6 @@ export interface EmployeeDataPoint {
   adjustedSalary: number
   gender: GenderEnum
 }
-
-const BUCKET_WIDTH = 100
 
 /**
  * Builds the gender-vs-score scatter response shared by reviewer-side
@@ -48,34 +48,16 @@ export function buildChartFromEmployeePoints(
 function computeLinearRegression(
   points: EmployeeDataPoint[],
 ): RegressionLineDto {
-  const n = points.length
-  if (n < 2) {
-    return { slope: 0, intercept: n === 1 ? points[0].adjustedSalary : 0 }
-  }
-
-  let sumX = 0
-  let sumY = 0
-  let sumXY = 0
-  let sumX2 = 0
-
-  for (const p of points) {
-    sumX += p.score
-    sumY += p.adjustedSalary
-    sumXY += p.score * p.adjustedSalary
-    sumX2 += p.score * p.score
-  }
-
-  const denominator = n * sumX2 - sumX * sumX
-  if (denominator === 0) {
-    return { slope: 0, intercept: sumY / n }
-  }
-
-  const slope = (n * sumXY - sumX * sumY) / denominator
-  const intercept = (sumY - slope * sumX) / n
+  const regression = computeSalaryRegression(
+    points.map((p) => ({
+      score: p.score,
+      adjustedBaseSalary: p.adjustedSalary,
+    })),
+  )
 
   return {
-    slope: Math.round(slope * 100) / 100,
-    intercept: Math.round(intercept * 100) / 100,
+    slope: roundNullable(regression.slope, 2) ?? 0,
+    intercept: roundNullable(regression.intercept, 2) ?? 0,
   }
 }
 
@@ -86,7 +68,7 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
     salary: point.adjustedSalary,
   }))
 
-  return computeSalaryScoreBucketSnapshots(salaryPoints, BUCKET_WIDTH).map(
+  return computeSalaryScoreBucketSnapshots(salaryPoints, SCORE_BUCKET_WIDTH).map(
     (bucket) => {
       const snapshot = bucket.totals
 

@@ -167,7 +167,17 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
+`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. The same row also snapshots the salary-outlier regression analysis: the fitted base-salary regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's adjusted base salary vs predicted base salary at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
+
+### Reconstructing the gender-vs-score chart from a stored result
+
+The same chart shape that `buildChartFromEmployeePoints` produces for the application-side preview can be rebuilt from a persisted `report_result` row:
+
+- **Scatter points** — `outlier_analysis_snapshot.employees[*]` carries `score`, `gender`, and `adjustedBaseSalary` per employee.
+- **Regression line(s)** — `outlier_analysis_snapshot.regressions.overall` is the gender-blind line that drives the outlier flag. `regressions.male/female/neutral` are per-cohort lines available for visualisation only.
+- **Score-bucket overlay** — the per-employee `scoreBucketRangeFrom/To` is preserved on each row, but the bucket-level aggregates (median, average, gender breakdowns, counts) live in `base_snapshot.scoreBuckets`. Render the chart by joining on the bucket range when an overlay is needed.
+
+Bucket placement is informational only: the outlier flag is decided against the regression prediction at the employee's exact score, not the bucket median.
 
 ## Enums
 
@@ -376,14 +386,14 @@ One row per outlier the company has acknowledged at submission. Two shapes share
 
 Postponement is all-or-none across the report — the API layer enforces uniformity before persisting. The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected.
 
-| Column               | Type                                                                   |
-| -------------------- | ---------------------------------------------------------------------- |
-| `id`                 | `uuid` PK                                                              |
-| `report_employee_id` | `fk → report_employee`                                                 |
-| `reason`             | `text` (nullable — null only when parent `outliers_postponed = true`)  |
-| `action`             | `text` (nullable — null only when parent `outliers_postponed = true`)  |
-| `signature_name`     | `text` (nullable — null only when parent `outliers_postponed = true`)  |
-| `signature_role`     | `text` (nullable — null only when parent `outliers_postponed = true`)  |
+| Column               | Type                                                                  |
+| -------------------- | --------------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                             |
+| `report_employee_id` | `fk → report_employee`                                                |
+| `reason`             | `text` (nullable — null only when parent `outliers_postponed = true`) |
+| `action`             | `text` (nullable — null only when parent `outliers_postponed = true`) |
+| `signature_name`     | `text` (nullable — null only when parent `outliers_postponed = true`) |
+| `signature_role`     | `text` (nullable — null only when parent `outliers_postponed = true`) |
 
 Invariant (enforced via CHECK):
 
@@ -421,6 +431,7 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 | `calculation_version`                 | `text` (default `v1`)                                                         |
 | `base_snapshot`                       | `jsonb` adjusted base salary snapshot                                         |
 | `full_snapshot`                       | `jsonb` adjusted full salary snapshot                                         |
+| `outlier_analysis_snapshot`           | `jsonb` regression-based salary outlier analysis snapshot                     |
 
 `base_snapshot` and `full_snapshot` share the same shape:
 
@@ -431,6 +442,13 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
   - `rangeFrom`, `rangeTo`
   - `totals` with the same aggregate shape as above
   - `counts` for `overall`, `male`, `female`, `neutral`
+
+`outlier_analysis_snapshot` stores:
+
+- `method` — currently `BASE_SALARY_LINEAR_REGRESSION_BY_SCORE`.
+- `thresholdPercent` and `allowedDifferencePercent` — the configured threshold and the half-threshold band used for detection.
+- `regression` — slope/intercept and basic fit metadata for adjusted base salary by score.
+- `employees[]` — per employee ordinal: score, gender, adjusted base salary, predicted base salary at that exact score, score-bucket range, percent difference, direction, and `isOutlier`.
 
 Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
 
@@ -552,5 +570,5 @@ No FKs, no relationships. Standalone lookup table.
 - **Fines cron.** Daily job: `SELECT * FROM report WHERE fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')`. Accrual table (`report_fine` or similar) not yet designed.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
-- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around the score-bucket median), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.
+- **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around each employee's predicted adjusted base salary on the score regression line), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.
 - **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row, and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The report-level `outliers_postponed` flag lets a company acknowledge every outlier without filling explanations immediately; postponement applies to the whole report, never to individual rows.

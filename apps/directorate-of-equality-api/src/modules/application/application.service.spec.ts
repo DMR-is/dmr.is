@@ -12,6 +12,7 @@ import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -143,30 +144,29 @@ describe('ApplicationService', () => {
   })
 
   describe('salaryAnalysis', () => {
-    it('returns outliers (with bucket + assessment) and the gender-vs-score chart', async () => {
+    it('returns regression outliers and the gender-vs-score chart', async () => {
       const result = await service.salaryAnalysis(makeRequest(), COMPANY)
 
       expect(configGetByKey).toHaveBeenCalledWith(
         'salary_difference_threshold_percent',
       )
 
-      // Ordinal 1 sits 16.7% below the bucket median (1,200,000), well past the
-      // 1.95% half-threshold band — flagged. Ordinals 2 and 3 fall inside the
-      // band and are not flagged.
+      // Ordinal 1 sits about 3% below its predicted salary on the regression
+      // line, past the 1.95% half-threshold band. The rest stay inside the band.
       expect(result.outliers).toHaveLength(1)
       expect(result.outliers[0]).toMatchObject({
         employeeOrdinal: 1,
-        adjustedBaseSalary: 1000000,
+        adjustedBaseSalary: 850000,
         direction: 'BELOW',
-        referenceSalary: 1200000,
-        scoreBucketRangeFrom: 200,
-        scoreBucketRangeTo: 300,
+        predictedBaseSalary: 876786,
+        scoreBucketRangeFrom: 100,
+        scoreBucketRangeTo: 200,
       })
-      expect(result.outliers[0].differencePercent).toBeCloseTo(-16.6667, 2)
+      expect(result.outliers[0].differencePercent).toBeCloseTo(-3.055, 3)
       expect(result.outliers[0].allowedDifferencePercent).toBeCloseTo(1.95, 4)
 
-      expect(result.baseSalaryByGenderAndScoreAll.dataPoints).toHaveLength(3)
-      expect(result.baseSalaryByGenderAndScoreAll.totals.maleCount).toBe(2)
+      expect(result.baseSalaryByGenderAndScoreAll.dataPoints).toHaveLength(7)
+      expect(result.baseSalaryByGenderAndScoreAll.totals.maleCount).toBe(6)
       expect(result.baseSalaryByGenderAndScoreAll.totals.femaleCount).toBe(1)
     })
 
@@ -655,8 +655,13 @@ function makeRequest(): SalaryAnalysisRequestDto {
               description: 'People responsibility',
               weight: 5,
               steps: [
-                { order: 1, description: 'low', score: 10 },
-                { order: 5, description: 'high', score: 250 },
+                { order: 1, description: 'score 100', score: 100 },
+                { order: 2, description: 'score 200', score: 200 },
+                { order: 3, description: 'score 300', score: 300 },
+                { order: 4, description: 'score 400', score: 400 },
+                { order: 5, description: 'score 500', score: 500 },
+                { order: 6, description: 'score 600', score: 600 },
+                { order: 7, description: 'score 700', score: 700 },
               ],
             },
           ],
@@ -665,30 +670,51 @@ function makeRequest(): SalaryAnalysisRequestDto {
       roles: [
         {
           title: 'Framkvaemdastjori',
-          stepAssignments: [
-            {
-              criterionTitle: 'Abyrgd',
-              subTitle: 'Abyrgd a fólki',
-              stepOrder: 5,
-            },
-          ],
+          stepAssignments: [],
         },
       ],
       employees: [
         makeEmployee({
           ordinal: 1,
           gender: GenderEnum.FEMALE,
-          baseSalary: 1000000,
+          baseSalary: 850000,
+          stepOrder: 1,
         }),
         makeEmployee({
           ordinal: 2,
           gender: GenderEnum.MALE,
-          baseSalary: 1200000,
+          baseSalary: 1000000,
+          stepOrder: 2,
         }),
         makeEmployee({
           ordinal: 3,
           gender: GenderEnum.MALE,
-          baseSalary: 1210000,
+          baseSalary: 1100000,
+          stepOrder: 3,
+        }),
+        makeEmployee({
+          ordinal: 4,
+          gender: GenderEnum.MALE,
+          baseSalary: 1200000,
+          stepOrder: 4,
+        }),
+        makeEmployee({
+          ordinal: 5,
+          gender: GenderEnum.MALE,
+          baseSalary: 1300000,
+          stepOrder: 5,
+        }),
+        makeEmployee({
+          ordinal: 6,
+          gender: GenderEnum.MALE,
+          baseSalary: 1400000,
+          stepOrder: 6,
+        }),
+        makeEmployee({
+          ordinal: 7,
+          gender: GenderEnum.MALE,
+          baseSalary: 1500000,
+          stepOrder: 7,
         }),
       ],
     },
@@ -699,10 +725,12 @@ function makeEmployee({
   ordinal,
   gender,
   baseSalary,
+  stepOrder,
 }: {
   ordinal: number
   gender: GenderEnum
   baseSalary: number
+  stepOrder: number
 }) {
   return {
     ordinal,
@@ -717,7 +745,13 @@ function makeEmployee({
     baseSalary,
     additionalSalary: 100000,
     bonusSalary: null,
-    personalStepAssignments: [],
+    personalStepAssignments: [
+      {
+        criterionTitle: 'Abyrgd',
+        subTitle: 'Abyrgd a fólki',
+        stepOrder,
+      },
+    ],
   }
 }
 
@@ -918,5 +952,30 @@ function makeReportResultDto(reportId: string) {
     calculationVersion: 'v1',
     base: snapshot,
     full: snapshot,
+    outlierAnalysis: {
+      method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+      thresholdPercent: 3.9,
+      allowedDifferencePercent: 1.95,
+      regressions: {
+        overall: makeEmptyRegression(),
+        male: makeEmptyRegression(),
+        female: makeEmptyRegression(),
+        neutral: makeEmptyRegression(),
+      },
+      employees: [],
+    },
+  }
+}
+
+function makeEmptyRegression() {
+  return {
+    slope: null,
+    intercept: null,
+    sampleCount: 0,
+    scoreMean: null,
+    adjustedBaseSalaryMean: null,
+    rSquared: null,
+    scoreRangeFrom: null,
+    scoreRangeTo: null,
   }
 }
