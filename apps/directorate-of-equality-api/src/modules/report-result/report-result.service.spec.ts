@@ -9,6 +9,7 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ConfigModel } from '../config/models/config.model'
+import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
 import {
   GenderEnum,
   ReportModel,
@@ -89,11 +90,21 @@ describe('ReportResultService', () => {
           totals: { overall: { average: 625000 } },
           scoreBuckets: [],
         },
+        outlierAnalysis: makeOutlierAnalysis(),
       }),
     })
     employeeFindAll.mockResolvedValue([
-      makeEmployee('role-b', 120, GenderEnum.MALE, 1, 400000, 100000, 50000),
-      makeEmployee('role-a', 220, GenderEnum.FEMALE, 0.5, 300000, 50000, null),
+      makeEmployee(1, 'role-b', 120, GenderEnum.MALE, 1, 400000, 100000, 50000),
+      makeEmployee(
+        2,
+        'role-a',
+        220,
+        GenderEnum.FEMALE,
+        0.5,
+        300000,
+        50000,
+        null,
+      ),
     ])
     configFindOne.mockResolvedValue({ value: '3.9' })
     resultCreate.mockResolvedValue({ id: 'result-1' })
@@ -128,6 +139,53 @@ describe('ReportResultService', () => {
           totals: expect.objectContaining({
             overall: expect.objectContaining({ average: 625000 }),
           }),
+        }),
+        outlierAnalysisSnapshot: expect.objectContaining({
+          method:
+            SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+          thresholdPercent: 3.9,
+          allowedDifferencePercent: 1.95,
+          regressions: expect.objectContaining({
+            overall: expect.objectContaining({
+              sampleCount: 2,
+              slope: 2000,
+              intercept: 160000,
+            }),
+            male: expect.objectContaining({
+              sampleCount: 1,
+              intercept: 400000,
+            }),
+            female: expect.objectContaining({
+              sampleCount: 1,
+              intercept: 600000,
+            }),
+            neutral: expect.objectContaining({
+              sampleCount: 0,
+              slope: null,
+            }),
+          }),
+          employees: expect.arrayContaining([
+            expect.objectContaining({
+              ordinal: 1,
+              score: 120,
+              gender: GenderEnum.MALE,
+              adjustedBaseSalary: 400000,
+              predictedBaseSalary: 400000,
+              scoreBucketRangeFrom: 100,
+              scoreBucketRangeTo: 200,
+              isOutlier: false,
+            }),
+            expect.objectContaining({
+              ordinal: 2,
+              score: 220,
+              gender: GenderEnum.FEMALE,
+              adjustedBaseSalary: 600000,
+              predictedBaseSalary: 600000,
+              scoreBucketRangeFrom: 200,
+              scoreBucketRangeTo: 300,
+              isOutlier: false,
+            }),
+          ]),
         }),
       }),
     )
@@ -187,6 +245,7 @@ describe('ReportResultService', () => {
           totals: { overall: { average: 625000 } },
           scoreBuckets: [],
         },
+        outlierAnalysis: makeOutlierAnalysis(),
       }),
     })
 
@@ -197,6 +256,7 @@ describe('ReportResultService', () => {
 })
 
 function makeEmployee(
+  ordinal: number,
   reportEmployeeRoleId: string,
   score: number,
   gender: GenderEnum,
@@ -206,6 +266,7 @@ function makeEmployee(
   bonusSalary: number | null,
 ) {
   return {
+    ordinal,
     reportEmployeeRoleId,
     score,
     gender,
@@ -214,4 +275,41 @@ function makeEmployee(
     additionalSalary,
     bonusSalary,
   } as ReportEmployeeModel
+}
+
+function makeOutlierAnalysis() {
+  return {
+    method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+    thresholdPercent: 3.9,
+    allowedDifferencePercent: 1.95,
+    regressions: {
+      overall: {
+        slope: 2000,
+        intercept: 160000,
+        sampleCount: 2,
+        scoreMean: 170,
+        adjustedBaseSalaryMean: 500000,
+        rSquared: 1,
+        scoreRangeFrom: 120,
+        scoreRangeTo: 220,
+      },
+      male: makeEmptyRegression(1, 400000),
+      female: makeEmptyRegression(1, 600000),
+      neutral: makeEmptyRegression(0, null),
+    },
+    employees: [],
+  }
+}
+
+function makeEmptyRegression(sampleCount: number, mean: number | null) {
+  return {
+    slope: sampleCount > 0 ? 0 : null,
+    intercept: mean,
+    sampleCount,
+    scoreMean: sampleCount > 0 ? 0 : null,
+    adjustedBaseSalaryMean: mean,
+    rSquared: null,
+    scoreRangeFrom: sampleCount > 0 ? 0 : null,
+    scoreRangeTo: sampleCount > 0 ? 0 : null,
+  }
 }

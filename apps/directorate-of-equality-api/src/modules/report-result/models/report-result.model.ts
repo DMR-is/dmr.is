@@ -3,7 +3,10 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
-import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
+import type {
+  SalaryOutlierAnalysisSnapshot,
+  SalaryResultSnapshot,
+} from '../../report/lib/compensation-aggregates'
 import { ReportModel } from '../../report/models/report.model'
 import type { ReportResultDto } from '../dto/report-result.dto'
 
@@ -16,6 +19,7 @@ export type ReportResultAttributes = {
   calculationVersion: string
   baseSnapshot: SalaryResultSnapshot
   fullSnapshot: SalaryResultSnapshot
+  outlierAnalysisSnapshot: SalaryOutlierAnalysisSnapshot
 }
 
 export type ReportResultCreateAttributes = Omit<
@@ -71,6 +75,13 @@ export class ReportResultModel extends MutableModel<
   })
   fullSnapshot!: SalaryResultSnapshot
 
+  @Column({
+    type: DataType.JSONB,
+    allowNull: false,
+    field: 'outlier_analysis_snapshot',
+  })
+  outlierAnalysisSnapshot!: SalaryOutlierAnalysisSnapshot
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -82,6 +93,7 @@ export class ReportResultModel extends MutableModel<
       calculationVersion: model.calculationVersion,
       base: model.baseSnapshot,
       full: model.fullSnapshot,
+      outlierAnalysis: model.outlierAnalysisSnapshot,
     }
   }
 

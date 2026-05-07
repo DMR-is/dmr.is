@@ -69,7 +69,7 @@ export type SalaryOutlierAssessment = {
   direction: SalaryOutlierDirection | null
   differencePercent: number | null
   allowedDifferencePercent: number
-  referenceSalary: number | null
+  predictedSalary: number | null
 }
 
 export type CompensationAggregateResult = {
@@ -77,6 +77,60 @@ export type CompensationAggregateResult = {
     base: SalaryResultSnapshot
     full: SalaryResultSnapshot
   }
+}
+
+export enum SalaryOutlierAnalysisMethodEnum {
+  BASE_SALARY_LINEAR_REGRESSION_BY_SCORE = 'BASE_SALARY_LINEAR_REGRESSION_BY_SCORE',
+}
+
+export const SCORE_BUCKET_WIDTH = 100
+
+export type SalaryRegressionSnapshot = {
+  slope: number | null
+  intercept: number | null
+  sampleCount: number
+  scoreMean: number | null
+  adjustedBaseSalaryMean: number | null
+  rSquared: number | null
+  scoreRangeFrom: number | null
+  scoreRangeTo: number | null
+}
+
+/**
+ * Regressions fitted on adjusted base salary vs score.
+ *
+ * `overall` is gender-blind and is the line that drives the outlier flag.
+ * `male` / `female` / `neutral` are fitted on each cohort separately and are
+ * carried for visualisation/analytics only — the outlier rule does not use
+ * them.
+ */
+export type SalaryRegressionsByGenderSnapshot = {
+  overall: SalaryRegressionSnapshot
+  male: SalaryRegressionSnapshot
+  female: SalaryRegressionSnapshot
+  neutral: SalaryRegressionSnapshot
+}
+
+export type SalaryOutlierAnalysisEmployeeSnapshot = {
+  ordinal: number
+  score: number
+  gender: GenderEnum
+  adjustedBaseSalary: number
+  predictedBaseSalary: number | null
+  scoreBucketRangeFrom: number | null
+  scoreBucketRangeTo: number | null
+  direction: SalaryOutlierDirection | null
+  differencePercent: number | null
+  allowedDifferencePercent: number
+  isOutlier: boolean
+}
+
+export type SalaryOutlierAnalysisSnapshot = {
+  method: SalaryOutlierAnalysisMethodEnum
+  thresholdPercent: number
+  allowedDifferencePercent: number
+  regressions: SalaryRegressionsByGenderSnapshot
+  employees: SalaryOutlierAnalysisEmployeeSnapshot[]
 }
 
 type AggregateGroup = {
@@ -266,62 +320,46 @@ export function roundSalaryResultSnapshot(
   }
 }
 
-export function assessSalaryOutlierFromReference(input: {
+/**
+ * Compares an employee's salary to a predicted salary at their exact score
+ * and flags them as an outlier when the absolute difference is at or above
+ * the supplied band. Caller is responsible for deriving
+ * `allowedDifferencePercent` from the configured threshold (typically half
+ * of `salary_difference_threshold_percent`).
+ */
+export function assessSalaryOutlierFromPrediction(input: {
   salary: number
-  referenceSalary: number | null
-  thresholdPercent: number
-  useHalfThreshold?: boolean
+  predictedSalary: number | null
+  allowedDifferencePercent: number
 }): SalaryOutlierAssessment {
-  const allowedDifferencePercent =
-    input.useHalfThreshold === false
-      ? input.thresholdPercent
-      : input.thresholdPercent / 2
-
-  if (input.referenceSalary === null || input.referenceSalary === 0) {
+  if (input.predictedSalary === null || input.predictedSalary <= 0) {
     return {
       isOutlier: false,
       direction: null,
       differencePercent: null,
-      allowedDifferencePercent,
-      referenceSalary: input.referenceSalary,
+      allowedDifferencePercent: input.allowedDifferencePercent,
+      predictedSalary: input.predictedSalary,
     }
   }
 
   const differencePercent =
-    ((input.salary - input.referenceSalary) / input.referenceSalary) * 100
+    ((input.salary - input.predictedSalary) / input.predictedSalary) * 100
   const absoluteDifferencePercent = Math.abs(differencePercent)
 
   return {
-    isOutlier: absoluteDifferencePercent >= allowedDifferencePercent,
+    isOutlier: absoluteDifferencePercent >= input.allowedDifferencePercent,
     direction: getSalaryOutlierDirection(differencePercent),
     differencePercent,
-    allowedDifferencePercent,
-    referenceSalary: input.referenceSalary,
+    allowedDifferencePercent: input.allowedDifferencePercent,
+    predictedSalary: input.predictedSalary,
   }
 }
 
-/**
- * Salary outlier rule for a score bucket:
- *
- * 1. Place the employee in a score bucket.
- * 2. Use the bucket's overall median salary as the reference salary.
- * 3. Use half of the configured salary-difference threshold by default.
- *    Example: `3.9` becomes an allowed +/- `1.95%` band around the median.
- * 4. Mark the employee as an outlier when their adjusted salary is greater
- *    than or equal to that allowed percentage above or below the bucket median.
- */
-export function assessSalaryOutlierInBucket(input: {
-  salary: number
-  bucket: SalaryScoreBucketSnapshot
-  thresholdPercent: number
-  useHalfThreshold?: boolean
-}): SalaryOutlierAssessment {
-  return assessSalaryOutlierFromReference({
-    salary: input.salary,
-    referenceSalary: input.bucket.totals.overall.median,
-    thresholdPercent: input.thresholdPercent,
-    useHalfThreshold: input.useHalfThreshold,
-  })
+export function resolveAllowedDifferencePercent(
+  thresholdPercent: number,
+  useHalfThreshold = true,
+): number {
+  return useHalfThreshold ? thresholdPercent / 2 : thresholdPercent
 }
 
 export type OutlierDetectionEmployee = {
@@ -334,8 +372,11 @@ export type OutlierDetectionEmployee = {
 
 export type DetectedOutlier = {
   ordinal: number
+  score: number
   adjustedBaseSalary: number
-  bucket: SalaryScoreBucketSnapshot
+  predictedBaseSalary: number
+  scoreBucketRangeFrom: number
+  scoreBucketRangeTo: number
   assessment: SalaryOutlierAssessment
 }
 
@@ -344,53 +385,295 @@ export type DetectedOutlier = {
  * application-side preview endpoint and the submit-side guard:
  *
  * - Adjusts each employee's base salary (`baseSalary / workRatio`).
- * - Buckets employees by score using the standard bucket width.
- * - Runs `assessSalaryOutlierInBucket` on each (half threshold by default).
- * - Returns the outlier rows with the bucket and full assessment, so the
- *   caller can show the calculation that drove the verdict.
+ * - Fits one regression line from score -> adjusted base salary.
+ * - Assesses each employee against the predicted salary at their exact score.
+ * - Returns only the rows where the assessment is an outlier.
  */
 export function detectOutliers(input: {
   employees: OutlierDetectionEmployee[]
   thresholdPercent: number
-  bucketWidth?: number
   useHalfThreshold?: boolean
 }): DetectedOutlier[] {
-  const samples: SalaryScorePoint[] = input.employees.map((employee) => ({
-    score: employee.score,
-    gender: employee.gender,
-    salary: employee.baseSalary / employee.workRatio,
-  }))
-
-  const buckets = computeSalaryScoreBucketSnapshots(samples, input.bucketWidth)
-
+  const analysis = computeSalaryOutlierAnalysis(input)
   const outliers: DetectedOutlier[] = []
 
-  for (let index = 0; index < input.employees.length; index += 1) {
-    const employee = input.employees[index]
-    const sample = samples[index]
-    const bucket = buckets.find(
-      (b) => sample.score >= b.rangeFrom && sample.score < b.rangeTo,
-    )
-    if (!bucket) continue
-
-    const assessment = assessSalaryOutlierInBucket({
-      salary: sample.salary,
-      bucket,
-      thresholdPercent: input.thresholdPercent,
-      useHalfThreshold: input.useHalfThreshold,
-    })
-
-    if (assessment.isOutlier) {
+  for (const employee of analysis.employees) {
+    if (
+      employee.isOutlier &&
+      employee.predictedBaseSalary !== null &&
+      employee.scoreBucketRangeFrom !== null &&
+      employee.scoreBucketRangeTo !== null
+    ) {
       outliers.push({
         ordinal: employee.ordinal,
-        adjustedBaseSalary: sample.salary,
-        bucket,
-        assessment,
+        score: employee.score,
+        adjustedBaseSalary: employee.adjustedBaseSalary,
+        predictedBaseSalary: employee.predictedBaseSalary,
+        scoreBucketRangeFrom: employee.scoreBucketRangeFrom,
+        scoreBucketRangeTo: employee.scoreBucketRangeTo,
+        assessment: {
+          isOutlier: employee.isOutlier,
+          direction: employee.direction,
+          differencePercent: employee.differencePercent,
+          allowedDifferencePercent: employee.allowedDifferencePercent,
+          predictedSalary: employee.predictedBaseSalary,
+        },
       })
     }
   }
 
   return outliers
+}
+
+/**
+ * Salary outlier analysis rule:
+ *
+ * 1. Adjust each employee's base salary to a full-time equivalent.
+ * 2. Fit a gender-blind least-squares regression line from
+ *    score -> adjusted base salary (`regressions.overall`).
+ * 3. Predict the employee's salary at their exact score using that line.
+ * 4. Use half of the configured salary-difference threshold by default.
+ *    Example: `3.9` becomes an allowed +/- `1.95%` band around the line.
+ * 5. Mark the employee as an outlier when their adjusted base salary is
+ *    greater than or equal to that allowed percentage above or below the
+ *    predicted salary.
+ *
+ * Per-cohort regressions (`regressions.male/female/neutral`) are also fitted
+ * and snapshotted for visualisation/analytics. They do not influence the
+ * outlier flag.
+ *
+ * Score-bucket placement (`scoreBucketRangeFrom/To`) is preserved per
+ * employee so reviewers can still cross-reference the bucket-level
+ * aggregates carried in `report_result.base_snapshot.scoreBuckets`. It does
+ * not influence the outlier flag either.
+ */
+export function computeSalaryOutlierAnalysis(input: {
+  employees: OutlierDetectionEmployee[]
+  thresholdPercent: number
+  useHalfThreshold?: boolean
+}): SalaryOutlierAnalysisSnapshot {
+  const adjustedEmployees = input.employees.map((employee) => ({
+    ordinal: employee.ordinal,
+    score: employee.score,
+    gender: employee.gender,
+    adjustedBaseSalary: employee.baseSalary / employee.workRatio,
+  }))
+  const regressions = computeRegressionsByGender(adjustedEmployees)
+  const overallRegression = regressions.overall
+  const allowedDifferencePercent = resolveAllowedDifferencePercent(
+    input.thresholdPercent,
+    input.useHalfThreshold,
+  )
+
+  return {
+    method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+    thresholdPercent: input.thresholdPercent,
+    allowedDifferencePercent,
+    regressions,
+    employees: adjustedEmployees.map((employee) => {
+      const predictedBaseSalary = predictFromRegression(
+        overallRegression,
+        employee.score,
+      )
+      const bucketRangeFrom = bucketRangeFromScore(employee.score)
+      const assessment = assessSalaryOutlierFromPrediction({
+        salary: employee.adjustedBaseSalary,
+        predictedSalary: predictedBaseSalary,
+        allowedDifferencePercent,
+      })
+
+      return {
+        ordinal: employee.ordinal,
+        score: employee.score,
+        gender: employee.gender,
+        adjustedBaseSalary: employee.adjustedBaseSalary,
+        predictedBaseSalary,
+        scoreBucketRangeFrom: bucketRangeFrom,
+        scoreBucketRangeTo: bucketRangeFrom + SCORE_BUCKET_WIDTH,
+        direction: assessment.direction,
+        differencePercent: assessment.differencePercent,
+        allowedDifferencePercent: assessment.allowedDifferencePercent,
+        isOutlier: assessment.isOutlier,
+      }
+    }),
+  }
+}
+
+function bucketRangeFromScore(score: number): number {
+  return Math.floor(score / SCORE_BUCKET_WIDTH) * SCORE_BUCKET_WIDTH
+}
+
+function predictFromRegression(
+  regression: SalaryRegressionSnapshot,
+  score: number,
+): number | null {
+  if (regression.slope === null || regression.intercept === null) {
+    return null
+  }
+  return regression.slope * score + regression.intercept
+}
+
+function computeRegressionsByGender(
+  samples: Array<{
+    score: number
+    gender: GenderEnum
+    adjustedBaseSalary: number
+  }>,
+): SalaryRegressionsByGenderSnapshot {
+  return {
+    overall: computeSalaryRegression(samples),
+    male: computeSalaryRegression(
+      samples.filter((sample) => sample.gender === GenderEnum.MALE),
+    ),
+    female: computeSalaryRegression(
+      samples.filter((sample) => sample.gender === GenderEnum.FEMALE),
+    ),
+    neutral: computeSalaryRegression(
+      samples.filter((sample) => sample.gender === GenderEnum.NEUTRAL),
+    ),
+  }
+}
+
+/**
+ * Canonical least-squares regression used everywhere in the app:
+ * outlier detection, the gender-vs-score chart, and any future analytics
+ * that needs to fit a salary-vs-score line. Returns the line plus enough
+ * descriptive stats (means, ranges, r²) to render or interpret it.
+ */
+export function computeSalaryRegression(
+  samples: Array<{ score: number; adjustedBaseSalary: number }>,
+): SalaryRegressionSnapshot {
+  if (samples.length === 0) {
+    return {
+      slope: null,
+      intercept: null,
+      sampleCount: 0,
+      scoreMean: null,
+      adjustedBaseSalaryMean: null,
+      rSquared: null,
+      scoreRangeFrom: null,
+      scoreRangeTo: null,
+    }
+  }
+
+  let sumScore = 0
+  let sumSalary = 0
+  let scoreMin = samples[0].score
+  let scoreMax = samples[0].score
+  for (const sample of samples) {
+    sumScore += sample.score
+    sumSalary += sample.adjustedBaseSalary
+    if (sample.score < scoreMin) scoreMin = sample.score
+    if (sample.score > scoreMax) scoreMax = sample.score
+  }
+
+  const scoreMean = sumScore / samples.length
+  const adjustedBaseSalaryMean = sumSalary / samples.length
+
+  let denominator = 0
+  let numerator = 0
+  let totalSquares = 0
+  for (const sample of samples) {
+    const dx = sample.score - scoreMean
+    const dy = sample.adjustedBaseSalary - adjustedBaseSalaryMean
+    denominator += dx * dx
+    numerator += dx * dy
+    totalSquares += dy * dy
+  }
+
+  if (denominator === 0) {
+    return {
+      slope: 0,
+      intercept: adjustedBaseSalaryMean,
+      sampleCount: samples.length,
+      scoreMean,
+      adjustedBaseSalaryMean,
+      rSquared: null,
+      scoreRangeFrom: scoreMin,
+      scoreRangeTo: scoreMax,
+    }
+  }
+
+  const slope = numerator / denominator
+  const intercept = adjustedBaseSalaryMean - slope * scoreMean
+
+  let residualSquares = 0
+  for (const sample of samples) {
+    const predicted = slope * sample.score + intercept
+    const residual = sample.adjustedBaseSalary - predicted
+    residualSquares += residual * residual
+  }
+
+  return {
+    slope,
+    intercept,
+    sampleCount: samples.length,
+    scoreMean,
+    adjustedBaseSalaryMean,
+    rSquared: totalSquares === 0 ? null : 1 - residualSquares / totalSquares,
+    scoreRangeFrom: scoreMin,
+    scoreRangeTo: scoreMax,
+  }
+}
+
+export function roundSalaryOutlierAnalysisSnapshot(
+  snapshot: SalaryOutlierAnalysisSnapshot,
+  salaryPrecision = 2,
+  percentPrecision = 4,
+): SalaryOutlierAnalysisSnapshot {
+  const roundRegression = (
+    regression: SalaryRegressionSnapshot,
+  ): SalaryRegressionSnapshot => ({
+    slope: roundNullable(regression.slope, salaryPrecision),
+    intercept: roundNullable(regression.intercept, salaryPrecision),
+    sampleCount: regression.sampleCount,
+    scoreMean: roundNullable(regression.scoreMean, salaryPrecision),
+    adjustedBaseSalaryMean: roundNullable(
+      regression.adjustedBaseSalaryMean,
+      salaryPrecision,
+    ),
+    rSquared: roundNullable(regression.rSquared, percentPrecision),
+    scoreRangeFrom: roundNullable(regression.scoreRangeFrom, salaryPrecision),
+    scoreRangeTo: roundNullable(regression.scoreRangeTo, salaryPrecision),
+  })
+
+  return {
+    ...snapshot,
+    thresholdPercent: roundNullable(
+      snapshot.thresholdPercent,
+      percentPrecision,
+    ) as number,
+    allowedDifferencePercent: roundNullable(
+      snapshot.allowedDifferencePercent,
+      percentPrecision,
+    ) as number,
+    regressions: {
+      overall: roundRegression(snapshot.regressions.overall),
+      male: roundRegression(snapshot.regressions.male),
+      female: roundRegression(snapshot.regressions.female),
+      neutral: roundRegression(snapshot.regressions.neutral),
+    },
+    employees: snapshot.employees.map((employee) => ({
+      ...employee,
+      score: roundNullable(employee.score, salaryPrecision) as number,
+      adjustedBaseSalary: roundNullable(
+        employee.adjustedBaseSalary,
+        salaryPrecision,
+      ) as number,
+      predictedBaseSalary: roundNullable(
+        employee.predictedBaseSalary,
+        salaryPrecision,
+      ),
+      differencePercent: roundNullable(
+        employee.differencePercent,
+        percentPrecision,
+      ),
+      allowedDifferencePercent: roundNullable(
+        employee.allowedDifferencePercent,
+        percentPrecision,
+      ) as number,
+    })),
+  }
 }
 
 export function roundNullable(

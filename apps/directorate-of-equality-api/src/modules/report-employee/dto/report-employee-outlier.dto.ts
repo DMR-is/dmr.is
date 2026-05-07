@@ -1,4 +1,10 @@
-import { ApiOptionalString, ApiUUId } from '@dmr.is/decorators'
+import {
+  ApiOptionalEnum,
+  ApiOptionalString,
+  ApiUUId,
+} from '@dmr.is/decorators'
+
+import { GenderEnum } from '../../report/models/report.model'
 
 export class ReportEmployeeOutlierDto {
   @ApiUUId()
@@ -6,6 +12,12 @@ export class ReportEmployeeOutlierDto {
 
   @ApiUUId()
   reportEmployeeId!: string
+
+  @ApiOptionalEnum(GenderEnum, { enumName: 'GenderEnum', nullable: true })
+  gender!: GenderEnum | null
+
+  @ApiOptionalString({ nullable: true })
+  roleTitle!: string | null
 
   @ApiOptionalString({
     nullable: true,
