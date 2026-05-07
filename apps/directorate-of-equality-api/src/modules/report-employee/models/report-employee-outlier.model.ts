@@ -59,6 +59,8 @@ export class ReportEmployeeOutlierModel extends MutableModel<
     return {
       id: model.id,
       reportEmployeeId: model.reportEmployeeId,
+      gender: model.reportEmployee?.gender ?? null,
+      roleTitle: model.reportEmployee?.role?.title ?? null,
       reason: model.reason,
       action: model.action,
       signatureName: model.signatureName,
