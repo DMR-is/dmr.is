@@ -6,30 +6,34 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
+import { ReportDetailDto } from '../../gen/fetch'
 import { ReportFormContainer } from './ReportFormContainer'
 import { ReportSidebarContainer } from './ReportSidebarContainer'
 
 type ReportContainerProps = {
-  id: string
+  report: ReportDetailDto
 }
 
-export function ReportContainer({ id }: ReportContainerProps) {
+export function ReportContainer({ report }: ReportContainerProps) {
   return (
     <HydrateClient>
       <Box paddingY={[4, 5, 6]} background="purple100">
         <GridContainer className="print-hidden">
           <GridRow>
             <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
-              <ReportFormContainer id={id} />
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða skýrslu</div>}
-              ></ErrorBoundary>
+              >
+              <ReportFormContainer report={report} />
+
+              </ErrorBoundary>
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
-              <ReportSidebarContainer id={id} />
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
-              ></ErrorBoundary>
+              >
+              <ReportSidebarContainer id={report.id} status={report.status} />
+              </ErrorBoundary>
             </GridColumn>
           </GridRow>
         </GridContainer>

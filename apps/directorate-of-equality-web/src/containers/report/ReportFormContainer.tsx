@@ -1,47 +1,46 @@
 'use client'
 
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { ReportTabs } from '../../components/report/report-tabs/ReportTabs'
 import type { ReportDetailDto } from '../../gen/fetch'
-import { useTRPC } from '../../lib/trpc/client/trpc'
+import { formatDateIS } from '../../lib/constants'
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 type ReportFormContainerProps = {
-  id: string
+  report: ReportDetailDto
 }
 
-export function ReportFormContainer({ id }: ReportFormContainerProps) {
-  const trpc = useTRPC()
+export function ReportFormContainer({ report }: ReportFormContainerProps) {
 
-  // const { data: report } = useQuery(
-  //   trpc.reports.getById.queryOptions({ id: id }),
-  // ) as { data: ReportDetailDto }
-
-  // if (!report) return null
 
   const title = <>
     <Text variant="h2">Vinnslusvæði</Text>
-          <Text>Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</Text>
-
+    <Text marginBottom={4}>Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</Text>
   </>
+
   return (
-    <Box background="white" padding={[4, 6, 8]} borderRadius="large">
-      <Stack space={[3, 4]}>
+    <Box background="white" paddingX={[4, 8, 14]} paddingY={[4, 6, 8]}borderRadius="large">
         <Stack space={[2]}>
           <Breadcrumbs
             items={[
               { title: 'Forsíða', href: '/' },
-              { title: 'Mál', href: '/mal' },
-              { title: 'Flott fyrirtæki', href: `/mal/${id}` },
+              { title: 'Yfirlit', href: '/mal' },
+              { title: 'Vinnslusvæði', href: `/mal/${report.id}` },
             ]}
           />
         {title}
+        <Stack space={1}>
+        <Text variant="eyebrow" color='purple400'>{formatDateIS(report.createdAt)}</Text>
+        <Text variant="h3" marginBottom={4}>{report.company.name}</Text>
         </Stack>
-      </Stack>
+
+        </Stack>
+        <ReportTabs report={report} />
     </Box>
   )
 }

@@ -6,7 +6,6 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
-import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { ReportContainer } from '../../../../containers/report/ReportContainer'
 import { trpc } from '../../../../lib/trpc/client/server'
@@ -14,7 +13,7 @@ import { trpc } from '../../../../lib/trpc/client/server'
 export default async function CasePage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string, type: string }>
 }) {
   const { id } = await params
 
@@ -22,17 +21,13 @@ export default async function CasePage({
 const report = await fetchQueryWithHandler(
   trpc.reports.getById.queryOptions({ id: id }),)
 
-
 return (
   <HydrateClient>
       <Box background='purple100' style={{ minHeight: '100dvh' }} paddingY={4} paddingX={6}>
       <GridContainer>
         <GridRow>
           <GridColumn span="12/12">
-          <ReportContainer id={id} />
-            <Text variant='h4' fontWeight='medium' >
-              {JSON.stringify(report)}
-            </Text>
+          <ReportContainer report={report} />
           </GridColumn>
         </GridRow>
       </GridContainer>

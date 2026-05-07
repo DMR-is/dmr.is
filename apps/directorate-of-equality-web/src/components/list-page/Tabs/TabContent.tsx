@@ -59,7 +59,7 @@ export const TabContent = ({
         columns={columns}
         data={data}
         loading={isLoading}
-        getRowHref={(row) => `/mal/${row.id}`}
+        getRowHref={(row) => `/mal/${row.id}?type=${row.type}`}
         getRowExpanded={
           expandable ? (row) => <ExpandedRow row={row} /> : undefined
         }

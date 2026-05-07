@@ -3,7 +3,7 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import * as styles from './Report.css'
+import * as styles from '../Report.css'
 
 type ReportSidebarProps = {
   children?: React.ReactNode
