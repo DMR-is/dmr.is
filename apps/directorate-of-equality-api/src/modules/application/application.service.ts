@@ -502,18 +502,18 @@ function toOutlierDto(detected: DetectedOutlier): SalaryAnalysisOutlierDto {
   // detectOutliers only emits rows where isOutlier=true, which guarantees
   // a non-null direction and non-null differencePercent (see the assessment
   // in compensation-aggregates.ts).
-  const { assessment, bucket } = detected
+  const { assessment } = detected
 
   return {
     employeeOrdinal: detected.ordinal,
     adjustedBaseSalary: Math.round(detected.adjustedBaseSalary),
+    predictedBaseSalary: Math.round(detected.predictedBaseSalary),
+    scoreBucketRangeFrom: detected.scoreBucketRangeFrom,
+    scoreBucketRangeTo: detected.scoreBucketRangeTo,
     direction:
       (assessment.direction as SalaryAnalysisOutlierDirectionEnum | null) ??
       SalaryAnalysisOutlierDirectionEnum.EQUAL,
     differencePercent: assessment.differencePercent ?? 0,
     allowedDifferencePercent: assessment.allowedDifferencePercent,
-    referenceSalary: assessment.referenceSalary,
-    scoreBucketRangeFrom: bucket.rangeFrom,
-    scoreBucketRangeTo: bucket.rangeTo,
   }
 }

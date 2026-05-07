@@ -380,9 +380,8 @@ export class ReportCreateService implements IReportCreateService {
 
   /**
    * Each `outliers[].employeeOrdinal` must match an `ordinal` in the parsed
-   * employees array. Outlier detection is the application's responsibility
-   * (planned outlier-preview endpoint — see `db/README.md` Notes); this
-   * service trusts the caller's flagging but rejects orphan references.
+   * employees array. The submit-side guard below verifies the submitted set
+   * against the canonical regression-based detection result.
    */
   private assertOutliersReferenceParsedEmployees(input: CreateReportDto) {
     if (!input.outliers || input.outliers.length === 0) {

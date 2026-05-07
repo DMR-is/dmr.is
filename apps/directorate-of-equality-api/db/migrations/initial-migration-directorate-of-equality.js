@@ -270,7 +270,8 @@ module.exports = {
       salary_difference_threshold_percent DECIMAL(5, 2) DEFAULT NULL,
       calculation_version TEXT NOT NULL DEFAULT 'v1',
       base_snapshot JSONB NOT NULL,
-      full_snapshot JSONB NOT NULL
+      full_snapshot JSONB NOT NULL,
+      outlier_analysis_snapshot JSONB NOT NULL
     );
 
     CREATE TABLE report_role_result (
