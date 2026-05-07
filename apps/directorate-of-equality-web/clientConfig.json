@@ -2367,6 +2367,11 @@
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "company": { "$ref": "#/components/schemas/CompanyReportDto" },
           "equalityReport": {
             "$ref": "#/components/schemas/EqualityReportDto"
@@ -2393,6 +2398,7 @@
           "type",
           "status",
           "importedFromExcel",
+          "createdAt",
           "company",
           "equalityReport",
           "timeline",
