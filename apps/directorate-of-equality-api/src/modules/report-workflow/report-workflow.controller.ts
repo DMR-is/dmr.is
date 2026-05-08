@@ -13,6 +13,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { DenyReportDto } from './dto/deny-report.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
@@ -24,7 +25,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
 @ApiTags('Report Workflow')
 @ApiParam({ name: 'reportId', type: String })
 @ApiBearerAuth()
-@UseGuards(TokenJwtAuthGuard, AdminGuard)
+@UseGuards(TokenJwtAuthGuard, AdminGuard, ReportResourceGuard)
 export class ReportWorkflowController {
   constructor(
     @Inject(IReportWorkflowService)

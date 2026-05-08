@@ -345,6 +345,7 @@ export class ReportModel extends MutableModel<
           : model.reviewer === null
             ? null
             : UserModel.fromModel(model.reviewer),
+      createdAt: model.createdAt
     }
   }
 

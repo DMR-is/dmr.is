@@ -4,9 +4,9 @@ import { Suspense } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
-import { HeroContainer } from '../../components/front-page/HeroContainer'
-import { PanelsContainer } from '../../components/front-page/PanelsContainer'
-import { SectionContainer } from '../../components/front-page/SectionContainer'
+import { HeroContainer } from '../../containers/front-page/HeroContainer'
+import { PanelsContainer } from '../../containers/front-page/PanelsContainer'
+import { SectionContainer } from '../../containers/front-page/SectionContainer'
 import { authOptions } from '../../lib/auth/authOptions'
 
 export default async function IndexPage() {

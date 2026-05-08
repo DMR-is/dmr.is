@@ -1,7 +1,7 @@
 /* eslint-disable local-rules/disallow-kennitalas */
-export type { Case } from '../../../components/list-page/constants'
+export type { Case } from '../../../lib/constants'
 
-import { type Case } from '../../../components/list-page/constants'
+import { type Case } from '../../../lib/constants'
 
 export const MOCK_DATA: Case[] = [
   {

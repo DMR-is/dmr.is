@@ -1,5 +1,6 @@
 import {
   ApiBoolean,
+  ApiDateTime,
   ApiEnum,
   ApiOptionalBoolean,
   ApiOptionalDateTime,
@@ -104,4 +105,7 @@ export class ReportDto {
 
   @ApiOptionalDto(UserDto, { nullable: true })
   reviewer?: UserDto | null
+
+  @ApiDateTime()
+  createdAt!: Date
 }

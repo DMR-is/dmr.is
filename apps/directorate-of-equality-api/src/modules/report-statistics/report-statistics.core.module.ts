@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
@@ -13,6 +14,7 @@ import { IReportStatisticsService } from './report-statistics.service.interface'
 
 @Module({
   imports: [
+    AuthorizationCoreModule,
     SequelizeModule.forFeature([
       ReportEmployeeModel,
       ReportCriterionModel,

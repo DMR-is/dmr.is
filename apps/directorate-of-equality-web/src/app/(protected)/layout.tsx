@@ -2,6 +2,8 @@
 
 import { Header } from '../../components/header/Header'
 
+import '../../styles/global.css'
+
 export default function ProtectedLayout({
   children,
 }: {

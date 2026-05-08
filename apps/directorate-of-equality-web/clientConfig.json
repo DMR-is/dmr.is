@@ -1568,6 +1568,416 @@
         "summary": "",
         "tags": ["Report Workflow"]
       }
+    },
+    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
+      "get": {
+        "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getBaseSalaryByGenderAndScoreAll",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
+    },
+    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-work": {
+      "get": {
+        "description": "Adjusted base salary (baseSalary / workRatio) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getBaseSalaryByGenderAndScoreWork",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
+    },
+    "/api/v1/reports/{reportId}/statistics/full-salary-by-gender-and-score-all": {
+      "get": {
+        "description": "Adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getFullSalaryByGenderAndScoreAll",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
+    },
+    "/api/v1/reports/{reportId}/statistics/base-salary-gender-wage-gap": {
+      "get": {
+        "description": "Gender wage gap for adjusted base salary (baseSalary / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
+        "operationId": "getBaseSalaryGenderWageGap",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenderWageGapDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
+    },
+    "/api/v1/reports/{reportId}/statistics/full-salary-gender-wage-gap": {
+      "get": {
+        "description": "Gender wage gap for adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
+        "operationId": "getFullSalaryGenderWageGap",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenderWageGapDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
+    },
+    "/api/v1/reports/{reportId}/statistics/benefits-breakdown": {
+      "get": {
+        "description": "Average bonus salary (viðbótarlaun) and additional salary (aukagreiðslur) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
+        "operationId": "getBenefitsBreakdown",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenefitsBreakdownDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Statistics"]
+      }
     }
   },
   "info": {
@@ -2419,6 +2829,87 @@
         },
         "required": ["totals", "scoreBuckets"]
       },
+      "SalaryOutlierRegressionDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number", "nullable": true },
+          "intercept": { "type": "number", "nullable": true },
+          "sampleCount": { "type": "number" },
+          "scoreMean": { "type": "number", "nullable": true },
+          "adjustedBaseSalaryMean": { "type": "number", "nullable": true },
+          "rSquared": { "type": "number", "nullable": true },
+          "scoreRangeFrom": { "type": "number", "nullable": true },
+          "scoreRangeTo": { "type": "number", "nullable": true }
+        },
+        "required": ["sampleCount"]
+      },
+      "SalaryOutlierRegressionsDto": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          },
+          "male": { "$ref": "#/components/schemas/SalaryOutlierRegressionDto" },
+          "female": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          },
+          "neutral": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          }
+        },
+        "required": ["overall", "male", "female", "neutral"]
+      },
+      "SalaryOutlierAnalysisEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "score": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "adjustedBaseSalary": { "type": "number" },
+          "predictedBaseSalary": { "type": "number", "nullable": true },
+          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
+          "scoreBucketRangeTo": { "type": "number", "nullable": true },
+          "direction": { "type": "string", "nullable": true },
+          "differencePercent": { "type": "number", "nullable": true },
+          "allowedDifferencePercent": { "type": "number" },
+          "isOutlier": { "type": "boolean" }
+        },
+        "required": [
+          "ordinal",
+          "score",
+          "gender",
+          "adjustedBaseSalary",
+          "allowedDifferencePercent",
+          "isOutlier"
+        ]
+      },
+      "SalaryOutlierAnalysisDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["BASE_SALARY_LINEAR_REGRESSION_BY_SCORE"]
+          },
+          "thresholdPercent": { "type": "number" },
+          "allowedDifferencePercent": { "type": "number" },
+          "regressions": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionsDto"
+          },
+          "employees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalaryOutlierAnalysisEmployeeDto"
+            }
+          }
+        },
+        "required": [
+          "method",
+          "thresholdPercent",
+          "allowedDifferencePercent",
+          "regressions",
+          "employees"
+        ]
+      },
       "ReportResultDto": {
         "type": "object",
         "properties": {
@@ -2434,9 +2925,19 @@
           },
           "full": {
             "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "outlierAnalysis": {
+            "$ref": "#/components/schemas/SalaryOutlierAnalysisDto"
           }
         },
-        "required": ["id", "reportId", "calculationVersion", "base", "full"]
+        "required": [
+          "id",
+          "reportId",
+          "calculationVersion",
+          "base",
+          "full",
+          "outlierAnalysis"
+        ]
       },
       "ReportRoleResultDto": {
         "type": "object",
@@ -2466,6 +2967,11 @@
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "reportEmployeeId": { "type": "string", "format": "uuid" },
+          "gender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
+          "roleTitle": { "type": "string", "nullable": true },
           "reason": {
             "type": "string",
             "nullable": true,
@@ -2551,6 +3057,11 @@
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "company": { "$ref": "#/components/schemas/CompanyReportDto" },
           "equalityReport": {
             "$ref": "#/components/schemas/EqualityReportDto"
@@ -2577,6 +3088,7 @@
           "type",
           "status",
           "importedFromExcel",
+          "createdAt",
           "company",
           "equalityReport",
           "timeline",
@@ -2598,6 +3110,147 @@
         "type": "object",
         "properties": { "denialReason": { "type": "string" } },
         "required": ["denialReason"]
+      },
+      "ScatterDataPointDto": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "number" },
+          "adjustedSalary": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
+        },
+        "required": ["score", "adjustedSalary", "gender"]
+      },
+      "RegressionLineDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number" },
+          "intercept": { "type": "number" }
+        },
+        "required": ["slope", "intercept"]
+      },
+      "ScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "maleAverageSalary": { "type": "number", "nullable": true },
+          "femaleAverageSalary": { "type": "number", "nullable": true },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number", "nullable": true },
+          "femaleMedianSalary": { "type": "number", "nullable": true },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "rangeFrom",
+          "rangeTo",
+          "overallAverageSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryTotalsDto": {
+        "type": "object",
+        "properties": {
+          "maleAverageSalary": { "type": "number" },
+          "femaleAverageSalary": { "type": "number" },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number" },
+          "femaleMedianSalary": { "type": "number" },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "maleAverageSalary",
+          "femaleAverageSalary",
+          "overallAverageSalary",
+          "maleMedianSalary",
+          "femaleMedianSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryByGenderAndScoreDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
+          },
+          "regressionLine": {
+            "$ref": "#/components/schemas/RegressionLineDto"
+          },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
+          },
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" }
+        },
+        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
+      },
+      "GenderWageGapDto": {
+        "type": "object",
+        "properties": {
+          "maleAverageSalary": { "type": "number" },
+          "femaleAverageSalary": { "type": "number" },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number" },
+          "femaleMedianSalary": { "type": "number" },
+          "overallMedianSalary": { "type": "number" },
+          "averageWageGapPercent": { "type": "number", "nullable": true },
+          "medianWageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "maleAverageSalary",
+          "femaleAverageSalary",
+          "overallAverageSalary",
+          "maleMedianSalary",
+          "femaleMedianSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "GenderBenefitsDto": {
+        "type": "object",
+        "properties": {
+          "averageBonusSalary": { "type": "number" },
+          "averageAdditionalSalary": { "type": "number" },
+          "averageTotal": { "type": "number" },
+          "medianBonusSalary": { "type": "number" },
+          "medianAdditionalSalary": { "type": "number" },
+          "medianTotal": { "type": "number" },
+          "count": { "type": "number" }
+        },
+        "required": [
+          "averageBonusSalary",
+          "averageAdditionalSalary",
+          "averageTotal",
+          "medianBonusSalary",
+          "medianAdditionalSalary",
+          "medianTotal",
+          "count"
+        ]
+      },
+      "BenefitsBreakdownDto": {
+        "type": "object",
+        "properties": {
+          "male": { "$ref": "#/components/schemas/GenderBenefitsDto" },
+          "female": { "$ref": "#/components/schemas/GenderBenefitsDto" },
+          "overall": { "$ref": "#/components/schemas/GenderBenefitsDto" },
+          "bonusWageGapPercent": { "type": "number", "nullable": true },
+          "additionalWageGapPercent": { "type": "number", "nullable": true },
+          "totalWageGapPercent": { "type": "number", "nullable": true }
+        },
+        "required": ["male", "female", "overall"]
       }
     }
   }
