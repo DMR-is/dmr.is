@@ -20,4 +20,12 @@ export const reportsRouter = router({
         path: { id: input.id },
       }),
     ),
+
+  overview: protectedProcedure.query(({ ctx }) =>
+    ctx.api.getReportOverview(),
+  ),
+
+  overviewStatistics: protectedProcedure.query(({ ctx }) =>
+    ctx.api.getReportOverviewStatistics(),
+  ),
 })
