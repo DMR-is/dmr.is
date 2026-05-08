@@ -11,7 +11,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   reportId: string
   status: ReportStatusEnum
-  // admin?: string  // not yet available from API — enable once wired up
 }
 
 type Option = { value: ReportStatusEnum; label: string }
@@ -27,8 +26,6 @@ const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
 }
 
 export const ReportStatusSelect = ({ reportId, status }: Props) => {
-  // const hasAdmin = !!admin  // uncomment once admin is available from API
-  const hasAdmin = true // temporary until admin is wired up
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -75,7 +72,6 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
       label="Staða"
       options={options}
       value={currentOption}
-      isDisabled={!hasAdmin || options.length === 0}
       isLoading={isLoading}
       onChange={(opt) => handleChange(opt as Option | null)}
     />
