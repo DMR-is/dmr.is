@@ -1,10 +1,12 @@
 'use client'
 
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+
 import { Tabs } from '@island.is/island-ui/core'
 
 import { ReportDetailDto, ReportTypeEnum } from '../../../gen/fetch'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
-import { SalaryDistributionChart } from './salary-tab/SalaryDistributionChart'
+import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 import { CommentsForm } from './CommentsForm'
 
@@ -18,17 +20,21 @@ export function ReportTabs({ report }: ReportTabsProps) {
   const trpc = useTRPC()
   const isSalary = report.type === ReportTypeEnum.SALARY
 
-  const { data: salaryStats } = useQuery({
+  const { data: salaryStats, isLoading: salaryLoading } = useQuery({
     ...trpc.reportStatistics.baseSalaryByGenderAndScoreAll.queryOptions({
       reportId: report.id,
     }),
     enabled: isSalary,
   })
 
+  if (isSalary && salaryLoading) {
+    return <SkeletonLoader repeat={4} height={44} space={1} />
+  }
+
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
     label: 'Jafnréttisáætlun',
-    content: <div>Jafnréttisáætlun</div>,
+    content: <EqualityReportTab equalityReportContent={report.equalityReportContent ?? report.equalityReport.content} />,
   }
 
   const fyrirtaekid = {
@@ -52,6 +58,7 @@ export function ReportTabs({ report }: ReportTabsProps) {
   return (
     <>
     <Tabs
+      key={tabs.map((t) => t.id).join(',')}
       label="Skýrsla"
       tabs={tabs}
       contentBackground="white"
