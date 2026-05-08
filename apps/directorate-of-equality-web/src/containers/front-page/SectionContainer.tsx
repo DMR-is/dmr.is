@@ -159,7 +159,13 @@ export const SectionContainer = () => {
           </GridColumn>
           <GridColumn span={['12/12', '5/12']}>
             <Wrapper title="Tölfræði">
-              <Box display="flex" flexWrap="wrap" columnGap={1} rowGap={1} marginBottom={2}>
+              <Box
+                display="flex"
+                flexWrap="wrap"
+                columnGap={1}
+                rowGap={1}
+                marginBottom={2}
+              >
                 {STATS_WINDOWS.map(({ id, label, variant }) => (
                   <Tag
                     key={id}

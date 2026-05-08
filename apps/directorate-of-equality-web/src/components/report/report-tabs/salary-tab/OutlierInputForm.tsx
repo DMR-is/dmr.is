@@ -5,10 +5,18 @@ interface OutlierInputFormProps {
 }
 
 export const OutlierInputForm = ({ outlierDate }: OutlierInputFormProps) => {
-  if(!outlierDate) return null
+  if (!outlierDate) return null
   return (
-    <Box style={{maxWidth: 390}}>
-      <DatePicker  readOnly placeholderText="Valin dagsetning fyrir úrbótafrest" icon={{name: 'calendar', type: 'outline'}} size="sm" name="outlierCorrectionDate" label="Frestur til úrbóta" selected={outlierDate} />
+    <Box style={{ maxWidth: 390 }}>
+      <DatePicker
+        readOnly
+        placeholderText="Valin dagsetning fyrir úrbótafrest"
+        icon={{ name: 'calendar', type: 'outline' }}
+        size="sm"
+        name="outlierCorrectionDate"
+        label="Frestur til úrbóta"
+        selected={outlierDate}
+      />
     </Box>
   )
 }

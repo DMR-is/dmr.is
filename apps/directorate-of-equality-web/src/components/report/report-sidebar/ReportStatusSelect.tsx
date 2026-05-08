@@ -17,11 +17,20 @@ type Option = { value: ReportStatusEnum; label: string }
 
 const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
   [ReportStatusEnum.SUBMITTED]: [
-    { value: ReportStatusEnum.IN_REVIEW, label: ReportStatusTranslatedEnum.IN_REVIEW },
+    {
+      value: ReportStatusEnum.IN_REVIEW,
+      label: ReportStatusTranslatedEnum.IN_REVIEW,
+    },
   ],
   [ReportStatusEnum.IN_REVIEW]: [
-    { value: ReportStatusEnum.APPROVED, label: ReportStatusTranslatedEnum.APPROVED },
-    { value: ReportStatusEnum.DENIED, label: ReportStatusTranslatedEnum.DENIED },
+    {
+      value: ReportStatusEnum.APPROVED,
+      label: ReportStatusTranslatedEnum.APPROVED,
+    },
+    {
+      value: ReportStatusEnum.DENIED,
+      label: ReportStatusTranslatedEnum.DENIED,
+    },
   ],
 }
 
@@ -49,7 +58,10 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
 
   const isLoading = assign.isPending || approve.isPending || deny.isPending
 
-  const currentOption: Option = { value: status, label: ReportStatusTranslatedEnum[status] }
+  const currentOption: Option = {
+    value: status,
+    label: ReportStatusTranslatedEnum[status],
+  }
   const options = TRANSITIONS[status] ?? []
 
   const handleChange = (opt: Option | null) => {

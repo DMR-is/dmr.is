@@ -1,4 +1,17 @@
-const IS_MONTHS = ['janúar','febrúar','mars','apríl','maí','júní','júlí','ágúst','september','október','nóvember','desember']
+const IS_MONTHS = [
+  'janúar',
+  'febrúar',
+  'mars',
+  'apríl',
+  'maí',
+  'júní',
+  'júlí',
+  'ágúst',
+  'september',
+  'október',
+  'nóvember',
+  'desember',
+]
 
 export const formatDateIS = (dateStr: string) => {
   const d = new Date(dateStr)

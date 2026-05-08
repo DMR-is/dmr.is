@@ -10,7 +10,9 @@ type ReportSidebarContainerProps = {
   report: ReportDetailDto
 }
 
-export function ReportSidebarContainer({ report }: ReportSidebarContainerProps) {
+export function ReportSidebarContainer({
+  report,
+}: ReportSidebarContainerProps) {
   return (
     <ReportSidebar>
       <EmployeeSelect />

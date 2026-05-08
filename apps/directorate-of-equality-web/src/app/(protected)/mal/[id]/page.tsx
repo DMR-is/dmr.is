@@ -17,20 +17,25 @@ export default async function CasePage({
 }) {
   const { id } = await params
 
+  const report = await fetchQueryWithHandler(
+    trpc.reports.getById.queryOptions({ id: id }),
+  )
 
-const report = await fetchQueryWithHandler(
-  trpc.reports.getById.queryOptions({ id: id }),)
-
-return (
-  <HydrateClient>
-      <Box background='purple100' style={{ minHeight: '100dvh' }} paddingY={4} paddingX={6}>
-      <GridContainer>
-        <GridRow>
-          <GridColumn span="12/12">
-          <ReportContainer report={report} />
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
+  return (
+    <HydrateClient>
+      <Box
+        background="purple100"
+        style={{ minHeight: '100dvh' }}
+        paddingY={4}
+        paddingX={6}
+      >
+        <GridContainer>
+          <GridRow>
+            <GridColumn span="12/12">
+              <ReportContainer report={report} />
+            </GridColumn>
+          </GridRow>
+        </GridContainer>
       </Box>
     </HydrateClient>
   )

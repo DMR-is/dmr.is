@@ -21,9 +21,7 @@ export const reportsRouter = router({
       }),
     ),
 
-  overview: protectedProcedure.query(({ ctx }) =>
-    ctx.api.getReportOverview(),
-  ),
+  overview: protectedProcedure.query(({ ctx }) => ctx.api.getReportOverview()),
 
   overviewStatistics: protectedProcedure.query(({ ctx }) =>
     ctx.api.getReportOverviewStatistics(),
