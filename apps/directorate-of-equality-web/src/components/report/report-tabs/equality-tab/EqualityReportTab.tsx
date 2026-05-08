@@ -8,6 +8,8 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 
 import { GridRow } from '@island.is/island-ui/core'
 
+import { EqualityReportInputs } from './EqualityReportInputs'
+
 type EqualityReportTabProps = {
   equalityReportContent?: string | null
 }
@@ -26,6 +28,7 @@ export const EqualityReportTab = ({
           zIndex={10}
           borderRadius="large"
           marginTop={4}
+          marginBottom={3}
         >
           <HTMLEditor
             key={editorKey.current}
@@ -34,6 +37,9 @@ export const EqualityReportTab = ({
             disabled
             readonly
           />
+        </Box>
+        <Box marginBottom={6}>
+          <EqualityReportInputs />
         </Box>
       </GridColumn>
     </GridRow>
