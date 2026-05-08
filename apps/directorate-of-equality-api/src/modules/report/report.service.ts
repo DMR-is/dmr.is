@@ -29,16 +29,10 @@ import {
 
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
-import { UserModel } from '../user/models/user.model'
-import { ReportOverviewDto } from './dto/report-overview.dto'
-import {
-  ReportOverviewStatisticsDto,
-  ReportStatisticsItemDto,
-  ReportStatisticsWindowDto,
-} from './dto/report-overview-statistics.dto'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
+import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
 import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
 import {
@@ -50,6 +44,12 @@ import {
   ReportStatusCountsDto,
 } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
+import { ReportOverviewDto } from './dto/report-overview.dto'
+import {
+  ReportOverviewStatisticsDto,
+  ReportStatisticsItemDto,
+  ReportStatisticsWindowDto,
+} from './dto/report-overview-statistics.dto'
 import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
