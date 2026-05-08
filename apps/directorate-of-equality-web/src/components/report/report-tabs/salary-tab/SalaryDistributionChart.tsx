@@ -2,11 +2,11 @@
 
 import {
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
   ResponsiveContainer,
   Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -71,7 +71,7 @@ export function SalaryDistributionChart({ data }: Props) {
       </Text>
 
     <ResponsiveContainer width="100%" height={420} >
-      <ScatterChart margin={{ top: 24, right: 0, left: 0, bottom: 24 }}>
+      <ComposedChart margin={{ top: 24, right: 0, left: 0, bottom: 24 }}>
         <CartesianGrid vertical={false} stroke={theme.color.blue200} />
         <XAxis
           type="number"
@@ -169,7 +169,7 @@ export function SalaryDistributionChart({ data }: Props) {
           legendType="plainline"
           isAnimationActive={true}
         />
-      </ScatterChart>
+      </ComposedChart>
     </ResponsiveContainer>
 
 

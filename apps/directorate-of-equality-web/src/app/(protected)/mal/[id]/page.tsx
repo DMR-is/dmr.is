@@ -13,7 +13,7 @@ import { trpc } from '../../../../lib/trpc/client/server'
 export default async function CasePage({
   params,
 }: {
-  params: Promise<{ id: string, type: string }>
+  params: Promise<{ id: string }>
 }) {
   const { id } = await params
 

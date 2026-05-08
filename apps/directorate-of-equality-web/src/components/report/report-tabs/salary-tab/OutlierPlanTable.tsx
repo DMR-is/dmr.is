@@ -19,7 +19,7 @@ interface OutlierPlanTableProps {
 const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   {
     accessorKey: 'reportEmployeeId',
-    header: 'Nafn',
+    header: 'Númer',
   },
   {
     id: 'starf',

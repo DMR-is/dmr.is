@@ -29,12 +29,11 @@ const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
 export const ReportStatusSelect = ({ reportId, status }: Props) => {
   // const hasAdmin = !!admin  // uncomment once admin is available from API
   const hasAdmin = true // temporary until admin is wired up
-
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.reports.getById.queryKey({ id: reportId }) })
+    queryClient.invalidateQueries({ queryKey: trpc.reports.getById.queryKey() })
 
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),

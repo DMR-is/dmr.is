@@ -32,7 +32,7 @@ export function ReportContainer({ report }: ReportContainerProps) {
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
               >
-              <ReportSidebarContainer id={report.id} status={report.status} />
+              <ReportSidebarContainer id={report.id} />
               </ErrorBoundary>
             </GridColumn>
           </GridRow>
