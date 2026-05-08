@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
 import { Tabs } from '@island.is/island-ui/core'
@@ -26,6 +28,8 @@ export function ReportTabs({ report }: ReportTabsProps) {
     }),
     enabled: isSalary,
   })
+
+  const [selectedTab, setSelectedTab] = useState(isSalary ? 'launagreining' : 'jafnrettisaetlun')
 
   if (isSalary && salaryLoading) {
     return <SkeletonLoader repeat={4} height={44} space={1} />
@@ -58,11 +62,11 @@ export function ReportTabs({ report }: ReportTabsProps) {
   return (
     <>
     <Tabs
-      key={tabs.map((t) => t.id).join(',')}
       label="Skýrsla"
       tabs={tabs}
       contentBackground="white"
-      selected={tabs[0].id}
+      selected={selectedTab}
+      onChange={setSelectedTab}
       />
     <CommentsForm reportId={report.id} />
       </>
