@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
-import { TabsContainer } from '../../../components/list-page/TabsContent/TabsContainer'
+import { TabsContainer } from '../../../components/list-page/tabs/TabsContainer'
 
 export default function MalPage() {
   return (

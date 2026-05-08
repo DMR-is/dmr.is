@@ -21,7 +21,7 @@ import { useReports } from '../../../hooks/useReports'
 import { type Case, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
 import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
 import { CreateSalaryReportDrawer } from '../CreateSalaryReportDrawer'
-import { ReportFilter } from '../FilterContent/ReportFilter'
+import { ReportFilter } from '../filter/ReportFilter'
 import { TabContent } from './TabContent'
 
 import { type ColumnDef } from '@tanstack/react-table'
