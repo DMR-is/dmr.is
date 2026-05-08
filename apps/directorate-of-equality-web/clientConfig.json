@@ -2645,6 +2645,87 @@
         },
         "required": ["totals", "scoreBuckets"]
       },
+      "SalaryOutlierRegressionDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number", "nullable": true },
+          "intercept": { "type": "number", "nullable": true },
+          "sampleCount": { "type": "number" },
+          "scoreMean": { "type": "number", "nullable": true },
+          "adjustedBaseSalaryMean": { "type": "number", "nullable": true },
+          "rSquared": { "type": "number", "nullable": true },
+          "scoreRangeFrom": { "type": "number", "nullable": true },
+          "scoreRangeTo": { "type": "number", "nullable": true }
+        },
+        "required": ["sampleCount"]
+      },
+      "SalaryOutlierRegressionsDto": {
+        "type": "object",
+        "properties": {
+          "overall": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          },
+          "male": { "$ref": "#/components/schemas/SalaryOutlierRegressionDto" },
+          "female": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          },
+          "neutral": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
+          }
+        },
+        "required": ["overall", "male", "female", "neutral"]
+      },
+      "SalaryOutlierAnalysisEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "score": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "adjustedBaseSalary": { "type": "number" },
+          "predictedBaseSalary": { "type": "number", "nullable": true },
+          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
+          "scoreBucketRangeTo": { "type": "number", "nullable": true },
+          "direction": { "type": "string", "nullable": true },
+          "differencePercent": { "type": "number", "nullable": true },
+          "allowedDifferencePercent": { "type": "number" },
+          "isOutlier": { "type": "boolean" }
+        },
+        "required": [
+          "ordinal",
+          "score",
+          "gender",
+          "adjustedBaseSalary",
+          "allowedDifferencePercent",
+          "isOutlier"
+        ]
+      },
+      "SalaryOutlierAnalysisDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["BASE_SALARY_LINEAR_REGRESSION_BY_SCORE"]
+          },
+          "thresholdPercent": { "type": "number" },
+          "allowedDifferencePercent": { "type": "number" },
+          "regressions": {
+            "$ref": "#/components/schemas/SalaryOutlierRegressionsDto"
+          },
+          "employees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalaryOutlierAnalysisEmployeeDto"
+            }
+          }
+        },
+        "required": [
+          "method",
+          "thresholdPercent",
+          "allowedDifferencePercent",
+          "regressions",
+          "employees"
+        ]
+      },
       "ReportResultDto": {
         "type": "object",
         "properties": {
@@ -2660,9 +2741,19 @@
           },
           "full": {
             "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          },
+          "outlierAnalysis": {
+            "$ref": "#/components/schemas/SalaryOutlierAnalysisDto"
           }
         },
-        "required": ["id", "reportId", "calculationVersion", "base", "full"]
+        "required": [
+          "id",
+          "reportId",
+          "calculationVersion",
+          "base",
+          "full",
+          "outlierAnalysis"
+        ]
       },
       "ReportRoleResultDto": {
         "type": "object",
@@ -2692,6 +2783,11 @@
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "reportEmployeeId": { "type": "string", "format": "uuid" },
+          "gender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
+          "roleTitle": { "type": "string", "nullable": true },
           "reason": {
             "type": "string",
             "nullable": true,
