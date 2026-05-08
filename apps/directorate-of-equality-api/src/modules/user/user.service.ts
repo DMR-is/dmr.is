@@ -27,4 +27,18 @@ export class UserService implements IUserService {
 
     return user.fromModel()
   }
+
+  async getActiveUsers(): Promise<UserDto[]> {
+    this.logger.debug('Listing active users', { context: LOGGING_CONTEXT })
+
+    const users = await this.userModel.findAll({
+      where: { isActive: true },
+      order: [
+        ['firstName', 'ASC'],
+        ['lastName', 'ASC'],
+      ],
+    })
+
+    return users.map((user) => user.fromModel())
+  }
 }
