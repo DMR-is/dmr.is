@@ -1,5 +1,7 @@
 import { getServerSession } from 'next-auth'
 
+import { Suspense } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { HeroContainer } from '../../components/front-page/HeroContainer'
@@ -13,7 +15,9 @@ export default async function IndexPage() {
   return (
     <Box marginTop={[2, 4]}>
       <HeroContainer userName={session?.user?.name} />
-      <SectionContainer />
+      <Suspense fallback={null}>
+        <SectionContainer />
+      </Suspense>
       <PanelsContainer />
     </Box>
   )

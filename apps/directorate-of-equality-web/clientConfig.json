@@ -748,6 +748,110 @@
         "tags": ["Config"]
       }
     },
+    "/api/v1/reports/overview": {
+      "get": {
+        "operationId": "getReportOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReportOverviewDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/overview/statistics": {
+      "get": {
+        "operationId": "getReportOverviewStatistics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOverviewStatisticsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports": {
       "get": {
         "operationId": "listReports",
@@ -1889,6 +1993,86 @@
           "description": { "type": "string", "nullable": true }
         },
         "required": ["value"]
+      },
+      "ReportOverviewGeneralDto": {
+        "type": "object",
+        "properties": {
+          "submittedToday": { "type": "number" },
+          "inProgress": { "type": "number" },
+          "reportsWithComments": { "type": "number" },
+          "reportsWithoutEmployee": { "type": "number" }
+        },
+        "required": [
+          "submittedToday",
+          "inProgress",
+          "reportsWithComments",
+          "reportsWithoutEmployee"
+        ]
+      },
+      "ReportOverviewAssignedDto": {
+        "type": "object",
+        "properties": {
+          "totalAssigned": { "type": "number" },
+          "assignedWithComments": { "type": "number" }
+        },
+        "required": ["totalAssigned", "assignedWithComments"]
+      },
+      "ReportOverviewDto": {
+        "type": "object",
+        "properties": {
+          "general": {
+            "$ref": "#/components/schemas/ReportOverviewGeneralDto"
+          },
+          "assigned": {
+            "$ref": "#/components/schemas/ReportOverviewAssignedDto"
+          }
+        },
+        "required": ["general", "assigned"]
+      },
+      "ReportStatisticsItemDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SUBMITTED",
+              "IN_REVIEW",
+              "DENIED",
+              "APPROVED",
+              "SUPERSEDED"
+            ]
+          },
+          "count": { "type": "number" },
+          "percentage": { "type": "number" }
+        },
+        "required": ["status", "count", "percentage"]
+      },
+      "ReportStatisticsWindowDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportStatisticsItemDto" }
+          },
+          "total": { "type": "number" }
+        },
+        "required": ["items", "total"]
+      },
+      "ReportOverviewStatisticsDto": {
+        "type": "object",
+        "properties": {
+          "last30Days": {
+            "$ref": "#/components/schemas/ReportStatisticsWindowDto"
+          },
+          "currentYear": {
+            "$ref": "#/components/schemas/ReportStatisticsWindowDto"
+          },
+          "allTime": {
+            "$ref": "#/components/schemas/ReportStatisticsWindowDto"
+          }
+        },
+        "required": ["last30Days", "currentYear", "allTime"]
       },
       "ReportTypeEnum": { "type": "string", "enum": ["SALARY", "EQUALITY"] },
       "ReportStatusEnum": {
