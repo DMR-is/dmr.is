@@ -19,7 +19,6 @@ export default function MalPage() {
         reverse
         imageSpan={'3/12'}
         withOffset={false}
-
       />
       <Box background="blue100" paddingY={5}>
         <Suspense fallback={<div>Loading...</div>}>

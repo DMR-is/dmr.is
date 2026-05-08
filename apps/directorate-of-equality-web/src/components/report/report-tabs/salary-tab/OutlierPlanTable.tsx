@@ -84,12 +84,16 @@ export const OutlierPlanTable = ({ outliers }: OutlierPlanTableProps) => {
         columns={columns}
         data={pageData}
         getRowExpanded={(row) => <ExpandedRow row={row} />}
-        paging={outliers.length > PAGE_SIZE ? {
-          page,
-          pageSize: PAGE_SIZE,
-          totalItems: outliers.length,
-          totalPages: Math.ceil(outliers.length / PAGE_SIZE),
-        } : undefined}
+        paging={
+          outliers.length > PAGE_SIZE
+            ? {
+                page,
+                pageSize: PAGE_SIZE,
+                totalItems: outliers.length,
+                totalPages: Math.ceil(outliers.length / PAGE_SIZE),
+              }
+            : undefined
+        }
         onPageChange={setPage}
         showPageSizeSelect={false}
       />

@@ -24,15 +24,14 @@ export function ReportContainer({ report }: ReportContainerProps) {
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða skýrslu</div>}
               >
-              <ReportFormContainer report={report} />
-
+                <ReportFormContainer report={report} />
               </ErrorBoundary>
             </GridColumn>
             <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
               >
-              <ReportSidebarContainer report={report} />
+                <ReportSidebarContainer report={report} />
               </ErrorBoundary>
             </GridColumn>
           </GridRow>

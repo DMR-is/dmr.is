@@ -34,16 +34,34 @@ export const CommentsForm = ({
 }: Props) => {
   return (
     <>
-      <Text variant="h4" marginBottom={4}>Athugasemdir</Text>
-      <Box display="flex" flexDirection="column" rowGap={4} background="blue100" padding={4} borderRadius="large">
+      <Text variant="h4" marginBottom={4}>
+        Athugasemdir
+      </Text>
+      <Box
+        display="flex"
+        flexDirection="column"
+        rowGap={4}
+        background="blue100"
+        padding={4}
+        borderRadius="large"
+      >
         {comments.length > 0 && (
           <Box display="flex" flexDirection="column">
             {comments.map((c, i) => (
               <React.Fragment key={c.id}>
-                <Box display="flex" justifyContent="spaceBetween" marginBottom={1}>
-                  <Text variant="medium" fontWeight="medium">{c.authorKind}</Text>
+                <Box
+                  display="flex"
+                  justifyContent="spaceBetween"
+                  marginBottom={1}
+                >
+                  <Text variant="medium" fontWeight="medium">
+                    {c.authorKind}
+                  </Text>
                   <Text variant="medium" color="dark400">
-                    {new Date(c.createdAt).toDateString() === new Date().toDateString() ? 'Í dag' : formatDateIS(c.createdAt)}
+                    {new Date(c.createdAt).toDateString() ===
+                    new Date().toDateString()
+                      ? 'Í dag'
+                      : formatDateIS(c.createdAt)}
                   </Text>
                 </Box>
                 <Text>{c.body}</Text>
@@ -72,7 +90,11 @@ export const CommentsForm = ({
           onChange={(e) => onExternalChange(e.target.checked)}
         />
         <Box alignSelf="flexEnd">
-          <Button onClick={onSubmit} loading={isPending} disabled={!body.trim()}>
+          <Button
+            onClick={onSubmit}
+            loading={isPending}
+            disabled={!body.trim()}
+          >
             Vista athugasemd
           </Button>
         </Box>

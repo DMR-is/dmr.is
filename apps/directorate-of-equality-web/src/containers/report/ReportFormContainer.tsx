@@ -7,37 +7,47 @@ import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS } from '../../lib/constants'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
-
 type ReportFormContainerProps = {
   report: ReportDetailDto
 }
 
 export function ReportFormContainer({ report }: ReportFormContainerProps) {
-
-
-  const title = <>
-    <Text variant="h2">Vinnslusvæði</Text>
-    <Text marginBottom={4}>Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.</Text>
-  </>
+  const title = (
+    <>
+      <Text variant="h2">Vinnslusvæði</Text>
+      <Text marginBottom={4}>
+        Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate
+        libero et velit interdum, ac aliquet odio mattis.
+      </Text>
+    </>
+  )
 
   return (
-    <Box background="white" paddingX={[4, 8, 14]} paddingY={[4, 6, 8]}borderRadius="large">
-        <Stack space={[2]}>
-          <Breadcrumbs
-            items={[
-              { title: 'Forsíða', href: '/' },
-              { title: 'Yfirlit', href: '/mal' },
-              { title: 'Vinnslusvæði', href: `/mal/${report.id}` },
-            ]}
-          />
+    <Box
+      background="white"
+      paddingX={[4, 8, 14]}
+      paddingY={[4, 6, 8]}
+      borderRadius="large"
+    >
+      <Stack space={[2]}>
+        <Breadcrumbs
+          items={[
+            { title: 'Forsíða', href: '/' },
+            { title: 'Yfirlit', href: '/mal' },
+            { title: 'Vinnslusvæði', href: `/mal/${report.id}` },
+          ]}
+        />
         {title}
         <Stack space={1}>
-        <Text variant="eyebrow" color='purple400'>{formatDateIS(report.createdAt)}</Text>
-        <Text variant="h3" marginBottom={4}>{report.company.name}</Text>
+          <Text variant="eyebrow" color="purple400">
+            {formatDateIS(report.createdAt)}
+          </Text>
+          <Text variant="h3" marginBottom={4}>
+            {report.company.name}
+          </Text>
         </Stack>
-
-        </Stack>
-        <ReportTabsContainer report={report} />
+      </Stack>
+      <ReportTabsContainer report={report} />
     </Box>
   )
 }
