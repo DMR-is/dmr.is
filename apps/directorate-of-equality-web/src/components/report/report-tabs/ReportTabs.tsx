@@ -2,38 +2,21 @@
 
 import { useState } from 'react'
 
-import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
-
 import { Tabs } from '@island.is/island-ui/core'
 
-import { ReportDetailDto, ReportTypeEnum } from '../../../gen/fetch'
-import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { CommentsContainer } from '../../../containers/report/CommentsContainer'
+import { ReportDetailDto, ReportTypeEnum, SalaryByGenderAndScoreDto } from '../../../gen/fetch'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
-import { CommentsForm } from './CommentsForm'
-
-import { useQuery } from '@tanstack/react-query'
 
 type ReportTabsProps = {
   report: ReportDetailDto
+  salaryStats?: SalaryByGenderAndScoreDto
 }
 
-export function ReportTabs({ report }: ReportTabsProps) {
-  const trpc = useTRPC()
+export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const isSalary = report.type === ReportTypeEnum.SALARY
-
-  const { data: salaryStats, isLoading: salaryLoading } = useQuery({
-    ...trpc.reportStatistics.baseSalaryByGenderAndScoreAll.queryOptions({
-      reportId: report.id,
-    }),
-    enabled: isSalary,
-  })
-
   const [selectedTab, setSelectedTab] = useState(isSalary ? 'launagreining' : 'jafnrettisaetlun')
-
-  if (isSalary && salaryLoading) {
-    return <SkeletonLoader repeat={4} height={44} space={1} />
-  }
 
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
@@ -68,7 +51,7 @@ export function ReportTabs({ report }: ReportTabsProps) {
       selected={selectedTab}
       onChange={setSelectedTab}
       />
-    <CommentsForm reportId={report.id} />
+    <CommentsContainer reportId={report.id} />
       </>
   )
 }

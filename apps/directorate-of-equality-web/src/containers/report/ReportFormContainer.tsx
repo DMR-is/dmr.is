@@ -1,14 +1,11 @@
-'use client'
-
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { ReportTabs } from '../../components/report/report-tabs/ReportTabs'
 import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS } from '../../lib/constants'
+import { ReportTabsContainer } from './ReportTabsContainer'
 
 
 type ReportFormContainerProps = {
@@ -40,7 +37,7 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
         </Stack>
 
         </Stack>
-        <ReportTabs report={report} />
+        <ReportTabsContainer report={report} />
     </Box>
   )
 }

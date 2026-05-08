@@ -1,5 +1,3 @@
-'use client'
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
