@@ -10,6 +10,7 @@ import {
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
+import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 
@@ -33,7 +34,30 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const fyrirtaekid = {
     id: 'fyrirtaekid',
     label: 'Fyrirtækið',
-    content: <div>Fyrirtækið</div>,
+    content: (
+      <CompanyInfoTab
+        company={report.company}
+        admin={{
+          email: report.companyAdminEmail ?? undefined,
+          name: report.companyAdminName ?? undefined,
+          gender: report.companyAdminGender ?? undefined,
+        }}
+        contactPerson={{
+          email: report.contactEmail ?? undefined,
+          name: report.contactName ?? undefined,
+          phone: report.contactPhone ?? undefined,
+        }}
+        employees={{
+          womenCount: report.averageEmployeeFemaleCount ?? undefined,
+          menCount: report.averageEmployeeMaleCount ?? undefined,
+          otherCount: report.averageEmployeeNeutralCount ?? undefined,
+        }}
+        subsidaries={report.subsidiaries?.map((dc) => ({
+          name: dc.name ?? undefined,
+          nationalId: dc.nationalId ?? undefined,
+        }))}
+      />
+    ),
   }
 
   const tabs =

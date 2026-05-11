@@ -3125,6 +3125,10 @@
             "example": "2026-02-19T10:30:00.000Z"
           },
           "company": { "$ref": "#/components/schemas/CompanyReportDto" },
+          "subsidiaries": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompanyReportDto" }
+          },
           "equalityReport": {
             "$ref": "#/components/schemas/EqualityReportDto"
           },
@@ -3152,6 +3156,7 @@
           "importedFromExcel",
           "createdAt",
           "company",
+          "subsidiaries",
           "equalityReport",
           "timeline",
           "roleResults",

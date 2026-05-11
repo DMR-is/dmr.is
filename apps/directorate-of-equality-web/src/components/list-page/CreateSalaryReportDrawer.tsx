@@ -18,6 +18,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { type ParsedReportDto } from '../../gen/fetch/types.gen'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { formatNationalId } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -68,7 +69,7 @@ export const CreateSalaryReportDrawer = () => {
   )
 
   const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({
-    label: `${c.name} (${c.nationalId})`,
+    label: `${c.name} (${formatNationalId(c.nationalId)})`,
     value: c.id,
   }))
 

@@ -15,6 +15,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { formatNationalId } from '../../lib/utils'
 import { CreateCompanyModal } from './CreateCompanyModal'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -67,7 +68,7 @@ export const CompaniesPage = () => {
   const rows = useMemo<CompanyRow[]>(() => {
     const all = (data?.companies ?? []).map((c) => ({
       name: c.name,
-      nationalId: c.nationalId,
+      nationalId: formatNationalId(c.nationalId),
       employees: c.averageEmployeeCountFromRsk,
     }))
 

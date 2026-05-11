@@ -8,3 +8,12 @@ export const getBaseUrlFromServerSide = (includePrefix = false): string => {
   }
   return includePrefix ? url : url.replace(/^https?:\/\//, '')
 }
+
+export const formatNationalId = (nationalId = '') => {
+  // Format: XXXXXX-XXXX or XXXXXXXXXX or XXXXXX XXXX
+  const cleaned = nationalId.replace(/[^0-9]/g, '')
+  if (cleaned.length !== 10) {
+    return nationalId // Return as is if not 10 digits
+  }
+  return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
+}
