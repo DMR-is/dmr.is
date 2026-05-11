@@ -109,12 +109,19 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { where: { id: context.reportId } },
     )
 
-    await this.reportEventService.emitAssigned(
-      context.reportId,
-      actorUserId,
-      targetUserId,
-      nextStatus,
-    )
+    if (targetUserId === null) {
+      await this.reportEventService.emitUnassigned(
+        context.reportId,
+        actorUserId,
+        currentReviewerUserId,
+      )
+    } else {
+      await this.reportEventService.emitAssigned(
+        context.reportId,
+        actorUserId,
+        targetUserId,
+      )
+    }
   }
 
   private async getReviewerUserId(reportId: string): Promise<string | null> {

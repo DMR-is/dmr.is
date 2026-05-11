@@ -38,8 +38,7 @@ export class ReportEventService implements IReportEventService {
   async emitAssigned(
     reportId: string,
     actorUserId: string,
-    assignedUserId: string | null,
-    reportStatus: ReportStatusEnum,
+    assignedUserId: string,
   ): Promise<void> {
     this.logger.info(`Emitting ASSIGNED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
@@ -50,8 +49,27 @@ export class ReportEventService implements IReportEventService {
       reportId,
       eventType: ReportEventTypeEnum.ASSIGNED,
       actorUserId,
-      reportStatus,
+      reportStatus: ReportStatusEnum.IN_REVIEW,
       assignedUserId,
+    })
+  }
+
+  async emitUnassigned(
+    reportId: string,
+    actorUserId: string,
+    previousAssigneeUserId: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting UNASSIGNED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.UNASSIGNED,
+      actorUserId,
+      reportStatus: ReportStatusEnum.SUBMITTED,
+      assignedUserId: previousAssigneeUserId,
     })
   }
 

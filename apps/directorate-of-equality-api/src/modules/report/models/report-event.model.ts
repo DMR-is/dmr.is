@@ -11,6 +11,7 @@ import { ReportModel, ReportStatusEnum } from './report.model'
 export enum ReportEventTypeEnum {
   SUBMITTED = 'SUBMITTED',
   ASSIGNED = 'ASSIGNED',
+  UNASSIGNED = 'UNASSIGNED',
   STATUS_CHANGED = 'STATUS_CHANGED',
   SUPERSEDED = 'SUPERSEDED',
 }
