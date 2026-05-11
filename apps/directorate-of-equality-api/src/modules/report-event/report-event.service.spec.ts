@@ -38,38 +38,44 @@ describe('ReportEventService', () => {
   })
 
   describe('emitAssigned', () => {
-    it('creates an ASSIGNED event with the supplied status snapshot', async () => {
+    it('creates an ASSIGNED event with the new assignee and IN_REVIEW status', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitAssigned(
-        'report-1',
-        'reviewer-1',
-        'reviewer-1',
-        ReportStatusEnum.IN_REVIEW,
-      )
+      await service.emitAssigned('report-1', 'reviewer-1', 'user-2')
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
         eventType: ReportEventTypeEnum.ASSIGNED,
         actorUserId: 'reviewer-1',
         reportStatus: ReportStatusEnum.IN_REVIEW,
-        assignedUserId: 'reviewer-1',
+        assignedUserId: 'user-2',
       })
     })
+  })
 
-    it('creates an ASSIGNED event with a null assignee for unassignment', async () => {
+  describe('emitUnassigned', () => {
+    it('creates an UNASSIGNED event with the previous assignee and SUBMITTED status', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitAssigned(
-        'report-1',
-        'reviewer-1',
-        null,
-        ReportStatusEnum.SUBMITTED,
-      )
+      await service.emitUnassigned('report-1', 'reviewer-1', 'user-2')
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
-        eventType: ReportEventTypeEnum.ASSIGNED,
+        eventType: ReportEventTypeEnum.UNASSIGNED,
+        actorUserId: 'reviewer-1',
+        reportStatus: ReportStatusEnum.SUBMITTED,
+        assignedUserId: 'user-2',
+      })
+    })
+
+    it('records a null previous assignee when none was set', async () => {
+      reportEventModel.create.mockResolvedValue({})
+
+      await service.emitUnassigned('report-1', 'reviewer-1', null)
+
+      expect(reportEventModel.create).toHaveBeenCalledWith({
+        reportId: 'report-1',
+        eventType: ReportEventTypeEnum.UNASSIGNED,
         actorUserId: 'reviewer-1',
         reportStatus: ReportStatusEnum.SUBMITTED,
         assignedUserId: null,
