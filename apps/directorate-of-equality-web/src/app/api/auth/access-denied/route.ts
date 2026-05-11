@@ -29,6 +29,12 @@ function handler(request: NextRequest) {
     }
   }
 
+  response.cookies.set('doe.signin_error', '1', {
+    path: '/',
+    maxAge: 60,
+    sameSite: 'lax',
+  })
+
   return response
 }
 
