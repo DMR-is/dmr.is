@@ -26,7 +26,11 @@ export function ReportSidebarContainer({
     <ReportSidebar>
       <EmployeeSelect reportId={data.id} assignedUserId={data.reviewer?.id} />
       <ReportStatusSelect reportId={data.id} status={data.status} />
-      <ReportFormStepper status={data.status} timeline={data.timeline} />
+      <ReportFormStepper
+        status={data.status}
+        timeline={data.timeline}
+        companyName={data.company.name}
+      />
     </ReportSidebar>
   )
 }

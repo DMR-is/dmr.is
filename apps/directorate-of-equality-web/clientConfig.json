@@ -2704,7 +2704,13 @@
       },
       "ReportEventTypeEnum": {
         "type": "string",
-        "enum": ["SUBMITTED", "ASSIGNED", "STATUS_CHANGED", "SUPERSEDED"]
+        "enum": [
+          "SUBMITTED",
+          "ASSIGNED",
+          "UNASSIGNED",
+          "STATUS_CHANGED",
+          "SUPERSEDED"
+        ]
       },
       "ReportEventDto": {
         "type": "object",

@@ -26,6 +26,7 @@ export enum ReportStatusTranslatedEnum {
   APPROVED = 'Afgreitt',
   DENIED = 'Hafnað',
   SUPERSEDED = 'Úrelt',
+  UNASSIGNED = 'Óúthlutað',
 }
 import { type ColumnDef } from '@tanstack/react-table'
 
