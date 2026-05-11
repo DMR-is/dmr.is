@@ -19,6 +19,7 @@ describe('ReportWorkflowService', () => {
   const reportEventService = {
     emitSubmitted: jest.fn(),
     emitAssigned: jest.fn(),
+    emitUnassigned: jest.fn(),
     emitStatusChanged: jest.fn(),
     emitSuperseded: jest.fn(),
   }
@@ -88,7 +89,6 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'reviewer-1',
-        ReportStatusEnum.IN_REVIEW,
       )
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
     })
@@ -118,7 +118,6 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'user-2',
-        ReportStatusEnum.IN_REVIEW,
       )
     })
 
@@ -143,14 +142,13 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'user-2',
-        ReportStatusEnum.IN_REVIEW,
       )
     })
 
     it('unassigns an IN_REVIEW report and returns it to SUBMITTED', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-1' })
-      reportEventService.emitAssigned.mockResolvedValue(undefined)
+      reportEventService.emitUnassigned.mockResolvedValue(undefined)
 
       await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
         userId: null,
@@ -164,11 +162,11 @@ describe('ReportWorkflowService', () => {
         },
         { where: { id: 'report-1' } },
       )
-      expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+      expect(reportEventService.emitAssigned).not.toHaveBeenCalled()
+      expect(reportEventService.emitUnassigned).toHaveBeenCalledWith(
         'report-1',
         'reviewer-1',
-        null,
-        ReportStatusEnum.SUBMITTED,
+        'user-1',
       )
     })
 

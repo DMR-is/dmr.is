@@ -5,8 +5,12 @@ export interface IReportEventService {
   emitAssigned(
     reportId: string,
     actorUserId: string,
-    assignedUserId: string | null,
-    reportStatus: ReportStatusEnum,
+    assignedUserId: string,
+  ): Promise<void>
+  emitUnassigned(
+    reportId: string,
+    actorUserId: string,
+    previousAssigneeUserId: string | null,
   ): Promise<void>
   emitStatusChanged(
     reportId: string,
