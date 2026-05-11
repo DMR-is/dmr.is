@@ -4,6 +4,7 @@ import {
   ReportEmployeeOutlierDto,
   SalaryByGenderAndScoreDto,
 } from '../../../../gen/fetch'
+import { Empty } from '../../../Empty'
 import { OutlierInputForm } from './OutlierInputForm'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
@@ -11,7 +12,6 @@ import { SalaryStatistics } from './SalaryStatistics'
 
 interface SalaryReportTabProps {
   data: SalaryByGenderAndScoreDto
-  reportId: string
   outliers: ReportEmployeeOutlierDto[]
   outlierDate?: Date
 }
@@ -21,10 +21,18 @@ const formatSalary = (v: number) =>
 
 export const SalaryReportTab = ({
   data,
-  reportId,
   outliers,
   outlierDate,
 }: SalaryReportTabProps) => {
+  if (!data) {
+    return (
+      <Empty
+        title="Engin launagreining"
+        message="Engin launagreining fannst fyrir þessa skýrslu. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar."
+      />
+    )
+  }
+
   return (
     <Stack space={6}>
       <SalaryDistributionChart data={data} />
