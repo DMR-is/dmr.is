@@ -15,6 +15,7 @@ import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
 import { type ReportResourceContext } from '../report/types/report-resource-context'
+import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
 
@@ -37,8 +38,9 @@ export class ReportWorkflowController {
   @DoeResponse({ operationId: 'assignReport', include404: true })
   async assign(
     @CurrentReportResourceContext() context: ReportResourceContext,
+    @Body() dto: AssignReportDto,
   ): Promise<void> {
-    return this.reportWorkflowService.assign(context)
+    return this.reportWorkflowService.assign(context, dto)
   }
 
   @Post('deny')

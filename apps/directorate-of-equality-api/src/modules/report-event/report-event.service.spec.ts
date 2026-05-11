@@ -38,10 +38,15 @@ describe('ReportEventService', () => {
   })
 
   describe('emitAssigned', () => {
-    it('creates an ASSIGNED event with IN_REVIEW status snapshot', async () => {
+    it('creates an ASSIGNED event with the supplied status snapshot', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitAssigned('report-1', 'reviewer-1', 'reviewer-1')
+      await service.emitAssigned(
+        'report-1',
+        'reviewer-1',
+        'reviewer-1',
+        ReportStatusEnum.IN_REVIEW,
+      )
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
@@ -49,6 +54,25 @@ describe('ReportEventService', () => {
         actorUserId: 'reviewer-1',
         reportStatus: ReportStatusEnum.IN_REVIEW,
         assignedUserId: 'reviewer-1',
+      })
+    })
+
+    it('creates an ASSIGNED event with a null assignee for unassignment', async () => {
+      reportEventModel.create.mockResolvedValue({})
+
+      await service.emitAssigned(
+        'report-1',
+        'reviewer-1',
+        null,
+        ReportStatusEnum.SUBMITTED,
+      )
+
+      expect(reportEventModel.create).toHaveBeenCalledWith({
+        reportId: 'report-1',
+        eventType: ReportEventTypeEnum.ASSIGNED,
+        actorUserId: 'reviewer-1',
+        reportStatus: ReportStatusEnum.SUBMITTED,
+        assignedUserId: null,
       })
     })
   })

@@ -15,6 +15,8 @@ import {
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
 import { IReportEventService } from '../report-event/report-event.service.interface'
+import { UserModel } from '../user/models/user.model'
+import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
 
@@ -30,9 +32,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
+    @InjectModel(UserModel)
+    private readonly userModel: typeof UserModel,
   ) {}
 
-  async assign(context: ReportResourceContext): Promise<void> {
+  async assign(
+    context: ReportResourceContext,
+    dto: AssignReportDto,
+  ): Promise<void> {
     this.logger.info(`Assigning report ${context.reportId} to reviewer`, {
       context: LOGGING_CONTEXT,
     })
@@ -41,24 +48,81 @@ export class ReportWorkflowService implements IReportWorkflowService {
       throw new ForbiddenException('Only reviewers may assign reports')
     }
 
-    if (context.reportStatus !== ReportStatusEnum.SUBMITTED) {
+    const actorUserId = context.actor.userId
+
+    // Resolve target reviewer:
+    // - undefined → assign to caller
+    // - UUID → assign to that user (must be active)
+    // - null → unassign
+    const targetUserId =
+      dto.userId === undefined ? actorUserId : dto.userId
+
+    if (targetUserId !== null) {
+      const targetUser = await this.userModel.findOne({
+        where: { id: targetUserId },
+        attributes: ['id', 'isActive'],
+      })
+
+      if (!targetUser || !targetUser.isActive) {
+        throw new BadRequestException(
+          `Target reviewer ${targetUserId} is not an active user`,
+        )
+      }
+    }
+
+    // Status transitions:
+    // - SUBMITTED + target  → IN_REVIEW
+    // - IN_REVIEW + target  → IN_REVIEW (reassignment)
+    // - IN_REVIEW + null    → SUBMITTED (return to queue)
+    // - anything else       → 400
+    let nextStatus: ReportStatusEnum
+    if (context.reportStatus === ReportStatusEnum.SUBMITTED) {
+      if (targetUserId === null) {
+        throw new BadRequestException(
+          'Cannot unassign a report that is not in review',
+        )
+      }
+      nextStatus = ReportStatusEnum.IN_REVIEW
+    } else if (context.reportStatus === ReportStatusEnum.IN_REVIEW) {
+      nextStatus =
+        targetUserId === null
+          ? ReportStatusEnum.SUBMITTED
+          : ReportStatusEnum.IN_REVIEW
+    } else {
       throw new BadRequestException(
         `Cannot assign report with status ${context.reportStatus}`,
       )
     }
 
-    const actorUserId = context.actor.userId
+    const currentReviewerUserId = await this.getReviewerUserId(context.reportId)
+
+    // No-op: same reviewer, same status. Skip writing the event log.
+    if (
+      currentReviewerUserId === targetUserId &&
+      context.reportStatus === nextStatus
+    ) {
+      return
+    }
 
     await this.reportModel.update(
-      { status: ReportStatusEnum.IN_REVIEW },
+      { status: nextStatus, reviewerUserId: targetUserId },
       { where: { id: context.reportId } },
     )
 
     await this.reportEventService.emitAssigned(
       context.reportId,
       actorUserId,
-      actorUserId,
+      targetUserId,
+      nextStatus,
     )
+  }
+
+  private async getReviewerUserId(reportId: string): Promise<string | null> {
+    const report = await this.reportModel.findOne({
+      where: { id: reportId },
+      attributes: ['reviewerUserId'],
+    })
+    return report?.reviewerUserId ?? null
   }
 
   async deny(

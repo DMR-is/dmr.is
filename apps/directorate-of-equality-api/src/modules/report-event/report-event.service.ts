@@ -38,7 +38,8 @@ export class ReportEventService implements IReportEventService {
   async emitAssigned(
     reportId: string,
     actorUserId: string,
-    assignedUserId: string,
+    assignedUserId: string | null,
+    reportStatus: ReportStatusEnum,
   ): Promise<void> {
     this.logger.info(`Emitting ASSIGNED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
@@ -49,7 +50,7 @@ export class ReportEventService implements IReportEventService {
       reportId,
       eventType: ReportEventTypeEnum.ASSIGNED,
       actorUserId,
-      reportStatus: ReportStatusEnum.IN_REVIEW,
+      reportStatus,
       assignedUserId,
     })
   }
