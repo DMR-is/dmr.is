@@ -487,6 +487,60 @@
         "tags": ["Users"]
       }
     },
+    "/api/v1/users/active": {
+      "get": {
+        "operationId": "getActiveUsers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Users"]
+      }
+    },
     "/api/v1/config": {
       "get": {
         "operationId": "getAllConfig",
@@ -1336,6 +1390,14 @@
             "schema": { "type": "string" }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AssignReportDto" }
+            }
+          }
+        },
         "responses": {
           "204": { "description": "" },
           "400": {
@@ -3105,6 +3167,17 @@
           "body": { "type": "string" }
         },
         "required": ["visibility", "body"]
+      },
+      "AssignReportDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Target reviewer user id. Omit to assign to the caller, pass a UUID to assign to a specific active user, or pass null to unassign (returns the report to the SUBMITTED queue)."
+          }
+        }
       },
       "DenyReportDto": {
         "type": "object",

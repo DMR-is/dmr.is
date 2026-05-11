@@ -25,6 +25,7 @@ describe('ReportWorkflowService', () => {
 
   const reportModel = {
     update: jest.fn(),
+    findOne: jest.fn(),
     findAll: jest.fn(),
   }
 
@@ -33,10 +34,8 @@ describe('ReportWorkflowService', () => {
     findAll: jest.fn(),
   }
 
-  const sequelize = {
-    transaction: jest
-      .fn()
-      .mockImplementation((cb: () => Promise<void>) => cb()),
+  const userModel = {
+    findOne: jest.fn(),
   }
 
   let service: ReportWorkflowService
@@ -62,33 +61,171 @@ describe('ReportWorkflowService', () => {
       reportEventService as never,
       reportModel as never,
       companyReportModel as never,
-      sequelize as never,
+      userModel as never,
     )
   })
 
   describe('assign', () => {
-    it('transitions SUBMITTED → IN_REVIEW and emits STATUS_CHANGED + ASSIGNED', async () => {
+    it('transitions SUBMITTED → IN_REVIEW and assigns the caller when no userId is given', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
+      userModel.findOne.mockResolvedValue({
+        id: 'reviewer-1',
+        isActive: true,
+      })
       reportEventService.emitAssigned.mockResolvedValue(undefined)
 
-      await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED))
+      await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {})
 
       expect(reportModel.update).toHaveBeenCalledWith(
-        { status: ReportStatusEnum.IN_REVIEW },
+        {
+          status: ReportStatusEnum.IN_REVIEW,
+          reviewerUserId: 'reviewer-1',
+        },
         { where: { id: 'report-1' } },
       )
       expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
         'report-1',
         'reviewer-1',
         'reviewer-1',
+        ReportStatusEnum.IN_REVIEW,
       )
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
     })
 
-    it('rejects non-SUBMITTED reports', async () => {
+    it('assigns a specific active user when userId is supplied', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
+      userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+      reportEventService.emitAssigned.mockResolvedValue(undefined)
+
+      await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+        userId: 'user-2',
+      })
+
+      expect(userModel.findOne).toHaveBeenCalledWith({
+        where: { id: 'user-2' },
+        attributes: ['id', 'isActive'],
+      })
+      expect(reportModel.update).toHaveBeenCalledWith(
+        {
+          status: ReportStatusEnum.IN_REVIEW,
+          reviewerUserId: 'user-2',
+        },
+        { where: { id: 'report-1' } },
+      )
+      expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.IN_REVIEW,
+      )
+    })
+
+    it('reassigns an IN_REVIEW report to a different user without changing status', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-1' })
+      userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+      reportEventService.emitAssigned.mockResolvedValue(undefined)
+
+      await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        userId: 'user-2',
+      })
+
+      expect(reportModel.update).toHaveBeenCalledWith(
+        {
+          status: ReportStatusEnum.IN_REVIEW,
+          reviewerUserId: 'user-2',
+        },
+        { where: { id: 'report-1' } },
+      )
+      expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.IN_REVIEW,
+      )
+    })
+
+    it('unassigns an IN_REVIEW report and returns it to SUBMITTED', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-1' })
+      reportEventService.emitAssigned.mockResolvedValue(undefined)
+
+      await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        userId: null,
+      })
+
+      expect(userModel.findOne).not.toHaveBeenCalled()
+      expect(reportModel.update).toHaveBeenCalledWith(
+        {
+          status: ReportStatusEnum.SUBMITTED,
+          reviewerUserId: null,
+        },
+        { where: { id: 'report-1' } },
+      )
+      expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+        'report-1',
+        'reviewer-1',
+        null,
+        ReportStatusEnum.SUBMITTED,
+      )
+    })
+
+    it('is a no-op when reassigning to the same user with same status', async () => {
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: 'reviewer-1' })
+      userModel.findOne.mockResolvedValue({
+        id: 'reviewer-1',
+        isActive: true,
+      })
+
+      await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        userId: 'reviewer-1',
+      })
+
+      expect(reportModel.update).not.toHaveBeenCalled()
+      expect(reportEventService.emitAssigned).not.toHaveBeenCalled()
+    })
+
+    it('rejects when target user is inactive', async () => {
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
+      userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: false })
+
       await expect(
-        service.assign(reviewerContext(ReportStatusEnum.DRAFT)),
+        service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: 'user-2',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects when target user does not exist', async () => {
+      reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
+      userModel.findOne.mockResolvedValue(null)
+
+      await expect(
+        service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: 'missing',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects unassign from SUBMITTED (nothing to unassign)', async () => {
+      await expect(
+        service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: null,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects reports outside SUBMITTED / IN_REVIEW', async () => {
+      await expect(
+        service.assign(reviewerContext(ReportStatusEnum.DRAFT), {}),
       ).rejects.toBeInstanceOf(BadRequestException)
 
       expect(reportModel.update).not.toHaveBeenCalled()
@@ -96,7 +233,7 @@ describe('ReportWorkflowService', () => {
 
     it('rejects company actors', async () => {
       await expect(
-        service.assign(companyContext(ReportStatusEnum.SUBMITTED)),
+        service.assign(companyContext(ReportStatusEnum.SUBMITTED), {}),
       ).rejects.toBeInstanceOf(ForbiddenException)
 
       expect(reportModel.update).not.toHaveBeenCalled()
