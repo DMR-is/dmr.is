@@ -5,7 +5,8 @@ export interface IReportEventService {
   emitAssigned(
     reportId: string,
     actorUserId: string,
-    assignedUserId: string,
+    assignedUserId: string | null,
+    reportStatus: ReportStatusEnum,
   ): Promise<void>
   emitStatusChanged(
     reportId: string,

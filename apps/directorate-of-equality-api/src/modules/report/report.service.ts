@@ -79,6 +79,8 @@ export class ReportService implements IReportService {
     private readonly reportRoleResultModel: typeof ReportRoleResultModel,
     @InjectModel(ReportEmployeeOutlierModel)
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
+    @InjectModel(CompanyReportModel)
+    private readonly companyReportModel: typeof CompanyReportModel,
   ) {}
 
   async list(query: GetReportsQueryDto): Promise<GetReportsResponseDto> {
@@ -189,21 +191,36 @@ export class ReportService implements IReportService {
       )
     }
 
-    const [{ result, roleResults, employeeOutliers }, timeline] =
+    const [{ result, roleResults, employeeOutliers }, timeline, subsidiaries] =
       await Promise.all([
         this.loadSalaryCalculations(report),
         this.buildTimeline(id, report.comments ?? []),
+        this.loadSubsidiaries(id),
       ])
 
     return {
       ...base,
       company: CompanyReportModel.fromModel(report.companyReport),
+      subsidiaries,
       equalityReport,
       timeline,
       result,
       roleResults,
       employeeOutliers,
     }
+  }
+
+  /**
+   * Subsidiary snapshots for the report — every `company_report` row whose
+   * `parentCompanyId` is non-null. The parent row is excluded (it's already
+   * returned as `company`). Result is sorted by name for stable UI display.
+   */
+  private async loadSubsidiaries(reportId: string) {
+    const rows = await this.companyReportModel.findAll({
+      where: { reportId, parentCompanyId: { [Op.not]: null } },
+      order: [['name', 'ASC']],
+    })
+    return rows.map((row) => row.fromModel())
   }
 
   async getOverview(nationalId: string): Promise<ReportOverviewDto> {

@@ -16,6 +16,11 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
  *   `CompanyReportModel`, not the live `CompanyModel`). Matches the
  *   "Upplýsingar um fyrirtæki" panel in the design.
  *
+ * - `subsidiaries`: immutable snapshots of the subsidiary companies the
+ *   parent reported on, taken at submission time. One row per subsidiary
+ *   (`parentCompanyId` set to the parent's `companyId`). Empty array when
+ *   the submission covered only the parent.
+ *
  * - `equalityReport`: **always** populated. For equality-type reports the
  *   block mirrors the requested report itself; for salary-type reports it's
  *   the linked equality (via `equalityReportId`). The invariant "no salary
@@ -37,6 +42,9 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
 export class ReportDetailDto extends ReportDto {
   @ApiDto(CompanyReportDto)
   company!: CompanyReportDto
+
+  @ApiDtoArray(CompanyReportDto)
+  subsidiaries!: CompanyReportDto[]
 
   @ApiDto(EqualityReportDto)
   equalityReport!: EqualityReportDto

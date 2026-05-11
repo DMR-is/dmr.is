@@ -1,5 +1,6 @@
 import {
   zApproveReportPath,
+  zAssignReportBody,
   zAssignReportPath,
   zDenyReportBody,
   zDenyReportPath,
@@ -9,10 +10,11 @@ import { protectedProcedure, router } from '../trpc'
 
 export const reportWorkflowRouter = router({
   assign: protectedProcedure
-    .input(zAssignReportPath)
+    .input(zAssignReportPath.extend(zAssignReportBody.shape))
     .mutation(async ({ ctx, input }) => {
       await ctx.api.assignReport({
         path: { reportId: input.reportId },
+        body: { userId: input.userId },
       })
     }),
 

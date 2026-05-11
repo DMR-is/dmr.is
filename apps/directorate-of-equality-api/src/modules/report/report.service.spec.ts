@@ -92,6 +92,7 @@ const makeService = () => {
   // outputs unless a test overrides.
   const roleResultFindAll = jest.fn().mockResolvedValue([])
   const outlierFindAll = jest.fn().mockResolvedValue([])
+  const companyReportFindAll = jest.fn().mockResolvedValue([])
   const reportEventModel = {
     findAll: jest.fn().mockResolvedValue([]),
   } as unknown as typeof import('./models/report-event.model').ReportEventModel
@@ -101,6 +102,9 @@ const makeService = () => {
   const reportEmployeeOutlierModel = {
     findAll: outlierFindAll,
   } as unknown as typeof import('../report-employee/models/report-employee-outlier.model').ReportEmployeeOutlierModel
+  const companyReportModel = {
+    findAll: companyReportFindAll,
+  } as unknown as typeof import('../company/models/company-report.model').CompanyReportModel
 
   const service = new ReportService(
     logger,
@@ -108,6 +112,7 @@ const makeService = () => {
     reportEventModel,
     reportRoleResultModel,
     reportEmployeeOutlierModel,
+    companyReportModel,
   )
   return {
     service,
@@ -116,6 +121,7 @@ const makeService = () => {
     findOne,
     roleResultFindAll,
     outlierFindAll,
+    companyReportFindAll,
     logger,
   }
 }
@@ -537,6 +543,59 @@ describe('ReportService.getById', () => {
           danglingEqualityReportId: '00000000-0000-0000-0000-000000000abc',
         }),
       )
+    })
+  })
+
+  describe('subsidiaries', () => {
+    it('returns an empty array when no subsidiary company_report rows exist', async () => {
+      const { service, findByPkOrThrow, companyReportFindAll } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.EQUALITY,
+        }) as unknown as ReportModel,
+      )
+
+      const detail = await service.getById(baseReport.id)
+
+      expect(detail.subsidiaries).toEqual([])
+      expect(companyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            reportId: baseReport.id,
+            parentCompanyId: { [Op.not]: null },
+          }),
+        }),
+      )
+    })
+
+    it('maps subsidiary company_report rows into the response', async () => {
+      const { service, findByPkOrThrow, companyReportFindAll } = makeService()
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.EQUALITY,
+        }) as unknown as ReportModel,
+      )
+
+      const subsidiaryDto = {
+        id: 'cr2',
+        companyId: 'c2',
+        reportId: baseReport.id,
+        parentCompanyId: 'c1',
+        name: 'Blámi dóttir ehf.',
+        nationalId: '4703013921',
+        address: 'Hafnarstræti 6',
+        city: 'Reykjavík',
+        postcode: '101',
+        averageEmployeeCountFromRsk: 12,
+        isatCategory: '62010',
+      }
+      companyReportFindAll.mockResolvedValueOnce([
+        { fromModel: () => subsidiaryDto },
+      ])
+
+      const detail = await service.getById(baseReport.id)
+
+      expect(detail.subsidiaries).toEqual([subsidiaryDto])
     })
   })
 
