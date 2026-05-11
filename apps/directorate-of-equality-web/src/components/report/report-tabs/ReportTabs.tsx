@@ -27,13 +27,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
     label: 'Jafnréttisáætlun',
-    content: (
-      <EqualityReportTab
-        equalityReportContent={
-          report.equalityReportContent ?? report.equalityReport.content
-        }
-      />
-    ),
+    content: <EqualityReportTab report={report.equalityReport} />,
   }
 
   const fyrirtaekid = {

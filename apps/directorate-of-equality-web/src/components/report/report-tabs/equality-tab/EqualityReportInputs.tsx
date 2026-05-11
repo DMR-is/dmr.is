@@ -1,7 +1,18 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
-export const EqualityReportInputs = () => {
+
+interface EqualityReportInputsProps {
+  supervisor?: string
+  approvalDate?: Date
+  validityPeriod?: Date
+}
+
+export const EqualityReportInputs = ({
+  supervisor,
+  approvalDate,
+  validityPeriod,
+}: EqualityReportInputsProps) => {
   return (
     <Box>
       <Box display="flex" columnGap={2} marginBottom={2}>
@@ -13,6 +24,7 @@ export const EqualityReportInputs = () => {
           label="Dagsetning samþykktar"
           readOnly
           disabled
+          selected={approvalDate}
         />
         <DatePicker
           placeholderText="Gildistími"
@@ -22,6 +34,7 @@ export const EqualityReportInputs = () => {
           label="Gildistími"
           readOnly
           disabled
+          selected={validityPeriod}
         />
       </Box>
       <Box width="half">
@@ -32,6 +45,7 @@ export const EqualityReportInputs = () => {
           placeholder="Ábyrgðaraðili"
           readOnly
           disabled
+          value={supervisor}
         />
       </Box>
     </Box>

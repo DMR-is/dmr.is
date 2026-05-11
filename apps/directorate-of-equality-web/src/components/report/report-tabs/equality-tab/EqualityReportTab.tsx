@@ -8,15 +8,14 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 
 import { GridRow } from '@island.is/island-ui/core'
 
+import { EqualityReportDto } from '../../../../gen/fetch'
 import { EqualityReportInputs } from './EqualityReportInputs'
 
 type EqualityReportTabProps = {
-  equalityReportContent?: string | null
+  report: EqualityReportDto
 }
 
-export const EqualityReportTab = ({
-  equalityReportContent,
-}: EqualityReportTabProps) => {
+export const EqualityReportTab = ({ report }: EqualityReportTabProps) => {
   const editorKey = useRef(0)
 
   return (
@@ -32,14 +31,22 @@ export const EqualityReportTab = ({
         >
           <HTMLEditor
             key={editorKey.current}
-            defaultValue={equalityReportContent ?? ''}
+            defaultValue={report.content ?? ''}
             handleUpload={() => new Error('File upload not supported')}
             disabled
             readonly
           />
         </Box>
         <Box marginBottom={6}>
-          <EqualityReportInputs />
+          <EqualityReportInputs
+            supervisor={'TODO'}
+            approvalDate={
+              report.approvedAt ? new Date(report.approvedAt) : undefined
+            }
+            validityPeriod={
+              report.validUntil ? new Date(report.validUntil) : undefined
+            }
+          />
         </Box>
       </GridColumn>
     </GridRow>
