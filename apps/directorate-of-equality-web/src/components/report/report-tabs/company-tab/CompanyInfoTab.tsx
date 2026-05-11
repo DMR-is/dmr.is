@@ -1,44 +1,74 @@
 'use client'
 
+import { useMemo } from 'react'
+
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Table } from '@dmr.is/ui/components/Tables/Table'
 
-import { CompanyReportDto } from '../../../../gen/fetch'
 import { formatNationalId } from '../../../../lib/utils'
 import { InfoItems } from './InfoItems'
 
-//TODO: revisit
+import { type ColumnDef } from '@tanstack/react-table'
+
+type Subsidary = {
+  name?: string
+  nationalId?: string
+}
+
+const subsidariesColumns: ColumnDef<Subsidary>[] = [
+  {
+    accessorKey: 'name',
+    header: 'Nafn',
+    cell: ({ getValue }) => getValue<string>() ?? 'Óþekkt',
+  },
+  {
+    accessorKey: 'nationalId',
+    header: 'Kennitala',
+    cell: ({ getValue }) => {
+      const val = getValue<string | undefined>()
+      return val ? formatNationalId(val) : 'Óþekkt'
+    },
+  },
+]
+
 interface CompanyInfoTabProps {
-  companyData: CompanyReportDto
-  adminData?: {
+  company?: {
+    name?: string
+    nationalId?: string
+    address?: string
+    city?: string
+    averageEmployeeCountFromRsk?: number
+    isatCategory?: string
+  }
+  admin?: {
     name?: string
     email?: string
     gender?: string
   }
-  contactPersonData?: {
+  contactPerson?: {
     name?: string
     email?: string
     phone?: string
   }
-  employeesData?: {
+  employees?: {
     womenCount?: number
     menCount?: number
     otherCount?: number
   }
-  daughterCompanyData?: {
-    name?: string
-    nationalId?: string
-  }[]
+  subsidaries?: Subsidary[]
 }
 
 export const CompanyInfoTab = ({
-  companyData,
-  adminData,
-  contactPersonData,
-  employeesData,
-  daughterCompanyData,
+  company,
+  admin,
+  contactPerson,
+  employees,
+  subsidaries,
 }: CompanyInfoTabProps) => {
+  const subsidariesData = useMemo(() => subsidaries ?? [], [subsidaries])
+
   return (
     <Box marginBottom={6} marginTop={4}>
       <Accordion singleExpand={false} dividerOnTop={false} space={'p5'}>
@@ -49,20 +79,20 @@ export const CompanyInfoTab = ({
         >
           <InfoItems
             items={[
-              { label: 'Fyrirtæki', children: companyData.name },
+              { label: 'Fyrirtæki', children: company?.name },
               {
                 label: 'Kennitala',
-                children: formatNationalId(companyData.nationalId),
+                children: formatNationalId(company?.nationalId),
               },
-              { label: 'Heimilisfang', children: companyData.address },
-              { label: 'Sveitarfélag', children: companyData.city },
+              { label: 'Heimilisfang', children: company?.address },
+              { label: 'Sveitarfélag', children: company?.city },
               {
                 label: 'Fjöldi starfsmanna',
-                children: companyData.averageEmployeeCountFromRsk,
+                children: company?.averageEmployeeCountFromRsk,
               },
               {
                 label: 'ÍSAT atvinnugreinaflokkun',
-                children: companyData.isatCategory,
+                children: company?.isatCategory,
               },
             ]}
           />
@@ -70,18 +100,18 @@ export const CompanyInfoTab = ({
         <AccordionItem id="company-admin" label="Æðsti stjórnandi">
           <InfoItems
             items={[
-              { label: 'Nafn', children: adminData?.name },
-              { label: 'Netfang', children: adminData?.email },
-              { label: 'Kyn', children: adminData?.gender },
+              { label: 'Nafn', children: admin?.name },
+              { label: 'Netfang', children: admin?.email },
+              { label: 'Kyn', children: admin?.gender },
             ]}
           />
         </AccordionItem>
         <AccordionItem id="company-contact-person" label="Tengiliður">
           <InfoItems
             items={[
-              { label: 'Nafn', children: contactPersonData?.name },
-              { label: 'Netfang', children: contactPersonData?.email },
-              { label: 'Sími', children: contactPersonData?.phone },
+              { label: 'Nafn', children: contactPerson?.name },
+              { label: 'Netfang', children: contactPerson?.email },
+              { label: 'Sími', children: contactPerson?.phone },
             ]}
           />
         </AccordionItem>
@@ -92,25 +122,18 @@ export const CompanyInfoTab = ({
           <InfoItems
             colCount={3}
             items={[
-              { label: 'Konur', children: employeesData?.womenCount },
-              { label: 'Karlar', children: employeesData?.menCount },
+              { label: 'Konur', children: employees?.womenCount },
+              { label: 'Karlar', children: employees?.menCount },
               {
                 label: 'Hlutlaus skráning kyns í Þjóðskrá',
-                children: employeesData?.otherCount,
+                children: employees?.otherCount,
               },
             ]}
           />
         </AccordionItem>
-        {daughterCompanyData && daughterCompanyData.length > 0 && (
-          <AccordionItem id="company-daughter-companies" label="Dótturfélög">
-            <InfoItems
-              items={daughterCompanyData.map((daughter) => ({
-                label: daughter.name ?? 'Óþekkt',
-                children: daughter.nationalId
-                  ? formatNationalId(daughter.nationalId)
-                  : 'Óþekkt',
-              }))}
-            />
+        {subsidariesData.length > 0 && (
+          <AccordionItem id="company-subsidaries" label="Dótturfélög">
+            <Table columns={subsidariesColumns} data={subsidariesData} />
           </AccordionItem>
         )}
       </Accordion>

@@ -36,27 +36,26 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
     label: 'Fyrirtækið',
     content: (
       <CompanyInfoTab
-        companyData={report.company}
-        adminData={{
+        company={report.company}
+        admin={{
           email: report.companyAdminEmail ?? undefined,
           name: report.companyAdminName ?? undefined,
           gender: report.companyAdminGender ?? undefined,
         }}
-        contactPersonData={{
+        contactPerson={{
           email: report.contactEmail ?? undefined,
           name: report.contactName ?? undefined,
           phone: report.contactPhone ?? undefined,
         }}
-        employeesData={{
+        employees={{
           womenCount: report.averageEmployeeFemaleCount ?? undefined,
           menCount: report.averageEmployeeMaleCount ?? undefined,
           otherCount: report.averageEmployeeNeutralCount ?? undefined,
         }}
-        // TODO: daughter company data is currently not included in the API response, needs to be added before this can be used
-        // daughterCompanyData={report.daughterCompanies?.map((dc) => ({
-        //   name: dc.name ?? undefined,
-        //   nationalId: dc.nationalId ?? undefined,
-        // }))}
+        subsidaries={report.subsidiaries?.map((dc) => ({
+          name: dc.name ?? undefined,
+          nationalId: dc.nationalId ?? undefined,
+        }))}
       />
     ),
   }
