@@ -10,6 +10,7 @@ import {
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
+import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 
@@ -33,7 +34,31 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const fyrirtaekid = {
     id: 'fyrirtaekid',
     label: 'Fyrirtækið',
-    content: <div>Fyrirtækið</div>,
+    content: (
+      <CompanyInfoTab
+        companyData={report.company}
+        adminData={{
+          email: report.companyAdminEmail ?? undefined,
+          name: report.companyAdminName ?? undefined,
+          gender: report.companyAdminGender ?? undefined,
+        }}
+        contactPersonData={{
+          email: report.contactEmail ?? undefined,
+          name: report.contactName ?? undefined,
+          phone: report.contactPhone ?? undefined,
+        }}
+        employeesData={{
+          womenCount: report.averageEmployeeFemaleCount ?? undefined,
+          menCount: report.averageEmployeeMaleCount ?? undefined,
+          otherCount: report.averageEmployeeNeutralCount ?? undefined,
+        }}
+        // TODO: daughter company data is currently not included in the API response, needs to be added before this can be used
+        // daughterCompanyData={report.daughterCompanies?.map((dc) => ({
+        //   name: dc.name ?? undefined,
+        //   nationalId: dc.nationalId ?? undefined,
+        // }))}
+      />
+    ),
   }
 
   const tabs =

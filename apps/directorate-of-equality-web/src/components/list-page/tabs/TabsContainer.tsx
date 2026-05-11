@@ -19,6 +19,7 @@ import {
 } from '../../../gen/fetch/types.gen'
 import { useReports } from '../../../hooks/useReports'
 import { type Case, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
+import { formatNationalId } from '../../../lib/utils'
 import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
 import { CreateSalaryReportDrawer } from '../CreateSalaryReportDrawer'
 import { ReportFilter } from '../filter/ReportFilter'
@@ -79,7 +80,7 @@ function mapReportToCase(report: ReportListItemDto): Case {
       : '',
     type: TYPE_TO_LABEL[report.type] ?? report.type,
     company: report.companyName ?? '',
-    kennitala: report.companyNationalId ?? '',
+    kennitala: formatNationalId(report.companyNationalId ?? ''),
     status: STATUS_TO_LABEL[report.status] ?? report.status,
     reviewer,
     correctionDeadline: report.correctionDeadline
