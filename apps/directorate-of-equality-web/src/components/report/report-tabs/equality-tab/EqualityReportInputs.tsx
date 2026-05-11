@@ -23,7 +23,6 @@ export const EqualityReportInputs = ({
           name="planApprovalDate"
           label="Dagsetning samþykktar"
           readOnly
-          disabled
           selected={approvalDate}
         />
         <DatePicker
@@ -33,7 +32,6 @@ export const EqualityReportInputs = ({
           name="validityPeriod"
           label="Gildistími"
           readOnly
-          disabled
           selected={validityPeriod}
         />
       </Box>
@@ -44,7 +42,6 @@ export const EqualityReportInputs = ({
           size="sm"
           placeholder="Ábyrgðaraðili"
           readOnly
-          disabled
           value={supervisor}
         />
       </Box>

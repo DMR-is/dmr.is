@@ -44,7 +44,6 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
             label: 'Launagreining',
             content: (
               <SalaryReportTab
-                reportId={report.id}
                 data={salaryStats}
                 outliers={report.employeeOutliers}
                 outlierDate={
