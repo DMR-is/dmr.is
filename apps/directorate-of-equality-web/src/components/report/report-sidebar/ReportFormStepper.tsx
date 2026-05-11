@@ -62,7 +62,7 @@ export const ReportFormStepper = ({ status, timeline, companyName }: Props) => {
   )
 
   return (
-    <Box>
+    <Box marginTop={1}>
       {statusSteps.map((step, index) => {
         const stepItems = (timeline ?? []).filter((item) => {
           const s = timelineItemStatus(item)
