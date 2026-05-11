@@ -5,7 +5,6 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 import { decodeJwt } from 'jose'
 
 import { identityServerId } from '@dmr.is/auth/identityProvider'
-import { identityServerConfig as sharedIdentityServerConfig } from '@dmr.is/auth/identityServerConfig'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getMyUser } from '../../gen/fetch/sdk.gen'
@@ -19,7 +18,7 @@ type ErrorWithPotentialReqRes = Error & {
   response?: unknown
 }
 
-export const localIdentityServerConfig = {
+export const identityServerConfig = {
   id: identityServerId,
   name: 'Iceland authentication service',
   scope: `openid offline_access profile`,
@@ -27,14 +26,6 @@ export const localIdentityServerConfig = {
   clientId: process.env.DOE_WEB_CLIENT_ID!,
   clientSecret: process.env.DOE_WEB_CLIENT_SECRET ?? '',
 }
-
-export const identityServerConfig =
-  process.env.NODE_ENV !== 'production'
-    ? localIdentityServerConfig
-    : {
-        ...sharedIdentityServerConfig,
-        scope: localIdentityServerConfig.scope,
-      }
 
 async function authorize(nationalId?: string, idToken?: string) {
   if (!idToken || !nationalId) {
