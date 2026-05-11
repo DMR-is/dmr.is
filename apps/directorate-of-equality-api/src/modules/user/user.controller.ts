@@ -27,4 +27,10 @@ export class UserController {
   async getMyUser(@CurrentUser() user: DMRUser): Promise<UserDto> {
     return this.userService.getMyUser(user.nationalId)
   }
+
+  @Get('active')
+  @DoeResponse({ operationId: 'getActiveUsers', type: [UserDto] })
+  async getActiveUsers(): Promise<UserDto[]> {
+    return this.userService.getActiveUsers()
+  }
 }
