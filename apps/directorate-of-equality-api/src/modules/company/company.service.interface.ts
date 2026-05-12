@@ -18,6 +18,10 @@ export interface ICompanyService {
   getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto>
   getById(id: string): Promise<CompanyDto>
   getByNationalId(nationalId: string): Promise<CompanyDto>
+  getOrCreateByNationalId(
+    nationalId: string,
+    fallbackName?: string,
+  ): Promise<CompanyDto>
   rskLookup(nationalId: string): Promise<CompanyLookupDto>
   create(input: CreateCompanyInput): Promise<CompanyDto>
   getOrCreateSubsidiaryReportSnapshotSource(

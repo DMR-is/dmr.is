@@ -156,6 +156,43 @@ export class CompanyService implements ICompanyService {
     return company.fromModel()
   }
 
+  async getOrCreateByNationalId(
+    nationalId: string,
+    fallbackName?: string,
+  ): Promise<CompanyDto> {
+    const existing = await this.companyModel.findOne({
+      where: { nationalId },
+    })
+
+    if (existing) {
+      return existing.fromModel()
+    }
+
+    const registry =
+      await this.nationalRegistryService.getEntityByNationalId(nationalId)
+
+    const name = registry.entity?.nafn ?? fallbackName
+
+    if (!name) {
+      throw new NotFoundException(
+        `No entity found in national registry for "${nationalId}" and no fallback name provided`,
+      )
+    }
+
+    this.logger.info(
+      `Auto-provisioning company with national id "${nationalId}"`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    const company = await this.companyModel.create({
+      name,
+      nationalId,
+      averageEmployeeCountFromRsk: 0,
+    })
+
+    return company.fromModel()
+  }
+
   async getOrCreateSubsidiaryReportSnapshotSource(
     input: SubsidiaryReportSnapshotLookup,
   ): Promise<SubsidiaryReportSnapshotSourceDto> {
