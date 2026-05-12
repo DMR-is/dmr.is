@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
