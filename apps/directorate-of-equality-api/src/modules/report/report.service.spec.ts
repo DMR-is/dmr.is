@@ -32,9 +32,14 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
     correctionDeadline: null,
     validUntil: null,
     equalityReportId: null,
+    companyAdminName: null,
+    companyAdminEmail: null,
+    companyAdminGender: null,
     companyReport: {
       name: 'Blámi hf.',
       nationalId: '4703013920',
+      isatCategory: '62.01.0',
+      averageEmployeeCountFromRsk: 25,
     },
     reviewer: null,
     ...overrides,
@@ -42,19 +47,35 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
   // Instance methods the service calls — projections the real model
   // provides via BaseModel. Tests only need something that returns a
   // plain object shape-compatible with the DTO.
-  row.fromModelToListItem = () => ({
-    id: row.id,
-    identifier: row.identifier,
-    type: row.type,
-    status: row.status,
-    companyName: (row.companyReport as { name?: string } | null)?.name ?? null,
-    companyNationalId:
-      (row.companyReport as { nationalId?: string } | null)?.nationalId ?? null,
-    reviewer: row.reviewer,
-    createdAt: row.createdAt,
-    correctionDeadline: row.correctionDeadline,
-    validUntil: row.validUntil,
-  })
+  row.fromModelToListItem = (waitingForAction = false) => {
+    const companyReport = row.companyReport as
+      | {
+          name?: string
+          nationalId?: string
+          isatCategory?: string
+          averageEmployeeCountFromRsk?: number
+        }
+      | null
+    return {
+      id: row.id,
+      identifier: row.identifier,
+      type: row.type,
+      status: row.status,
+      companyName: companyReport?.name ?? null,
+      companyNationalId: companyReport?.nationalId ?? null,
+      companyIsatCategory: companyReport?.isatCategory ?? null,
+      companyAverageEmployeeCountFromRsk:
+        companyReport?.averageEmployeeCountFromRsk ?? null,
+      companyAdminName: row.companyAdminName,
+      companyAdminEmail: row.companyAdminEmail,
+      companyAdminGender: row.companyAdminGender,
+      reviewer: row.reviewer,
+      waitingForAction,
+      createdAt: row.createdAt,
+      correctionDeadline: row.correctionDeadline,
+      validUntil: row.validUntil,
+    }
+  }
   return row
 }
 
@@ -105,6 +126,9 @@ const makeService = () => {
   const companyReportModel = {
     findAll: companyReportFindAll,
   } as unknown as typeof import('../company/models/company-report.model').CompanyReportModel
+  const reportCommentModel = {
+    findAll: jest.fn().mockResolvedValue([]),
+  } as unknown as typeof import('../report-comment/models/report-comment.model').ReportCommentModel
 
   const service = new ReportService(
     logger,
@@ -113,6 +137,7 @@ const makeService = () => {
     reportRoleResultModel,
     reportEmployeeOutlierModel,
     companyReportModel,
+    reportCommentModel,
   )
   return {
     service,
