@@ -119,9 +119,15 @@ export const Table = <TData extends object>({
                 }
                 const canSort = header.column.getCanSort()
                 const sorted = header.column.getIsSorted()
+                const explicitSize = header.column.columnDef.size
                 return (
                   <T.HeadData
                     key={header.id}
+                    style={
+                      explicitSize !== undefined
+                        ? { width: explicitSize }
+                        : undefined
+                    }
                     box={{
                       paddingLeft: [1, 2],
                       paddingRight: [1, 2],
@@ -261,6 +267,7 @@ export const Table = <TData extends object>({
                       ) : (
                         <T.Data
                           key={cell.id}
+                          text={{ variant: 'medium' }}
                           box={{
                             paddingLeft: [1, 2],
                             paddingRight: [1, 2],

@@ -41,15 +41,17 @@ export const CATEGORY_LABEL_TO_SLUG: Record<string, string> =
 
 export type Case = {
   id: string
-  identifier: string | null
   date: string
   type: string
   company: string
+  companyAdmin: string
+  companyAdminGender: string
   kennitala: string
   status: string
+  email: string
+  isatCode: string
   reviewer: string
-  correctionDeadline: string | null
-  validUntil: string | null
+  employeeCount: string
 }
 
 export const COLUMNS: ColumnDef<Case>[] = [
@@ -64,11 +66,18 @@ export const COLUMN_STATUS: ColumnDef<Case> = {
   enableSorting: true,
 }
 
+export const COLUMN_REVIEWER: ColumnDef<Case> = {
+  accessorKey: 'reviewer',
+  header: 'Starfsmaður',
+  enableSorting: true,
+}
+
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
   { label: 'Fyrirtæki', key: 'company' },
+  { label: 'Æðsti stjórnandi', key: 'companyAdmin' },
   { label: 'Kennitala', key: 'kennitala' },
-  { label: 'Málsnúmer', key: 'identifier' },
-  { label: 'Umsjónarmaður', key: 'reviewer' },
-  { label: 'Leiðréttingarfrestur', key: 'correctionDeadline' },
-  { label: 'Gildir til', key: 'validUntil' },
+  { label: 'Netfang', key: 'email' },
+  { label: 'ÍSAT atvinnugreinaflokkun', key: 'isatCode' },
+  { label: 'Kyn æðsta stjórnanda', key: 'companyAdminGender' },
+  { label: 'Fjöldi starfsmanna', key: 'employeeCount' },
 ]

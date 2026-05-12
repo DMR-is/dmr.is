@@ -47,10 +47,14 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
   const onError = () => () =>
     toast.error('Villa við að uppfæra stöðu. Vinsamlegast reyndu aftur síðar.')
 
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({
       queryKey: trpc.reports.getById.queryKey({ id: reportId }),
     })
+    queryClient.invalidateQueries({
+      queryKey: trpc.reports.list.queryKey(),
+    })
+  }
 
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),

@@ -15,14 +15,19 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import * as styles from './ReportFilter.css'
 
+export type FilterOption = { value: string; label: string }
+
 type Props = {
   q: string | null
   type: string[] | null
   status: string[] | null
-  showStatusFilter?: boolean
+  statusOptions?: FilterOption[]
+  reviewerUserId: string[] | null
+  reviewers?: FilterOption[]
   onQChange: (value: string | null) => void
   onTypeChange: (values: string[] | null) => void
   onStatusChange: (values: string[] | null) => void
+  onReviewerChange: (values: string[] | null) => void
   onReset: () => void
 }
 
@@ -30,10 +35,13 @@ export const ReportFilter = ({
   q,
   type,
   status,
-  showStatusFilter,
+  statusOptions,
+  reviewerUserId,
+  reviewers,
   onQChange,
   onTypeChange,
   onStatusChange,
+  onReviewerChange,
   onReset,
 }: Props) => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>()
@@ -44,6 +52,29 @@ export const ReportFilter = ({
     setDateTo(undefined)
     onReset()
   }
+
+  const extraCategories = [
+    ...(statusOptions && statusOptions.length > 0
+      ? [
+          {
+            id: 'status',
+            label: 'Staða',
+            selected: status ?? [],
+            filters: statusOptions,
+          },
+        ]
+      : []),
+    ...(reviewers && reviewers.length > 0
+      ? [
+          {
+            id: 'reviewer',
+            label: 'Umsjónarmaður',
+            selected: reviewerUserId ?? [],
+            filters: reviewers,
+          },
+        ]
+      : []),
+  ]
 
   return (
     <Box>
@@ -76,10 +107,13 @@ export const ReportFilter = ({
               onTypeChange(selected.length ? selected : null)
             if (categoryId === 'status')
               onStatusChange(selected.length ? selected : null)
+            if (categoryId === 'reviewer')
+              onReviewerChange(selected.length ? selected : null)
           }}
           onClear={(categoryId) => {
             if (categoryId === 'type') onTypeChange(null)
             if (categoryId === 'status') onStatusChange(null)
+            if (categoryId === 'reviewer') onReviewerChange(null)
           }}
           categories={[
             {
@@ -91,23 +125,7 @@ export const ReportFilter = ({
                 { value: 'SALARY', label: 'Launagreining' },
               ],
             },
-            ...(showStatusFilter
-              ? [
-                  {
-                    id: 'status',
-                    label: 'Staða',
-                    selected: status ?? [],
-                    filters: [
-                      { value: 'DRAFT', label: 'Drög' },
-                      { value: 'SUBMITTED', label: 'Innsent' },
-                      { value: 'IN_REVIEW', label: 'Í vinnslu' },
-                      { value: 'APPROVED', label: 'Samþykkt' },
-                      { value: 'DENIED', label: 'Hafnað' },
-                      { value: 'SUPERSEDED', label: 'Úrelt' },
-                    ],
-                  },
-                ]
-              : []),
+            ...extraCategories,
           ]}
         />
         <Box className={styles.dateSection} paddingX={3} background={'white'}>
@@ -142,7 +160,6 @@ export const ReportFilter = ({
                     selected={dateTo}
                     minDate={dateFrom}
                     handleChange={(date) => setDateTo(date ?? undefined)}
-                    locale="is"
                   />
                   {(dateFrom || dateTo) && (
                     <Box textAlign="right">

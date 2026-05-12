@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { TabsContainer } from '../../../components/list-page/tabs/TabsContainer'
 
@@ -21,7 +22,7 @@ export default function MalPage() {
         withOffset={false}
       />
       <Box background="blue100" paddingY={5}>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SearchDashboardLoading />}>
           <TabsContainer />
         </Suspense>
       </Box>
