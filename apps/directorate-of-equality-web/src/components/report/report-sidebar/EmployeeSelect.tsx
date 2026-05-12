@@ -1,6 +1,7 @@
 'use client'
 
 import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 
@@ -21,10 +22,16 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
 
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),
-    onSuccess: () =>
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
-      }),
+      })
+      toast.success('Úthlutun tókst.')
+    },
+
+    onError: () => {
+      toast.error('Villa við að úthluta starfsmanni.')
+    },
   })
 
   const options = (users ?? []).map((u) => ({
@@ -44,8 +51,7 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
       isLoading={isLoadingUsers || assign.isPending}
       onChange={(opt) => {
         if (!opt) assign.mutate({ reportId, userId: null })
-        else
-          assign.mutate({ reportId, userId: (opt as { value: string }).value })
+        else assign.mutate({ reportId, userId: opt.value })
       }}
     />
   )

@@ -1,7 +1,6 @@
-'use client'
-
 import {
   ReportEventTypeEnum,
+  ReportStatusEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
   UserDto,
@@ -18,7 +17,7 @@ export function userName(user: UserDto): string {
 
 export function timelineItemStatus(
   item: ReportTimelineItemDto,
-): import('../../../gen/fetch').ReportStatusEnum | null {
+): ReportStatusEnum | null {
   return item.event?.reportStatus ?? item.comment?.reportStatus ?? null
 }
 
@@ -29,10 +28,12 @@ export function timelineNode(
 ): React.ReactNode {
   if (item.kind === ReportTimelineItemKindEnum.COMMENT) {
     const user = usersById.get(item.comment?.authorUserId ?? '')
-    const fullName = user
-      ? `${user.firstName === 'Gervimaður' ? 'GM' : user.firstName} ${user.lastName}`
-      : 'Óþekktum notanda'
-    return <>Athugasemd frá: <Bold>{fullName}</Bold></>
+    const fullName = user ? userName(user) : 'Óþekktum notanda'
+    return (
+      <>
+        Athugasemd frá: <Bold>{fullName}</Bold>
+      </>
+    )
   }
 
   if (!item.event) return null
@@ -40,12 +41,24 @@ export function timelineNode(
   const { eventType, assignedUserId, actorUserId, toStatus } = item.event
 
   if (eventType === ReportEventTypeEnum.SUBMITTED) {
-    return companyName ? <>Innsent af: <Bold>{companyName}</Bold></> : 'Innsent'
+    return companyName ? (
+      <>
+        Innsent af: <Bold>{companyName}</Bold>
+      </>
+    ) : (
+      'Innsent'
+    )
   }
 
   if (eventType === ReportEventTypeEnum.ASSIGNED && assignedUserId) {
     const user = usersById.get(assignedUserId)
-    return user ? <><Bold>{userName(user)}</Bold> merkir sér málið</> : 'Úthlutað'
+    return user ? (
+      <>
+        <Bold>{userName(user)}</Bold> merkir sér málið
+      </>
+    ) : (
+      'Úthlutað'
+    )
   }
 
   if (eventType === ReportEventTypeEnum.STATUS_CHANGED) {
@@ -53,7 +66,11 @@ export function timelineNode(
     const actor = actorUserId ? usersById.get(actorUserId) : null
     return (
       <>
-        {actor && <><Bold>{userName(actor)}</Bold>{' '}</>}
+        {actor && (
+          <>
+            <Bold>{userName(actor)}</Bold>{' '}
+          </>
+        )}
         færir mál í stöðuna: {statusLabel ? <Bold>{statusLabel}</Bold> : null}
       </>
     )
@@ -63,7 +80,11 @@ export function timelineNode(
     const actor = actorUserId ? usersById.get(actorUserId) : null
     return (
       <>
-        {actor && <><Bold>{userName(actor)}</Bold>{' '}</>}
+        {actor && (
+          <>
+            <Bold>{userName(actor)}</Bold>{' '}
+          </>
+        )}
         tekur sig af málinu
       </>
     )

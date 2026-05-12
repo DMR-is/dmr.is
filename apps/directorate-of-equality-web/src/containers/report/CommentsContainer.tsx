@@ -30,6 +30,9 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       queryClient.invalidateQueries({
         queryKey: trpc.reportComments.list.queryKey({ reportId }),
       })
+      queryClient.invalidateQueries({
+        queryKey: trpc.reports.getById.queryKey({ id: reportId }),
+      })
     },
   })
 

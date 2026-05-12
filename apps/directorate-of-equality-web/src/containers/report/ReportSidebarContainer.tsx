@@ -1,5 +1,6 @@
 'use client'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
 
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
@@ -28,7 +29,9 @@ export function ReportSidebarContainer({
     <ReportSidebar>
       <EmployeeSelect reportId={data.id} assignedUserId={data.reviewer?.id} />
       <ReportStatusSelect reportId={data.id} status={data.status} />
-      <Divider />
+      <Box paddingY={2}>
+        <Divider />
+      </Box>
       <ReportFormStepper
         status={data.status}
         timeline={data.timeline}

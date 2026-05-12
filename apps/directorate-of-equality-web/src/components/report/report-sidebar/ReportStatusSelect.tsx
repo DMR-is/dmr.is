@@ -1,10 +1,14 @@
 'use client'
 
+import React from 'react'
+
 import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../../gen/fetch'
 import { ReportStatusTranslatedEnum } from '../../../lib/constants'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
+import { ReportDenialModal } from './ReportDenialModal'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -37,23 +41,42 @@ const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
 export const ReportStatusSelect = ({ reportId, status }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const onSuccess = () => () => toast.success('Uppfærsla á stöðu tókst.')
+
+  const onError = () => () =>
+    toast.error('Villa við að uppfæra stöðu. Vinsamlegast reyndu aftur síðar.')
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.reports.getById.queryKey() })
+    queryClient.invalidateQueries({
+      queryKey: trpc.reports.getById.queryKey({ id: reportId }),
+    })
 
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      onSuccess()
+    },
+    onError: onError(),
   })
 
   const approve = useMutation({
     ...trpc.reportWorkflow.approve.mutationOptions(),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      onSuccess()
+    },
+    onError: onError(),
   })
 
   const deny = useMutation({
     ...trpc.reportWorkflow.deny.mutationOptions(),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      onSuccess()
+    },
+    onError: onError(),
   })
 
   const isLoading = assign.isPending || approve.isPending || deny.isPending
@@ -71,21 +94,25 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
     } else if (opt.value === ReportStatusEnum.APPROVED) {
       approve.mutate({ reportId })
     } else if (opt.value === ReportStatusEnum.DENIED) {
-      // TODO: replace prompt with a proper denial reason dialog
-      const denialReason = window.prompt('Ástæða höfnunar')
-      if (!denialReason) return
-      deny.mutate({ reportId, denialReason })
+      setIsModalOpen(true)
     }
   }
 
   return (
-    <Select
-      size="sm"
-      label="Staða"
-      options={options}
-      value={currentOption}
-      isLoading={isLoading}
-      onChange={(opt) => handleChange(opt as Option | null)}
-    />
+    <>
+      <Select
+        size="sm"
+        label="Staða"
+        options={options}
+        value={currentOption}
+        isLoading={isLoading}
+        onChange={(opt) => handleChange(opt as Option | null)}
+      />
+      <ReportDenialModal
+        visible={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={(denialReason) => deny.mutate({ reportId, denialReason })}
+      />
+    </>
   )
 }

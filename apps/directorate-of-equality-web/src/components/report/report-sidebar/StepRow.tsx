@@ -38,12 +38,26 @@ export function StepRow({
   const hasItems = stepItems.length > 0
   const circleVariant = isActive ? 'active' : isComplete ? 'complete' : 'next'
 
+  const toggleProps = hasItems
+    ? {
+        role: 'button' as const,
+        tabIndex: 0,
+        onClick: onToggle,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onToggle()
+          }
+        },
+      }
+    : {}
+
   return (
     <div className={styles.stepRow}>
       <div className={styles.indicatorColumn}>
         <div
           className={cn(styles.circle, styles.circleVariants[circleVariant])}
-          onClick={hasItems ? onToggle : undefined}
+          {...toggleProps}
         >
           {isComplete ? (
             <Icon icon="checkmark" color="white" size="small" />
@@ -55,7 +69,9 @@ export function StepRow({
           <div
             className={cn(
               styles.connectingLine,
-              styles.connectingLineVariants[isComplete ? 'complete' : 'incomplete'],
+              styles.connectingLineVariants[
+                isComplete ? 'complete' : 'incomplete'
+              ],
             )}
           />
         )}
@@ -64,7 +80,7 @@ export function StepRow({
       <Box className={styles.contentColumn} paddingBottom={isLast ? 0 : 2}>
         <div
           className={cn(styles.titleRow, hasItems && styles.titleRowClickable)}
-          onClick={hasItems ? onToggle : undefined}
+          {...toggleProps}
         >
           <Text fontWeight={isActive ? 'semiBold' : 'light'}>{label}</Text>
         </div>
@@ -78,9 +94,9 @@ export function StepRow({
           >
             <div className={styles.collapseInner}>
               <Box paddingBottom={1} paddingTop={1}>
-                {stepItems.map((item) => (
+                {stepItems.map((item, index) => (
                   <TimelineItem
-                    key={item.createdAt}
+                    key={`${item.kind}-${item.createdAt}-${index}`}
                     item={item}
                     usersById={usersById}
                     companyName={companyName}
