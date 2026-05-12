@@ -1,26 +1,57 @@
 'use client'
 
 import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-// TODO: replace with real admins endpoint once available from API
-const mockUsers = [
-  { id: 'emp-1', name: 'Dís Arnardóttir' },
-  { id: 'emp-2', name: 'Bjarni Sigurðsson' },
-  { id: 'emp-3', name: 'Elín Guðmundsdóttir' },
-  { id: 'emp-4', name: 'Katrín Ólafsdóttir' },
-]
+import { useTRPC } from '../../../lib/trpc/client/trpc'
 
-const options = mockUsers.map((user) => ({ label: user.name, value: user.id }))
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-export const EmployeeSelect = () => {
+type Props = {
+  reportId: string
+  assignedUserId?: string | null
+}
+
+export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const { data: users, isLoading: isLoadingUsers } = useQuery(
+    trpc.user.listActive.queryOptions(),
+  )
+
+  const assign = useMutation({
+    ...trpc.reportWorkflow.assign.mutationOptions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: trpc.reports.getById.queryKey({ id: reportId }),
+      })
+      toast.success('Úthlutun tókst.')
+    },
+
+    onError: () => {
+      toast.error('Villa við að úthluta starfsmanni.')
+    },
+  })
+
+  const options = (users ?? []).map((u) => ({
+    label: `${u.firstName} ${u.lastName}`,
+    value: u.id,
+  }))
+
+  const value = options.find((o) => o.value === assignedUserId) ?? null
+
   return (
     <Select
       size="sm"
       label="Starfsmaður"
       options={options}
+      value={value}
+      isClearable
+      isLoading={isLoadingUsers || assign.isPending}
       onChange={(opt) => {
-        // eslint-disable-next-line no-console
-        console.log('Selected employee ID:', opt?.value)
+        if (!opt) assign.mutate({ reportId, userId: null })
+        else assign.mutate({ reportId, userId: opt.value })
       }}
     />
   )
