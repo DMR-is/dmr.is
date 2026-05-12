@@ -75,6 +75,7 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
     onSuccess: () => {
       invalidate()
       onSuccess()
+      setIsModalOpen(false)
     },
     onError: onError(),
   })
@@ -110,6 +111,7 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
       />
       <ReportDenialModal
         visible={isModalOpen}
+        isLoading={deny.isPending}
         onClose={() => setIsModalOpen(false)}
         onSubmit={(denialReason) => deny.mutate({ reportId, denialReason })}
       />

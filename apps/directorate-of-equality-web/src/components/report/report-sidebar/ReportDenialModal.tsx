@@ -1,4 +1,3 @@
-import { i } from 'node_modules/next-usequerystate/dist/serializer-DjSGvhZt'
 import React from 'react'
 
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -11,11 +10,13 @@ import * as styles from './ReportDenialModal.css'
 
 interface ReportDenialModalProps {
   visible: boolean
+  isLoading?: boolean
   onClose: () => void
   onSubmit: (denialReason: string) => void
 }
 export const ReportDenialModal = ({
   visible,
+  isLoading = false,
   onClose,
   onSubmit,
 }: ReportDenialModalProps) => {
@@ -48,7 +49,7 @@ export const ReportDenialModal = ({
           onClick={onClose}
         />
       </div>
-      <form>
+      <form onSubmit={(e) => e.preventDefault()}>
         <div className={styles.modalContent}>
           <AlertMessage
             type="warning"
@@ -67,6 +68,7 @@ export const ReportDenialModal = ({
             rows={4}
             backgroundColor="blue"
             value={denialReason}
+            disabled={isLoading}
             onChange={(val) => handleChange(val.target.value)}
           />
           <Button
@@ -74,7 +76,8 @@ export const ReportDenialModal = ({
             size="default"
             type="submit"
             onClick={() => onSubmit(denialReason)}
-            disabled={denialReason.length === 0}
+            disabled={denialReason.length === 0 || isLoading}
+            loading={isLoading}
           >
             Vista
           </Button>

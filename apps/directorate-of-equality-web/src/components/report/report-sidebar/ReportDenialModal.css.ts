@@ -10,12 +10,12 @@ export const layoverModal = style({
   height: 'fit-content',
   overflowY: 'auto',
   margin: 'auto',
+  padding: theme.spacing[4],
   borderRadius: theme.border.radius.large,
 })
 
 // Modal content area
 export const modalContent = style({
-  maxWidth: '550px',
   margin: '0 auto',
   marginTop: spacing[1],
   padding: `${spacing[3]}px ${spacing[4]}px`,
