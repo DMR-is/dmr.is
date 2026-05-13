@@ -27,6 +27,7 @@ import {
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
+import { AutoProvisionCompany } from '../../core/decorators/auto-provision-company.decorator'
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
@@ -184,6 +185,7 @@ export class ApplicationController {
 
   @Post('reports/equality')
   @HttpCode(HttpStatus.CREATED)
+  @AutoProvisionCompany()
   @DoeResponse({
     operationId: 'submitApplicationEqualityReport',
     status: 201,

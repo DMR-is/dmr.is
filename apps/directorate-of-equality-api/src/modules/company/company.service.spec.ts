@@ -79,6 +79,104 @@ describe('CompanyService', () => {
     )
   })
 
+  describe('getOrCreateByNationalId', () => {
+    it('returns the existing company without touching the registry or creating a row', async () => {
+      findOne.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-1',
+          name: 'Acme ehf.',
+          nationalId: '5501234567',
+          averageEmployeeCountFromRsk: 12,
+        }),
+      )
+
+      const result = await service.getOrCreateByNationalId('5501234567')
+
+      expect(findOne).toHaveBeenCalledWith({
+        where: { nationalId: '5501234567' },
+      })
+      expect(getEntityByNationalId).not.toHaveBeenCalled()
+      expect(create).not.toHaveBeenCalled()
+      expect(result).toEqual({
+        id: 'company-1',
+        name: 'Acme ehf.',
+        nationalId: '5501234567',
+        averageEmployeeCountFromRsk: 12,
+      })
+    })
+
+    it('creates a new company with the registry name and zero employee count when missing', async () => {
+      findOne.mockResolvedValue(null)
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: '6601234567',
+          nafn: 'Registry Name ehf.',
+        }),
+      })
+      create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-2',
+          name: 'Registry Name ehf.',
+          nationalId: '6601234567',
+          averageEmployeeCountFromRsk: 0,
+        }),
+      )
+
+      const result = await service.getOrCreateByNationalId(
+        '6601234567',
+        'Body-provided name',
+      )
+
+      expect(create).toHaveBeenCalledWith({
+        name: 'Registry Name ehf.',
+        nationalId: '6601234567',
+        averageEmployeeCountFromRsk: 0,
+      })
+      expect(result).toEqual({
+        id: 'company-2',
+        name: 'Registry Name ehf.',
+        nationalId: '6601234567',
+        averageEmployeeCountFromRsk: 0,
+      })
+    })
+
+    it('falls back to the supplied name when the registry has no matching entity', async () => {
+      findOne.mockResolvedValue(null)
+      getEntityByNationalId.mockResolvedValue({ entity: null })
+      create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-3',
+          name: 'Body-provided name',
+          nationalId: '7701234567',
+          averageEmployeeCountFromRsk: 0,
+        }),
+      )
+
+      const result = await service.getOrCreateByNationalId(
+        '7701234567',
+        'Body-provided name',
+      )
+
+      expect(create).toHaveBeenCalledWith({
+        name: 'Body-provided name',
+        nationalId: '7701234567',
+        averageEmployeeCountFromRsk: 0,
+      })
+      expect(result.name).toBe('Body-provided name')
+    })
+
+    it('throws NotFoundException when neither the registry nor a fallback name yield a name', async () => {
+      findOne.mockResolvedValue(null)
+      getEntityByNationalId.mockResolvedValue({ entity: null })
+
+      await expect(
+        service.getOrCreateByNationalId('8801234567'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(create).not.toHaveBeenCalled()
+    })
+  })
+
   describe('getOrCreateSubsidiaryReportSnapshotSource', () => {
     it('returns existing company data with address fields seeded from the national registry', async () => {
       getEntityByNationalId.mockResolvedValue({
@@ -195,11 +293,15 @@ function makeRegistryEntity(
 }
 
 function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
-  return {
+  const fields = {
     id: 'company-1',
     name: 'Acme ehf.',
     nationalId: '5501234567',
     averageEmployeeCountFromRsk: 3,
     ...overrides,
-  } as CompanyModel
+  }
+  return {
+    ...fields,
+    fromModel: () => ({ ...fields }),
+  } as unknown as CompanyModel
 }
