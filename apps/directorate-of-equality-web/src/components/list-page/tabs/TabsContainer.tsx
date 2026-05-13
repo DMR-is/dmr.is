@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -11,6 +12,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import {
@@ -18,17 +20,19 @@ import {
   ReportStatusEnum,
 } from '../../../gen/fetch/types.gen'
 import { useReports } from '../../../hooks/useReports'
-import { type Case, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
+import { type Case, COLUMN_REVIEWER, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../../lib/utils'
 import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
 import { CreateSalaryReportDrawer } from '../CreateSalaryReportDrawer'
-import { ReportFilter } from '../filter/ReportFilter'
+import { type FilterOption, ReportFilter } from '../filter/ReportFilter'
 import { TabContent } from './TabContent'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
 type TabId = 'innsendingar' | 'i-vinnslu' | 'afgreitt'
 
+const SUBMITTED = [ReportStatusEnum.SUBMITTED]
 const IN_REVIEW = [ReportStatusEnum.IN_REVIEW]
 const PROCESSED = [
   ReportStatusEnum.APPROVED,
@@ -38,12 +42,29 @@ const PROCESSED = [
 
 const TAB_FIXED_STATUS: Record<
   TabId,
-  typeof IN_REVIEW | typeof PROCESSED | undefined
+  typeof SUBMITTED | typeof IN_REVIEW | typeof PROCESSED | undefined
 > = {
-  innsendingar: undefined,
+  innsendingar: SUBMITTED,
   'i-vinnslu': IN_REVIEW,
   afgreitt: PROCESSED,
 }
+
+const ALL_STATUS_OPTIONS: FilterOption[] = [
+  { value: 'DRAFT', label: 'Drög' },
+  { value: 'SUBMITTED', label: 'Innsent' },
+  { value: 'IN_REVIEW', label: 'Í vinnslu' },
+  { value: 'APPROVED', label: 'Samþykkt' },
+  { value: 'DENIED', label: 'Hafnað' },
+  { value: 'SUPERSEDED', label: 'Úrelt' },
+]
+
+const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
+  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
+  'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
+  // tab 3 shows ONLY the three processed statuses — exclude everything else
+  afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW'],
+}
+
 
 const STATUS_VARIANT: Record<string, TagVariant> = {
   Samþykkt: 'mint',
@@ -74,7 +95,6 @@ function mapReportToCase(report: ReportListItemDto): Case {
     : ''
   return {
     id: report.id,
-    identifier: report.identifier ?? null,
     date: report.createdAt
       ? new Date(report.createdAt).toLocaleDateString('is-IS')
       : '',
@@ -83,13 +103,38 @@ function mapReportToCase(report: ReportListItemDto): Case {
     kennitala: formatNationalId(report.companyNationalId ?? ''),
     status: STATUS_TO_LABEL[report.status] ?? report.status,
     reviewer,
-    correctionDeadline: report.correctionDeadline
-      ? new Date(report.correctionDeadline).toLocaleDateString('is-IS')
-      : null,
-    validUntil: report.validUntil
-      ? new Date(report.validUntil).toLocaleDateString('is-IS')
-      : null,
+    companyAdmin: 'TODO',
+    companyAdminGender: 'TODO',
+    email: 'TODO',
+    isatCode: 'TODO',
+    employeeCount: 'TODO',
   }
+}
+
+const MOCK_COMMENTS: Record<string, string> = {
+  '1': 'Beðið svara',
+  '2': 'Vantar gögn',
+  '3': 'Til skoðunar',
+}
+
+const commentsColumn: ColumnDef<Case> = {
+  id: 'comments',
+  header: () => null,
+  size: 56,
+  enableSorting: false,
+  cell: ({ row }) => {
+    const comment = MOCK_COMMENTS[row.original.id] ?? 'Engar athugasemdir'
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center">
+        <Tooltip
+          text={comment}
+          placement="right"
+          color="blue400"
+          iconSize="medium"
+        />
+      </Box>
+    )
+  },
 }
 
 const statusColumn: ColumnDef<Case> = {
@@ -110,6 +155,7 @@ const statusColumn: ColumnDef<Case> = {
 }
 
 export const TabsContainer = () => {
+  const trpc = useTRPC()
   const [activeTab, setActiveTab] = useState<TabId>('innsendingar')
 
   const fixedStatus = TAB_FIXED_STATUS[activeTab]
@@ -118,13 +164,38 @@ export const TabsContainer = () => {
   const { data, isLoading, filter, setFilter, resetFilter } =
     useReports(fixedQuery)
 
+  const needsUsers = activeTab !== 'innsendingar'
+  const { data: usersData } = useQuery(
+    trpc.user.listActive.queryOptions(undefined, { enabled: needsUsers }),
+  )
+
+  const reviewerOptions: FilterOption[] = (usersData ?? []).map((u) => ({
+    value: u.id,
+    label: `${u.firstName} ${u.lastName}`.trim(),
+  }))
+
+  const excluded = EXCLUDED_FROM_STATUS_FILTER[activeTab]
+  const statusOptions = ALL_STATUS_OPTIONS.filter(
+    (o) => !excluded.includes(o.value),
+  )
+
   const handleTabChange = (tab: string) => {
     resetFilter()
     setActiveTab(tab as TabId)
   }
 
-  const extraColumns = activeTab !== 'innsendingar' ? [statusColumn] : []
-  const allColumns = [...COLUMNS, ...extraColumns]
+  const leadingColumns: ColumnDef<Case>[] =
+    activeTab === 'i-vinnslu' ? [commentsColumn] : []
+  const middleColumns: ColumnDef<Case>[] =
+    activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
+  const trailingColumns: ColumnDef<Case>[] =
+    activeTab !== 'innsendingar' ? [statusColumn] : []
+  const allColumns = [
+    ...leadingColumns,
+    ...COLUMNS,
+    ...middleColumns,
+    ...trailingColumns,
+  ]
 
   return (
     <GridContainer>
@@ -140,13 +211,20 @@ export const TabsContainer = () => {
             q={filter.q}
             type={filter.type as string[] | null}
             status={filter.status as string[] | null}
-            showStatusFilter={activeTab === 'innsendingar'}
+            statusOptions={statusOptions}
+            reviewerUserId={filter.reviewerUserId as string[] | null}
+            reviewers={needsUsers ? reviewerOptions : undefined}
             onQChange={(q) => setFilter({ q })}
             onTypeChange={(type) =>
               setFilter({ type: type as typeof filter.type })
             }
             onStatusChange={(status) =>
               setFilter({ status: status as typeof filter.status })
+            }
+            onReviewerChange={(reviewerUserId) =>
+              setFilter({
+                reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
+              })
             }
             onReset={resetFilter}
           />

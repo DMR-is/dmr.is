@@ -8,7 +8,6 @@ import { Paging } from '../../../gen/fetch'
 import { type Case, DETAIL_FIELDS } from '../../../lib/constants'
 import * as styles from './TabContent.css'
 
-import { useQuery } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const ExpandedRow = ({ row }: { row: Case }) => (
