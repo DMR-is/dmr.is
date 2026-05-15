@@ -9,7 +9,7 @@ export class CreateReportCommentDto {
   @IsEnum(CommentVisibilityEnum)
   visibility!: CommentVisibilityEnum
 
-  @ApiString()
+  @ApiString({ description: 'Plain text comment body' })
   @IsString()
   @IsNotEmpty()
   body!: string

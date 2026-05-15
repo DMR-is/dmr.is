@@ -36,9 +36,11 @@ import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
+import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
+import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { IApplicationService } from './application.service.interface'
@@ -212,5 +214,24 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.getReport(reportId, company)
+  }
+
+  @Post('reports/:reportId/comments')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'reportId', type: String })
+  @DoeResponse({
+    operationId: 'submitApplicationReportComment',
+    status: 201,
+    include404: true,
+    description:
+      'Submits an external comment on a report owned by the authenticated company.',
+    type: ApplicationReportCommentDto,
+  })
+  async submitComment(
+    @Param('reportId', ParseUUIDPipe) reportId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: SubmitApplicationReportCommentDto,
+  ): Promise<ApplicationReportCommentDto> {
+    return this.applicationService.createReportComment(reportId, input, company)
   }
 }

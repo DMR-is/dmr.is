@@ -70,6 +70,7 @@ describe('ApplicationService', () => {
   let outlierFindAll: jest.Mock
   let eventFindOne: jest.Mock
   let getCommentsByReportId: jest.Mock
+  let createComment: jest.Mock
   let getResultByReportId: jest.Mock
 
   beforeEach(async () => {
@@ -88,6 +89,7 @@ describe('ApplicationService', () => {
     outlierFindAll = jest.fn().mockResolvedValue([])
     eventFindOne = jest.fn().mockResolvedValue(null)
     getCommentsByReportId = jest.fn().mockResolvedValue([])
+    createComment = jest.fn()
     getResultByReportId = jest.fn()
 
     const module = await Test.createTestingModule({
@@ -115,7 +117,10 @@ describe('ApplicationService', () => {
         },
         {
           provide: IReportCommentService,
-          useValue: { getByReportId: getCommentsByReportId },
+          useValue: {
+            getByReportId: getCommentsByReportId,
+            create: createComment,
+          },
         },
         {
           provide: IReportResultService,
@@ -490,6 +495,12 @@ describe('ApplicationService', () => {
         reportId: REPORT_ID,
         visibility: CommentVisibilityEnum.EXTERNAL,
       })
+      const slimExternalComment = {
+        id: externalComment.id,
+        authorKind: externalComment.authorKind,
+        body: externalComment.body,
+        createdAt: externalComment.createdAt,
+      }
       const outlier = makeOutlierRow()
 
       reportFindOne
@@ -520,7 +531,7 @@ describe('ApplicationService', () => {
         equalityReportContent: null,
         outliersPostponed: false,
         result: reportResult,
-        externalComments: [externalComment],
+        externalComments: [slimExternalComment],
         denialReason: null,
       })
       expect(result.companies).toHaveLength(2)
@@ -609,7 +620,7 @@ describe('ApplicationService', () => {
       )
     })
 
-    it('loads comments through company context so internal comments are stripped', async () => {
+    it('loads comments through company context and returns the slim application shape', async () => {
       const externalComment = makeCommentDto({
         reportId: REPORT_ID,
         visibility: CommentVisibilityEnum.EXTERNAL,
@@ -630,13 +641,106 @@ describe('ApplicationService', () => {
 
       const result = await service.getReport(REPORT_ID, COMPANY)
 
-      expect(result.externalComments).toEqual([externalComment])
+      expect(result.externalComments).toEqual([
+        {
+          id: externalComment.id,
+          authorKind: externalComment.authorKind,
+          body: externalComment.body,
+          createdAt: externalComment.createdAt,
+        },
+      ])
+      expect(result.externalComments[0]).not.toHaveProperty('reportId')
+      expect(result.externalComments[0]).not.toHaveProperty('authorUserId')
+      expect(result.externalComments[0]).not.toHaveProperty('visibility')
+      expect(result.externalComments[0]).not.toHaveProperty('reportStatus')
       expect(result.externalComments).toEqual(
         expect.not.arrayContaining([
           expect.objectContaining({
             visibility: CommentVisibilityEnum.INTERNAL,
           }),
         ]),
+      )
+    })
+  })
+
+  describe('createReportComment', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+
+    it("throws NotFoundException when the report doesn't exist", async () => {
+      reportFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.createReportComment(REPORT_ID, { body: 'hi' }, COMPANY),
+      ).rejects.toThrow(NotFoundException)
+      expect(companyReportFindAll).not.toHaveBeenCalled()
+      expect(createComment).not.toHaveBeenCalled()
+    })
+
+    it("throws NotFoundException when the resolved company isn't the parent", async () => {
+      reportFindOne.mockResolvedValueOnce(makeReportRow({ id: REPORT_ID }))
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({
+          reportId: REPORT_ID,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        }),
+      ])
+
+      await expect(
+        service.createReportComment(REPORT_ID, { body: 'hi' }, COMPANY),
+      ).rejects.toThrow(NotFoundException)
+      expect(createComment).not.toHaveBeenCalled()
+    })
+
+    it('forwards an EXTERNAL comment through the company context and returns the slim application DTO', async () => {
+      const createdComment = makeCommentDto({
+        id: 'comment-new',
+        reportId: REPORT_ID,
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'Please review my correction',
+        authorUserId: 'reviewer-1',
+        reportStatus: ReportStatusEnum.SUBMITTED,
+      })
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          status: ReportStatusEnum.SUBMITTED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+      createComment.mockResolvedValueOnce(createdComment)
+
+      const result = await service.createReportComment(
+        REPORT_ID,
+        { body: 'Please review my correction' },
+        COMPANY,
+      )
+
+      expect(result).toEqual({
+        id: 'comment-new',
+        authorKind: createdComment.authorKind,
+        body: 'Please review my correction',
+        createdAt: createdComment.createdAt,
+      })
+      expect(result).not.toHaveProperty('reportId')
+      expect(result).not.toHaveProperty('authorUserId')
+      expect(result).not.toHaveProperty('visibility')
+      expect(result).not.toHaveProperty('reportStatus')
+      expect(createComment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportId: REPORT_ID,
+          reportStatus: ReportStatusEnum.SUBMITTED,
+          actor: {
+            kind: ReportRoleEnum.COMPANY,
+            nationalId: COMPANY.nationalId,
+          },
+        }),
+        {
+          body: 'Please review my correction',
+          visibility: CommentVisibilityEnum.EXTERNAL,
+        },
       )
     })
   })
