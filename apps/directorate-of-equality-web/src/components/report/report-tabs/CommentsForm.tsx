@@ -12,6 +12,7 @@ type Props = {
   usersById: Map<string, UserDto>
   companyName?: string | null
   currentUserId?: string | null
+  readonly?: boolean
   body: string
   isExternal: boolean
   isPending: boolean
@@ -26,6 +27,7 @@ export const CommentsForm = ({
   usersById,
   companyName,
   currentUserId,
+  readonly = false,
   body,
   isExternal,
   isPending,
@@ -54,16 +56,18 @@ export const CommentsForm = ({
           onDelete={onDelete}
         />
 
-        <Box marginTop={4}>
-          <CommentInputForm
-            body={body}
-            isExternal={isExternal}
-            isPending={isPending}
-            onBodyChange={onBodyChange}
-            onExternalChange={onExternalChange}
-            onSubmit={onSubmit}
-          />
-        </Box>
+        {!readonly && (
+          <Box marginTop={4}>
+            <CommentInputForm
+              body={body}
+              isExternal={isExternal}
+              isPending={isPending}
+              onBodyChange={onBodyChange}
+              onExternalChange={onExternalChange}
+              onSubmit={onSubmit}
+            />
+          </Box>
+        )}
       </Box>
     </>
   )

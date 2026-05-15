@@ -47,7 +47,8 @@ export function TimelineEntry({
     comment?.authorUserId != null &&
     comment.authorUserId === currentUserId &&
     comment.visibility !== CommentVisibilityEnum.EXTERNAL
-  const hasBody = isComment && !!comment?.body
+  const bodyText = isComment ? (comment?.body ?? null) : (item.event?.reason ?? null)
+  const hasBody = !!bodyText
 
   return (
     <Box
@@ -71,9 +72,9 @@ export function TimelineEntry({
           </Box>
         </Box>
 
-        {isComment && comment?.body && (
+        {bodyText && (
           <Box paddingRight={6}>
-            <Text marginTop={1}>{comment.body}</Text>
+            <Text marginTop={1}>{bodyText}</Text>
           </Box>
         )}
 
