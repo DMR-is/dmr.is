@@ -5,8 +5,8 @@ import React from 'react'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
-import { ModalBase } from '@dmr.is/ui/components/island-is/ModalBase'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import * as styles from './ReportDenialModal.css'
 
@@ -30,38 +30,25 @@ export const ReportDenialModal = ({
   }
 
   return (
-    <ModalBase
+    <Modal
       baseId="report-denial-modal"
-      initialVisibility={false}
       onVisibilityChange={(v) => {
         if (!v) onClose()
       }}
-      className={styles.layoverModal}
-      hideOnClickOutside={true}
-      hideOnEsc
       isVisible={visible}
     >
-      <div className={styles.modalHeader}>
-        <Text variant="h3">Höfnun skýrslu</Text>
-        <Button
-          variant="primary"
-          colorScheme="light"
-          circle
-          icon="close"
-          onClick={onClose}
-        />
-      </div>
       <form onSubmit={(e) => e.preventDefault()}>
         <div className={styles.modalContent}>
+          <Text variant="h3">Höfnun skýrslu</Text>
+          <Text>
+            Vinsamlegast gerðu grein fyrir ástæðu höfnunar. Athugið að afrit af
+            þessum texta er sent til innsendanda.
+          </Text>
           <AlertMessage
             type="warning"
             title="Athugið"
             message="Þessi aðgerð er óaftukræf og mun vísa skýrslunni frá."
           />
-          <Text>
-            Vinsamlegast gerðu grein fyrir ástæðu höfnunar. Athugið að afrit af
-            þessum texta er sent til innsendanda.
-          </Text>
           <Input
             name="denial-reason-input"
             label="Ástæða höfnunar"
@@ -85,6 +72,6 @@ export const ReportDenialModal = ({
           </Button>
         </div>
       </form>
-    </ModalBase>
+    </Modal>
   )
 }

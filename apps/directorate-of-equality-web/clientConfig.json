@@ -2570,6 +2570,7 @@
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportListItemDto": {
         "type": "object",
         "properties": {
@@ -2583,9 +2584,24 @@
           },
           "companyName": { "type": "string", "nullable": true },
           "companyNationalId": { "type": "string", "nullable": true },
+          "companyIsatCategory": { "type": "string", "nullable": true },
+          "companyAverageEmployeeCountFromRsk": {
+            "type": "number",
+            "nullable": true
+          },
+          "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminEmail": { "type": "string", "nullable": true },
+          "companyAdminGender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
           "reviewer": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
+          },
+          "waitingForAction": {
+            "type": "boolean",
+            "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
           },
           "createdAt": {
             "type": "string",
@@ -2606,7 +2622,7 @@
             "nullable": true
           }
         },
-        "required": ["id", "type", "status"]
+        "required": ["id", "type", "status", "waitingForAction"]
       },
       "ReportStatusCountsDto": {
         "type": "object",
@@ -2631,7 +2647,6 @@
         },
         "required": ["reports", "paging", "statusCounts"]
       },
-      "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportProviderEnum": {
         "type": "string",
         "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]

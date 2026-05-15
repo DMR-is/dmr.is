@@ -17,19 +17,16 @@ export const layoverModal = style({
 // Modal content area
 export const modalContent = style({
   margin: '0 auto',
-  marginTop: spacing[1],
   padding: `${spacing[3]}px ${spacing[4]}px`,
+  paddingTop: 0,
   display: 'flex',
   flexDirection: 'column',
   gap: spacing[3],
-  rowGap: spacing[2],
+  rowGap: spacing[3],
 })
 
 // Modal header
 export const modalHeader = style({
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: `${spacing[3]}px ${spacing[4]}px`,
+  paddingLeft: spacing[4],
+  paddingRight: spacing[4],
 })
