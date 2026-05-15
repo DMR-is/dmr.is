@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 import { CommentsForm } from '../../components/report/report-tabs/CommentsForm'
-import { CommentVisibilityEnum } from '../../gen/fetch/types.gen'
+import { CommentVisibilityEnum, ReportStatusEnum } from '../../gen/fetch/types.gen'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -18,9 +18,14 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   const [body, setBody] = useState('')
   const [isExternal, setIsExternal] = useState(false)
 
-  const { data: comments = [] } = useQuery(
-    trpc.reportComments.list.queryOptions({ reportId }),
+  const { data: report } = useQuery(
+    trpc.reports.getById.queryOptions({ id: reportId }),
   )
+
+  const { data: users = [] } = useQuery(trpc.user.listActive.queryOptions())
+  const { data: me } = useQuery(trpc.user.getMyUser.queryOptions())
+
+  const usersById = new Map(users.map((u) => [u.id, u]))
 
   const { mutate: createComment, isPending } = useMutation({
     ...trpc.reportComments.create.mutationOptions(),
@@ -28,8 +33,14 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       setBody('')
       setIsExternal(false)
       queryClient.invalidateQueries({
-        queryKey: trpc.reportComments.list.queryKey({ reportId }),
+        queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
+    },
+  })
+
+  const { mutate: deleteComment } = useMutation({
+    ...trpc.reportComments.delete.mutationOptions(),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
@@ -47,15 +58,27 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     })
   }
 
+  const handleDelete = (commentId: string) => {
+    deleteComment({ reportId, commentId })
+  }
+
   return (
     <CommentsForm
-      comments={comments}
+      timeline={report?.timeline ?? []}
+      usersById={usersById}
+      companyName={report?.company?.name}
+      currentUserId={me?.id}
+      readonly={
+        report?.status === ReportStatusEnum.APPROVED ||
+        report?.status === ReportStatusEnum.DENIED
+      }
       body={body}
       isExternal={isExternal}
       isPending={isPending}
       onBodyChange={setBody}
       onExternalChange={setIsExternal}
       onSubmit={handleSubmit}
+      onDelete={handleDelete}
     />
   )
 }
