@@ -36,6 +36,7 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { CommentVisibilityEnum } from '../report-comment/models/report-comment.model'
 import { IReportCommentService } from '../report-comment/report-comment.service.interface'
 import { CreateEqualityReportDto } from '../report-create/dto/create-equality-report.dto'
 import {
@@ -53,6 +54,7 @@ import {
   buildChartFromEmployeePoints,
   type EmployeeDataPoint,
 } from '../report-statistics/lib/build-chart'
+import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import {
@@ -60,6 +62,7 @@ import {
   SalaryAnalysisOutlierDto,
   SalaryAnalysisResponseDto,
 } from './dto/salary-analysis.response.dto'
+import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import type {
   SubmitReportCompanyDto,
@@ -258,9 +261,51 @@ export class ApplicationService implements IApplicationService {
         report.type === ReportTypeEnum.SALARY ? report.outliersPostponed : null,
       outliers: salaryData.outliers,
       result: salaryData.result,
-      externalComments,
+      externalComments: externalComments.map(
+        ApplicationReportCommentDto.fromReportComment,
+      ),
       denialReason,
     }
+  }
+
+  async createReportComment(
+    reportId: string,
+    input: SubmitApplicationReportCommentDto,
+    company: CompanyDto,
+  ): Promise<ApplicationReportCommentDto> {
+    this.logger.info('Submitting report comment from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      reportId,
+    })
+
+    const report = await this.reportModel.findOne({ where: { id: reportId } })
+
+    if (!report) {
+      throw new NotFoundException(`Report "${reportId}" not found`)
+    }
+
+    const companyRows = await this.companyReportModel.findAll({
+      where: { reportId },
+      order: [['createdAt', 'ASC']],
+    })
+
+    const parentCompany = companyRows.find(
+      (row) => row.parentCompanyId === null,
+    )
+    if (!parentCompany || parentCompany.companyId !== company.id) {
+      throw new NotFoundException(`Report "${reportId}" not found`)
+    }
+
+    const created = await this.reportCommentService.create(
+      this.createCompanyReportContext(report, company),
+      {
+        body: input.body,
+        visibility: CommentVisibilityEnum.EXTERNAL,
+      },
+    )
+
+    return ApplicationReportCommentDto.fromReportComment(created)
   }
 
   private async createSalaryReportInput(

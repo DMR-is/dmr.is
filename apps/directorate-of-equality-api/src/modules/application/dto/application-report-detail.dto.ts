@@ -14,9 +14,9 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../../report/models/report.enums'
-import { ReportCommentDto } from '../../report-comment/dto/report-comment.dto'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
+import { ApplicationReportCommentDto } from './application-report-comment.dto'
 
 export class ApplicationReportDetailDto {
   @ApiUUId()
@@ -65,8 +65,8 @@ export class ApplicationReportDetailDto {
   @ApiOptionalDto(ReportResultDto, { nullable: true })
   result!: ReportResultDto | null
 
-  @ApiDtoArray(ReportCommentDto)
-  externalComments!: ReportCommentDto[]
+  @ApiDtoArray(ApplicationReportCommentDto)
+  externalComments!: ApplicationReportCommentDto[]
 
   @ApiOptionalString({ nullable: true })
   denialReason!: string | null

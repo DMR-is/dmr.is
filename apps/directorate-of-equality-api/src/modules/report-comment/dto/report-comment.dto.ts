@@ -28,7 +28,7 @@ export class ReportCommentDto {
   @ApiEnum(CommentVisibilityEnum, { enumName: 'CommentVisibilityEnum' })
   visibility!: CommentVisibilityEnum
 
-  @ApiString()
+  @ApiString({ description: 'Plain text comment body' })
   body!: string
 
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
