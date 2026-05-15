@@ -2,6 +2,7 @@
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
 import { ReportFormStepper } from '../../components/report/report-sidebar/ReportFormStepper'
@@ -27,16 +28,13 @@ export function ReportSidebarContainer({
 
   return (
     <ReportSidebar>
+      <Text variant="h5">Upplýsingar</Text>
       <EmployeeSelect reportId={data.id} assignedUserId={data.reviewer?.id} />
       <ReportStatusSelect reportId={data.id} status={data.status} />
-      <Box paddingY={2}>
+      <Box paddingTop={1}>
         <Divider />
       </Box>
-      <ReportFormStepper
-        status={data.status}
-        timeline={data.timeline}
-        companyName={data.company.name}
-      />
+      <ReportFormStepper status={data.status} />
     </ReportSidebar>
   )
 }

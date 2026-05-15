@@ -45,10 +45,21 @@ export const LinkCard = ({
         <GridRow alignItems={'center'}>
           <GridColumn span={columnSpan.content}>
             <Stack space={1}>
-              <Text variant="h3" as="h3" color="blue400" fontWeight="semiBold">
-                {title}
-              </Text>
-              {description && <Text>{description}</Text>}
+              <Box
+                display={'flex'}
+                flexDirection="column"
+                justifyContent="spaceBetween"
+              >
+                <Text
+                  variant="h3"
+                  as="h3"
+                  color="blue400"
+                  fontWeight="semiBold"
+                >
+                  {title}
+                </Text>
+                {description && <Text>{description}</Text>}
+              </Box>
             </Stack>
           </GridColumn>
           {hasImage && (
