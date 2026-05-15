@@ -45,45 +45,33 @@ function getErrorMessage(error: unknown): string {
   return 'Unknown error'
 }
 
+const REQUIRED_ENV_VARS = [
+  'NATIONAL_REGISTRY_API_LOGIN_PATH',
+  'NATIONAL_REGISTRY_API_LOOKUP_PATH',
+  'NATIONAL_REGISTRY_CLIENT_USER',
+  'NATIONAL_REGISTRY_CLIENT_PASSWORD',
+] as const
+
 @Injectable()
 export class NationalRegistryService implements INationalRegistryService {
   private audkenni: string | null = null
   private token: string | null = null
 
   constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {
-    if (!process.env.NATIONAL_REGISTRY_API_LOGIN_PATH) {
+    const missing = REQUIRED_ENV_VARS.filter((name) => !process.env[name])
+    if (missing.length > 0) {
       this.logger.error(
-        'National registry login path not set in env NATIONAL_REGISTRY_API_LOGIN_PATH',
-        { context: LOGGING_CONTEXT },
+        'National registry client is misconfigured — requests will fail until env vars are set',
+        { context: LOGGING_CONTEXT, missing },
       )
     }
+  }
 
-    if (!process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH) {
-      this.logger.error(
-        'National registry lookup path not set in env NATIONAL_REGISTRY_API_LOOKUP_PATH',
-        { context: LOGGING_CONTEXT },
-      )
-    }
-
-    if (!process.env.NATIONAL_REGISTRY_CLIENT_USER) {
-      this.logger.error(
-        'National registry user not set in env NATIONAL_REGISTRY_CLIENT_USER',
-        { context: LOGGING_CONTEXT },
-      )
-
+  private assertConfigured(): void {
+    const missing = REQUIRED_ENV_VARS.filter((name) => !process.env[name])
+    if (missing.length > 0) {
       throw new InternalServerErrorException(
-        'National registry user not set in env NATIONAL_REGISTRY_CLIENT_USER',
-      )
-    }
-
-    if (!process.env.NATIONAL_REGISTRY_CLIENT_PASSWORD) {
-      this.logger.error(
-        'National registry password not set in env NATIONAL_REGISTRY_CLIENT_PASSWORD',
-        { context: LOGGING_CONTEXT },
-      )
-
-      throw new InternalServerErrorException(
-        'National registry password not set in env NATIONAL_REGISTRY_CLIENT_PASSWORD',
+        `National registry client is not configured. Missing env vars: ${missing.join(', ')}`,
       )
     }
   }
@@ -108,6 +96,8 @@ export class NationalRegistryService implements INationalRegistryService {
   }
 
   private async authenticate() {
+    this.assertConfigured()
+
     if (this.token && this.audkenni) {
       this.logger.info('Already authenticated with national registry', {
         context: LOGGING_CONTEXT,

@@ -48,62 +48,60 @@ describe('NationalRegistryService', () => {
     jest.clearAllMocks()
   })
   describe('constructor', () => {
-    it('should throw InternalServerErrorException if NATIONAL_REGISTRY_CLIENT_USER is not set', async () => {
-      const originalUser = process.env.NATIONAL_REGISTRY_CLIENT_USER
-      delete process.env.NATIONAL_REGISTRY_CLIENT_USER
-      await expect(async () => {
-        await Test.createTestingModule({
-          providers: [
-            NationalRegistryService,
-            { provide: LOGGER_PROVIDER, useValue: mockLogger },
-          ],
-        }).compile()
-      }).rejects.toThrow(InternalServerErrorException)
-      process.env.NATIONAL_REGISTRY_CLIENT_USER = originalUser
-    })
-    it('should throw InternalServerErrorException if NATIONAL_REGISTRY_CLIENT_PASSWORD is not set', async () => {
-      const originalPassword = process.env.NATIONAL_REGISTRY_CLIENT_PASSWORD
-      delete process.env.NATIONAL_REGISTRY_CLIENT_PASSWORD
-      await expect(async () => {
-        await Test.createTestingModule({
-          providers: [
-            NationalRegistryService,
-            { provide: LOGGER_PROVIDER, useValue: mockLogger },
-          ],
-        }).compile()
-      }).rejects.toThrow(InternalServerErrorException)
-      process.env.NATIONAL_REGISTRY_CLIENT_PASSWORD = originalPassword
-    })
-    it('should log error if NATIONAL_REGISTRY_API_LOGIN_PATH is not set', async () => {
-      const originalPath = process.env.NATIONAL_REGISTRY_API_LOGIN_PATH
-      delete process.env.NATIONAL_REGISTRY_API_LOGIN_PATH
-      await Test.createTestingModule({
+    const compileService = async () => {
+      const testModule = await Test.createTestingModule({
         providers: [
           NationalRegistryService,
           { provide: LOGGER_PROVIDER, useValue: mockLogger },
         ],
       }).compile()
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'National registry login path not set in env NATIONAL_REGISTRY_API_LOGIN_PATH',
-        { context: 'NationalRegistryClientService' },
-      )
-      process.env.NATIONAL_REGISTRY_API_LOGIN_PATH = originalPath
-    })
-    it('should log error if NATIONAL_REGISTRY_API_LOOKUP_PATH is not set', async () => {
-      const originalPath = process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH
-      delete process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH
-      await Test.createTestingModule({
-        providers: [
-          NationalRegistryService,
-          { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        ],
-      }).compile()
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'National registry lookup path not set in env NATIONAL_REGISTRY_API_LOOKUP_PATH',
-        { context: 'NationalRegistryClientService' },
-      )
-      process.env.NATIONAL_REGISTRY_API_LOOKUP_PATH = originalPath
-    })
+      return testModule.get<NationalRegistryService>(NationalRegistryService)
+    }
+
+    it.each([
+      'NATIONAL_REGISTRY_CLIENT_USER',
+      'NATIONAL_REGISTRY_CLIENT_PASSWORD',
+      'NATIONAL_REGISTRY_API_LOGIN_PATH',
+      'NATIONAL_REGISTRY_API_LOOKUP_PATH',
+    ] as const)(
+      'logs a misconfiguration error when %s is missing but does not throw at boot',
+      async (envVar) => {
+        const original = process.env[envVar]
+        delete process.env[envVar]
+
+        const built = await compileService()
+
+        expect(built).toBeDefined()
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'National registry client is misconfigured — requests will fail until env vars are set',
+          expect.objectContaining({
+            context: 'NationalRegistryClientService',
+            missing: expect.arrayContaining([envVar]),
+          }),
+        )
+        process.env[envVar] = original
+      },
+    )
+
+    it.each([
+      'NATIONAL_REGISTRY_CLIENT_USER',
+      'NATIONAL_REGISTRY_CLIENT_PASSWORD',
+      'NATIONAL_REGISTRY_API_LOGIN_PATH',
+      'NATIONAL_REGISTRY_API_LOOKUP_PATH',
+    ] as const)(
+      'throws InternalServerErrorException from getEntityByNationalId when %s is missing',
+      async (envVar) => {
+        const original = process.env[envVar]
+        delete process.env[envVar]
+
+        const built = await compileService()
+        await expect(built.getEntityByNationalId('1234567890')).rejects.toThrow(
+          InternalServerErrorException,
+        )
+
+        process.env[envVar] = original
+      },
+    )
   })
   describe('authenticate', () => {
     it('should authenticate successfully and cache credentials', async () => {
