@@ -211,17 +211,17 @@ export class ApplicationService implements IApplicationService {
   }
 
   async getReport(
-    reportId: string,
+    providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
-    const report = await this.reportModel.findOne({ where: { id: reportId } })
+    const report = await this.reportModel.findOne({ where: { providerId } })
 
     if (!report) {
-      throw new NotFoundException(`Report "${reportId}" not found`)
+      throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
     const companyRows = await this.companyReportModel.findAll({
-      where: { reportId },
+      where: { reportId: report.id },
       order: [['createdAt', 'ASC']],
     })
 
@@ -229,7 +229,7 @@ export class ApplicationService implements IApplicationService {
       (row) => row.parentCompanyId === null,
     )
     if (!parentCompany || parentCompany.companyId !== company.id) {
-      throw new NotFoundException(`Report "${reportId}" not found`)
+      throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
     const [equalityReport, salaryData, externalComments, denialReason] =
@@ -269,24 +269,24 @@ export class ApplicationService implements IApplicationService {
   }
 
   async createReportComment(
-    reportId: string,
+    providerId: string,
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
   ): Promise<ApplicationReportCommentDto> {
     this.logger.info('Submitting report comment from application portal', {
       context: LOGGING_CONTEXT,
       companyId: company.id,
-      reportId,
+      providerId,
     })
 
-    const report = await this.reportModel.findOne({ where: { id: reportId } })
+    const report = await this.reportModel.findOne({ where: { providerId } })
 
     if (!report) {
-      throw new NotFoundException(`Report "${reportId}" not found`)
+      throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
     const companyRows = await this.companyReportModel.findAll({
-      where: { reportId },
+      where: { reportId: report.id },
       order: [['createdAt', 'ASC']],
     })
 
@@ -294,7 +294,7 @@ export class ApplicationService implements IApplicationService {
       (row) => row.parentCompanyId === null,
     )
     if (!parentCompany || parentCompany.companyId !== company.id) {
-      throw new NotFoundException(`Report "${reportId}" not found`)
+      throw new NotFoundException(`Report "${providerId}" not found`)
     }
 
     const created = await this.reportCommentService.create(

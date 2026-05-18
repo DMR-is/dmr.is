@@ -9,7 +9,6 @@ import {
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
-  ParseUUIDPipe,
   Post,
   StreamableFile,
   UploadedFile,
@@ -200,38 +199,52 @@ export class ApplicationController {
     return this.applicationService.submitEquality(input, company)
   }
 
-  @Get('reports/:reportId')
-  @ApiParam({ name: 'reportId', type: String })
+  @Get('reports/:providerId')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      "Upstream submission ID (e.g. the island.is application UUID). Identifies the report by the originator's own handle rather than the DoE-side `report.id`, which the applicant does not see. Resolved against reports whose parent company matches the authenticated company.",
+  })
   @DoeResponse({
     operationId: 'getApplicationReport',
     include404: true,
     description:
-      'Returns company-facing report detail with external comments only.',
+      'Returns company-facing report detail with external comments. Looked up by upstream `providerId`.',
     type: ApplicationReportDetailDto,
   })
   async getReport(
-    @Param('reportId', ParseUUIDPipe) reportId: string,
+    @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
-    return this.applicationService.getReport(reportId, company)
+    return this.applicationService.getReport(providerId, company)
   }
 
-  @Post('reports/:reportId/comments')
+  @Post('reports/:providerId/comments')
   @HttpCode(HttpStatus.CREATED)
-  @ApiParam({ name: 'reportId', type: String })
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
   @DoeResponse({
     operationId: 'submitApplicationReportComment',
     status: 201,
     include404: true,
     description:
-      'Submits an external comment on a report owned by the authenticated company.',
+      'Submits an external comment on a report owned by the authenticated company. Report is looked up by upstream `providerId`.',
     type: ApplicationReportCommentDto,
   })
   async submitComment(
-    @Param('reportId', ParseUUIDPipe) reportId: string,
+    @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
     @Body() input: SubmitApplicationReportCommentDto,
   ): Promise<ApplicationReportCommentDto> {
-    return this.applicationService.createReportComment(reportId, input, company)
+    return this.applicationService.createReportComment(
+      providerId,
+      input,
+      company,
+    )
   }
 }

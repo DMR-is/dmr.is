@@ -442,19 +442,25 @@ describe('ApplicationService', () => {
 
   describe('getReport', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
     const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-0000000000bb'
 
-    it("throws NotFoundException when the report doesn't exist", async () => {
+    it("throws NotFoundException when no report matches the providerId", async () => {
       reportFindOne.mockResolvedValueOnce(null)
 
-      await expect(service.getReport(REPORT_ID, COMPANY)).rejects.toThrow(
+      await expect(service.getReport(PROVIDER_ID, COMPANY)).rejects.toThrow(
         NotFoundException,
       )
+      expect(reportFindOne).toHaveBeenCalledWith({
+        where: { providerId: PROVIDER_ID },
+      })
       expect(companyReportFindAll).not.toHaveBeenCalled()
     })
 
     it("throws NotFoundException when the resolved company isn't the parent", async () => {
-      reportFindOne.mockResolvedValueOnce(makeReportRow({ id: REPORT_ID }))
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
       companyReportFindAll.mockResolvedValueOnce([
         makeCompanyReportRow({
           reportId: REPORT_ID,
@@ -463,7 +469,7 @@ describe('ApplicationService', () => {
         }),
       ])
 
-      await expect(service.getReport(REPORT_ID, COMPANY)).rejects.toThrow(
+      await expect(service.getReport(PROVIDER_ID, COMPANY)).rejects.toThrow(
         NotFoundException,
       )
       expect(getCommentsByReportId).not.toHaveBeenCalled()
@@ -475,6 +481,7 @@ describe('ApplicationService', () => {
       const validUntil = new Date('2028-06-01T00:00:00.000Z')
       const salaryReport = makeReportRow({
         id: REPORT_ID,
+        providerId: PROVIDER_ID,
         type: ReportTypeEnum.SALARY,
         status: ReportStatusEnum.SUBMITTED,
         identifier: 'SAL-2026-001',
@@ -520,8 +527,14 @@ describe('ApplicationService', () => {
       outlierFindAll.mockResolvedValueOnce([outlier])
       getCommentsByReportId.mockResolvedValueOnce([externalComment])
 
-      const result = await service.getReport(REPORT_ID, COMPANY)
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
 
+      expect(reportFindOne).toHaveBeenCalledWith({
+        where: { providerId: PROVIDER_ID },
+      })
+      expect(companyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { reportId: REPORT_ID } }),
+      )
       expect(result).toMatchObject({
         id: REPORT_ID,
         type: ReportTypeEnum.SALARY,
@@ -568,6 +581,7 @@ describe('ApplicationService', () => {
     it('returns equality report detail with narrative content and no salary-only data', async () => {
       const equalityReport = makeReportRow({
         id: REPORT_ID,
+        providerId: PROVIDER_ID,
         type: ReportTypeEnum.EQUALITY,
         status: ReportStatusEnum.APPROVED,
         identifier: 'EQ-2026-001',
@@ -580,7 +594,7 @@ describe('ApplicationService', () => {
       ])
       getCommentsByReportId.mockResolvedValueOnce([])
 
-      const result = await service.getReport(REPORT_ID, COMPANY)
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
 
       expect(result.equalityReport).toBeNull()
       expect(result.equalityReportContent).toBe('Equality plan narrative')
@@ -595,6 +609,7 @@ describe('ApplicationService', () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
           id: REPORT_ID,
+          providerId: PROVIDER_ID,
           status: ReportStatusEnum.DENIED,
           type: ReportTypeEnum.EQUALITY,
         }),
@@ -605,7 +620,7 @@ describe('ApplicationService', () => {
       getCommentsByReportId.mockResolvedValueOnce([])
       eventFindOne.mockResolvedValueOnce({ reason: 'Missing explanation' })
 
-      const result = await service.getReport(REPORT_ID, COMPANY)
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
 
       expect(result.denialReason).toBe('Missing explanation')
       expect(eventFindOne).toHaveBeenCalledWith(
@@ -625,7 +640,9 @@ describe('ApplicationService', () => {
         reportId: REPORT_ID,
         visibility: CommentVisibilityEnum.EXTERNAL,
       })
-      reportFindOne.mockResolvedValueOnce(makeReportRow({ id: REPORT_ID }))
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
       companyReportFindAll.mockResolvedValueOnce([
         makeCompanyReportRow({ reportId: REPORT_ID }),
       ])
@@ -639,7 +656,7 @@ describe('ApplicationService', () => {
         },
       )
 
-      const result = await service.getReport(REPORT_ID, COMPANY)
+      const result = await service.getReport(PROVIDER_ID, COMPANY)
 
       expect(result.externalComments).toEqual([
         {
@@ -665,19 +682,25 @@ describe('ApplicationService', () => {
 
   describe('createReportComment', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
 
-    it("throws NotFoundException when the report doesn't exist", async () => {
+    it("throws NotFoundException when no report matches the providerId", async () => {
       reportFindOne.mockResolvedValueOnce(null)
 
       await expect(
-        service.createReportComment(REPORT_ID, { body: 'hi' }, COMPANY),
+        service.createReportComment(PROVIDER_ID, { body: 'hi' }, COMPANY),
       ).rejects.toThrow(NotFoundException)
+      expect(reportFindOne).toHaveBeenCalledWith({
+        where: { providerId: PROVIDER_ID },
+      })
       expect(companyReportFindAll).not.toHaveBeenCalled()
       expect(createComment).not.toHaveBeenCalled()
     })
 
     it("throws NotFoundException when the resolved company isn't the parent", async () => {
-      reportFindOne.mockResolvedValueOnce(makeReportRow({ id: REPORT_ID }))
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
       companyReportFindAll.mockResolvedValueOnce([
         makeCompanyReportRow({
           reportId: REPORT_ID,
@@ -687,7 +710,7 @@ describe('ApplicationService', () => {
       ])
 
       await expect(
-        service.createReportComment(REPORT_ID, { body: 'hi' }, COMPANY),
+        service.createReportComment(PROVIDER_ID, { body: 'hi' }, COMPANY),
       ).rejects.toThrow(NotFoundException)
       expect(createComment).not.toHaveBeenCalled()
     })
@@ -704,6 +727,7 @@ describe('ApplicationService', () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
           id: REPORT_ID,
+          providerId: PROVIDER_ID,
           status: ReportStatusEnum.SUBMITTED,
         }),
       )
@@ -713,7 +737,7 @@ describe('ApplicationService', () => {
       createComment.mockResolvedValueOnce(createdComment)
 
       const result = await service.createReportComment(
-        REPORT_ID,
+        PROVIDER_ID,
         { body: 'Please review my correction' },
         COMPANY,
       )
@@ -900,7 +924,7 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     identifier: 'SAL-2026-001',
     importedFromExcel: true,
     providerType: ReportProviderEnum.SYSTEM,
-    providerId: null,
+    providerId: 'salary-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminEmail: 'admin@example.is',
     companyAdminGender: GenderEnum.FEMALE,
@@ -926,7 +950,7 @@ function makeSubmitEqualityInput(): SubmitEqualityReportDto {
   return {
     identifier: 'EQ-2026-001',
     providerType: ReportProviderEnum.SYSTEM,
-    providerId: null,
+    providerId: 'equality-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminEmail: 'admin@example.is',
     companyAdminGender: GenderEnum.FEMALE,
@@ -950,6 +974,7 @@ function makeReportRow(
 ): ReportModel {
   return {
     id: 'report-1',
+    providerId: null,
     type: ReportTypeEnum.EQUALITY,
     status: ReportStatusEnum.SUBMITTED,
     identifier: 'REPORT-001',

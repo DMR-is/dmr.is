@@ -64,7 +64,7 @@ State-by-state:
 - **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.)
 - **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. The company must submit a new report (new row) — this denied row **stays forever** as audit.
 - **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition.
-- **`SUPERSEDED`** — a newer report from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per company is "current" at any time.
+- **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
 
 ## Resubmission
 
@@ -72,8 +72,19 @@ A resubmission is always a **new row** in `report`. It is never an update of an 
 
 Two resubmission triggers:
 
-1. **Denial** — reviewer denied the current submission. Company edits, re-submits as a new `DRAFT` → `SUBMITTED` row.
+1. **Denial** — reviewer denied the current submission. The denied row stays as audit forever and is never mutated. A redo always comes through as a fresh upstream application — new `provider_id` → new `report` row → fresh review queue entry. A future PUT-edit endpoint is planned to allow targeted in-place edits to a denied row after admin/applicant communication, but that is distinct from resubmission; resubmission is always a new row.
 2. **Three-year expiry** — approved report is aging out. Companies are notified ~3 months before `valid_until`. A new report is drafted and submitted. On approval, the old report transitions to `SUPERSEDED`.
+
+## Provider correlation
+
+Every report row records who submitted it on the upstream side via the pair `(provider_type, provider_id)`:
+
+- **`provider_type`** (`ReportProviderEnum`) — the upstream system that originated the submission. `ISLAND_IS` for reports forwarded from the island.is application portal, `SYSTEM` for DoE-internal/manual creations, `OTHER` as an escape hatch for any future integration that isn't island.is.
+- **`provider_id`** — the upstream system's own ID for this specific submission. For an island.is-originated report this is the application's UUID on their side. Separate from `report.identifier`, which is the DoE-side internal handle and has no relation to the upstream ID.
+
+Each new island.is submission gets its own `provider_id` — the type identifies the channel, the id identifies the individual application on that channel. Once a row exists for a given `(provider_type, provider_id)` tuple, that mapping is permanent: the row is never duplicated, and a future resubmission from the same company comes through as a fresh upstream application with a new `provider_id`. SYSTEM-created rows leave both columns null.
+
+**Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists *and the submitting company matches the existing row's parent*, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
 ## Audit timeline (events + comments)
 
@@ -306,8 +317,8 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
 | `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
 | `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
-| `provider_type`                  | `ReportProviderEnum`                                                                                                           |
-| `provider_id`                    | `text` (nullable)                                                                                                              |
+| `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
+| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
 | `identifier`                     | `text`                                                                                                                         |
 | `outliers_postponed`             | `boolean` (default `false` — when true, the company has deferred every outlier explanation on this report)                     |

@@ -5,7 +5,6 @@ import {
   ApiNumber,
   ApiOptionalBoolean,
   ApiOptionalDtoArray,
-  ApiOptionalString,
   ApiString,
   ApiUUID,
 } from '@dmr.is/decorators'
@@ -37,8 +36,8 @@ export class SubmitSalaryReportDto {
   @ApiEnum(ReportProviderEnum)
   providerType!: ReportProviderEnum
 
-  @ApiOptionalString({ nullable: true })
-  providerId!: string | null
+  @ApiString()
+  providerId!: string
 
   @ApiString()
   companyAdminName!: string

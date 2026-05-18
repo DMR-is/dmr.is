@@ -9,7 +9,11 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { ReportModel, ReportStatusEnum } from '../report/models/report.model'
+import {
+  ReportModel,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -233,6 +237,20 @@ export class ReportWorkflowService implements IReportWorkflowService {
   }
 
   private async supersedePreviousApproved(reportId: string): Promise<void> {
+    // Supersession is scoped to `(company, type)` — approving a new SALARY
+    // must not invalidate a still-valid APPROVED EQUALITY (and vice versa).
+    // See db/README.md → "Report lifecycle" / SUPERSEDED.
+    const newReport = await this.reportModel.findOne({
+      where: { id: reportId },
+      attributes: ['type'],
+    })
+
+    if (!newReport) {
+      return
+    }
+
+    const newReportType: ReportTypeEnum = newReport.type
+
     const companyReport = await this.companyReportModel.findOne({
       where: { reportId },
       attributes: ['companyId'],
@@ -256,7 +274,11 @@ export class ReportWorkflowService implements IReportWorkflowService {
     }
 
     const toSupersede = await this.reportModel.findAll({
-      where: { id: siblingReportIds, status: ReportStatusEnum.APPROVED },
+      where: {
+        id: siblingReportIds,
+        status: ReportStatusEnum.APPROVED,
+        type: newReportType,
+      },
       attributes: ['id'],
     })
 

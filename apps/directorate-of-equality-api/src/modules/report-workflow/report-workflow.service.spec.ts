@@ -1,6 +1,9 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
-import { ReportStatusEnum } from '../report/models/report.model'
+import {
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -292,8 +295,9 @@ describe('ReportWorkflowService', () => {
   })
 
   describe('approve', () => {
-    it('transitions IN_REVIEW → APPROVED, supersedes prior approvals, emits STATUS_CHANGED + SUPERSEDED', async () => {
+    it('transitions IN_REVIEW → APPROVED, supersedes prior approvals of the same type, emits STATUS_CHANGED + SUPERSEDED', async () => {
       reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
       reportModel.findAll.mockResolvedValue([{ id: 'old-report-1' }])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       reportEventService.emitSuperseded.mockResolvedValue(undefined)
@@ -312,6 +316,14 @@ describe('ReportWorkflowService', () => {
         }),
         { where: { id: 'report-1' } },
       )
+      expect(reportModel.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: ReportStatusEnum.APPROVED,
+            type: ReportTypeEnum.SALARY,
+          }),
+        }),
+      )
       expect(reportModel.update).toHaveBeenCalledWith(
         { status: ReportStatusEnum.SUPERSEDED, validUntil: expect.any(Date) },
         { where: { id: ['old-report-1'] } },
@@ -328,8 +340,39 @@ describe('ReportWorkflowService', () => {
       )
     })
 
+    it('does not supersede approved reports of a different type (SALARY approval leaves APPROVED EQUALITY untouched)', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
+      // The cross-type EQUALITY sibling exists in company_report but the
+      // type-scoped findAll filters it out, returning no rows to supersede.
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([
+        { reportId: 'old-equality-1' },
+        { reportId: 'report-1' },
+      ])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(reportModel.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: ['old-equality-1'],
+            status: ReportStatusEnum.APPROVED,
+            type: ReportTypeEnum.SALARY,
+          }),
+        }),
+      )
+      // Only the initial APPROVED transition update ran — no supersede update,
+      // no SUPERSEDED event emitted for the EQUALITY sibling.
+      expect(reportModel.update).toHaveBeenCalledTimes(1)
+      expect(reportEventService.emitSuperseded).not.toHaveBeenCalled()
+    })
+
     it('skips supersede when no sibling reports are APPROVED', async () => {
       reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
