@@ -54,15 +54,12 @@ const COLUMNS: ColumnDef<UserDto>[] = [
 
 export const UsersContainer = () => {
   const trpc = useTRPC()
-  const [showInactive, setShowInactive] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { data: users } = useSuspenseQuery(
     trpc.user.listActive.queryOptions(undefined),
   )
-
-  const filtered = (users ?? []).filter((u) => showInactive || u.isActive)
 
   const openCreate = () => {
     setSelectedUser(null)
@@ -93,29 +90,18 @@ export const UsersContainer = () => {
             >
               Nýr notandi
             </Button>
-            <Button
-              icon={showInactive ? 'eyeOff' : 'eye'}
-              iconType="outline"
-              variant="utility"
-              colorScheme="white"
-              fluid
-              size="small"
-              onClick={() => setShowInactive((v) => !v)}
-            >
-              {showInactive ? 'Fela óvirka' : 'Sýna óvirka'}
-            </Button>
           </Stack>
         </GridColumn>
 
         <GridColumn span={['12/12', '9/12']}>
           <Stack space={2}>
             <Inline space={1} alignY="center">
-              <Text fontWeight="semiBold">{filtered.length}</Text>
+              <Text fontWeight="semiBold">{users?.length ?? 0}</Text>
               <Text>notendur fundust</Text>
             </Inline>
             <Table
               columns={COLUMNS}
-              data={filtered}
+              data={users ?? []}
               noDataMessage="Engir notendur skráðir"
               onRowClick={openEdit}
             />

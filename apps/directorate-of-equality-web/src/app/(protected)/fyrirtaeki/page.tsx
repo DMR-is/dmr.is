@@ -12,15 +12,20 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 
 export default async function FyrirtaekiPage() {
   const queryClient = getQueryClient()
-  await queryClient.prefetchQuery(
-    trpc.company.list.queryOptions({ pageSize: 1000 }),
-  )
+  await Promise.all([
+    queryClient.prefetchQuery(
+      trpc.company.list.queryOptions({ pageSize: 1000 }),
+    ),
+    queryClient.prefetchQuery(
+      trpc.reports.list.queryOptions({ status: ['APPROVED'], pageSize: 1000 }),
+    ),
+  ])
 
   return (
     <Box height="full">
       <Hero
         title="Fyrirtæki"
-        description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
+        description="Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála."
         image={{ src: '/assets/banner-image.svg', alt: 'Fyrirtæki' }}
         breadcrumbs={{
           items: [{ title: 'Forsíða', href: '/' }, { title: 'Fyrirtæki' }],

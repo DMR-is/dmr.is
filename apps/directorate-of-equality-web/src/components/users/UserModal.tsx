@@ -33,16 +33,18 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
       setEmail(user.email)
       setPhone(user.phone ?? '')
       setIsActive(user.isActive)
+    } else {
+      setFirstName('')
+      setLastName('')
+      setEmail('')
+      setPhone('')
+      setIsActive(true)
     }
   }, [user])
 
-  const handleClose = () => {
-    onClose()
-  }
-
   const handleSave = () => {
     // TODO: wire up update mutation when API endpoint is available
-    handleClose()
+    onClose()
   }
 
   const isNew = !user
@@ -53,9 +55,9 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
       isVisible={isOpen}
       title={isNew ? 'Nýr notandi' : 'Breyta notanda'}
       onVisibilityChange={(visible) => {
-        if (!visible) handleClose()
+        if (!visible) onClose()
       }}
-      toggleClose={handleClose}
+      toggleClose={onClose}
       width="small"
     >
       <Stack space={3}>
@@ -108,7 +110,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         )}
 
         <Inline justifyContent="flexEnd" space={2}>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" onClick={onClose}>
             Hætta við
           </Button>
           <Button
