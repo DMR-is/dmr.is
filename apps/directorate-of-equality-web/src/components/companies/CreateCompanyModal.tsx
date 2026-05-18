@@ -97,7 +97,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
               <TextInput
                 name="nationalId"
                 label="Kennitala"
-                size="sm"
+                size="xs"
                 placeholder="000000-0000"
                 value={nationalIdInput}
                 onChange={(e) => {
@@ -107,6 +107,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
               />
               <Button
                 variant="ghost"
+                size="small"
                 loading={lookupQuery.isFetching}
                 disabled={!nationalIdInput.trim()}
                 onClick={handleLookup}
@@ -125,6 +126,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
         <TextInput
           name="name"
           label="Nafn fyrirtækis"
+          size="xs"
           value={lookupQuery.data?.name ?? ''}
           readOnly
           isLoading={lookupQuery.isFetching}
@@ -135,16 +137,18 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
           name="employeeCount"
           label="Meðalfjöldi starfsmanna"
           type="number"
+          size="xs"
           value={employeeCount}
           onChange={(e) => setEmployeeCount(e.target.value)}
           disabled={!lookedUp}
         />
 
         <Inline justifyContent="flexEnd" space={2}>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" size="small" onClick={handleClose}>
             Hætta við
           </Button>
           <Button
+            size="small"
             disabled={!canCreate}
             loading={createMutation.isPending}
             onClick={handleCreate}

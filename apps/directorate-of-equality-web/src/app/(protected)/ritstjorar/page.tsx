@@ -6,15 +6,15 @@ import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/Se
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
 
-export default function NotendurPage() {
+export default function RitstjorarPage() {
   return (
     <Box height="full">
       <Hero
-        title="Notendur"
-        description="Hér eru skráðir notendur kerfisins. Hægt er að bæta við nýjum notanda, breyta upplýsingum eða gera notanda óvirkan."
-        image={{ src: '/assets/banner-image.svg', alt: 'Notendur' }}
+        title="Ritstjórar"
+        description="Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan."
+        image={{ src: '/assets/banner-image.svg', alt: 'Ritstjórar' }}
         breadcrumbs={{
-          items: [{ title: 'Forsíða', href: '/' }, { title: 'Notendur' }],
+          items: [{ title: 'Forsíða', href: '/' }, { title: 'Ritstjórar' }],
         }}
         variant="default"
         reverse

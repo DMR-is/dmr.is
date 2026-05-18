@@ -56,10 +56,15 @@ export const UsersContainer = () => {
   const trpc = useTRPC()
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showInactive, setShowInactive] = useState(false)
 
   const { data: users } = useSuspenseQuery(
     trpc.user.listActive.queryOptions(undefined),
   )
+
+  const visibleUsers = showInactive
+    ? users
+    : (users ?? []).filter((u) => u.isActive)
 
   const openCreate = () => {
     setSelectedUser(null)
@@ -88,7 +93,18 @@ export const UsersContainer = () => {
               variant="utility"
               colorScheme="white"
             >
-              Nýr notandi
+              Nýr ritstjóri
+            </Button>
+            <Button
+              icon={showInactive ? 'eyeOff' : 'eye'}
+              iconType="outline"
+              fluid
+              size="small"
+              onClick={() => setShowInactive((v) => !v)}
+              variant="utility"
+              colorScheme="white"
+            >
+              {showInactive ? 'Fela óvirka' : 'Sýna óvirka'}
             </Button>
           </Stack>
         </GridColumn>
@@ -96,13 +112,13 @@ export const UsersContainer = () => {
         <GridColumn span={['12/12', '9/12']}>
           <Stack space={2}>
             <Inline space={1} alignY="center">
-              <Text fontWeight="semiBold">{users?.length ?? 0}</Text>
-              <Text>notendur fundust</Text>
+              <Text fontWeight="semiBold">{visibleUsers.length}</Text>
+              <Text>ritstjórar fundust</Text>
             </Inline>
             <Table
               columns={COLUMNS}
-              data={users ?? []}
-              noDataMessage="Engir notendur skráðir"
+              data={visibleUsers}
+              noDataMessage="Engir ritstjórar skráðir"
               onRowClick={openEdit}
             />
           </Stack>

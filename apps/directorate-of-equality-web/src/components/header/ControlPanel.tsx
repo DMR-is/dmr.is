@@ -17,7 +17,7 @@ const NAV_PATHS = [
   { title: 'Jafnréttisáætlanir', href: '/mal?category=jafnrettisaetlun' },
   { title: 'Úrbótaáætlanir', href: '/mal?category=urbotaaaetlun' },
   { title: 'Fyrirtæki', href: '/fyrirtaeki' },
-  { title: 'Notendur', href: '/notendur' },
+  { title: 'Ritstjórar', href: '/ritstjorar' },
 ]
 
 export const ControlPanel = () => {

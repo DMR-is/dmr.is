@@ -53,7 +53,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     <Modal
       baseId="user-modal"
       isVisible={isOpen}
-      title={isNew ? 'Nýr notandi' : 'Breyta notanda'}
+      title={isNew ? 'Nýr ritstjóri' : 'Breyta ritstjóra'}
       onVisibilityChange={(visible) => {
         if (!visible) onClose()
       }}
@@ -66,6 +66,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
             <TextInput
               name="firstName"
               label="Fornafn"
+              size="xs"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
@@ -74,6 +75,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
             <TextInput
               name="lastName"
               label="Eftirnafn"
+              size="xs"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
@@ -84,6 +86,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           name="email"
           label="Netfang"
           type="email"
+          size="xs"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -91,6 +94,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         <TextInput
           name="phone"
           label="Sími"
+          size="xs"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
@@ -98,11 +102,11 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         {!isNew && (
           <Box>
             <Text variant="eyebrow" marginBottom={1}>
-              Staða notanda
+              Staða ritstjóra
             </Text>
             <Checkbox
               name="isActive"
-              label="Virkur notandi"
+              label="Virkur ritstjóri"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
             />
@@ -110,14 +114,15 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         )}
 
         <Inline justifyContent="flexEnd" space={2}>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" size="small" onClick={onClose}>
             Hætta við
           </Button>
           <Button
+            size="small"
             disabled={!firstName.trim() || !lastName.trim() || !email.trim()}
             onClick={handleSave}
           >
-            {isNew ? 'Stofna notanda' : 'Vista breytingar'}
+            {isNew ? 'Stofna ritstjóra' : 'Vista breytingar'}
           </Button>
         </Inline>
       </Stack>
