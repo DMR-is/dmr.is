@@ -211,7 +211,9 @@ export const Table = <TData extends object>({
                           : undefined
                     }
                     style={
-                      !getRowExpanded && href ? { cursor: 'pointer' } : undefined
+                      !getRowExpanded && href
+                        ? { cursor: 'pointer' }
+                        : undefined
                     }
                   >
                     {row.getVisibleCells().map((cell, i) =>
@@ -330,7 +332,7 @@ export const Table = <TData extends object>({
           )}
         </T.Body>
       </T.Table>
-      {paging && (
+      {paging && paging.totalPages > 1 && (
         <DataTablePagination
           paging={paging}
           onPageChange={onPageChange}

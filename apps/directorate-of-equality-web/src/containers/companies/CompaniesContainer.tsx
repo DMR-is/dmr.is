@@ -10,13 +10,14 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
+import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
-import { CreateCompanyModal } from './CreateCompanyModal'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
@@ -54,7 +55,7 @@ const inRange = (count: number, range: string): boolean => {
 
 const PAGE_SIZE = 10
 
-export const CompaniesPage = () => {
+export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [employeeRanges, setEmployeeRanges] = useState<string[]>([])
@@ -102,107 +103,99 @@ export const CompaniesPage = () => {
   }
 
   return (
-    <Box marginTop={[3, 4]}>
-      <GridContainer>
-        <GridRow>
-          <GridColumn span="12/12">
-            <Box
-              display="flex"
-              justifyContent="spaceBetween"
-              alignItems="center"
-              marginBottom={3}
-            >
-              <Text variant="h2">Fyrirtæki</Text>
-              <Button
-                icon="add"
-                iconType="outline"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Nýtt fyrirtæki
-              </Button>
-            </Box>
-          </GridColumn>
-
-          <GridColumn span={['12/12', '3/12']}>
-            <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-              Leit og síun
-            </Text>
-            <Filter
-              labelClearAll="Hreinsa allar síur"
-              labelOpen="Opna síur"
-              labelClose="Loka síum"
+    <GridContainer>
+      <Box display="flex" justifyContent="flexEnd" marginBottom={3}>
+        <Button
+          icon="add"
+          iconType="outline"
+          onClick={() => setIsModalOpen(true)}
+          size="small"
+          variant="utility"
+          colorScheme="white"
+        >
+          Nýtt fyrirtæki
+        </Button>
+      </Box>
+      <GridRow>
+        <GridColumn span={['12/12', '3/12']}>
+          <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
+            Leit og síun
+          </Text>
+          <Filter
+            labelClearAll="Hreinsa allar síur"
+            labelOpen="Opna síur"
+            labelClose="Loka síum"
+            labelClear="Hreinsa"
+            labelTitle="Síur"
+            labelResult="Sýna niðurstöður"
+            onFilterClear={handleReset}
+            variant="default"
+            filterInput={
+              <FilterInput
+                name="query"
+                placeholder="Leita að fyrirtæki..."
+                value={query}
+                onChange={(val) => {
+                  setQuery(val)
+                  setPage(1)
+                }}
+                backgroundColor="white"
+              />
+            }
+          >
+            <FilterMultiChoice
               labelClear="Hreinsa"
-              labelTitle="Síur"
-              labelResult="Sýna niðurstöður"
-              onFilterClear={handleReset}
-              variant="default"
-              filterInput={
-                <FilterInput
-                  name="query"
-                  placeholder="Leita að fyrirtæki..."
-                  value={query}
-                  onChange={(val) => {
-                    setQuery(val)
-                    setPage(1)
-                  }}
-                  backgroundColor="white"
-                />
-              }
-            >
-              <FilterMultiChoice
-                labelClear="Hreinsa"
-                onChange={({ categoryId, selected }) => {
-                  if (categoryId === 'employees') {
-                    setEmployeeRanges(selected)
-                    setPage(1)
-                  }
-                }}
-                onClear={(categoryId) => {
-                  if (categoryId === 'employees') {
-                    setEmployeeRanges([])
-                    setPage(1)
-                  }
-                }}
-                categories={[
-                  {
-                    id: 'employees',
-                    label: 'Starfsmenn',
-                    selected: employeeRanges,
-                    filters: EMPLOYEE_RANGES,
-                  },
-                ]}
-              />
-            </Filter>
-          </GridColumn>
+              onChange={({ categoryId, selected }) => {
+                if (categoryId === 'employees') {
+                  setEmployeeRanges(selected)
+                  setPage(1)
+                }
+              }}
+              onClear={(categoryId) => {
+                if (categoryId === 'employees') {
+                  setEmployeeRanges([])
+                  setPage(1)
+                }
+              }}
+              categories={[
+                {
+                  id: 'employees',
+                  label: 'Starfsmenn',
+                  selected: employeeRanges,
+                  filters: EMPLOYEE_RANGES,
+                },
+              ]}
+            />
+          </Filter>
+        </GridColumn>
 
-          <GridColumn span={['12/12', '9/12']}>
-            <Stack space={3}>
-              <Box display="flex" alignItems="center" columnGap={1}>
-                <Text fontWeight="semiBold">{rows.length}</Text>
-                <Text>fyrirtæki fundust</Text>
-              </Box>
-              <Table
-                columns={COLUMNS}
-                data={pageData}
-                paging={{
-                  page,
-                  pageSize: PAGE_SIZE,
-                  totalItems: rows.length,
-                  totalPages,
-                }}
-                onPageChange={setPage}
-                showPageSizeSelect={false}
-                noDataMessage="Engin fyrirtæki skráð"
-              />
-            </Stack>
-          </GridColumn>
-        </GridRow>
-      </GridContainer>
+        <GridColumn span={['12/12', '9/12']}>
+          <Stack space={2}>
+            <Inline space={1} alignY="center">
+              <Text fontWeight="semiBold">{rows.length}</Text>
+              <Text>fyrirtæki fundust</Text>
+            </Inline>
+            <Table
+              columns={COLUMNS}
+              data={pageData}
+              paging={{
+                page,
+                pageSize: PAGE_SIZE,
+                totalItems: rows.length,
+                totalPages,
+              }}
+              onPageChange={setPage}
+              showPageSizeSelect={false}
+              noDataMessage="Engin fyrirtæki skráð"
+            />
+          </Stack>
+        </GridColumn>
+      </GridRow>
 
       <CreateCompanyModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
-    </Box>
+    </GridContainer>
   )
 }
