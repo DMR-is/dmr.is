@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -22,6 +23,7 @@ import {
 } from '../report/lib/employee-scores'
 import {
   ReportModel,
+  ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.model'
@@ -96,13 +98,26 @@ export class ReportCreateService implements IReportCreateService {
   private async createSalaryReport(
     input: CreateReportDto,
   ): Promise<CreateReportResponseDto> {
+    const submittingCompany = this.getSubmittingCompany(input.companies)
+
+    // Idempotent replay — if upstream retries with the same (provider_type,
+    // provider_id), return the prior reportId instead of inserting again. See
+    // db/README.md → "Provider correlation".
+    const replay = await this.findExistingByProviderTuple(
+      input.providerType,
+      input.providerId,
+      submittingCompany.companyId,
+    )
+    if (replay) {
+      return replay
+    }
+
     const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     this.assertOutliersReferenceParsedEmployees(input)
     await this.assertOutliersMatchDetectedOutliers(input, employeeScores)
 
     await this.assertEqualityReportApproved(input.equalityReportId)
-    const submittingCompany = this.getSubmittingCompany(input.companies)
     const outliersPostponed = input.outliersPostponed ?? false
 
     // 1. report row — status SUBMITTED so it lands in the reviewer queue.
@@ -283,6 +298,15 @@ export class ReportCreateService implements IReportCreateService {
   ): Promise<CreateReportResponseDto> {
     const submittingCompany = this.getSubmittingCompany(input.companies)
 
+    const replay = await this.findExistingByProviderTuple(
+      input.providerType,
+      input.providerId,
+      submittingCompany.companyId,
+    )
+    if (replay) {
+      return replay
+    }
+
     const report = await this.reportModel.create({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
@@ -316,6 +340,56 @@ export class ReportCreateService implements IReportCreateService {
     })
 
     return { reportId: report.id }
+  }
+
+  /**
+   * Returns the existing `reportId` if a row already exists for the
+   * `(provider_type, provider_id)` tuple, otherwise returns null and the
+   * caller proceeds with insert.
+   *
+   * Null `provider_id` (typical for `provider_type = SYSTEM` admin-created
+   * rows) short-circuits with a null return — those rows are not subject to
+   * the unique constraint and never replay-collide.
+   *
+   * Cross-company collisions (an existing row with the same tuple but a
+   * different submitting company) throw 409. This shouldn't happen under
+   * normal upstream behaviour but is defensible in the "new provider channel
+   * reuses an existing channel's id" scenario the DB constraint guards
+   * against.
+   */
+  private async findExistingByProviderTuple(
+    providerType: ReportProviderEnum,
+    providerId: string | null,
+    submittingCompanyId: string,
+  ): Promise<CreateReportResponseDto | null> {
+    if (providerId === null) {
+      return null
+    }
+
+    const existing = await this.reportModel.findOne({
+      where: { providerType, providerId },
+    })
+    if (!existing) {
+      return null
+    }
+
+    const existingParent = await this.companyReportModel.findOne({
+      where: { reportId: existing.id, parentCompanyId: null },
+    })
+    if (!existingParent || existingParent.companyId !== submittingCompanyId) {
+      throw new ConflictException(
+        `Provider tuple (${providerType}, "${providerId}") is already registered for a different company`,
+      )
+    }
+
+    this.logger.info('Idempotent replay — returning existing report id', {
+      context: LOGGING_CONTEXT,
+      reportId: existing.id,
+      providerType,
+      providerId,
+    })
+
+    return { reportId: existing.id }
   }
 
   private getSubmittingCompany(

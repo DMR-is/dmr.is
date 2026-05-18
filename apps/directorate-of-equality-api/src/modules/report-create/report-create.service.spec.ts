@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -48,6 +52,7 @@ describe('ReportCreateService', () => {
   let reportEventCreate: jest.Mock
   let companyFindAll: jest.Mock
   let companyReportBulkCreate: jest.Mock
+  let companyReportFindOne: jest.Mock
   let roleBulkCreate: jest.Mock
   let employeeBulkCreate: jest.Mock
   let roleStepBulkCreate: jest.Mock
@@ -72,6 +77,7 @@ describe('ReportCreateService', () => {
     companyReportBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `cr-${i}` })),
     )
+    companyReportFindOne = jest.fn().mockResolvedValue(null)
     roleBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `role-${i}` })),
     )
@@ -130,7 +136,10 @@ describe('ReportCreateService', () => {
         },
         {
           provide: getModelToken(CompanyReportModel),
-          useValue: { bulkCreate: companyReportBulkCreate },
+          useValue: {
+            bulkCreate: companyReportBulkCreate,
+            findOne: companyReportFindOne,
+          },
         },
         {
           provide: getModelToken(ReportEmployeeRoleModel),
@@ -568,6 +577,115 @@ describe('ReportCreateService', () => {
 
     expect(reportCreate).toHaveBeenCalled()
     expect(reportEventCreate).not.toHaveBeenCalled()
+  })
+
+  describe('idempotent replay on (providerType, providerId)', () => {
+    const EXISTING_REPORT_ID = '00000000-0000-0000-0000-0000000000ee'
+
+    it('SALARY: returns existing reportId without inserting when tuple already exists for the same company', async () => {
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-1'
+
+      // First findOne is the provider-tuple lookup → returns existing row.
+      // No follow-up call is made because we short-circuit before
+      // assertEqualityReportApproved.
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      const result = await service.createSalary(input)
+
+      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(reportCreate).not.toHaveBeenCalled()
+      expect(companyReportBulkCreate).not.toHaveBeenCalled()
+      expect(reportResultCreateForReport).not.toHaveBeenCalled()
+      expect(reportEventCreate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: rejects with 409 when an existing tuple belongs to a different company', async () => {
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-1'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: 'someone-else-company-id',
+        parentCompanyId: null,
+      })
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        ConflictException,
+      )
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('EQUALITY: returns existing reportId without inserting when tuple already exists for the same company', async () => {
+      const input = makeEqualityInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-2'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      const result = await service.createEquality(input)
+
+      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(reportCreate).not.toHaveBeenCalled()
+      expect(companyReportBulkCreate).not.toHaveBeenCalled()
+      expect(reportEventCreate).not.toHaveBeenCalled()
+    })
+
+    it('proceeds with insert when providerId is non-null but no existing tuple matches', async () => {
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-3'
+
+      // 1st findOne (provider tuple lookup) → null = no replay.
+      // 2nd findOne (equality report lookup) → approved equality stays.
+      reportFindOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: EQUALITY_REPORT_ID })
+
+      const result = await service.createSalary(input)
+
+      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'island-is-application-uuid-3',
+        }),
+      )
+    })
+
+    it('skips the idempotency check entirely when providerId is null', async () => {
+      // makeInput() defaults to providerType=SYSTEM, providerId=null.
+      // The default reportFindOne mock returns {id: EQUALITY_REPORT_ID}, which
+      // would falsely match the provider-tuple lookup if the check ran. The
+      // fact that this still completes a successful insert proves the null
+      // short-circuit fires before any findOne call.
+      await service.createSalary(makeInput())
+
+      expect(reportCreate).toHaveBeenCalled()
+      expect(companyReportFindOne).not.toHaveBeenCalled()
+    })
   })
 })
 

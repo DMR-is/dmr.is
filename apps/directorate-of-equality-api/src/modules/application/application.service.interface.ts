@@ -26,11 +26,11 @@ export interface IApplicationService {
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto>
   getReport(
-    reportId: string,
+    providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
   createReportComment(
-    reportId: string,
+    providerId: string,
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
   ): Promise<ApplicationReportCommentDto>
