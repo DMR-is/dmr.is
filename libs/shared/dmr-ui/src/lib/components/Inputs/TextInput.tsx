@@ -1,11 +1,11 @@
-import { Input } from "../../island-is/lib/Input"
-import { SkeletonLoader } from "../../island-is/lib/SkeletonLoader"
+import { Input } from '../../island-is/lib/Input'
+import { SkeletonLoader } from '../../island-is/lib/SkeletonLoader'
 
 type Props = Omit<
   React.ComponentProps<typeof Input> & {
     isLoading?: boolean
   },
-  'size' | 'backgroundColor'
+  'backgroundColor'
 >
 
 export const TextInput = ({ isLoading = false, ...props }: Props) => {

@@ -34,6 +34,8 @@ export type TableProps<TData extends object> = {
   getRowExpanded?: (row: TData) => React.ReactNode
   /** When provided, clicking a row navigates SPA-style to this href. */
   getRowHref?: (row: TData) => string
+  /** When provided, clicking a row calls this handler with the row data. */
+  onRowClick?: (row: TData) => void
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
@@ -48,6 +50,7 @@ export const Table = <TData extends object>({
   data,
   getRowExpanded,
   getRowHref,
+  onRowClick,
   paging,
   onPageChange,
   onPageSizeChange,
@@ -206,12 +209,14 @@ export const Table = <TData extends object>({
                     onClick={
                       !getRowExpanded && href
                         ? () => router.push(href)
-                        : getRowExpanded && !href
-                          ? () => row.toggleExpanded()
-                          : undefined
+                        : !getRowExpanded && onRowClick
+                          ? () => onRowClick(row.original)
+                          : getRowExpanded && !href
+                            ? () => row.toggleExpanded()
+                            : undefined
                     }
                     style={
-                      !getRowExpanded && href
+                      (!getRowExpanded && href) || (!getRowExpanded && onRowClick)
                         ? { cursor: 'pointer' }
                         : undefined
                     }
