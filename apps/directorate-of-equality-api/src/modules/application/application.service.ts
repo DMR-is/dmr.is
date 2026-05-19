@@ -25,7 +25,11 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
-import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
+import {
+  ReportProviderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
   ReportEventModel,
@@ -79,6 +83,7 @@ import { IApplicationService } from './application.service.interface'
 const LOGGING_CONTEXT = 'ApplicationService'
 const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
   'salary_difference_threshold_percent'
+const DEFAULT_APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -218,8 +223,11 @@ export class ApplicationService implements IApplicationService {
   async getReport(
     providerId: string,
     company: CompanyDto,
+    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
-    const report = await this.reportModel.findOne({ where: { providerId } })
+    const report = await this.reportModel.findOne({
+      where: { providerType, providerId },
+    })
 
     if (!report) {
       throw new NotFoundException(`Report "${providerId}" not found`)
@@ -279,6 +287,7 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
+    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportCommentDto> {
     this.logger.info('Submitting report comment from application portal', {
       context: LOGGING_CONTEXT,
@@ -286,7 +295,9 @@ export class ApplicationService implements IApplicationService {
       providerId,
     })
 
-    const report = await this.reportModel.findOne({ where: { providerId } })
+    const report = await this.reportModel.findOne({
+      where: { providerType, providerId },
+    })
 
     if (!report) {
       throw new NotFoundException(`Report "${providerId}" not found`)
@@ -326,6 +337,7 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: EditEqualityContentDto,
     company: CompanyDto,
+    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
     this.logger.info('Editing equality content from application portal', {
       context: LOGGING_CONTEXT,
@@ -333,7 +345,11 @@ export class ApplicationService implements IApplicationService {
       providerId,
     })
 
-    const report = await this.findOwnedReportByProviderId(providerId, company)
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+      providerType,
+    )
 
     if (report.type !== ReportTypeEnum.EQUALITY) {
       throw new BadRequestException(
@@ -358,7 +374,7 @@ export class ApplicationService implements IApplicationService {
       company.id,
     )
 
-    return this.getReport(providerId, company)
+    return this.getReport(providerId, company, providerType)
   }
 
   /**
@@ -380,6 +396,7 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: EditOutliersDto,
     company: CompanyDto,
+    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
     this.logger.info('Editing outliers from application portal', {
       context: LOGGING_CONTEXT,
@@ -387,7 +404,11 @@ export class ApplicationService implements IApplicationService {
       providerId,
     })
 
-    const report = await this.findOwnedReportByProviderId(providerId, company)
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+      providerType,
+    )
 
     if (report.type !== ReportTypeEnum.SALARY) {
       throw new BadRequestException(
@@ -506,21 +527,24 @@ export class ApplicationService implements IApplicationService {
 
     await this.reportEventService.emitEdited(report.id, newStatus, company.id)
 
-    return this.getReport(providerId, company)
+    return this.getReport(providerId, company, providerType)
   }
 
   /**
-   * Lookup helper used by all applicant-facing endpoints that take a
-   * `:providerId` path parameter. Resolves the report by `provider_id` and
-   * verifies the authenticated company owns the parent `company_report` row.
-   * Throws `NotFoundException` on miss or ownership mismatch — never leaks
-   * the existence of another company's report.
+   * Lookup helper used by applicant-facing edit endpoints. Resolves the report
+   * by the upstream `(provider_type, provider_id)` tuple and verifies the
+   * authenticated company owns the parent `company_report` row. Throws
+   * `NotFoundException` on miss or ownership mismatch — never leaks the
+   * existence of another company's report.
    */
-  private async findOwnedReportByProviderId(
+  private async findOwnedReportByProviderTuple(
     providerId: string,
     company: CompanyDto,
+    providerType: ReportProviderEnum,
   ): Promise<ReportModel> {
-    const report = await this.reportModel.findOne({ where: { providerId } })
+    const report = await this.reportModel.findOne({
+      where: { providerType, providerId },
+    })
 
     if (!report) {
       throw new NotFoundException(`Report "${providerId}" not found`)

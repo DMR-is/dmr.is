@@ -468,9 +468,58 @@ describe('ApplicationService', () => {
         NotFoundException,
       )
       expect(reportFindOne).toHaveBeenCalledWith({
-        where: { providerId: PROVIDER_ID },
+        where: {
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: PROVIDER_ID,
+        },
       })
       expect(companyReportFindAll).not.toHaveBeenCalled()
+    })
+
+    it('defaults applicant lookup to the ISLAND_IS provider channel', async () => {
+      reportFindOne.mockImplementationOnce(async ({ where }) =>
+        where.providerType === ReportProviderEnum.ISLAND_IS ? null : {},
+      )
+
+      await expect(service.getReport(PROVIDER_ID, COMPANY)).rejects.toThrow(
+        NotFoundException,
+      )
+      expect(reportFindOne).toHaveBeenCalledWith({
+        where: {
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: PROVIDER_ID,
+        },
+      })
+      expect(companyReportFindAll).not.toHaveBeenCalled()
+    })
+
+    it('honors an explicit providerType when resolving an applicant report', async () => {
+      const equalityReport = makeReportRow({
+        id: REPORT_ID,
+        providerType: ReportProviderEnum.OTHER,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.SUBMITTED,
+      })
+      reportFindOne.mockResolvedValueOnce(equalityReport)
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+      getCommentsByReportId.mockResolvedValueOnce([])
+
+      const result = await service.getReport(
+        PROVIDER_ID,
+        COMPANY,
+        ReportProviderEnum.OTHER,
+      )
+
+      expect(reportFindOne).toHaveBeenCalledWith({
+        where: {
+          providerType: ReportProviderEnum.OTHER,
+          providerId: PROVIDER_ID,
+        },
+      })
+      expect(result.id).toBe(REPORT_ID)
     })
 
     it("throws NotFoundException when the resolved company isn't the parent", async () => {
@@ -546,7 +595,10 @@ describe('ApplicationService', () => {
       const result = await service.getReport(PROVIDER_ID, COMPANY)
 
       expect(reportFindOne).toHaveBeenCalledWith({
-        where: { providerId: PROVIDER_ID },
+        where: {
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: PROVIDER_ID,
+        },
       })
       expect(companyReportFindAll).toHaveBeenCalledWith(
         expect.objectContaining({ where: { reportId: REPORT_ID } }),
@@ -707,7 +759,10 @@ describe('ApplicationService', () => {
         service.createReportComment(PROVIDER_ID, { body: 'hi' }, COMPANY),
       ).rejects.toThrow(NotFoundException)
       expect(reportFindOne).toHaveBeenCalledWith({
-        where: { providerId: PROVIDER_ID },
+        where: {
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: PROVIDER_ID,
+        },
       })
       expect(companyReportFindAll).not.toHaveBeenCalled()
       expect(createComment).not.toHaveBeenCalled()

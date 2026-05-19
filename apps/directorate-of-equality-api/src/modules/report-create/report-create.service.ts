@@ -522,6 +522,12 @@ export class ReportCreateService implements IReportCreateService {
       submittedOutliers.map((o) => o.employeeOrdinal),
     )
 
+    if (outliersPostponed && detectedOrdinals.size === 0) {
+      throw new BadRequestException(
+        'Cannot postpone outlier explanations because this salary report has no detected outliers.',
+      )
+    }
+
     const extras = [...submittedOrdinals].filter(
       (ordinal) => !detectedOrdinals.has(ordinal),
     )

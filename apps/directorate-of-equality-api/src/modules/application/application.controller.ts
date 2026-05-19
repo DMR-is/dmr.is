@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Header,
   HttpCode,
@@ -8,9 +9,11 @@ import {
   Inject,
   MaxFileSizeValidator,
   Param,
+  ParseEnumPipe,
   ParseFilePipe,
   Post,
   Put,
+  Query,
   StreamableFile,
   UploadedFile,
   UseGuards,
@@ -22,6 +25,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger'
 
@@ -33,6 +37,7 @@ import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
@@ -54,6 +59,15 @@ const DOCX_MIME =
 
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
+const DEFAULT_APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
+const PROVIDER_TYPE_QUERY = {
+  name: 'providerType',
+  enum: ReportProviderEnum,
+  enumName: 'ReportProviderEnum',
+  required: false,
+  description:
+    'Upstream provider channel. Defaults to `ISLAND_IS` for backwards compatibility with the island.is application portal.',
+}
 
 @Controller({
   path: 'application',
@@ -209,6 +223,7 @@ export class ApplicationController {
     description:
       "Upstream submission ID (e.g. the island.is application UUID). Identifies the report by the originator's own handle rather than the DoE-side `report.id`, which the applicant does not see. Resolved against reports whose parent company matches the authenticated company.",
   })
+  @ApiQuery(PROVIDER_TYPE_QUERY)
   @DoeResponse({
     operationId: 'getApplicationReport',
     include404: true,
@@ -219,8 +234,14 @@ export class ApplicationController {
   async getReport(
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
+    @Query(
+      'providerType',
+      new DefaultValuePipe(DEFAULT_APPLICATION_REPORT_PROVIDER),
+      new ParseEnumPipe(ReportProviderEnum),
+    )
+    providerType: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto> {
-    return this.applicationService.getReport(providerId, company)
+    return this.applicationService.getReport(providerId, company, providerType)
   }
 
   @Post('reports/:providerId/comments')
@@ -231,6 +252,7 @@ export class ApplicationController {
     description:
       'Upstream submission ID (e.g. the island.is application UUID).',
   })
+  @ApiQuery(PROVIDER_TYPE_QUERY)
   @DoeResponse({
     operationId: 'submitApplicationReportComment',
     status: 201,
@@ -243,11 +265,18 @@ export class ApplicationController {
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
     @Body() input: SubmitApplicationReportCommentDto,
+    @Query(
+      'providerType',
+      new DefaultValuePipe(DEFAULT_APPLICATION_REPORT_PROVIDER),
+      new ParseEnumPipe(ReportProviderEnum),
+    )
+    providerType: ReportProviderEnum,
   ): Promise<ApplicationReportCommentDto> {
     return this.applicationService.createReportComment(
       providerId,
       input,
       company,
+      providerType,
     )
   }
 
@@ -258,6 +287,7 @@ export class ApplicationController {
     description:
       'Upstream submission ID (e.g. the island.is application UUID).',
   })
+  @ApiQuery(PROVIDER_TYPE_QUERY)
   @DoeResponse({
     operationId: 'editApplicationEqualityContent',
     include404: true,
@@ -269,11 +299,18 @@ export class ApplicationController {
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
     @Body() input: EditEqualityContentDto,
+    @Query(
+      'providerType',
+      new DefaultValuePipe(DEFAULT_APPLICATION_REPORT_PROVIDER),
+      new ParseEnumPipe(ReportProviderEnum),
+    )
+    providerType: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.editEqualityContent(
       providerId,
       input,
       company,
+      providerType,
     )
   }
 
@@ -284,6 +321,7 @@ export class ApplicationController {
     description:
       'Upstream submission ID (e.g. the island.is application UUID).',
   })
+  @ApiQuery(PROVIDER_TYPE_QUERY)
   @DoeResponse({
     operationId: 'editApplicationOutliers',
     include404: true,
@@ -295,7 +333,18 @@ export class ApplicationController {
     @Param('providerId') providerId: string,
     @CurrentCompany() company: CompanyDto,
     @Body() input: EditOutliersDto,
+    @Query(
+      'providerType',
+      new DefaultValuePipe(DEFAULT_APPLICATION_REPORT_PROVIDER),
+      new ParseEnumPipe(ReportProviderEnum),
+    )
+    providerType: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto> {
-    return this.applicationService.editOutliers(providerId, input, company)
+    return this.applicationService.editOutliers(
+      providerId,
+      input,
+      company,
+      providerType,
+    )
   }
 }

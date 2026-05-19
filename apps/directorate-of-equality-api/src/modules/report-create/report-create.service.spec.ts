@@ -435,6 +435,31 @@ describe('ReportCreateService', () => {
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
+  it('rejects postponement when the salary report has no detected outliers', async () => {
+    const input = makeInput()
+    input.outliersPostponed = true
+    input.outliers = []
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      'Cannot postpone outlier explanations because this salary report has no detected outliers.',
+    )
+    expect(reportCreate).not.toHaveBeenCalled()
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('submits a zero-outlier salary report normally when postponement is not requested', async () => {
+    const input = makeInput()
+    input.outliersPostponed = false
+    input.outliers = []
+
+    await service.createSalary(input)
+
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+    )
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
   it('persists every outlier with NULL explanation columns when the report is postponed', async () => {
     const input = makeInputWithDetectedOutlier()
     input.outliersPostponed = true

@@ -1,5 +1,6 @@
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
@@ -30,21 +31,25 @@ export interface IApplicationService {
   getReport(
     providerId: string,
     company: CompanyDto,
+    providerType?: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto>
   createReportComment(
     providerId: string,
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
+    providerType?: ReportProviderEnum,
   ): Promise<ApplicationReportCommentDto>
   editEqualityContent(
     providerId: string,
     input: EditEqualityContentDto,
     company: CompanyDto,
+    providerType?: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto>
   editOutliers(
     providerId: string,
     input: EditOutliersDto,
     company: CompanyDto,
+    providerType?: ReportProviderEnum,
   ): Promise<ApplicationReportDetailDto>
   getEqualityTemplateHtml(): string
   getEqualityTemplateDocx(): Buffer
