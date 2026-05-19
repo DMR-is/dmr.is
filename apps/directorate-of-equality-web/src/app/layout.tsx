@@ -20,8 +20,8 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions)
 
   return (
-    <html lang="is">
-      <body>
+    <html lang="is" style={{ height: '100%' }}>
+      <body style={{ height: '100%' }}>
         <RootProviders session={session}>{children}</RootProviders>
       </body>
     </html>

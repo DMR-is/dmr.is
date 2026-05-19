@@ -217,6 +217,7 @@ export const CreateSalaryReportDrawer = () => {
                   if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
                 isLoading={companiesQuery.isLoading}
+                size="xs"
                 backgroundColor="blue"
               />
             </GridColumn>
@@ -284,6 +285,7 @@ export const CreateSalaryReportDrawer = () => {
                   label={overviewText.createSalaryReport.deferReasonLabel}
                   textarea
                   rows={3}
+                  size="xs"
                   value={postponeReason}
                   onChange={(e) => setPostponeReason(e.target.value)}
                 />
@@ -299,6 +301,7 @@ export const CreateSalaryReportDrawer = () => {
               <TextInput
                 name="companyAdminName"
                 label={sharedText.form.nameLabel}
+                size="xs"
                 value={form.companyAdminName}
                 onChange={(e) => set('companyAdminName')(e.target.value)}
                 disabled={!companyId}
@@ -309,6 +312,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="companyAdminEmail"
                 label={sharedText.form.emailLabel}
                 type="email"
+                size="xs"
                 value={form.companyAdminEmail}
                 onChange={(e) => set('companyAdminEmail')(e.target.value)}
                 disabled={!companyId}
@@ -323,6 +327,7 @@ export const CreateSalaryReportDrawer = () => {
                   (o) => o.value === form.companyAdminGender,
                 )}
                 onChange={(opt) => opt && set('companyAdminGender')(opt.value)}
+                size="xs"
                 backgroundColor="blue"
               />
             </GridColumn>
@@ -336,6 +341,7 @@ export const CreateSalaryReportDrawer = () => {
               <TextInput
                 name="contactName"
                 label={sharedText.form.nameLabel}
+                size="xs"
                 value={form.contactName}
                 onChange={(e) => set('contactName')(e.target.value)}
                 disabled={!companyId}
@@ -346,6 +352,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="contactEmail"
                 label={sharedText.form.emailLabel}
                 type="email"
+                size="xs"
                 value={form.contactEmail}
                 onChange={(e) => set('contactEmail')(e.target.value)}
                 disabled={!companyId}
@@ -356,6 +363,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="contactPhone"
                 label={sharedText.form.phoneLabel}
                 type="tel"
+                size="xs"
                 value={form.contactPhone}
                 onChange={(e) => set('contactPhone')(e.target.value)}
                 disabled={!companyId}
@@ -372,6 +380,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="averageEmployeeMaleCount"
                 label={overviewText.createSalaryReport.maleCountLabel}
                 type="number"
+                size="xs"
                 value={form.averageEmployeeMaleCount}
                 onChange={(e) =>
                   set('averageEmployeeMaleCount')(e.target.value)
@@ -384,6 +393,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="averageEmployeeFemaleCount"
                 label={overviewText.createSalaryReport.femaleCountLabel}
                 type="number"
+                size="xs"
                 value={form.averageEmployeeFemaleCount}
                 onChange={(e) =>
                   set('averageEmployeeFemaleCount')(e.target.value)
@@ -396,6 +406,7 @@ export const CreateSalaryReportDrawer = () => {
                 name="averageEmployeeNeutralCount"
                 label={overviewText.createSalaryReport.neutralCountLabel}
                 type="number"
+                size="xs"
                 value={form.averageEmployeeNeutralCount}
                 onChange={(e) =>
                   set('averageEmployeeNeutralCount')(e.target.value)
@@ -406,10 +417,11 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Inline justifyContent="flexEnd" space={2}>
-                <Button variant="ghost" onClick={handleReset}>
+                <Button variant="ghost" size="small" onClick={handleReset}>
                   {overviewText.createSalaryReport.reset}
                 </Button>
                 <Button
+                  size="small"
                   disabled={!canSubmit}
                   loading={submitMutation.isPending}
                   onClick={handleSubmit}

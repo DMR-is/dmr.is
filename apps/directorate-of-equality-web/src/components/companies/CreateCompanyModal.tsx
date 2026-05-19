@@ -91,17 +91,34 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
             {companiesText.createModal.kennitalaEyebrow}
           </Text>
           <Inline space={2} alignY="center">
-            <Box flexGrow={1}>
+            <Box
+              flexGrow={1}
+              display="flex"
+              justifyContent="flexEnd"
+              alignItems="flexEnd"
+              columnGap={2}
+            >
               <TextInput
                 name="nationalId"
                 label={companiesText.createModal.kennitalaLabel}
                 placeholder={companiesText.createModal.kennitalaPlaceholder}
+                size="xs"
+                placeholder="000000-0000"
                 value={nationalIdInput}
                 onChange={(e) => {
                   setNationalIdInput(e.target.value)
                   if (lookupNationalId) setLookupNationalId(null)
                 }}
               />
+              <Button
+                variant="ghost"
+                size="small"
+                loading={lookupQuery.isFetching}
+                disabled={!nationalIdInput.trim()}
+                onClick={handleLookup}
+              >
+                Fletta upp
+              </Button>
             </Box>
             <Button
               variant="ghost"
@@ -123,6 +140,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
         <TextInput
           name="name"
           label={companiesText.createModal.nameLabel}
+          size="xs"
           value={lookupQuery.data?.name ?? ''}
           readOnly
           isLoading={lookupQuery.isFetching}
@@ -133,16 +151,18 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
           name="employeeCount"
           label={companiesText.createModal.employeeCountLabel}
           type="number"
+          size="xs"
           value={employeeCount}
           onChange={(e) => setEmployeeCount(e.target.value)}
           disabled={!lookedUp}
         />
 
         <Inline justifyContent="flexEnd" space={2}>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" size="small" onClick={handleClose}>
             {companiesText.createModal.cancel}
           </Button>
           <Button
+            size="small"
             disabled={!canCreate}
             loading={createMutation.isPending}
             onClick={handleCreate}

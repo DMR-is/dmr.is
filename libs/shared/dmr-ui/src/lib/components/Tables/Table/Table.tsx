@@ -34,6 +34,8 @@ export type TableProps<TData extends object> = {
   getRowExpanded?: (row: TData) => React.ReactNode
   /** When provided, clicking a row navigates SPA-style to this href. */
   getRowHref?: (row: TData) => string
+  /** When provided, clicking a row calls this handler with the row data. */
+  onRowClick?: (row: TData) => void
   paging?: DataTablePagingProps
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
@@ -41,6 +43,10 @@ export type TableProps<TData extends object> = {
   loading?: boolean
   noDataMessage?: string
   layout?: 'fixed' | 'auto'
+  /** Controlled sorting state. When provided, the table operates in server-side sort mode. */
+  sorting?: SortingState
+  /** Called when the user clicks a sortable column header. */
+  onSortingChange?: (sorting: SortingState) => void
 }
 
 export const Table = <TData extends object>({
@@ -48,6 +54,7 @@ export const Table = <TData extends object>({
   data,
   getRowExpanded,
   getRowHref,
+  onRowClick,
   paging,
   onPageChange,
   onPageSizeChange,
@@ -55,9 +62,18 @@ export const Table = <TData extends object>({
   loading = false,
   noDataMessage = 'Engar niðurstöður fundust',
   layout = 'fixed',
+  sorting: controlledSorting,
+  onSortingChange,
 }: TableProps<TData>) => {
   const router = useRouter()
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
+  const isControlled = controlledSorting !== undefined && onSortingChange !== undefined
+  const sorting = isControlled ? controlledSorting : internalSorting
+  const setSorting = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    const next = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+    if (onSortingChange) onSortingChange(next)
+    else setInternalSorting(next)
+  }
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [collapsingRows, setCollapsingRows] = useState<Set<string>>(new Set())
 
@@ -85,8 +101,9 @@ export const Table = <TData extends object>({
     state: { sorting, expanded },
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
+    manualSorting: isControlled,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    ...(isControlled ? {} : { getSortedRowModel: getSortedRowModel() }),
     getExpandedRowModel: getExpandedRowModel(),
     getRowCanExpand: () => !!getRowExpanded,
   })
@@ -206,12 +223,16 @@ export const Table = <TData extends object>({
                     onClick={
                       !getRowExpanded && href
                         ? () => router.push(href)
-                        : getRowExpanded && !href
-                          ? () => row.toggleExpanded()
-                          : undefined
+                        : !getRowExpanded && onRowClick
+                          ? () => onRowClick(row.original)
+                          : getRowExpanded && !href
+                            ? () => row.toggleExpanded()
+                            : undefined
                     }
                     style={
-                      !getRowExpanded && href ? { cursor: 'pointer' } : undefined
+                      (!getRowExpanded && href) || (!getRowExpanded && onRowClick)
+                        ? { cursor: 'pointer' }
+                        : undefined
                     }
                   >
                     {row.getVisibleCells().map((cell, i) =>
@@ -330,7 +351,7 @@ export const Table = <TData extends object>({
           )}
         </T.Body>
       </T.Table>
-      {paging && (
+      {paging && paging.totalPages > 1 && (
         <DataTablePagination
           paging={paging}
           onPageChange={onPageChange}

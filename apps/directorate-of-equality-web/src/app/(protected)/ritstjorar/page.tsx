@@ -4,17 +4,17 @@ import { Hero } from '@dmr.is/ui/components/Hero/Hero'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
-import { CompaniesContainer } from '../../../containers/companies/CompaniesContainer'
+import { UsersContainer } from '../../../containers/users/UsersContainer'
 
-export default async function FyrirtaekiPage() {
+export default function RitstjorarPage() {
   return (
     <Box height="full">
       <Hero
-        title="Fyrirtæki"
-        description="Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála."
-        image={{ src: '/assets/banner-image.svg', alt: 'Fyrirtæki' }}
+        title="Ritstjórar"
+        description="Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan."
+        image={{ src: '/assets/banner-image.svg', alt: 'Ritstjórar' }}
         breadcrumbs={{
-          items: [{ title: 'Forsíða', href: '/' }, { title: 'Fyrirtæki' }],
+          items: [{ title: 'Forsíða', href: '/' }, { title: 'Ritstjórar' }],
         }}
         variant="default"
         reverse
@@ -23,7 +23,7 @@ export default async function FyrirtaekiPage() {
       />
       <Box background="blue100" paddingY={5} height="full">
         <Suspense fallback={<SearchDashboardLoading />}>
-          <CompaniesContainer />
+          <UsersContainer />
         </Suspense>
       </Box>
     </Box>
