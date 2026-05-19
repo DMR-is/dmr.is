@@ -1,24 +1,31 @@
 import { Suspense } from 'react'
 
-import { getQueryClient } from '@dmr.is/trpc/client/server'
-import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
+import { Hero } from '@dmr.is/ui/components/Hero/Hero'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
-import { CompaniesPage } from '../../../components/companies/CompaniesPage'
-import { trpc } from '../../../lib/trpc/client/server'
-
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+import { CompaniesContainer } from '../../../containers/companies/CompaniesContainer'
 
 export default async function FyrirtaekiPage() {
-  const queryClient = getQueryClient()
-  await queryClient.prefetchQuery(
-    trpc.company.list.queryOptions({ pageSize: 1000 }),
-  )
-
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<SkeletonLoader repeat={5} height={44} space={1} />}>
-        <CompaniesPage />
-      </Suspense>
-    </HydrationBoundary>
+    <Box height="full">
+      <Hero
+        title="Fyrirtæki"
+        description="Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála."
+        image={{ src: '/assets/banner-image.svg', alt: 'Fyrirtæki' }}
+        breadcrumbs={{
+          items: [{ title: 'Forsíða', href: '/' }, { title: 'Fyrirtæki' }],
+        }}
+        variant="default"
+        reverse
+        imageSpan={'3/12'}
+        withOffset={false}
+      />
+      <Box background="blue100" paddingY={5} height="full">
+        <Suspense fallback={<SearchDashboardLoading />}>
+          <CompaniesContainer />
+        </Suspense>
+      </Box>
+    </Box>
   )
 }

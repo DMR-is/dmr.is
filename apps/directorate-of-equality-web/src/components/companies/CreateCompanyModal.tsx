@@ -86,12 +86,18 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     >
       <Stack space={3}>
         <Stack space={1}>
-          <Text variant="eyebrow">Kennitala fyrirtækis</Text>
           <Inline space={2} alignY="center">
-            <Box flexGrow={1}>
+            <Box
+              flexGrow={1}
+              display="flex"
+              justifyContent="flexEnd"
+              alignItems="flexEnd"
+              columnGap={2}
+            >
               <TextInput
                 name="nationalId"
                 label="Kennitala"
+                size="xs"
                 placeholder="000000-0000"
                 value={nationalIdInput}
                 onChange={(e) => {
@@ -99,16 +105,16 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
                   if (lookupNationalId) setLookupNationalId(null)
                 }}
               />
+              <Button
+                variant="ghost"
+                size="small"
+                loading={lookupQuery.isFetching}
+                disabled={!nationalIdInput.trim()}
+                onClick={handleLookup}
+              >
+                Fletta upp
+              </Button>
             </Box>
-            <Button
-              variant="ghost"
-              size="small"
-              loading={lookupQuery.isFetching}
-              disabled={!nationalIdInput.trim()}
-              onClick={handleLookup}
-            >
-              Fletta upp
-            </Button>
           </Inline>
           {lookupQuery.isError && (
             <Text color="red600" variant="small">
@@ -120,6 +126,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
         <TextInput
           name="name"
           label="Nafn fyrirtækis"
+          size="xs"
           value={lookupQuery.data?.name ?? ''}
           readOnly
           isLoading={lookupQuery.isFetching}
@@ -130,16 +137,18 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
           name="employeeCount"
           label="Meðalfjöldi starfsmanna"
           type="number"
+          size="xs"
           value={employeeCount}
           onChange={(e) => setEmployeeCount(e.target.value)}
           disabled={!lookedUp}
         />
 
         <Inline justifyContent="flexEnd" space={2}>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" size="small" onClick={handleClose}>
             Hætta við
           </Button>
           <Button
+            size="small"
             disabled={!canCreate}
             loading={createMutation.isPending}
             onClick={handleCreate}

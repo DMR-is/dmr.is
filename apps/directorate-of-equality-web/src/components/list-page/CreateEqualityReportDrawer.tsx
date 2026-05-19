@@ -126,6 +126,7 @@ export const CreateEqualityReportDrawer = () => {
                 }
                 onChange={(opt) => setCompanyId(opt?.value ?? null)}
                 isLoading={companiesQuery.isLoading}
+                size="xs"
                 backgroundColor="blue"
               />
             </GridColumn>
@@ -139,6 +140,7 @@ export const CreateEqualityReportDrawer = () => {
               <TextInput
                 name="companyAdminName"
                 label="Nafn"
+                size="xs"
                 value={form.companyAdminName}
                 onChange={(e) => set('companyAdminName')(e.target.value)}
                 disabled={!companyId}
@@ -149,6 +151,7 @@ export const CreateEqualityReportDrawer = () => {
                 name="companyAdminEmail"
                 label="Netfang"
                 type="email"
+                size="xs"
                 value={form.companyAdminEmail}
                 onChange={(e) => set('companyAdminEmail')(e.target.value)}
                 disabled={!companyId}
@@ -163,6 +166,7 @@ export const CreateEqualityReportDrawer = () => {
                   (o) => o.value === form.companyAdminGender,
                 )}
                 onChange={(opt) => opt && set('companyAdminGender')(opt.value)}
+                size="xs"
                 backgroundColor="blue"
               />
             </GridColumn>
@@ -176,6 +180,7 @@ export const CreateEqualityReportDrawer = () => {
               <TextInput
                 name="contactName"
                 label="Nafn"
+                size="xs"
                 value={form.contactName}
                 onChange={(e) => set('contactName')(e.target.value)}
                 disabled={!companyId}
@@ -186,6 +191,7 @@ export const CreateEqualityReportDrawer = () => {
                 name="contactEmail"
                 label="Netfang"
                 type="email"
+                size="xs"
                 value={form.contactEmail}
                 onChange={(e) => set('contactEmail')(e.target.value)}
                 disabled={!companyId}
@@ -196,6 +202,7 @@ export const CreateEqualityReportDrawer = () => {
                 name="contactPhone"
                 label="Símanúmer"
                 type="tel"
+                size="xs"
                 value={form.contactPhone}
                 onChange={(e) => set('contactPhone')(e.target.value)}
                 disabled={!companyId}
@@ -230,10 +237,11 @@ export const CreateEqualityReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Inline justifyContent="flexEnd" space={2}>
-                <Button variant="ghost" onClick={handleReset}>
+                <Button variant="ghost" size="small" onClick={handleReset}>
                   Hreinsa
                 </Button>
                 <Button
+                  size="small"
                   disabled={!canSubmit}
                   loading={submitMutation.isPending}
                   onClick={handleSubmit}

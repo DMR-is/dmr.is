@@ -15,18 +15,26 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
+import { CreateEqualityReportDrawer } from '../../components/list-page/CreateEqualityReportDrawer'
+import { CreateSalaryReportDrawer } from '../../components/list-page/CreateSalaryReportDrawer'
+import {
+  type FilterOption,
+  ReportFilter,
+} from '../../components/list-page/filter/ReportFilter'
+import { TabContent } from '../../components/list-page/tabs/TabContent'
 import {
   type ReportListItemDto,
   ReportStatusEnum,
-} from '../../../gen/fetch/types.gen'
-import { useReports } from '../../../hooks/useReports'
-import { type Case, COLUMN_REVIEWER, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
-import { useTRPC } from '../../../lib/trpc/client/trpc'
-import { formatNationalId } from '../../../lib/utils'
-import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
-import { CreateSalaryReportDrawer } from '../CreateSalaryReportDrawer'
-import { type FilterOption, ReportFilter } from '../filter/ReportFilter'
-import { TabContent } from './TabContent'
+} from '../../gen/fetch/types.gen'
+import { useReports } from '../../hooks/useReports'
+import {
+  type Case,
+  COLUMN_REVIEWER,
+  COLUMN_STATUS,
+  COLUMNS,
+} from '../../lib/constants'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+import { formatNationalId } from '../../lib/utils'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -64,7 +72,6 @@ const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   // tab 3 shows ONLY the three processed statuses — exclude everything else
   afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW'],
 }
-
 
 const STATUS_VARIANT: Record<string, TagVariant> = {
   Samþykkt: 'mint',
@@ -154,7 +161,7 @@ const statusColumn: ColumnDef<Case> = {
   },
 }
 
-export const TabsContainer = () => {
+export const ReportsContainer = () => {
   const trpc = useTRPC()
   const [activeTab, setActiveTab] = useState<TabId>('innsendingar')
 
@@ -190,12 +197,7 @@ export const TabsContainer = () => {
     activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
   const trailingColumns: ColumnDef<Case>[] =
     activeTab !== 'innsendingar' ? [statusColumn] : []
-  const allColumns = [
-    ...leadingColumns,
-    ...COLUMNS,
-    ...middleColumns,
-    ...trailingColumns,
-  ]
+  const allColumns = [...leadingColumns, ...COLUMNS, ...middleColumns, ...trailingColumns]
 
   return (
     <GridContainer>
