@@ -5,6 +5,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS } from '../../lib/constants'
+import { reportText } from '../../lib/text'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
 type ReportFormContainerProps = {
@@ -14,11 +15,8 @@ type ReportFormContainerProps = {
 export function ReportFormContainer({ report }: ReportFormContainerProps) {
   const title = (
     <>
-      <Text variant="h2">Vinnslusvæði</Text>
-      <Text marginBottom={4}>
-        Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate
-        libero et velit interdum, ac aliquet odio mattis.
-      </Text>
+      <Text variant="h2">{reportText.heroTitle}</Text>
+      <Text marginBottom={4}>{reportText.heroDescription}</Text>
     </>
   )
 
@@ -32,9 +30,9 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
       <Stack space={[2]}>
         <Breadcrumbs
           items={[
-            { title: 'Forsíða', href: '/' },
-            { title: 'Yfirlit', href: '/mal' },
-            { title: 'Vinnslusvæði', href: `/mal/${report.id}` },
+            { title: reportText.breadcrumbHome, href: '/' },
+            { title: reportText.breadcrumbOverview, href: '/mal' },
+            { title: reportText.heroTitle, href: `/mal/${report.id}` },
           ]}
         />
         {title}

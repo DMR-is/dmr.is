@@ -6,6 +6,7 @@ import { Section } from '@dmr.is/ui/components/island-is/Section'
 
 import { ReportStatusEnum } from '../../../gen/fetch'
 import { ReportStatusTranslatedEnum } from '../../../lib/constants'
+import { reportText } from '../../../lib/text'
 
 type Props = {
   status: ReportStatusEnum
@@ -20,7 +21,7 @@ export const ReportFormStepper = ({ status }: Props) => {
   const decisionLabel =
     status === ReportStatusEnum.DENIED
       ? ReportStatusTranslatedEnum.DENIED
-      : 'Afgreitt'
+      : reportText.stepApproved
 
   const steps: Step[] = [
     {

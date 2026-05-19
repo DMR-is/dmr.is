@@ -14,8 +14,9 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { loginText } from '../../lib/text'
+
 const SIGNIN_ERROR_COOKIE = 'doe.signin_error'
-const SIGNIN_ERROR_MESSAGE = 'Ekki tókst að skrá þig inn. Reyndu aftur síðar.'
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -54,15 +55,13 @@ function LoginContent() {
             justifyContent="center"
           >
             <Stack space={2}>
-              <Text variant="h2">Innskráning</Text>
-              <Text variant="intro">
-                Skráðu þig inn í kerfi Jafnréttisstofu með rafrænum skilríkjum.
-              </Text>
+              <Text variant="h2">{loginText.heading}</Text>
+              <Text variant="intro">{loginText.description}</Text>
               {showError && (
                 <AlertMessage
                   type="error"
-                  title="Innskráning mistókst"
-                  message={SIGNIN_ERROR_MESSAGE}
+                  title={loginText.errorTitle}
+                  message={loginText.errorMessage}
                 />
               )}
               <Box marginTop={[2, 2, 3]}>
@@ -80,7 +79,7 @@ function LoginContent() {
                   iconType="outline"
                   loading={loading}
                 >
-                  Skrá inn með rafrænum skilríkjum
+                  {loginText.submitButton}
                 </Button>
               </Box>
             </Stack>

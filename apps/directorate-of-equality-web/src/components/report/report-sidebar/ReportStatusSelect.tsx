@@ -7,6 +7,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../../gen/fetch'
 import { ReportStatusTranslatedEnum } from '../../../lib/constants'
+import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { ReportDenialModal } from './ReportDenialModal'
 
@@ -42,10 +43,10 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const onSuccess = () => () => toast.success('Uppfærsla á stöðu tókst.')
+  const onSuccess = () => () =>
+    toast.success(reportText.statusSelect.successToast)
 
-  const onError = () => () =>
-    toast.error('Villa við að uppfæra stöðu. Vinsamlegast reyndu aftur síðar.')
+  const onError = () => () => toast.error(reportText.statusSelect.errorToast)
 
   const invalidate = () => {
     queryClient.invalidateQueries({

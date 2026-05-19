@@ -4,6 +4,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { ReportTimelineItemDto, UserDto } from '../../../gen/fetch'
+import { reportText } from '../../../lib/text'
 import { CommentInputForm } from './CommentInputForm'
 import { TimelineFeed } from './TimelineFeed'
 
@@ -39,7 +40,7 @@ export const CommentsForm = ({
   return (
     <>
       <Text variant="h4" marginBottom={4}>
-        Athugasemdir
+        {reportText.comments.heading}
       </Text>
       <Box
         display="flex"

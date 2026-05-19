@@ -20,7 +20,13 @@ import {
   ReportStatusEnum,
 } from '../../../gen/fetch/types.gen'
 import { useReports } from '../../../hooks/useReports'
-import { type Case, COLUMN_REVIEWER, COLUMN_STATUS, COLUMNS } from '../../../lib/constants'
+import {
+  type Case,
+  COLUMN_REVIEWER,
+  COLUMN_STATUS,
+  COLUMNS,
+} from '../../../lib/constants'
+import { overviewText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../../lib/utils'
 import { CreateEqualityReportDrawer } from '../CreateEqualityReportDrawer'
@@ -64,7 +70,6 @@ const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   // tab 3 shows ONLY the three processed statuses — exclude everything else
   afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW'],
 }
-
 
 const STATUS_VARIANT: Record<string, TagVariant> = {
   Samþykkt: 'mint',
@@ -123,7 +128,7 @@ const commentsColumn: ColumnDef<Case> = {
   size: 56,
   enableSorting: false,
   cell: ({ row }) => {
-    const comment = MOCK_COMMENTS[row.original.id] ?? 'Engar athugasemdir'
+    const comment = MOCK_COMMENTS[row.original.id] ?? overviewText.noComments
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip
@@ -233,7 +238,7 @@ export const TabsContainer = () => {
           <Stack space={2}>
             <Inline space={1} alignY="center">
               <Text fontWeight="semiBold">{data?.paging.totalItems ?? 0}</Text>
-              <Text>færslur fundust</Text>
+              <Text>{overviewText.resultsText}</Text>
             </Inline>
             <Tabs
               label="Mál"
@@ -244,7 +249,7 @@ export const TabsContainer = () => {
               tabs={[
                 {
                   id: 'innsendingar',
-                  label: `Innsendingar (${data?.statusCounts.submitted ?? 0})`,
+                  label: `${overviewText.tabInnsendingar} (${data?.statusCounts.submitted ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}
@@ -258,7 +263,7 @@ export const TabsContainer = () => {
                 },
                 {
                   id: 'i-vinnslu',
-                  label: `Í vinnslu (${data?.statusCounts.inReview ?? 0})`,
+                  label: `${overviewText.tabInProgress} (${data?.statusCounts.inReview ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}
@@ -271,7 +276,7 @@ export const TabsContainer = () => {
                 },
                 {
                   id: 'afgreitt',
-                  label: `Afgreitt (${data?.statusCounts.processed ?? 0})`,
+                  label: `${overviewText.tabAfgreitt} (${data?.statusCounts.processed ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}

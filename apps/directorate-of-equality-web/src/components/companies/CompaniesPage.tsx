@@ -14,6 +14,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
+import { companiesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 import { CreateCompanyModal } from './CreateCompanyModal'
@@ -28,11 +29,19 @@ type CompanyRow = {
 }
 
 const COLUMNS: ColumnDef<CompanyRow>[] = [
-  { accessorKey: 'name', header: 'Nafn', enableSorting: true },
-  { accessorKey: 'nationalId', header: 'Kennitala', enableSorting: false },
+  {
+    accessorKey: 'name',
+    header: companiesText.columns.name,
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'nationalId',
+    header: companiesText.columns.kennitala,
+    enableSorting: false,
+  },
   {
     accessorKey: 'employees',
-    header: 'Meðalfjöldi starfsmanna',
+    header: companiesText.columns.avgEmployees,
     enableSorting: true,
   },
 ]
@@ -112,34 +121,34 @@ export const CompaniesPage = () => {
               alignItems="center"
               marginBottom={3}
             >
-              <Text variant="h2">Fyrirtæki</Text>
+              <Text variant="h2">{companiesText.heading}</Text>
               <Button
                 icon="add"
                 iconType="outline"
                 onClick={() => setIsModalOpen(true)}
               >
-                Nýtt fyrirtæki
+                {companiesText.newButton}
               </Button>
             </Box>
           </GridColumn>
 
           <GridColumn span={['12/12', '3/12']}>
             <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-              Leit og síun
+              {companiesText.filterHeading}
             </Text>
             <Filter
-              labelClearAll="Hreinsa allar síur"
-              labelOpen="Opna síur"
-              labelClose="Loka síum"
-              labelClear="Hreinsa"
-              labelTitle="Síur"
-              labelResult="Sýna niðurstöður"
+              labelClearAll={companiesText.filter.labelClearAll}
+              labelOpen={companiesText.filter.labelOpen}
+              labelClose={companiesText.filter.labelClose}
+              labelClear={companiesText.filter.labelClear}
+              labelTitle={companiesText.filter.labelTitle}
+              labelResult={companiesText.filter.labelResult}
               onFilterClear={handleReset}
               variant="default"
               filterInput={
                 <FilterInput
                   name="query"
-                  placeholder="Leita að fyrirtæki..."
+                  placeholder={companiesText.filterPlaceholder}
                   value={query}
                   onChange={(val) => {
                     setQuery(val)
@@ -150,7 +159,7 @@ export const CompaniesPage = () => {
               }
             >
               <FilterMultiChoice
-                labelClear="Hreinsa"
+                labelClear={companiesText.filter.labelClear}
                 onChange={({ categoryId, selected }) => {
                   if (categoryId === 'employees') {
                     setEmployeeRanges(selected)
@@ -166,7 +175,7 @@ export const CompaniesPage = () => {
                 categories={[
                   {
                     id: 'employees',
-                    label: 'Starfsmenn',
+                    label: companiesText.employeeRangesLabel,
                     selected: employeeRanges,
                     filters: EMPLOYEE_RANGES,
                   },
@@ -179,7 +188,7 @@ export const CompaniesPage = () => {
             <Stack space={3}>
               <Box display="flex" alignItems="center" columnGap={1}>
                 <Text fontWeight="semiBold">{rows.length}</Text>
-                <Text>fyrirtæki fundust</Text>
+                <Text>{companiesText.resultsText}</Text>
               </Box>
               <Table
                 columns={COLUMNS}
@@ -192,7 +201,7 @@ export const CompaniesPage = () => {
                 }}
                 onPageChange={setPage}
                 showPageSizeSelect={false}
-                noDataMessage="Engin fyrirtæki skráð"
+                noDataMessage={companiesText.noData}
               />
             </Stack>
           </GridColumn>

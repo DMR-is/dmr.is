@@ -13,6 +13,7 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { overviewText } from '../../../lib/text'
 import * as styles from './ReportFilter.css'
 
 export type FilterOption = { value: string; label: string }
@@ -58,7 +59,7 @@ export const ReportFilter = ({
       ? [
           {
             id: 'status',
-            label: 'Staða',
+            label: overviewText.filter.statusLabel,
             selected: status ?? [],
             filters: statusOptions,
           },
@@ -68,7 +69,7 @@ export const ReportFilter = ({
       ? [
           {
             id: 'reviewer',
-            label: 'Umsjónarmaður',
+            label: overviewText.filter.reviewerLabel,
             selected: reviewerUserId ?? [],
             filters: reviewers,
           },
@@ -79,21 +80,21 @@ export const ReportFilter = ({
   return (
     <Box>
       <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-        Leit og síun
+        {overviewText.filter.heading}
       </Text>
       <Filter
-        labelClearAll="Hreinsa allar síur"
-        labelOpen="Opna síur"
-        labelClose="Loka síum"
-        labelClear="Hreinsa"
-        labelTitle="Síur"
-        labelResult="Sýna niðurstöður"
+        labelClearAll={overviewText.filter.labelClearAll}
+        labelOpen={overviewText.filter.labelOpen}
+        labelClose={overviewText.filter.labelClose}
+        labelClear={overviewText.filter.labelClear}
+        labelTitle={overviewText.filter.labelTitle}
+        labelResult={overviewText.filter.labelResult}
         onFilterClear={handleReset}
         variant="default"
         filterInput={
           <FilterInput
             name="query"
-            placeholder="Leita að máli..."
+            placeholder={overviewText.filter.placeholder}
             value={q ?? ''}
             onChange={(value) => onQChange(value || null)}
             backgroundColor="white"
@@ -101,7 +102,7 @@ export const ReportFilter = ({
         }
       >
         <FilterMultiChoice
-          labelClear="Hreinsa"
+          labelClear={overviewText.filter.labelClear}
           onChange={({ categoryId, selected }) => {
             if (categoryId === 'type')
               onTypeChange(selected.length ? selected : null)
@@ -118,7 +119,7 @@ export const ReportFilter = ({
           categories={[
             {
               id: 'type',
-              label: 'Flokkur',
+              label: overviewText.filter.categoryLabel,
               selected: type ?? [],
               filters: [
                 { value: 'EQUALITY', label: 'Jafnréttisáætlun' },
@@ -138,14 +139,14 @@ export const ReportFilter = ({
             >
               <AccordionItem
                 id="date-accordion-item"
-                label="Tímabil"
+                label={overviewText.filter.dateRangeLabel}
                 labelVariant="h5"
                 iconVariant="small"
               >
                 <Stack space={2}>
                   <DatePicker
-                    label="Frá"
-                    placeholderText="Frá"
+                    label={overviewText.filter.dateFrom}
+                    placeholderText={overviewText.filter.dateFrom}
                     size="xs"
                     selected={dateFrom}
                     maxDate={dateTo}
@@ -154,8 +155,8 @@ export const ReportFilter = ({
                     appearInline
                   />
                   <DatePicker
-                    label="Til"
-                    placeholderText="Til"
+                    label={overviewText.filter.dateTo}
+                    placeholderText={overviewText.filter.dateTo}
                     size="xs"
                     selected={dateTo}
                     minDate={dateFrom}
@@ -172,7 +173,7 @@ export const ReportFilter = ({
                           setDateTo(undefined)
                         }}
                       >
-                        Hreinsa dagsetningar
+                        {overviewText.filter.clearDates}
                       </Button>
                     </Box>
                   )}

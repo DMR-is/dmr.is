@@ -5,16 +5,20 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { TabsContainer } from '../../../components/list-page/tabs/TabsContainer'
+import { overviewText } from '../../../lib/text'
 
 export default function MalPage() {
   return (
     <>
       <Hero
-        title="Yfirlit"
-        description="Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis."
-        image={{ src: '/assets/banner-image.svg', alt: 'Heildarlisti' }}
+        title={overviewText.heroTitle}
+        description={overviewText.heroDescription}
+        image={{ src: '/assets/banner-image.svg', alt: overviewText.imageAlt }}
         breadcrumbs={{
-          items: [{ title: 'Forsíða', href: '/' }, { title: 'Heildarlisti' }],
+          items: [
+            { title: overviewText.breadcrumbHome, href: '/' },
+            { title: overviewText.breadcrumbOverview },
+          ],
         }}
         variant="default"
         reverse
