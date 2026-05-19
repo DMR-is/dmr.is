@@ -106,7 +106,7 @@ export const CreateEqualityReportDrawer = () => {
       ariaLabel={overviewText.createEqualityReport.drawerLabel}
       baseId="create-equality-report-drawer"
       disclosure={
-        <UtilityButton icon="add">
+        <UtilityButton icon="add" fluid>
           {overviewText.createEqualityReport.buttonLabel}
         </UtilityButton>
       }

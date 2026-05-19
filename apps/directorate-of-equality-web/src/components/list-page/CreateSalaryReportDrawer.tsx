@@ -188,7 +188,7 @@ export const CreateSalaryReportDrawer = () => {
       ariaLabel={overviewText.createSalaryReport.drawerLabel}
       baseId="create-salary-report-drawer"
       disclosure={
-        <UtilityButton icon="add">
+        <UtilityButton icon="add" fluid>
           {overviewText.createSalaryReport.buttonLabel}
         </UtilityButton>
       }
