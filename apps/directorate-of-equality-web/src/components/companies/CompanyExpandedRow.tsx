@@ -31,8 +31,7 @@ const FieldGrid = ({ fields }: { fields: FieldRow[] }) => (
       <Box
         key={label}
         background={Math.floor(index / 2) % 2 === 0 ? 'white' : 'blue100'}
-        paddingX={1}
-        paddingY={1}
+        padding={1}
         className={styles.item}
       >
         <Box display="flex">
@@ -48,29 +47,25 @@ const FieldGrid = ({ fields }: { fields: FieldRow[] }) => (
   </div>
 )
 
+const STATUS_MAP: Record<
+  string,
+  { label: string; variant: 'mint' | 'red' | 'blue' | 'purple' | 'dark' }
+> = {
+  APPROVED: { label: 'Samþykkt', variant: 'mint' },
+  DENIED: { label: 'Hafnað', variant: 'red' },
+  IN_REVIEW: { label: 'Í vinnslu', variant: 'blue' },
+  SUBMITTED: { label: 'Innsent', variant: 'purple' },
+  SUPERSEDED: { label: 'Úrelt', variant: 'dark' },
+}
+
 const ReportStatusTag = ({ status }: { status: string }) => {
-  const variants: Record<string, 'mint' | 'red' | 'blue' | 'purple' | 'dark'> =
-    {
-      APPROVED: 'mint',
-      DENIED: 'red',
-      IN_REVIEW: 'blue',
-      SUBMITTED: 'purple',
-      SUPERSEDED: 'dark',
-    }
-  const labels: Record<string, string> = {
-    APPROVED: 'Samþykkt',
-    DENIED: 'Hafnað',
-    IN_REVIEW: 'Í vinnslu',
-    SUBMITTED: 'Innsent',
-    SUPERSEDED: 'Úrelt',
-  }
+  const { label = status, variant = 'blue' } = STATUS_MAP[status] ?? {}
   return (
-    <Tag variant={variants[status] ?? 'blue'} outlined disabled>
-      {labels[status] ?? status}
+    <Tag variant={variant} outlined disabled>
+      {label}
     </Tag>
   )
 }
-
 
 export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
   const equalityReports = approvedReports.filter((r) => r.type === 'EQUALITY')

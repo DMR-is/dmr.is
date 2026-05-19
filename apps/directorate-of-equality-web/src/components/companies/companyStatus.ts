@@ -34,12 +34,7 @@ export const EMPLOYEE_RANGES = [
 ]
 
 export const STATUS_FILTER_OPTIONS = (
-  [
-    'missing-equality',
-    'has-equality',
-    'missing-salary',
-    'compliant',
-  ] as const
+  ['missing-equality', 'has-equality', 'missing-salary', 'compliant'] as const
 ).map((value) => ({ value, label: STATUS_LABEL[value] }))
 
 export const EXPIRES_FILTER_OPTIONS = [
@@ -48,7 +43,7 @@ export const EXPIRES_FILTER_OPTIONS = [
   { value: 'soon', label: 'Rennur út innan 6 mánaða' },
 ]
 
-export const DAGSEKTIR_FILTER_OPTIONS = [
+export const DAILY_FINES_FILTER_OPTIONS = [
   { value: 'active', label: 'Dagsektir í gangi' },
 ]
 
@@ -85,7 +80,11 @@ function getActiveReportTypes(
   const needsSalary =
     company.salaryReportRequired || company.salaryReportRequiredOverride
 
-  return { hasEquality: hasActive('EQUALITY'), hasSalary: hasActive('SALARY'), needsSalary }
+  return {
+    hasEquality: hasActive('EQUALITY'),
+    hasSalary: hasActive('SALARY'),
+    needsSalary,
+  }
 }
 
 export function deriveStatus(

@@ -8,8 +8,15 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
-import { CompanyFilter } from '../../components/companies/CompanyFilter'
-import { inRange, matchesStatusFilter, normalizeId } from '../../components/companies/companyStatus'
+import {
+  CompanyFilter,
+  type CompanyFilters,
+} from '../../components/companies/CompanyFilter'
+import {
+  inRange,
+  matchesStatusFilter,
+  normalizeId,
+} from '../../components/companies/companyStatus'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
 import { ReportStatusEnum } from '../../gen/fetch'
@@ -18,10 +25,12 @@ import { useReports } from '../../hooks/useReports'
 
 export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [employeeRanges, setEmployeeRanges] = useState<string[]>([])
-  const [statusFilters, setStatusFilters] = useState<string[]>([])
-  const [expiresFilter, setExpiresFilter] = useState<string[]>([])
-  const [dagsektirFilter, setDagsektirFilter] = useState<string[]>([])
+  const [filters, setFilters] = useState<CompanyFilters>({
+    employees: [],
+    status: [],
+    expires: [],
+    dailyFines: [],
+  })
 
   const { data, filter, setFilter, resetFilter } = useCompanies({
     pageSize: 10,
@@ -41,15 +50,21 @@ export const CompaniesContainer = () => {
   const handleSortingChange = (next: { id: string; desc: boolean }[]) => {
     if (next.length === 0) return
     const { id, desc } = next[0]
-    setFilter({ sortBy: id as 'name' | 'employeeCount', direction: desc ? 'desc' : 'asc', page: 1 })
+    setFilter({
+      sortBy: id as 'name' | 'employeeCount',
+      direction: desc ? 'desc' : 'asc',
+      page: 1,
+    })
+  }
+
+  const handleFiltersChange = (key: keyof CompanyFilters, val: string[]) => {
+    setFilters((prev) => ({ ...prev, [key]: val }))
+    setFilter({ page: 1 })
   }
 
   const handleReset = () => {
     resetFilter()
-    setEmployeeRanges([])
-    setStatusFilters([])
-    setExpiresFilter([])
-    setDagsektirFilter([])
+    setFilters({ employees: [], status: [], expires: [], dailyFines: [] })
   }
 
   const rows = useMemo(() => {
@@ -60,18 +75,22 @@ export const CompaniesContainer = () => {
 
     return companies.filter((company) => {
       if (
-        employeeRanges.length &&
-        !employeeRanges.some((r) => inRange(company.averageEmployeeCountFromRsk, r))
+        filters.employees.length &&
+        !filters.employees.some((r) =>
+          inRange(company.averageEmployeeCountFromRsk, r),
+        )
       )
         return false
 
       if (
-        statusFilters.length &&
-        !statusFilters.some((f) => matchesStatusFilter(company, approvedReports, f))
+        filters.status.length &&
+        !filters.status.some((f) =>
+          matchesStatusFilter(company, approvedReports, f),
+        )
       )
         return false
 
-      if (expiresFilter.length) {
+      if (filters.expires.length) {
         const companyId = normalizeId(company.nationalId)
         const companyReports = approvedReports.filter(
           (r) => normalizeId(r.companyNationalId) === companyId,
@@ -80,22 +99,29 @@ export const CompaniesContainer = () => {
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
         const threeMonthsFromNow = new Date(now)
         threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3)
-        const matches = expiresFilter.some((f) => {
+        const matches = filters.expires.some((f) => {
           const cutoff =
-            f === '30d' ? thirtyDaysFromNow : f === '3m' ? threeMonthsFromNow : sixMonthsFromNow
+            f === '30d'
+              ? thirtyDaysFromNow
+              : f === '3m'
+                ? threeMonthsFromNow
+                : sixMonthsFromNow
           return companyReports.some(
-            (r) => r.validUntil && new Date(r.validUntil) > now && new Date(r.validUntil) <= cutoff,
+            (r) =>
+              r.validUntil &&
+              new Date(r.validUntil) > now &&
+              new Date(r.validUntil) <= cutoff,
           )
         })
         if (!matches) return false
       }
 
-      // TODO: dagsektir requires finesStartedAt on the list endpoint
-      if (dagsektirFilter.length) return false
+      // TODO: daily fines requires finesStartedAt on the list endpoint
+      if (filters.dailyFines.length) return false
 
       return true
     })
-  }, [data, approvedReports, employeeRanges, statusFilters, expiresFilter, dagsektirFilter])
+  }, [data, approvedReports, filters])
 
   return (
     <GridContainer>
@@ -115,15 +141,9 @@ export const CompaniesContainer = () => {
         <GridColumn span={['12/12', '3/12']}>
           <CompanyFilter
             query={filter.q ?? ''}
-            employeeRanges={employeeRanges}
-            statusFilters={statusFilters}
-            expiresFilter={expiresFilter}
-            dagsektirFilter={dagsektirFilter}
             onQueryChange={(val) => setFilter({ q: val, page: 1 })}
-            onEmployeeRangesChange={(val) => { setEmployeeRanges(val); setFilter({ page: 1 }) }}
-            onStatusFiltersChange={(val) => { setStatusFilters(val); setFilter({ page: 1 }) }}
-            onExpiresFilterChange={(val) => { setExpiresFilter(val); setFilter({ page: 1 }) }}
-            onDagsektirFilterChange={(val) => { setDagsektirFilter(val); setFilter({ page: 1 }) }}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
             onReset={handleReset}
           />
         </GridColumn>
