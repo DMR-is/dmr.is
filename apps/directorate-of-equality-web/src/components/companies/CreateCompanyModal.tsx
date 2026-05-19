@@ -103,7 +103,6 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
                 label={companiesText.createModal.kennitalaLabel}
                 placeholder={companiesText.createModal.kennitalaPlaceholder}
                 size="xs"
-                placeholder="000000-0000"
                 value={nationalIdInput}
                 onChange={(e) => {
                   setNationalIdInput(e.target.value)

@@ -31,8 +31,8 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
         <Breadcrumbs
           items={[
             { title: reportText.breadcrumbHome, href: '/' },
-            { title: reportText.breadcrumbOverview, href: '/mal' },
-            { title: reportText.heroTitle, href: `/mal/${report.id}` },
+            { title: reportText.breadcrumbOverview, href: '/yfirlit' },
+            { title: reportText.heroTitle, href: `/yfirlit/${report.id}` },
           ]}
         />
         {title}

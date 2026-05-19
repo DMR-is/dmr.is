@@ -58,7 +58,7 @@ export const TabContent = ({
         columns={columns}
         data={data}
         loading={isLoading}
-        getRowHref={(row) => `/mal/${row.id}`}
+        getRowHref={(row) => `/yfirlit/${row.id}`}
         getRowExpanded={
           expandable ? (row) => <ExpandedRow row={row} /> : undefined
         }

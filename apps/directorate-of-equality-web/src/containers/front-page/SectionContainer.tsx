@@ -120,7 +120,7 @@ export const SectionContainer = () => {
           <GridColumn span={['12/12', '7/12']}>
             <Stack space={3}>
               {/* TODO NAVIGATE CORRECTLY AND PREFILTERED FOR MIN MAL */}
-              <Wrapper title="Mál" link="/mal" linkText="Opna ristjórn">
+              <Wrapper title="Yfirlit" link="/yfirlit" linkText="Opna ristjórn">
                 <Tabs
                   label="Mál flokkar"
                   selected={selectedTab}
