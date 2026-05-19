@@ -92,13 +92,15 @@ export const ReportFilter = ({
         onFilterClear={handleReset}
         variant="default"
         filterInput={
-          <FilterInput
-            name="query"
-            placeholder={overviewText.filter.placeholder}
-            value={q ?? ''}
-            onChange={(value) => onQChange(value || null)}
-            backgroundColor="white"
-          />
+          <Box marginTop={3}>
+            <FilterInput
+              name="query"
+              placeholder={overviewText.filter.placeholder}
+              value={q ?? ''}
+              onChange={(value) => onQChange(value || null)}
+              backgroundColor="white"
+            />
+          </Box>
         }
       >
         <FilterMultiChoice

@@ -53,7 +53,7 @@ export const TabContent = ({
   onPageChange,
 }: TabContentProps) => {
   return (
-    <Box marginTop={3}>
+    <Box marginTop={2}>
       <Table
         columns={columns}
         data={data}

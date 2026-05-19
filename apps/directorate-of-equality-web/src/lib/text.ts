@@ -219,6 +219,18 @@ export const headerText = {
 }
 
 export const sharedText = {
+  statusLabels: {
+    DRAFT: 'Drög',
+    SUBMITTED: 'Innsent',
+    IN_REVIEW: 'Í vinnslu',
+    APPROVED: 'Samþykkt',
+    DENIED: 'Hafnað',
+    SUPERSEDED: 'Úrelt',
+  },
+  typeLabels: {
+    EQUALITY: 'Jafnréttisáætlun',
+    SALARY: 'Launagreining',
+  },
   genders: {
     male: 'Karl',
     female: 'Kona',

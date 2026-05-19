@@ -128,18 +128,6 @@ export const CompaniesContainer = () => {
 
   return (
     <GridContainer>
-      <Box display="flex" justifyContent="flexEnd" marginBottom={3}>
-        <Button
-          icon="add"
-          iconType="outline"
-          onClick={() => setIsModalOpen(true)}
-          size="small"
-          variant="utility"
-          colorScheme="white"
-        >
-          Nýtt fyrirtæki
-        </Button>
-      </Box>
       <GridRow>
         <GridColumn span={['12/12', '3/12']}>
           <CompanyFilter
@@ -149,6 +137,19 @@ export const CompaniesContainer = () => {
             onFiltersChange={handleFiltersChange}
             onReset={handleReset}
           />
+          <Box display="flex" marginTop={2}>
+            <Button
+              icon="add"
+              iconType="outline"
+              onClick={() => setIsModalOpen(true)}
+              size="small"
+              variant="utility"
+              colorScheme="white"
+              fluid
+            >
+              Nýtt fyrirtæki
+            </Button>
+          </Box>
         </GridColumn>
         <GridColumn span={['12/12', '9/12']}>
           {data?.paging && (

@@ -33,7 +33,7 @@ import {
   COLUMN_STATUS,
   COLUMNS,
 } from '../../lib/constants'
-import { overviewText } from '../../lib/text'
+import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
@@ -58,14 +58,9 @@ const TAB_FIXED_STATUS: Record<
   afgreitt: PROCESSED,
 }
 
-const ALL_STATUS_OPTIONS: FilterOption[] = [
-  { value: 'DRAFT', label: 'Drög' },
-  { value: 'SUBMITTED', label: 'Innsent' },
-  { value: 'IN_REVIEW', label: 'Í vinnslu' },
-  { value: 'APPROVED', label: 'Samþykkt' },
-  { value: 'DENIED', label: 'Hafnað' },
-  { value: 'SUPERSEDED', label: 'Úrelt' },
-]
+const ALL_STATUS_OPTIONS: FilterOption[] = (
+  ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'APPROVED', 'DENIED', 'SUPERSEDED'] as const
+).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
@@ -83,19 +78,6 @@ const STATUS_VARIANT: Record<string, TagVariant> = {
   Drög: 'purple',
 }
 
-const STATUS_TO_LABEL: Record<string, string> = {
-  DRAFT: 'Drög',
-  SUBMITTED: 'Innsent',
-  IN_REVIEW: 'Í vinnslu',
-  DENIED: 'Hafnað',
-  APPROVED: 'Samþykkt',
-  SUPERSEDED: 'Úrelt',
-}
-
-const TYPE_TO_LABEL: Record<string, string> = {
-  EQUALITY: 'Jafnréttisáætlun',
-  SALARY: 'Launagreining',
-}
 
 function mapReportToCase(report: ReportListItemDto): Case {
   const reviewer = report.reviewer
@@ -106,10 +88,10 @@ function mapReportToCase(report: ReportListItemDto): Case {
     date: report.createdAt
       ? new Date(report.createdAt).toLocaleDateString('is-IS')
       : '',
-    type: TYPE_TO_LABEL[report.type] ?? report.type,
+    type: sharedText.typeLabels[report.type as keyof typeof sharedText.typeLabels] ?? report.type,
     company: report.companyName ?? '',
     kennitala: formatNationalId(report.companyNationalId ?? ''),
-    status: STATUS_TO_LABEL[report.status] ?? report.status,
+    status: sharedText.statusLabels[report.status as keyof typeof sharedText.statusLabels] ?? report.status,
     reviewer,
     companyAdmin: 'TODO',
     companyAdminGender: 'TODO',
