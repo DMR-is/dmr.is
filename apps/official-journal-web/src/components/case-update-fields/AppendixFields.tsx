@@ -25,6 +25,8 @@ type Props = {
   onToggle: () => void
 }
 
+const MAX_ADDITIONS_COUNT = 25
+
 export const AppendixFields = ({ toggle, onToggle }: Props) => {
   const { data: session } = useSession()
   const trpc = useTRPC()
@@ -206,7 +208,9 @@ export const AppendixFields = ({ toggle, onToggle }: Props) => {
         })}
         <Inline space={2} flexWrap="wrap">
           <Button
-            disabled={currentCase.additions.length >= 10 || !canEdit}
+            disabled={
+              currentCase.additions.length >= MAX_ADDITIONS_COUNT || !canEdit
+            }
             variant="utility"
             icon="add"
             size="small"
