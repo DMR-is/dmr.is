@@ -120,14 +120,21 @@ export class ReportCreateService implements IReportCreateService {
     await this.assertEqualityReportApproved(input.equalityReportId)
     const outliersPostponed = input.outliersPostponed ?? false
 
-    // 1. report row — status SUBMITTED so it lands in the reviewer queue.
+    // 1. report row. Status splits on the postponement choice:
+    //   - outliersPostponed = false → SUBMITTED (lands in reviewer queue).
+    //   - outliersPostponed = true  → POSTPONED (cannot be picked up; the
+    //     applicant must resolve via PUT /application/reports/:providerId/
+    //     outliers, which transitions POSTPONED → SUBMITTED).
+    // See db/README.md → "Report lifecycle".
+    const initialStatus = outliersPostponed
+      ? ReportStatusEnum.POSTPONED
+      : ReportStatusEnum.SUBMITTED
     const report = await this.reportModel.create({
       type: ReportTypeEnum.SALARY,
-      status: ReportStatusEnum.SUBMITTED,
+      status: initialStatus,
       equalityReportId: input.equalityReportId,
       identifier: input.identifier,
       importedFromExcel: input.importedFromExcel,
-      outliersPostponed,
       providerType: input.providerType,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
@@ -245,8 +252,9 @@ export class ReportCreateService implements IReportCreateService {
 
     // 8. Salary outliers — only employees the company flagged
     //    via the outlier-preview flow get a row here. When the report is
-    //    postponed, every row's explanation columns are written as NULL
-    //    (the all-or-none invariant lives on report.outliersPostponed).
+    //    postponed (status = POSTPONED), every row's explanation columns
+    //    are written as NULL; the applicant fills them in later via
+    //    PUT /application/reports/:providerId/outliers.
     if (input.outliers && input.outliers.length > 0) {
       const employeeOrdinalToId = new Map<number, string>()
       input.parsed.employees.forEach((employee, index) => {
@@ -277,10 +285,13 @@ export class ReportCreateService implements IReportCreateService {
     await this.reportResultService.createForReport(report.id)
 
     // 10. SUBMITTED audit event — actorUserId null = company admin.
+    //     reportStatus snapshots the actual landing status so the event log
+    //     captures whether outliers were postponed at submit time. A later
+    //     POSTPONED → SUBMITTED transition emits its own STATUS_CHANGED row.
     await this.reportEventModel.create({
       reportId: report.id,
       eventType: ReportEventTypeEnum.SUBMITTED,
-      reportStatus: ReportStatusEnum.SUBMITTED,
+      reportStatus: initialStatus,
       actorUserId: null,
       companyId: submittingCompany.companyId,
     })

@@ -36,6 +36,7 @@ import { IReportCreateService } from '../report-create/report-create.service.int
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
+import { IReportEventService } from '../report-event/report-event.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
@@ -66,12 +67,16 @@ describe('ApplicationService', () => {
   let createSalary: jest.Mock
   let createEquality: jest.Mock
   let reportFindOne: jest.Mock
+  let reportUpdate: jest.Mock
   let companyReportFindAll: jest.Mock
   let outlierFindAll: jest.Mock
+  let outlierUpdate: jest.Mock
   let eventFindOne: jest.Mock
   let getCommentsByReportId: jest.Mock
   let createComment: jest.Mock
   let getResultByReportId: jest.Mock
+  let emitEdited: jest.Mock
+  let emitStatusChanged: jest.Mock
 
   beforeEach(async () => {
     configGetByKey = jest.fn().mockResolvedValue({
@@ -85,12 +90,16 @@ describe('ApplicationService', () => {
     createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
     createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
     reportFindOne = jest.fn()
+    reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
+    outlierUpdate = jest.fn().mockResolvedValue([1])
     eventFindOne = jest.fn().mockResolvedValue(null)
     getCommentsByReportId = jest.fn().mockResolvedValue([])
     createComment = jest.fn()
     getResultByReportId = jest.fn()
+    emitEdited = jest.fn().mockResolvedValue(undefined)
+    emitStatusChanged = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -123,12 +132,19 @@ describe('ApplicationService', () => {
           },
         },
         {
+          provide: IReportEventService,
+          useValue: {
+            emitEdited,
+            emitStatusChanged,
+          },
+        },
+        {
           provide: IReportResultService,
           useValue: { getByReportId: getResultByReportId },
         },
         {
           provide: getModelToken(ReportModel),
-          useValue: { findOne: reportFindOne },
+          useValue: { findOne: reportFindOne, update: reportUpdate },
         },
         {
           provide: getModelToken(CompanyReportModel),
@@ -136,7 +152,7 @@ describe('ApplicationService', () => {
         },
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
-          useValue: { findAll: outlierFindAll },
+          useValue: { findAll: outlierFindAll, update: outlierUpdate },
         },
         {
           provide: getModelToken(ReportEventModel),
@@ -768,6 +784,354 @@ describe('ApplicationService', () => {
       )
     })
   })
+
+  describe('editEqualityContent', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
+
+    it('updates content, emits EDITED, keeps IN_REVIEW status on success', async () => {
+      const equalityReport = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.EQUALITY,
+        status: ReportStatusEnum.IN_REVIEW,
+      })
+      // First findOne: editEqualityContent's own ownership lookup.
+      // Second findOne: getReport's re-read at the end (the edit method
+      // returns the fresh detail by delegating to getReport).
+      reportFindOne
+        .mockResolvedValueOnce(equalityReport)
+        .mockResolvedValueOnce(equalityReport)
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getCommentsByReportId.mockResolvedValueOnce([])
+
+      const result = await service.editEqualityContent(
+        PROVIDER_ID,
+        { equalityReportContent: 'Revised narrative' },
+        COMPANY,
+      )
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { equalityReportContent: 'Revised narrative' },
+        { where: { id: REPORT_ID } },
+      )
+      expect(emitEdited).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.IN_REVIEW,
+        COMPANY.id,
+      )
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+      expect(result.id).toBe(REPORT_ID)
+    })
+
+    it('rejects when the report is not EQUALITY', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.IN_REVIEW,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editEqualityContent(
+          PROVIDER_ID,
+          { equalityReportContent: 'x' },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(emitEdited).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the report status is not IN_REVIEW', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.EQUALITY,
+          status: ReportStatusEnum.DENIED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editEqualityContent(
+          PROVIDER_ID,
+          { equalityReportContent: 'x' },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it("throws NotFoundException when the resolved company isn't the parent", async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.EQUALITY,
+          status: ReportStatusEnum.IN_REVIEW,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({
+          reportId: REPORT_ID,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        }),
+      ])
+
+      await expect(
+        service.editEqualityContent(
+          PROVIDER_ID,
+          { equalityReportContent: 'x' },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(NotFoundException)
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('editOutliers', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
+
+    const detectedSnapshot = (ordinals: number[]) =>
+      makeReportResultDto(REPORT_ID, ordinals)
+
+    const validRow = (ordinal: number) => ({
+      employeeOrdinal: ordinal,
+      reason: 'Parental leave, salary frozen',
+      action: 'No adjustment, frozen for the period',
+      signatureName: 'Anna Admin',
+      signatureRole: 'HR',
+    })
+
+    it('POSTPONED → SUBMITTED resolution: updates outliers, flips status, emits STATUS_CHANGED + EDITED', async () => {
+      const postponedSalary = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.POSTPONED,
+      })
+      // 1st reportFindOne: edit method ownership lookup.
+      // 2nd reportFindOne: getReport re-read returns the now-SUBMITTED row.
+      reportFindOne
+        .mockResolvedValueOnce(postponedSalary)
+        .mockResolvedValueOnce(
+          makeReportRow({
+            ...postponedSalary,
+            status: ReportStatusEnum.SUBMITTED,
+          } as never),
+        )
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1]))
+      outlierFindAll.mockResolvedValueOnce([
+        {
+          id: 'outlier-1',
+          reportEmployee: { id: 'emp-1', ordinal: 1 },
+        },
+      ])
+      getCommentsByReportId.mockResolvedValueOnce([])
+
+      await service.editOutliers(
+        PROVIDER_ID,
+        { outliers: [validRow(1)] },
+        COMPANY,
+      )
+
+      expect(outlierUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: 'Parental leave, salary frozen',
+          action: 'No adjustment, frozen for the period',
+          signatureName: 'Anna Admin',
+          signatureRole: 'HR',
+        }),
+        { where: { id: 'outlier-1' } },
+      )
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { status: ReportStatusEnum.SUBMITTED },
+        { where: { id: REPORT_ID } },
+      )
+      expect(emitStatusChanged).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.POSTPONED,
+        ReportStatusEnum.SUBMITTED,
+        null,
+      )
+      expect(emitEdited).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.SUBMITTED,
+        COMPANY.id,
+      )
+    })
+
+    it('IN_REVIEW correction: updates outliers, preserves status, emits EDITED only', async () => {
+      const inReviewSalary = makeReportRow({
+        id: REPORT_ID,
+        providerId: PROVIDER_ID,
+        type: ReportTypeEnum.SALARY,
+        status: ReportStatusEnum.IN_REVIEW,
+      })
+      reportFindOne
+        .mockResolvedValueOnce(inReviewSalary)
+        .mockResolvedValueOnce(inReviewSalary)
+      companyReportFindAll
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+        .mockResolvedValueOnce([makeCompanyReportRow({ reportId: REPORT_ID })])
+      getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1]))
+      outlierFindAll.mockResolvedValueOnce([
+        {
+          id: 'outlier-1',
+          reportEmployee: { id: 'emp-1', ordinal: 1 },
+        },
+      ])
+      getCommentsByReportId.mockResolvedValueOnce([])
+
+      await service.editOutliers(
+        PROVIDER_ID,
+        { outliers: [validRow(1)] },
+        COMPANY,
+      )
+
+      expect(outlierUpdate).toHaveBeenCalledTimes(1)
+      // Status is NOT updated — only outlier rows are.
+      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+      expect(emitEdited).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.IN_REVIEW,
+        COMPANY.id,
+      )
+    })
+
+    it('rejects extras (submitted ordinal not in canonical detected set)', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.POSTPONED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+      getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1]))
+
+      await expect(
+        service.editOutliers(
+          PROVIDER_ID,
+          { outliers: [validRow(1), validRow(2)] },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierUpdate).not.toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('rejects missing (detected ordinal not in submitted)', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.POSTPONED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+      getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1, 2]))
+
+      await expect(
+        service.editOutliers(
+          PROVIDER_ID,
+          { outliers: [validRow(1)] },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierUpdate).not.toHaveBeenCalled()
+    })
+
+    it('rejects duplicates (same ordinal submitted twice)', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.POSTPONED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editOutliers(
+          PROVIDER_ID,
+          { outliers: [validRow(1), validRow(1)] },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierUpdate).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the report is not SALARY', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.EQUALITY,
+          status: ReportStatusEnum.POSTPONED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editOutliers(
+          PROVIDER_ID,
+          { outliers: [validRow(1)] },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+
+    it('rejects when status is neither POSTPONED nor IN_REVIEW', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.DENIED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.editOutliers(
+          PROVIDER_ID,
+          { outliers: [validRow(1)] },
+          COMPANY,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+  })
 })
 
 function makeRequest(): SalaryAnalysisRequestDto {
@@ -1039,7 +1403,10 @@ function makeCommentDto(overrides: Partial<Record<string, unknown>> = {}) {
   }
 }
 
-function makeReportResultDto(reportId: string) {
+function makeReportResultDto(
+  reportId: string,
+  detectedOrdinals: number[] = [],
+) {
   const aggregate = {
     overall: {
       average: null,
@@ -1097,7 +1464,19 @@ function makeReportResultDto(reportId: string) {
         female: makeEmptyRegression(),
         neutral: makeEmptyRegression(),
       },
-      employees: [],
+      employees: detectedOrdinals.map((ordinal) => ({
+        ordinal,
+        score: 0,
+        gender: GenderEnum.MALE,
+        adjustedBaseSalary: 0,
+        predictedBaseSalary: 0,
+        scoreBucketRangeFrom: null,
+        scoreBucketRangeTo: null,
+        direction: null,
+        differencePercent: null,
+        allowedDifferencePercent: 1.95,
+        isOutlier: true,
+      })),
     },
   }
 }

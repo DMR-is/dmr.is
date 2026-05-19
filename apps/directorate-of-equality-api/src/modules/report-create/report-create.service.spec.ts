@@ -14,6 +14,7 @@ import { IConfigService } from '../config/config.service.interface'
 import {
   GenderEnum,
   ReportProviderEnum,
+  ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
@@ -367,8 +368,9 @@ describe('ReportCreateService', () => {
     await service.createSalary(input)
 
     expect(reportCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ outliersPostponed: false }),
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
     )
+    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty('outliersPostponed')
     expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
     expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
@@ -450,8 +452,9 @@ describe('ReportCreateService', () => {
     await service.createSalary(input)
 
     expect(reportCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ outliersPostponed: true }),
+      expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
     )
+    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty('outliersPostponed')
     expect(outlierBulkCreate).toHaveBeenCalledWith([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
@@ -461,6 +464,17 @@ describe('ReportCreateService', () => {
         signatureRole: null,
       }),
     ])
+
+    // The SUBMITTED audit event snapshots the actual landing status —
+    // POSTPONED for a postponed salary report. This is the historical signal
+    // for "did this report ever postpone?" once status flips to SUBMITTED
+    // after the applicant resolves outliers.
+    expect(reportEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: 'SUBMITTED',
+        reportStatus: ReportStatusEnum.POSTPONED,
+      }),
+    )
   })
 
   it('accepts a postponed report with bare acknowledgement rows (no explanations supplied)', async () => {

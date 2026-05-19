@@ -22,7 +22,7 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'Null only when the parent report has `outliersPostponed = true`. Otherwise required and non-empty.',
+      'Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty.',
   })
   reason!: string | null
 

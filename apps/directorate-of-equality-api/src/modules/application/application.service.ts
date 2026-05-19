@@ -48,6 +48,7 @@ import { IReportCreateService } from '../report-create/report-create.service.int
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
+import { IReportEventService } from '../report-event/report-event.service.interface'
 import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import {
@@ -56,6 +57,8 @@ import {
 } from '../report-statistics/lib/build-chart'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
+import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import {
   SalaryAnalysisOutlierDirectionEnum,
@@ -88,6 +91,8 @@ export class ApplicationService implements IApplicationService {
     private readonly reportCreateService: IReportCreateService,
     @Inject(IReportCommentService)
     private readonly reportCommentService: IReportCommentService,
+    @Inject(IReportEventService)
+    private readonly reportEventService: IReportEventService,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
     @InjectModel(ReportModel)
@@ -258,7 +263,9 @@ export class ApplicationService implements IApplicationService {
           ? report.equalityReportContent
           : null,
       outliersPostponed:
-        report.type === ReportTypeEnum.SALARY ? report.outliersPostponed : null,
+        report.type === ReportTypeEnum.SALARY
+          ? report.status === ReportStatusEnum.POSTPONED
+          : null,
       outliers: salaryData.outliers,
       result: salaryData.result,
       externalComments: externalComments.map(
@@ -306,6 +313,231 @@ export class ApplicationService implements IApplicationService {
     )
 
     return ApplicationReportCommentDto.fromReportComment(created)
+  }
+
+  /**
+   * In-place edit of an EQUALITY report's narrative body. Allowed only on
+   * `IN_REVIEW` reports — i.e. a reviewer has picked the report up and asked
+   * for changes via comment. Status is preserved (reviewer keeps their
+   * pickup); the EDITED event is the audit signal that the applicant
+   * responded.
+   */
+  async editEqualityContent(
+    providerId: string,
+    input: EditEqualityContentDto,
+    company: CompanyDto,
+  ): Promise<ApplicationReportDetailDto> {
+    this.logger.info('Editing equality content from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      providerId,
+    })
+
+    const report = await this.findOwnedReportByProviderId(providerId, company)
+
+    if (report.type !== ReportTypeEnum.EQUALITY) {
+      throw new BadRequestException(
+        `Cannot edit equality content on a report of type ${report.type}`,
+      )
+    }
+
+    if (report.status !== ReportStatusEnum.IN_REVIEW) {
+      throw new BadRequestException(
+        `Cannot edit equality content on a report in status ${report.status}`,
+      )
+    }
+
+    await this.reportModel.update(
+      { equalityReportContent: input.equalityReportContent },
+      { where: { id: report.id } },
+    )
+
+    await this.reportEventService.emitEdited(
+      report.id,
+      report.status,
+      company.id,
+    )
+
+    return this.getReport(providerId, company)
+  }
+
+  /**
+   * In-place edit of a SALARY report's outlier explanations.
+   *
+   * Allowed in two statuses:
+   *   - `POSTPONED` (primary path): applicant is resolving postponement.
+   *     Status transitions to `SUBMITTED` on success, emitting both an
+   *     `EDITED` and a `STATUS_CHANGED` event.
+   *   - `IN_REVIEW` (correction path): reviewer asked for corrections via
+   *     comment. Status is preserved; only `EDITED` is emitted.
+   *
+   * The submitted set must match the canonical detected outliers on the
+   * report (read from `report_result.outlierAnalysisSnapshot.employees`
+   * filtered to `isOutlier = true`) — every detected ordinal must appear
+   * exactly once, and no extras are allowed.
+   */
+  async editOutliers(
+    providerId: string,
+    input: EditOutliersDto,
+    company: CompanyDto,
+  ): Promise<ApplicationReportDetailDto> {
+    this.logger.info('Editing outliers from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      providerId,
+    })
+
+    const report = await this.findOwnedReportByProviderId(providerId, company)
+
+    if (report.type !== ReportTypeEnum.SALARY) {
+      throw new BadRequestException(
+        `Cannot edit outliers on a report of type ${report.type}`,
+      )
+    }
+
+    if (
+      report.status !== ReportStatusEnum.POSTPONED &&
+      report.status !== ReportStatusEnum.IN_REVIEW
+    ) {
+      throw new BadRequestException(
+        `Cannot edit outliers on a report in status ${report.status}`,
+      )
+    }
+
+    // 1. Pure request validation — detect duplicate ordinals before any DB
+    //    fetch. Failing fast keeps the error message specific to the input
+    //    and avoids unnecessary work.
+    const submittedOrdinals = new Set<number>()
+    for (const submitted of input.outliers) {
+      if (submittedOrdinals.has(submitted.employeeOrdinal)) {
+        throw new BadRequestException(
+          `Duplicate outlier row for employee ordinal ${submitted.employeeOrdinal}`,
+        )
+      }
+      submittedOrdinals.add(submitted.employeeOrdinal)
+    }
+
+    // 2. Canonical detected set, frozen at submit time on the report_result.
+    const reportResult = await this.reportResultService.getByReportId(report.id)
+    const detectedOrdinals = new Set(
+      reportResult.outlierAnalysis.employees
+        .filter((employee) => employee.isOutlier)
+        .map((employee) => employee.ordinal),
+    )
+
+    const extras = [...submittedOrdinals].filter(
+      (ordinal) => !detectedOrdinals.has(ordinal),
+    )
+    if (extras.length > 0) {
+      throw new BadRequestException(
+        `Outlier row(s) submitted for non-outlier employee ordinal(s): ${extras.join(', ')}`,
+      )
+    }
+
+    const missing = [...detectedOrdinals].filter(
+      (ordinal) => !submittedOrdinals.has(ordinal),
+    )
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Detected outlier(s) missing acknowledgement for employee ordinal(s): ${missing.join(', ')}`,
+      )
+    }
+
+    // 3. Load the existing outlier rows joined with their employees so we
+    //    can resolve ordinal → outlier row id.
+    const outlierRows = await this.reportEmployeeOutlierModel.findAll({
+      include: [
+        {
+          model: ReportEmployeeModel,
+          as: 'reportEmployee',
+          where: { reportId: report.id },
+          required: true,
+          attributes: ['id', 'ordinal'],
+        },
+      ],
+    })
+    const outlierByOrdinal = new Map<number, ReportEmployeeOutlierModel>()
+    for (const row of outlierRows) {
+      if (row.reportEmployee) {
+        outlierByOrdinal.set(row.reportEmployee.ordinal, row)
+      }
+    }
+
+    // 4. Update each outlier row's explanation fields. The set-match
+    //    validation above guarantees every submitted ordinal resolves.
+    for (const submitted of input.outliers) {
+      const row = outlierByOrdinal.get(submitted.employeeOrdinal)
+      if (!row) {
+        // Shouldn't happen — detected set is read from report_result which
+        // is built from the same employees that have outlier rows. Defensive.
+        throw new InternalServerErrorException(
+          `Outlier row missing for detected employee ordinal ${submitted.employeeOrdinal}`,
+        )
+      }
+      await this.reportEmployeeOutlierModel.update(
+        {
+          reason: submitted.reason,
+          action: submitted.action,
+          signatureName: submitted.signatureName,
+          signatureRole: submitted.signatureRole,
+        },
+        { where: { id: row.id } },
+      )
+    }
+
+    // 5. If we were resolving postponement, transition POSTPONED → SUBMITTED.
+    const wasPostponed = report.status === ReportStatusEnum.POSTPONED
+    const newStatus = wasPostponed
+      ? ReportStatusEnum.SUBMITTED
+      : report.status
+
+    if (wasPostponed) {
+      await this.reportModel.update(
+        { status: ReportStatusEnum.SUBMITTED },
+        { where: { id: report.id } },
+      )
+      await this.reportEventService.emitStatusChanged(
+        report.id,
+        ReportStatusEnum.POSTPONED,
+        ReportStatusEnum.SUBMITTED,
+        null,
+      )
+    }
+
+    await this.reportEventService.emitEdited(report.id, newStatus, company.id)
+
+    return this.getReport(providerId, company)
+  }
+
+  /**
+   * Lookup helper used by all applicant-facing endpoints that take a
+   * `:providerId` path parameter. Resolves the report by `provider_id` and
+   * verifies the authenticated company owns the parent `company_report` row.
+   * Throws `NotFoundException` on miss or ownership mismatch — never leaks
+   * the existence of another company's report.
+   */
+  private async findOwnedReportByProviderId(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<ReportModel> {
+    const report = await this.reportModel.findOne({ where: { providerId } })
+
+    if (!report) {
+      throw new NotFoundException(`Report "${providerId}" not found`)
+    }
+
+    const companyRows = await this.companyReportModel.findAll({
+      where: { reportId: report.id },
+      attributes: ['companyId', 'parentCompanyId'],
+    })
+    const parentCompany = companyRows.find(
+      (row) => row.parentCompanyId === null,
+    )
+    if (!parentCompany || parentCompany.companyId !== company.id) {
+      throw new NotFoundException(`Report "${providerId}" not found`)
+    }
+
+    return report
   }
 
   private async createSalaryReportInput(

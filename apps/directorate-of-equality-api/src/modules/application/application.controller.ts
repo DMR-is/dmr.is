@@ -10,6 +10,7 @@ import {
   Param,
   ParseFilePipe,
   Post,
+  Put,
   StreamableFile,
   UploadedFile,
   UseGuards,
@@ -37,6 +38,8 @@ import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
+import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
@@ -246,5 +249,53 @@ export class ApplicationController {
       input,
       company,
     )
+  }
+
+  @Put('reports/:providerId/equality-content')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'editApplicationEqualityContent',
+    include404: true,
+    description:
+      'Replaces the narrative body of an EQUALITY report in place. Allowed only on reports in status `IN_REVIEW`. Emits an `EDITED` event; status is preserved.',
+    type: ApplicationReportDetailDto,
+  })
+  async editEqualityContent(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: EditEqualityContentDto,
+  ): Promise<ApplicationReportDetailDto> {
+    return this.applicationService.editEqualityContent(
+      providerId,
+      input,
+      company,
+    )
+  }
+
+  @Put('reports/:providerId/outliers')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'editApplicationOutliers',
+    include404: true,
+    description:
+      'Replaces outlier explanations on a SALARY report. All-or-none — the submitted set must match the canonical detected outliers exactly. Allowed in status `POSTPONED` (transitions to `SUBMITTED`) or `IN_REVIEW` (status preserved). Always emits `EDITED`; the `POSTPONED → SUBMITTED` case additionally emits `STATUS_CHANGED`.',
+    type: ApplicationReportDetailDto,
+  })
+  async editOutliers(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: EditOutliersDto,
+  ): Promise<ApplicationReportDetailDto> {
+    return this.applicationService.editOutliers(providerId, input, company)
   }
 }

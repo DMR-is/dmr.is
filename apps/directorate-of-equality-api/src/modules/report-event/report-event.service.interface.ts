@@ -20,6 +20,11 @@ export interface IReportEventService {
     reason?: string | null,
   ): Promise<void>
   emitSuperseded(reportId: string, relatedReportId: string): Promise<void>
+  emitEdited(
+    reportId: string,
+    reportStatus: ReportStatusEnum,
+    companyId: string,
+  ): Promise<void>
 }
 
 export const IReportEventService = Symbol('IReportEventService')

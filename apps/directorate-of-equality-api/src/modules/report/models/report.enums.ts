@@ -13,6 +13,7 @@ export enum ReportTypeEnum {
 export enum ReportStatusEnum {
   DRAFT = 'DRAFT',
   SUBMITTED = 'SUBMITTED',
+  POSTPONED = 'POSTPONED',
   IN_REVIEW = 'IN_REVIEW',
   DENIED = 'DENIED',
   APPROVED = 'APPROVED',
