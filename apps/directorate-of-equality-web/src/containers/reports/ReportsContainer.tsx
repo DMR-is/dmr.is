@@ -199,37 +199,38 @@ export const ReportsContainer = () => {
     activeTab !== 'innsendingar' ? [statusColumn] : []
   const allColumns = [...leadingColumns, ...COLUMNS, ...middleColumns, ...trailingColumns]
 
-  return (
-    <GridContainer>
-      <Box display="flex" justifyContent="flexEnd" marginBottom={3}>
-        <Inline space={2}>
-          <CreateEqualityReportDrawer />
-          <CreateSalaryReportDrawer />
-        </Inline>
-      </Box>
+  const filterAndTable = (expandable?: boolean) => (
+    <Box paddingTop={4}>
       <GridRow>
         <GridColumn span={['12/12', '3/12']}>
-          <ReportFilter
-            q={filter.q}
-            type={filter.type as string[] | null}
-            status={filter.status as string[] | null}
-            statusOptions={statusOptions}
-            reviewerUserId={filter.reviewerUserId as string[] | null}
-            reviewers={needsUsers ? reviewerOptions : undefined}
-            onQChange={(q) => setFilter({ q })}
-            onTypeChange={(type) =>
-              setFilter({ type: type as typeof filter.type })
-            }
-            onStatusChange={(status) =>
-              setFilter({ status: status as typeof filter.status })
-            }
-            onReviewerChange={(reviewerUserId) =>
-              setFilter({
-                reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
-              })
-            }
-            onReset={resetFilter}
-          />
+          <Stack space={3}>
+            <ReportFilter
+              q={filter.q}
+              type={filter.type as string[] | null}
+              status={filter.status as string[] | null}
+              statusOptions={statusOptions}
+              reviewerUserId={filter.reviewerUserId as string[] | null}
+              reviewers={needsUsers ? reviewerOptions : undefined}
+              onQChange={(q) => setFilter({ q })}
+              onTypeChange={(type) =>
+                setFilter({ type: type as typeof filter.type })
+              }
+              onStatusChange={(status) =>
+                setFilter({ status: status as typeof filter.status })
+              }
+              onReviewerChange={(reviewerUserId) =>
+                setFilter({
+                  reviewerUserId:
+                    reviewerUserId as typeof filter.reviewerUserId,
+                })
+              }
+              onReset={resetFilter}
+            />
+            <Stack space={2}>
+              <CreateEqualityReportDrawer />
+              <CreateSalaryReportDrawer />
+            </Stack>
+          </Stack>
         </GridColumn>
         <GridColumn span={['12/12', '9/12']}>
           <Stack space={2}>
@@ -237,58 +238,47 @@ export const ReportsContainer = () => {
               <Text fontWeight="semiBold">{data?.paging.totalItems ?? 0}</Text>
               <Text>færslur fundust</Text>
             </Inline>
-            <Tabs
-              label="Mál"
-              selected={activeTab}
-              contentBackground="blue100"
-              size="sm"
-              onChange={handleTabChange}
-              tabs={[
-                {
-                  id: 'innsendingar',
-                  label: `Innsendingar (${data?.statusCounts.submitted ?? 0})`,
-                  content: (
-                    <TabContent
-                      data={data?.reports.map(mapReportToCase)}
-                      isLoading={isLoading}
-                      columns={allColumns}
-                      expandable
-                      paging={data?.paging}
-                      onPageChange={(p) => setFilter({ page: p })}
-                    />
-                  ),
-                },
-                {
-                  id: 'i-vinnslu',
-                  label: `Í vinnslu (${data?.statusCounts.inReview ?? 0})`,
-                  content: (
-                    <TabContent
-                      data={data?.reports.map(mapReportToCase)}
-                      isLoading={isLoading}
-                      columns={allColumns}
-                      paging={data?.paging}
-                      onPageChange={(p) => setFilter({ page: p })}
-                    />
-                  ),
-                },
-                {
-                  id: 'afgreitt',
-                  label: `Afgreitt (${data?.statusCounts.processed ?? 0})`,
-                  content: (
-                    <TabContent
-                      data={data?.reports.map(mapReportToCase)}
-                      isLoading={isLoading}
-                      columns={allColumns}
-                      paging={data?.paging}
-                      onPageChange={(p) => setFilter({ page: p })}
-                    />
-                  ),
-                },
-              ]}
+            <TabContent
+              data={data?.reports.map(mapReportToCase)}
+              isLoading={isLoading}
+              columns={allColumns}
+              expandable={expandable}
+              paging={data?.paging}
+              onPageChange={(p) => setFilter({ page: p })}
             />
           </Stack>
         </GridColumn>
       </GridRow>
+    </Box>
+  )
+
+  return (
+    <GridContainer>
+      <Tabs
+        label="Mál"
+        selected={activeTab}
+        contentBackground="blue100"
+        size="sm"
+        onlyRenderSelectedTab
+        onChange={handleTabChange}
+        tabs={[
+          {
+            id: 'innsendingar',
+            label: `Innsendingar (${data?.statusCounts.submitted ?? 0})`,
+            content: filterAndTable(true),
+          },
+          {
+            id: 'i-vinnslu',
+            label: `Í vinnslu (${data?.statusCounts.inReview ?? 0})`,
+            content: filterAndTable(),
+          },
+          {
+            id: 'afgreitt',
+            label: `Afgreitt (${data?.statusCounts.processed ?? 0})`,
+            content: filterAndTable(),
+          },
+        ]}
+      />
     </GridContainer>
   )
 }
