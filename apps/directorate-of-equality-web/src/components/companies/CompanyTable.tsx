@@ -9,32 +9,31 @@ import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   type CompanyDto,
+  type Paging,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
 import { formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
-import {
-  deriveStatus,
-  normalizeId,
-  PAGE_SIZE,
-  STATUS_LABEL,
-  STATUS_TAG_VARIANT,
-} from './companyStatus'
+import { deriveStatus, normalizeId, STATUS_LABEL, STATUS_TAG_VARIANT } from './companyStatus'
 
-import { type ColumnDef } from '@tanstack/react-table'
+import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
 type Props = {
   rows: CompanyDto[]
   approvedReports: ReportListItemDto[]
-  page: number
+  paging: Paging
   onPageChange: (page: number) => void
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
 }
 
 export const CompanyTable = ({
   rows,
   approvedReports,
-  page,
+  paging,
   onPageChange,
+  sorting,
+  onSortingChange,
 }: Props) => {
   const columns = useMemo<ColumnDef<CompanyDto>[]>(
     () => [
@@ -46,7 +45,8 @@ export const CompanyTable = ({
         cell: ({ getValue }) => formatNationalId(getValue<string>()),
       },
       {
-        accessorKey: 'averageEmployeeCountFromRsk',
+        id: 'employeeCount',
+        accessorFn: (row) => row.averageEmployeeCountFromRsk,
         header: 'Meðalfjöldi starfsmanna',
         enableSorting: true,
       },
@@ -71,24 +71,18 @@ export const CompanyTable = ({
     [approvedReports],
   )
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
-  const pageData = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
   return (
     <Stack space={2}>
       <Inline space={1} alignY="center">
-        <Text fontWeight="semiBold">{rows.length}</Text>
+        <Text fontWeight="semiBold">{paging.totalItems}</Text>
         <Text>fyrirtæki fundust</Text>
       </Inline>
       <Table
         columns={columns}
-        data={pageData}
-        paging={{
-          page,
-          pageSize: PAGE_SIZE,
-          totalItems: rows.length,
-          totalPages,
-        }}
+        data={rows}
+        sorting={sorting}
+        onSortingChange={onSortingChange}
+        paging={paging}
         onPageChange={onPageChange}
         showPageSizeSelect={false}
         noDataMessage="Engin fyrirtæki skráð"

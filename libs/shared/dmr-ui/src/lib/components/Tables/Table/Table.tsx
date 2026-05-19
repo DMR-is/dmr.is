@@ -43,6 +43,10 @@ export type TableProps<TData extends object> = {
   loading?: boolean
   noDataMessage?: string
   layout?: 'fixed' | 'auto'
+  /** Controlled sorting state. When provided, the table operates in server-side sort mode. */
+  sorting?: SortingState
+  /** Called when the user clicks a sortable column header. */
+  onSortingChange?: (sorting: SortingState) => void
 }
 
 export const Table = <TData extends object>({
@@ -58,9 +62,17 @@ export const Table = <TData extends object>({
   loading = false,
   noDataMessage = 'Engar niðurstöður fundust',
   layout = 'fixed',
+  sorting: controlledSorting,
+  onSortingChange,
 }: TableProps<TData>) => {
   const router = useRouter()
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
+  const sorting = controlledSorting ?? internalSorting
+  const setSorting = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    const next = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+    if (onSortingChange) onSortingChange(next)
+    else setInternalSorting(next)
+  }
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [collapsingRows, setCollapsingRows] = useState<Set<string>>(new Set())
 

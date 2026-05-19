@@ -12,7 +12,6 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tabs } from '@dmr.is/ui/components/island-is/Tabs'
 import { type TagVariant } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
-import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import { CreateEqualityReportDrawer } from '../../components/list-page/CreateEqualityReportDrawer'
@@ -118,32 +117,6 @@ function mapReportToCase(report: ReportListItemDto): Case {
   }
 }
 
-const MOCK_COMMENTS: Record<string, string> = {
-  '1': 'Beðið svara',
-  '2': 'Vantar gögn',
-  '3': 'Til skoðunar',
-}
-
-const commentsColumn: ColumnDef<Case> = {
-  id: 'comments',
-  header: () => null,
-  size: 56,
-  enableSorting: false,
-  cell: ({ row }) => {
-    const comment = MOCK_COMMENTS[row.original.id] ?? 'Engar athugasemdir'
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center">
-        <Tooltip
-          text={comment}
-          placement="right"
-          color="blue400"
-          iconSize="medium"
-        />
-      </Box>
-    )
-  },
-}
-
 const statusColumn: ColumnDef<Case> = {
   ...COLUMN_STATUS,
   cell: ({ getValue }) => {
@@ -191,18 +164,11 @@ export const ReportsContainer = () => {
     setActiveTab(tab as TabId)
   }
 
-  const leadingColumns: ColumnDef<Case>[] =
-    activeTab === 'i-vinnslu' ? [commentsColumn] : []
   const middleColumns: ColumnDef<Case>[] =
     activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
   const trailingColumns: ColumnDef<Case>[] =
     activeTab !== 'innsendingar' ? [statusColumn] : []
-  const allColumns = [
-    ...leadingColumns,
-    ...COLUMNS,
-    ...middleColumns,
-    ...trailingColumns,
-  ]
+  const allColumns = [...COLUMNS, ...middleColumns, ...trailingColumns]
 
   return (
     <GridContainer>

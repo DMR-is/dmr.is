@@ -29,16 +29,6 @@ export enum ReportStatusTranslatedEnum {
 }
 import { type ColumnDef } from '@tanstack/react-table'
 
-export const CATEGORY_SLUG_MAP: Record<string, string> = {
-  jafnrettisaetlun: 'Jafnréttisáætlun',
-  launagreining: 'Launagreining',
-}
-
-export const CATEGORY_LABEL_TO_SLUG: Record<string, string> =
-  Object.fromEntries(
-    Object.entries(CATEGORY_SLUG_MAP).map(([slug, label]) => [label, slug]),
-  )
-
 export type Case = {
   id: string
   date: string
