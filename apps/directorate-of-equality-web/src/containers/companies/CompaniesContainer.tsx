@@ -48,7 +48,10 @@ export const CompaniesContainer = () => {
     : []
 
   const handleSortingChange = (next: { id: string; desc: boolean }[]) => {
-    if (next.length === 0) return
+    if (next.length === 0) {
+      setFilter({ sortBy: 'name', direction: 'asc', page: 1 })
+      return
+    }
     const { id, desc } = next[0]
     setFilter({
       sortBy: id as 'name' | 'employeeCount',

@@ -67,7 +67,8 @@ export const Table = <TData extends object>({
 }: TableProps<TData>) => {
   const router = useRouter()
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
-  const sorting = controlledSorting ?? internalSorting
+  const isControlled = controlledSorting !== undefined && onSortingChange !== undefined
+  const sorting = isControlled ? controlledSorting : internalSorting
   const setSorting = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
     const next = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
     if (onSortingChange) onSortingChange(next)
@@ -100,8 +101,9 @@ export const Table = <TData extends object>({
     state: { sorting, expanded },
     onSortingChange: setSorting,
     onExpandedChange: setExpanded,
+    manualSorting: isControlled,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    ...(isControlled ? {} : { getSortedRowModel: getSortedRowModel() }),
     getExpandedRowModel: getExpandedRowModel(),
     getRowCanExpand: () => !!getRowExpanded,
   })
