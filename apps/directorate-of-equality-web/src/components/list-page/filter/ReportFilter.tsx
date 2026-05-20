@@ -13,7 +13,7 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { overviewText } from '../../../lib/text'
+import { overviewText, sharedText } from '../../../lib/text'
 import * as styles from './ReportFilter.css'
 
 export type FilterOption = { value: string; label: string }
@@ -83,12 +83,12 @@ export const ReportFilter = ({
         {overviewText.filter.heading}
       </Text>
       <Filter
-        labelClearAll={overviewText.filter.labelClearAll}
-        labelOpen={overviewText.filter.labelOpen}
-        labelClose={overviewText.filter.labelClose}
-        labelClear={overviewText.filter.labelClear}
-        labelTitle={overviewText.filter.labelTitle}
-        labelResult={overviewText.filter.labelResult}
+        labelClearAll={sharedText.filter.labelClearAll}
+        labelOpen={sharedText.filter.labelOpen}
+        labelClose={sharedText.filter.labelClose}
+        labelClear={sharedText.filter.labelClear}
+        labelTitle={sharedText.filter.labelTitle}
+        labelResult={sharedText.filter.labelResult}
         onFilterClear={handleReset}
         variant="default"
         filterInput={
@@ -104,7 +104,7 @@ export const ReportFilter = ({
         }
       >
         <FilterMultiChoice
-          labelClear={overviewText.filter.labelClear}
+          labelClear={sharedText.filter.labelClear}
           onChange={({ categoryId, selected }) => {
             if (categoryId === 'type')
               onTypeChange(selected.length ? selected : null)
@@ -125,7 +125,7 @@ export const ReportFilter = ({
               selected: type ?? [],
               filters: [
                 { value: 'EQUALITY', label: 'Jafnréttisáætlun' },
-                { value: 'SALARY', label: 'Launagreining' },
+                { value: 'SALARY', label: 'Skýrslugjöf' },
               ],
             },
             ...extraCategories,

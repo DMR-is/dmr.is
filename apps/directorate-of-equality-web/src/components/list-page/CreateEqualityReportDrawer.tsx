@@ -66,7 +66,7 @@ export const CreateEqualityReportDrawer = () => {
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
     },
-    onError: () => toast.error(overviewText.createEqualityReport.errorToast),
+    onError: () => toast.error(sharedText.form.errorToast),
   })
 
   const handleReset = () => {
@@ -243,7 +243,7 @@ export const CreateEqualityReportDrawer = () => {
             <GridColumn span="12/12">
               <Inline justifyContent="flexEnd" space={2}>
                 <Button variant="ghost" size="small" onClick={handleReset}>
-                  {overviewText.createEqualityReport.reset}
+                  {sharedText.form.reset}
                 </Button>
                 <Button
                   size="small"
@@ -251,7 +251,7 @@ export const CreateEqualityReportDrawer = () => {
                   loading={submitMutation.isPending}
                   onClick={handleSubmit}
                 >
-                  {overviewText.createEqualityReport.submit}
+                  {sharedText.form.submit}
                 </Button>
               </Inline>
             </GridColumn>

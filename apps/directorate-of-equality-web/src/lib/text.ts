@@ -51,7 +51,6 @@ export const overviewText = {
   heroDescription:
     'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
   imageAlt: 'Heildarlisti',
-  breadcrumbHome: 'Forsíða',
   breadcrumbOverview: 'Heildarlisti',
   tabInnsendingar: 'Innsendingar',
   tabInProgress: 'Í vinnslu',
@@ -71,25 +70,16 @@ export const overviewText = {
     dateFrom: 'Frá',
     dateTo: 'Til',
     clearDates: 'Hreinsa dagsetningar',
-    labelClearAll: 'Hreinsa allar síur',
-    labelOpen: 'Opna síur',
-    labelClose: 'Loka síum',
-    labelClear: 'Hreinsa',
-    labelTitle: 'Síur',
-    labelResult: 'Sýna niðurstöður',
   },
   createEqualityReport: {
     drawerLabel: 'Skrá jafnréttisáætlun',
     buttonLabel: 'Jafnréttisáætlun',
     heading: 'Ný jafnréttisáætlun',
-    reset: 'Hreinsa',
-    submit: 'Senda inn',
     successToast: 'Skýrsla send inn',
-    errorToast: 'Villa við innsendingu',
   },
   createSalaryReport: {
     drawerLabel: 'Skrá launagreiningu',
-    buttonLabel: 'Launagreining',
+    buttonLabel: 'Skýrslugjöf',
     heading: 'Ný launagreining',
     excelHeading: 'Excel innflutningur',
     excelPlaceholder: 'Veldu Excel skrá til að flytja inn launagreiningargögn',
@@ -102,12 +92,9 @@ export const overviewText = {
     femaleCountLabel: 'Konur',
     neutralCountLabel: 'Kynhlutlægt',
     employeeCountHeading: 'Starfsmannafjöldi',
-    reset: 'Hreinsa',
-    submit: 'Senda inn',
     excelSuccessToast: 'Excel skrá flutt inn',
     excelErrorToast: 'Villa við innflutning á Excel skrá',
-    successToast: 'Launagreining send inn',
-    errorToast: 'Villa við innsendingu',
+    successToast: 'Skýrslugjöf send inn',
   },
 }
 
@@ -115,12 +102,11 @@ export const reportText = {
   heroTitle: 'Vinnslusvæði',
   heroDescription:
     'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
-  breadcrumbHome: 'Forsíða',
   breadcrumbOverview: 'Yfirlit',
   sidebarTitle: 'Upplýsingar',
   tabEquality: 'Jafnréttisáætlun',
   tabCompany: 'Fyrirtækið',
-  tabSalary: 'Launagreining',
+  tabSalary: 'Skýrslugjöf',
   tabsLabel: 'Skýrsla',
   stepApproved: 'Afgreitt',
   comments: {
@@ -162,14 +148,6 @@ export const companiesText = {
     name: 'Nafn',
     kennitala: 'Kennitala',
     avgEmployees: 'Meðalfjöldi starfsmanna',
-  },
-  filter: {
-    labelClearAll: 'Hreinsa allar síur',
-    labelOpen: 'Opna síur',
-    labelClose: 'Loka síum',
-    labelClear: 'Hreinsa',
-    labelTitle: 'Síur',
-    labelResult: 'Sýna niðurstöður',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
@@ -219,6 +197,15 @@ export const headerText = {
 }
 
 export const sharedText = {
+  breadcrumbHome: 'Forsíða',
+  filter: {
+    labelClearAll: 'Hreinsa allar síur',
+    labelOpen: 'Opna síur',
+    labelClose: 'Loka síum',
+    labelClear: 'Hreinsa',
+    labelTitle: 'Síur',
+    labelResult: 'Sýna niðurstöður',
+  },
   statusLabels: {
     DRAFT: 'Drög',
     SUBMITTED: 'Innsent',
@@ -229,7 +216,7 @@ export const sharedText = {
   },
   typeLabels: {
     EQUALITY: 'Jafnréttisáætlun',
-    SALARY: 'Launagreining',
+    SALARY: 'Skýrslugjöf',
   },
   genders: {
     male: 'Karl',
@@ -245,6 +232,9 @@ export const sharedText = {
     companySelect: 'Veldu fyrirtæki',
     topManagerHeading: 'Æðsti stjórnandi',
     contactHeading: 'Tengiliður',
+    reset: 'Hreinsa',
+    submit: 'Senda inn',
+    errorToast: 'Villa við innsendingu',
   },
   empty: {
     title: 'Ekkert fannst',

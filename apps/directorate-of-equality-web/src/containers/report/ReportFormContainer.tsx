@@ -5,7 +5,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS } from '../../lib/constants'
-import { reportText } from '../../lib/text'
+import { reportText, sharedText } from '../../lib/text'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
 type ReportFormContainerProps = {
@@ -30,7 +30,7 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
       <Stack space={[2]}>
         <Breadcrumbs
           items={[
-            { title: reportText.breadcrumbHome, href: '/' },
+            { title: sharedText.breadcrumbHome, href: '/' },
             { title: reportText.breadcrumbOverview, href: '/yfirlit' },
             { title: reportText.heroTitle, href: `/yfirlit/${report.id}` },
           ]}

@@ -5,7 +5,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { ReportsContainer } from '../../../containers/reports/ReportsContainer'
-import { overviewText } from '../../../lib/text'
+import { overviewText, sharedText } from '../../../lib/text'
 
 export default function MalPage() {
   return (
@@ -16,7 +16,7 @@ export default function MalPage() {
         image={{ src: '/assets/banner-image.svg', alt: overviewText.imageAlt }}
         breadcrumbs={{
           items: [
-            { title: overviewText.breadcrumbHome, href: '/' },
+            { title: sharedText.breadcrumbHome, href: '/' },
             { title: overviewText.breadcrumbOverview },
           ],
         }}

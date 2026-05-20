@@ -143,7 +143,7 @@ export const CreateSalaryReportDrawer = () => {
       const ordinals = parseOutlierOrdinals(message)
 
       if (!ordinals) {
-        toast.error(overviewText.createSalaryReport.errorToast)
+        toast.error(sharedText.form.errorToast)
         return
       }
 
@@ -165,7 +165,7 @@ export const CreateSalaryReportDrawer = () => {
         })
         onSuccess()
       } catch {
-        toast.error(overviewText.createSalaryReport.errorToast)
+        toast.error(sharedText.form.errorToast)
       }
     }
   }
@@ -418,7 +418,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span="12/12">
               <Inline justifyContent="flexEnd" space={2}>
                 <Button variant="ghost" size="small" onClick={handleReset}>
-                  {overviewText.createSalaryReport.reset}
+                  {sharedText.form.reset}
                 </Button>
                 <Button
                   size="small"
@@ -426,7 +426,7 @@ export const CreateSalaryReportDrawer = () => {
                   loading={submitMutation.isPending}
                   onClick={handleSubmit}
                 >
-                  {overviewText.createSalaryReport.submit}
+                  {sharedText.form.submit}
                 </Button>
               </Inline>
             </GridColumn>
