@@ -5,7 +5,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 type UtilityButtonProps = Pick<
   React.ComponentProps<typeof Button>,
-  'icon' | 'iconType' | 'onClick' | 'children' | 'loading' | 'fluid'
+  'icon' | 'iconType' | 'onClick' | 'children' | 'loading'
 > & {
   backgroundColor?: React.ComponentProps<typeof Box>['background']
 }

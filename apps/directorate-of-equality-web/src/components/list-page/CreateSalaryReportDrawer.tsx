@@ -117,7 +117,6 @@ export const CreateSalaryReportDrawer = () => {
     const body = {
       importedFromExcel: true,
       providerType: 'SYSTEM' as const,
-      providerId: Math.random().toString(36).substring(2, 15), // random ID to avoid replay, see report-create.service.ts
       companyAdminName: form.companyAdminName,
       companyAdminEmail: form.companyAdminEmail,
       companyAdminGender: form.companyAdminGender,
@@ -189,7 +188,7 @@ export const CreateSalaryReportDrawer = () => {
       ariaLabel={overviewText.createSalaryReport.drawerLabel}
       baseId="create-salary-report-drawer"
       disclosure={
-        <UtilityButton icon="add" fluid>
+        <UtilityButton icon="add">
           {overviewText.createSalaryReport.buttonLabel}
         </UtilityButton>
       }

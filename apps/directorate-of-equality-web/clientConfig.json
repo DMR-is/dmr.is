@@ -2792,10 +2792,7 @@
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
           },
-          "body": {
-            "type": "string",
-            "description": "Plain text comment body"
-          },
+          "body": { "type": "string" },
           "reportStatus": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
@@ -3193,7 +3190,7 @@
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
           },
-          "body": { "type": "string", "description": "Plain text comment body" }
+          "body": { "type": "string" }
         },
         "required": ["visibility", "body"]
       },
