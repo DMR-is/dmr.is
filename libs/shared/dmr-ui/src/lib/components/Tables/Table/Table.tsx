@@ -67,10 +67,16 @@ export const Table = <TData extends object>({
 }: TableProps<TData>) => {
   const router = useRouter()
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
-  const isControlled = controlledSorting !== undefined && onSortingChange !== undefined
+  const isControlled =
+    controlledSorting !== undefined && onSortingChange !== undefined
   const sorting = isControlled ? controlledSorting : internalSorting
-  const setSorting = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
-    const next = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+  const setSorting = (
+    updaterOrValue: SortingState | ((old: SortingState) => SortingState),
+  ) => {
+    const next =
+      typeof updaterOrValue === 'function'
+        ? updaterOrValue(sorting)
+        : updaterOrValue
     if (onSortingChange) onSortingChange(next)
     else setInternalSorting(next)
   }
@@ -121,7 +127,12 @@ export const Table = <TData extends object>({
 
   return (
     <Stack space={3}>
-      <T.Table style={{ tableLayout: layout, width: '100%' }}>
+      <T.Table
+        style={{
+          tableLayout: layout,
+          width: '100%',
+        }}
+      >
         <T.Head>
           {table.getHeaderGroups().map((headerGroup) => (
             <T.Row key={headerGroup.id}>
@@ -230,7 +241,8 @@ export const Table = <TData extends object>({
                             : undefined
                     }
                     style={
-                      (!getRowExpanded && href) || (!getRowExpanded && onRowClick)
+                      (!getRowExpanded && href) ||
+                      (!getRowExpanded && onRowClick)
                         ? { cursor: 'pointer' }
                         : undefined
                     }

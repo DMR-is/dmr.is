@@ -11,6 +11,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
+import { companiesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -40,11 +41,11 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     ...trpc.company.create.mutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: trpc.company.list.queryKey() })
-      toast.success('Fyrirtæki skráð')
+      toast.success(companiesText.createModal.successToast)
       handleClose()
     },
     onError: () => {
-      toast.error('Villa við skráningu fyrirtækis')
+      toast.error(companiesText.createModal.errorToast)
     },
   })
 
@@ -77,7 +78,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     <Modal
       baseId="create-company-modal"
       isVisible={isOpen}
-      title="Skrá nýtt fyrirtæki"
+      title={companiesText.createModal.title}
       onVisibilityChange={(visible) => {
         if (!visible) handleClose()
       }}
@@ -86,6 +87,9 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     >
       <Stack space={3}>
         <Stack space={1}>
+          <Text variant="eyebrow">
+            {companiesText.createModal.kennitalaEyebrow}
+          </Text>
           <Inline space={2} alignY="center">
             <Box
               flexGrow={1}
@@ -96,9 +100,9 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
             >
               <TextInput
                 name="nationalId"
-                label="Kennitala"
+                label={companiesText.createModal.kennitalaLabel}
+                placeholder={companiesText.createModal.kennitalaPlaceholder}
                 size="xs"
-                placeholder="000000-0000"
                 value={nationalIdInput}
                 onChange={(e) => {
                   setNationalIdInput(e.target.value)
@@ -115,17 +119,26 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
                 Fletta upp
               </Button>
             </Box>
+            <Button
+              variant="ghost"
+              size="small"
+              loading={lookupQuery.isFetching}
+              disabled={!nationalIdInput.trim()}
+              onClick={handleLookup}
+            >
+              {companiesText.createModal.lookupButton}
+            </Button>
           </Inline>
           {lookupQuery.isError && (
             <Text color="red600" variant="small">
-              Fyrirtæki fannst ekki í þjóðskrá
+              {companiesText.createModal.notFoundError}
             </Text>
           )}
         </Stack>
 
         <TextInput
           name="name"
-          label="Nafn fyrirtækis"
+          label={companiesText.createModal.nameLabel}
           size="xs"
           value={lookupQuery.data?.name ?? ''}
           readOnly
@@ -135,7 +148,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
 
         <TextInput
           name="employeeCount"
-          label="Meðalfjöldi starfsmanna"
+          label={companiesText.createModal.employeeCountLabel}
           type="number"
           size="xs"
           value={employeeCount}
@@ -145,7 +158,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
 
         <Inline justifyContent="flexEnd" space={2}>
           <Button variant="ghost" size="small" onClick={handleClose}>
-            Hætta við
+            {companiesText.createModal.cancel}
           </Button>
           <Button
             size="small"
@@ -153,7 +166,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
             loading={createMutation.isPending}
             onClick={handleCreate}
           >
-            Skrá fyrirtæki
+            {companiesText.createModal.submit}
           </Button>
         </Inline>
       </Stack>

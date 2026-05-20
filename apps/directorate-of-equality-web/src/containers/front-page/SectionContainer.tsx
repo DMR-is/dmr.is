@@ -18,6 +18,7 @@ import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
+import { frontPageText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -55,15 +56,27 @@ const STATS_WINDOWS: {
   label: string
   variant: 'blue' | 'mint' | 'purple'
 }[] = [
-  { id: 'last30Days', label: 'Síðustu 30 dagar', variant: 'blue' },
-  { id: 'currentYear', label: 'Þetta ár', variant: 'mint' },
-  { id: 'allTime', label: 'Allt saman', variant: 'purple' },
+  {
+    id: 'last30Days',
+    label: frontPageText.statsWindows.last30,
+    variant: 'blue',
+  },
+  {
+    id: 'currentYear',
+    label: frontPageText.statsWindows.thisYear,
+    variant: 'mint',
+  },
+  {
+    id: 'allTime',
+    label: frontPageText.statsWindows.allTime,
+    variant: 'purple',
+  },
 ]
 
 const STATS_WINDOW_INTROS: Record<StatisticsWindow, string> = {
-  last30Days: 'Hlutfall mála eftir stöðu síðustu 30 daga.',
-  currentYear: 'Hlutfall mála eftir stöðu á þessu ári.',
-  allTime: 'Hlutfall mála eftir stöðu frá upphafi.',
+  last30Days: frontPageText.statsIntros.last30,
+  currentYear: frontPageText.statsIntros.thisYear,
+  allTime: frontPageText.statsIntros.allTime,
 }
 
 const CHART_STATUSES = [
@@ -101,13 +114,13 @@ export const SectionContainer = () => {
     <Section bleed variant="blue">
       <GridContainer>
         <Text variant="h3" fontWeight="semiBold" marginBottom={3}>
-          Staða mála
+          {frontPageText.sectionTitle}
         </Text>
         <GridRow>
           <GridColumn span={['12/12', '7/12']}>
             <Stack space={3}>
               {/* TODO NAVIGATE CORRECTLY AND PREFILTERED FOR MIN MAL */}
-              <Wrapper title="Mál" link="/mal" linkText="Opna ristjórn">
+              <Wrapper title="Yfirlit" link="/yfirlit" linkText="Opna ristjórn">
                 <Tabs
                   label="Mál flokkar"
                   selected={selectedTab}
@@ -116,7 +129,7 @@ export const SectionContainer = () => {
                   tabs={[
                     {
                       id: 'almennt',
-                      label: 'Almennt',
+                      label: frontPageText.tabGeneral,
                       content: (
                         <TrackerTable
                           rows={[
@@ -138,7 +151,7 @@ export const SectionContainer = () => {
                     },
                     {
                       id: 'min-mal',
-                      label: 'Mín mál',
+                      label: frontPageText.tabMine,
                       content: (
                         <TrackerTable
                           rows={[
@@ -158,7 +171,7 @@ export const SectionContainer = () => {
             </Stack>
           </GridColumn>
           <GridColumn span={['12/12', '5/12']}>
-            <Wrapper title="Tölfræði">
+            <Wrapper title={frontPageText.statsTitle}>
               <Box
                 display="flex"
                 flexWrap="wrap"

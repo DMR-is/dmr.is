@@ -3,6 +3,8 @@
 import { useLogOut } from '@dmr.is/auth/useLogOut'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 
+import { headerText } from '../lib/text'
+
 export const LogoutButton = () => {
   const logOut = useLogOut()
   return (
@@ -12,7 +14,7 @@ export const LogoutButton = () => {
       iconType="outline"
       onClick={() => logOut()}
     >
-      Skrá út
+      {headerText.logoutButton}
     </Button>
   )
 }

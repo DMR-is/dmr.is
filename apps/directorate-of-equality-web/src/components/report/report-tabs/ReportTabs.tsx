@@ -10,6 +10,7 @@ import {
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
+import { reportText } from '../../../lib/text'
 import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
@@ -27,13 +28,13 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
 
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
-    label: 'Jafnréttisáætlun',
+    label: reportText.tabEquality,
     content: <EqualityReportTab report={report.equalityReport} />,
   }
 
   const fyrirtaekid = {
     id: 'fyrirtaekid',
-    label: 'Fyrirtækið',
+    label: reportText.tabCompany,
     content: (
       <CompanyInfoTab
         company={report.company}
@@ -65,7 +66,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
       ? [
           {
             id: 'launagreining',
-            label: 'Launagreining',
+            label: reportText.tabSalary,
             content: (
               <SalaryReportTab
                 data={salaryStats}
@@ -86,7 +87,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   return (
     <>
       <Tabs
-        label="Skýrsla"
+        label={reportText.tabsLabel}
         tabs={tabs}
         contentBackground="white"
         selected={selectedTab}
