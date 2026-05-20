@@ -173,7 +173,7 @@ export const ReportsContainer = () => {
 
   const needsUsers = activeTab !== 'innsendingar'
   const { data: usersData } = useQuery(
-    trpc.user.listActive.queryOptions(undefined, { enabled: needsUsers }),
+    trpc.user.list.queryOptions(undefined, { enabled: needsUsers }),
   )
 
   const reviewerOptions: FilterOption[] = (usersData ?? []).map((u) => ({
