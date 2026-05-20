@@ -250,7 +250,7 @@ describe('ApplicationService', () => {
         equalityReportId: input.equalityReportId,
         identifier: input.identifier,
         importedFromExcel: input.importedFromExcel,
-        providerType: input.providerType,
+        providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
         companyAdminName: input.companyAdminName,
         companyAdminEmail: input.companyAdminEmail,
@@ -360,7 +360,7 @@ describe('ApplicationService', () => {
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).toHaveBeenCalledWith({
         identifier: input.identifier,
-        providerType: input.providerType,
+        providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
         companyAdminName: input.companyAdminName,
         companyAdminEmail: input.companyAdminEmail,
@@ -474,52 +474,6 @@ describe('ApplicationService', () => {
         },
       })
       expect(companyReportFindAll).not.toHaveBeenCalled()
-    })
-
-    it('defaults applicant lookup to the ISLAND_IS provider channel', async () => {
-      reportFindOne.mockImplementationOnce(async ({ where }) =>
-        where.providerType === ReportProviderEnum.ISLAND_IS ? null : {},
-      )
-
-      await expect(service.getReport(PROVIDER_ID, COMPANY)).rejects.toThrow(
-        NotFoundException,
-      )
-      expect(reportFindOne).toHaveBeenCalledWith({
-        where: {
-          providerType: ReportProviderEnum.ISLAND_IS,
-          providerId: PROVIDER_ID,
-        },
-      })
-      expect(companyReportFindAll).not.toHaveBeenCalled()
-    })
-
-    it('honors an explicit providerType when resolving an applicant report', async () => {
-      const equalityReport = makeReportRow({
-        id: REPORT_ID,
-        providerType: ReportProviderEnum.OTHER,
-        providerId: PROVIDER_ID,
-        type: ReportTypeEnum.EQUALITY,
-        status: ReportStatusEnum.SUBMITTED,
-      })
-      reportFindOne.mockResolvedValueOnce(equalityReport)
-      companyReportFindAll.mockResolvedValueOnce([
-        makeCompanyReportRow({ reportId: REPORT_ID }),
-      ])
-      getCommentsByReportId.mockResolvedValueOnce([])
-
-      const result = await service.getReport(
-        PROVIDER_ID,
-        COMPANY,
-        ReportProviderEnum.OTHER,
-      )
-
-      expect(reportFindOne).toHaveBeenCalledWith({
-        where: {
-          providerType: ReportProviderEnum.OTHER,
-          providerId: PROVIDER_ID,
-        },
-      })
-      expect(result.id).toBe(REPORT_ID)
     })
 
     it("throws NotFoundException when the resolved company isn't the parent", async () => {
@@ -1342,7 +1296,6 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     equalityReportId: '00000000-0000-0000-0000-00000000eee1',
     identifier: 'SAL-2026-001',
     importedFromExcel: true,
-    providerType: ReportProviderEnum.SYSTEM,
     providerId: 'salary-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminEmail: 'admin@example.is',
@@ -1368,7 +1321,6 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
 function makeSubmitEqualityInput(): SubmitEqualityReportDto {
   return {
     identifier: 'EQ-2026-001',
-    providerType: ReportProviderEnum.SYSTEM,
     providerId: 'equality-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminEmail: 'admin@example.is',

@@ -83,7 +83,13 @@ import { IApplicationService } from './application.service.interface'
 const LOGGING_CONTEXT = 'ApplicationService'
 const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
   'salary_difference_threshold_percent'
-const DEFAULT_APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
+
+/**
+ * This module is bound to the island.is application portal. Other upstream
+ * provider channels — when they exist — get their own controllers; we don't
+ * branch within this one.
+ */
+const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -223,10 +229,9 @@ export class ApplicationService implements IApplicationService {
   async getReport(
     providerId: string,
     company: CompanyDto,
-    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
     const report = await this.reportModel.findOne({
-      where: { providerType, providerId },
+      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
     })
 
     if (!report) {
@@ -287,7 +292,6 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
-    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportCommentDto> {
     this.logger.info('Submitting report comment from application portal', {
       context: LOGGING_CONTEXT,
@@ -296,7 +300,7 @@ export class ApplicationService implements IApplicationService {
     })
 
     const report = await this.reportModel.findOne({
-      where: { providerType, providerId },
+      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
     })
 
     if (!report) {
@@ -337,7 +341,6 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: EditEqualityContentDto,
     company: CompanyDto,
-    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
     this.logger.info('Editing equality content from application portal', {
       context: LOGGING_CONTEXT,
@@ -348,7 +351,6 @@ export class ApplicationService implements IApplicationService {
     const report = await this.findOwnedReportByProviderTuple(
       providerId,
       company,
-      providerType,
     )
 
     if (report.type !== ReportTypeEnum.EQUALITY) {
@@ -374,7 +376,7 @@ export class ApplicationService implements IApplicationService {
       company.id,
     )
 
-    return this.getReport(providerId, company, providerType)
+    return this.getReport(providerId, company)
   }
 
   /**
@@ -396,7 +398,6 @@ export class ApplicationService implements IApplicationService {
     providerId: string,
     input: EditOutliersDto,
     company: CompanyDto,
-    providerType: ReportProviderEnum = DEFAULT_APPLICATION_REPORT_PROVIDER,
   ): Promise<ApplicationReportDetailDto> {
     this.logger.info('Editing outliers from application portal', {
       context: LOGGING_CONTEXT,
@@ -407,7 +408,6 @@ export class ApplicationService implements IApplicationService {
     const report = await this.findOwnedReportByProviderTuple(
       providerId,
       company,
-      providerType,
     )
 
     if (report.type !== ReportTypeEnum.SALARY) {
@@ -527,7 +527,7 @@ export class ApplicationService implements IApplicationService {
 
     await this.reportEventService.emitEdited(report.id, newStatus, company.id)
 
-    return this.getReport(providerId, company, providerType)
+    return this.getReport(providerId, company)
   }
 
   /**
@@ -540,10 +540,9 @@ export class ApplicationService implements IApplicationService {
   private async findOwnedReportByProviderTuple(
     providerId: string,
     company: CompanyDto,
-    providerType: ReportProviderEnum,
   ): Promise<ReportModel> {
     const report = await this.reportModel.findOne({
-      where: { providerType, providerId },
+      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
     })
 
     if (!report) {
@@ -574,7 +573,7 @@ export class ApplicationService implements IApplicationService {
       equalityReportId: input.equalityReportId,
       identifier: input.identifier,
       importedFromExcel: input.importedFromExcel,
-      providerType: input.providerType,
+      providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
       companyAdminEmail: input.companyAdminEmail,
@@ -600,7 +599,7 @@ export class ApplicationService implements IApplicationService {
 
     return {
       identifier: input.identifier,
-      providerType: input.providerType,
+      providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
       companyAdminEmail: input.companyAdminEmail,

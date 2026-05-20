@@ -1,4 +1,4 @@
-import { ApiString } from '@dmr.is/decorators'
+import { ApiHTML } from '@dmr.is/decorators'
 
 /**
  * Body for `PUT /api/v1/application/reports/:providerId/equality-content`.
@@ -10,10 +10,9 @@ import { ApiString } from '@dmr.is/decorators'
  * the EDITED event is the audit signal that the applicant responded.
  */
 export class EditEqualityContentDto {
-  @ApiString({
-    minLength: 1,
+  @ApiHTML({
     description:
-      'New narrative content for the equality report. Replaces the prior `equality_report_content` in place.',
+      'New narrative content for the equality report as base64-encoded HTML. Decoded server-side and replaces the prior `equality_report_content` in place.',
   })
   equalityReportContent!: string
 }
