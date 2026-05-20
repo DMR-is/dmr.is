@@ -4,6 +4,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
 import type { UserDto } from '../dto/user.dto'
+import { DoeUserRole } from '../types/user-role'
 
 type UserAttributes = {
   nationalId: string
@@ -12,6 +13,7 @@ type UserAttributes = {
   email: string
   phone: string | null
   isActive: boolean
+  role: DoeUserRole
 }
 
 type UserCreateAttributes = {
@@ -21,6 +23,7 @@ type UserCreateAttributes = {
   email: string
   phone?: string | null
   isActive?: boolean
+  role: DoeUserRole
 }
 
 @MutableTable({ tableName: DoeModels.USER })
@@ -51,6 +54,12 @@ export class UserModel extends MutableModel<
   })
   isActive!: boolean
 
+  @Column({
+    type: DataType.ENUM(...Object.values(DoeUserRole)),
+    allowNull: false,
+  })
+  role!: DoeUserRole
+
   static fromModel(model: UserModel): UserDto {
     return {
       id: model.id,
@@ -60,6 +69,7 @@ export class UserModel extends MutableModel<
       email: model.email,
       phone: model.phone,
       isActive: model.isActive,
+      role: model.role,
     }
   }
 
