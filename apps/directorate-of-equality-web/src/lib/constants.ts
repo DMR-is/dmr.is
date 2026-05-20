@@ -21,6 +21,7 @@ export const formatDateIS = (dateStr: string) => {
 
 export enum ReportStatusTranslatedEnum {
   SUBMITTED = 'Innsending',
+  POSTPONED = 'Frestað',
   DRAFT = 'Drög',
   IN_REVIEW = 'Í vinnslu',
   APPROVED = 'Afgreitt',

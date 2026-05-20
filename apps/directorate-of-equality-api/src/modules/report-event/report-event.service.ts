@@ -96,6 +96,25 @@ export class ReportEventService implements IReportEventService {
     })
   }
 
+  async emitEdited(
+    reportId: string,
+    reportStatus: ReportStatusEnum,
+    companyId: string,
+  ): Promise<void> {
+    this.logger.info(`Emitting EDITED event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.EDITED,
+      actorUserId: null,
+      reportStatus,
+      companyId,
+    })
+  }
+
   async emitSuperseded(
     reportId: string,
     relatedReportId: string,

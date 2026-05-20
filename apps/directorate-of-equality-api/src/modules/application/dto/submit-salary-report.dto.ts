@@ -9,10 +9,7 @@ import {
   ApiUUID,
 } from '@dmr.is/decorators'
 
-import {
-  GenderEnum,
-  ReportProviderEnum,
-} from '../../report/models/report.enums'
+import { GenderEnum } from '../../report/models/report.enums'
 import { CreateReportOutlierDto } from '../../report-create/dto/create-report.dto'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import {
@@ -32,9 +29,6 @@ export class SubmitSalaryReportDto {
 
   @ApiBoolean()
   importedFromExcel!: boolean
-
-  @ApiEnum(ReportProviderEnum)
-  providerType!: ReportProviderEnum
 
   @ApiString()
   providerId!: string

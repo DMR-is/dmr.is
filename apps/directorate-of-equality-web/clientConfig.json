@@ -2552,6 +2552,7 @@
         "enum": [
           "DRAFT",
           "SUBMITTED",
+          "POSTPONED",
           "IN_REVIEW",
           "DENIED",
           "APPROVED",
@@ -2724,7 +2725,8 @@
           "ASSIGNED",
           "UNASSIGNED",
           "STATUS_CHANGED",
-          "SUPERSEDED"
+          "SUPERSEDED",
+          "EDITED"
         ]
       },
       "ReportEventDto": {

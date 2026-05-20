@@ -42,6 +42,10 @@ describe('ReportWorkflowService', () => {
     findOne: jest.fn(),
   }
 
+  const reportEmployeeOutlierModel = {
+    findOne: jest.fn(),
+  }
+
   let service: ReportWorkflowService
 
   const reviewerContext = (
@@ -66,6 +70,7 @@ describe('ReportWorkflowService', () => {
       reportModel as never,
       companyReportModel as never,
       userModel as never,
+      reportEmployeeOutlierModel as never,
     )
   })
 
@@ -396,6 +401,39 @@ describe('ReportWorkflowService', () => {
       await expect(
         service.approve(companyContext(ReportStatusEnum.IN_REVIEW)),
       ).rejects.toBeInstanceOf(ForbiddenException)
+    })
+
+    it('rejects when any outlier row on the report still has null explanation fields', async () => {
+      reportEmployeeOutlierModel.findOne.mockResolvedValueOnce({
+        id: 'outlier-1',
+      })
+
+      await expect(
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      // The gate fires before the APPROVED update.
+      expect(reportModel.update).not.toHaveBeenCalled()
+      expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
+    })
+
+    it('proceeds with approval when no outlier row has missing explanations (EQUALITY no-op or SALARY resolved)', async () => {
+      reportEmployeeOutlierModel.findOne.mockResolvedValueOnce(null)
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      // Gate ran first, then the APPROVED update.
+      expect(reportEmployeeOutlierModel.findOne).toHaveBeenCalledTimes(1)
+      expect(reportModel.update).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.APPROVED }),
+        { where: { id: 'report-1' } },
+      )
     })
   })
 

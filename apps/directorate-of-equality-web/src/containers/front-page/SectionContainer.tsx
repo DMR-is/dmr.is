@@ -33,6 +33,7 @@ const PieChart = dynamic(
 const STATUS_LABELS: Record<ReportStatusEnum, string> = {
   [ReportStatusEnum.DRAFT]: 'Drög',
   [ReportStatusEnum.SUBMITTED]: 'Ný mál',
+  [ReportStatusEnum.POSTPONED]: 'Frestað',
   [ReportStatusEnum.IN_REVIEW]: 'Í vinnslu',
   [ReportStatusEnum.APPROVED]: 'Samþykkt',
   [ReportStatusEnum.DENIED]: 'Hafnað',
@@ -42,6 +43,7 @@ const STATUS_LABELS: Record<ReportStatusEnum, string> = {
 const STATUS_COLORS: Record<ReportStatusEnum, string> = {
   [ReportStatusEnum.DRAFT]: theme.color.dark200,
   [ReportStatusEnum.SUBMITTED]: theme.color.yellow600,
+  [ReportStatusEnum.POSTPONED]: theme.color.blue200,
   [ReportStatusEnum.IN_REVIEW]: theme.color.roseTinted400,
   [ReportStatusEnum.APPROVED]: theme.color.mint600,
   [ReportStatusEnum.DENIED]: theme.color.red400,
