@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { GetUsersQueryDto } from './dto/get-users.query.dto'
 import { UserDto } from './dto/user.dto'
 import { UserModel } from './models/user.model'
 import { IUserService } from './user.service.interface'
@@ -28,11 +29,14 @@ export class UserService implements IUserService {
     return user.fromModel()
   }
 
-  async getActiveUsers(): Promise<UserDto[]> {
-    this.logger.debug('Listing active users', { context: LOGGING_CONTEXT })
+  async getUsers({ showInactive }: GetUsersQueryDto): Promise<UserDto[]> {
+    this.logger.debug(
+      `Listing users${showInactive ? ' (including inactive)' : ''}`,
+      { context: LOGGING_CONTEXT },
+    )
 
     const users = await this.userModel.findAll({
-      where: { isActive: true },
+      where: showInactive ? undefined : { isActive: true },
       order: [
         ['firstName', 'ASC'],
         ['lastName', 'ASC'],

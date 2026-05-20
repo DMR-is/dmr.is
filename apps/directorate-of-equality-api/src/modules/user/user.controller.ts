@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, UseGuards } from '@nestjs/common'
+import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
@@ -7,6 +7,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { GetUsersQueryDto } from './dto/get-users.query.dto'
 import { UserDto } from './dto/user.dto'
 import { IUserService } from './user.service.interface'
 
@@ -28,9 +29,9 @@ export class UserController {
     return this.userService.getMyUser(user.nationalId)
   }
 
-  @Get('active')
-  @DoeResponse({ operationId: 'getActiveUsers', type: [UserDto] })
-  async getActiveUsers(): Promise<UserDto[]> {
-    return this.userService.getActiveUsers()
+  @Get()
+  @DoeResponse({ operationId: 'getUsers', type: [UserDto] })
+  async getUsers(@Query() query: GetUsersQueryDto): Promise<UserDto[]> {
+    return this.userService.getUsers(query)
   }
 }

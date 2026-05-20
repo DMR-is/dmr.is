@@ -22,7 +22,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     trpc.reports.getById.queryOptions({ id: reportId }),
   )
 
-  const { data: users = [] } = useQuery(trpc.user.listActive.queryOptions())
+  const { data: users = [] } = useQuery(trpc.user.list.queryOptions())
   const { data: me } = useQuery(trpc.user.getMyUser.queryOptions())
 
   const usersById = new Map(users.map((u) => [u.id, u]))

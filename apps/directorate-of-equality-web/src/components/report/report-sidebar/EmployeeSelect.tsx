@@ -17,7 +17,7 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
   const queryClient = useQueryClient()
 
   const { data: users, isLoading: isLoadingUsers } = useQuery(
-    trpc.user.listActive.queryOptions(),
+    trpc.user.list.queryOptions(),
   )
 
   const assign = useMutation({

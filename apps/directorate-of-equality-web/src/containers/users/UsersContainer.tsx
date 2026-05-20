@@ -59,12 +59,10 @@ export const UsersContainer = () => {
   const [showInactive, setShowInactive] = useState(false)
 
   const { data: users } = useSuspenseQuery(
-    trpc.user.listActive.queryOptions(undefined),
+    trpc.user.list.queryOptions({ showInactive }),
   )
 
-  const visibleUsers = showInactive
-    ? users
-    : (users ?? []).filter((u) => u.isActive)
+  const visibleUsers = users ?? []
 
   const openCreate = () => {
     setSelectedUser(null)

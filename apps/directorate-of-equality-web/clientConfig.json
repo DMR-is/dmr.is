@@ -487,10 +487,18 @@
         "tags": ["Users"]
       }
     },
-    "/api/v1/users/active": {
+    "/api/v1/users": {
       "get": {
-        "operationId": "getActiveUsers",
-        "parameters": [],
+        "operationId": "getUsers",
+        "parameters": [
+          {
+            "name": "showInactive",
+            "required": false,
+            "in": "query",
+            "description": "When true, includes inactive users. Defaults to false.",
+            "schema": { "type": "boolean" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -2509,6 +2517,7 @@
             "enum": [
               "DRAFT",
               "SUBMITTED",
+              "POSTPONED",
               "IN_REVIEW",
               "DENIED",
               "APPROVED",
@@ -2794,7 +2803,10 @@
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
           },
-          "body": { "type": "string" },
+          "body": {
+            "type": "string",
+            "description": "Plain text comment body"
+          },
           "reportStatus": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
@@ -3060,7 +3072,7 @@
           "reason": {
             "type": "string",
             "nullable": true,
-            "description": "Null only when the parent report has `outliersPostponed = true`. Otherwise required and non-empty."
+            "description": "Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty."
           },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
@@ -3192,7 +3204,7 @@
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
           },
-          "body": { "type": "string" }
+          "body": { "type": "string", "description": "Plain text comment body" }
         },
         "required": ["visibility", "body"]
       },
