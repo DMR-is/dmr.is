@@ -9,9 +9,13 @@ import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { type UserDto } from '../../gen/fetch/types.gen'
+import { useTRPC } from '../../lib/trpc/client/trpc'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   user: UserDto | null
@@ -20,6 +24,10 @@ type Props = {
 }
 
 export const UserModal = ({ user, isOpen, onClose }: Props) => {
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const [nationalId, setNationalId] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -28,12 +36,14 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
   useEffect(() => {
     if (user) {
+      setNationalId('')
       setFirstName(user.firstName)
       setLastName(user.lastName)
       setEmail(user.email)
       setPhone(user.phone ?? '')
       setIsActive(user.isActive)
     } else {
+      setNationalId('')
       setFirstName('')
       setLastName('')
       setEmail('')
@@ -42,12 +52,50 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     }
   }, [user])
 
-  const handleSave = () => {
-    // TODO: wire up update mutation when API endpoint is available
-    onClose()
-  }
+  const { mutate: createUser, isPending: isCreating } = useMutation(
+    trpc.user.create.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
+        toast.success('Ritstjóri stofnaður')
+        onClose()
+      },
+    }),
+  )
+
+  const { mutate: updateUser, isPending: isUpdating } = useMutation(
+    trpc.user.update.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
+        toast.success('Breytingar vistaðar')
+        onClose()
+      },
+    }),
+  )
 
   const isNew = !user
+  const isSaving = isCreating || isUpdating
+
+  const handleSave = () => {
+    if (isNew) {
+      createUser({
+        nationalId,
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        role: 'EDITOR',
+      })
+    } else {
+      updateUser({
+        id: user.id,
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        isActive,
+      })
+    }
+  }
 
   return (
     <Modal
@@ -61,6 +109,16 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
       width="small"
     >
       <Stack space={3}>
+        {isNew && (
+          <TextInput
+            name="nationalId"
+            label="Kennitala"
+            size="xs"
+            value={nationalId}
+            onChange={(e) => setNationalId(e.target.value)}
+          />
+        )}
+
         <Inline space={2}>
           <Box flexGrow={1}>
             <TextInput
@@ -119,7 +177,14 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           </Button>
           <Button
             size="small"
-            disabled={!firstName.trim() || !lastName.trim() || !email.trim()}
+            loading={isSaving}
+            disabled={
+              isSaving ||
+              !firstName.trim() ||
+              !lastName.trim() ||
+              !email.trim() ||
+              (isNew && !nationalId.trim())
+            }
             onClick={handleSave}
           >
             {isNew ? 'Stofna ritstjóra' : 'Vista breytingar'}
