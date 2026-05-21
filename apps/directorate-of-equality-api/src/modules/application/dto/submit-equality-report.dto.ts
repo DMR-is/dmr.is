@@ -5,10 +5,7 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
-import {
-  GenderEnum,
-  ReportProviderEnum,
-} from '../../report/models/report.enums'
+import { GenderEnum } from '../../report/models/report.enums'
 import {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
@@ -17,9 +14,6 @@ import {
 export class SubmitEqualityReportDto {
   @ApiString()
   identifier!: string
-
-  @ApiEnum(ReportProviderEnum)
-  providerType!: ReportProviderEnum
 
   @ApiString()
   providerId!: string

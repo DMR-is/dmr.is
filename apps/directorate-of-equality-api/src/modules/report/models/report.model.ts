@@ -55,7 +55,6 @@ type ReportAttributes = {
   providerId: string | null
   importedFromExcel: boolean
   identifier: string | null
-  outliersPostponed: boolean
 
   equalityReportId: string | null
   reviewerUserId: string | null
@@ -88,7 +87,6 @@ type ReportCreateAttributes = {
   providerId?: string | null
   importedFromExcel?: boolean
   identifier?: string | null
-  outliersPostponed?: boolean
 
   equalityReportId?: string | null
   reviewerUserId?: string | null
@@ -249,14 +247,6 @@ export class ReportModel extends MutableModel<
   @Column({ type: DataType.TEXT, allowNull: true })
   identifier!: string | null
 
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-    field: 'outliers_postponed',
-  })
-  outliersPostponed!: boolean
-
   @ForeignKey(() => ReportModel)
   @Column({ type: DataType.UUID, allowNull: true, field: 'equality_report_id' })
   equalityReportId!: string | null
@@ -331,7 +321,9 @@ export class ReportModel extends MutableModel<
       importedFromExcel: model.importedFromExcel,
       identifier: model.identifier,
       outliersPostponed:
-        model.type === ReportTypeEnum.SALARY ? model.outliersPostponed : null,
+        model.type === ReportTypeEnum.SALARY
+          ? model.status === ReportStatusEnum.POSTPONED
+          : null,
       equalityReportId: model.equalityReportId,
       reviewerUserId: model.reviewerUserId,
       approvedAt: model.approvedAt,

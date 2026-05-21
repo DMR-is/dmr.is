@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 
-import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -59,12 +58,10 @@ export const UsersContainer = () => {
   const [showInactive, setShowInactive] = useState(false)
 
   const { data: users } = useSuspenseQuery(
-    trpc.user.listActive.queryOptions(undefined),
+    trpc.user.list.queryOptions({ showInactive }),
   )
 
-  const visibleUsers = showInactive
-    ? users
-    : (users ?? []).filter((u) => u.isActive)
+  const visibleUsers = users ?? []
 
   const openCreate = () => {
     setSelectedUser(null)

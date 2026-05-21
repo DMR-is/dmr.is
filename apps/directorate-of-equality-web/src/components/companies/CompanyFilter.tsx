@@ -5,6 +5,7 @@ import { FilterInput } from '@dmr.is/ui/components/island-is/FilterInput'
 import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiChoice'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { sharedText } from '../../lib/text'
 import {
   DAILY_FINES_FILTER_OPTIONS,
   EMPLOYEE_RANGES,
@@ -74,12 +75,12 @@ export const CompanyFilter = ({
         Leit og síun
       </Text>
       <Filter
-        labelClearAll="Hreinsa allar síur"
-        labelOpen="Opna síur"
-        labelClose="Loka síum"
-        labelClear="Hreinsa"
-        labelTitle="Síur"
-        labelResult="Sýna niðurstöður"
+        labelClearAll={sharedText.filter.labelClearAll}
+        labelOpen={sharedText.filter.labelOpen}
+        labelClose={sharedText.filter.labelClose}
+        labelClear={sharedText.filter.labelClear}
+        labelTitle={sharedText.filter.labelTitle}
+        labelResult={sharedText.filter.labelResult}
         onFilterClear={onReset}
         variant="default"
         filterInput={
@@ -93,7 +94,7 @@ export const CompanyFilter = ({
         }
       >
         <FilterMultiChoice
-          labelClear="Hreinsa"
+          labelClear={sharedText.filter.labelClear}
           onChange={({ categoryId, selected }) =>
             onFiltersChange(categoryId as keyof CompanyFilters, [...selected])
           }

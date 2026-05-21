@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -18,6 +20,8 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { AssignReportDto } from './dto/assign-report.dto'
@@ -38,6 +42,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(UserModel)
     private readonly userModel: typeof UserModel,
+    @InjectModel(ReportEmployeeOutlierModel)
+    private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
   ) {}
 
   async assign(
@@ -194,6 +200,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
       )
     }
 
+    await this.assertOutlierExplanationsResolved(context.reportId)
+
     const actorUserId = context.actor.userId
     const now = new Date()
     const validUntil = new Date(now)
@@ -234,6 +242,49 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { finesStartedAt: new Date() },
       { where: { id: context.reportId } },
     )
+  }
+
+  /**
+   * Belt-and-suspenders gate: a SALARY report whose outlier rows still carry
+   * null explanation fields (i.e. was submitted with `outliersPostponed = true`
+   * and the applicant has not resolved them via the outliers edit endpoint)
+   * cannot be approved. EQUALITY reports have no outlier rows, so the query
+   * is a cheap no-op for them.
+   *
+   * The submit-side guard already enforces "every detected outlier has a row"
+   * and the all-or-none invariant on rows themselves. This check enforces the
+   * additional lifecycle invariant: status can leave POSTPONED only after the
+   * resolve path has filled every row.
+   */
+  private async assertOutlierExplanationsResolved(
+    reportId: string,
+  ): Promise<void> {
+    const unresolved = await this.reportEmployeeOutlierModel.findOne({
+      include: [
+        {
+          model: ReportEmployeeModel,
+          as: 'reportEmployee',
+          where: { reportId },
+          required: true,
+          attributes: [],
+        },
+      ],
+      where: {
+        [Op.or]: [
+          { reason: null },
+          { action: null },
+          { signatureName: null },
+          { signatureRole: null },
+        ],
+      },
+      attributes: ['id'],
+    })
+
+    if (unresolved) {
+      throw new BadRequestException(
+        `Cannot approve report ${reportId}: outlier explanations are still pending`,
+      )
+    }
   }
 
   private async supersedePreviousApproved(reportId: string): Promise<void> {

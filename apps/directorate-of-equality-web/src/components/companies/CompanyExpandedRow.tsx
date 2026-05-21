@@ -79,7 +79,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
       value: company.averageEmployeeCountFromRsk,
     },
     {
-      label: 'Launagreining skylda',
+      label: 'Skýrslugjöf skylda',
       value:
         company.salaryReportRequired || company.salaryReportRequiredOverride
           ? 'Já'
@@ -137,7 +137,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
               >
                 <Stack space={1}>
                   <Text variant="small" fontWeight="semiBold">
-                    Launagreining
+                    Skýrslugjöf
                   </Text>
                   <Text variant="small" color="dark300">
                     Gildir til: {formatDate(r.validUntil)}

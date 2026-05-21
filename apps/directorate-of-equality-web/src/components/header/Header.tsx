@@ -15,6 +15,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Hidden } from '@dmr.is/ui/components/island-is/Hidden'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 
+import { headerText } from '../../lib/text'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
 
@@ -45,7 +46,7 @@ export const Header = () => {
                     <Hidden above="md">
                       <img
                         src={'/assets/jafnrettisstofa-logo.svg'}
-                        alt="Skjaldarmerki"
+                        alt={headerText.logoAlt}
                         height={20}
                         style={{ maxHeight: '20px' }}
                       />
@@ -53,7 +54,7 @@ export const Header = () => {
                     <Hidden below="lg">
                       <img
                         src={'/assets/jafnrettisstofa-logo.svg'}
-                        alt="Skjaldarmerki"
+                        alt={headerText.logoAlt}
                         height={44}
                         style={{ maxHeight: '44px' }}
                       />
@@ -71,10 +72,10 @@ export const Header = () => {
                     <DropdownMenu
                       title={session.user.name ?? ''}
                       icon="chevronDown"
-                      menuLabel="Notandi"
+                      menuLabel={headerText.userMenuLabel}
                       items={[
                         {
-                          title: 'Útskrá',
+                          title: headerText.logout,
                           onClick: (e) => {
                             e.preventDefault()
                             logOut()

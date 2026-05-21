@@ -3,6 +3,8 @@ import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
+import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
+import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
@@ -34,6 +36,16 @@ export interface IApplicationService {
     input: SubmitApplicationReportCommentDto,
     company: CompanyDto,
   ): Promise<ApplicationReportCommentDto>
+  editEqualityContent(
+    providerId: string,
+    input: EditEqualityContentDto,
+    company: CompanyDto,
+  ): Promise<ApplicationReportDetailDto>
+  editOutliers(
+    providerId: string,
+    input: EditOutliersDto,
+    company: CompanyDto,
+  ): Promise<ApplicationReportDetailDto>
   getEqualityTemplateHtml(): string
   getEqualityTemplateDocx(): Buffer
 }

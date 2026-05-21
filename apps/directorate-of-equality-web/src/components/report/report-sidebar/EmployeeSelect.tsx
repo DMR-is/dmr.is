@@ -3,6 +3,7 @@
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
+import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -17,7 +18,7 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
   const queryClient = useQueryClient()
 
   const { data: users, isLoading: isLoadingUsers } = useQuery(
-    trpc.user.listActive.queryOptions(),
+    trpc.user.list.queryOptions(),
   )
 
   const assign = useMutation({
@@ -26,11 +27,11 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
-      toast.success('Úthlutun tókst.')
+      toast.success(reportText.employeeSelect.successToast)
     },
 
     onError: () => {
-      toast.error('Villa við að úthluta starfsmanni.')
+      toast.error(reportText.employeeSelect.errorToast)
     },
   })
 
@@ -44,7 +45,7 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
   return (
     <Select
       size="sm"
-      label="Starfsmaður"
+      label={reportText.employeeSelect.label}
       options={options}
       value={value}
       isClearable

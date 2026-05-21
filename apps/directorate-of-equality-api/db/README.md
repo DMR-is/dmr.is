@@ -45,25 +45,29 @@ Every company must submit an `EQUALITY` report — no gating column, no exceptio
 
 ```
   DRAFT  ──submit──▶  SUBMITTED  ──pickup──▶  IN_REVIEW
-                                                  │
-                       ┌──────────────────────────┤
-                       ▼                          ▼
-                    DENIED                     APPROVED
-                       │                          │
-                       │ (resubmit = new DRAFT    │ (3yr later, or on new approval)
-                       │  row, no FK chain)       ▼
-                       │                       SUPERSEDED
-                       ▼
-                  (new DRAFT row)
+                          ▲                       │
+                          │ resolve outliers      │
+                          │ (PUT /outliers)       │
+                          │                       │
+                       POSTPONED       ┌──────────┤
+                       (no pickup)     ▼          ▼
+                                    DENIED     APPROVED
+                                       │          │
+                                       │ (denial  │ (3yr later, or on new approval)
+                                       │  is      ▼
+                                       │  final)  SUPERSEDED
+                                       │
+                                  (new application = new provider_id = new row)
 ```
 
 State-by-state:
 
 - **`DRAFT`** — company admin is still editing. Not visible to reviewers. Most columns may be null. Can transition to `SUBMITTED`.
 - **`SUBMITTED`** — company finalized the submission. `created_at` is the submission timestamp for the row. Waits in reviewer queue.
-- **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.)
-- **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. The company must submit a new report (new row) — this denied row **stays forever** as audit.
-- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition.
+- **`POSTPONED`** — applies to `SALARY` reports only. The company submitted with all outliers deferred (`outliers[]` rows persisted with null explanation columns). The report is **not pickable** by reviewers — `assign()` rejects this status, `approve()` rejects this status. The applicant resolves the postponement via `PUT /api/v1/application/reports/:providerId/outliers`, which fills in the explanation fields and transitions the row to `SUBMITTED` (emitting a `STATUS_CHANGED` + an `EDITED` event). Reviewers can read the report and its content while it sits here, but cannot act on it.
+- **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.) In-place applicant edits are allowed in this state via the two PUT endpoints (equality body / outliers), each emitting an `EDITED` event; status is preserved so the reviewer keeps their pickup.
+- **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. **Terminal state.** This denied row stays as audit forever and is never mutated. The company submits afresh via the upstream application portal, which produces a new `provider_id` and a new `report` row.
+- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
 - **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
 
 ## Resubmission
@@ -90,7 +94,7 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
 
-- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment, status transitions (future: fines started, retraction). Never edited, never deleted.
+- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment / unassignment, status transitions, applicant in-place edits (`EDITED`), and supersession (future: fines started, retraction). Never edited, never deleted.
 - **`report_comment`** — human-written messages. Either **internal** (reviewer-to-reviewer, hidden from the company) or **external** (reviewer ↔ company admin, visible to both sides). Company admins can post on external comments only.
 
 ### Mutability
@@ -149,7 +153,19 @@ The `application` module is the company-admin API surface. It reuses reviewer-si
 - `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
 - `GET /api/v1/application/reports/equality/active` returns the company's active equality report: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row.
 - `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept application-facing bodies with one explicit `company` object for the authenticated parent and an optional `subsidiaries[]` array containing subsidiary names/national IDs. Missing or empty `subsidiaries` means no subsidiaries. The application service maps that to the internal `companies[]` snapshot shape before delegating to report-create.
-- `GET /api/v1/application/reports/:reportId` is company-facing detail, not the reviewer detail DTO. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
+- `GET /api/v1/application/reports/:providerId` is company-facing detail, not the reviewer detail DTO. Lookup is by the upstream `(provider_type, provider_id)` tuple rather than internal `report.id` (the applicant never sees the DoE-side id). The optional `providerType` query parameter defaults to `ISLAND_IS` for the island.is application portal. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
+- `POST /api/v1/application/reports/:providerId/comments` posts an external comment on the applicant's own report.
+
+### Applicant edit endpoints
+
+In-place edits are exposed for the two narrow corrections the applicant flow needs after submission. Both are authenticated against the upstream `(provider_type, provider_id)` tuple (same ownership check as the GET, with `providerType` defaulting to `ISLAND_IS`) and emit an `EDITED` `report_event` row on success.
+
+- `PUT /api/v1/application/reports/:providerId/equality-content` — replaces the narrative body of an `EQUALITY` report. Allowed only when `status = IN_REVIEW` (i.e. the reviewer has picked the report up and asked for changes via comment). Status is preserved on success.
+- `PUT /api/v1/application/reports/:providerId/outliers` — replaces outlier explanations on a `SALARY` report. All-or-none: the submitted set must match the canonical detected outliers exactly (read from `report_result.outlier_analysis_snapshot.employees` filtered to `isOutlier = true`); duplicates, extras, or missing rows all reject 400. Allowed in two statuses:
+  - `POSTPONED` — primary path. The submitted body must include all four explanation fields per row (`reason`, `action`, `signatureName`, `signatureRole`). On success the row's explanation columns are filled and status transitions `POSTPONED → SUBMITTED`, emitting both an `EDITED` and a `STATUS_CHANGED` event.
+  - `IN_REVIEW` — correction path. Reviewer asked for outlier-row corrections via comment; the applicant edits without changing status. Only `EDITED` is emitted.
+
+A future endpoint may handle other in-place edits after admin/applicant communication; everything else still requires a fresh upstream submission.
 
 ## Daughter companies
 
@@ -198,9 +214,9 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
 | `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                            |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`                                          |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`                   |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
 
@@ -321,8 +337,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
 | `identifier`                     | `text`                                                                                                                         |
-| `outliers_postponed`             | `boolean` (default `false` — when true, the company has deferred every outlier explanation on this report)                     |
-| `status`                         | `ReportStatusEnum`                                                                                                             |
+| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")          |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
@@ -390,21 +405,21 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report_employee_outlier`
 
-One row per outlier the company has acknowledged at submission. Two shapes share the table, governed by the parent report's `outliers_postponed`:
+One row per outlier the company has acknowledged at submission. Two shapes share the table, distinguished by the parent report's `status`:
 
-- **Filled** (parent `outliers_postponed = false`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
-- **Postponed** (parent `outliers_postponed = true`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later. Reviewer can chase up via the report-level `correction_deadline`.
+- **Filled** (parent `status != POSTPONED`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
+- **Postponed** (parent `status = POSTPONED`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later via `PUT /api/v1/application/reports/:providerId/outliers`. Reviewer can chase up via the report-level `correction_deadline`, but cannot pick up a `POSTPONED` report (the resolve happens applicant-side).
 
-Postponement is all-or-none across the report — the API layer enforces uniformity before persisting. The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected.
+Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ every outlier row has NULL explanations). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills every row and flips status to `SUBMITTED`.
 
 | Column               | Type                                                                  |
 | -------------------- | --------------------------------------------------------------------- |
 | `id`                 | `uuid` PK                                                             |
 | `report_employee_id` | `fk → report_employee`                                                |
-| `reason`             | `text` (nullable — null only when parent `outliers_postponed = true`) |
-| `action`             | `text` (nullable — null only when parent `outliers_postponed = true`) |
-| `signature_name`     | `text` (nullable — null only when parent `outliers_postponed = true`) |
-| `signature_role`     | `text` (nullable — null only when parent `outliers_postponed = true`) |
+| `reason`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
+| `action`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
+| `signature_name`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
+| `signature_role`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
 
 Invariant (enforced via CHECK):
 
@@ -582,4 +597,4 @@ No FKs, no relationships. Standalone lookup table.
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
 - **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around each employee's predicted adjusted base salary on the score regression line), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.
-- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row, and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The report-level `outliers_postponed` flag lets a company acknowledge every outlier without filling explanations immediately; postponement applies to the whole report, never to individual rows.
+- **Submit-side outlier guard.** Wired into `report-create.service.ts.createSalary()` alongside the preview endpoint. Uses the same `detectOutliers(parsed, threshold)` helper as the preview to assert: every detected outlier has an `outliers[]` row, and every `outliers[]` row references a detected outlier (extras are rejected). Threshold is re-read from `config` at submission time, so a small drift between preview and submit is possible — rejection in that case just means "re-run preview". The submit `outliersPostponed` input flag lets a company acknowledge every outlier without filling explanations immediately; postponement applies to the whole report and lands the row in `POSTPONED` status. The applicant resolves it later via the outliers edit endpoint.
