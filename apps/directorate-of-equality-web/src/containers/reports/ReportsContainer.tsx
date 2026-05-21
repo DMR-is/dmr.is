@@ -248,7 +248,6 @@ export const ReportsContainer = () => {
             />
           </Stack>
         </GridColumn>
-        s
       </GridRow>
     </Box>
   )
