@@ -15,13 +15,13 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { TableCell } from '@dmr.is/ui/components/Tables/Table'
 
-import { CreateEqualityReportDrawer } from '../../components/list-page/CreateEqualityReportDrawer'
-import { CreateSalaryReportDrawer } from '../../components/list-page/CreateSalaryReportDrawer'
+import { CreateEqualityReportDrawer } from '../../components/reports/CreateEqualityReportDrawer'
+import { CreateSalaryReportDrawer } from '../../components/reports/CreateSalaryReportDrawer'
 import {
   type FilterOption,
   ReportFilter,
-} from '../../components/list-page/filter/ReportFilter'
-import { TabContent } from '../../components/list-page/tabs/TabContent'
+} from '../../components/reports/filter/ReportFilter'
+import { TabContent } from '../../components/reports/tabs/TabContent'
 import {
   type ReportListItemDto,
   ReportStatusEnum,
@@ -197,7 +197,12 @@ export const ReportsContainer = () => {
     activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
   const trailingColumns: ColumnDef<Case>[] =
     activeTab !== 'innsendingar' ? [statusColumn] : []
-  const allColumns = [...leadingColumns, ...COLUMNS, ...middleColumns, ...trailingColumns]
+  const allColumns = [
+    ...leadingColumns,
+    ...COLUMNS,
+    ...middleColumns,
+    ...trailingColumns,
+  ]
 
   const filterAndTable = (expandable?: boolean) => (
     <Box paddingTop={4}>
