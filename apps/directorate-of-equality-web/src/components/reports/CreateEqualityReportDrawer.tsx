@@ -15,22 +15,27 @@ import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
+import { GenderEnum } from '../../gen/fetch/types.gen'
+import { overviewText, reportText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+const t = overviewText.createEqualityReport
+const s = sharedText
+
 const GENDER_OPTIONS = [
-  { label: 'Karl', value: 'MALE' },
-  { label: 'Kona', value: 'FEMALE' },
-  { label: 'Kynhlutlægt', value: 'NEUTRAL' },
-] as const
+  { label: s.genders.male, value: GenderEnum.MALE },
+  { label: s.genders.female, value: GenderEnum.FEMALE },
+  { label: s.genders.neutral, value: GenderEnum.NEUTRAL },
+]
 
 const EMPTY_FORM = {
   companyAdminName: '',
   companyAdminEmail: '',
-  companyAdminGender: 'MALE' as 'MALE' | 'FEMALE' | 'NEUTRAL',
+  companyAdminGender: GenderEnum.MALE,
   contactName: '',
   contactEmail: '',
   contactPhone: '',
@@ -60,11 +65,11 @@ export const CreateEqualityReportDrawer = () => {
   const submitMutation = useMutation({
     ...trpc.adminReport.submitEquality.mutationOptions(),
     onSuccess: () => {
-      toast.success('Skýrsla send inn')
+      toast.success(t.successToast)
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
     },
-    onError: () => toast.error('Villa við innsendingu'),
+    onError: () => toast.error(s.form.errorToast),
   })
 
   const handleReset = () => {
@@ -102,28 +107,28 @@ export const CreateEqualityReportDrawer = () => {
 
   return (
     <Drawer
-      ariaLabel="Skrá jafnréttisáætlun"
+      ariaLabel={t.drawerLabel}
       baseId="create-equality-report-drawer"
       disclosure={
         <UtilityButton icon="add" fluid>
-          Jafnréttisáætlun
+          {t.buttonLabel}
         </UtilityButton>
       }
     >
       <GridContainer>
         <Text variant="h2" marginBottom={6}>
-          Ný jafnréttisáætlun
+          {t.heading}
         </Text>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
-              Fyrirtæki
+              {s.form.companyHeading}
             </Text>
           </GridColumn>
           <GridColumn span={['12/12', '8/12']}>
             <Select
               name="company"
-              label="Veldu fyrirtæki"
+              label={s.form.companySelect}
               options={companyOptions}
               value={companyOptions.find((o) => o.value === companyId) ?? null}
               onChange={(opt) => setCompanyId(opt?.value ?? null)}
@@ -137,13 +142,13 @@ export const CreateEqualityReportDrawer = () => {
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
-              Æðsti stjórnandi
+              {s.form.topManagerHeading}
             </Text>
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
               name="companyAdminName"
-              label="Nafn"
+              label={s.form.nameLabel}
               size="xs"
               value={form.companyAdminName}
               onChange={(e) => set('companyAdminName')(e.target.value)}
@@ -153,7 +158,7 @@ export const CreateEqualityReportDrawer = () => {
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
               name="companyAdminEmail"
-              label="Netfang"
+              label={s.form.emailLabel}
               type="email"
               size="xs"
               value={form.companyAdminEmail}
@@ -164,7 +169,7 @@ export const CreateEqualityReportDrawer = () => {
           <GridColumn span={['12/12', '6/12']}>
             <Select
               name="companyAdminGender"
-              label="Kyn"
+              label={s.form.genderLabel}
               options={GENDER_OPTIONS}
               value={GENDER_OPTIONS.find(
                 (o) => o.value === form.companyAdminGender,
@@ -179,13 +184,13 @@ export const CreateEqualityReportDrawer = () => {
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
-              Tengiliður
+              {s.form.contactHeading}
             </Text>
           </GridColumn>
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
               name="contactName"
-              label="Nafn"
+              label={s.form.nameLabel}
               size="xs"
               value={form.contactName}
               onChange={(e) => set('contactName')(e.target.value)}
@@ -195,7 +200,7 @@ export const CreateEqualityReportDrawer = () => {
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
               name="contactEmail"
-              label="Netfang"
+              label={s.form.emailLabel}
               type="email"
               size="xs"
               value={form.contactEmail}
@@ -206,7 +211,7 @@ export const CreateEqualityReportDrawer = () => {
           <GridColumn span={['12/12', '6/12']}>
             <TextInput
               name="contactPhone"
-              label="Símanúmer"
+              label={s.form.phoneLabel}
               type="tel"
               size="xs"
               value={form.contactPhone}
@@ -219,7 +224,7 @@ export const CreateEqualityReportDrawer = () => {
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
-              Skýrsla
+              {reportText.tabsLabel}
             </Text>
           </GridColumn>
           <GridColumn span="12/12">
@@ -247,7 +252,7 @@ export const CreateEqualityReportDrawer = () => {
           <GridColumn span="12/12">
             <Inline justifyContent="flexEnd" space={2}>
               <Button variant="ghost" size="small" onClick={handleReset}>
-                Hreinsa
+                {s.form.reset}
               </Button>
               <Button
                 size="small"
@@ -255,7 +260,7 @@ export const CreateEqualityReportDrawer = () => {
                 loading={submitMutation.isPending}
                 onClick={handleSubmit}
               >
-                Senda inn
+                {s.form.submit}
               </Button>
             </Inline>
           </GridColumn>
