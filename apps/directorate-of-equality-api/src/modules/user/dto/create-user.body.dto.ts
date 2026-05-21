@@ -1,18 +1,16 @@
+import { IsEmail } from 'class-validator'
+
 import {
-  ApiBoolean,
   ApiEnum,
+  ApiNationalId,
   ApiOptionalString,
   ApiString,
-  ApiUUId,
 } from '@dmr.is/decorators'
 
 import { DoeUserRole } from '../types/user-role'
 
-export class UserDto {
-  @ApiUUId()
-  id!: string
-
-  @ApiString()
+export class CreateUserBodyDto {
+  @ApiNationalId()
   nationalId!: string
 
   @ApiString()
@@ -22,13 +20,11 @@ export class UserDto {
   lastName!: string
 
   @ApiString()
+  @IsEmail()
   email!: string
 
   @ApiOptionalString({ nullable: true })
-  phone!: string | null
-
-  @ApiBoolean()
-  isActive!: boolean
+  phone?: string | null
 
   @ApiEnum(DoeUserRole)
   role!: DoeUserRole
