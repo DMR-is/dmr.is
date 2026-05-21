@@ -6,7 +6,6 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { sharedText } from '../../lib/text'
-
 import {
   DAILY_FINES_FILTER_OPTIONS,
   EMPLOYEE_RANGES,
