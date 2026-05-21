@@ -28,11 +28,12 @@ import {
 } from '../../gen/fetch/types.gen'
 import { useReports } from '../../hooks/useReports'
 import {
-  type Case,
+  Case,
   COLUMN_REVIEWER,
   COLUMN_STATUS,
   COLUMNS,
 } from '../../lib/constants'
+import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
@@ -57,14 +58,9 @@ const TAB_FIXED_STATUS: Record<
   afgreitt: PROCESSED,
 }
 
-const ALL_STATUS_OPTIONS: FilterOption[] = [
-  { value: 'DRAFT', label: 'Drög' },
-  { value: 'SUBMITTED', label: 'Innsent' },
-  { value: 'IN_REVIEW', label: 'Í vinnslu' },
-  { value: 'APPROVED', label: 'Samþykkt' },
-  { value: 'DENIED', label: 'Hafnað' },
-  { value: 'SUPERSEDED', label: 'Úrelt' },
-]
+const ALL_STATUS_OPTIONS: FilterOption[] = (
+  ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'APPROVED', 'DENIED', 'SUPERSEDED'] as const
+).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
@@ -82,19 +78,6 @@ const STATUS_VARIANT: Record<string, TagVariant> = {
   Drög: 'purple',
 }
 
-const STATUS_TO_LABEL: Record<string, string> = {
-  DRAFT: 'Drög',
-  SUBMITTED: 'Innsent',
-  IN_REVIEW: 'Í vinnslu',
-  DENIED: 'Hafnað',
-  APPROVED: 'Samþykkt',
-  SUPERSEDED: 'Úrelt',
-}
-
-const TYPE_TO_LABEL: Record<string, string> = {
-  EQUALITY: 'Jafnréttisáætlun',
-  SALARY: 'Launagreining',
-}
 
 function mapReportToCase(report: ReportListItemDto): Case {
   const reviewer = report.reviewer
@@ -105,10 +88,10 @@ function mapReportToCase(report: ReportListItemDto): Case {
     date: report.createdAt
       ? new Date(report.createdAt).toLocaleDateString('is-IS')
       : '',
-    type: TYPE_TO_LABEL[report.type] ?? report.type,
+    type: sharedText.typeLabels[report.type as keyof typeof sharedText.typeLabels] ?? report.type,
     company: report.companyName ?? '',
     kennitala: formatNationalId(report.companyNationalId ?? ''),
-    status: STATUS_TO_LABEL[report.status] ?? report.status,
+    status: sharedText.statusLabels[report.status as keyof typeof sharedText.statusLabels] ?? report.status,
     reviewer,
     companyAdmin: 'TODO',
     companyAdminGender: 'TODO',
@@ -130,7 +113,7 @@ const commentsColumn: ColumnDef<Case> = {
   size: 56,
   enableSorting: false,
   cell: ({ row }) => {
-    const comment = MOCK_COMMENTS[row.original.id] ?? 'Engar athugasemdir'
+    const comment = MOCK_COMMENTS[row.original.id] ?? overviewText.noComments
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip
@@ -197,7 +180,12 @@ export const ReportsContainer = () => {
     activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
   const trailingColumns: ColumnDef<Case>[] =
     activeTab !== 'innsendingar' ? [statusColumn] : []
-  const allColumns = [...leadingColumns, ...COLUMNS, ...middleColumns, ...trailingColumns]
+  const allColumns = [
+    ...leadingColumns,
+    ...COLUMNS,
+    ...middleColumns,
+    ...trailingColumns,
+  ]
 
   return (
     <GridContainer>
@@ -235,7 +223,7 @@ export const ReportsContainer = () => {
           <Stack space={2}>
             <Inline space={1} alignY="center">
               <Text fontWeight="semiBold">{data?.paging.totalItems ?? 0}</Text>
-              <Text>færslur fundust</Text>
+              <Text>{overviewText.resultsText}</Text>
             </Inline>
             <Tabs
               label="Mál"
@@ -246,7 +234,7 @@ export const ReportsContainer = () => {
               tabs={[
                 {
                   id: 'innsendingar',
-                  label: `Innsendingar (${data?.statusCounts.submitted ?? 0})`,
+                  label: `${overviewText.tabInnsendingar} (${data?.statusCounts.submitted ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}
@@ -260,7 +248,7 @@ export const ReportsContainer = () => {
                 },
                 {
                   id: 'i-vinnslu',
-                  label: `Í vinnslu (${data?.statusCounts.inReview ?? 0})`,
+                  label: `${overviewText.tabInProgress} (${data?.statusCounts.inReview ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}
@@ -273,7 +261,7 @@ export const ReportsContainer = () => {
                 },
                 {
                   id: 'afgreitt',
-                  label: `Afgreitt (${data?.statusCounts.processed ?? 0})`,
+                  label: `${overviewText.tabAfgreitt} (${data?.statusCounts.processed ?? 0})`,
                   content: (
                     <TabContent
                       data={data?.reports.map(mapReportToCase)}

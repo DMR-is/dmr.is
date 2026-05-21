@@ -53,12 +53,12 @@ export const TabContent = ({
   onPageChange,
 }: TabContentProps) => {
   return (
-    <Box marginTop={3}>
+    <Box marginTop={2}>
       <Table
         columns={columns}
         data={data}
         loading={isLoading}
-        getRowHref={(row) => `/mal/${row.id}`}
+        getRowHref={(row) => `/yfirlit/${row.id}`}
         getRowExpanded={
           expandable ? (row) => <ExpandedRow row={row} /> : undefined
         }

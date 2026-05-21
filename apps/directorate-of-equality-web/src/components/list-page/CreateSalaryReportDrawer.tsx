@@ -17,6 +17,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { type ParsedReportDto } from '../../gen/fetch/types.gen'
+import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
@@ -24,10 +25,10 @@ import { UtilityButton } from '../buttons/UtilityButton'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const GENDER_OPTIONS = [
-  { label: 'Karl', value: 'MALE' },
-  { label: 'Kona', value: 'FEMALE' },
-  { label: 'Kynhlutlægt', value: 'NEUTRAL' },
-] as const
+  { label: sharedText.genders.male, value: 'MALE' as const },
+  { label: sharedText.genders.female, value: 'FEMALE' as const },
+  { label: sharedText.genders.neutral, value: 'NEUTRAL' as const },
+]
 
 const EMPTY_FORM = {
   companyAdminName: '',
@@ -77,9 +78,9 @@ export const CreateSalaryReportDrawer = () => {
     ...trpc.adminReport.importWorkbook.mutationOptions(),
     onSuccess: (data) => {
       setParsedReport(data)
-      toast.success('Excel skrá flutt inn')
+      toast.success(overviewText.createSalaryReport.excelSuccessToast)
     },
-    onError: () => toast.error('Villa við innflutning á Excel skrá'),
+    onError: () => toast.error(overviewText.createSalaryReport.excelErrorToast),
   })
 
   const submitMutation = useMutation(
@@ -129,7 +130,7 @@ export const CreateSalaryReportDrawer = () => {
     }
 
     const onSuccess = () => {
-      toast.success('Launagreining send inn')
+      toast.success(overviewText.createSalaryReport.successToast)
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
     }
@@ -142,13 +143,13 @@ export const CreateSalaryReportDrawer = () => {
       const ordinals = parseOutlierOrdinals(message)
 
       if (!ordinals) {
-        toast.error('Villa við innsendingu')
+        toast.error(sharedText.form.errorToast)
         return
       }
 
       if (!postpone) {
         toast.error(
-          `Frávik fundust fyrir ${ordinals.length} starfsmenn. Merktu "Fresta skilum frávika" og gefðu ástæðu til að senda inn.`,
+          `Frávik fundust fyrir ${ordinals.length} starfsmenn. Merktu "${overviewText.createSalaryReport.deferLabel}" og gefðu ástæðu til að senda inn.`,
         )
         return
       }
@@ -164,7 +165,7 @@ export const CreateSalaryReportDrawer = () => {
         })
         onSuccess()
       } catch {
-        toast.error('Villa við innsendingu')
+        toast.error(sharedText.form.errorToast)
       }
     }
   }
@@ -184,24 +185,28 @@ export const CreateSalaryReportDrawer = () => {
 
   return (
     <Drawer
-      ariaLabel="Skrá launagreiningu"
+      ariaLabel={overviewText.createSalaryReport.drawerLabel}
       baseId="create-salary-report-drawer"
-      disclosure={<UtilityButton icon="add">Launagreining</UtilityButton>}
+      disclosure={
+        <UtilityButton icon="add">
+          {overviewText.createSalaryReport.buttonLabel}
+        </UtilityButton>
+      }
     >
       <GridContainer>
         <Stack space={4}>
-          <Text variant="h2">Ný launagreining</Text>
+          <Text variant="h2">{overviewText.createSalaryReport.heading}</Text>
 
           <GridRow rowGap={[2, 3]}>
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Fyrirtæki
+                {sharedText.form.companyHeading}
               </Text>
             </GridColumn>
             <GridColumn span={['12/12', '8/12']}>
               <Select
                 name="company"
-                label="Veldu fyrirtæki"
+                label={sharedText.form.companySelect}
                 options={companyOptions}
                 value={
                   companyOptions.find((o) => o.value === companyId) ?? null
@@ -219,7 +224,7 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Excel innflutningur
+                {overviewText.createSalaryReport.excelHeading}
               </Text>
             </GridColumn>
             <GridColumn span="12/12">
@@ -235,7 +240,7 @@ export const CreateSalaryReportDrawer = () => {
                   <Text variant="small">
                     {parsedReport
                       ? `Gögn flutt inn: ${parsedReport.employees.length} starfsmenn, ${parsedReport.roles.length} hlutverk, ${parsedReport.criteria.length} viðmið`
-                      : 'Veldu Excel skrá til að flytja inn launagreiningargögn'}
+                      : overviewText.createSalaryReport.excelPlaceholder}
                   </Text>
                 </Box>
                 <input
@@ -253,19 +258,21 @@ export const CreateSalaryReportDrawer = () => {
                   disabled={!companyId}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {parsedReport ? 'Skipta um skrá' : 'Velja skrá'}
+                  {parsedReport
+                    ? overviewText.createSalaryReport.switchFile
+                    : overviewText.createSalaryReport.chooseFile}
                 </Button>
               </Box>
             </GridColumn>
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Frávik
+                {overviewText.createSalaryReport.deviationsHeading}
               </Text>
             </GridColumn>
             <GridColumn span="12/12">
               <Checkbox
-                label="Fresta skilum frávika"
+                label={overviewText.createSalaryReport.deferLabel}
                 checked={postpone}
                 onChange={(e) => setPostpone(e.target.checked)}
                 disabled={!companyId}
@@ -275,7 +282,7 @@ export const CreateSalaryReportDrawer = () => {
               <GridColumn span="12/12">
                 <TextInput
                   name="postponeReason"
-                  label="Ástæða frestunar"
+                  label={overviewText.createSalaryReport.deferReasonLabel}
                   textarea
                   rows={3}
                   size="xs"
@@ -287,13 +294,13 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Æðsti stjórnandi
+                {sharedText.form.topManagerHeading}
               </Text>
             </GridColumn>
             <GridColumn span={['12/12', '6/12']}>
               <TextInput
                 name="companyAdminName"
-                label="Nafn"
+                label={sharedText.form.nameLabel}
                 size="xs"
                 value={form.companyAdminName}
                 onChange={(e) => set('companyAdminName')(e.target.value)}
@@ -303,7 +310,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '6/12']}>
               <TextInput
                 name="companyAdminEmail"
-                label="Netfang"
+                label={sharedText.form.emailLabel}
                 type="email"
                 size="xs"
                 value={form.companyAdminEmail}
@@ -314,7 +321,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '6/12']}>
               <Select
                 name="companyAdminGender"
-                label="Kyn"
+                label={sharedText.form.genderLabel}
                 options={GENDER_OPTIONS}
                 value={GENDER_OPTIONS.find(
                   (o) => o.value === form.companyAdminGender,
@@ -327,13 +334,13 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Tengiliður
+                {sharedText.form.contactHeading}
               </Text>
             </GridColumn>
             <GridColumn span={['12/12', '6/12']}>
               <TextInput
                 name="contactName"
-                label="Nafn"
+                label={sharedText.form.nameLabel}
                 size="xs"
                 value={form.contactName}
                 onChange={(e) => set('contactName')(e.target.value)}
@@ -343,7 +350,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '6/12']}>
               <TextInput
                 name="contactEmail"
-                label="Netfang"
+                label={sharedText.form.emailLabel}
                 type="email"
                 size="xs"
                 value={form.contactEmail}
@@ -354,7 +361,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '6/12']}>
               <TextInput
                 name="contactPhone"
-                label="Símanúmer"
+                label={sharedText.form.phoneLabel}
                 type="tel"
                 size="xs"
                 value={form.contactPhone}
@@ -365,13 +372,13 @@ export const CreateSalaryReportDrawer = () => {
 
             <GridColumn span="12/12">
               <Text variant="h4" marginBottom={1}>
-                Starfsmannafjöldi
+                {overviewText.createSalaryReport.employeeCountHeading}
               </Text>
             </GridColumn>
             <GridColumn span={['12/12', '4/12']}>
               <TextInput
                 name="averageEmployeeMaleCount"
-                label="Karlar"
+                label={overviewText.createSalaryReport.maleCountLabel}
                 type="number"
                 size="xs"
                 value={form.averageEmployeeMaleCount}
@@ -384,7 +391,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '4/12']}>
               <TextInput
                 name="averageEmployeeFemaleCount"
-                label="Konur"
+                label={overviewText.createSalaryReport.femaleCountLabel}
                 type="number"
                 size="xs"
                 value={form.averageEmployeeFemaleCount}
@@ -397,7 +404,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span={['12/12', '4/12']}>
               <TextInput
                 name="averageEmployeeNeutralCount"
-                label="Kynhlutlægt"
+                label={overviewText.createSalaryReport.neutralCountLabel}
                 type="number"
                 size="xs"
                 value={form.averageEmployeeNeutralCount}
@@ -411,7 +418,7 @@ export const CreateSalaryReportDrawer = () => {
             <GridColumn span="12/12">
               <Inline justifyContent="flexEnd" space={2}>
                 <Button variant="ghost" size="small" onClick={handleReset}>
-                  Hreinsa
+                  {sharedText.form.reset}
                 </Button>
                 <Button
                   size="small"
@@ -419,7 +426,7 @@ export const CreateSalaryReportDrawer = () => {
                   loading={submitMutation.isPending}
                   onClick={handleSubmit}
                 >
-                  Senda inn
+                  {sharedText.form.submit}
                 </Button>
               </Inline>
             </GridColumn>

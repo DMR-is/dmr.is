@@ -9,6 +9,7 @@ import { ReportFormStepper } from '../../components/report/report-sidebar/Report
 import { ReportSidebar } from '../../components/report/report-sidebar/ReportSidebar'
 import { ReportStatusSelect } from '../../components/report/report-sidebar/ReportStatusSelect'
 import { ReportDetailDto } from '../../gen/fetch'
+import { reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useQuery } from '@tanstack/react-query'
@@ -28,7 +29,7 @@ export function ReportSidebarContainer({
 
   return (
     <ReportSidebar>
-      <Text variant="h5">Upplýsingar</Text>
+      <Text variant="h5">{reportText.sidebarTitle}</Text>
       <EmployeeSelect reportId={data.id} assignedUserId={data.reviewer?.id} />
       <ReportStatusSelect reportId={data.id} status={data.status} />
       <Box paddingTop={1}>

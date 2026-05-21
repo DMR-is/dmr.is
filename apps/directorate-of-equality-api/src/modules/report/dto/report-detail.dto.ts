@@ -35,7 +35,7 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
  * - `result` / `roleResults` / `employeeOutliers`: salary-only calculation
  *   outputs. For equality reports these are `null` / `[]`; for salary reports
  *   they're populated once the scoring engine has run. The UI uses them to
- *   render the Launagreining charts: `result` → gender-gap summary, `roleResults`
+ *   render the Skýrslugjöf charts: `result` → gender-gap summary, `roleResults`
  *   → scatter-plot points per role, `employeeOutliers` → the Úrbótaáætlun
  *   table listing employees who fall outside the acceptable pay-gap threshold.
  */

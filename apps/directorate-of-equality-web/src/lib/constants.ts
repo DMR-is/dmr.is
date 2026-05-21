@@ -1,3 +1,18 @@
+export const NAV_PATHS = {
+  frontpage: { title: 'Forsíða', href: '/' },
+  heildarlisti: { title: 'Heildarlisti', href: '/yfirlit' },
+  jafnrettisaetlanir: {
+    title: 'Jafnréttisáætlanir',
+    href: '/yfirlit?category=jafnrettisaetlanir',
+  },
+  urbotaaetlanir: {
+    title: 'Úrbótaáætlanir',
+    href: '/yfirlit?category=urbotaaetlanir',
+  },
+  skyrslur: { title: 'Skýrslur', href: '/yfirlit?category=urbotaaetlanir' },
+  fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
+}
+
 const IS_MONTHS = [
   'janúar',
   'febrúar',
@@ -28,6 +43,8 @@ export enum ReportStatusTranslatedEnum {
   DENIED = 'Hafnað',
   SUPERSEDED = 'Úrelt',
 }
+import { overviewText, reportText } from './text'
+
 import { type ColumnDef } from '@tanstack/react-table'
 
 export type Case = {
@@ -46,29 +63,44 @@ export type Case = {
 }
 
 export const COLUMNS: ColumnDef<Case>[] = [
-  { accessorKey: 'date', header: 'Dagsetning', enableSorting: true },
-  { accessorKey: 'type', header: 'Flokkur', enableSorting: true },
-  { accessorKey: 'company', header: 'Fyrirtæki', enableSorting: true },
+  {
+    accessorKey: 'date',
+    header: overviewText.filter.dateLabel,
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'type',
+    header: overviewText.filter.typeLabel,
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'company',
+    header: overviewText.filter.companyLabel,
+    enableSorting: true,
+  },
 ]
 
 export const COLUMN_STATUS: ColumnDef<Case> = {
   accessorKey: 'status',
-  header: 'Staða',
+  header: overviewText.filter.statusLabel,
   enableSorting: true,
 }
 
 export const COLUMN_REVIEWER: ColumnDef<Case> = {
   accessorKey: 'reviewer',
-  header: 'Starfsmaður',
+  header: overviewText.filter.reviewerLabel,
   enableSorting: true,
 }
 
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
-  { label: 'Fyrirtæki', key: 'company' },
-  { label: 'Æðsti stjórnandi', key: 'companyAdmin' },
-  { label: 'Kennitala', key: 'kennitala' },
-  { label: 'Netfang', key: 'email' },
-  { label: 'ÍSAT atvinnugreinaflokkun', key: 'isatCode' },
-  { label: 'Kyn æðsta stjórnanda', key: 'companyAdminGender' },
-  { label: 'Fjöldi starfsmanna', key: 'employeeCount' },
+  { label: reportText.detailFields.company, key: 'company' },
+  { label: reportText.detailFields.companyAdmin, key: 'companyAdmin' },
+  { label: reportText.detailFields.kennitala, key: 'kennitala' },
+  { label: reportText.detailFields.email, key: 'email' },
+  { label: reportText.detailFields.isatCode, key: 'isatCode' },
+  {
+    label: reportText.detailFields.companyAdminGender,
+    key: 'companyAdminGender',
+  },
+  { label: reportText.detailFields.employeeCount, key: 'employeeCount' },
 ]

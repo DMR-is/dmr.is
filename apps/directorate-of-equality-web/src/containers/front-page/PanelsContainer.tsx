@@ -2,26 +2,28 @@ import { ImagePanel } from '@dmr.is/ui/components/ImagePanel/ImagePanel'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Section } from '@dmr.is/ui/components/Section/Section'
 
+import { frontPageText } from '../../lib/text'
+
 export const PanelsContainer = () => {
   return (
     <Section>
       <Stack space={4}>
         <ImagePanel
           align="right"
-          title="Tölulegar upplýsingar"
-          description="Upplýsingar birtar opinberlega á vef jafnréttisstofu og fylgst er með árangri ..."
+          title={frontPageText.panelStats.title}
+          description={frontPageText.panelStats.description}
           link="#"
-          linkText="Lesa meira"
+          linkText={frontPageText.panelStats.linkText}
           image={{
             src: '/assets/tolfraedi-image.svg',
             alt: '',
           }}
         />
         <ImagePanel
-          title="Keyra út lista"
-          description="Sækja skýrslur og tölfræðileg gögn um starfsemi stofnunarinnar."
+          title={frontPageText.panelExport.title}
+          description={frontPageText.panelExport.description}
           link="#"
-          linkText="Sækja skýrslu"
+          linkText={frontPageText.panelExport.linkText}
           image={{
             src: '/assets/keyra-ut-lista-image.svg',
             alt: '',

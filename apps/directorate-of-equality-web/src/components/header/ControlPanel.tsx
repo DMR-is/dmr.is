@@ -9,16 +9,9 @@ import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { NAV_PATHS } from '../../lib/constants'
+import { headerText } from '../../lib/text'
 import * as styles from './ControlPanel.css'
-
-const NAV_PATHS = [
-  { title: 'Forsíða', href: '/' },
-  { title: 'Heildarlisti', href: '/mal' },
-  { title: 'Jafnréttisáætlanir', href: '/mal?category=jafnrettisaetlun' },
-  { title: 'Úrbótaáætlanir', href: '/mal?category=urbotaaaetlun' },
-  { title: 'Fyrirtæki', href: '/fyrirtaeki' },
-  { title: 'Ritstjórar', href: '/ritstjorar' },
-]
 
 export const ControlPanel = () => {
   const [toggle, setToggle] = useState(false)
@@ -59,9 +52,9 @@ export const ControlPanel = () => {
           <Inline justifyContent="spaceBetween">
             <Stack space={0} align="left">
               <Text textAlign="left" variant="small" fontWeight="semiBold">
-                Stjórnborð
+                {headerText.controlPanelTitle}
               </Text>
-              <Text>Jafnréttisstofa</Text>
+              <Text>{headerText.brand}</Text>
             </Stack>
             <Box
               height="full"
@@ -90,7 +83,7 @@ export const ControlPanel = () => {
           borderRightWidth="standard"
         >
           <Stack space={0}>
-            {NAV_PATHS.map((path, i) => (
+            {Object.values(NAV_PATHS).map((path, i) => (
               <LinkV2 href={path.href} key={path.href}>
                 <Box
                   borderTopWidth={i === 0 ? 'standard' : undefined}
