@@ -22,6 +22,7 @@ import {
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import {
   CreateCompanyInput,
@@ -58,15 +59,15 @@ export class CompanyService implements ICompanyService {
       })
     }
 
-    if (query.minEmployeeCount !== undefined) {
+    if (query.employeeCountCategory !== undefined) {
       Object.assign(where, {
-        averageEmployeeCountFromRsk: { [Op.gte]: query.minEmployeeCount },
+        employeeCountCategory: query.employeeCountCategory,
       })
     }
 
     const sortCol =
       query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
-        ? 'averageEmployeeCountFromRsk'
+        ? 'employeeCountCategory'
         : 'name'
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
@@ -137,7 +138,7 @@ export class CompanyService implements ICompanyService {
     const company = await this.companyModel.create({
       name: input.name,
       nationalId: input.nationalId,
-      averageEmployeeCountFromRsk: input.averageEmployeeCountFromRsk,
+      employeeCountCategory: input.employeeCountCategory,
     })
 
     return company.fromModel()
@@ -187,7 +188,7 @@ export class CompanyService implements ICompanyService {
     const company = await this.companyModel.create({
       name,
       nationalId,
-      averageEmployeeCountFromRsk: 0,
+      employeeCountCategory: CompanySizeEnum.SMALL,
     })
 
     return company.fromModel()
@@ -220,7 +221,7 @@ export class CompanyService implements ICompanyService {
       (await this.companyModel.create({
         name: registry.entity.nafn,
         nationalId: input.nationalId,
-        averageEmployeeCountFromRsk: 0,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       }))
 
     return {

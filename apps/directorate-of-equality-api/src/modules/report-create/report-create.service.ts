@@ -447,19 +447,28 @@ export class ReportCreateService implements IReportCreateService {
     }
 
     await this.companyReportModel.bulkCreate(
-      companies.map((company) => ({
-        companyId: company.companyId,
-        reportId,
-        parentCompanyId: company.parentCompanyId,
-        name: company.name,
-        nationalId: company.nationalId,
-        address: company.address,
-        city: company.city,
-        postcode: company.postcode,
-        averageEmployeeCountFromRsk: companyById.get(company.companyId)!
-          .averageEmployeeCountFromRsk,
-        isatCategory: company.isatCategory,
-      })),
+      companies.map((company) => {
+        const stored = companyById.get(company.companyId)
+        // Guaranteed present by the validation loop above; checked again
+        // here purely to narrow the type for the compiler.
+        if (!stored) {
+          throw new BadRequestException(
+            `Company "${company.companyId}" not found`,
+          )
+        }
+        return {
+          companyId: company.companyId,
+          reportId,
+          parentCompanyId: company.parentCompanyId,
+          name: company.name,
+          nationalId: company.nationalId,
+          address: company.address,
+          city: company.city,
+          postcode: company.postcode,
+          employeeCountCategory: stored.employeeCountCategory,
+          isatCategory: company.isatCategory,
+        }
+      }),
     )
   }
 

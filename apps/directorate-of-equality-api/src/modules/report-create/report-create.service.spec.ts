@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
@@ -72,8 +73,8 @@ describe('ReportCreateService', () => {
     companyFindAll = jest
       .fn()
       .mockResolvedValue([
-        makeCompanyRow(PARENT_COMPANY_ID, 75),
-        makeCompanyRow(SUBSIDIARY_COMPANY_ID, 25),
+        makeCompanyRow(PARENT_COMPANY_ID, CompanySizeEnum.LARGE),
+        makeCompanyRow(SUBSIDIARY_COMPANY_ID, CompanySizeEnum.MEDIUM),
       ])
     companyReportBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `cr-${i}` })),
@@ -218,7 +219,7 @@ describe('ReportCreateService', () => {
       reportId: REPORT_ID,
       companyId: PARENT_COMPANY_ID,
       parentCompanyId: null,
-      averageEmployeeCountFromRsk: 75,
+      employeeCountCategory: CompanySizeEnum.LARGE,
     })
 
     // 1 role, 1 criterion, 1 sub_criterion, 2 steps, 1 employee.
@@ -291,7 +292,7 @@ describe('ReportCreateService', () => {
     expect(rows[1]).toMatchObject({
       companyId: SUBSIDIARY_COMPANY_ID,
       parentCompanyId: PARENT_COMPANY_ID,
-      averageEmployeeCountFromRsk: 25,
+      employeeCountCategory: CompanySizeEnum.MEDIUM,
     })
   })
 
@@ -563,7 +564,7 @@ describe('ReportCreateService', () => {
       reportId: REPORT_ID,
       companyId: PARENT_COMPANY_ID,
       parentCompanyId: null,
-      averageEmployeeCountFromRsk: 75,
+      employeeCountCategory: CompanySizeEnum.LARGE,
     })
 
     // No criteria, no employees, no role/personal joins, no snapshot.
@@ -603,7 +604,7 @@ describe('ReportCreateService', () => {
     expect(rows[1]).toMatchObject({
       companyId: SUBSIDIARY_COMPANY_ID,
       parentCompanyId: PARENT_COMPANY_ID,
-      averageEmployeeCountFromRsk: 25,
+      employeeCountCategory: CompanySizeEnum.MEDIUM,
     })
   })
 
@@ -746,11 +747,11 @@ function makeCompanySnapshot(
 
 function makeCompanyRow(
   id: string,
-  averageEmployeeCountFromRsk: number,
+  employeeCountCategory: CompanySizeEnum,
 ): CompanyModel {
   return {
     id,
-    averageEmployeeCountFromRsk,
+    employeeCountCategory,
   } as CompanyModel
 }
 
