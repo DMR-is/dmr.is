@@ -1,4 +1,6 @@
-import { ApiBoolean, ApiNumber, ApiString, ApiUUId } from '@dmr.is/decorators'
+import { ApiBoolean, ApiEnum, ApiString, ApiUUId } from '@dmr.is/decorators'
+
+import { CompanySizeEnum } from '../models/company.enums'
 
 export class CompanyDto {
   @ApiUUId()
@@ -7,8 +9,8 @@ export class CompanyDto {
   @ApiString()
   name!: string
 
-  @ApiNumber()
-  averageEmployeeCountFromRsk!: number
+  @ApiEnum(CompanySizeEnum, { enumName: 'CompanySizeEnum' })
+  employeeCountCategory!: CompanySizeEnum
 
   @ApiString()
   nationalId!: string

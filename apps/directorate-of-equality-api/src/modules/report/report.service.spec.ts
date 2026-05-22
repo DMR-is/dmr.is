@@ -4,6 +4,7 @@ import { Op } from 'sequelize'
 
 import type { Logger } from '@dmr.is/logging'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
 import type { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import type { ReportModel } from './models/report.model'
@@ -39,7 +40,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       name: 'Blámi hf.',
       nationalId: '4703013920',
       isatCategory: '62.01.0',
-      averageEmployeeCountFromRsk: 25,
+      employeeCountCategory: CompanySizeEnum.MEDIUM,
     },
     reviewer: null,
     ...overrides,
@@ -53,7 +54,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
           name?: string
           nationalId?: string
           isatCategory?: string
-          averageEmployeeCountFromRsk?: number
+          employeeCountCategory?: CompanySizeEnum
         }
       | null
     return {
@@ -64,8 +65,8 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       companyName: companyReport?.name ?? null,
       companyNationalId: companyReport?.nationalId ?? null,
       companyIsatCategory: companyReport?.isatCategory ?? null,
-      companyAverageEmployeeCountFromRsk:
-        companyReport?.averageEmployeeCountFromRsk ?? null,
+      companyEmployeeCountCategory:
+        companyReport?.employeeCountCategory ?? null,
       companyAdminName: row.companyAdminName,
       companyAdminEmail: row.companyAdminEmail,
       companyAdminGender: row.companyAdminGender,
@@ -424,7 +425,7 @@ describe('ReportService.getById', () => {
       address: 'Hafnarstræti 5',
       city: 'Reykjavík',
       postcode: '101',
-      averageEmployeeCountFromRsk: 45,
+      employeeCountCategory: CompanySizeEnum.MEDIUM,
       isatCategory: '62010',
     },
     comments: [],
@@ -637,7 +638,7 @@ describe('ReportService.getById', () => {
         address: 'Hafnarstræti 6',
         city: 'Reykjavík',
         postcode: '101',
-        averageEmployeeCountFromRsk: 12,
+        employeeCountCategory: CompanySizeEnum.SMALL,
         isatCategory: '62010',
       }
       companyReportFindAll.mockResolvedValueOnce([

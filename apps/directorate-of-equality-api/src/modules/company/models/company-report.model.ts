@@ -5,6 +5,7 @@ import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../../core/constants'
 import { ReportModel } from '../../report/models/report.model'
 import type { CompanyReportDto } from '../dto/company-report.dto'
+import { CompanySizeEnum } from './company.enums'
 import { CompanyModel } from './company.model'
 
 type CompanyReportAttributes = {
@@ -17,7 +18,7 @@ type CompanyReportAttributes = {
   address: string
   city: string
   postcode: string
-  averageEmployeeCountFromRsk: number
+  employeeCountCategory: CompanySizeEnum
   isatCategory: string
 }
 
@@ -31,7 +32,7 @@ type CompanyReportCreateAttributes = {
   address: string
   city: string
   postcode: string
-  averageEmployeeCountFromRsk: number
+  employeeCountCategory: CompanySizeEnum
   isatCategory: string
 }
 
@@ -68,11 +69,11 @@ export class CompanyReportModel extends ImmutableModel<
   postcode!: string
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.ENUM(...Object.values(CompanySizeEnum)),
     allowNull: false,
-    field: 'average_employee_count_from_rsk',
+    field: 'employee_count_category',
   })
-  averageEmployeeCountFromRsk!: number
+  employeeCountCategory!: CompanySizeEnum
 
   @Column({ type: DataType.TEXT, allowNull: false, field: 'isat_category' })
   isatCategory!: string
@@ -100,7 +101,7 @@ export class CompanyReportModel extends ImmutableModel<
       address: model.address,
       city: model.city,
       postcode: model.postcode,
-      averageEmployeeCountFromRsk: model.averageEmployeeCountFromRsk,
+      employeeCountCategory: model.employeeCountCategory,
       isatCategory: model.isatCategory,
     }
   }

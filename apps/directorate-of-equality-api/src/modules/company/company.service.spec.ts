@@ -8,6 +8,7 @@ import {
 } from '@dmr.is/clients-national-registry'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { CompanyService } from './company.service'
 
@@ -86,7 +87,7 @@ describe('CompanyService', () => {
           id: 'company-1',
           name: 'Acme ehf.',
           nationalId: '5501234567',
-          averageEmployeeCountFromRsk: 12,
+          employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
@@ -101,7 +102,7 @@ describe('CompanyService', () => {
         id: 'company-1',
         name: 'Acme ehf.',
         nationalId: '5501234567',
-        averageEmployeeCountFromRsk: 12,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       })
     })
 
@@ -118,7 +119,7 @@ describe('CompanyService', () => {
           id: 'company-2',
           name: 'Registry Name ehf.',
           nationalId: '6601234567',
-          averageEmployeeCountFromRsk: 0,
+          employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
@@ -130,13 +131,13 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Registry Name ehf.',
         nationalId: '6601234567',
-        averageEmployeeCountFromRsk: 0,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       })
       expect(result).toEqual({
         id: 'company-2',
         name: 'Registry Name ehf.',
         nationalId: '6601234567',
-        averageEmployeeCountFromRsk: 0,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       })
     })
 
@@ -148,7 +149,7 @@ describe('CompanyService', () => {
           id: 'company-3',
           name: 'Body-provided name',
           nationalId: '7701234567',
-          averageEmployeeCountFromRsk: 0,
+          employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
@@ -160,7 +161,7 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Body-provided name',
         nationalId: '7701234567',
-        averageEmployeeCountFromRsk: 0,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       })
       expect(result.name).toBe('Body-provided name')
     })
@@ -193,7 +194,7 @@ describe('CompanyService', () => {
           id: 'company-1',
           name: 'Acme ehf.',
           nationalId: '5501234567',
-          averageEmployeeCountFromRsk: 12,
+          employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
@@ -234,7 +235,7 @@ describe('CompanyService', () => {
           id: 'company-2',
           name: 'Subsidiary ehf.',
           nationalId: '6601234567',
-          averageEmployeeCountFromRsk: 0,
+          employeeCountCategory: CompanySizeEnum.SMALL,
         }),
       )
 
@@ -246,7 +247,7 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
-        averageEmployeeCountFromRsk: 0,
+        employeeCountCategory: CompanySizeEnum.SMALL,
       })
       expect(result).toEqual({
         companyId: 'company-2',
@@ -297,7 +298,7 @@ function makeCompanyModel(overrides: Partial<CompanyModel> = {}): CompanyModel {
     id: 'company-1',
     name: 'Acme ehf.',
     nationalId: '5501234567',
-    averageEmployeeCountFromRsk: 3,
+    employeeCountCategory: CompanySizeEnum.SMALL,
     ...overrides,
   }
   return {

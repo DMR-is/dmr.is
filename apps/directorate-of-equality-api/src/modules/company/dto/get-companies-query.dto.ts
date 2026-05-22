@@ -1,12 +1,9 @@
-import { Transform } from 'class-transformer'
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator'
+import { IsEnum, IsOptional, IsString } from 'class-validator'
 
-import {
-  ApiOptionalEnum,
-  ApiOptionalNumber,
-  ApiOptionalString,
-} from '@dmr.is/decorators'
+import { ApiOptionalEnum, ApiOptionalString } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
+
+import { CompanySizeEnum } from '../models/company.enums'
 
 export enum CompanySortByEnum {
   NAME = 'name',
@@ -26,20 +23,13 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsString()
   q?: string
 
-  @ApiOptionalNumber({
-    description:
-      'Return only companies with averageEmployeeCountFromRsk >= this value.',
-    minimum: 0,
-  })
-  @Transform(({ value }) => {
-    if (value == null) return undefined
-    const n = parseInt(value, 10)
-    return Number.isNaN(n) ? undefined : n
+  @ApiOptionalEnum(CompanySizeEnum, {
+    enumName: 'CompanySizeEnum',
+    description: 'Return only companies whose employee-count bucket matches.',
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  minEmployeeCount?: number
+  @IsEnum(CompanySizeEnum)
+  employeeCountCategory?: CompanySizeEnum
 
   @ApiOptionalEnum(CompanySortByEnum, { enumName: 'CompanySortByEnum' })
   @IsOptional()
