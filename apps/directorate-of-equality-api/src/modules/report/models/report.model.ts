@@ -378,8 +378,8 @@ export class ReportModel extends MutableModel<
       companyName: model.companyReport?.name ?? null,
       companyNationalId: model.companyReport?.nationalId ?? null,
       companyIsatCategory: model.companyReport?.isatCategory ?? null,
-      companyAverageEmployeeCountFromRsk:
-        model.companyReport?.averageEmployeeCountFromRsk ?? null,
+      companyEmployeeCountCategory:
+        model.companyReport?.employeeCountCategory ?? null,
       companyAdminName: model.companyAdminName,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,

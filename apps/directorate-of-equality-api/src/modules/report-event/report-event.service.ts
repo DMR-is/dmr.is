@@ -133,4 +133,23 @@ export class ReportEventService implements IReportEventService {
       relatedReportId,
     })
   }
+
+  async emitWithdrawn(
+    reportId: string,
+    relatedReportId: string,
+  ): Promise<void> {
+    this.logger.info(`Emitting WITHDRAWN event for report ${reportId}`, {
+      context: LOGGING_CONTEXT,
+      reportId: reportId,
+      relatedReportId: relatedReportId,
+    })
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.WITHDRAWN,
+      actorUserId: null,
+      reportStatus: ReportStatusEnum.WITHDRAWN,
+      relatedReportId,
+    })
+  }
 }

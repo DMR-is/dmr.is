@@ -15,6 +15,7 @@ export enum ReportEventTypeEnum {
   STATUS_CHANGED = 'STATUS_CHANGED',
   SUPERSEDED = 'SUPERSEDED',
   EDITED = 'EDITED',
+  WITHDRAWN = 'WITHDRAWN',
 }
 
 type ReportEventAttributes = {

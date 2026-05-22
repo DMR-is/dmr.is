@@ -5,10 +5,11 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../../core/constants'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
+import { CompanySizeEnum } from './company.enums'
 
 type CompanyAttributes = {
   name: string
-  averageEmployeeCountFromRsk: number
+  employeeCountCategory: CompanySizeEnum
   nationalId: string
   salaryReportRequired: boolean
   salaryReportRequiredOverride: boolean
@@ -16,7 +17,7 @@ type CompanyAttributes = {
 
 type CompanyCreateAttributes = {
   name: string
-  averageEmployeeCountFromRsk: number
+  employeeCountCategory: CompanySizeEnum
   nationalId: string
   salaryReportRequired?: boolean
   salaryReportRequiredOverride?: boolean
@@ -31,11 +32,11 @@ export class CompanyModel extends MutableModel<
   name!: string
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.ENUM(...Object.values(CompanySizeEnum)),
     allowNull: false,
-    field: 'average_employee_count_from_rsk',
+    field: 'employee_count_category',
   })
-  averageEmployeeCountFromRsk!: number
+  employeeCountCategory!: CompanySizeEnum
 
   @Column({ type: DataType.TEXT, allowNull: false, field: 'national_id' })
   nationalId!: string
@@ -60,7 +61,7 @@ export class CompanyModel extends MutableModel<
     return {
       id: model.id,
       name: model.name,
-      averageEmployeeCountFromRsk: model.averageEmployeeCountFromRsk,
+      employeeCountCategory: model.employeeCountCategory,
       nationalId: model.nationalId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
