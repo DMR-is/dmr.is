@@ -39,6 +39,7 @@ const STATUS_LABELS: Record<ReportStatusEnum, string> = {
   [ReportStatusEnum.APPROVED]: 'Samþykkt',
   [ReportStatusEnum.DENIED]: 'Hafnað',
   [ReportStatusEnum.SUPERSEDED]: 'Yfirtekið',
+  [ReportStatusEnum.WITHDRAWN]: 'Dregin til baka',
 }
 
 const STATUS_COLORS: Record<ReportStatusEnum, string> = {
@@ -49,6 +50,7 @@ const STATUS_COLORS: Record<ReportStatusEnum, string> = {
   [ReportStatusEnum.APPROVED]: theme.color.mint600,
   [ReportStatusEnum.DENIED]: theme.color.red400,
   [ReportStatusEnum.SUPERSEDED]: theme.color.blueberry400,
+  [ReportStatusEnum.WITHDRAWN]: theme.color.dark300,
 }
 
 type StatisticsWindow = 'last30Days' | 'currentYear' | 'allTime'

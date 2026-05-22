@@ -1,44 +1,45 @@
-'use client'
-
-import { useState } from 'react'
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
-import { type ReportEmployeeOutlierDto } from '../../../../gen/fetch'
+import { type Paging, type ReportEmployeeOutlierDto } from '../../../../gen/fetch'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
-const PAGE_SIZE = 10
-
 interface OutlierPlanTableProps {
   outliers: ReportEmployeeOutlierDto[]
+  paging?: Paging
+  loading?: boolean
+  onPageChange?: (page: number) => void
 }
+
+const dash = '–'
 
 const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   {
-    accessorKey: 'reportEmployeeId',
+    accessorKey: 'employeeOrdinal',
     header: 'Númer',
+    cell: ({ getValue }) => getValue<number | null>() ?? dash,
   },
   {
     id: 'starf',
     header: 'Starf',
-    cell: () => 'TODO',
+    cell: ({ row }) => row.original.roleTitle ?? dash,
   },
   {
     id: 'kyn',
     header: 'Kyn',
-    cell: () => 'TODO',
+    cell: ({ row }) => row.original.gender ?? dash,
   },
   {
     id: 'launafravik',
     header: 'Launafrávik',
-    cell: () => 'TODO',
+    cell: ({ row }) =>
+      row.original.differencePercent == null
+        ? dash
+        : `${row.original.differencePercent.toLocaleString('is-IS')}%`,
   },
 ]
-
-const dash = '–'
 
 const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   <Box background="blue100" padding={2}>
@@ -70,11 +71,12 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   </Box>
 )
 
-export const OutlierPlanTable = ({ outliers }: OutlierPlanTableProps) => {
-  const [page, setPage] = useState(1)
-  const start = (page - 1) * PAGE_SIZE
-  const pageData = outliers.slice(start, start + PAGE_SIZE)
-
+export const OutlierPlanTable = ({
+  outliers,
+  paging,
+  loading,
+  onPageChange,
+}: OutlierPlanTableProps) => {
   return (
     <>
       <Text variant="h4" marginBottom={4}>
@@ -82,20 +84,13 @@ export const OutlierPlanTable = ({ outliers }: OutlierPlanTableProps) => {
       </Text>
       <Table
         columns={columns}
-        data={pageData}
+        data={outliers}
         getRowExpanded={(row) => <ExpandedRow row={row} />}
-        paging={
-          outliers.length > PAGE_SIZE
-            ? {
-                page,
-                pageSize: PAGE_SIZE,
-                totalItems: outliers.length,
-                totalPages: Math.ceil(outliers.length / PAGE_SIZE),
-              }
-            : undefined
-        }
-        onPageChange={setPage}
+        paging={paging}
+        loading={loading}
+        onPageChange={onPageChange}
         showPageSizeSelect={false}
+        noDataMessage="Engin úrbótaáætlun skráð"
       />
     </>
   )

@@ -13,7 +13,6 @@ import {
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
 import {
-  inRange,
   matchesStatusFilter,
   normalizeId,
 } from '../../components/companies/companyStatus'
@@ -79,9 +78,7 @@ export const CompaniesContainer = () => {
     return companies.filter((company) => {
       if (
         filters.employees.length &&
-        !filters.employees.some((r) =>
-          inRange(company.averageEmployeeCountFromRsk, r),
-        )
+        !filters.employees.includes(company.employeeCountCategory)
       )
         return false
 

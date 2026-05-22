@@ -68,6 +68,12 @@ export class ReportListItemDto {
   })
   waitingForAction!: boolean
 
+  @ApiBoolean({
+    description:
+      'True when the report has at least one employee outlier — outliers are the input that drives the company-side improvement plan.',
+  })
+  includesImprovementPlan!: boolean
+
   @ApiOptionalDateTime({ nullable: true })
   createdAt!: Date | null
 

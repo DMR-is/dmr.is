@@ -1,6 +1,7 @@
 import { Stack } from '@island.is/island-ui/core'
 
 import {
+  Paging,
   ReportEmployeeOutlierDto,
   SalaryByGenderAndScoreDto,
 } from '../../../../gen/fetch'
@@ -13,6 +14,9 @@ import { SalaryStatistics } from './SalaryStatistics'
 interface SalaryReportTabProps {
   data: SalaryByGenderAndScoreDto
   outliers: ReportEmployeeOutlierDto[]
+  outliersPaging?: Paging
+  outliersLoading?: boolean
+  onOutliersPageChange: (page: number) => void
   outlierDate?: Date
 }
 
@@ -22,6 +26,9 @@ const formatSalary = (v: number) =>
 export const SalaryReportTab = ({
   data,
   outliers,
+  outliersPaging,
+  outliersLoading,
+  onOutliersPageChange,
   outlierDate,
 }: SalaryReportTabProps) => {
   if (!data) {
@@ -41,7 +48,12 @@ export const SalaryReportTab = ({
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
       />
-      <OutlierPlanTable outliers={outliers} />
+      <OutlierPlanTable
+        outliers={outliers}
+        paging={outliersPaging}
+        loading={outliersLoading}
+        onPageChange={onOutliersPageChange}
+      />
       <OutlierInputForm outlierDate={outlierDate} />
     </Stack>
   )

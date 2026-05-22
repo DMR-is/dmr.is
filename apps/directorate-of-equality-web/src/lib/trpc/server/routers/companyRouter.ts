@@ -10,7 +10,7 @@ const zGetCompaniesQuery = z.object({
   page: z.number().min(1).optional(),
   pageSize: z.number().min(1).optional(),
   q: z.string().optional(),
-  minEmployeeCount: z.number().min(0).optional(),
+  employeeCountCategory: z.enum(['SMALL', 'MEDIUM', 'LARGE']).optional(),
   sortBy: z.enum(['name', 'employeeCount']).optional(),
   direction: z.enum(['asc', 'desc']).optional(),
 })

@@ -235,11 +235,11 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "minEmployeeCount",
+            "name": "employeeCountCategory",
             "required": false,
             "in": "query",
-            "description": "Return only companies with averageEmployeeCountFromRsk >= this value.",
-            "schema": { "minimum": 0, "type": "number" }
+            "description": "Return only companies whose employee-count bucket matches.",
+            "schema": { "$ref": "#/components/schemas/CompanySizeEnum" }
           },
           {
             "name": "sortBy",
@@ -1153,6 +1153,13 @@
             "schema": { "type": "boolean" }
           },
           {
+            "name": "hasImprovementPlan",
+            "required": false,
+            "in": "query",
+            "description": "When true, returns only reports that have at least one employee outlier (i.e. an improvement plan applies). When false, returns only reports with no outliers. Omit for no constraint.",
+            "schema": { "type": "boolean" }
+          },
+          {
             "name": "createdFrom",
             "required": false,
             "in": "query",
@@ -1318,6 +1325,87 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ReportDetailDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{id}/outliers": {
+      "get": {
+        "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by `employeeOrdinal` ascending.",
+        "operationId": "getReportOutliers",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportOutliersResponseDto"
+                }
               }
             }
           },
@@ -2538,6 +2626,10 @@
           "equalityReportContent"
         ]
       },
+      "CompanySizeEnum": {
+        "type": "string",
+        "enum": ["SMALL", "MEDIUM", "LARGE"]
+      },
       "CompanySortByEnum": {
         "type": "string",
         "enum": ["name", "employeeCount"]
@@ -2548,7 +2640,9 @@
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
-          "averageEmployeeCountFromRsk": { "type": "number" },
+          "employeeCountCategory": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          },
           "nationalId": { "type": "string" },
           "salaryReportRequired": { "type": "boolean" },
           "salaryReportRequiredOverride": { "type": "boolean" }
@@ -2556,7 +2650,7 @@
         "required": [
           "id",
           "name",
-          "averageEmployeeCountFromRsk",
+          "employeeCountCategory",
           "nationalId",
           "salaryReportRequired",
           "salaryReportRequiredOverride"
@@ -2614,9 +2708,11 @@
         "properties": {
           "nationalId": { "type": "string" },
           "name": { "type": "string" },
-          "averageEmployeeCountFromRsk": { "type": "number" }
+          "employeeCountCategory": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          }
         },
-        "required": ["nationalId", "name", "averageEmployeeCountFromRsk"]
+        "required": ["nationalId", "name", "employeeCountCategory"]
       },
       "UserDto": {
         "type": "object",
@@ -2739,7 +2835,8 @@
               "IN_REVIEW",
               "DENIED",
               "APPROVED",
-              "SUPERSEDED"
+              "SUPERSEDED",
+              "WITHDRAWN"
             ]
           },
           "count": { "type": "number" },
@@ -2783,7 +2880,8 @@
           "IN_REVIEW",
           "DENIED",
           "APPROVED",
-          "SUPERSEDED"
+          "SUPERSEDED",
+          "WITHDRAWN"
         ]
       },
       "ReportSortByEnum": {
@@ -2813,9 +2911,9 @@
           "companyName": { "type": "string", "nullable": true },
           "companyNationalId": { "type": "string", "nullable": true },
           "companyIsatCategory": { "type": "string", "nullable": true },
-          "companyAverageEmployeeCountFromRsk": {
-            "type": "number",
-            "nullable": true
+          "companyEmployeeCountCategory": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "companyAdminName": { "type": "string", "nullable": true },
           "companyAdminEmail": { "type": "string", "nullable": true },
@@ -2830,6 +2928,10 @@
           "waitingForAction": {
             "type": "boolean",
             "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
+          },
+          "includesImprovementPlan": {
+            "type": "boolean",
+            "description": "True when the report has at least one employee outlier — outliers are the input that drives the company-side improvement plan."
           },
           "createdAt": {
             "type": "string",
@@ -2850,7 +2952,13 @@
             "nullable": true
           }
         },
-        "required": ["id", "type", "status", "waitingForAction"]
+        "required": [
+          "id",
+          "type",
+          "status",
+          "waitingForAction",
+          "includesImprovementPlan"
+        ]
       },
       "ReportStatusCountsDto": {
         "type": "object",
@@ -2895,7 +3003,9 @@
           "address": { "type": "string" },
           "city": { "type": "string" },
           "postcode": { "type": "string" },
-          "averageEmployeeCountFromRsk": { "type": "number" },
+          "employeeCountCategory": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          },
           "isatCategory": { "type": "string" }
         },
         "required": [
@@ -2907,7 +3017,7 @@
           "address",
           "city",
           "postcode",
-          "averageEmployeeCountFromRsk",
+          "employeeCountCategory",
           "isatCategory"
         ]
       },
@@ -2953,7 +3063,8 @@
           "UNASSIGNED",
           "STATUS_CHANGED",
           "SUPERSEDED",
-          "EDITED"
+          "EDITED",
+          "WITHDRAWN"
         ]
       },
       "ReportEventDto": {
@@ -3277,27 +3388,6 @@
           "full"
         ]
       },
-      "ReportEmployeeOutlierDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "reportEmployeeId": { "type": "string", "format": "uuid" },
-          "gender": {
-            "nullable": true,
-            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
-          },
-          "roleTitle": { "type": "string", "nullable": true },
-          "reason": {
-            "type": "string",
-            "nullable": true,
-            "description": "Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty."
-          },
-          "action": { "type": "string", "nullable": true },
-          "signatureName": { "type": "string", "nullable": true },
-          "signatureRole": { "type": "string", "nullable": true }
-        },
-        "required": ["id", "reportEmployeeId"]
-      },
       "ReportDetailDto": {
         "type": "object",
         "properties": {
@@ -3397,9 +3487,9 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
           },
-          "employeeOutliers": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ReportEmployeeOutlierDto" }
+          "includesImprovementPlan": {
+            "type": "boolean",
+            "description": "True when the report has at least one employee outlier. The full list is fetched separately via `GET /reports/:id/outliers`."
           }
         },
         "required": [
@@ -3413,8 +3503,72 @@
           "equalityReport",
           "timeline",
           "roleResults",
-          "employeeOutliers"
+          "includesImprovementPlan"
         ]
+      },
+      "ReportEmployeeOutlierDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportEmployeeId": { "type": "string", "format": "uuid" },
+          "employeeOrdinal": {
+            "type": "number",
+            "nullable": true,
+            "description": "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.outlier_analysis_snapshot.employees`."
+          },
+          "gender": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
+          },
+          "roleTitle": { "type": "string", "nullable": true },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty."
+          },
+          "action": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureRole": { "type": "string", "nullable": true },
+          "adjustedBaseSalary": {
+            "type": "number",
+            "nullable": true,
+            "description": "Employee's full-time-equivalent base salary at submission, projected from the matching `outlier_analysis_snapshot.employees` entry. Null if the snapshot has no matching ordinal."
+          },
+          "predictedBaseSalary": {
+            "type": "number",
+            "nullable": true,
+            "description": "Salary predicted by the regression line at the employee's exact score. Null when the regression had no slope (insufficient sample) or no matching snapshot entry exists."
+          },
+          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
+          "scoreBucketRangeTo": { "type": "number", "nullable": true },
+          "direction": {
+            "type": "string",
+            "nullable": true,
+            "description": "Sign of the deviation from the predicted salary: 'ABOVE' | 'BELOW' | 'EQUAL'. Null when no prediction was available."
+          },
+          "differencePercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "Signed percent deviation of the employee's adjusted base salary from the predicted salary."
+          },
+          "allowedDifferencePercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time."
+          }
+        },
+        "required": ["id", "reportEmployeeId"]
+      },
+      "GetReportOutliersResponseDto": {
+        "type": "object",
+        "properties": {
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportEmployeeOutlierDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["outliers", "paging"]
       },
       "CreateReportCommentDto": {
         "type": "object",

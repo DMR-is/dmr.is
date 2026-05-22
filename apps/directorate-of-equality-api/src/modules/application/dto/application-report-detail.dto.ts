@@ -1,4 +1,5 @@
 import {
+  ApiBoolean,
   ApiDtoArray,
   ApiEnum,
   ApiOptionalBoolean,
@@ -14,7 +15,6 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../../report/models/report.enums'
-import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
 import { ApplicationReportCommentDto } from './application-report-comment.dto'
 
@@ -59,8 +59,11 @@ export class ApplicationReportDetailDto {
   })
   outliersPostponed!: boolean | null
 
-  @ApiDtoArray(ReportEmployeeOutlierDto)
-  outliers!: ReportEmployeeOutlierDto[]
+  @ApiBoolean({
+    description:
+      'True when the report has at least one employee outlier. The full list is fetched separately via `GET /application/reports/:providerId/outliers`.',
+  })
+  includesImprovementPlan!: boolean
 
   @ApiOptionalDto(ReportResultDto, { nullable: true })
   result!: ReportResultDto | null

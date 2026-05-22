@@ -71,6 +71,8 @@ describe('ApplicationService', () => {
   let reportUpdate: jest.Mock
   let companyReportFindAll: jest.Mock
   let outlierFindAll: jest.Mock
+  let outlierFindAndCountAll: jest.Mock
+  let outlierCount: jest.Mock
   let outlierUpdate: jest.Mock
   let eventFindOne: jest.Mock
   let getCommentsByReportId: jest.Mock
@@ -94,6 +96,10 @@ describe('ApplicationService', () => {
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
+    outlierFindAndCountAll = jest
+      .fn()
+      .mockResolvedValue({ rows: [], count: 0 })
+    outlierCount = jest.fn().mockResolvedValue(0)
     outlierUpdate = jest.fn().mockResolvedValue([1])
     eventFindOne = jest.fn().mockResolvedValue(null)
     getCommentsByReportId = jest.fn().mockResolvedValue([])
@@ -153,7 +159,12 @@ describe('ApplicationService', () => {
         },
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
-          useValue: { findAll: outlierFindAll, update: outlierUpdate },
+          useValue: {
+            findAll: outlierFindAll,
+            findAndCountAll: outlierFindAndCountAll,
+            count: outlierCount,
+            update: outlierUpdate,
+          },
         },
         {
           provide: getModelToken(ReportEventModel),
@@ -544,7 +555,7 @@ describe('ApplicationService', () => {
         }),
       ])
       getResultByReportId.mockResolvedValueOnce(reportResult)
-      outlierFindAll.mockResolvedValueOnce([outlier])
+      outlierCount.mockResolvedValueOnce(1)
       getCommentsByReportId.mockResolvedValueOnce([externalComment])
 
       const result = await service.getReport(PROVIDER_ID, COMPANY)
@@ -566,6 +577,7 @@ describe('ApplicationService', () => {
         submittedAt,
         equalityReportContent: null,
         outliersPostponed: false,
+        includesImprovementPlan: true,
         result: reportResult,
         externalComments: [slimExternalComment],
         denialReason: null,
@@ -577,18 +589,10 @@ describe('ApplicationService', () => {
         approvedAt,
         validUntil,
       })
-      expect(result.outliers).toEqual([
-        {
-          id: outlier.id,
-          reportEmployeeId: outlier.reportEmployeeId,
-          gender: GenderEnum.FEMALE,
-          roleTitle: 'Manager',
-          reason: outlier.reason,
-          action: outlier.action,
-          signatureName: outlier.signatureName,
-          signatureRole: outlier.signatureRole,
-        },
-      ])
+      // outlier row reference retained so the mock factory stays in use for
+      // the editOutliers tests below; the detail payload itself no longer
+      // includes the outlier list.
+      expect(outlier.id).toBe('outlier-1')
       expect(getCommentsByReportId).toHaveBeenCalledWith(
         expect.objectContaining({
           reportId: REPORT_ID,
@@ -621,11 +625,11 @@ describe('ApplicationService', () => {
 
       expect(result.equalityReport).toBeNull()
       expect(result.equalityReportContent).toBe('Equality plan narrative')
-      expect(result.outliers).toEqual([])
+      expect(result.includesImprovementPlan).toBe(false)
       expect(result.outliersPostponed).toBeNull()
       expect(result.result).toBeNull()
       expect(getResultByReportId).not.toHaveBeenCalled()
-      expect(outlierFindAll).not.toHaveBeenCalled()
+      expect(outlierCount).not.toHaveBeenCalled()
     })
 
     it('surfaces the latest denial reason when the report is DENIED', async () => {
