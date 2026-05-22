@@ -13,6 +13,9 @@ export class ReportStatusCountsDto {
 
   @ApiProperty()
   processed!: number
+
+  @ApiProperty()
+  postponed!: number
 }
 
 export class GetReportsResponseDto {

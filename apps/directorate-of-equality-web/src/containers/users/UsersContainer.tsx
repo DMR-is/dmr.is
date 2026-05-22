@@ -13,6 +13,7 @@ import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import { UserModal } from '../../components/users/UserModal'
 import { type UserDto } from '../../gen/fetch/types.gen'
+import { sharedText, usersText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
@@ -22,29 +23,29 @@ import { type ColumnDef } from '@tanstack/react-table'
 const COLUMNS: ColumnDef<UserDto>[] = [
   {
     accessorKey: 'firstName',
-    header: 'Nafn',
+    header: sharedText.form.nameLabel,
     enableSorting: true,
     cell: ({ row }) =>
       `${row.original.firstName} ${row.original.lastName}`.trim(),
   },
   {
     accessorKey: 'nationalId',
-    header: 'Kennitala',
+    header: usersText.modal.nationalIdLabel,
     enableSorting: false,
     cell: ({ getValue }) => formatNationalId(getValue<string>()),
   },
-  { accessorKey: 'email', header: 'Netfang', enableSorting: true },
-  { accessorKey: 'phone', header: 'Sími', enableSorting: false },
+  { accessorKey: 'email', header: sharedText.form.emailLabel, enableSorting: true },
+  { accessorKey: 'phone', header: sharedText.form.phoneShortLabel, enableSorting: false },
   {
     accessorKey: 'isActive',
-    header: 'Staða',
+    header: sharedText.statusLabel,
     enableSorting: true,
     cell: ({ getValue }) => (
       <TableCell
         items={{
           type: 'tag',
           variant: getValue<boolean>() ? 'mint' : 'red',
-          children: getValue<boolean>() ? 'Virkur' : 'Óvirkur',
+          children: getValue<boolean>() ? usersText.active : usersText.inactive,
         }}
       />
     ),
@@ -79,7 +80,7 @@ export const UsersContainer = () => {
         <GridColumn span={['12/12', '3/12']}>
           <Stack space={2}>
             <Text variant="h5" fontWeight="semiBold">
-              Aðgerðir
+              {usersText.actionsHeading}
             </Text>
             <Button
               icon="add"
@@ -90,7 +91,7 @@ export const UsersContainer = () => {
               variant="utility"
               colorScheme="white"
             >
-              Nýr ritstjóri
+              {usersText.createButton}
             </Button>
             <Button
               icon={showInactive ? 'eyeOff' : 'eye'}
@@ -101,7 +102,7 @@ export const UsersContainer = () => {
               variant="utility"
               colorScheme="white"
             >
-              {showInactive ? 'Fela óvirka' : 'Sýna óvirka'}
+              {showInactive ? usersText.hideInactive : usersText.showInactive}
             </Button>
           </Stack>
         </GridColumn>
@@ -110,12 +111,12 @@ export const UsersContainer = () => {
           <Stack space={2}>
             <Inline space={1} alignY="center">
               <Text fontWeight="semiBold">{visibleUsers.length}</Text>
-              <Text>ritstjórar fundust</Text>
+              <Text>{usersText.resultsText}</Text>
             </Inline>
             <Table
               columns={COLUMNS}
               data={visibleUsers}
-              noDataMessage="Engir ritstjórar skráðir"
+              noDataMessage={usersText.noData}
               onRowClick={openEdit}
             />
           </Stack>

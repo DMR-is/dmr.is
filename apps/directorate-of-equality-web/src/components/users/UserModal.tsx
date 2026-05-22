@@ -13,9 +13,13 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { type UserDto } from '../../gen/fetch/types.gen'
+import { sharedText, usersText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+const u = usersText.modal
+const f = sharedText.form
 
 type Props = {
   user: UserDto | null
@@ -56,7 +60,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     trpc.user.create.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-        toast.success('Ritstjóri stofnaður')
+        toast.success(u.createSuccess)
         onClose()
       },
     }),
@@ -66,7 +70,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     trpc.user.update.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
-        toast.success('Breytingar vistaðar')
+        toast.success(u.saveSuccess)
         onClose()
       },
     }),
@@ -101,7 +105,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
     <Modal
       baseId="user-modal"
       isVisible={isOpen}
-      title={isNew ? 'Nýr ritstjóri' : 'Breyta ritstjóra'}
+      title={isNew ? u.createTitle : u.editTitle}
       onVisibilityChange={(visible) => {
         if (!visible) onClose()
       }}
@@ -112,7 +116,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         {isNew && (
           <TextInput
             name="nationalId"
-            label="Kennitala"
+            label={u.nationalIdLabel}
             size="xs"
             value={nationalId}
             onChange={(e) => setNationalId(e.target.value)}
@@ -123,7 +127,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           <Box flexGrow={1}>
             <TextInput
               name="firstName"
-              label="Fornafn"
+              label={u.firstNameLabel}
               size="xs"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -132,7 +136,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
           <Box flexGrow={1}>
             <TextInput
               name="lastName"
-              label="Eftirnafn"
+              label={u.lastNameLabel}
               size="xs"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
@@ -142,7 +146,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
         <TextInput
           name="email"
-          label="Netfang"
+          label={f.emailLabel}
           type="email"
           size="xs"
           value={email}
@@ -151,7 +155,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
         <TextInput
           name="phone"
-          label="Sími"
+          label={f.phoneShortLabel}
           size="xs"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
@@ -160,11 +164,11 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         {!isNew && (
           <Box>
             <Text variant="eyebrow" marginBottom={1}>
-              Staða ritstjóra
+              {u.statusEyebrow}
             </Text>
             <Checkbox
               name="isActive"
-              label="Virkur ritstjóri"
+              label={u.activeLabel}
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
             />
@@ -173,7 +177,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
         <Inline justifyContent="flexEnd" space={2}>
           <Button variant="ghost" size="small" onClick={onClose}>
-            Hætta við
+            {f.cancel}
           </Button>
           <Button
             size="small"
@@ -187,7 +191,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
             }
             onClick={handleSave}
           >
-            {isNew ? 'Stofna ritstjóra' : 'Vista breytingar'}
+            {isNew ? u.create : u.save}
           </Button>
         </Inline>
       </Stack>

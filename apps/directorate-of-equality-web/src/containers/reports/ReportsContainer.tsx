@@ -41,7 +41,7 @@ import { type ColumnDef } from '@tanstack/react-table'
 
 type TabId = 'innsendingar' | 'i-vinnslu' | 'afgreitt'
 
-const SUBMITTED = [ReportStatusEnum.SUBMITTED]
+const SUBMITTED = [ReportStatusEnum.SUBMITTED, ReportStatusEnum.POSTPONED]
 const IN_REVIEW = [ReportStatusEnum.IN_REVIEW]
 const PROCESSED = [
   ReportStatusEnum.APPROVED,
@@ -65,6 +65,7 @@ const ALL_STATUS_OPTIONS: FilterOption[] = (
     'IN_REVIEW',
     'APPROVED',
     'DENIED',
+    'POSTPONED',
     'SUPERSEDED',
   ] as const
 ).map((value) => ({ value, label: sharedText.statusLabels[value] }))
@@ -264,7 +265,7 @@ export const ReportsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `Innsendingar (${data?.statusCounts.submitted ?? 0})`,
+            label: `Innsendingar (${(data?.statusCounts.submitted ?? 0) + (data?.statusCounts.postponed ?? 0)})`,
             content: filterAndTable(true),
           },
           {

@@ -23,11 +23,21 @@ export const ReportFormStepper = ({ status }: Props) => {
       ? ReportStatusTranslatedEnum.DENIED
       : reportText.stepApproved
 
+  const isPostponed = status === ReportStatusEnum.POSTPONED
+
   const steps: Step[] = [
     {
       label: ReportStatusTranslatedEnum.SUBMITTED,
       matchStatuses: [ReportStatusEnum.SUBMITTED],
     },
+    ...(isPostponed
+      ? [
+          {
+            label: ReportStatusTranslatedEnum.POSTPONED,
+            matchStatuses: [ReportStatusEnum.POSTPONED],
+          },
+        ]
+      : []),
     {
       label: ReportStatusTranslatedEnum.IN_REVIEW,
       matchStatuses: [ReportStatusEnum.IN_REVIEW],

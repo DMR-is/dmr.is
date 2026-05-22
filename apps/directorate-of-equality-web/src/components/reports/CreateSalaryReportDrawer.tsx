@@ -130,6 +130,8 @@ export const CreateSalaryReportDrawer = () => {
       averageEmployeeFemaleCount: Number(form.averageEmployeeFemaleCount),
       averageEmployeeNeutralCount: Number(form.averageEmployeeNeutralCount),
       parsed: parsedReport,
+      postponed: postpone,
+      postponeReason: postpone ? postponeReason : undefined,
     }
 
     const onSuccess = () => {
@@ -162,7 +164,6 @@ export const CreateSalaryReportDrawer = () => {
           path: { companyId },
           body: {
             ...body,
-            postponed: true,
             outliers: ordinals.map((employeeOrdinal) => ({ employeeOrdinal })),
           },
         })

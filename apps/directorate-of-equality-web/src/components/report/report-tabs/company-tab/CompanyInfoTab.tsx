@@ -7,10 +7,16 @@ import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
+import { overviewText, reportText, sharedText } from '../../../../lib/text'
 import { formatNationalId } from '../../../../lib/utils'
 import { InfoItems } from './InfoItems'
 
 import { type ColumnDef } from '@tanstack/react-table'
+
+const c = reportText.companyTab
+const d = reportText.detailFields
+const f = sharedText.form
+const e = overviewText.createSalaryReport
 
 type Subsidary = {
   name?: string
@@ -20,15 +26,15 @@ type Subsidary = {
 const subsidariesColumns: ColumnDef<Subsidary>[] = [
   {
     accessorKey: 'name',
-    header: 'Nafn',
-    cell: ({ getValue }) => getValue<string>() ?? 'Óþekkt',
+    header: f.nameLabel,
+    cell: ({ getValue }) => getValue<string>() ?? sharedText.unknown,
   },
   {
     accessorKey: 'nationalId',
-    header: 'Kennitala',
+    header: d.kennitala,
     cell: ({ getValue }) => {
       const val = getValue<string | undefined>()
-      return val ? formatNationalId(val) : 'Óþekkt'
+      return val ? formatNationalId(val) : sharedText.unknown
     },
   },
 ]
@@ -74,65 +80,65 @@ export const CompanyInfoTab = ({
       <Accordion singleExpand={false} dividerOnTop={false} space={'p5'}>
         <AccordionItem
           id="company-name"
-          label="Upplýsingar fyrirtækis"
+          label={c.companyInfoHeading}
           startExpanded
         >
           <InfoItems
             items={[
-              { label: 'Fyrirtæki', children: company?.name },
+              { label: d.company, children: company?.name },
               {
-                label: 'Kennitala',
+                label: d.kennitala,
                 children: formatNationalId(company?.nationalId),
               },
-              { label: 'Heimilisfang', children: company?.address },
-              { label: 'Sveitarfélag', children: company?.city },
+              { label: d.address, children: company?.address },
+              { label: d.city, children: company?.city },
               {
-                label: 'Fjöldi starfsmanna',
+                label: d.employeeCount,
                 children: company?.averageEmployeeCountFromRsk,
               },
               {
-                label: 'ÍSAT atvinnugreinaflokkun',
+                label: d.isatCode,
                 children: company?.isatCategory,
               },
             ]}
           />
         </AccordionItem>
-        <AccordionItem id="company-admin" label="Æðsti stjórnandi">
+        <AccordionItem id="company-admin" label={f.topManagerHeading}>
           <InfoItems
             items={[
-              { label: 'Nafn', children: admin?.name },
-              { label: 'Netfang', children: admin?.email },
-              { label: 'Kyn', children: admin?.gender },
+              { label: f.nameLabel, children: admin?.name },
+              { label: f.emailLabel, children: admin?.email },
+              { label: f.genderLabel, children: admin?.gender },
             ]}
           />
         </AccordionItem>
-        <AccordionItem id="company-contact-person" label="Tengiliður">
+        <AccordionItem id="company-contact-person" label={f.contactHeading}>
           <InfoItems
             items={[
-              { label: 'Nafn', children: contactPerson?.name },
-              { label: 'Netfang', children: contactPerson?.email },
-              { label: 'Sími', children: contactPerson?.phone },
+              { label: f.nameLabel, children: contactPerson?.name },
+              { label: f.emailLabel, children: contactPerson?.email },
+              { label: f.phoneShortLabel, children: contactPerson?.phone },
             ]}
           />
         </AccordionItem>
         <AccordionItem
           id="company-average-employees"
-          label="Meðalfjöldi starfsmanna"
+          label={c.averageEmployeesHeading}
         >
           <InfoItems
             colCount={3}
             items={[
-              { label: 'Konur', children: employees?.womenCount },
-              { label: 'Karlar', children: employees?.menCount },
+              { label: e.femaleCountLabel, children: employees?.womenCount },
+              { label: e.maleCountLabel, children: employees?.menCount },
               {
-                label: 'Hlutlaus skráning kyns í Þjóðskrá',
+                label: c.genderNeutralRegistry,
                 children: employees?.otherCount,
               },
             ]}
           />
         </AccordionItem>
         {subsidariesData.length > 0 && (
-          <AccordionItem id="company-subsidaries" label="Dótturfélög">
+          <AccordionItem id="company-subsidaries" label={c.subsidaries}>
             <Table columns={subsidariesColumns} data={subsidariesData} />
           </AccordionItem>
         )}

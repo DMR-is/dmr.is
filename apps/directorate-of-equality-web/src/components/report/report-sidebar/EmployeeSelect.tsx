@@ -11,9 +11,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 type Props = {
   reportId: string
   assignedUserId?: string | null
+  disabled?: boolean
 }
 
-export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
+export const EmployeeSelect = ({
+  reportId,
+  assignedUserId,
+  disabled,
+}: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
@@ -50,6 +55,7 @@ export const EmployeeSelect = ({ reportId, assignedUserId }: Props) => {
       value={value}
       isClearable
       isLoading={isLoadingUsers || assign.isPending}
+      isDisabled={disabled}
       onChange={(opt) => {
         if (!opt) assign.mutate({ reportId, userId: null })
         else assign.mutate({ reportId, userId: opt.value })

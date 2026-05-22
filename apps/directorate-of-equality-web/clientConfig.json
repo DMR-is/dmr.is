@@ -2857,9 +2857,10 @@
         "properties": {
           "submitted": { "type": "number" },
           "inReview": { "type": "number" },
-          "processed": { "type": "number" }
+          "processed": { "type": "number" },
+          "postponed": { "type": "number" }
         },
-        "required": ["submitted", "inReview", "processed"]
+        "required": ["submitted", "inReview", "processed", "postponed"]
       },
       "GetReportsResponseDto": {
         "type": "object",
@@ -3287,6 +3288,7 @@
             "allOf": [{ "$ref": "#/components/schemas/GenderEnum" }]
           },
           "roleTitle": { "type": "string", "nullable": true },
+          "score": { "type": "number", "nullable": true },
           "reason": {
             "type": "string",
             "nullable": true,

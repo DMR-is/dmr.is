@@ -31,6 +31,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
@@ -103,46 +104,56 @@ export class ReportService implements IReportService {
     const whereForCounts = this.buildWhere({ ...query, status: undefined })
     const countCol = `${ReportModel.name}.id`
 
-    const [{ rows, count }, submittedCount, inReviewCount, processedCount] =
-      await Promise.all([
-        this.reportModel.scope('listview').findAndCountAll({
-          where,
-          order,
-          limit,
-          offset,
-          // distinct + col avoids row duplication from the include inflating count.
-          // Qualify with the model alias — the listview scope joins tables that
-          // also have an `id` column, so a bare `id` is ambiguous in Postgres.
-          distinct: true,
-          col: countCol,
-          // Subquery off so the nested-where syntax works against joined cols.
-          subQuery: false,
-        }),
-        this.reportModel.scope('listview').count({
-          where: { ...whereForCounts, status: ReportStatusEnum.SUBMITTED },
-          distinct: true,
-          col: countCol,
-        }),
-        this.reportModel.scope('listview').count({
-          where: { ...whereForCounts, status: ReportStatusEnum.IN_REVIEW },
-          distinct: true,
-          col: countCol,
-        }),
-        this.reportModel.scope('listview').count({
-          where: {
-            ...whereForCounts,
-            status: {
-              [Op.in]: [
-                ReportStatusEnum.APPROVED,
-                ReportStatusEnum.DENIED,
-                ReportStatusEnum.SUPERSEDED,
-              ],
-            },
+    const [
+      { rows, count },
+      submittedCount,
+      inReviewCount,
+      processedCount,
+      postponedCount,
+    ] = await Promise.all([
+      this.reportModel.scope('listview').findAndCountAll({
+        where,
+        order,
+        limit,
+        offset,
+        // distinct + col avoids row duplication from the include inflating count.
+        // Qualify with the model alias — the listview scope joins tables that
+        // also have an `id` column, so a bare `id` is ambiguous in Postgres.
+        distinct: true,
+        col: countCol,
+        // Subquery off so the nested-where syntax works against joined cols.
+        subQuery: false,
+      }),
+      this.reportModel.scope('listview').count({
+        where: { ...whereForCounts, status: ReportStatusEnum.SUBMITTED },
+        distinct: true,
+        col: countCol,
+      }),
+      this.reportModel.scope('listview').count({
+        where: { ...whereForCounts, status: ReportStatusEnum.IN_REVIEW },
+        distinct: true,
+        col: countCol,
+      }),
+      this.reportModel.scope('listview').count({
+        where: {
+          ...whereForCounts,
+          status: {
+            [Op.in]: [
+              ReportStatusEnum.APPROVED,
+              ReportStatusEnum.DENIED,
+              ReportStatusEnum.SUPERSEDED,
+            ],
           },
-          distinct: true,
-          col: countCol,
-        }),
-      ])
+        },
+        distinct: true,
+        col: countCol,
+      }),
+      this.reportModel.scope('listview').count({
+        where: { ...whereForCounts, status: ReportStatusEnum.POSTPONED },
+        distinct: true,
+        col: countCol,
+      }),
+    ])
 
     const waitingMap = await this.computeWaitingForAction(rows.map((r) => r.id))
     const reports = rows.map((r) =>
@@ -154,6 +165,7 @@ export class ReportService implements IReportService {
       submitted: submittedCount,
       inReview: inReviewCount,
       processed: processedCount,
+      postponed: postponedCount,
     }
 
     return { reports, paging, statusCounts }
@@ -232,10 +244,7 @@ export class ReportService implements IReportService {
     const [latestEvents, latestCompanyComments] = await Promise.all([
       this.reportEventModel.findAll({
         where: { reportId: { [Op.in]: reportIds } },
-        attributes: [
-          'reportId',
-          [fn('MAX', col('created_at')), 'latestAt'],
-        ],
+        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
         group: ['reportId'],
         raw: true,
       }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
@@ -244,10 +253,7 @@ export class ReportService implements IReportService {
           reportId: { [Op.in]: reportIds },
           authorKind: ReportRoleEnum.COMPANY,
         },
-        attributes: [
-          'reportId',
-          [fn('MAX', col('created_at')), 'latestAt'],
-        ],
+        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
         group: ['reportId'],
         raw: true,
       }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
@@ -335,7 +341,12 @@ export class ReportService implements IReportService {
       this.reportModel.count({
         where: { status: { [Op.in]: activeStatuses } },
         include: [
-          { model: ReportCommentModel, as: 'comments', required: true, attributes: [] },
+          {
+            model: ReportCommentModel,
+            as: 'comments',
+            required: true,
+            attributes: [],
+          },
         ],
         distinct: true,
       }),
@@ -354,14 +365,24 @@ export class ReportService implements IReportService {
         where: { status: { [Op.in]: activeStatuses } },
         include: [
           reviewerInclude,
-          { model: ReportCommentModel, as: 'comments', required: true, attributes: [] },
+          {
+            model: ReportCommentModel,
+            as: 'comments',
+            required: true,
+            attributes: [],
+          },
         ],
         distinct: true,
       }),
     ])
 
     return {
-      general: { submittedToday, inProgress, reportsWithComments, reportsWithoutEmployee },
+      general: {
+        submittedToday,
+        inProgress,
+        reportsWithComments,
+        reportsWithoutEmployee,
+      },
       assigned: { totalAssigned, assignedWithComments },
     }
   }
@@ -389,7 +410,10 @@ export class ReportService implements IReportService {
 
     const groupByStatus = async (from?: Date) => {
       const rows = (await this.reportModel.findAll({
-        attributes: ['status', [fn('COUNT', col(`${ReportModel.name}.id`)), 'count']],
+        attributes: [
+          'status',
+          [fn('COUNT', col(`${ReportModel.name}.id`)), 'count'],
+        ],
         where: {
           status: { [Op.in]: nonDraftStatuses },
           ...(from ? { createdAt: { [Op.gte]: from } } : {}),
@@ -422,8 +446,7 @@ export class ReportService implements IReportService {
     const total = items.reduce((sum, i) => sum + i.count, 0)
 
     for (const item of items) {
-      item.percentage =
-        total > 0 ? Math.round((item.count / total) * 100) : 0
+      item.percentage = total > 0 ? Math.round((item.count / total) * 100) : 0
     }
 
     return { items, total }
@@ -525,9 +548,16 @@ export class ReportService implements IReportService {
           {
             model: ReportEmployeeModel,
             as: 'reportEmployee',
-            attributes: [],
+            attributes: ['gender', 'score'],
             where: { reportId: report.id },
             required: true,
+            include: [
+              {
+                model: ReportEmployeeRoleModel,
+                as: 'role',
+                attributes: ['title'],
+              },
+            ],
           },
         ],
       }),

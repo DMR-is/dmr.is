@@ -70,6 +70,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
             content: (
               <SalaryReportTab
                 data={salaryStats}
+                outliersPostponed={report.outliersPostponed ?? undefined}
                 outliers={report.employeeOutliers}
                 outlierDate={
                   report.correctionDeadline

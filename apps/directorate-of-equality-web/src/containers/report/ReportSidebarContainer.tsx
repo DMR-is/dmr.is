@@ -26,12 +26,21 @@ export function ReportSidebarContainer({
     ...trpc.reports.getById.queryOptions({ id: report.id }),
     initialData: report,
   })
+  const isDisabled = data.status === 'POSTPONED' || data.status === 'DENIED'
 
   return (
     <ReportSidebar>
       <Text variant="h5">{reportText.sidebarTitle}</Text>
-      <EmployeeSelect reportId={data.id} assignedUserId={data.reviewer?.id} />
-      <ReportStatusSelect reportId={data.id} status={data.status} />
+      <EmployeeSelect
+        reportId={data.id}
+        assignedUserId={data.reviewer?.id}
+        disabled={isDisabled}
+      />
+      <ReportStatusSelect
+        reportId={data.id}
+        status={data.status}
+        disabled={isDisabled}
+      />
       <Box paddingTop={1}>
         <Divider />
       </Box>

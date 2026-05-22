@@ -8,7 +8,10 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
+import { reportText } from '../../../lib/text'
 import * as styles from './ReportDenialModal.css'
+
+const t = reportText.denialModal
 
 interface ReportDenialModalProps {
   visible: boolean
@@ -39,19 +42,16 @@ export const ReportDenialModal = ({
     >
       <form onSubmit={(e) => e.preventDefault()}>
         <div className={styles.modalContent}>
-          <Text variant="h3">Höfnun skýrslu</Text>
-          <Text>
-            Vinsamlegast gerðu grein fyrir ástæðu höfnunar. Athugið að afrit af
-            þessum texta er sent til innsendanda.
-          </Text>
+          <Text variant="h3">{t.heading}</Text>
+          <Text>{t.description}</Text>
           <AlertMessage
             type="warning"
-            title="Athugið"
-            message="Þessi aðgerð er óaftukræf og mun vísa skýrslunni frá."
+            title={t.warningTitle}
+            message={t.warningMessage}
           />
           <Input
             name="denial-reason-input"
-            label="Ástæða höfnunar"
+            label={t.reasonLabel}
             size="sm"
             textarea
             rows={4}
@@ -68,7 +68,7 @@ export const ReportDenialModal = ({
             disabled={denialReason.length === 0 || isLoading}
             loading={isLoading}
           >
-            Vista
+            {t.submitButton}
           </Button>
         </div>
       </form>
