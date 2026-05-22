@@ -47,7 +47,10 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
   // Instance methods the service calls — projections the real model
   // provides via BaseModel. Tests only need something that returns a
   // plain object shape-compatible with the DTO.
-  row.fromModelToListItem = (waitingForAction = false) => {
+  row.fromModelToListItem = (
+    waitingForAction = false,
+    includesImprovementPlan = false,
+  ) => {
     const companyReport = row.companyReport as
       | {
           name?: string
@@ -71,6 +74,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       companyAdminGender: row.companyAdminGender,
       reviewer: row.reviewer,
       waitingForAction,
+      includesImprovementPlan,
       createdAt: row.createdAt,
       correctionDeadline: row.correctionDeadline,
       validUntil: row.validUntil,
@@ -113,6 +117,10 @@ const makeService = () => {
   // outputs unless a test overrides.
   const roleResultFindAll = jest.fn().mockResolvedValue([])
   const outlierFindAll = jest.fn().mockResolvedValue([])
+  const outlierFindAndCountAll = jest
+    .fn()
+    .mockResolvedValue({ rows: [], count: 0 })
+  const outlierCount = jest.fn().mockResolvedValue(0)
   const companyReportFindAll = jest.fn().mockResolvedValue([])
   const reportEventModel = {
     findAll: jest.fn().mockResolvedValue([]),
@@ -122,6 +130,8 @@ const makeService = () => {
   } as unknown as typeof import('../report-result/models/report-role-result.model').ReportRoleResultModel
   const reportEmployeeOutlierModel = {
     findAll: outlierFindAll,
+    findAndCountAll: outlierFindAndCountAll,
+    count: outlierCount,
   } as unknown as typeof import('../report-employee/models/report-employee-outlier.model').ReportEmployeeOutlierModel
   const companyReportModel = {
     findAll: companyReportFindAll,
@@ -146,6 +156,8 @@ const makeService = () => {
     findOne,
     roleResultFindAll,
     outlierFindAll,
+    outlierFindAndCountAll,
+    outlierCount,
     companyReportFindAll,
     logger,
   }
@@ -648,8 +660,12 @@ describe('ReportService.getById', () => {
 
   describe('salary calculations', () => {
     it('returns null/empty calc blocks for equality reports without querying role results or outliers', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
-        makeService()
+      const {
+        service,
+        findByPkOrThrow,
+        roleResultFindAll,
+        outlierCount,
+      } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
           type: ReportTypeEnum.EQUALITY,
@@ -661,14 +677,18 @@ describe('ReportService.getById', () => {
 
       expect(detail.result).toBeNull()
       expect(detail.roleResults).toEqual([])
-      expect(detail.employeeOutliers).toEqual([])
+      expect(detail.includesImprovementPlan).toBe(false)
       expect(roleResultFindAll).not.toHaveBeenCalled()
-      expect(outlierFindAll).not.toHaveBeenCalled()
+      expect(outlierCount).not.toHaveBeenCalled()
     })
 
     it('returns null/empty calc blocks for salary reports before scoring has run (result missing)', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
-        makeService()
+      const {
+        service,
+        findByPkOrThrow,
+        roleResultFindAll,
+        outlierCount,
+      } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
           type: ReportTypeEnum.SALARY,
@@ -688,14 +708,18 @@ describe('ReportService.getById', () => {
 
       expect(detail.result).toBeNull()
       expect(detail.roleResults).toEqual([])
-      expect(detail.employeeOutliers).toEqual([])
+      expect(detail.includesImprovementPlan).toBe(false)
       expect(roleResultFindAll).not.toHaveBeenCalled()
-      expect(outlierFindAll).not.toHaveBeenCalled()
+      expect(outlierCount).not.toHaveBeenCalled()
     })
 
-    it('loads role results and employee outliers when result exists on salary report', async () => {
-      const { service, findByPkOrThrow, roleResultFindAll, outlierFindAll } =
-        makeService()
+    it('loads role results and flags includesImprovementPlan when outliers exist on salary report', async () => {
+      const {
+        service,
+        findByPkOrThrow,
+        roleResultFindAll,
+        outlierCount,
+      } = makeService()
 
       const resultId = '00000000-0000-0000-0000-000000000111'
       const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
@@ -753,16 +777,8 @@ describe('ReportService.getById', () => {
         maximumFemaleSalary: 1200,
         maximumNeutralSalary: 0,
       })
-      const outlierRow = withFromModel({
-        id: 'd1',
-        reportEmployeeId: 'e1',
-        reason: 'Seniority premium',
-        action: 'Reviewed and accepted',
-        signatureName: 'Admin',
-        signatureRole: 'HR',
-      })
       roleResultFindAll.mockResolvedValueOnce([roleResultRow])
-      outlierFindAll.mockResolvedValueOnce([outlierRow])
+      outlierCount.mockResolvedValueOnce(3)
 
       const detail = await service.getById(baseReport.id)
 
@@ -773,20 +789,152 @@ describe('ReportService.getById', () => {
       expect(detail.roleResults[0]).toEqual(
         expect.objectContaining({ reportResultId: resultId }),
       )
-      expect(detail.employeeOutliers).toHaveLength(1)
-      expect(detail.employeeOutliers[0]).toEqual(
-        expect.objectContaining({ reason: 'Seniority premium' }),
-      )
+      expect(detail.includesImprovementPlan).toBe(true)
+      expect(outlierCount).toHaveBeenCalledTimes(1)
 
       expect(roleResultFindAll).toHaveBeenCalledWith({
         where: { reportResultId: resultId },
       })
-      expect(outlierFindAll).toHaveBeenCalledWith(
-        expect.objectContaining({
-          include: expect.any(Array),
-        }),
-      )
     })
+  })
+})
+
+describe('ReportService.getOutliers', () => {
+  const REPORT_ID = '00000000-0000-0000-0000-000000000001'
+
+  const makeDetailedSalaryReportRow = () => {
+    const row = {
+      id: REPORT_ID,
+      type: ReportTypeEnum.SALARY,
+      status: ReportStatusEnum.SUBMITTED,
+      result: {
+        outlierAnalysisSnapshot: {
+          employees: [
+            {
+              ordinal: 1,
+              adjustedBaseSalary: 950000,
+              predictedBaseSalary: 1000000,
+              scoreBucketRangeFrom: 500,
+              scoreBucketRangeTo: 600,
+              direction: 'BELOW',
+              differencePercent: -5,
+              allowedDifferencePercent: 1.95,
+              isOutlier: true,
+            },
+          ],
+        },
+      },
+    }
+    return row
+  }
+
+  const makeOutlierRow = (
+    overrides: Partial<Record<string, unknown>> = {},
+  ) => ({
+    id: 'outlier-1',
+    reportEmployeeId: 'employee-1',
+    reason: 'Tenure premium',
+    action: 'Reviewed',
+    signatureName: 'Reviewer',
+    signatureRole: 'HR',
+    reportEmployee: {
+      id: 'employee-1',
+      ordinal: 1,
+      gender: 'FEMALE',
+      role: { id: 'role-1', title: 'Engineer' },
+    },
+    fromModel(
+      analysis: {
+        adjustedBaseSalary?: number
+        predictedBaseSalary?: number | null
+        scoreBucketRangeFrom?: number | null
+        scoreBucketRangeTo?: number | null
+        direction?: string | null
+        differencePercent?: number | null
+        allowedDifferencePercent?: number
+      } | null = null,
+    ) {
+      const r = this as unknown as Record<string, unknown>
+      const re = r.reportEmployee as Record<string, unknown> | undefined
+      const role = re?.role as Record<string, unknown> | undefined
+      return {
+        id: r.id,
+        reportEmployeeId: r.reportEmployeeId,
+        employeeOrdinal: re?.ordinal ?? null,
+        gender: re?.gender ?? null,
+        roleTitle: role?.title ?? null,
+        reason: r.reason,
+        action: r.action,
+        signatureName: r.signatureName,
+        signatureRole: r.signatureRole,
+        adjustedBaseSalary: analysis?.adjustedBaseSalary ?? null,
+        predictedBaseSalary: analysis?.predictedBaseSalary ?? null,
+        scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
+        scoreBucketRangeTo: analysis?.scoreBucketRangeTo ?? null,
+        direction: analysis?.direction ?? null,
+        differencePercent: analysis?.differencePercent ?? null,
+        allowedDifferencePercent: analysis?.allowedDifferencePercent ?? null,
+      }
+    },
+    ...overrides,
+  })
+
+  it('paginates outliers and merges analysis snapshot fields by ordinal', async () => {
+    const { service, findByPkOrThrow, outlierFindAndCountAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce(
+      makeDetailedSalaryReportRow() as unknown as ReportModel,
+    )
+    outlierFindAndCountAll.mockResolvedValueOnce({
+      rows: [makeOutlierRow()],
+      count: 1,
+    })
+
+    const result = await service.getOutliers(REPORT_ID, {
+      page: 1,
+      pageSize: 10,
+    })
+
+    expect(result.outliers).toHaveLength(1)
+    expect(result.outliers[0]).toEqual(
+      expect.objectContaining({
+        employeeOrdinal: 1,
+        roleTitle: 'Engineer',
+        gender: 'FEMALE',
+        reason: 'Tenure premium',
+        adjustedBaseSalary: 950000,
+        predictedBaseSalary: 1000000,
+        scoreBucketRangeFrom: 500,
+        scoreBucketRangeTo: 600,
+        direction: 'BELOW',
+        allowedDifferencePercent: 1.95,
+      }),
+    )
+    expect(result.paging).toEqual(
+      expect.objectContaining({
+        page: 1,
+        pageSize: 10,
+        totalItems: 1,
+        totalPages: 1,
+      }),
+    )
+  })
+
+  it('returns empty list with null-safe analysis when the report has no result', async () => {
+    const { service, findByPkOrThrow, outlierFindAndCountAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce({
+      id: REPORT_ID,
+      type: ReportTypeEnum.EQUALITY,
+      result: null,
+    } as unknown as ReportModel)
+    outlierFindAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    const result = await service.getOutliers(REPORT_ID, {
+      page: 1,
+      pageSize: 10,
+    })
+
+    expect(result.outliers).toEqual([])
+    expect(result.paging.totalItems).toBe(0)
   })
 })
 

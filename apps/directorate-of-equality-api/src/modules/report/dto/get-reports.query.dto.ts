@@ -97,6 +97,21 @@ export class GetReportsQueryDto extends PagingQuery {
   @IsBoolean()
   unassignedReviewer?: boolean
 
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    description:
+      'When true, returns only reports that have at least one employee outlier (i.e. an improvement plan applies). When false, returns only reports with no outliers. Omit for no constraint.',
+  })
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true
+    if (value === 'false' || value === false) return false
+    return undefined
+  })
+  @IsOptional()
+  @IsBoolean()
+  hasImprovementPlan?: boolean
+
   @ApiOptionalDateTime()
   createdFrom?: Date
 
