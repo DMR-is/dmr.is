@@ -12,6 +12,7 @@ import {
 } from '../../gen/fetch/types.gen'
 import { formatNationalId } from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
+import { COMPANY_SIZE_LABEL } from './companyStatus'
 
 type Props = {
   company: CompanyDto
@@ -76,7 +77,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
     { label: 'Kennitala', value: formatNationalId(company.nationalId) },
     {
       label: 'Meðalfjöldi starfsmanna',
-      value: company.averageEmployeeCountFromRsk,
+      value: COMPANY_SIZE_LABEL[company.employeeCountCategory],
     },
     {
       label: 'Skýrslugjöf skylda',

@@ -1,5 +1,7 @@
 import {
   zGetReportByIdPath,
+  zGetReportOutliersPath,
+  zGetReportOutliersQuery,
   zListReportsQuery,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
@@ -20,6 +22,16 @@ export const reportsRouter = router({
         path: { id: input.id },
       }),
     ),
+
+  getOutliers: protectedProcedure
+    .input(zGetReportOutliersPath.merge(zGetReportOutliersQuery))
+    .query(({ ctx, input }) => {
+      const { id, page, pageSize } = input
+      return ctx.api.getReportOutliers({
+        path: { id },
+        query: { page, pageSize },
+      })
+    }),
 
   overview: protectedProcedure.query(({ ctx }) => ctx.api.getReportOverview()),
 

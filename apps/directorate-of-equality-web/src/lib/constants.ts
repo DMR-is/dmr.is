@@ -42,6 +42,7 @@ export enum ReportStatusTranslatedEnum {
   APPROVED = 'Afgreitt',
   DENIED = 'Hafnað',
   SUPERSEDED = 'Úrelt',
+  WITHDRAWN = 'Dregin til baka',
 }
 import { overviewText, reportText } from './text'
 

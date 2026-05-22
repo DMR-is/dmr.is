@@ -14,7 +14,13 @@ import {
 } from '../../gen/fetch/types.gen'
 import { formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
-import { deriveStatus, normalizeId, STATUS_LABEL, STATUS_TAG_VARIANT } from './companyStatus'
+import {
+  COMPANY_SIZE_LABEL,
+  deriveStatus,
+  normalizeId,
+  STATUS_LABEL,
+  STATUS_TAG_VARIANT,
+} from './companyStatus'
 
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
@@ -46,7 +52,7 @@ export const CompanyTable = ({
       },
       {
         id: 'employeeCount',
-        accessorFn: (row) => row.averageEmployeeCountFromRsk,
+        accessorFn: (row) => COMPANY_SIZE_LABEL[row.employeeCountCategory],
         header: 'Meðalfjöldi starfsmanna',
         enableSorting: true,
       },

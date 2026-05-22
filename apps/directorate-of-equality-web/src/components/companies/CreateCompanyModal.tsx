@@ -13,6 +13,7 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { companiesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
+import { employeeCountCategoryFromCount } from './companyStatus'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -67,7 +68,9 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     createMutation.mutate({
       nationalId: lookupQuery.data.nationalId,
       name: lookupQuery.data.name,
-      averageEmployeeCountFromRsk: Number(employeeCount),
+      employeeCountCategory: employeeCountCategoryFromCount(
+        Number(employeeCount),
+      ),
     })
   }
 
