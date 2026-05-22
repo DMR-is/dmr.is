@@ -461,7 +461,7 @@ describe('ApplicationService', () => {
     const PROVIDER_ID = 'island-is-application-aa'
     const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-0000000000bb'
 
-    it("throws NotFoundException when no report matches the providerId", async () => {
+    it('throws NotFoundException when no report matches the providerId', async () => {
       reportFindOne.mockResolvedValueOnce(null)
 
       await expect(service.getReport(PROVIDER_ID, COMPANY)).rejects.toThrow(
@@ -582,6 +582,7 @@ describe('ApplicationService', () => {
           reportEmployeeId: outlier.reportEmployeeId,
           gender: GenderEnum.FEMALE,
           roleTitle: 'Manager',
+          score: null,
           reason: outlier.reason,
           action: outlier.action,
           signatureName: outlier.signatureName,
@@ -706,7 +707,7 @@ describe('ApplicationService', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'
 
-    it("throws NotFoundException when no report matches the providerId", async () => {
+    it('throws NotFoundException when no report matches the providerId', async () => {
       reportFindOne.mockResolvedValueOnce(null)
 
       await expect(
@@ -1065,11 +1066,7 @@ describe('ApplicationService', () => {
       getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1, 2]))
 
       await expect(
-        service.editOutliers(
-          PROVIDER_ID,
-          { outliers: [validRow(1)] },
-          COMPANY,
-        ),
+        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
       expect(outlierUpdate).not.toHaveBeenCalled()
     })
@@ -1111,11 +1108,7 @@ describe('ApplicationService', () => {
       ])
 
       await expect(
-        service.editOutliers(
-          PROVIDER_ID,
-          { outliers: [validRow(1)] },
-          COMPANY,
-        ),
+        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
     })
 
@@ -1133,11 +1126,7 @@ describe('ApplicationService', () => {
       ])
 
       await expect(
-        service.editOutliers(
-          PROVIDER_ID,
-          { outliers: [validRow(1)] },
-          COMPANY,
-        ),
+        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
     })
   })
@@ -1462,7 +1451,8 @@ function makeReportResultDto(
     base: snapshot,
     full: snapshot,
     outlierAnalysis: {
-      method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+      method:
+        SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
       thresholdPercent: 3.9,
       allowedDifferencePercent: 1.95,
       regressions: {
