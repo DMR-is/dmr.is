@@ -194,6 +194,32 @@ describe('ReportService.list — filter & query building', () => {
     })
   })
 
+  it('default-excludes WITHDRAWN reports when no status filter is supplied', async () => {
+    const { service, findAndCountAll } = makeService()
+    findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.list(baseQuery({}))
+
+    const where = findAndCountAll.mock.calls[0][0].where as Record<
+      string,
+      unknown
+    >
+    expect(where.status).toEqual({ [Op.ne]: ReportStatusEnum.WITHDRAWN })
+  })
+
+  it('allows callers to explicitly request WITHDRAWN via the status filter', async () => {
+    const { service, findAndCountAll } = makeService()
+    findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.list(baseQuery({ status: [ReportStatusEnum.WITHDRAWN] }))
+
+    const where = findAndCountAll.mock.calls[0][0].where as Record<
+      string,
+      unknown
+    >
+    expect(where.status).toEqual({ [Op.in]: [ReportStatusEnum.WITHDRAWN] })
+  })
+
   it('prefers unassignedReviewer over reviewerUserId when both are given', async () => {
     const { service, findAndCountAll } = makeService()
     findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
