@@ -25,6 +25,7 @@ export interface IReportEventService {
     reportStatus: ReportStatusEnum,
     companyId: string,
   ): Promise<void>
+  emitWithdrawn(reportId: string, relatedReportId: string): Promise<void>
 }
 
 export const IReportEventService = Symbol('IReportEventService')

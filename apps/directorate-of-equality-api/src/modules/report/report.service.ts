@@ -552,6 +552,12 @@ export class ReportService implements IReportService {
     }
     if (query.status?.length) {
       Object.assign(where, { status: { [Op.in]: query.status } })
+    } else {
+      // Withdrawn reports are not surfaced in admin list views by default.
+      // Callers can still request them explicitly via `query.status`.
+      Object.assign(where, {
+        status: { [Op.ne]: ReportStatusEnum.WITHDRAWN },
+      })
     }
 
     // `unassignedReviewer` deliberately overrides `reviewerUserId` — the

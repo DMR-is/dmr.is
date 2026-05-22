@@ -50,10 +50,14 @@ describe('ReportCreateService', () => {
   let service: ReportCreateService
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
+  let reportFindAll: jest.Mock
+  let reportUpdate: jest.Mock
   let reportEventCreate: jest.Mock
   let companyFindAll: jest.Mock
+  let companyFindOne: jest.Mock
   let companyReportBulkCreate: jest.Mock
   let companyReportFindOne: jest.Mock
+  let companyReportFindAll: jest.Mock
   let roleBulkCreate: jest.Mock
   let employeeBulkCreate: jest.Mock
   let roleStepBulkCreate: jest.Mock
@@ -68,6 +72,8 @@ describe('ReportCreateService', () => {
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue({ id: EQUALITY_REPORT_ID })
+    reportFindAll = jest.fn().mockResolvedValue([])
+    reportUpdate = jest.fn().mockResolvedValue([0])
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
     companyFindAll = jest
       .fn()
@@ -75,10 +81,12 @@ describe('ReportCreateService', () => {
         makeCompanyRow(PARENT_COMPANY_ID, 75),
         makeCompanyRow(SUBSIDIARY_COMPANY_ID, 25),
       ])
+    companyFindOne = jest.fn().mockResolvedValue({ id: PARENT_COMPANY_ID })
     companyReportBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `cr-${i}` })),
     )
     companyReportFindOne = jest.fn().mockResolvedValue(null)
+    companyReportFindAll = jest.fn().mockResolvedValue([])
     roleBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `role-${i}` })),
     )
@@ -125,7 +133,12 @@ describe('ReportCreateService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(ReportModel),
-          useValue: { create: reportCreate, findOne: reportFindOne },
+          useValue: {
+            create: reportCreate,
+            findOne: reportFindOne,
+            findAll: reportFindAll,
+            update: reportUpdate,
+          },
         },
         {
           provide: getModelToken(ReportEventModel),
@@ -133,13 +146,14 @@ describe('ReportCreateService', () => {
         },
         {
           provide: getModelToken(CompanyModel),
-          useValue: { findAll: companyFindAll },
+          useValue: { findAll: companyFindAll, findOne: companyFindOne },
         },
         {
           provide: getModelToken(CompanyReportModel),
           useValue: {
             bulkCreate: companyReportBulkCreate,
             findOne: companyReportFindOne,
+            findAll: companyReportFindAll,
           },
         },
         {
@@ -724,6 +738,215 @@ describe('ReportCreateService', () => {
 
       expect(reportCreate).toHaveBeenCalled()
       expect(companyReportFindOne).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('in-flight sibling guard', () => {
+    const PRIOR_REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+
+    function mockPriorSibling(status: ReportStatusEnum, providerId = 'prior-1') {
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
+      reportFindAll.mockResolvedValueOnce([
+        { id: PRIOR_REPORT_ID, status, providerId },
+      ])
+    }
+
+    it('SALARY: withdraws a SUBMITTED predecessor and emits a WITHDRAWN event linked to the new report', async () => {
+      mockPriorSibling(ReportStatusEnum.SUBMITTED, 'prior-providerId')
+
+      const result = await service.createSalary(makeInput())
+
+      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { status: ReportStatusEnum.WITHDRAWN },
+        { where: { id: [PRIOR_REPORT_ID] } },
+      )
+      // SUBMITTED event for the new report + WITHDRAWN event for the prior.
+      expect(reportEventCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportId: REPORT_ID,
+          eventType: 'SUBMITTED',
+        }),
+      )
+      expect(reportEventCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportId: PRIOR_REPORT_ID,
+          eventType: 'WITHDRAWN',
+          reportStatus: ReportStatusEnum.WITHDRAWN,
+          relatedReportId: REPORT_ID,
+          actorUserId: null,
+        }),
+      )
+    })
+
+    it('SALARY: rejects with 409 when an IN_REVIEW predecessor exists, no insert, no withdraw, no events', async () => {
+      mockPriorSibling(ReportStatusEnum.IN_REVIEW, 'prior-providerId')
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        ConflictException,
+      )
+
+      expect(reportCreate).not.toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(reportEventCreate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: rejects with 409 when a POSTPONED predecessor exists', async () => {
+      mockPriorSibling(ReportStatusEnum.POSTPONED, 'prior-providerId')
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        ConflictException,
+      )
+
+      expect(reportCreate).not.toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: proceeds normally when no in-flight sibling exists', async () => {
+      // Default mocks: companyReportFindAll → [], reportFindAll → [].
+      await service.createSalary(makeInput())
+
+      expect(reportCreate).toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+      // No WITHDRAWN event emitted.
+      const withdrawnEventCalls = reportEventCreate.mock.calls.filter(
+        ([row]) => row.eventType === 'WITHDRAWN',
+      )
+      expect(withdrawnEventCalls).toHaveLength(0)
+    })
+
+    it('SALARY: ignores prior reports in terminal statuses (APPROVED / DENIED / SUPERSEDED / WITHDRAWN)', async () => {
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
+      // The Sequelize WHERE clause filters status server-side, so a terminal
+      // prior simulates as "findAll returns no in-flight rows for this filter".
+      reportFindAll.mockResolvedValueOnce([])
+
+      await service.createSalary(makeInput())
+
+      expect(reportCreate).toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: scopes the guard by type — an in-flight EQUALITY does not block a new SALARY submission', async () => {
+      // The guard queries reportModel.findAll with WHERE type=SALARY. If an
+      // EQUALITY is in flight, the SQL filter excludes it, so the mock for the
+      // SALARY-scoped findAll returns [].
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
+      reportFindAll.mockResolvedValueOnce([])
+
+      await service.createSalary(makeInput())
+
+      // The findAll WHERE asserted explicitly for confidence.
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ type: ReportTypeEnum.SALARY }),
+        }),
+      )
+      expect(reportCreate).toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('SALARY: locks the company row to serialise concurrent submits', async () => {
+      mockPriorSibling(ReportStatusEnum.SUBMITTED)
+
+      await service.createSalary(makeInput())
+
+      expect(companyFindOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: PARENT_COMPANY_ID },
+          lock: true,
+        }),
+      )
+    })
+
+    it('EQUALITY: withdraws a SUBMITTED predecessor and emits a linked WITHDRAWN event', async () => {
+      mockPriorSibling(ReportStatusEnum.SUBMITTED, 'prior-equality')
+
+      const result = await service.createEquality(makeEqualityInput())
+
+      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { status: ReportStatusEnum.WITHDRAWN },
+        { where: { id: [PRIOR_REPORT_ID] } },
+      )
+      expect(reportEventCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportId: PRIOR_REPORT_ID,
+          eventType: 'WITHDRAWN',
+          relatedReportId: REPORT_ID,
+        }),
+      )
+    })
+
+    it('EQUALITY: rejects with 409 when an IN_REVIEW predecessor exists', async () => {
+      mockPriorSibling(ReportStatusEnum.IN_REVIEW, 'prior-equality')
+
+      await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
+        ConflictException,
+      )
+
+      expect(reportCreate).not.toHaveBeenCalled()
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+
+    it('EQUALITY: scopes the guard by type — an in-flight SALARY does not block a new EQUALITY submission', async () => {
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+      ])
+      reportFindAll.mockResolvedValueOnce([])
+
+      await service.createEquality(makeEqualityInput())
+
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ type: ReportTypeEnum.EQUALITY }),
+        }),
+      )
+      expect(reportCreate).toHaveBeenCalled()
+    })
+
+    it('withdraws multiple SUBMITTED predecessors defensively (data drift before the guard was added)', async () => {
+      const OTHER_PRIOR_ID = '00000000-0000-0000-0000-0000000000bb'
+      companyReportFindAll.mockResolvedValueOnce([
+        { reportId: PRIOR_REPORT_ID },
+        { reportId: OTHER_PRIOR_ID },
+      ])
+      reportFindAll.mockResolvedValueOnce([
+        {
+          id: PRIOR_REPORT_ID,
+          status: ReportStatusEnum.SUBMITTED,
+          providerId: 'a',
+        },
+        {
+          id: OTHER_PRIOR_ID,
+          status: ReportStatusEnum.SUBMITTED,
+          providerId: 'b',
+        },
+      ])
+
+      await service.createSalary(makeInput())
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { status: ReportStatusEnum.WITHDRAWN },
+        { where: { id: [PRIOR_REPORT_ID, OTHER_PRIOR_ID] } },
+      )
+      // Two WITHDRAWN events, one per prior, both pointing at the new report.
+      const withdrawnCalls = reportEventCreate.mock.calls.filter(
+        ([row]) => row.eventType === 'WITHDRAWN',
+      )
+      expect(withdrawnCalls).toHaveLength(2)
+      expect(withdrawnCalls.map(([row]) => row.reportId)).toEqual([
+        PRIOR_REPORT_ID,
+        OTHER_PRIOR_ID,
+      ])
+      expect(withdrawnCalls.every(([row]) => row.relatedReportId === REPORT_ID))
+        .toBe(true)
     })
   })
 })

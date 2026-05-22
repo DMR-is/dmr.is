@@ -18,6 +18,7 @@ export enum ReportStatusEnum {
   DENIED = 'DENIED',
   APPROVED = 'APPROVED',
   SUPERSEDED = 'SUPERSEDED',
+  WITHDRAWN = 'WITHDRAWN',
 }
 
 export enum GenderEnum {
