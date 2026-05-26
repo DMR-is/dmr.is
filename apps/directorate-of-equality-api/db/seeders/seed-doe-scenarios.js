@@ -184,8 +184,8 @@ VALUES ('${eid(6)}', 'EQUALITY', 'APPROVED', '5001010006',
   'ISLAND_IS', 'prov-eq-006', 'JR-2026-006',
   'Jafnréttisáætlun Samþykkt lítið hf. 2026–2029. Við leggjum áherslu á hlutlæg ráðningarferli og gegnsæi í launamálum.',
   '${REVIEWER_ID}',
-  NOW() - INTERVAL ''10 days'',
-  NOW() - INTERVAL ''10 days'' + INTERVAL ''3 years'');
+  NOW() - INTERVAL '10 days',
+  NOW() - INTERVAL '10 days' + INTERVAL '3 years');
 
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
@@ -329,7 +329,8 @@ VALUES ('${uid(evCounter++)}', '${eid(160)}', 'SUPERSEDED', '${REVIEWER_ID}', 'S
   '${eid(16)}', '${cid(16)}');
 `
 
-  return `BEGIN;\n${oldEqCompany16}${companies.map(approvedEqBlock).join('')}\nCOMMIT;`
+  // oldEqCompany16 MUST come after the company loop so eid(16) exists when the SUPERSEDED FK is checked
+  return `BEGIN;\n${companies.map(approvedEqBlock).join('')}${oldEqCompany16}\nCOMMIT;`
 }
 
 function globalRolesSql() {
@@ -588,13 +589,9 @@ VALUES ('${uid(evCounter++)}', '${sid(16)}', 'STATUS_CHANGED', '${REVIEWER_ID}',
 `
 
   // Company 17: old salary SUPERSEDED + new salary APPROVED
+  // Old salary scaffold first (without the SUPERSEDED event — that references sid(17) which doesn't exist yet)
   sql += salaryScaffoldSql(sid(170), '5001010017', 'Saga launa hf.', 170, 'SUPERSEDED', eid(17), { hasOutliers: false, actualCompanyN: 17 })
-  sql += `
-INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
-  related_report_id, company_id)
-VALUES ('${uid(evCounter++)}', '${sid(170)}', 'SUPERSEDED', '${REVIEWER_ID}', 'SUPERSEDED',
-  '${sid(17)}', '${cid(17)}');
-`
+  // New salary inserted before the SUPERSEDED event so the FK is satisfied
   sql += salaryScaffoldSql(sid(17), '5001010017', 'Saga launa hf.', 17, 'APPROVED', eid(17), { hasOutliers: false })
   sql += `
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
@@ -607,6 +604,10 @@ INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_statu
   from_status, to_status, company_id)
 VALUES ('${uid(evCounter++)}', '${sid(17)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
   'IN_REVIEW', 'APPROVED', '${cid(17)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  related_report_id, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(170)}', 'SUPERSEDED', '${REVIEWER_ID}', 'SUPERSEDED',
+  '${sid(17)}', '${cid(17)}');
 `
 
   // Company 18: MEDIUM with salary_report_required_override=TRUE — salary SUBMITTED
@@ -648,15 +649,15 @@ DELETE FROM report_employee_role_criterion_step
     WHERE r.company_national_id LIKE '500101%'
   );
 DELETE FROM report_employee     WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
-DELETE FROM report_employee_role WHERE id IN (
-  '${ROLE_VERKEFNASTJORI}', '${ROLE_SERFRAEDINGUR}', '${ROLE_ADSTODARMADUR}'
-);
 DELETE FROM report_role_result
   WHERE report_result_id IN (
     SELECT rr.id FROM report_result rr
     JOIN report r ON r.id = rr.report_id
     WHERE r.company_national_id LIKE '500101%'
   );
+DELETE FROM report_employee_role WHERE id IN (
+  '${ROLE_VERKEFNASTJORI}', '${ROLE_SERFRAEDINGUR}', '${ROLE_ADSTODARMADUR}'
+);
 DELETE FROM report_result       WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_sub_criterion_step
   WHERE report_sub_criterion_id IN (
