@@ -22,6 +22,10 @@ module.exports = {
     await queryInterface.sequelize.query(approvedEqualityReportsSql())
     await queryInterface.sequelize.query(globalRolesSql())
     await queryInterface.sequelize.query(simpleSalaryScenariosSql())
+    await queryInterface.sequelize.query(postponedSalarySql())
+    await queryInterface.sequelize.query(inReviewSalarySql())
+    await queryInterface.sequelize.query(approvedSalarySql())
+    await queryInterface.sequelize.query(remainingSalarySql())
   },
   async down(queryInterface) {
     return await queryInterface.sequelize.query(downSql())
@@ -340,8 +344,10 @@ COMMIT;
 }
 
 function salaryScaffoldSql(reportId, nationalId, companyName, companyN, status, eqReportId, options = {}) {
-  const { hasOutliers = false, outliersExplained = false } = options
+  const { hasOutliers = false, outliersExplained = false, actualCompanyN = null } = options
   const base = companyN * 100
+  // actualCompanyN overrides cid() lookup — used when companyN encodes a disambiguation suffix (e.g. 170 vs 17)
+  const companyIdN = actualCompanyN ?? companyN
 
   const critIds       = [uid(base + 10), uid(base + 11)]
   const scrtIds       = [uid(base + 20), uid(base + 21)]
@@ -359,7 +365,7 @@ function salaryScaffoldSql(reportId, nationalId, companyName, companyN, status, 
     ? `, '${REVIEWER_ID}', NOW() - INTERVAL '${companyN} days', NOW() - INTERVAL '${companyN} days' + INTERVAL '3 years'`
     : needsReviewer ? `, '${REVIEWER_ID}'` : ''
 
-  const size = companyN === 18 ? 'MEDIUM' : 'LARGE'
+  const size = companyIdN === 18 ? 'MEDIUM' : 'LARGE'
   const outlierSnap = hasOutliers
     ? '{"outliers":[{"ordinal":1,"adjustedBaseSalary":850000,"predictedBaseSalary":700000,"direction":"ABOVE","differencePercent":21.43}]}'
     : '{"outliers":[]}'
@@ -382,7 +388,7 @@ VALUES ('${reportId}', 'SALARY', '${status}', '${nationalId}',
 
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
-VALUES ('${uid(base + 60)}', '${cid(companyN)}', '${reportId}', NULL,
+VALUES ('${uid(base + 60)}', '${cid(companyIdN)}', '${reportId}', NULL,
   '${companyName}', '${nationalId}', 'Stræti ${companyN}', 'Reykjavík', '101', '${size}', 'L');
 
 INSERT INTO report_criterion (id, report_id, title, weight, description, type) VALUES
@@ -453,6 +459,163 @@ function simpleSalaryScenariosSql() {
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
 VALUES ('${uid(evCounter++)}', '${sid(10)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(10)}');
 `
+  sql += '\nCOMMIT;'
+  return sql
+}
+
+function postponedSalarySql() {
+  let evCounter = 9000
+  let sql = 'BEGIN;\n'
+
+  // Company 11: salary POSTPONED — all outliers deferred (NULL explanation fields)
+  sql += salaryScaffoldSql(sid(11), '5001010011', 'Frestun sf.', 11, 'POSTPONED', eid(11), {
+    hasOutliers: true,
+    outliersExplained: false,
+  })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(11)}', 'SUBMITTED', NULL, 'POSTPONED', '${cid(11)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(11)}', 'STATUS_CHANGED', NULL, 'POSTPONED',
+  'SUBMITTED', 'POSTPONED', '${cid(11)}');
+`
+  sql += '\nCOMMIT;'
+  return sql
+}
+
+function inReviewSalarySql() {
+  let evCounter = 10000
+  let sql = 'BEGIN;\n'
+
+  // Company 12: salary IN_REVIEW, outlier present but not yet explained
+  sql += salaryScaffoldSql(sid(12), '5001010012', 'Yfirfaring hf.', 12, 'IN_REVIEW', eid(12), {
+    hasOutliers: true,
+    outliersExplained: false,
+  })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(12)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(12)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(12)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(12)}');
+
+INSERT INTO report_comment (id, report_id, author_kind, author_user_id, visibility, body, report_status)
+VALUES ('${uid(10200)}', '${sid(12)}', 'REVIEWER', '${REVIEWER_ID}', 'EXTERNAL',
+  'Útlagi nr. 1 þarfnast skýringar. Vinsamlegast útskýrið hvers vegna laun þessa starfsmanns eru yfir spá.', 'IN_REVIEW');
+`
+  sql += '\nCOMMIT;'
+  return sql
+}
+
+function approvedSalarySql() {
+  let evCounter = 11000
+  let sql = 'BEGIN;\n'
+
+  // Company 13: salary APPROVED, no outliers
+  sql += salaryScaffoldSql(sid(13), '5001010013', 'Samþykkt hreint ehf.', 13, 'APPROVED', eid(13), { hasOutliers: false })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(13)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(13)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(13)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(13)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(13)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
+  'IN_REVIEW', 'APPROVED', '${cid(13)}');
+`
+
+  // Company 14: salary APPROVED, outliers explained
+  sql += salaryScaffoldSql(sid(14), '5001010014', 'Samþykkt útlagar hf.', 14, 'APPROVED', eid(14), {
+    hasOutliers: true,
+    outliersExplained: true,
+  })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(14)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(14)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(14)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(14)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(14)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
+  'IN_REVIEW', 'APPROVED', '${cid(14)}');
+`
+
+  sql += '\nCOMMIT;'
+  return sql
+}
+
+function remainingSalarySql() {
+  let evCounter = 12000
+  let sql = 'BEGIN;\n'
+
+  // Company 15: salary DENIED
+  sql += salaryScaffoldSql(sid(15), '5001010015', 'Synjað laun sf.', 15, 'DENIED', eid(15), { hasOutliers: false })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(15)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(15)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(15)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(15)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, reason, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(15)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'DENIED',
+  'IN_REVIEW', 'DENIED',
+  'Launagögn uppfylla ekki kröfur 12. gr. reglugerðar nr. 1000/2017 um jafna meðferð kynjanna.',
+  '${cid(15)}');
+`
+
+  // Company 16: old equality SUPERSEDED (already inserted in Task 3), current APPROVED.
+  // Salary report references current (non-superseded) equality.
+  sql += salaryScaffoldSql(sid(16), '5001010016', 'Saga jafnréttis ehf.', 16, 'APPROVED', eid(16), { hasOutliers: false })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(16)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(16)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(16)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(16)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(16)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
+  'IN_REVIEW', 'APPROVED', '${cid(16)}');
+`
+
+  // Company 17: old salary SUPERSEDED + new salary APPROVED
+  sql += salaryScaffoldSql(sid(170), '5001010017', 'Saga launa hf.', 170, 'SUPERSEDED', eid(17), { hasOutliers: false, actualCompanyN: 17 })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  related_report_id, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(170)}', 'SUPERSEDED', '${REVIEWER_ID}', 'SUPERSEDED',
+  '${sid(17)}', '${cid(17)}');
+`
+  sql += salaryScaffoldSql(sid(17), '5001010017', 'Saga launa hf.', 17, 'APPROVED', eid(17), { hasOutliers: false })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(17)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(17)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(17)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(17)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(17)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
+  'IN_REVIEW', 'APPROVED', '${cid(17)}');
+`
+
+  // Company 18: MEDIUM with salary_report_required_override=TRUE — salary SUBMITTED
+  sql += salaryScaffoldSql(sid(18), '5001010018', 'Undanþága ehf.', 18, 'SUBMITTED', eid(18), { hasOutliers: false })
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(18)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(18)}');
+`
+
   sql += '\nCOMMIT;'
   return sql
 }
