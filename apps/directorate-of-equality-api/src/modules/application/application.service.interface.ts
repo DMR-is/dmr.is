@@ -1,6 +1,9 @@
+import { PagingQuery } from '@dmr.is/shared-dto'
+
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
+import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
@@ -31,6 +34,11 @@ export interface IApplicationService {
     providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
+  getReportOutliers(
+    providerId: string,
+    company: CompanyDto,
+    query: PagingQuery,
+  ): Promise<GetReportOutliersResponseDto>
   createReportComment(
     providerId: string,
     input: SubmitApplicationReportCommentDto,

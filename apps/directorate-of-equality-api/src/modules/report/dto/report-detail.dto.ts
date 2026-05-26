@@ -1,7 +1,6 @@
-import { ApiDto, ApiDtoArray, ApiOptionalDto } from '@dmr.is/decorators'
+import { ApiBoolean, ApiDto, ApiDtoArray, ApiOptionalDto } from '@dmr.is/decorators'
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
-import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
 import { ReportRoleResultDto } from '../../report-result/dto/report-role-result.dto'
 import { EqualityReportDto } from './equality-report.dto'
@@ -32,12 +31,17 @@ import { ReportTimelineItemDto } from './report-timeline-item.dto'
  *   (`EVENT` | `COMMENT`) and exactly one of `event` / `comment`
  *   populated. Paranoid-deleted comments are excluded.
  *
- * - `result` / `roleResults` / `employeeOutliers`: salary-only calculation
- *   outputs. For equality reports these are `null` / `[]`; for salary reports
- *   they're populated once the scoring engine has run. The UI uses them to
- *   render the Skýrslugjöf charts: `result` → gender-gap summary, `roleResults`
- *   → scatter-plot points per role, `employeeOutliers` → the Úrbótaáætlun
- *   table listing employees who fall outside the acceptable pay-gap threshold.
+ * - `result` / `roleResults`: salary-only calculation outputs. For equality
+ *   reports these are `null` / `[]`; for salary reports they're populated
+ *   once the scoring engine has run. The UI uses them to render the
+ *   Skýrslugjöf charts: `result` → gender-gap summary, `roleResults` →
+ *   scatter-plot points per role.
+ *
+ * - `includesImprovementPlan`: cheap boolean indicating whether the
+ *   Úrbótaáætlun (improvement plan) table has any rows. The full,
+ *   potentially-large list is served by a separate paginated endpoint
+ *   (`GET /reports/:id/outliers`) — the detail view only carries the flag
+ *   so it stays small for reports with hundreds of outliers.
  */
 export class ReportDetailDto extends ReportDto {
   @ApiDto(CompanyReportDto)
@@ -58,6 +62,9 @@ export class ReportDetailDto extends ReportDto {
   @ApiDtoArray(ReportRoleResultDto)
   roleResults!: ReportRoleResultDto[]
 
-  @ApiDtoArray(ReportEmployeeOutlierDto)
-  employeeOutliers!: ReportEmployeeOutlierDto[]
+  @ApiBoolean({
+    description:
+      'True when the report has at least one employee outlier. The full list is fetched separately via `GET /reports/:id/outliers`.',
+  })
+  includesImprovementPlan!: boolean
 }

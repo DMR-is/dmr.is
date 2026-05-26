@@ -7,8 +7,10 @@ import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
+import { type CompanySizeEnum } from '../../../../gen/fetch'
 import { overviewText, reportText, sharedText } from '../../../../lib/text'
 import { formatNationalId } from '../../../../lib/utils'
+import { COMPANY_SIZE_LABEL } from '../../../companies/companyStatus'
 import { InfoItems } from './InfoItems'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -45,7 +47,7 @@ interface CompanyInfoTabProps {
     nationalId?: string
     address?: string
     city?: string
-    averageEmployeeCountFromRsk?: number
+    employeeCountCategory?: CompanySizeEnum
     isatCategory?: string
   }
   admin?: {
@@ -94,7 +96,9 @@ export const CompanyInfoTab = ({
               { label: d.city, children: company?.city },
               {
                 label: d.employeeCount,
-                children: company?.averageEmployeeCountFromRsk,
+                children: company?.employeeCountCategory
+                  ? COMPANY_SIZE_LABEL[company.employeeCountCategory]
+                  : undefined,
               },
               {
                 label: d.isatCode,

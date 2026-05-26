@@ -1,5 +1,6 @@
 import {
   type CompanyDto,
+  CompanySizeEnum,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
 
@@ -27,11 +28,16 @@ export const STATUS_TAG_VARIANT: Record<
 }
 
 export const EMPLOYEE_RANGES = [
-  { value: '1-50', label: '1–50' },
-  { value: '51-100', label: '51–100' },
-  { value: '101-200', label: '101–200' },
-  { value: '201+', label: '201+' },
+  { value: CompanySizeEnum.SMALL, label: '0–24' },
+  { value: CompanySizeEnum.MEDIUM, label: '25–49' },
+  { value: CompanySizeEnum.LARGE, label: '50+' },
 ]
+
+export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
+  [CompanySizeEnum.SMALL]: '0–24',
+  [CompanySizeEnum.MEDIUM]: '25–49',
+  [CompanySizeEnum.LARGE]: '50+',
+}
 
 export const STATUS_FILTER_OPTIONS = (
   ['missing-equality', 'has-equality', 'missing-salary', 'compliant'] as const
@@ -52,12 +58,12 @@ export const PAGE_SIZE = 10
 export const normalizeId = (id: string | null | undefined) =>
   (id ?? '').replace(/[^0-9]/g, '')
 
-export const inRange = (count: number, range: string): boolean => {
-  if (range === '1-50') return count >= 1 && count <= 50
-  if (range === '51-100') return count >= 51 && count <= 100
-  if (range === '101-200') return count >= 101 && count <= 200
-  if (range === '201+') return count >= 201
-  return false
+export const employeeCountCategoryFromCount = (
+  count: number,
+): CompanySizeEnum => {
+  if (count >= 50) return CompanySizeEnum.LARGE
+  if (count >= 25) return CompanySizeEnum.MEDIUM
+  return CompanySizeEnum.SMALL
 }
 
 function getActiveReportTypes(

@@ -368,6 +368,7 @@ export class ReportModel extends MutableModel<
   static fromModelToListItem(
     model: ReportModel,
     waitingForAction = false,
+    includesImprovementPlan = false,
   ): ReportListItemDto {
     return {
       id: model.id,
@@ -377,13 +378,14 @@ export class ReportModel extends MutableModel<
       companyName: model.companyReport?.name ?? null,
       companyNationalId: model.companyReport?.nationalId ?? null,
       companyIsatCategory: model.companyReport?.isatCategory ?? null,
-      companyAverageEmployeeCountFromRsk:
-        model.companyReport?.averageEmployeeCountFromRsk ?? null,
+      companyEmployeeCountCategory:
+        model.companyReport?.employeeCountCategory ?? null,
       companyAdminName: model.companyAdminName,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,
       waitingForAction,
+      includesImprovementPlan,
       createdAt: model.createdAt,
       correctionDeadline: model.correctionDeadline,
       validUntil: model.validUntil,
@@ -394,8 +396,15 @@ export class ReportModel extends MutableModel<
     return ReportModel.fromModelToEqualityReport(this)
   }
 
-  fromModelToListItem(waitingForAction = false): ReportListItemDto {
-    return ReportModel.fromModelToListItem(this, waitingForAction)
+  fromModelToListItem(
+    waitingForAction = false,
+    includesImprovementPlan = false,
+  ): ReportListItemDto {
+    return ReportModel.fromModelToListItem(
+      this,
+      waitingForAction,
+      includesImprovementPlan,
+    )
   }
 
   fromModel(): ReportDto {

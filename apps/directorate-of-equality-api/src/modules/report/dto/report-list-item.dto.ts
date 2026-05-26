@@ -4,11 +4,11 @@ import {
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalEnum,
-  ApiOptionalNumber,
   ApiOptionalString,
   ApiUUId,
 } from '@dmr.is/decorators'
 
+import { CompanySizeEnum } from '../../company/models/company.enums'
 import { UserDto } from '../../user/dto/user.dto'
 import {
   GenderEnum,
@@ -44,8 +44,11 @@ export class ReportListItemDto {
   @ApiOptionalString({ nullable: true })
   companyIsatCategory!: string | null
 
-  @ApiOptionalNumber({ nullable: true })
-  companyAverageEmployeeCountFromRsk!: number | null
+  @ApiOptionalEnum(CompanySizeEnum, {
+    enumName: 'CompanySizeEnum',
+    nullable: true,
+  })
+  companyEmployeeCountCategory!: CompanySizeEnum | null
 
   @ApiOptionalString({ nullable: true })
   companyAdminName!: string | null
@@ -64,6 +67,12 @@ export class ReportListItemDto {
       'True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it.',
   })
   waitingForAction!: boolean
+
+  @ApiBoolean({
+    description:
+      'True when the report has at least one employee outlier — outliers are the input that drives the company-side improvement plan.',
+  })
+  includesImprovementPlan!: boolean
 
   @ApiOptionalDateTime({ nullable: true })
   createdAt!: Date | null

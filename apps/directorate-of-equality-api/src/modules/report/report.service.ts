@@ -22,6 +22,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared-dto'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -29,6 +30,7 @@ import {
 
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
+import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
@@ -59,7 +61,11 @@ import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
 import { ReportRoleEnum } from './types/report-resource-context'
-import { buildFreeTextWhere, dateRangeFilter } from './utils/filters'
+import {
+  buildFreeTextWhere,
+  buildImprovementPlanWhere,
+  dateRangeFilter,
+} from './utils/filters'
 import { IReportService } from './report.service.interface'
 
 const LOGGING_CONTEXT = 'ReportService'
@@ -155,9 +161,16 @@ export class ReportService implements IReportService {
       }),
     ])
 
-    const waitingMap = await this.computeWaitingForAction(rows.map((r) => r.id))
+    const pageIds = rows.map((r) => r.id)
+    const [waitingMap, improvementPlanMap] = await Promise.all([
+      this.computeWaitingForAction(pageIds),
+      this.computeIncludesImprovementPlan(pageIds),
+    ])
     const reports = rows.map((r) =>
-      r.fromModelToListItem(waitingMap.get(r.id) ?? false),
+      r.fromModelToListItem(
+        waitingMap.get(r.id) ?? false,
+        improvementPlanMap.get(r.id) ?? false,
+      ),
     )
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
@@ -209,12 +222,15 @@ export class ReportService implements IReportService {
       )
     }
 
-    const [{ result, roleResults, employeeOutliers }, timeline, subsidiaries] =
-      await Promise.all([
-        this.loadSalaryCalculations(report),
-        this.buildTimeline(id, report.comments ?? []),
-        this.loadSubsidiaries(id),
-      ])
+    const [
+      { result, roleResults, includesImprovementPlan },
+      timeline,
+      subsidiaries,
+    ] = await Promise.all([
+      this.loadSalaryCalculations(report),
+      this.buildTimeline(id, report.comments ?? []),
+      this.loadSubsidiaries(id),
+    ])
 
     return {
       ...base,
@@ -224,7 +240,7 @@ export class ReportService implements IReportService {
       timeline,
       result,
       roleResults,
-      employeeOutliers,
+      includesImprovementPlan,
     }
   }
 
@@ -281,6 +297,38 @@ export class ReportService implements IReportService {
       }
     }
 
+    return result
+  }
+
+  /**
+   * Per-page boolean: true when the report has at least one employee outlier.
+   * Outliers are owned by `ReportEmployeeOutlierModel` and link to the report
+   * via `ReportEmployeeModel.reportId`. One grouped query scoped to the
+   * page's report IDs — bounded by pageSize, no N+1.
+   */
+  private async computeIncludesImprovementPlan(
+    reportIds: string[],
+  ): Promise<Map<string, boolean>> {
+    const result = new Map<string, boolean>()
+    if (reportIds.length === 0) return result
+    for (const id of reportIds) result.set(id, false)
+
+    const rows = (await this.reportEmployeeOutlierModel.findAll({
+      include: [
+        {
+          model: ReportEmployeeModel,
+          as: 'reportEmployee',
+          attributes: [],
+          where: { reportId: { [Op.in]: reportIds } },
+          required: true,
+        },
+      ],
+      attributes: [[col('reportEmployee.report_id'), 'reportId']],
+      group: [col('reportEmployee.report_id')],
+      raw: true,
+    })) as unknown as { reportId: string }[]
+
+    for (const row of rows) result.set(row.reportId, true)
     return result
   }
 
@@ -533,17 +581,20 @@ export class ReportService implements IReportService {
   private async loadSalaryCalculations(report: ReportModel): Promise<{
     result: ReportDetailDto['result']
     roleResults: ReportDetailDto['roleResults']
-    employeeOutliers: ReportDetailDto['employeeOutliers']
+    includesImprovementPlan: boolean
   }> {
     if (report.type !== ReportTypeEnum.SALARY || !report.result) {
-      return { result: null, roleResults: [], employeeOutliers: [] }
+      return { result: null, roleResults: [], includesImprovementPlan: false }
     }
 
-    const [roleResultRows, outlierRows] = await Promise.all([
+    // Outlier rows themselves are served by the paginated
+    // `GET /reports/:id/outliers` endpoint — too many to inline into the
+    // detail payload. We only need the boolean here, so a count is enough.
+    const [roleResultRows, outlierCount] = await Promise.all([
       this.reportRoleResultModel.findAll({
         where: { reportResultId: report.result.id },
       }),
-      this.reportEmployeeOutlierModel.findAll({
+      this.reportEmployeeOutlierModel.count({
         include: [
           {
             model: ReportEmployeeModel,
@@ -566,8 +617,72 @@ export class ReportService implements IReportService {
     return {
       result: report.result.fromModel(),
       roleResults: roleResultRows.map((r) => r.fromModel()),
-      employeeOutliers: outlierRows.map((d) => d.fromModel()),
+      includesImprovementPlan: outlierCount > 0,
     }
+  }
+
+  async getOutliers(
+    reportId: string,
+    query: PagingQuery,
+  ): Promise<GetReportOutliersResponseDto> {
+    this.logger.debug('Listing report outliers', {
+      context: LOGGING_CONTEXT,
+      reportId,
+    })
+
+    // Verify the report exists + load its result so we can project each
+    // outlier with the matching analysis snapshot entry.
+    const report = await this.reportModel
+      .withScope('detailed')
+      .findByPkOrThrow(reportId)
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const { rows, count } = await this.reportEmployeeOutlierModel.findAndCountAll({
+      include: [
+        {
+          model: ReportEmployeeModel,
+          as: 'reportEmployee',
+          attributes: ['id', 'ordinal', 'gender'],
+          where: { reportId: report.id },
+          required: true,
+          include: [
+            {
+              model: ReportEmployeeRoleModel,
+              as: 'role',
+              attributes: ['id', 'title'],
+              required: false,
+            },
+          ],
+        },
+      ],
+      // Stable ordinal-based order so paging is deterministic and matches
+      // how the FE renders the improvement-plan list (1, 2, 3, ...).
+      order: [[{ model: ReportEmployeeModel, as: 'reportEmployee' }, 'ordinal', 'ASC']],
+      limit,
+      offset,
+      distinct: true,
+      subQuery: false,
+    })
+
+    const analysisByOrdinal = new Map(
+      report.result?.outlierAnalysisSnapshot.employees.map((employee) => [
+        employee.ordinal,
+        employee,
+      ]) ?? [],
+    )
+
+    const outliers = rows.map((row) =>
+      row.fromModel(
+        row.reportEmployee
+          ? analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null
+          : null,
+      ),
+    )
+
+    const paging = generatePaging(outliers, query.page, query.pageSize, count)
+
+    return { outliers, paging }
   }
 
   /**
@@ -582,6 +697,12 @@ export class ReportService implements IReportService {
     }
     if (query.status?.length) {
       Object.assign(where, { status: { [Op.in]: query.status } })
+    } else {
+      // Withdrawn reports are not surfaced in admin list views by default.
+      // Callers can still request them explicitly via `query.status`.
+      Object.assign(where, {
+        status: { [Op.ne]: ReportStatusEnum.WITHDRAWN },
+      })
     }
 
     // `unassignedReviewer` deliberately overrides `reviewerUserId` — the
@@ -611,6 +732,10 @@ export class ReportService implements IReportService {
 
     if (query.q?.trim()) {
       Object.assign(where, buildFreeTextWhere(query.q))
+    }
+
+    if (query.hasImprovementPlan !== undefined) {
+      Object.assign(where, buildImprovementPlanWhere(query.hasImprovementPlan))
     }
 
     return where

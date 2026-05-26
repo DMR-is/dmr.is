@@ -11,6 +11,7 @@ import {
   ParseFilePipe,
   Post,
   Put,
+  Query,
   StreamableFile,
   UploadedFile,
   UseGuards,
@@ -25,6 +26,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger'
 
+import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AutoProvisionCompany } from '../../core/decorators/auto-provision-company.decorator'
@@ -34,6 +36,7 @@ import { CompanyResourceGuard } from '../../core/guards/company-resource/company
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
+import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
@@ -221,6 +224,28 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.getReport(providerId, company)
+  }
+
+  @Get('reports/:providerId/outliers')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'getApplicationReportOutliers',
+    include404: true,
+    description:
+      'Paginated list of the report\'s employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by `employeeOrdinal` ascending.',
+    type: GetReportOutliersResponseDto,
+  })
+  async getReportOutliers(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Query() query: PagingQuery,
+  ): Promise<GetReportOutliersResponseDto> {
+    return this.applicationService.getReportOutliers(providerId, company, query)
   }
 
   @Post('reports/:providerId/comments')

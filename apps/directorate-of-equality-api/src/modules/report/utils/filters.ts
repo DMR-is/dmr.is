@@ -4,7 +4,10 @@
  * service file stays focused on orchestration rather than clause shapes.
  */
 
-import { Op, WhereOptions } from 'sequelize'
+import { literal, Op, WhereOptions } from 'sequelize'
+
+import { DoeModels } from '../../../core/constants'
+import { ReportModel } from '../models/report.model'
 
 /**
  * Build the `Op.or` clause for the `q` free-text search. Matches
@@ -29,6 +32,36 @@ export const buildFreeTextWhere = (term: string): WhereOptions => {
       { contactEmail: { [Op.iLike]: pattern } },
       { '$companyReport.name$': { [Op.iLike]: pattern } },
       { '$companyReport.national_id$': { [Op.iLike]: pattern } },
+    ],
+  }
+}
+
+/**
+ * Build a `where` clause that filters reports by whether they have at least
+ * one employee outlier — the underlying signal that drives the company-side
+ * "improvement plan". Implemented as an EXISTS subquery so the main list
+ * query doesn't need to join (or paginate around) the per-employee tables.
+ *
+ * - `true`  → only reports WITH outliers
+ * - `false` → only reports WITHOUT outliers
+ *
+ * The outer table is referenced by its Sequelize alias (`ReportModel.name`)
+ * — `findAndCountAll` / `count` both alias the main table by class name in
+ * the surrounding SQL, so the subquery's correlated column resolves
+ * correctly regardless of whether `subQuery` is on or off.
+ */
+export const buildImprovementPlanWhere = (
+  hasImprovementPlan: boolean,
+): WhereOptions => {
+  const negation = hasImprovementPlan ? '' : 'NOT '
+  return {
+    [Op.and]: [
+      literal(
+        `${negation}EXISTS (SELECT 1 FROM "${DoeModels.REPORT_EMPLOYEE}" "re" ` +
+          `INNER JOIN "${DoeModels.REPORT_EMPLOYEE_OUTLIER}" "reo" ` +
+          `ON "reo"."report_employee_id" = "re"."id" ` +
+          `WHERE "re"."report_id" = "${ReportModel.name}"."id")`,
+      ),
     ],
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Tabs } from '@island.is/island-ui/core'
 
@@ -11,20 +11,40 @@ import {
   SalaryByGenderAndScoreDto,
 } from '../../../gen/fetch'
 import { reportText } from '../../../lib/text'
+import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
+
+import { useQuery } from '@tanstack/react-query'
 
 type ReportTabsProps = {
   report: ReportDetailDto
   salaryStats?: SalaryByGenderAndScoreDto
 }
 
+const OUTLIERS_PAGE_SIZE = 10
+
 export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
+  const trpc = useTRPC()
   const isSalary = report.type === ReportTypeEnum.SALARY
   const [selectedTab, setSelectedTab] = useState(
     isSalary ? 'launagreining' : 'jafnrettisaetlun',
   )
+  const [outliersPage, setOutliersPage] = useState(1)
+
+  useEffect(() => {
+    setOutliersPage(1)
+  }, [report.id])
+
+  const { data: outliersData, isLoading: outliersLoading } = useQuery({
+    ...trpc.reports.getOutliers.queryOptions({
+      id: report.id,
+      page: outliersPage,
+      pageSize: OUTLIERS_PAGE_SIZE,
+    }),
+    enabled: isSalary && report.includesImprovementPlan,
+  })
 
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
@@ -70,8 +90,10 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
             content: (
               <SalaryReportTab
                 data={salaryStats}
-                outliersPostponed={report.outliersPostponed ?? undefined}
-                outliers={report.employeeOutliers}
+                outliers={outliersData?.outliers ?? []}
+                outliersPaging={outliersData?.paging}
+                outliersLoading={outliersLoading}
+                onOutliersPageChange={setOutliersPage}
                 outlierDate={
                   report.correctionDeadline
                     ? new Date(report.correctionDeadline)

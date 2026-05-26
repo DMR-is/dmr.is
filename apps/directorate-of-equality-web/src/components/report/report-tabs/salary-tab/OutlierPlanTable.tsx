@@ -1,55 +1,58 @@
-'use client'
-
-import { useMemo, useState } from 'react'
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
-import { type ReportEmployeeOutlierDto } from '../../../../gen/fetch'
-import { reportText, sharedText } from '../../../../lib/text'
+import {
+  type Paging,
+  type ReportEmployeeOutlierDto,
+} from '../../../../gen/fetch'
+import { reportText as r, sharedText } from '../../../../lib/text'
 
-import { type ColumnDef, type SortingState } from '@tanstack/react-table'
+import { type ColumnDef } from '@tanstack/react-table'
 
-const PAGE_SIZE = 10
+interface OutlierPlanTableProps {
+  outliers: ReportEmployeeOutlierDto[]
+  paging?: Paging
+  loading?: boolean
+  onPageChange?: (page: number) => void
+}
+
 const dash = '–'
-const t = reportText.salaryTab.outlierTable
+
+const s = r.salaryTab
+const o = s.outlierTable
 
 const genderMap: Record<string, string> = {
   MALE: sharedText.genders.male,
   FEMALE: sharedText.genders.female,
   NEUTRAL: sharedText.genders.neutral,
 }
-
-interface OutlierPlanTableProps {
-  outliers: ReportEmployeeOutlierDto[]
-}
-
 const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   {
-    accessorKey: 'reportEmployeeId',
-    header: t.numberHeader,
-    cell: ({ row }) => `${t.employee} ${row.index + 1}`,
-    enableSorting: false,
+    accessorKey: 'employeeOrdinal',
+    header: 'Númer',
+    cell: ({ getValue }) => getValue<number | null>() ?? dash,
   },
   {
     id: 'starf',
-    header: t.roleHeader,
-    accessorFn: (row) => row.roleTitle ?? '',
+    header: 'Starf',
     cell: ({ row }) => row.original.roleTitle ?? dash,
   },
   {
     id: 'kyn',
-    header: t.genderHeader,
+    header: o.genderHeader,
     accessorFn: (row) => (row.gender ? (genderMap[row.gender] ?? '') : ''),
     cell: ({ row }) =>
       row.original.gender ? (genderMap[row.original.gender] ?? dash) : dash,
   },
   {
     id: 'launafravik',
-    header: t.deviationHeader,
+    header: o.deviationHeader,
     accessorFn: (row) => row.score ?? 0,
-    cell: ({ row }) => row.original.score ?? dash,
+    cell: ({ row }) =>
+      row.original.differencePercent == null
+        ? dash
+        : `${row.original.differencePercent.toLocaleString('is-IS')}%`,
   },
 ]
 
@@ -57,10 +60,10 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   <Box background="blue100" padding={2}>
     <Box display="flex" flexWrap="wrap" style={{ columnGap: 16 }}>
       {[
-        { label: t.reasonLabel, value: row.reason },
-        { label: t.actionLabel, value: row.action },
-        { label: t.signatureNameLabel, value: row.signatureName },
-        { label: t.signatureRoleLabel, value: row.signatureRole },
+        { label: o.reasonLabel, value: row.reason },
+        { label: o.actionLabel, value: row.action },
+        { label: o.signatureNameLabel, value: row.signatureName },
+        { label: o.signatureRoleLabel, value: row.signatureRole },
       ].map(({ label, value }, i) => (
         <Box
           key={label}
@@ -83,63 +86,26 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   </Box>
 )
 
-export const OutlierPlanTable = ({ outliers }: OutlierPlanTableProps) => {
-  const [page, setPage] = useState(1)
-  const [sorting, setSorting] = useState<SortingState>([])
-
-  const sortedOutliers = useMemo(() => {
-    if (sorting.length === 0) return outliers
-    const { id, desc } = sorting[0]
-    return [...outliers].sort((a, b) => {
-      let aVal: string | number = ''
-      let bVal: string | number = ''
-      if (id === 'starf') {
-        aVal = a.roleTitle ?? ''
-        bVal = b.roleTitle ?? ''
-      } else if (id === 'kyn') {
-        aVal = a.gender ? (genderMap[a.gender] ?? '') : ''
-        bVal = b.gender ? (genderMap[b.gender] ?? '') : ''
-      } else if (id === 'launafravik') {
-        aVal = a.score ?? 0
-        bVal = b.score ?? 0
-      }
-      if (aVal < bVal) return desc ? 1 : -1
-      if (aVal > bVal) return desc ? -1 : 1
-      return 0
-    })
-  }, [outliers, sorting])
-
-  const start = (page - 1) * PAGE_SIZE
-  const pageData = sortedOutliers.slice(start, start + PAGE_SIZE)
-
-  const handleSortingChange = (next: SortingState) => {
-    setSorting(next)
-    setPage(1)
-  }
-
+export const OutlierPlanTable = ({
+  outliers,
+  paging,
+  loading,
+  onPageChange,
+}: OutlierPlanTableProps) => {
   return (
     <>
       <Text variant="h4" marginBottom={4}>
-        {t.heading}
+        {o.heading}
       </Text>
       <Table
         columns={columns}
-        data={pageData}
+        data={outliers}
         getRowExpanded={(row) => <ExpandedRow row={row} />}
-        paging={
-          sortedOutliers.length > PAGE_SIZE
-            ? {
-                page,
-                pageSize: PAGE_SIZE,
-                totalItems: sortedOutliers.length,
-                totalPages: Math.ceil(sortedOutliers.length / PAGE_SIZE),
-              }
-            : undefined
-        }
-        onPageChange={setPage}
+        paging={paging}
+        loading={loading}
+        onPageChange={onPageChange}
         showPageSizeSelect={false}
-        sorting={sorting}
-        onSortingChange={handleSortingChange}
+        noDataMessage={s.noDataMessage}
       />
     </>
   )

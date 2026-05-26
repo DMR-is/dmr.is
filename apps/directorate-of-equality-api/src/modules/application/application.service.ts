@@ -10,6 +10,11 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared-dto'
+import {
+  generatePaging,
+  getLimitAndOffset,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
@@ -49,6 +54,7 @@ import {
 } from '../report-create/dto/create-report.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
+import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
@@ -279,7 +285,7 @@ export class ApplicationService implements IApplicationService {
         report.type === ReportTypeEnum.SALARY
           ? report.status === ReportStatusEnum.POSTPONED
           : null,
-      outliers: salaryData.outliers,
+      includesImprovementPlan: salaryData.includesImprovementPlan,
       result: salaryData.result,
       externalComments: externalComments.map(
         ApplicationReportCommentDto.fromReportComment,
@@ -709,30 +715,25 @@ export class ApplicationService implements IApplicationService {
 
   private async loadSalaryData(report: ReportModel): Promise<{
     result: ReportResultDto | null
-    outliers: ApplicationReportDetailDto['outliers']
+    includesImprovementPlan: boolean
   }> {
     if (report.type !== ReportTypeEnum.SALARY) {
-      return { result: null, outliers: [] }
+      return { result: null, includesImprovementPlan: false }
     }
 
-    const [result, outlierRows] = await Promise.all([
+    // Outlier rows themselves are served by the paginated
+    // `GET /application/reports/:providerId/outliers` endpoint — the detail
+    // view only needs the boolean indicator.
+    const [result, outlierCount] = await Promise.all([
       this.getReportResultOrNull(report.id),
-      this.reportEmployeeOutlierModel.findAll({
+      this.reportEmployeeOutlierModel.count({
         include: [
           {
             model: ReportEmployeeModel,
             as: 'reportEmployee',
-            attributes: ['gender'],
+            attributes: [],
             where: { reportId: report.id },
             required: true,
-            include: [
-              {
-                model: ReportEmployeeRoleModel,
-                as: 'role',
-                attributes: ['title'],
-                required: true,
-              },
-            ],
           },
         ],
       }),
@@ -740,10 +741,77 @@ export class ApplicationService implements IApplicationService {
 
     return {
       result,
-      outliers: outlierRows.map((row) =>
-        ReportEmployeeOutlierModel.fromModel(row),
-      ),
+      includesImprovementPlan: outlierCount > 0,
     }
+  }
+
+  async getReportOutliers(
+    providerId: string,
+    company: CompanyDto,
+    query: PagingQuery,
+  ): Promise<GetReportOutliersResponseDto> {
+    this.logger.debug('Listing report outliers from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      providerId,
+    })
+
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+    )
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const [result, { rows, count }] = await Promise.all([
+      this.getReportResultOrNull(report.id),
+      this.reportEmployeeOutlierModel.findAndCountAll({
+        include: [
+          {
+            model: ReportEmployeeModel,
+            as: 'reportEmployee',
+            attributes: ['id', 'ordinal', 'gender'],
+            where: { reportId: report.id },
+            required: true,
+            include: [
+              {
+                model: ReportEmployeeRoleModel,
+                as: 'role',
+                attributes: ['id', 'title'],
+                required: false,
+              },
+            ],
+          },
+        ],
+        order: [
+          [{ model: ReportEmployeeModel, as: 'reportEmployee' }, 'ordinal', 'ASC'],
+        ],
+        limit,
+        offset,
+        distinct: true,
+        subQuery: false,
+      }),
+    ])
+
+    const analysisByOrdinal = new Map(
+      result?.outlierAnalysis.employees.map((employee) => [
+        employee.ordinal,
+        employee,
+      ]) ?? [],
+    )
+
+    const outliers = rows.map((row) =>
+      ReportEmployeeOutlierModel.fromModel(
+        row,
+        row.reportEmployee
+          ? analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null
+          : null,
+      ),
+    )
+
+    const paging = generatePaging(outliers, query.page, query.pageSize, count)
+
+    return { outliers, paging }
   }
 
   private async getReportResultOrNull(
