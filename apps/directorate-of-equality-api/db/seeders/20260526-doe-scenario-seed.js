@@ -14,6 +14,7 @@ module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(companiesSql())
     await queryInterface.sequelize.query(equalityReportsSql())
+    await queryInterface.sequelize.query(approvedEqualityReportsSql())
   },
   async down(queryInterface) {
     return await queryInterface.sequelize.query(downSql())
@@ -237,6 +238,87 @@ VALUES ('${uid(3011)}', '${eid(7)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(7)}'
 
 COMMIT;
   `
+}
+
+function approvedEqualityReportsSql() {
+  const companies = [
+    { n: 8,  name: 'Laun bíður ehf.',         nationalId: '5001010008', adminName: 'Helga Björnsdóttir',          adminEmail: 'helga@launbidur.is',   providerId: 'prov-eq-008', identifier: 'JR-2026-008' },
+    { n: 9,  name: 'Laun drög hf.',            nationalId: '5001010009', adminName: 'Inga Kristmundsdóttir',       adminEmail: 'inga@laundrog.is',     providerId: 'prov-eq-009', identifier: 'JR-2026-009' },
+    { n: 10, name: 'Laun sent ehf.',           nationalId: '5001010010', adminName: 'Jóna Eiríksdóttir',          adminEmail: 'jona@launsent.is',     providerId: 'prov-eq-010', identifier: 'JR-2026-010' },
+    { n: 11, name: 'Frestun sf.',              nationalId: '5001010011', adminName: 'Katrín Sigurbjörnsdóttir',   adminEmail: 'katrin@frestun.is',    providerId: 'prov-eq-011', identifier: 'JR-2026-011' },
+    { n: 12, name: 'Yfirfaring hf.',           nationalId: '5001010012', adminName: 'Lára Guðmundsdóttir',        adminEmail: 'lara@yfirfaring.is',   providerId: 'prov-eq-012', identifier: 'JR-2026-012' },
+    { n: 13, name: 'Samþykkt hreint ehf.',     nationalId: '5001010013', adminName: 'María Jónasdóttir',          adminEmail: 'maria@samthykkt.is',   providerId: 'prov-eq-013', identifier: 'JR-2026-013' },
+    { n: 14, name: 'Samþykkt útlagar hf.',     nationalId: '5001010014', adminName: 'Nína Helgadóttir',           adminEmail: 'nina@utlagar.is',      providerId: 'prov-eq-014', identifier: 'JR-2026-014' },
+    { n: 15, name: 'Synjað laun sf.',          nationalId: '5001010015', adminName: 'Ólöf Benediktsdóttir',       adminEmail: 'olof@synjaðlaun.is',   providerId: 'prov-eq-015', identifier: 'JR-2026-015' },
+    { n: 16, name: 'Saga jafnréttis ehf.',     nationalId: '5001010016', adminName: 'Petra Sigurðardóttir',       adminEmail: 'petra@sagajafnr.is',   providerId: 'prov-eq-016', identifier: 'JR-2026-016' },
+    { n: 17, name: 'Saga launa hf.',           nationalId: '5001010017', adminName: 'Ragna Bjarnardóttir',        adminEmail: 'ragna@sagalauna.is',   providerId: 'prov-eq-017', identifier: 'JR-2026-017' },
+    { n: 18, name: 'Undanþága ehf.',           nationalId: '5001010018', adminName: 'Sara Óskarsdóttir',          adminEmail: 'sara@undanthaga.is',   providerId: 'prov-eq-018', identifier: 'JR-2026-018' },
+  ]
+
+  let evCounter = 5000
+  let snapCounter2 = 3000
+
+  const approvedEqBlock = (c) => {
+    const size = c.n === 18 ? 'MEDIUM' : 'LARGE'
+    return `
+-- Company ${c.n}: ${c.name} — equality APPROVED
+INSERT INTO report (id, type, status, company_national_id, company_admin_name, company_admin_email,
+  company_admin_gender, contact_name, contact_email, contact_phone,
+  provider_type, provider_id, identifier, equality_report_content,
+  reviewer_user_id, approved_at, valid_until)
+VALUES ('${eid(c.n)}', 'EQUALITY', 'APPROVED', '${c.nationalId}',
+  '${c.adminName}', '${c.adminEmail}', 'FEMALE',
+  '${c.adminName}', '${c.adminEmail}', '555-${String(c.n).padStart(4,'0')}',
+  'ISLAND_IS', '${c.providerId}', '${c.identifier}',
+  'Jafnréttisáætlun ${c.name} 2026–2029. Við leggjum áherslu á jafna meðferð kynjanna og gagnsæi í launamálum.',
+  '${REVIEWER_ID}', NOW() - INTERVAL '${c.n * 5} days', NOW() - INTERVAL '${c.n * 5} days' + INTERVAL '3 years');
+
+INSERT INTO company_report (id, company_id, report_id, parent_company_id,
+  name, national_id, address, city, postcode, employee_count_category, isat_category)
+VALUES ('${uid(snapCounter2++)}', '${cid(c.n)}', '${eid(c.n)}', NULL,
+  '${c.name}', '${c.nationalId}', 'Stræti ${c.n}', 'Reykjavík', '101', '${size}', 'L');
+
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${eid(c.n)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(c.n)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${eid(c.n)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', '${cid(c.n)}');
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  from_status, to_status, company_id)
+VALUES ('${uid(evCounter++)}', '${eid(c.n)}', 'STATUS_CHANGED', '${REVIEWER_ID}', 'APPROVED',
+  'IN_REVIEW', 'APPROVED', '${cid(c.n)}');
+`
+  }
+
+  // Company 16 also gets an OLD superseded equality report (inserted before current one)
+  const oldEqCompany16 = `
+-- Company 16: Saga jafnréttis ehf. — OLD equality report (now SUPERSEDED)
+INSERT INTO report (id, type, status, company_national_id, company_admin_name, company_admin_email,
+  company_admin_gender, contact_name, contact_email, contact_phone,
+  provider_type, provider_id, identifier, equality_report_content,
+  reviewer_user_id, approved_at, valid_until)
+VALUES ('${eid(160)}', 'EQUALITY', 'SUPERSEDED', '5001010016',
+  'Petra Sigurðardóttir', 'petra@sagajafnr.is', 'FEMALE',
+  'Petra Sigurðardóttir', 'petra@sagajafnr.is', '555-0016',
+  'ISLAND_IS', 'prov-eq-016-old', 'JR-2023-016',
+  'Jafnréttisáætlun Saga jafnréttis ehf. 2023–2026 (útrunnin).',
+  '${REVIEWER_ID}',
+  NOW() - INTERVAL '3 years 20 days',
+  NOW() - INTERVAL '20 days');
+
+INSERT INTO company_report (id, company_id, report_id, parent_company_id,
+  name, national_id, address, city, postcode, employee_count_category, isat_category)
+VALUES ('${uid(snapCounter2++)}', '${cid(16)}', '${eid(160)}', NULL,
+  'Saga jafnréttis ehf.', '5001010016', 'Stræti 16', 'Reykjavík', '101', 'LARGE', 'L');
+
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
+  related_report_id, company_id)
+VALUES ('${uid(evCounter++)}', '${eid(160)}', 'SUPERSEDED', '${REVIEWER_ID}', 'SUPERSEDED',
+  '${eid(16)}', '${cid(16)}');
+`
+
+  return `BEGIN;\n${oldEqCompany16}${companies.map(approvedEqBlock).join('')}\nCOMMIT;`
 }
 
 function downSql() {
