@@ -12,6 +12,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
@@ -582,10 +583,45 @@ export class ReportCreateService implements IReportCreateService {
           address: company.address,
           city: company.city,
           postcode: company.postcode,
-          employeeCountCategory: stored.employeeCountCategory,
+          employeeCountCategory: this.normalizeEmployeeCountCategory(
+            stored.employeeCountCategory,
+            company.companyId,
+          ),
           isatCategory: company.isatCategory,
         }
       }),
+    )
+  }
+
+  private normalizeEmployeeCountCategory(
+    value: CompanySizeEnum | CompanySizeEnum[] | unknown,
+    companyId: string,
+  ): CompanySizeEnum {
+    if (Object.values(CompanySizeEnum).includes(value as CompanySizeEnum)) {
+      return value as CompanySizeEnum
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        this.logger.warn(
+          `Company "${companyId}" has empty employeeCountCategory array; defaulting to SMALL`,
+          { context: LOGGING_CONTEXT, companyId },
+        )
+        return CompanySizeEnum.SMALL
+      }
+
+      const [first] = value
+      if (Object.values(CompanySizeEnum).includes(first as CompanySizeEnum)) {
+        this.logger.warn(
+          `Company "${companyId}" has array-backed employeeCountCategory; using first value`,
+          { context: LOGGING_CONTEXT, companyId, employeeCountCategory: first },
+        )
+        return first as CompanySizeEnum
+      }
+    }
+
+    throw new BadRequestException(
+      `Company "${companyId}" has invalid employeeCountCategory value`,
     )
   }
 
