@@ -50,7 +50,8 @@ export const EqualityReportTab = ({ report }: EqualityReportTabProps) => {
         </Box>
         <Box marginBottom={6}>
           <EqualityReportInputs
-            supervisor={'TODO'}
+            supervisor={
+            }
             approvalDate={
               report.approvedAt ? new Date(report.approvedAt) : undefined
             }
