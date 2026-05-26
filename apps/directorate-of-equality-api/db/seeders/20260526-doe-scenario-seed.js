@@ -3,6 +3,11 @@
 // Existing reviewer (from initial seed)
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
+// Global role UUIDs (shared across all salary reports)
+const ROLE_VERKEFNASTJORI = 'aa000001-0000-0000-0000-000000000001'
+const ROLE_SERFRAEDINGUR  = 'aa000002-0000-0000-0000-000000000002'
+const ROLE_ADSTODARMADUR  = 'aa000003-0000-0000-0000-000000000003'
+
 // Helper: pad a number into a UUID-shaped constant
 const cid = (n) => `c${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}`
 const eid = (n) => `e${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // equality report
@@ -15,6 +20,8 @@ module.exports = {
     await queryInterface.sequelize.query(companiesSql())
     await queryInterface.sequelize.query(equalityReportsSql())
     await queryInterface.sequelize.query(approvedEqualityReportsSql())
+    await queryInterface.sequelize.query(globalRolesSql())
+    await queryInterface.sequelize.query(simpleSalaryScenariosSql())
   },
   async down(queryInterface) {
     return await queryInterface.sequelize.query(downSql())
@@ -321,6 +328,135 @@ VALUES ('${uid(evCounter++)}', '${eid(160)}', 'SUPERSEDED', '${REVIEWER_ID}', 'S
   return `BEGIN;\n${oldEqCompany16}${companies.map(approvedEqBlock).join('')}\nCOMMIT;`
 }
 
+function globalRolesSql() {
+  return `
+BEGIN;
+INSERT INTO report_employee_role (id, title) VALUES
+  ('${ROLE_VERKEFNASTJORI}', 'Verkefnastjóri'),
+  ('${ROLE_SERFRAEDINGUR}',  'Sérfræðingur'),
+  ('${ROLE_ADSTODARMADUR}',  'Aðstoðarmaður');
+COMMIT;
+  `
+}
+
+function salaryScaffoldSql(reportId, nationalId, companyName, companyN, status, eqReportId, options = {}) {
+  const { hasOutliers = false, outliersExplained = false } = options
+  const base = companyN * 100
+
+  const critIds       = [uid(base + 10), uid(base + 11)]
+  const scrtIds       = [uid(base + 20), uid(base + 21)]
+  const stepIds       = [uid(base + 30), uid(base + 31), uid(base + 32), uid(base + 33)]
+  const empIds        = Array.from({length: 6}, (_, i) => uid(base + 40 + i))
+  const resultId      = uid(base + 50)
+  const roleResultIds = [uid(base + 51), uid(base + 52), uid(base + 53)]
+
+  const needsReviewer = ['APPROVED', 'SUPERSEDED', 'DENIED', 'IN_REVIEW'].includes(status)
+  const needsApproval = ['APPROVED', 'SUPERSEDED'].includes(status)
+  const extraCols = needsApproval
+    ? ', reviewer_user_id, approved_at, valid_until'
+    : needsReviewer ? ', reviewer_user_id' : ''
+  const extraVals = needsApproval
+    ? `, '${REVIEWER_ID}', NOW() - INTERVAL '${companyN} days', NOW() - INTERVAL '${companyN} days' + INTERVAL '3 years'`
+    : needsReviewer ? `, '${REVIEWER_ID}'` : ''
+
+  const size = companyN === 18 ? 'MEDIUM' : 'LARGE'
+  const outlierSnap = hasOutliers
+    ? '{"outliers":[{"ordinal":1,"adjustedBaseSalary":850000,"predictedBaseSalary":700000,"direction":"ABOVE","differencePercent":21.43}]}'
+    : '{"outliers":[]}'
+  const baseSnap = hasOutliers ? '{"genderPayGap":9.1}' : '{"genderPayGap":0.8}'
+  const fullSnap = hasOutliers ? '{"genderPayGap":9.1,"roles":3,"employees":6}' : '{"genderPayGap":0.8,"roles":3,"employees":6}'
+
+  const emp1Salary = hasOutliers ? 850000 : 707000
+
+  let sql = `
+-- Salary report: company ${companyN} ${companyName} status=${status}
+INSERT INTO report (id, type, status, company_national_id, company_admin_name, company_admin_email,
+  company_admin_gender, contact_name, contact_email, contact_phone,
+  provider_type, provider_id, identifier, equality_report_id,
+  average_employee_male_count, average_employee_female_count, average_employee_neutral_count${extraCols})
+VALUES ('${reportId}', 'SALARY', '${status}', '${nationalId}',
+  'Jón Gunnarsson', 'jon@company${companyN}.is', 'MALE',
+  'Jón Gunnarsson', 'jon@company${companyN}.is', '555-${String(companyN).padStart(4, '0')}',
+  'ISLAND_IS', 'prov-sal-${String(companyN).padStart(3, '0')}', 'LS-2026-${String(companyN).padStart(3, '0')}',
+  '${eqReportId}', 3, 3, 0${extraVals});
+
+INSERT INTO company_report (id, company_id, report_id, parent_company_id,
+  name, national_id, address, city, postcode, employee_count_category, isat_category)
+VALUES ('${uid(base + 60)}', '${cid(companyN)}', '${reportId}', NULL,
+  '${companyName}', '${nationalId}', 'Stræti ${companyN}', 'Reykjavík', '101', '${size}', 'L');
+
+INSERT INTO report_criterion (id, report_id, title, weight, description, type) VALUES
+  ('${critIds[0]}', '${reportId}', 'Ábyrgð', 0.5000, 'Ábyrgð og umfang starfsins', 'RESPONSIBILITY'),
+  ('${critIds[1]}', '${reportId}', 'Hæfni',  0.5000, 'Menntun og reynsla',          'COMPETENCE');
+
+INSERT INTO report_sub_criterion (id, report_criterion_id, title, description, weight) VALUES
+  ('${scrtIds[0]}', '${critIds[0]}', 'Stjórnunarleg ábyrgð', 'Fjöldi undirlægra starfsmanna', 1.0000),
+  ('${scrtIds[1]}', '${critIds[1]}', 'Formlegt nám',          'Menntunarstig',                1.0000);
+
+INSERT INTO report_sub_criterion_step (id, report_sub_criterion_id, "order", description, score) VALUES
+  ('${stepIds[0]}', '${scrtIds[0]}', 1, 'Engin stjórnunarleg ábyrgð',   0.00),
+  ('${stepIds[1]}', '${scrtIds[0]}', 2, 'Stjórnun 1–5 starfsmanna',     1.00),
+  ('${stepIds[2]}', '${scrtIds[1]}', 1, 'Framhaldsskólapróf eða lægra', 0.00),
+  ('${stepIds[3]}', '${scrtIds[1]}', 2, 'Háskólapróf',                  1.00);
+
+INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, report_sub_criterion_step_id) VALUES
+  ('${uid(base + 70)}', '${ROLE_VERKEFNASTJORI}', '${stepIds[1]}'),
+  ('${uid(base + 71)}', '${ROLE_VERKEFNASTJORI}', '${stepIds[3]}'),
+  ('${uid(base + 72)}', '${ROLE_SERFRAEDINGUR}',  '${stepIds[1]}'),
+  ('${uid(base + 73)}', '${ROLE_SERFRAEDINGUR}',  '${stepIds[2]}'),
+  ('${uid(base + 74)}', '${ROLE_ADSTODARMADUR}',  '${stepIds[0]}'),
+  ('${uid(base + 75)}', '${ROLE_ADSTODARMADUR}',  '${stepIds[2]}');
+
+INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
+  start_date, work_ratio, base_salary, additional_salary, bonus_salary,
+  gender, report_employee_role_id, score) VALUES
+  ('${empIds[0]}','${reportId}',1,'MASTER',         'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,100000.00,'MALE',  '${ROLE_VERKEFNASTJORI}',2.00),
+  ('${empIds[1]}','${reportId}',2,'MASTER',         'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00, 80000.00,'FEMALE','${ROLE_VERKEFNASTJORI}',2.00),
+  ('${empIds[2]}','${reportId}',3,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00, 50000.00,'MALE',  '${ROLE_SERFRAEDINGUR}', 1.00),
+  ('${empIds[3]}','${reportId}',4,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00, 40000.00,'FEMALE','${ROLE_SERFRAEDINGUR}', 1.00),
+  ('${empIds[4]}','${reportId}',5,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,     NULL,'MALE',  '${ROLE_ADSTODARMADUR}', 0.00),
+  ('${empIds[5]}','${reportId}',6,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,     NULL,'FEMALE','${ROLE_ADSTODARMADUR}', 0.00);
+
+INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
+  calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
+VALUES ('${resultId}', '${reportId}', 3.90, 'v1', '${baseSnap}', '${fullSnap}', '${outlierSnap}');
+
+INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
+  ('${roleResultIds[0]}','${resultId}','${ROLE_VERKEFNASTJORI}','Verkefnastjóri','{"genderPayGap":${hasOutliers ? 9.1 : 0.6}}','{"employees":2}'),
+  ('${roleResultIds[1]}','${resultId}','${ROLE_SERFRAEDINGUR}', 'Sérfræðingur', '{"genderPayGap":0.7}',                        '{"employees":2}'),
+  ('${roleResultIds[2]}','${resultId}','${ROLE_ADSTODARMADUR}', 'Aðstoðarmaður','{"genderPayGap":0.4}',                        '{"employees":2}');
+`
+
+  if (hasOutliers) {
+    const exp = outliersExplained
+      ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
+      : `NULL, NULL, NULL, NULL`
+    sql += `
+INSERT INTO report_employee_outlier (id, report_employee_id, reason, action, signature_name, signature_role)
+VALUES ('${uid(base + 80)}', '${empIds[0]}', ${exp});
+`
+  }
+
+  return sql
+}
+
+function simpleSalaryScenariosSql() {
+  let evCounter = 8000
+  let sql = 'BEGIN;\n'
+
+  // Company 9: salary DRAFT (no events for DRAFT)
+  sql += salaryScaffoldSql(sid(9), '5001010009', 'Laun drög hf.', 9, 'DRAFT', eid(9))
+
+  // Company 10: salary SUBMITTED, no outliers
+  sql += salaryScaffoldSql(sid(10), '5001010010', 'Laun sent ehf.', 10, 'SUBMITTED', eid(10))
+  sql += `
+INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
+VALUES ('${uid(evCounter++)}', '${sid(10)}', 'SUBMITTED', NULL, 'SUBMITTED', '${cid(10)}');
+`
+  sql += '\nCOMMIT;'
+  return sql
+}
+
 function downSql() {
   const companyIds = Array.from({length: 28}, (_, i) => `'${cid(i+1)}'`).join(',\n    ')
   return `
@@ -349,6 +485,9 @@ DELETE FROM report_employee_role_criterion_step
     WHERE r.company_national_id LIKE '500101%'
   );
 DELETE FROM report_employee     WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+DELETE FROM report_employee_role WHERE id IN (
+  '${ROLE_VERKEFNASTJORI}', '${ROLE_SERFRAEDINGUR}', '${ROLE_ADSTODARMADUR}'
+);
 DELETE FROM report_role_result
   WHERE report_result_id IN (
     SELECT rr.id FROM report_result rr
