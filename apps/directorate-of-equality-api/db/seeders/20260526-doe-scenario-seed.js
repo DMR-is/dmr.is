@@ -6,8 +6,8 @@ const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 // Helper: pad a number into a UUID-shaped constant
 const cid = (n) => `c${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}`
 const eid = (n) => `e${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // equality report
-const sid = (n) => `s${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // salary report
-const uid = (n) => `u${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // generic
+const sid = (n) => `b${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // salary report (b = besold)
+const uid = (n) => `f${String(n).padStart(7,'0')}-0000-0000-0000-${String(n).padStart(12,'0')}` // generic (f = fill-in)
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
