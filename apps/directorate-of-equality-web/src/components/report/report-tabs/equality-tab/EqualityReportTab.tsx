@@ -5,7 +5,6 @@ import { useRef } from 'react'
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
-import { ProblemTemplate } from '@dmr.is/ui/components/island-is/ProblemTemplate'
 
 import { GridRow } from '@island.is/island-ui/core'
 
@@ -50,8 +49,7 @@ export const EqualityReportTab = ({ report }: EqualityReportTabProps) => {
         </Box>
         <Box marginBottom={6}>
           <EqualityReportInputs
-            supervisor={
-            }
+            supervisor={'TODO'}
             approvalDate={
               report.approvedAt ? new Date(report.approvedAt) : undefined
             }
