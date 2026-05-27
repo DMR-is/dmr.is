@@ -2,7 +2,11 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
-import { type Paging, type ReportEmployeeOutlierDto } from '../../../../gen/fetch'
+import {
+  type Paging,
+  type ReportEmployeeOutlierDto,
+} from '../../../../gen/fetch'
+import { reportText as r, sharedText } from '../../../../lib/text'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -15,6 +19,14 @@ interface OutlierPlanTableProps {
 
 const dash = '–'
 
+const s = r.salaryTab
+const o = s.outlierTable
+
+const genderMap: Record<string, string> = {
+  MALE: sharedText.genders.male,
+  FEMALE: sharedText.genders.female,
+  NEUTRAL: sharedText.genders.neutral,
+}
 const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   {
     accessorKey: 'employeeOrdinal',
@@ -28,12 +40,15 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   },
   {
     id: 'kyn',
-    header: 'Kyn',
-    cell: ({ row }) => row.original.gender ?? dash,
+    header: o.genderHeader,
+    accessorFn: (row) => (row.gender ? (genderMap[row.gender] ?? '') : ''),
+    cell: ({ row }) =>
+      row.original.gender ? (genderMap[row.original.gender] ?? dash) : dash,
   },
   {
     id: 'launafravik',
-    header: 'Launafrávik',
+    header: o.deviationHeader,
+    accessorFn: (row) => row.score ?? 0,
     cell: ({ row }) =>
       row.original.differencePercent == null
         ? dash
@@ -45,10 +60,10 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   <Box background="blue100" padding={2}>
     <Box display="flex" flexWrap="wrap" style={{ columnGap: 16 }}>
       {[
-        { label: 'Ástæða', value: row.reason },
-        { label: 'Aðgerð', value: row.action },
-        { label: 'Nafn undirritanda', value: row.signatureName },
-        { label: 'Hlutverk undirritanda', value: row.signatureRole },
+        { label: o.reasonLabel, value: row.reason },
+        { label: o.actionLabel, value: row.action },
+        { label: o.signatureNameLabel, value: row.signatureName },
+        { label: o.signatureRoleLabel, value: row.signatureRole },
       ].map(({ label, value }, i) => (
         <Box
           key={label}
@@ -80,7 +95,7 @@ export const OutlierPlanTable = ({
   return (
     <>
       <Text variant="h4" marginBottom={4}>
-        Úrbótaáætlun
+        {o.heading}
       </Text>
       <Table
         columns={columns}
@@ -90,7 +105,7 @@ export const OutlierPlanTable = ({
         loading={loading}
         onPageChange={onPageChange}
         showPageSizeSelect={false}
-        noDataMessage="Engin úrbótaáætlun skráð"
+        noDataMessage={s.noDataMessage}
       />
     </>
   )

@@ -27,6 +27,9 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalString({ nullable: true })
   roleTitle!: string | null
 
+  @ApiOptionalNumber({ nullable: true })
+  score!: number | null
+
   @ApiOptionalString({
     nullable: true,
     description:

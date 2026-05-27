@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   reportId: string
   status: ReportStatusEnum
+  disabled?: boolean
 }
 
 type Option = { value: ReportStatusEnum; label: string }
@@ -39,7 +40,7 @@ const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
   ],
 }
 
-export const ReportStatusSelect = ({ reportId, status }: Props) => {
+export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -112,6 +113,7 @@ export const ReportStatusSelect = ({ reportId, status }: Props) => {
         options={options}
         value={currentOption}
         isLoading={isLoading}
+        isDisabled={disabled}
         onChange={(opt) => handleChange(opt as Option | null)}
       />
       <ReportDenialModal

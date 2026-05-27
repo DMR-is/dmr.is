@@ -91,6 +91,7 @@ export class ReportEmployeeOutlierModel extends MutableModel<
       employeeOrdinal: model.reportEmployee?.ordinal ?? null,
       gender: model.reportEmployee?.gender ?? null,
       roleTitle: model.reportEmployee?.role?.title ?? null,
+      score: model.reportEmployee?.score ?? null,
       reason: model.reason,
       action: model.action,
       signatureName: model.signatureName,

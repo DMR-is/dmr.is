@@ -1,3 +1,5 @@
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+
 import { Stack } from '@island.is/island-ui/core'
 
 import {
@@ -5,6 +7,7 @@ import {
   ReportEmployeeOutlierDto,
   SalaryByGenderAndScoreDto,
 } from '../../../../gen/fetch'
+import { reportText } from '../../../../lib/text'
 import { Empty } from '../../../Empty'
 import { OutlierInputForm } from './OutlierInputForm'
 import { OutlierPlanTable } from './OutlierPlanTable'
@@ -18,6 +21,7 @@ interface SalaryReportTabProps {
   outliersLoading?: boolean
   onOutliersPageChange: (page: number) => void
   outlierDate?: Date
+  outliersPostponed?: boolean
 }
 
 const formatSalary = (v: number) =>
@@ -26,6 +30,7 @@ const formatSalary = (v: number) =>
 export const SalaryReportTab = ({
   data,
   outliers,
+  outliersPostponed,
   outliersPaging,
   outliersLoading,
   onOutliersPageChange,
@@ -34,8 +39,8 @@ export const SalaryReportTab = ({
   if (!data) {
     return (
       <Empty
-        title="Engin launagreining"
-        message="Engin launagreining fannst fyrir þessa skýrslu. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar."
+        title={reportText.salaryTab.emptyTitle}
+        message={reportText.salaryTab.emptyMessage}
       />
     )
   }
@@ -48,6 +53,14 @@ export const SalaryReportTab = ({
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
       />
+      {outliersPostponed && (
+        <AlertMessage
+          type="warning"
+          title={reportText.salaryTab.outliersPostponedTitle}
+          message={reportText.salaryTab.outliersPostponedMessage}
+        />
+      )}
+      -{' '}
       <OutlierPlanTable
         outliers={outliers}
         paging={outliersPaging}

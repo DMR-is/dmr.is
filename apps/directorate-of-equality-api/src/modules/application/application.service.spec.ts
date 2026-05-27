@@ -96,9 +96,7 @@ describe('ApplicationService', () => {
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
-    outlierFindAndCountAll = jest
-      .fn()
-      .mockResolvedValue({ rows: [], count: 0 })
+    outlierFindAndCountAll = jest.fn().mockResolvedValue({ rows: [], count: 0 })
     outlierCount = jest.fn().mockResolvedValue(0)
     outlierUpdate = jest.fn().mockResolvedValue([1])
     eventFindOne = jest.fn().mockResolvedValue(null)
