@@ -49,7 +49,12 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
     label: reportText.tabEquality,
-    content: <EqualityReportTab report={report.equalityReport} />,
+    content: (
+      <EqualityReportTab
+        report={report.equalityReport}
+        supervisor={report.contactName ?? undefined}
+      />
+    ),
   }
 
   const fyrirtaekid = {

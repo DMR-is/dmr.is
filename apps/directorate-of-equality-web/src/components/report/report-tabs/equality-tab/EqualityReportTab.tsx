@@ -14,9 +14,13 @@ import { EqualityReportInputs } from './EqualityReportInputs'
 
 type EqualityReportTabProps = {
   report?: EqualityReportDto
+  supervisor?: string
 }
 
-export const EqualityReportTab = ({ report }: EqualityReportTabProps) => {
+export const EqualityReportTab = ({
+  report,
+  supervisor,
+}: EqualityReportTabProps) => {
   const editorKey = useRef(0)
 
   if (!report?.content) {
@@ -49,7 +53,7 @@ export const EqualityReportTab = ({ report }: EqualityReportTabProps) => {
         </Box>
         <Box marginBottom={6}>
           <EqualityReportInputs
-            supervisor={'TODO'}
+            supervisor={supervisor}
             approvalDate={
               report.approvedAt ? new Date(report.approvedAt) : undefined
             }
