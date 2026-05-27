@@ -53,24 +53,21 @@ export const SalaryReportTab = ({
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
       />
-      {outliers.length > 0 && (
-        <>
-          {outliersPostponed && (
-            <AlertMessage
-              type="warning"
-              title={reportText.salaryTab.outliersPostponedTitle}
-              message={reportText.salaryTab.outliersPostponedMessage}
-            />
-          )}
-          <OutlierPlanTable
-            outliers={outliers}
-            paging={outliersPaging}
-            loading={outliersLoading}
-            onPageChange={onOutliersPageChange}
-          />
-          <OutlierInputForm outlierDate={outlierDate} />
-        </>
+      {outliersPostponed && (
+        <AlertMessage
+          type="warning"
+          title={reportText.salaryTab.outliersPostponedTitle}
+          message={reportText.salaryTab.outliersPostponedMessage}
+        />
       )}
+      -{' '}
+      <OutlierPlanTable
+        outliers={outliers}
+        paging={outliersPaging}
+        loading={outliersLoading}
+        onPageChange={onOutliersPageChange}
+      />
+      <OutlierInputForm outlierDate={outlierDate} />
     </Stack>
   )
 }

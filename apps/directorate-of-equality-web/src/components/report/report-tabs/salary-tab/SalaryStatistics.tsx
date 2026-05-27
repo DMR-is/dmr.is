@@ -16,25 +16,20 @@ export const SalaryStatistics = ({
   wageGapPercent,
 }: SalaryStatisticsProps) => {
   return (
-    <Box marginBottom={4}>
-      <Stack space={2}>
-        <Text variant="h4">Launamunur</Text>
-        <Text variant="default">
-          Óleiðréttur launamunur milli karla og kvenna
-        </Text>
-        <Box display="flex" columnGap={4} marginTop={1}>
-          <StatisticCard title="Meðallaun karla" content={maleAverageSalary} />
-          <StatisticCard
-            title="Meðallaun kvenna"
-            content={femaleAverageSalary}
-          />
-          <StatisticCard
-            title="Launamunur"
-            content={wageGapPercent + '%'}
-            color="purple"
-          />
-        </Box>
-      </Stack>
-    </Box>
+    <Stack space={2}>
+      <Text variant="h4">Launamunur</Text>
+      <Text variant="default">
+        Óleiðréttur launamunur milli karla og kvenna
+      </Text>
+      <Box display="flex" columnGap={4} marginTop={1}>
+        <StatisticCard title="Meðallaun karla" content={maleAverageSalary} />
+        <StatisticCard title="Meðallaun kvenna" content={femaleAverageSalary} />
+        <StatisticCard
+          title="Launamunur"
+          content={wageGapPercent + '%'}
+          color="purple"
+        />
+      </Box>
+    </Stack>
   )
 }
