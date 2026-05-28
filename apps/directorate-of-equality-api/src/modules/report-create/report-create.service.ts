@@ -589,7 +589,7 @@ export class ReportCreateService implements IReportCreateService {
     )
   }
 
-  /**
+/**
    * Each `outliers[].employeeOrdinal` must match an `ordinal` in the parsed
    * employees array. The submit-side guard below verifies the submitted set
    * against the canonical regression-based detection result.

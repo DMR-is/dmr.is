@@ -385,7 +385,9 @@ describe('ReportCreateService', () => {
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
     )
-    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty('outliersPostponed')
+    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty(
+      'outliersPostponed',
+    )
     expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
     expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
@@ -494,7 +496,9 @@ describe('ReportCreateService', () => {
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
     )
-    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty('outliersPostponed')
+    expect(reportCreate.mock.calls[0][0]).not.toHaveProperty(
+      'outliersPostponed',
+    )
     expect(outlierBulkCreate).toHaveBeenCalledWith([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
@@ -622,7 +626,7 @@ describe('ReportCreateService', () => {
     })
   })
 
-  it('propagates EQUALITY company_report failures before event creation', async () => {
+it('propagates EQUALITY company_report failures before event creation', async () => {
     companyReportBulkCreate.mockRejectedValue(new Error('cr boom'))
 
     await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
@@ -745,7 +749,10 @@ describe('ReportCreateService', () => {
   describe('in-flight sibling guard', () => {
     const PRIOR_REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
 
-    function mockPriorSibling(status: ReportStatusEnum, providerId = 'prior-1') {
+    function mockPriorSibling(
+      status: ReportStatusEnum,
+      providerId = 'prior-1',
+    ) {
       companyReportFindAll.mockResolvedValueOnce([
         { reportId: PRIOR_REPORT_ID },
       ])
@@ -946,8 +953,9 @@ describe('ReportCreateService', () => {
         PRIOR_REPORT_ID,
         OTHER_PRIOR_ID,
       ])
-      expect(withdrawnCalls.every(([row]) => row.relatedReportId === REPORT_ID))
-        .toBe(true)
+      expect(
+        withdrawnCalls.every(([row]) => row.relatedReportId === REPORT_ID),
+      ).toBe(true)
     })
   })
 })
