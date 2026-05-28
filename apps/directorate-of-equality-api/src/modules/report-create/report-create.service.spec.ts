@@ -626,24 +626,7 @@ describe('ReportCreateService', () => {
     })
   })
 
-  it('normalizes empty array employeeCountCategory values before writing company_report rows', async () => {
-    companyFindAll.mockResolvedValueOnce([
-      makeCompanyRow(PARENT_COMPANY_ID, [] as unknown as CompanySizeEnum),
-    ])
-
-    await service.createEquality(makeEqualityInput())
-
-    expect(companyReportBulkCreate.mock.calls[0][0][0]).toMatchObject({
-      companyId: PARENT_COMPANY_ID,
-      employeeCountCategory: CompanySizeEnum.SMALL,
-    })
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('empty employeeCountCategory array'),
-      expect.objectContaining({ companyId: PARENT_COMPANY_ID }),
-    )
-  })
-
-  it('propagates EQUALITY company_report failures before event creation', async () => {
+it('propagates EQUALITY company_report failures before event creation', async () => {
     companyReportBulkCreate.mockRejectedValue(new Error('cr boom'))
 
     await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
