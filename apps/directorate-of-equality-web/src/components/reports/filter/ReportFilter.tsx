@@ -25,10 +25,12 @@ type Props = {
   statusOptions?: FilterOption[]
   reviewerUserId: string[] | null
   reviewers?: FilterOption[]
+  hasImprovementPlan: boolean | null
   onQChange: (value: string | null) => void
   onTypeChange: (values: string[] | null) => void
   onStatusChange: (values: string[] | null) => void
   onReviewerChange: (values: string[] | null) => void
+  onHasImprovementPlanChange: (value: boolean | null) => void
   onReset: () => void
 }
 
@@ -39,10 +41,12 @@ export const ReportFilter = ({
   statusOptions,
   reviewerUserId,
   reviewers,
+  hasImprovementPlan,
   onQChange,
   onTypeChange,
   onStatusChange,
   onReviewerChange,
+  onHasImprovementPlanChange,
   onReset,
 }: Props) => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>()
@@ -106,15 +110,22 @@ export const ReportFilter = ({
         <FilterMultiChoice
           labelClear={sharedText.filter.labelClear}
           onChange={({ categoryId, selected }) => {
-            if (categoryId === 'type')
-              onTypeChange(selected.length ? selected : null)
+            if (categoryId === 'type') {
+              const hasImprovement = selected.includes('IMPROVEMENT_PLAN')
+              const realTypes = selected.filter((v) => v !== 'IMPROVEMENT_PLAN')
+              onTypeChange(realTypes.length ? realTypes : null)
+              onHasImprovementPlanChange(hasImprovement ? true : null)
+            }
             if (categoryId === 'status')
               onStatusChange(selected.length ? selected : null)
             if (categoryId === 'reviewer')
               onReviewerChange(selected.length ? selected : null)
           }}
           onClear={(categoryId) => {
-            if (categoryId === 'type') onTypeChange(null)
+            if (categoryId === 'type') {
+              onTypeChange(null)
+              onHasImprovementPlanChange(null)
+            }
             if (categoryId === 'status') onStatusChange(null)
             if (categoryId === 'reviewer') onReviewerChange(null)
           }}
@@ -122,10 +133,14 @@ export const ReportFilter = ({
             {
               id: 'type',
               label: overviewText.filter.categoryLabel,
-              selected: type ?? [],
+              selected: [
+                ...(type ?? []),
+                ...(hasImprovementPlan ? ['IMPROVEMENT_PLAN'] : []),
+              ],
               filters: [
                 { value: 'EQUALITY', label: 'Jafnréttisáætlun' },
                 { value: 'SALARY', label: 'Skýrslugjöf' },
+                { value: 'IMPROVEMENT_PLAN', label: 'Úrbótaáætlun' },
               ],
             },
             ...extraCategories,
