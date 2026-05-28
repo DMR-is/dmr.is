@@ -24,6 +24,7 @@ import {
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { buildCompanyStatusWhere } from './utils/filters'
 import {
   CreateCompanyInput,
   GetCompaniesQueryDto,
@@ -63,6 +64,10 @@ export class CompanyService implements ICompanyService {
       Object.assign(where, {
         employeeCountCategory: query.employeeCountCategory,
       })
+    }
+
+    if (query.companyStatus?.length) {
+      Object.assign(where, buildCompanyStatusWhere(query.companyStatus))
     }
 
     const sortCol =

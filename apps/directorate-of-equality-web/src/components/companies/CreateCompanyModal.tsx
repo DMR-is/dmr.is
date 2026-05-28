@@ -119,18 +119,9 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
                 disabled={!nationalIdInput.trim()}
                 onClick={handleLookup}
               >
-                Fletta upp
+                {companiesText.createModal.lookupButton}
               </Button>
             </Box>
-            <Button
-              variant="ghost"
-              size="small"
-              loading={lookupQuery.isFetching}
-              disabled={!nationalIdInput.trim()}
-              onClick={handleLookup}
-            >
-              {companiesText.createModal.lookupButton}
-            </Button>
           </Inline>
           {lookupQuery.isError && (
             <Text color="red600" variant="small">

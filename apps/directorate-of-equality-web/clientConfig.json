@@ -242,6 +242,18 @@
             "schema": { "$ref": "#/components/schemas/CompanySizeEnum" }
           },
           {
+            "name": "companyStatus",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies that match at least one of the provided status values. Omit for no constraint.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyStatusFilterEnum"
+              }
+            }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -2629,6 +2641,15 @@
       "CompanySizeEnum": {
         "type": "string",
         "enum": ["SMALL", "MEDIUM", "LARGE"]
+      },
+      "CompanyStatusFilterEnum": {
+        "type": "string",
+        "enum": [
+          "missing-equality",
+          "has-equality",
+          "missing-salary",
+          "compliant"
+        ]
       },
       "CompanySortByEnum": {
         "type": "string",
