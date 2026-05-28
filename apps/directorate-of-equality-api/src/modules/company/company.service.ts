@@ -1,4 +1,4 @@
-import { Op, Order, WhereOptions } from 'sequelize'
+import { literal, Op, Order, WhereOptions } from 'sequelize'
 
 import {
   ConflictException,
@@ -24,7 +24,7 @@ import {
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
-import { buildCompanyStatusWhere } from './utils/filters'
+import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
 import {
   CreateCompanyInput,
   GetCompaniesQueryDto,
@@ -48,11 +48,11 @@ export class CompanyService implements ICompanyService {
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
     const { limit, offset } = getLimitAndOffset(query)
 
-    const where: WhereOptions = {}
+    const conditions: WhereOptions[] = []
 
     if (query.q) {
       const pattern = `%${query.q.trim()}%`
-      Object.assign(where, {
+      conditions.push({
         [Op.or]: [
           { name: { [Op.iLike]: pattern } },
           { nationalId: { [Op.iLike]: pattern } },
@@ -61,23 +61,38 @@ export class CompanyService implements ICompanyService {
     }
 
     if (query.employeeCountCategory !== undefined) {
-      Object.assign(where, {
-        employeeCountCategory: query.employeeCountCategory,
-      })
+      conditions.push({ employeeCountCategory: query.employeeCountCategory })
     }
 
     if (query.companyStatus?.length) {
-      Object.assign(where, buildCompanyStatusWhere(query.companyStatus))
+      conditions.push(buildCompanyStatusWhere(query.companyStatus))
     }
 
-    const sortCol =
-      query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
-        ? 'employeeCountCategory'
-        : 'name'
+    if (query.expiresWithin?.length) {
+      conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
+    }
+
+    const where: WhereOptions =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]
+          : { [Op.and]: conditions }
+
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
     ).toUpperCase()
-    const order: Order = [[sortCol, sortDir]]
+    const order: Order =
+      query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
+        ? [
+            [
+              literal(
+                `CASE employee_count_category WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
+              ),
+              sortDir,
+            ],
+          ]
+        : [['name', sortDir]]
 
     const { rows, count } = await this.companyModel.findAndCountAll({
       where,

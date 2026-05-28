@@ -16,6 +16,7 @@ const zGetCompaniesQuery = z.object({
       z.enum(['missing-equality', 'has-equality', 'missing-salary', 'compliant']),
     )
     .optional(),
+  expiresWithin: z.array(z.enum(['30d', '3m', 'soon'])).optional(),
   sortBy: z.enum(['name', 'employeeCount']).optional(),
   direction: z.enum(['asc', 'desc']).optional(),
 })

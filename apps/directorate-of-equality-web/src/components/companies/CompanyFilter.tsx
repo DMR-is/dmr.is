@@ -25,6 +25,7 @@ type Category = {
   label: string
   selected: string[]
   filters: { value: string; label: string }[]
+  singleOption?: boolean
 }
 
 type Props = {
@@ -48,6 +49,7 @@ export const CompanyFilter = ({
       label: companiesText.avgEmployeeCount,
       selected: filters.employees,
       filters: EMPLOYEE_RANGES,
+      singleOption: true,
     },
     {
       id: 'status',

@@ -112,29 +112,3 @@ export function deriveStatus(
   if (hasEquality) return 'has-equality'                   // SMALL voluntary submission
   return 'compliant'                                       // SMALL with nothing: no obligation
 }
-
-/**
- * Returns the latest cutoff Date for a set of expires filter values.
- * '30d' → +30 days, '3m' → +3 months, 'soon' (or any other value) → +6 months.
- * Assumes at least one entry in `filters`.
- */
-export function computeMaxExpiryCutoff(filters: string[], now: Date): Date {
-  if (!filters.length) throw new Error('computeMaxExpiryCutoff requires at least one filter')
-  const cutoffs = filters.map((f) => {
-    const d = new Date(now)
-    if (f === '30d') d.setDate(d.getDate() + 30)
-    else if (f === '3m') d.setMonth(d.getMonth() + 3)
-    else d.setMonth(d.getMonth() + 6)
-    return d
-  })
-  return new Date(Math.max(...cutoffs.map((d) => d.getTime())))
-}
-
-/**
- * Formats a Date as YYYY-MM-DD for API date-range params.
- * Uses UTC date — safe for this app (Iceland runs at UTC/UTC+0).
- * In timezones west of UTC, `new Date()` near midnight may return tomorrow's date in UTC.
- */
-export function toDateString(d: Date): string {
-  return d.toISOString().split('T')[0]
-}

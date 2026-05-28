@@ -7,9 +7,9 @@ import { ApiOptionalEnum, ApiOptionalString } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CompanySizeEnum } from '../models/company.enums'
-import { CompanyStatusFilterEnum } from '../utils/filters'
+import { CompanyExpiryFilterEnum, CompanyStatusFilterEnum } from '../utils/filters'
 
-export { CompanyStatusFilterEnum }
+export { CompanyExpiryFilterEnum, CompanyStatusFilterEnum }
 
 export enum CompanySortByEnum {
   NAME = 'name',
@@ -53,6 +53,23 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(CompanyStatusFilterEnum, { each: true })
   companyStatus?: CompanyStatusFilterEnum[]
+
+  @ApiProperty({
+    enum: CompanyExpiryFilterEnum,
+    enumName: 'CompanyExpiryFilterEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanyExpiryFilterEnum, { each: true })
+  expiresWithin?: CompanyExpiryFilterEnum[]
 
   @ApiOptionalEnum(CompanySortByEnum, { enumName: 'CompanySortByEnum' })
   @IsOptional()

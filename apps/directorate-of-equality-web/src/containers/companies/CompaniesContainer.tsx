@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -12,52 +13,38 @@ import {
   CompanyFilter,
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
-import {
-  computeMaxExpiryCutoff,
-  normalizeId,
-  toDateString,
-} from '../../components/companies/companyStatus'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
-import { CompanySizeEnum, CompanyStatusFilterEnum, ReportStatusEnum } from '../../gen/fetch'
+import {
+  CompanyExpiryFilterEnum,
+  CompanySizeEnum,
+  CompanyStatusFilterEnum,
+  ReportStatusEnum,
+} from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
-import { useReports } from '../../hooks/useReports'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { data, filter, setFilter, resetFilter } = useCompanies({
     pageSize: 10,
-    sortBy: 'name',
-    direction: 'asc',
   })
 
   const [filters, setFilters] = useState<CompanyFilters>({
     employees: filter.employeeCountCategory ? [filter.employeeCountCategory] : [],
     status: (filter.companyStatus ?? []) as CompanyStatusFilterEnum[],
-    expires: [],
+    expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     dailyFines: [],
   })
 
-  // NOTE: useReports merges as { ...fixedQuery, ...activeFilter } so URL state can override
-  // validUntilFrom/validUntilTo. This is safe because these params are not present in the
-  // companies page URL — they are only set here via fixedQuery.
-  const reportsFixedQuery = useMemo(() => {
-    const base = {
+  const trpc = useTRPC()
+  const { data: reportsData } = useQuery(
+    trpc.reports.list.queryOptions({
       status: [ReportStatusEnum.APPROVED],
       pageSize: 500,
-    }
-    if (!filters.expires.length) return base
-    const now = new Date()
-    const maxCutoff = computeMaxExpiryCutoff(filters.expires, now)
-    return {
-      ...base,
-      validUntilFrom: toDateString(now),
-      validUntilTo: toDateString(maxCutoff),
-    }
-  }, [filters.expires])
-
-  const { data: reportsData } = useReports(reportsFixedQuery)
+    }),
+  )
   const approvedReports = reportsData?.reports ?? []
 
   const sorting = filter.sortBy
@@ -88,6 +75,8 @@ export const CompaniesContainer = () => {
         employeeCountCategory: (val[0] ?? null) as CompanySizeEnum | null,
         page: 1,
       })
+    } else if (key === 'expires') {
+      setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
     } else {
       setFilter({ page: 1 })
     }
@@ -101,26 +90,17 @@ export const CompaniesContainer = () => {
   const rows = useMemo(() => {
     const companies = data?.companies ?? []
 
-    return companies.filter((company) => {
+    return companies.filter(() => {
       // employees: filtered server-side via useCompanies (employeeCountCategory URL param)
-      // status: filtered server-side via useCompanies (companyStatus URL param)
-
-      if (filters.expires.length) {
-        // Server already filtered approvedReports to the expiry window —
-        // just check membership by nationalId.
-        const companyId = normalizeId(company.nationalId)
-        const hasExpiringReport = approvedReports.some(
-          (r) => normalizeId(r.companyNationalId) === companyId,
-        )
-        if (!hasExpiringReport) return false
-      }
+      // status:    filtered server-side via useCompanies (companyStatus URL param)
+      // expires:   filtered server-side via useCompanies (expiresWithin URL param)
 
       // TODO: daily fines requires finesStartedAt on the list endpoint
       if (filters.dailyFines.length) return false
 
       return true
     })
-  }, [data, approvedReports, filters])
+  }, [data, filters.dailyFines])
 
   return (
     <GridContainer>

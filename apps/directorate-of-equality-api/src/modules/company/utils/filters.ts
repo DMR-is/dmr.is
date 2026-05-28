@@ -60,37 +60,33 @@ function statusCondition(status: CompanyStatusFilterEnum): WhereOptions {
       }
 
     case CompanyStatusFilterEnum.MISSING_SALARY:
-      // LARGE: has equality (prerequisite met) but salary not yet filed
+      // needsSalary flag drives this — equality is prerequisite, salary not yet filed
       return {
         [Op.and]: [
           needsSalary,
-          { employeeCountCategory: CompanySizeEnum.LARGE },
           literal(activeReportExists('EQUALITY')),
           literal(`NOT ${activeReportExists('SALARY')}`),
         ],
       }
 
     case CompanyStatusFilterEnum.HAS_EQUALITY:
-      return {
-        [Op.and]: [noSalaryNeeded, literal(activeReportExists('EQUALITY'))],
-      }
+      return literal(activeReportExists('EQUALITY'))
 
     case CompanyStatusFilterEnum.MISSING_EQUALITY:
       return {
         [Op.or]: [
-          // MEDIUM: no equality
-          {
-            [Op.and]: [
-              noSalaryNeeded,
-              { employeeCountCategory: CompanySizeEnum.MEDIUM },
-              literal(`NOT ${activeReportExists('EQUALITY')}`),
-            ],
-          },
-          // LARGE: no equality (must file equality before salary)
+          // needsSalary flag set but equality (prerequisite) not yet filed
           {
             [Op.and]: [
               needsSalary,
-              { employeeCountCategory: CompanySizeEnum.LARGE },
+              literal(`NOT ${activeReportExists('EQUALITY')}`),
+            ],
+          },
+          // Non-SMALL, no salary obligation, no equality
+          {
+            [Op.and]: [
+              noSalaryNeeded,
+              { employeeCountCategory: { [Op.ne]: CompanySizeEnum.SMALL } },
               literal(`NOT ${activeReportExists('EQUALITY')}`),
             ],
           },
@@ -105,4 +101,35 @@ export function buildCompanyStatusWhere(
   if (!statuses.length) return {}
   const conditions = statuses.map(statusCondition)
   return conditions.length === 1 ? conditions[0] : { [Op.or]: conditions }
+}
+
+export enum CompanyExpiryFilterEnum {
+  DAYS_30 = '30d',
+  MONTHS_3 = '3m',
+  SOON = 'soon',
+}
+
+function maxExpiryInterval(values: CompanyExpiryFilterEnum[]): string {
+  if (values.includes(CompanyExpiryFilterEnum.SOON)) return "INTERVAL '6 months'"
+  if (values.includes(CompanyExpiryFilterEnum.MONTHS_3)) return "INTERVAL '3 months'"
+  return "INTERVAL '30 days'"
+}
+
+export function buildCompanyExpiryWhere(
+  values: CompanyExpiryFilterEnum[],
+): WhereOptions {
+  if (!values.length) return {}
+  const interval = maxExpiryInterval(values)
+  return {
+    [Op.and]: [
+      literal(`EXISTS (
+        SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
+        JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
+        WHERE cr.company_id = "${CompanyModel.name}"."id"
+        AND r.status = 'APPROVED'
+        AND r.valid_until > NOW()
+        AND r.valid_until <= NOW() + ${interval}
+      )`),
+    ],
+  }
 }
