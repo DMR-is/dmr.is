@@ -226,7 +226,9 @@ export const ReportsContainer = () => {
                   reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
                 })
               }
-              onHasImprovementPlanChange={(v) => setFilter({ hasImprovementPlan: v })}
+              onHasImprovementPlanChange={(v) =>
+                setFilter({ hasImprovementPlan: v })
+              }
               onReset={resetFilter}
             />
             <Stack space={2}>

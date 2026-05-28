@@ -18,6 +18,9 @@ import * as styles from './ReportFilter.css'
 
 export type FilterOption = { value: string; label: string }
 
+// UI-only virtual filter value — never sent to the API
+const IMPROVEMENT_PLAN_VALUE = 'IMPROVEMENT_PLAN'
+
 type Props = {
   q: string | null
   type: string[] | null
@@ -111,8 +114,8 @@ export const ReportFilter = ({
           labelClear={sharedText.filter.labelClear}
           onChange={({ categoryId, selected }) => {
             if (categoryId === 'type') {
-              const hasImprovement = selected.includes('IMPROVEMENT_PLAN')
-              const realTypes = selected.filter((v) => v !== 'IMPROVEMENT_PLAN')
+              const hasImprovement = selected.includes(IMPROVEMENT_PLAN_VALUE)
+              const realTypes = selected.filter((v) => v !== IMPROVEMENT_PLAN_VALUE)
               onTypeChange(realTypes.length ? realTypes : null)
               onHasImprovementPlanChange(hasImprovement ? true : null)
             }
@@ -135,12 +138,12 @@ export const ReportFilter = ({
               label: overviewText.filter.categoryLabel,
               selected: [
                 ...(type ?? []),
-                ...(hasImprovementPlan ? ['IMPROVEMENT_PLAN'] : []),
+                ...(hasImprovementPlan ? [IMPROVEMENT_PLAN_VALUE] : []),
               ],
               filters: [
                 { value: 'EQUALITY', label: 'Jafnréttisáætlun' },
                 { value: 'SALARY', label: 'Skýrslugjöf' },
-                { value: 'IMPROVEMENT_PLAN', label: 'Úrbótaáætlun' },
+                { value: IMPROVEMENT_PLAN_VALUE, label: 'Úrbótaáætlun' },
               ],
             },
             ...extraCategories,
