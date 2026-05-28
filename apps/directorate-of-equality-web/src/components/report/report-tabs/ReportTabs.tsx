@@ -96,6 +96,9 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
               <SalaryReportTab
                 data={salaryStats}
                 outliers={outliersData?.outliers ?? []}
+                outliersPostponed={
+                  report.status.match(/postponed/i) ? true : false
+                }
                 outliersPaging={outliersData?.paging}
                 outliersLoading={outliersLoading}
                 onOutliersPageChange={setOutliersPage}

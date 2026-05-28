@@ -1,0 +1,1500 @@
+{
+  "outliers": [
+    {
+      "employeeOrdinal": 1,
+      "adjustedBaseSalary": 2258000,
+      "predictedBaseSalary": 1341887,
+      "scoreBucketRangeFrom": 700,
+      "scoreBucketRangeTo": 800,
+      "direction": "ABOVE",
+      "differencePercent": 68.27045835899254,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 2,
+      "adjustedBaseSalary": 1279000,
+      "predictedBaseSalary": 1071585,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 19.35587156324083,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 3,
+      "adjustedBaseSalary": 1247143,
+      "predictedBaseSalary": 1075876,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 15.918846994711094,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 5,
+      "adjustedBaseSalary": 743000,
+      "predictedBaseSalary": 1045842,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -28.956782421392337,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 6,
+      "adjustedBaseSalary": 808750,
+      "predictedBaseSalary": 899965,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -10.135392540990866,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 7,
+      "adjustedBaseSalary": 534000,
+      "predictedBaseSalary": 728345,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -26.68306099558534,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 8,
+      "adjustedBaseSalary": 663000,
+      "predictedBaseSalary": 483786,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 37.0441598151022,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 9,
+      "adjustedBaseSalary": 701000,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -16.108924372770925,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 10,
+      "adjustedBaseSalary": 754000,
+      "predictedBaseSalary": 814155,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -7.388621170617632,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 11,
+      "adjustedBaseSalary": 808000,
+      "predictedBaseSalary": 827026,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -2.300572475048836,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 12,
+      "adjustedBaseSalary": 515000,
+      "predictedBaseSalary": 762669,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -32.47395746976313,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 13,
+      "adjustedBaseSalary": 703000,
+      "predictedBaseSalary": 822736,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -14.553375125160747,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 14,
+      "adjustedBaseSalary": 747000,
+      "predictedBaseSalary": 1045842,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -28.57431557036349,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 15,
+      "adjustedBaseSalary": 693750,
+      "predictedBaseSalary": 745507,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -6.9424837307989655,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 16,
+      "adjustedBaseSalary": 940000,
+      "predictedBaseSalary": 912837,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 2.9757235343044837,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 17,
+      "adjustedBaseSalary": 570000,
+      "predictedBaseSalary": 887093,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -35.745214382456766,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 19,
+      "adjustedBaseSalary": 617000,
+      "predictedBaseSalary": 908546,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -32.08929437728445,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 20,
+      "adjustedBaseSalary": 615000,
+      "predictedBaseSalary": 728345,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -15.561952270196599,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 21,
+      "adjustedBaseSalary": 619000,
+      "predictedBaseSalary": 891384,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -30.557422733371258,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 22,
+      "adjustedBaseSalary": 1186667,
+      "predictedBaseSalary": 887093,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 33.770196958160184,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 23,
+      "adjustedBaseSalary": 786250,
+      "predictedBaseSalary": 496657,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 58.30838961159655,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 24,
+      "adjustedBaseSalary": 860000,
+      "predictedBaseSalary": 1093038,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -21.320200464214658,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 25,
+      "adjustedBaseSalary": 521000,
+      "predictedBaseSalary": 741216,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -29.7101142671975,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 26,
+      "adjustedBaseSalary": 1195000,
+      "predictedBaseSalary": 1084457,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 10.193411892732986,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 27,
+      "adjustedBaseSalary": 784000,
+      "predictedBaseSalary": 839898,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -6.655317027833525,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 28,
+      "adjustedBaseSalary": 1185000,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 41.81301657384658,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 29,
+      "adjustedBaseSalary": 798000,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -4.500601497105845,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 30,
+      "adjustedBaseSalary": 1169000,
+      "predictedBaseSalary": 1054423,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 10.866291897684446,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 31,
+      "adjustedBaseSalary": 627000,
+      "predictedBaseSalary": 530981,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 18.083263890739588,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 32,
+      "adjustedBaseSalary": 810000,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -3.0645203166111954,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 33,
+      "adjustedBaseSalary": 738000,
+      "predictedBaseSalary": 908546,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -18.77131158903716,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 34,
+      "adjustedBaseSalary": 888750,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 6.359762430384938,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 35,
+      "adjustedBaseSalary": 802000,
+      "predictedBaseSalary": 835607,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -4.021907770274295,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 37,
+      "adjustedBaseSalary": 1011250,
+      "predictedBaseSalary": 809864,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 24.866597006359676,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 38,
+      "adjustedBaseSalary": 726250,
+      "predictedBaseSalary": 509529,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 42.53367427599786,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 39,
+      "adjustedBaseSalary": 877000,
+      "predictedBaseSalary": 839898,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 4.417457865548467,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 40,
+      "adjustedBaseSalary": 1199000,
+      "predictedBaseSalary": 1080166,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 11.001422411915538,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 41,
+      "adjustedBaseSalary": 944000,
+      "predictedBaseSalary": 844188,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 11.823383139304692,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 42,
+      "adjustedBaseSalary": 723000,
+      "predictedBaseSalary": 891384,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -18.890172271772894,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 43,
+      "adjustedBaseSalary": 814000,
+      "predictedBaseSalary": 1063004,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -23.424581022240748,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 44,
+      "adjustedBaseSalary": 947000,
+      "predictedBaseSalary": 1153105,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -17.873913052477352,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 45,
+      "adjustedBaseSalary": 994000,
+      "predictedBaseSalary": 741216,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 34.103927866421664,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 47,
+      "adjustedBaseSalary": 599000,
+      "predictedBaseSalary": 479495,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 24.92305536767425,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 48,
+      "adjustedBaseSalary": 803000,
+      "predictedBaseSalary": 1032971,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -22.263045348865028,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 49,
+      "adjustedBaseSalary": 657000,
+      "predictedBaseSalary": 929999,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -29.354728026836067,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 51,
+      "adjustedBaseSalary": 721250,
+      "predictedBaseSalary": 706892,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 2.031129774784145,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 52,
+      "adjustedBaseSalary": 920000,
+      "predictedBaseSalary": 1127362,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -18.393554498708546,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 53,
+      "adjustedBaseSalary": 704000,
+      "predictedBaseSalary": 818445,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -13.983258280576885,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 54,
+      "adjustedBaseSalary": 934000,
+      "predictedBaseSalary": 1110200,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -15.871006460761969,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 55,
+      "adjustedBaseSalary": 1045000,
+      "predictedBaseSalary": 1105909,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -5.507629252109751,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 56,
+      "adjustedBaseSalary": 990000,
+      "predictedBaseSalary": 814155,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 21.598494749454304,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 58,
+      "adjustedBaseSalary": 710000,
+      "predictedBaseSalary": 895674,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -20.73012913754443,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 59,
+      "adjustedBaseSalary": 537000,
+      "predictedBaseSalary": 732635,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -26.70294394219625,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 60,
+      "adjustedBaseSalary": 942000,
+      "predictedBaseSalary": 831317,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 13.314195588950001,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 61,
+      "adjustedBaseSalary": 635000,
+      "predictedBaseSalary": 496657,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 27.85478843035143,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 62,
+      "adjustedBaseSalary": 662500,
+      "predictedBaseSalary": 762669,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -13.133974414986552,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 63,
+      "adjustedBaseSalary": 665000,
+      "predictedBaseSalary": 492367,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 35.0619415117044,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 64,
+      "adjustedBaseSalary": 490000,
+      "predictedBaseSalary": 736926,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -33.50754023853057,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 65,
+      "adjustedBaseSalary": 1096000,
+      "predictedBaseSalary": 758378,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 44.51892108084868,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 66,
+      "adjustedBaseSalary": 1297143,
+      "predictedBaseSalary": 822736,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 57.662132465665614,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 67,
+      "adjustedBaseSalary": 676000,
+      "predictedBaseSalary": 895674,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -24.52615112250709,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 68,
+      "adjustedBaseSalary": 681000,
+      "predictedBaseSalary": 887093,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -23.232440341145722,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 69,
+      "adjustedBaseSalary": 666250,
+      "predictedBaseSalary": 496657,
+      "scoreBucketRangeFrom": 300,
+      "scoreBucketRangeTo": 400,
+      "direction": "ABOVE",
+      "differencePercent": 34.14685479011282,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 70,
+      "adjustedBaseSalary": 2264000,
+      "predictedBaseSalary": 1333306,
+      "scoreBucketRangeFrom": 700,
+      "scoreBucketRangeTo": 800,
+      "direction": "ABOVE",
+      "differencePercent": 69.80343813126154,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 71,
+      "adjustedBaseSalary": 1100000,
+      "predictedBaseSalary": 818445,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 34.40115893659862,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 72,
+      "adjustedBaseSalary": 621250,
+      "predictedBaseSalary": 728345,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -14.703842029040059,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 74,
+      "adjustedBaseSalary": 748000,
+      "predictedBaseSalary": 827026,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -9.555480459574913,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 75,
+      "adjustedBaseSalary": 1036000,
+      "predictedBaseSalary": 749797,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 38.17069682498298,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 76,
+      "adjustedBaseSalary": 922000,
+      "predictedBaseSalary": 814155,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 13.246274908077643,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 77,
+      "adjustedBaseSalary": 1324286,
+      "predictedBaseSalary": 878512,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 50.74182806276454,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 78,
+      "adjustedBaseSalary": 505000,
+      "predictedBaseSalary": 719764,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -29.838077470654774,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 79,
+      "adjustedBaseSalary": 526000,
+      "predictedBaseSalary": 745507,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -29.44395883589226,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 80,
+      "adjustedBaseSalary": 1235000,
+      "predictedBaseSalary": 1075876,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 14.790198427179533,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 81,
+      "adjustedBaseSalary": 1176000,
+      "predictedBaseSalary": 728345,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 61.46202297601431,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 82,
+      "adjustedBaseSalary": 879000,
+      "predictedBaseSalary": 818445,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 7.3987442775183485,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 83,
+      "adjustedBaseSalary": 778750,
+      "predictedBaseSalary": 895674,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -13.05434938853905,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 84,
+      "adjustedBaseSalary": 905000,
+      "predictedBaseSalary": 925708,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -2.2369941405270386,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 85,
+      "adjustedBaseSalary": 733000,
+      "predictedBaseSalary": 1075876,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -31.86946117641895,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 86,
+      "adjustedBaseSalary": 673000,
+      "predictedBaseSalary": 887093,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -24.134261893672644,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 87,
+      "adjustedBaseSalary": 951000,
+      "predictedBaseSalary": 1093038,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -12.994779815660626,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 88,
+      "adjustedBaseSalary": 721250,
+      "predictedBaseSalary": 745507,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -3.2537173201279335,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 89,
+      "adjustedBaseSalary": 943333,
+      "predictedBaseSalary": 908546,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "ABOVE",
+      "differencePercent": 3.828901627382495,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 90,
+      "adjustedBaseSalary": 1085714,
+      "predictedBaseSalary": 839898,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "ABOVE",
+      "differencePercent": 29.267418110143073,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 91,
+      "adjustedBaseSalary": 605000,
+      "predictedBaseSalary": 741216,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -18.377387968626653,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 92,
+      "adjustedBaseSalary": 794000,
+      "predictedBaseSalary": 839898,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -5.464696071555892,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 94,
+      "adjustedBaseSalary": 1045000,
+      "predictedBaseSalary": 1088747,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "BELOW",
+      "differencePercent": -4.018136534270483,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 95,
+      "adjustedBaseSalary": 1411429,
+      "predictedBaseSalary": 1153105,
+      "scoreBucketRangeFrom": 600,
+      "scoreBucketRangeTo": 700,
+      "direction": "ABOVE",
+      "differencePercent": 22.402434611785164,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 96,
+      "adjustedBaseSalary": 563000,
+      "predictedBaseSalary": 895674,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -37.14234183723594,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 97,
+      "adjustedBaseSalary": 606000,
+      "predictedBaseSalary": 891384,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -32.01582904107106,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 99,
+      "adjustedBaseSalary": 783000,
+      "predictedBaseSalary": 801283,
+      "scoreBucketRangeFrom": 400,
+      "scoreBucketRangeTo": 500,
+      "direction": "BELOW",
+      "differencePercent": -2.2817510282011675,
+      "allowedDifferencePercent": 1.95
+    },
+    {
+      "employeeOrdinal": 100,
+      "adjustedBaseSalary": 817000,
+      "predictedBaseSalary": 1037261,
+      "scoreBucketRangeFrom": 500,
+      "scoreBucketRangeTo": 600,
+      "direction": "BELOW",
+      "differencePercent": -21.234886882686272,
+      "allowedDifferencePercent": 1.95
+    }
+  ],
+  "baseSalaryByGenderAndScoreAll": {
+    "dataPoints": [
+      {
+        "score": 732,
+        "adjustedSalary": 2258000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 606,
+        "adjustedSalary": 1279000,
+        "gender": "MALE"
+      },
+      {
+        "score": 608,
+        "adjustedSalary": 1247143,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 512,
+        "adjustedSalary": 858000,
+        "gender": "NEUTRAL"
+      },
+      {
+        "score": 594,
+        "adjustedSalary": 743000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 526,
+        "adjustedSalary": 808750,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "adjustedSalary": 534000,
+        "gender": "MALE"
+      },
+      {
+        "score": 332,
+        "adjustedSalary": 663000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 701000,
+        "gender": "MALE"
+      },
+      {
+        "score": 486,
+        "adjustedSalary": 754000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 492,
+        "adjustedSalary": 808000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 462,
+        "adjustedSalary": 515000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 490,
+        "adjustedSalary": 703000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 594,
+        "adjustedSalary": 747000,
+        "gender": "MALE"
+      },
+      {
+        "score": 454,
+        "adjustedSalary": 693750,
+        "gender": "MALE"
+      },
+      {
+        "score": 532,
+        "adjustedSalary": 940000,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "adjustedSalary": 570000,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "adjustedSalary": 817000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 530,
+        "adjustedSalary": 617000,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "adjustedSalary": 615000,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "adjustedSalary": 619000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 520,
+        "adjustedSalary": 1186667,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 338,
+        "adjustedSalary": 786250,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 616,
+        "adjustedSalary": 860000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 452,
+        "adjustedSalary": 521000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 612,
+        "adjustedSalary": 1195000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 498,
+        "adjustedSalary": 784000,
+        "gender": "MALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 1185000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 798000,
+        "gender": "MALE"
+      },
+      {
+        "score": 598,
+        "adjustedSalary": 1169000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 354,
+        "adjustedSalary": 627000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 810000,
+        "gender": "MALE"
+      },
+      {
+        "score": 530,
+        "adjustedSalary": 738000,
+        "gender": "MALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 888750,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "adjustedSalary": 802000,
+        "gender": "MALE"
+      },
+      {
+        "score": 604,
+        "adjustedSalary": 1062000,
+        "gender": "MALE"
+      },
+      {
+        "score": 484,
+        "adjustedSalary": 1011250,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 344,
+        "adjustedSalary": 726250,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 498,
+        "adjustedSalary": 877000,
+        "gender": "MALE"
+      },
+      {
+        "score": 610,
+        "adjustedSalary": 1199000,
+        "gender": "MALE"
+      },
+      {
+        "score": 500,
+        "adjustedSalary": 944000,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "adjustedSalary": 723000,
+        "gender": "MALE"
+      },
+      {
+        "score": 602,
+        "adjustedSalary": 814000,
+        "gender": "MALE"
+      },
+      {
+        "score": 644,
+        "adjustedSalary": 947000,
+        "gender": "MALE"
+      },
+      {
+        "score": 452,
+        "adjustedSalary": 994000,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "adjustedSalary": 819000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 330,
+        "adjustedSalary": 599000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 588,
+        "adjustedSalary": 803000,
+        "gender": "MALE"
+      },
+      {
+        "score": 540,
+        "adjustedSalary": 657000,
+        "gender": "MALE"
+      },
+      {
+        "score": 492,
+        "adjustedSalary": 837000,
+        "gender": "MALE"
+      },
+      {
+        "score": 436,
+        "adjustedSalary": 721250,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 632,
+        "adjustedSalary": 920000,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "adjustedSalary": 704000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 624,
+        "adjustedSalary": 934000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 622,
+        "adjustedSalary": 1045000,
+        "gender": "MALE"
+      },
+      {
+        "score": 486,
+        "adjustedSalary": 990000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 534,
+        "adjustedSalary": 921667,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 524,
+        "adjustedSalary": 710000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 448,
+        "adjustedSalary": 537000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 494,
+        "adjustedSalary": 942000,
+        "gender": "MALE"
+      },
+      {
+        "score": 338,
+        "adjustedSalary": 635000,
+        "gender": "MALE"
+      },
+      {
+        "score": 462,
+        "adjustedSalary": 662500,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 336,
+        "adjustedSalary": 665000,
+        "gender": "MALE"
+      },
+      {
+        "score": 450,
+        "adjustedSalary": 490000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 460,
+        "adjustedSalary": 1096000,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "adjustedSalary": 1297143,
+        "gender": "MALE"
+      },
+      {
+        "score": 524,
+        "adjustedSalary": 676000,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "adjustedSalary": 681000,
+        "gender": "MALE"
+      },
+      {
+        "score": 338,
+        "adjustedSalary": 666250,
+        "gender": "MALE"
+      },
+      {
+        "score": 728,
+        "adjustedSalary": 2264000,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "adjustedSalary": 1100000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 446,
+        "adjustedSalary": 621250,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 516,
+        "adjustedSalary": 872500,
+        "gender": "MALE"
+      },
+      {
+        "score": 492,
+        "adjustedSalary": 748000,
+        "gender": "MALE"
+      },
+      {
+        "score": 456,
+        "adjustedSalary": 1036000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 486,
+        "adjustedSalary": 922000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 516,
+        "adjustedSalary": 1324286,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 442,
+        "adjustedSalary": 505000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 454,
+        "adjustedSalary": 526000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 608,
+        "adjustedSalary": 1235000,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "adjustedSalary": 1176000,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "adjustedSalary": 879000,
+        "gender": "MALE"
+      },
+      {
+        "score": 524,
+        "adjustedSalary": 778750,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 538,
+        "adjustedSalary": 905000,
+        "gender": "MALE"
+      },
+      {
+        "score": 608,
+        "adjustedSalary": 733000,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "adjustedSalary": 673000,
+        "gender": "MALE"
+      },
+      {
+        "score": 616,
+        "adjustedSalary": 951000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 454,
+        "adjustedSalary": 721250,
+        "gender": "MALE"
+      },
+      {
+        "score": 530,
+        "adjustedSalary": 943333,
+        "gender": "MALE"
+      },
+      {
+        "score": 498,
+        "adjustedSalary": 1085714,
+        "gender": "MALE"
+      },
+      {
+        "score": 452,
+        "adjustedSalary": 605000,
+        "gender": "MALE"
+      },
+      {
+        "score": 498,
+        "adjustedSalary": 794000,
+        "gender": "MALE"
+      },
+      {
+        "score": 630,
+        "adjustedSalary": 1130000,
+        "gender": "MALE"
+      },
+      {
+        "score": 614,
+        "adjustedSalary": 1045000,
+        "gender": "MALE"
+      },
+      {
+        "score": 644,
+        "adjustedSalary": 1411429,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 524,
+        "adjustedSalary": 563000,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "adjustedSalary": 606000,
+        "gender": "MALE"
+      },
+      {
+        "score": 494,
+        "adjustedSalary": 825000,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 480,
+        "adjustedSalary": 783000,
+        "gender": "MALE"
+      },
+      {
+        "score": 590,
+        "adjustedSalary": 817000,
+        "gender": "MALE"
+      }
+    ],
+    "regressionLine": {
+      "slope": 2145.25,
+      "intercept": -228438.74
+    },
+    "scoreBuckets": [
+      {
+        "rangeFrom": 300,
+        "rangeTo": 400,
+        "maleAverageSalary": 655417,
+        "femaleAverageSalary": 680300,
+        "overallAverageSalary": 670969,
+        "maleMedianSalary": 665000,
+        "femaleMedianSalary": 663000,
+        "overallMedianSalary": 664000,
+        "wageGapPercent": -3.8,
+        "maleCount": 3,
+        "femaleCount": 5
+      },
+      {
+        "rangeFrom": 400,
+        "rangeTo": 500,
+        "maleAverageSalary": 844221,
+        "femaleAverageSalary": 767913,
+        "overallAverageSalary": 805219,
+        "maleMedianSalary": 800000,
+        "femaleMedianSalary": 754000,
+        "overallMedianSalary": 798000,
+        "wageGapPercent": 9,
+        "maleCount": 22,
+        "femaleCount": 23
+      },
+      {
+        "rangeFrom": 500,
+        "rangeTo": 600,
+        "maleAverageSalary": 751820,
+        "femaleAverageSalary": 931546,
+        "overallAverageSalary": 806963,
+        "maleMedianSalary": 738000,
+        "femaleMedianSalary": 850208,
+        "overallMedianSalary": 762875,
+        "wageGapPercent": -23.9,
+        "maleCount": 19,
+        "femaleCount": 8
+      },
+      {
+        "rangeFrom": 600,
+        "rangeTo": 700,
+        "maleAverageSalary": 1037182,
+        "femaleAverageSalary": 1099762,
+        "overallAverageSalary": 1059269,
+        "maleMedianSalary": 1045000,
+        "femaleMedianSalary": 1073000,
+        "overallMedianSalary": 1045000,
+        "wageGapPercent": -6,
+        "maleCount": 11,
+        "femaleCount": 6
+      },
+      {
+        "rangeFrom": 700,
+        "rangeTo": 800,
+        "maleAverageSalary": 2264000,
+        "femaleAverageSalary": 2258000,
+        "overallAverageSalary": 2261000,
+        "maleMedianSalary": 2264000,
+        "femaleMedianSalary": 2258000,
+        "overallMedianSalary": 2261000,
+        "wageGapPercent": 0.3,
+        "maleCount": 1,
+        "femaleCount": 1
+      }
+    ],
+    "totals": {
+      "maleAverageSalary": 866012,
+      "femaleAverageSalary": 869127,
+      "overallAverageSalary": 867271,
+      "maleMedianSalary": 805875,
+      "femaleMedianSalary": 808000,
+      "overallMedianSalary": 808375,
+      "wageGapPercent": -0.4,
+      "maleCount": 56,
+      "femaleCount": 43
+    }
+  }
+}
