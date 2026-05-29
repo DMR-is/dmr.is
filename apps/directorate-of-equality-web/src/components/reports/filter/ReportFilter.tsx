@@ -59,7 +59,7 @@ export const ReportFilter = ({
       ? [
           {
             id: 'status',
-            label: overviewText.filter.statusLabel,
+            label: sharedText.statusLabel,
             selected: status ?? [],
             filters: statusOptions,
           },

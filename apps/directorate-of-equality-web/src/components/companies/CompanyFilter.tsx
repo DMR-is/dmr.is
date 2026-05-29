@@ -5,7 +5,7 @@ import { FilterInput } from '@dmr.is/ui/components/island-is/FilterInput'
 import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiChoice'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { sharedText } from '../../lib/text'
+import { companiesText, sharedText } from '../../lib/text'
 import {
   DAILY_FINES_FILTER_OPTIONS,
   EMPLOYEE_RANGES,
@@ -25,6 +25,7 @@ type Category = {
   label: string
   selected: string[]
   filters: { value: string; label: string }[]
+  singleOption?: boolean
 }
 
 type Props = {
@@ -45,25 +46,26 @@ export const CompanyFilter = ({
   const categories: Category[] = [
     {
       id: 'employees',
-      label: 'Fjöldi starfsmanna',
+      label: companiesText.avgEmployeeCount,
       selected: filters.employees,
       filters: EMPLOYEE_RANGES,
+      singleOption: true,
     },
     {
       id: 'status',
-      label: 'Staða',
+      label: sharedText.statusLabel,
       selected: filters.status,
       filters: STATUS_FILTER_OPTIONS,
     },
     {
       id: 'expires',
-      label: 'Gildistími',
+      label: companiesText.validPeriod,
       selected: filters.expires,
       filters: EXPIRES_FILTER_OPTIONS,
     },
     {
       id: 'dailyFines',
-      label: 'Dagsektir',
+      label: companiesText.dailyFines,
       selected: filters.dailyFines,
       filters: DAILY_FINES_FILTER_OPTIONS,
     },
@@ -72,7 +74,7 @@ export const CompanyFilter = ({
   return (
     <>
       <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-        Leit og síun
+        {companiesText.filterHeading}
       </Text>
       <Filter
         labelClearAll={sharedText.filter.labelClearAll}
@@ -86,7 +88,7 @@ export const CompanyFilter = ({
         filterInput={
           <FilterInput
             name="query"
-            placeholder="Leita að fyrirtæki..."
+            placeholder={companiesText.filterPlaceholder}
             value={query}
             onChange={onQueryChange}
             backgroundColor="white"

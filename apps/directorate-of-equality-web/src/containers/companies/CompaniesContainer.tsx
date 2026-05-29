@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -12,34 +13,38 @@ import {
   CompanyFilter,
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
-import {
-  matchesStatusFilter,
-  normalizeId,
-} from '../../components/companies/companyStatus'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
-import { ReportStatusEnum } from '../../gen/fetch'
+import {
+  CompanyExpiryFilterEnum,
+  CompanySizeEnum,
+  CompanyStatusFilterEnum,
+  ReportStatusEnum,
+} from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
-import { useReports } from '../../hooks/useReports'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 
 export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [filters, setFilters] = useState<CompanyFilters>({
-    employees: [],
-    status: [],
-    expires: [],
-    dailyFines: [],
-  })
 
   const { data, filter, setFilter, resetFilter } = useCompanies({
     pageSize: 10,
-    sortBy: 'name',
-    direction: 'asc',
   })
 
-  const { data: reportsData } = useReports({
-    status: [ReportStatusEnum.APPROVED],
+  const [filters, setFilters] = useState<CompanyFilters>({
+    employees: filter.employeeCountCategory ? [filter.employeeCountCategory] : [],
+    status: (filter.companyStatus ?? []) as CompanyStatusFilterEnum[],
+    expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
+    dailyFines: [],
   })
+
+  const trpc = useTRPC()
+  const { data: reportsData } = useQuery(
+    trpc.reports.list.queryOptions({
+      status: [ReportStatusEnum.APPROVED],
+      pageSize: 500,
+    }),
+  )
   const approvedReports = reportsData?.reports ?? []
 
   const sorting = filter.sortBy
@@ -61,7 +66,20 @@ export const CompaniesContainer = () => {
 
   const handleFiltersChange = (key: keyof CompanyFilters, val: string[]) => {
     setFilters((prev) => ({ ...prev, [key]: val }))
-    setFilter({ page: 1 })
+    if (key === 'status') {
+      setFilter({ companyStatus: val as CompanyStatusFilterEnum[], page: 1 })
+    } else if (key === 'employees') {
+      // API supports a single employeeCountCategory; pass first selected value.
+      // Multi-select >1 categories would require an API change.
+      setFilter({
+        employeeCountCategory: (val[0] ?? null) as CompanySizeEnum | null,
+        page: 1,
+      })
+    } else if (key === 'expires') {
+      setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
+    } else {
+      setFilter({ page: 1 })
+    }
   }
 
   const handleReset = () => {
@@ -71,57 +89,18 @@ export const CompaniesContainer = () => {
 
   const rows = useMemo(() => {
     const companies = data?.companies ?? []
-    const now = new Date()
-    const sixMonthsFromNow = new Date(now)
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
 
-    return companies.filter((company) => {
-      if (
-        filters.employees.length &&
-        !filters.employees.includes(company.employeeCountCategory)
-      )
-        return false
-
-      if (
-        filters.status.length &&
-        !filters.status.some((f) =>
-          matchesStatusFilter(company, approvedReports, f),
-        )
-      )
-        return false
-
-      if (filters.expires.length) {
-        const companyId = normalizeId(company.nationalId)
-        const companyReports = approvedReports.filter(
-          (r) => normalizeId(r.companyNationalId) === companyId,
-        )
-        const thirtyDaysFromNow = new Date(now)
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-        const threeMonthsFromNow = new Date(now)
-        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3)
-        const matches = filters.expires.some((f) => {
-          const cutoff =
-            f === '30d'
-              ? thirtyDaysFromNow
-              : f === '3m'
-                ? threeMonthsFromNow
-                : sixMonthsFromNow
-          return companyReports.some(
-            (r) =>
-              r.validUntil &&
-              new Date(r.validUntil) > now &&
-              new Date(r.validUntil) <= cutoff,
-          )
-        })
-        if (!matches) return false
-      }
+    return companies.filter(() => {
+      // employees: filtered server-side via useCompanies (employeeCountCategory URL param)
+      // status:    filtered server-side via useCompanies (companyStatus URL param)
+      // expires:   filtered server-side via useCompanies (expiresWithin URL param)
 
       // TODO: daily fines requires finesStartedAt on the list endpoint
       if (filters.dailyFines.length) return false
 
       return true
     })
-  }, [data, approvedReports, filters])
+  }, [data, filters.dailyFines])
 
   return (
     <GridContainer>

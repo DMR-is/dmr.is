@@ -242,6 +242,30 @@
             "schema": { "$ref": "#/components/schemas/CompanySizeEnum" }
           },
           {
+            "name": "companyStatus",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies that match at least one of the provided status values. Omit for no constraint.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyStatusFilterEnum"
+              }
+            }
+          },
+          {
+            "name": "expiresWithin",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyExpiryFilterEnum"
+              }
+            }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -2629,6 +2653,19 @@
       "CompanySizeEnum": {
         "type": "string",
         "enum": ["SMALL", "MEDIUM", "LARGE"]
+      },
+      "CompanyStatusFilterEnum": {
+        "type": "string",
+        "enum": [
+          "missing-equality",
+          "has-equality",
+          "missing-salary",
+          "compliant"
+        ]
+      },
+      "CompanyExpiryFilterEnum": {
+        "type": "string",
+        "enum": ["30d", "3m", "soon"]
       },
       "CompanySortByEnum": {
         "type": "string",

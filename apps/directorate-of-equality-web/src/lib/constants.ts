@@ -44,7 +44,7 @@ export enum ReportStatusTranslatedEnum {
   SUPERSEDED = 'Úrelt',
   WITHDRAWN = 'Dregin til baka',
 }
-import { overviewText, reportText } from './text'
+import { overviewText, reportText, sharedText } from './text'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -83,7 +83,7 @@ export const COLUMNS: ColumnDef<Case>[] = [
 
 export const COLUMN_STATUS: ColumnDef<Case> = {
   accessorKey: 'status',
-  header: overviewText.filter.statusLabel,
+  header: sharedText.statusLabel,
   enableSorting: true,
 }
 

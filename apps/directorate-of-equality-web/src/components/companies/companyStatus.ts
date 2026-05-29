@@ -101,33 +101,14 @@ export function deriveStatus(
     company,
     approvedReports,
   )
+  const isSmall = company.employeeCountCategory === CompanySizeEnum.SMALL
 
-  if (needsSalary && hasSalary) return 'compliant'
-  if (needsSalary && !hasSalary) return 'missing-salary'
-  if (hasEquality) return 'has-equality'
-  return 'missing-equality'
-}
-
-export function matchesStatusFilter(
-  company: CompanyDto,
-  approvedReports: ReportListItemDto[],
-  filter: string,
-): boolean {
-  const { hasEquality, hasSalary, needsSalary } = getActiveReportTypes(
-    company,
-    approvedReports,
-  )
-
-  switch (filter) {
-    case 'compliant':
-      return needsSalary && hasSalary
-    case 'missing-salary':
-      return needsSalary && !hasSalary
-    case 'has-equality':
-      return !needsSalary && hasEquality
-    case 'missing-equality':
-      return !needsSalary && !hasEquality
-    default:
-      return false
-  }
+  if (needsSalary && hasSalary) return 'compliant'          // LARGE: both reports filed
+  if (needsSalary && hasEquality) return 'missing-salary'  // LARGE: equality done, salary missing
+  if (needsSalary) return 'missing-equality'               // LARGE: equality is the prerequisite
+  // No salary requirement below this line
+  if (!isSmall && hasEquality) return 'compliant'          // MEDIUM with equality: obligation met
+  if (!isSmall) return 'missing-equality'                  // MEDIUM without equality
+  if (hasEquality) return 'has-equality'                   // SMALL voluntary submission
+  return 'compliant'                                       // SMALL with nothing: no obligation
 }
