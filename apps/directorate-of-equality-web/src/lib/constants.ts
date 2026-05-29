@@ -11,6 +11,7 @@ export const NAV_PATHS = {
   },
   skyrslur: { title: 'Skýrslur', href: '/yfirlit?type=SALARY' },
   fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
+  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar' },
 }
 
 const IS_MONTHS = [

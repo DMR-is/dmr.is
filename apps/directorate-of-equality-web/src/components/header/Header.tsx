@@ -15,6 +15,7 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Hidden } from '@dmr.is/ui/components/island-is/Hidden'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { headerText } from '../../lib/text'
 import { ControlPanel } from './ControlPanel'
 import * as styles from './Header.css'
@@ -23,7 +24,13 @@ export const Header = () => {
   const pathName = usePathname()
   const { data: session, status } = useSession()
   const logOut = useLogOut()
-
+  const { isMobile } = useIsMobile()
+  const username = isMobile
+    ? session?.user?.name
+        ?.split(' ')
+        .map((n) => n.charAt(0))
+        .join('')
+    : session?.user?.name
   useEffect(() => {
     if (session?.invalid === true && status === 'authenticated') {
       forceLogin(pathName ?? '/innskraning')
@@ -49,10 +56,9 @@ export const Header = () => {
                   >
                     <Hidden above="md">
                       <img
-                        src={'/assets/jafnrettisstofa-logo.svg'}
+                        src={'/assets/jafnrettisstofa-small-logo.png'}
                         alt={headerText.logoAlt}
-                        height={20}
-                        style={{ maxHeight: '20px' }}
+                        style={{ maxHeight: '44px' }}
                       />
                     </Hidden>
                     <Hidden below="lg">
@@ -74,7 +80,7 @@ export const Header = () => {
                 >
                   {session?.user ? (
                     <DropdownMenu
-                      title={session.user.name ?? ''}
+                      title={username ?? headerText.userMenuLabel}
                       icon="chevronDown"
                       menuLabel={headerText.userMenuLabel}
                       items={[
