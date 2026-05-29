@@ -90,9 +90,6 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
     >
       <Stack space={3}>
         <Stack space={1}>
-          <Text variant="eyebrow">
-            {companiesText.createModal.kennitalaEyebrow}
-          </Text>
           <Inline space={2} alignY="center">
             <Box
               flexGrow={1}

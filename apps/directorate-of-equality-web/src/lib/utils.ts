@@ -1,3 +1,5 @@
+import { CompanySizeEnum } from '../gen/fetch'
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export const getBaseUrlFromServerSide = (includePrefix = false): string => {
   let url = ''
@@ -29,4 +31,16 @@ export const mapGender = (gender?: string) => {
     default:
       return 'Óþekkt'
   }
+}
+
+export const EMPLOYEE_RANGES = [
+  { value: CompanySizeEnum.SMALL, label: '0–24' },
+  { value: CompanySizeEnum.MEDIUM, label: '25–49' },
+  { value: CompanySizeEnum.LARGE, label: '50+' },
+]
+
+export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
+  [CompanySizeEnum.SMALL]: '0–24',
+  [CompanySizeEnum.MEDIUM]: '25–49',
+  [CompanySizeEnum.LARGE]: '50+',
 }

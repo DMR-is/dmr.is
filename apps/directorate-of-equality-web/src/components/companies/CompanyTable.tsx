@@ -12,10 +12,9 @@ import {
   type Paging,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
-import { formatNationalId } from '../../lib/utils'
+import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
-  COMPANY_SIZE_LABEL,
   deriveStatus,
   normalizeId,
   STATUS_LABEL,

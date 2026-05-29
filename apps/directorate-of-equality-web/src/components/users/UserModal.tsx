@@ -10,6 +10,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { ToggleSwitchButton } from '@dmr.is/ui/components/island-is/ToggleSwitchButton'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
 import { type UserDto } from '../../gen/fetch/types.gen'
@@ -166,11 +167,14 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
             <Text variant="eyebrow" marginBottom={1}>
               {u.statusEyebrow}
             </Text>
-            <Checkbox
-              name="isActive"
+
+            <ToggleSwitchButton
+              expander
               label={u.activeLabel}
               checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
+              onChange={() => setIsActive((prev) => !prev)}
+              onFocus={undefined}
+              onBlur={undefined}
             />
           </Box>
         )}

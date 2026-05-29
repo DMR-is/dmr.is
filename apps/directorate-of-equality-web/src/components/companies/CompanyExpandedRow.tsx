@@ -10,9 +10,8 @@ import {
   type CompanyDto,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
-import { formatNationalId } from '../../lib/utils'
+import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
-import { COMPANY_SIZE_LABEL } from './companyStatus'
 
 type Props = {
   company: CompanyDto
