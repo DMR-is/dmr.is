@@ -23,8 +23,8 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
   return (
     <Box
       background="white"
-      paddingX={[4, 8, 14]}
-      paddingY={[4, 6, 8]}
+      paddingX={[4, 4, 4, 8, 14]}
+      paddingY={[4, 4, 4, 8]}
       borderRadius="large"
     >
       <Stack space={[2]}>

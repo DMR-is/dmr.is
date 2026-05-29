@@ -17,17 +17,24 @@ type ReportContainerProps = {
 export function ReportContainer({ report }: ReportContainerProps) {
   return (
     <HydrateClient>
-      <Box paddingY={[4, 5, 6]} background="purple100">
+      <Box paddingY={[2, 2, 6]} background="purple100">
         <GridContainer className="print-hidden">
           <GridRow>
-            <GridColumn span={['12/12', '12/12', '9/12', '9/12']}>
+            <GridColumn
+              span={['12/12', '12/12', '12/12', '9/12', '9/12']}
+              order={[2, 2, 1]}
+            >
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða skýrslu</div>}
               >
                 <ReportFormContainer report={report} />
               </ErrorBoundary>
             </GridColumn>
-            <GridColumn span={['12/12', '12/12', '3/12', '3/12']}>
+            <GridColumn
+              span={['12/12', '12/12', '12/12', '3/12', '3/12']}
+              order={[1, 1, 2]}
+              className="report-sidebar-column"
+            >
               <ErrorBoundary
                 fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
               >
