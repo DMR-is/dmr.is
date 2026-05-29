@@ -95,10 +95,11 @@ function mapReportToCase(report: ReportListItemDto): Case {
     date: report.createdAt
       ? new Date(report.createdAt).toLocaleDateString('is-IS')
       : '',
-    type:
-      sharedText.typeLabels[
-        report.type as keyof typeof sharedText.typeLabels
-      ] ?? report.type,
+    type: report.includesImprovementPlan
+      ? 'Úrbótaáætlun'
+      : sharedText.typeLabels[
+          report.type as keyof typeof sharedText.typeLabels
+        ] ?? report.type,
     company: report.companyName ?? '',
     kennitala: formatNationalId(report.companyNationalId ?? ''),
     status:
@@ -212,6 +213,7 @@ export const ReportsContainer = () => {
               statusOptions={statusOptions}
               reviewerUserId={filter.reviewerUserId as string[] | null}
               reviewers={needsUsers ? reviewerOptions : undefined}
+              hasImprovementPlan={filter.hasImprovementPlan ?? null}
               onQChange={(q) => setFilter({ q })}
               onTypeChange={(type) =>
                 setFilter({ type: type as typeof filter.type })
@@ -221,9 +223,11 @@ export const ReportsContainer = () => {
               }
               onReviewerChange={(reviewerUserId) =>
                 setFilter({
-                  reviewerUserId:
-                    reviewerUserId as typeof filter.reviewerUserId,
+                  reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
                 })
+              }
+              onHasImprovementPlanChange={(v) =>
+                setFilter({ hasImprovementPlan: v })
               }
               onReset={resetFilter}
             />
