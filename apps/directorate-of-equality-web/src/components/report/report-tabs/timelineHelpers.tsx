@@ -50,9 +50,9 @@ export function timelineEntryText(
   companyName?: string | null,
 ): React.ReactNode {
   if (item.kind === ReportTimelineItemKindEnum.COMMENT) {
-    const comment = item.comment!
-    const user = usersById.get(comment.authorUserId ?? '')
-    const isCompany = comment.authorKind === ReportRoleEnum.COMPANY
+    const comment = item.comment
+    const user = usersById.get(comment?.authorUserId ?? '')
+    const isCompany = comment?.authorKind === ReportRoleEnum.COMPANY
     const authorName = isCompany
       ? (companyName ?? 'Fyrirtæki')
       : user

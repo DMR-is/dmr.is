@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { isClassStaticBlockDeclaration } from 'typescript'
 
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
