@@ -5,18 +5,26 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
 import { Paging } from '../../../gen/fetch'
+import { useIsTablet } from '../../../hooks/useIsTablet'
 import { type Case, DETAIL_FIELDS } from '../../../lib/constants'
 import * as styles from './TabContent.css'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
-const ExpandedRow = ({ row }: { row: Case }) => (
+const ExpandedRow = ({ row }: { row: Case }) => {
+  const { isTablet } = useIsTablet()
+
+  return (
   <Box background="blue100" padding={2}>
     <div className={styles.expandedRowGrid}>
       {DETAIL_FIELDS.map(({ label, key }, index) => (
         <Box
           key={key}
-          background={Math.floor(index / 2) % 2 === 0 ? 'white' : 'blue100'}
+          background={
+            (isTablet ? index % 2 : Math.floor(index / 2) % 2) === 0
+              ? 'white'
+              : 'blue100'
+          }
           paddingX={1}
           paddingY={1}
           className={styles.expandedRowItem}
@@ -33,7 +41,8 @@ const ExpandedRow = ({ row }: { row: Case }) => (
       ))}
     </div>
   </Box>
-)
+  )
+}
 
 export type TabContentProps = {
   data?: Case[]

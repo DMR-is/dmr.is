@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { isClassStaticBlockDeclaration } from 'typescript'
 
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
@@ -13,6 +14,8 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { useIsMobile } from '../../../hooks/useIsMobile'
+import { useIsTablet } from '../../../hooks/useIsTablet'
 import { overviewText, sharedText } from '../../../lib/text'
 import * as styles from './ReportFilter.css'
 
@@ -54,6 +57,8 @@ export const ReportFilter = ({
 }: Props) => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>()
   const [dateTo, setDateTo] = useState<Date | undefined>()
+  const { isMobile } = useIsMobile()
+  const { isTablet } = useIsTablet()
 
   const handleReset = () => {
     setDateFrom(undefined)
@@ -86,9 +91,11 @@ export const ReportFilter = ({
 
   return (
     <Box>
-      <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-        {overviewText.filter.heading}
-      </Text>
+      {!isMobile && (
+        <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
+          {overviewText.filter.heading}
+        </Text>
+      )}
       <Filter
         labelClearAll={sharedText.filter.labelClearAll}
         labelOpen={sharedText.filter.labelOpen}
@@ -97,7 +104,7 @@ export const ReportFilter = ({
         labelTitle={sharedText.filter.labelTitle}
         labelResult={sharedText.filter.labelResult}
         onFilterClear={handleReset}
-        variant="default"
+        variant={isTablet ? 'popover' : 'default'}
         filterInput={
           <Box marginTop={3}>
             <FilterInput
