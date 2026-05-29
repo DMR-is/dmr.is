@@ -68,12 +68,12 @@ const STATS_WINDOWS: {
   {
     id: 'currentYear',
     label: frontPageText.statsWindows.thisYear,
-    variant: 'mint',
+    variant: 'blue',
   },
   {
     id: 'allTime',
     label: frontPageText.statsWindows.allTime,
-    variant: 'purple',
+    variant: 'blue',
   },
 ]
 
@@ -91,7 +91,11 @@ const CHART_STATUSES = [
   ReportStatusEnum.SUPERSEDED,
 ] as const
 
-export const SectionContainer = () => {
+type Props = {
+  userId?: string
+}
+
+export const SectionContainer = ({ userId }: Props) => {
   const [selectedTab, setSelectedTab] = useState('almennt')
   const [statsWindow, setStatsWindow] = useState<StatisticsWindow>('last30Days')
 
@@ -123,8 +127,15 @@ export const SectionContainer = () => {
         <GridRow>
           <GridColumn span={['12/12', '7/12']}>
             <Stack space={3}>
-              {/* TODO NAVIGATE CORRECTLY AND PREFILTERED FOR MIN MAL */}
-              <Wrapper title="Yfirlit" link="/yfirlit" linkText="Opna ristjórn">
+              <Wrapper
+                title="Yfirlit"
+                link={
+                  selectedTab === 'min-mal'
+                    ? `/yfirlit?tab=i-vinnslu${userId ? `&reviewerUserId=${userId}` : ''}`
+                    : '/yfirlit'
+                }
+                linkText="Opna ristjórn"
+              >
                 <Tabs
                   label="Mál flokkar"
                   selected={selectedTab}
@@ -186,8 +197,8 @@ export const SectionContainer = () => {
                 {STATS_WINDOWS.map(({ id, label, variant }) => (
                   <Tag
                     key={id}
+                    active={statsWindow === id}
                     variant={variant}
-                    outlined={statsWindow !== id}
                     onClick={() => setStatsWindow(id)}
                   >
                     {label}

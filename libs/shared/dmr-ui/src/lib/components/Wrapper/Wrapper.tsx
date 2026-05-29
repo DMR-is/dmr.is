@@ -3,7 +3,6 @@ import { Box } from '../../island-is/lib/Box'
 import { Stack } from '../../island-is/lib/Stack'
 import { Text } from '../../island-is/lib/Text'
 
-
 type WrapperProps = {
   background?: 'white' | 'blue'
   children?: React.ReactNode
@@ -20,6 +19,7 @@ export const Wrapper = ({ children, title, link, linkText }: WrapperProps) => {
       borderColor="blue200"
       borderRadius="large"
       padding={4}
+      marginBottom={4}
     >
       <Stack space={3}>
         <Stack space={2}>

@@ -42,7 +42,11 @@ export const Header = () => {
                   justifyContent="flexStart"
                   alignY="center"
                 >
-                  <FocusableBox href="/" data-testid="link-back-home">
+                  <FocusableBox
+                    href="/"
+                    data-testid="link-back-home"
+                    marginRight={1}
+                  >
                     <Hidden above="md">
                       <img
                         src={'/assets/jafnrettisstofa-logo.svg'}

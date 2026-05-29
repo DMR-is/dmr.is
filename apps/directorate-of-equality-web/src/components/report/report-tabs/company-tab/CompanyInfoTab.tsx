@@ -9,7 +9,7 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { type CompanySizeEnum } from '../../../../gen/fetch'
 import { overviewText, reportText, sharedText } from '../../../../lib/text'
-import { formatNationalId } from '../../../../lib/utils'
+import { formatNationalId, mapGender } from '../../../../lib/utils'
 import { COMPANY_SIZE_LABEL } from '../../../companies/companyStatus'
 import { InfoItems } from './InfoItems'
 
@@ -112,7 +112,7 @@ export const CompanyInfoTab = ({
             items={[
               { label: f.nameLabel, children: admin?.name },
               { label: f.emailLabel, children: admin?.email },
-              { label: f.genderLabel, children: admin?.gender },
+              { label: f.genderLabel, children: mapGender(admin?.gender) },
             ]}
           />
         </AccordionItem>

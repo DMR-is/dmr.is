@@ -17,3 +17,16 @@ export const formatNationalId = (nationalId = '') => {
   }
   return `${cleaned.slice(0, 6)}-${cleaned.slice(6)}`
 }
+
+export const mapGender = (gender?: string) => {
+  switch (gender) {
+    case 'FEMALE':
+      return 'Kona'
+    case 'MALE':
+      return 'Karl'
+    case 'NEUTRAL':
+      return 'Hlutlaus skráning kyns í Þjóðskrá'
+    default:
+      return 'Óþekkt'
+  }
+}

@@ -115,7 +115,9 @@ export const ReportFilter = ({
           onChange={({ categoryId, selected }) => {
             if (categoryId === 'type') {
               const hasImprovement = selected.includes(IMPROVEMENT_PLAN_VALUE)
-              const realTypes = selected.filter((v) => v !== IMPROVEMENT_PLAN_VALUE)
+              const realTypes = selected.filter(
+                (v) => v !== IMPROVEMENT_PLAN_VALUE,
+              )
               onTypeChange(realTypes.length ? realTypes : null)
               onHasImprovementPlanChange(hasImprovement ? true : null)
             }
@@ -132,6 +134,7 @@ export const ReportFilter = ({
             if (categoryId === 'status') onStatusChange(null)
             if (categoryId === 'reviewer') onReviewerChange(null)
           }}
+          singleExpand={false}
           categories={[
             {
               id: 'type',

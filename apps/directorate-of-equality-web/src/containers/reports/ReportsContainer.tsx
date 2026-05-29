@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -97,9 +97,9 @@ function mapReportToCase(report: ReportListItemDto): Case {
       : '',
     type: report.includesImprovementPlan
       ? 'Úrbótaáætlun'
-      : sharedText.typeLabels[
+      : (sharedText.typeLabels[
           report.type as keyof typeof sharedText.typeLabels
-        ] ?? report.type,
+        ] ?? report.type),
     company: report.companyName ?? '',
     kennitala: formatNationalId(report.companyNationalId ?? ''),
     status:
@@ -160,7 +160,10 @@ const statusColumn: ColumnDef<Case> = {
 
 export const ReportsContainer = () => {
   const trpc = useTRPC()
-  const [activeTab, setActiveTab] = useState<TabId>('innsendingar')
+  const [activeTab, setActiveTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral(['innsendingar', 'i-vinnslu', 'afgreitt'] as const).withDefault('innsendingar'),
+  )
 
   const fixedStatus = TAB_FIXED_STATUS[activeTab]
   const fixedQuery = fixedStatus ? { status: fixedStatus } : undefined
@@ -223,7 +226,8 @@ export const ReportsContainer = () => {
               }
               onReviewerChange={(reviewerUserId) =>
                 setFilter({
-                  reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
+                  reviewerUserId:
+                    reviewerUserId as typeof filter.reviewerUserId,
                 })
               }
               onHasImprovementPlanChange={(v) =>

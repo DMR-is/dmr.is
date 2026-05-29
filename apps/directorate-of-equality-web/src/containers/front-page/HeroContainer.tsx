@@ -27,7 +27,7 @@ export const HeroContainer = ({ userName }: Props) => {
       }}
     >
       <GridRow>
-        <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
+        <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[2, 2, 0]}>
           <LinkCard
             href={NAV_PATHS.heildarlisti.href}
             title={NAV_PATHS.heildarlisti.title}
@@ -37,7 +37,7 @@ export const HeroContainer = ({ userName }: Props) => {
             }}
           />
         </GridColumn>
-        <GridColumn span={['12/12', '4/12']} paddingBottom={[2, 0]}>
+        <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[2, 2, 0]}>
           <LinkCard
             href={NAV_PATHS.jafnrettisaetlanir.href}
             title={NAV_PATHS.jafnrettisaetlanir.title}
@@ -47,7 +47,7 @@ export const HeroContainer = ({ userName }: Props) => {
             }}
           />
         </GridColumn>
-        <GridColumn span={['12/12', '4/12']} paddingBottom={[0]}>
+        <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[0]}>
           <LinkCard
             href={NAV_PATHS.urbotaaetlanir.href}
             title={NAV_PATHS.urbotaaetlanir.title}
