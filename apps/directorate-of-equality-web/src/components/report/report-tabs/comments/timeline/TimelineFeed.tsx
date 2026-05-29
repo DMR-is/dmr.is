@@ -7,7 +7,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 import { Divider } from '@island.is/island-ui/core'
 
-import { ReportTimelineItemDto, UserDto } from '../../../gen/fetch'
+import { ReportTimelineItemDto, UserDto } from '../../../../../gen/fetch'
 import { TimelineEntry } from './TimelineEntry'
 
 const HEAD_COUNT = 3

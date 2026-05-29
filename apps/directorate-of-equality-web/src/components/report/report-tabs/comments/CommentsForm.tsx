@@ -3,10 +3,10 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { ReportTimelineItemDto, UserDto } from '../../../gen/fetch'
-import { reportText } from '../../../lib/text'
+import { ReportTimelineItemDto, UserDto } from '../../../../gen/fetch'
+import { reportText } from '../../../../lib/text'
+import { TimelineFeed } from './timeline/TimelineFeed'
 import { CommentInputForm } from './CommentInputForm'
-import { TimelineFeed } from './TimelineFeed'
 
 type Props = {
   timeline: ReportTimelineItemDto[]

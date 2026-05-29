@@ -5,7 +5,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 
-import { reportText } from '../../../lib/text'
+import { reportText } from '../../../../lib/text'
 
 type Props = {
   body: string

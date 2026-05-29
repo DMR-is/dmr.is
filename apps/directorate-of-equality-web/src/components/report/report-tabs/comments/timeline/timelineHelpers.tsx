@@ -7,11 +7,11 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
   UserDto,
-} from '../../../gen/fetch'
+} from '../../../../../gen/fetch'
 import {
   formatDateIS,
   ReportStatusTranslatedEnum,
-} from '../../../lib/constants'
+} from '../../../../../lib/constants'
 
 export function formatRelativeDate(dateStr: string): string {
   const d = new Date(dateStr)
