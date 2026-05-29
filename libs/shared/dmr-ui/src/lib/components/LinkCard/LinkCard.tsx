@@ -1,9 +1,6 @@
 import { FocusableBox } from '../../island-is'
 import { Box } from '../../island-is/lib/Box'
-import { GridColumn } from '../../island-is/lib/GridColumn'
-import { GridContainer } from '../../island-is/lib/GridContainer'
-import { GridRow } from '../../island-is/lib/GridRow'
-import { Stack } from '../../island-is/lib/Stack'
+import { Hidden } from '../../island-is/lib/Hidden'
 import { Text } from '../../island-is/lib/Text'
 import { Image, ImageProps } from '../Image/Image'
 export type LinkCardProps = {
@@ -20,57 +17,42 @@ export const LinkCard = ({
   image,
 }: LinkCardProps) => {
   const hasImage = !!(image && image.src)
-  const columnSpan: Record<
-    string,
-    React.ComponentProps<typeof GridColumn>['span']
-  > = {
-    content: hasImage ? ['12/12', '12/12', '12/12', '8/12'] : '12/12',
-    image: ['12/12', '12/12', '12/12', '4/12'],
-  }
 
   return (
     <FocusableBox
       height="full"
-      paddingX={3}
+      paddingX={4}
       paddingY={3}
       border="standard"
       borderColor="blueberry200"
       borderRadius="large"
       background="white"
       display="flex"
-      alignItems="center"
+      flexDirection={['columnReverse', 'columnReverse', 'columnReverse', 'row']}
+      alignItems={['flexStart', 'flexStart', 'flexStart', 'center']}
+      rowGap={2}
+      columnGap={2}
       href={href}
     >
-      <GridContainer>
-        <GridRow alignItems={'center'}>
-          <GridColumn span={columnSpan.content}>
-            <Stack space={1}>
-              <Box
-                display={'flex'}
-                flexDirection="column"
-                justifyContent="spaceBetween"
-              >
-                <Text
-                  variant="h3"
-                  as="h3"
-                  color="blue400"
-                  fontWeight="semiBold"
-                >
-                  {title}
-                </Text>
-                {description && <Text>{description}</Text>}
-              </Box>
-            </Stack>
-          </GridColumn>
-          {hasImage && (
-            <GridColumn hiddenBelow="lg" span={columnSpan.image}>
-              <Box height="full">
-                <Image {...image} />
-              </Box>
-            </GridColumn>
-          )}
-        </GridRow>
-      </GridContainer>
+      <Box
+        display={'flex'}
+        flexDirection="column"
+        justifyContent="flexStart"
+        rowGap={1}
+        height="full"
+      >
+        <Text variant="h3" as="h3" color="blue400" fontWeight="semiBold">
+          {title}
+        </Text>
+        {description && <Text>{description}</Text>}
+      </Box>
+      <Hidden below="lg">
+        {hasImage && (
+          <Box height="full">
+            <Image {...image} />
+          </Box>
+        )}
+      </Hidden>
     </FocusableBox>
   )
 }
