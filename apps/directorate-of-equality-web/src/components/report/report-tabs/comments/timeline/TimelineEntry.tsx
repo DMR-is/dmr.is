@@ -10,7 +10,7 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
   UserDto,
-} from '../../../gen/fetch'
+} from '../../../../../gen/fetch'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
 import {
   formatRelativeDate,
@@ -47,7 +47,9 @@ export function TimelineEntry({
     comment?.authorUserId != null &&
     comment.authorUserId === currentUserId &&
     comment.visibility !== CommentVisibilityEnum.EXTERNAL
-  const bodyText = isComment ? (comment?.body ?? null) : (item.event?.reason ?? null)
+  const bodyText = isComment
+    ? (comment?.body ?? null)
+    : (item.event?.reason ?? null)
   const hasBody = !!bodyText
 
   return (
@@ -65,9 +67,12 @@ export function TimelineEntry({
           display="flex"
           justifyContent="spaceBetween"
           alignItems="flexStart"
+          rowGap={1}
+          columnGap={1}
+          flexDirection={['columnReverse', 'columnReverse', 'row']}
         >
           <Text>{text}</Text>
-          <Box style={{ whiteSpace: 'nowrap', marginLeft: 8 }}>
+          <Box>
             <Text>{date}</Text>
           </Box>
         </Box>
@@ -79,7 +84,11 @@ export function TimelineEntry({
         )}
 
         {isExternal && (
-          <Box display="flex" justifyContent="flexEnd" marginTop={1}>
+          <Box
+            display="flex"
+            justifyContent={['flexStart', 'flexStart', 'flexEnd']}
+            marginTop={1}
+          >
             <Tag disabled outlined variant="blue">
               Sýnilegt innsendanda
             </Tag>

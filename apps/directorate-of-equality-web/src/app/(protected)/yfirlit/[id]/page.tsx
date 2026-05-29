@@ -26,8 +26,8 @@ export default async function CasePage({
       <Box
         background="purple100"
         style={{ minHeight: '100dvh' }}
-        paddingY={4}
-        paddingX={6}
+        paddingY={[1, 1, 1, 4]}
+        paddingX={[2, 2, 2, 6]}
       >
         <GridContainer>
           <GridRow>

@@ -59,7 +59,7 @@ export const overviewText = {
   noComments: 'Engar athugasemdir',
   filter: {
     heading: 'Leit og síun',
-    placeholder: 'Leita að máli...',
+    placeholder: 'Sláðu inn leitarorð',
     categoryLabel: 'Flokkur',
     reviewerLabel: 'Starfsmaður',
     dateLabel: 'Dagsetning',

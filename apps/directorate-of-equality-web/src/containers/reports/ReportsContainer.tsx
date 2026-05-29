@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { parseAsStringLiteral, useQueryState } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -26,6 +26,7 @@ import {
   type ReportListItemDto,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useReports } from '../../hooks/useReports'
 import {
   Case,
@@ -86,10 +87,12 @@ const STATUS_VARIANT: Record<string, TagVariant> = {
   Drög: 'purple',
 }
 
+const unknown = sharedText.unknown
+
 function mapReportToCase(report: ReportListItemDto): Case {
   const reviewer = report.reviewer
     ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
-    : ''
+    : unknown
   return {
     id: report.id,
     date: report.createdAt
@@ -97,21 +100,21 @@ function mapReportToCase(report: ReportListItemDto): Case {
       : '',
     type: report.includesImprovementPlan
       ? 'Úrbótaáætlun'
-      : sharedText.typeLabels[
+      : (sharedText.typeLabels[
           report.type as keyof typeof sharedText.typeLabels
-        ] ?? report.type,
-    company: report.companyName ?? '',
-    kennitala: formatNationalId(report.companyNationalId ?? ''),
+        ] ?? report.type),
+    company: report.companyName ?? unknown,
+    kennitala: formatNationalId(report.companyNationalId ?? unknown),
     status:
       sharedText.statusLabels[
         report.status as keyof typeof sharedText.statusLabels
       ] ?? report.status,
     reviewer,
-    companyAdmin: 'TODO',
-    companyAdminGender: 'TODO',
-    email: 'TODO',
-    isatCode: 'TODO',
-    employeeCount: 'TODO',
+    companyAdmin: report.companyAdminName ?? unknown,
+    companyAdminGender: report.companyAdminGender ?? unknown,
+    email: report.companyAdminEmail ?? unknown,
+    isatCode: report.companyIsatCategory ?? unknown,
+    employeeCount: report.companyEmployeeCountCategory ?? unknown,
   }
 }
 
@@ -160,7 +163,15 @@ const statusColumn: ColumnDef<Case> = {
 
 export const ReportsContainer = () => {
   const trpc = useTRPC()
-  const [activeTab, setActiveTab] = useState<TabId>('innsendingar')
+  const { isMobile } = useIsMobile()
+  const [activeTab, setActiveTab] = useQueryState(
+    'tab',
+    parseAsStringLiteral([
+      'innsendingar',
+      'i-vinnslu',
+      'afgreitt',
+    ] as const).withDefault('innsendingar'),
+  )
 
   const fixedStatus = TAB_FIXED_STATUS[activeTab]
   const fixedQuery = fixedStatus ? { status: fixedStatus } : undefined
@@ -202,9 +213,9 @@ export const ReportsContainer = () => {
   ]
 
   const filterAndTable = (expandable?: boolean) => (
-    <Box paddingTop={4}>
+    <Box paddingTop={[0, 0, 4]}>
       <GridRow>
-        <GridColumn span={['12/12', '3/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
           <Stack space={3}>
             <ReportFilter
               q={filter.q}
@@ -223,7 +234,8 @@ export const ReportsContainer = () => {
               }
               onReviewerChange={(reviewerUserId) =>
                 setFilter({
-                  reviewerUserId: reviewerUserId as typeof filter.reviewerUserId,
+                  reviewerUserId:
+                    reviewerUserId as typeof filter.reviewerUserId,
                 })
               }
               onHasImprovementPlanChange={(v) =>
@@ -231,17 +243,23 @@ export const ReportsContainer = () => {
               }
               onReset={resetFilter}
             />
-            <Stack space={2}>
-              <CreateEqualityReportDrawer />
-              <CreateSalaryReportDrawer />
-            </Stack>
+            {!isMobile && (
+              <Stack space={2}>
+                <CreateEqualityReportDrawer />
+                <CreateSalaryReportDrawer />
+              </Stack>
+            )}
           </Stack>
         </GridColumn>
-        <GridColumn span={['12/12', '9/12']}>
-          <Stack space={2}>
+        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
+          <Stack space={[1, 2]}>
             <Inline space={1} alignY="center">
-              <Text fontWeight="semiBold">{data?.paging.totalItems ?? 0}</Text>
-              <Text>{overviewText.resultsText}</Text>
+              <Text fontWeight="semiBold" marginTop={isMobile ? 2 : 0}>
+                {data?.paging.totalItems ?? 0}
+              </Text>
+              <Text marginTop={isMobile ? 2 : 0}>
+                {overviewText.resultsText}
+              </Text>
             </Inline>
             <TabContent
               data={data?.reports.map(mapReportToCase)}
@@ -251,6 +269,14 @@ export const ReportsContainer = () => {
               paging={data?.paging}
               onPageChange={(p) => setFilter({ page: p })}
             />
+            {isMobile && (
+              <Box marginTop={2}>
+                <Stack space={2}>
+                  <CreateEqualityReportDrawer />
+                  <CreateSalaryReportDrawer />
+                </Stack>
+              </Box>
+            )}
           </Stack>
         </GridColumn>
       </GridRow>

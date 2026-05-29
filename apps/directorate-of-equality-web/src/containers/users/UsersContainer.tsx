@@ -13,6 +13,7 @@ import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 
 import { UserModal } from '../../components/users/UserModal'
 import { type UserDto } from '../../gen/fetch/types.gen'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { sharedText, usersText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
@@ -34,8 +35,16 @@ const COLUMNS: ColumnDef<UserDto>[] = [
     enableSorting: false,
     cell: ({ getValue }) => formatNationalId(getValue<string>()),
   },
-  { accessorKey: 'email', header: sharedText.form.emailLabel, enableSorting: true },
-  { accessorKey: 'phone', header: sharedText.form.phoneShortLabel, enableSorting: false },
+  {
+    accessorKey: 'email',
+    header: sharedText.form.emailLabel,
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'phone',
+    header: sharedText.form.phoneShortLabel,
+    enableSorting: false,
+  },
   {
     accessorKey: 'isActive',
     header: sharedText.statusLabel,
@@ -53,6 +62,7 @@ const COLUMNS: ColumnDef<UserDto>[] = [
 ]
 
 export const UsersContainer = () => {
+  const { isMobile } = useIsMobile()
   const trpc = useTRPC()
   const [selectedUser, setSelectedUser] = useState<UserDto | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -77,37 +87,39 @@ export const UsersContainer = () => {
   return (
     <GridContainer>
       <GridRow>
-        <GridColumn span={['12/12', '3/12']}>
-          <Stack space={2}>
-            <Text variant="h5" fontWeight="semiBold">
-              {usersText.actionsHeading}
-            </Text>
-            <Button
-              icon="add"
-              iconType="outline"
-              fluid
-              size="small"
-              onClick={openCreate}
-              variant="utility"
-              colorScheme="white"
-            >
-              {usersText.createButton}
-            </Button>
-            <Button
-              icon={showInactive ? 'eyeOff' : 'eye'}
-              iconType="outline"
-              fluid
-              size="small"
-              onClick={() => setShowInactive((v) => !v)}
-              variant="utility"
-              colorScheme="white"
-            >
-              {showInactive ? usersText.hideInactive : usersText.showInactive}
-            </Button>
-          </Stack>
+        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
+          {!isMobile && (
+            <Stack space={2}>
+              <Text variant="h5" fontWeight="semiBold">
+                {usersText.actionsHeading}
+              </Text>
+              <Button
+                icon="add"
+                iconType="outline"
+                fluid
+                size="small"
+                onClick={openCreate}
+                variant="utility"
+                colorScheme="white"
+              >
+                {usersText.createButton}
+              </Button>
+              <Button
+                icon={showInactive ? 'eyeOff' : 'eye'}
+                iconType="outline"
+                fluid
+                size="small"
+                onClick={() => setShowInactive((v) => !v)}
+                variant="utility"
+                colorScheme="white"
+              >
+                {showInactive ? usersText.hideInactive : usersText.showInactive}
+              </Button>
+            </Stack>
+          )}
         </GridColumn>
 
-        <GridColumn span={['12/12', '9/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
           <Stack space={2}>
             <Inline space={1} alignY="center">
               <Text fontWeight="semiBold">{visibleUsers.length}</Text>
@@ -119,6 +131,34 @@ export const UsersContainer = () => {
               noDataMessage={usersText.noData}
               onRowClick={openEdit}
             />
+            {isMobile && (
+              <Stack space={2}>
+                <Button
+                  icon="add"
+                  iconType="outline"
+                  fluid
+                  size="small"
+                  onClick={openCreate}
+                  variant="utility"
+                  colorScheme="white"
+                >
+                  {usersText.createButton}
+                </Button>
+                <Button
+                  icon={showInactive ? 'eyeOff' : 'eye'}
+                  iconType="outline"
+                  fluid
+                  size="small"
+                  onClick={() => setShowInactive((v) => !v)}
+                  variant="utility"
+                  colorScheme="white"
+                >
+                  {showInactive
+                    ? usersText.hideInactive
+                    : usersText.showInactive}
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </GridColumn>
       </GridRow>

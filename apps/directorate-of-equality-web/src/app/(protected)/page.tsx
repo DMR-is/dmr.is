@@ -16,7 +16,7 @@ export default async function IndexPage() {
     <Box marginTop={[2, 4]}>
       <HeroContainer userName={session?.user?.name} />
       <Suspense fallback={null}>
-        <SectionContainer />
+        <SectionContainer userId={session?.user?.id} />
       </Suspense>
       <PanelsContainer />
     </Box>

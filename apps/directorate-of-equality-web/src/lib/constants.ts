@@ -3,14 +3,15 @@ export const NAV_PATHS = {
   heildarlisti: { title: 'Heildarlisti', href: '/yfirlit' },
   jafnrettisaetlanir: {
     title: 'Jafnréttisáætlanir',
-    href: '/yfirlit?category=jafnrettisaetlanir',
+    href: 'yfirlit?type=EQUALITY',
   },
   urbotaaetlanir: {
     title: 'Úrbótaáætlanir',
-    href: '/yfirlit?category=urbotaaetlanir',
+    href: '/yfirlit?hasImprovementPlan=true',
   },
-  skyrslur: { title: 'Skýrslur', href: '/yfirlit?category=urbotaaetlanir' },
+  skyrslur: { title: 'Skýrslur', href: '/yfirlit?type=SALARY' },
   fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
+  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar' },
 }
 
 const IS_MONTHS = [

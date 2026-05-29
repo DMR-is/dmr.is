@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 
-import { CommentsForm } from '../../components/report/report-tabs/CommentsForm'
-import { CommentVisibilityEnum, ReportStatusEnum } from '../../gen/fetch/types.gen'
+import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
+import {
+  CommentVisibilityEnum,
+  ReportStatusEnum,
+} from '../../gen/fetch/types.gen'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'

@@ -64,7 +64,7 @@ export const Hero = ({
   return (
     <GridContainer>
       <Stack space={4}>
-        <GridRow align={alignHeader}>
+        <GridRow align={alignHeader} marginBottom={[4, 4, 4, 0]}>
           {hasTitleOrDescription && (
             <GridColumn
               offset={offset}

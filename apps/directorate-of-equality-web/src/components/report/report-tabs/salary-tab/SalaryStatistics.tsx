@@ -22,7 +22,13 @@ export const SalaryStatistics = ({
         <Text variant="default">
           Óleiðréttur launamunur milli karla og kvenna
         </Text>
-        <Box display="flex" columnGap={4} marginTop={1}>
+        <Box
+          display="flex"
+          columnGap={[0, 0, 0, 4]}
+          rowGap={[2, 2, 2, 0]}
+          marginTop={1}
+          flexDirection={['column', 'column', 'column', 'row']}
+        >
           <StatisticCard title="Meðallaun karla" content={maleAverageSalary} />
           <StatisticCard
             title="Meðallaun kvenna"

@@ -80,8 +80,10 @@ export const CompanyTable = ({
   return (
     <Stack space={2}>
       <Inline space={1} alignY="center">
-        <Text fontWeight="semiBold">{paging.totalItems}</Text>
-        <Text>fyrirtæki fundust</Text>
+        <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
+          {paging.totalItems}
+        </Text>
+        <Text marginTop={[2, 2, 0]}>fyrirtæki fundust</Text>
       </Inline>
       <Table
         columns={columns}

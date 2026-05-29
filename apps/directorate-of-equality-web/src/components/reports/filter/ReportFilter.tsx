@@ -13,6 +13,8 @@ import { FilterMultiChoice } from '@dmr.is/ui/components/island-is/FilterMultiCh
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { useIsMobile } from '../../../hooks/useIsMobile'
+import { useIsTablet } from '../../../hooks/useIsTablet'
 import { overviewText, sharedText } from '../../../lib/text'
 import * as styles from './ReportFilter.css'
 
@@ -54,6 +56,8 @@ export const ReportFilter = ({
 }: Props) => {
   const [dateFrom, setDateFrom] = useState<Date | undefined>()
   const [dateTo, setDateTo] = useState<Date | undefined>()
+  const { isMobile } = useIsMobile()
+  const { isTablet } = useIsTablet()
 
   const handleReset = () => {
     setDateFrom(undefined)
@@ -86,9 +90,11 @@ export const ReportFilter = ({
 
   return (
     <Box>
-      <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
-        {overviewText.filter.heading}
-      </Text>
+      {!isMobile && (
+        <Text variant="h5" fontWeight="semiBold" marginBottom={2}>
+          {overviewText.filter.heading}
+        </Text>
+      )}
       <Filter
         labelClearAll={sharedText.filter.labelClearAll}
         labelOpen={sharedText.filter.labelOpen}
@@ -97,7 +103,7 @@ export const ReportFilter = ({
         labelTitle={sharedText.filter.labelTitle}
         labelResult={sharedText.filter.labelResult}
         onFilterClear={handleReset}
-        variant="default"
+        variant={isTablet ? 'popover' : 'default'}
         filterInput={
           <Box marginTop={3}>
             <FilterInput
@@ -115,7 +121,9 @@ export const ReportFilter = ({
           onChange={({ categoryId, selected }) => {
             if (categoryId === 'type') {
               const hasImprovement = selected.includes(IMPROVEMENT_PLAN_VALUE)
-              const realTypes = selected.filter((v) => v !== IMPROVEMENT_PLAN_VALUE)
+              const realTypes = selected.filter(
+                (v) => v !== IMPROVEMENT_PLAN_VALUE,
+              )
               onTypeChange(realTypes.length ? realTypes : null)
               onHasImprovementPlanChange(hasImprovement ? true : null)
             }
@@ -132,6 +140,7 @@ export const ReportFilter = ({
             if (categoryId === 'status') onStatusChange(null)
             if (categoryId === 'reviewer') onReviewerChange(null)
           }}
+          singleExpand={false}
           categories={[
             {
               id: 'type',

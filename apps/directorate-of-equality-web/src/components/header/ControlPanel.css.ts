@@ -34,7 +34,7 @@ export const controlPanel = style({
       height: HEADER_HEIGHT,
     },
     [`screen and (min-width: ${theme.breakpoints.sm}px)`]: {
-      inlineSize: 300,
+      inlineSize: 240,
       paddingInline: theme.spacing[3],
     },
   },
