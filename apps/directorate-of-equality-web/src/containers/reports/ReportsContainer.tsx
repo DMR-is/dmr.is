@@ -27,7 +27,6 @@ import {
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { useIsTablet } from '../../hooks/useIsTablet'
 import { useReports } from '../../hooks/useReports'
 import {
   Case,
@@ -165,7 +164,6 @@ const statusColumn: ColumnDef<Case> = {
 export const ReportsContainer = () => {
   const trpc = useTRPC()
   const { isMobile } = useIsMobile()
-  const { isTablet } = useIsTablet()
   const [activeTab, setActiveTab] = useQueryState(
     'tab',
     parseAsStringLiteral([
@@ -272,10 +270,12 @@ export const ReportsContainer = () => {
               onPageChange={(p) => setFilter({ page: p })}
             />
             {isMobile && (
-              <Stack space={2}>
-                <CreateEqualityReportDrawer />
-                <CreateSalaryReportDrawer />
-              </Stack>
+              <Box marginTop={2}>
+                <Stack space={2}>
+                  <CreateEqualityReportDrawer />
+                  <CreateSalaryReportDrawer />
+                </Stack>
+              </Box>
             )}
           </Stack>
         </GridColumn>

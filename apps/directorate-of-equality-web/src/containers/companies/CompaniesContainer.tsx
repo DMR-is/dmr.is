@@ -22,9 +22,11 @@ import {
   ReportStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
+import { useIsTablet } from '../../hooks/useIsTablet'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 export const CompaniesContainer = () => {
+  const { isTablet } = useIsTablet()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { data, filter, setFilter, resetFilter } = useCompanies({
@@ -32,7 +34,9 @@ export const CompaniesContainer = () => {
   })
 
   const [filters, setFilters] = useState<CompanyFilters>({
-    employees: filter.employeeCountCategory ? [filter.employeeCountCategory] : [],
+    employees: filter.employeeCountCategory
+      ? [filter.employeeCountCategory]
+      : [],
     status: (filter.companyStatus ?? []) as CompanyStatusFilterEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     dailyFines: [],
@@ -102,10 +106,25 @@ export const CompaniesContainer = () => {
     })
   }, [data, filters.dailyFines])
 
+  const newButton = (
+    <Box display="flex" marginTop={2}>
+      <Button
+        icon="add"
+        iconType="outline"
+        onClick={() => setIsModalOpen(true)}
+        size="small"
+        variant="utility"
+        colorScheme="white"
+        fluid
+      >
+        Nýtt fyrirtæki
+      </Button>
+    </Box>
+  )
   return (
     <GridContainer>
       <GridRow>
-        <GridColumn span={['12/12', '3/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
           <CompanyFilter
             query={filter.q ?? ''}
             onQueryChange={(val) => setFilter({ q: val, page: 1 })}
@@ -113,21 +132,9 @@ export const CompaniesContainer = () => {
             onFiltersChange={handleFiltersChange}
             onReset={handleReset}
           />
-          <Box display="flex" marginTop={2}>
-            <Button
-              icon="add"
-              iconType="outline"
-              onClick={() => setIsModalOpen(true)}
-              size="small"
-              variant="utility"
-              colorScheme="white"
-              fluid
-            >
-              Nýtt fyrirtæki
-            </Button>
-          </Box>
+          {!isTablet && newButton}
         </GridColumn>
-        <GridColumn span={['12/12', '9/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
           {data?.paging && (
             <CompanyTable
               rows={rows}
@@ -138,9 +145,9 @@ export const CompaniesContainer = () => {
               onSortingChange={handleSortingChange}
             />
           )}
+          {isTablet && newButton}
         </GridColumn>
       </GridRow>
-
       <CreateCompanyModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

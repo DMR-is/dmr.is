@@ -7,6 +7,7 @@ import {
   type ReportEmployeeOutlierDto,
 } from '../../../../gen/fetch'
 import { reportText as r, sharedText } from '../../../../lib/text'
+import * as styles from './OutlierPlanTable.css'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -64,16 +65,15 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
         { label: o.actionLabel, value: row.action },
         { label: o.signatureNameLabel, value: row.signatureName },
         { label: o.signatureRoleLabel, value: row.signatureRole },
-      ].map(({ label, value }, i) => (
+      ].map(({ label, value }) => (
         <Box
           key={label}
-          background={Math.floor(i / 2) % 2 === 0 ? 'white' : 'blue100'}
           paddingX={1}
           paddingY={1}
-          style={{ flex: '0 0 calc(50% - 8px)' }}
+          className={styles.expandedRowItem}
         >
           <Box display="flex">
-            <Box style={{ minWidth: 220 }}>
+            <Box style={{ minWidth: 180 }}>
               <Text variant="small" fontWeight="semiBold">
                 {label}
               </Text>
