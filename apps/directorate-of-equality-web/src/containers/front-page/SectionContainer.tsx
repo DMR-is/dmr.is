@@ -18,8 +18,7 @@ import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
-import { overviewText, sharedText } from '../../lib/text'
-import { frontPageText } from '../../lib/text'
+import { frontPageText, overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useSuspenseQuery } from '@tanstack/react-query'
