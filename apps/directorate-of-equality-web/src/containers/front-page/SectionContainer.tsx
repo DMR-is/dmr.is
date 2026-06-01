@@ -18,6 +18,7 @@ import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
+import { overviewText, sharedText } from '../../lib/text'
 import { frontPageText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -32,14 +33,14 @@ const PieChart = dynamic(
 )
 
 const STATUS_LABELS: Record<ReportStatusEnum, string> = {
-  [ReportStatusEnum.DRAFT]: 'Drög',
-  [ReportStatusEnum.SUBMITTED]: 'Ný mál',
-  [ReportStatusEnum.POSTPONED]: 'Frestað',
-  [ReportStatusEnum.IN_REVIEW]: 'Í vinnslu',
-  [ReportStatusEnum.APPROVED]: 'Samþykkt',
-  [ReportStatusEnum.DENIED]: 'Hafnað',
-  [ReportStatusEnum.SUPERSEDED]: 'Yfirtekið',
-  [ReportStatusEnum.WITHDRAWN]: 'Dregin til baka',
+  [ReportStatusEnum.DRAFT]: sharedText.statusLabels.DRAFT,
+  [ReportStatusEnum.SUBMITTED]: sharedText.statusLabels.SUBMITTED,
+  [ReportStatusEnum.POSTPONED]: sharedText.statusLabels.POSTPONED,
+  [ReportStatusEnum.IN_REVIEW]: sharedText.statusLabels.IN_REVIEW,
+  [ReportStatusEnum.APPROVED]: sharedText.statusLabels.APPROVED,
+  [ReportStatusEnum.DENIED]: sharedText.statusLabels.DENIED,
+  [ReportStatusEnum.SUPERSEDED]: sharedText.statusLabels.SUPERSEDED,
+  [ReportStatusEnum.WITHDRAWN]: sharedText.statusLabels.WITHDRAWN,
 }
 
 const STATUS_COLORS: Record<ReportStatusEnum, string> = {
@@ -128,13 +129,13 @@ export const SectionContainer = ({ userId }: Props) => {
           <GridColumn span={['12/12', '7/12']}>
             <Stack space={3}>
               <Wrapper
-                title="Yfirlit"
+                title={overviewText.heroTitle}
                 link={
                   selectedTab === 'min-mal'
                     ? `/yfirlit?tab=i-vinnslu${userId ? `&reviewerUserId=${userId}` : ''}`
                     : '/yfirlit'
                 }
-                linkText="Opna ristjórn"
+                linkText={overviewText.openAdmin}
               >
                 <Tabs
                   label="Mál flokkar"

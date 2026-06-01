@@ -13,6 +13,7 @@ import {
   type Paging,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
+import { companiesText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
@@ -43,22 +44,26 @@ export const CompanyTable = ({
 }: Props) => {
   const columns = useMemo<ColumnDef<CompanyDto>[]>(
     () => [
-      { accessorKey: 'name', header: 'Nafn', enableSorting: true },
+      {
+        accessorKey: 'name',
+        header: sharedText.form.nameLabel,
+        enableSorting: true,
+      },
       {
         accessorKey: 'nationalId',
-        header: 'Kennitala',
+        header: sharedText.form.kennitalaLabel,
         enableSorting: false,
         cell: ({ getValue }) => formatNationalId(getValue<string>()),
       },
       {
         id: 'employeeCount',
         accessorFn: (row) => COMPANY_SIZE_LABEL[row.employeeCountCategory],
-        header: 'Meðalfjöldi starfsmanna',
+        header: companiesText.expandedRow.avgEmployees,
         enableSorting: true,
       },
       {
         id: 'status',
-        header: 'Staða',
+        header: sharedText.statusLabel,
         enableSorting: false,
         cell: ({ row }) => {
           const status = deriveStatus(row.original, approvedReports)
@@ -84,7 +89,7 @@ export const CompanyTable = ({
           <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
             {paging.totalItems}
           </Text>
-          <Text marginTop={[2, 2, 0]}>fyrirtæki fundust</Text>
+          <Text marginTop={[2, 2, 0]}>{companiesText.resultsText}</Text>
         </Inline>
 
         <Table
@@ -95,7 +100,7 @@ export const CompanyTable = ({
           paging={paging}
           onPageChange={onPageChange}
           showPageSizeSelect={false}
-          noDataMessage="Engin fyrirtæki skráð"
+          noDataMessage={companiesText.noData}
           getRowExpanded={(company) => (
             <CompanyExpandedRow
               company={company}

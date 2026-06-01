@@ -57,6 +57,7 @@ export const overviewText = {
   tabAfgreitt: 'Afgreitt',
   resultsText: 'færslur fundust',
   noComments: 'Engar athugasemdir',
+  openAdmin: 'Opna ritjstjórn',
   filter: {
     heading: 'Leit og síun',
     placeholder: 'Sláðu inn leitarorð',
@@ -114,6 +115,8 @@ export const reportText = {
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
     submit: 'Vista athugasemd',
+    visibleToApplicant: 'Sýnileg innsendanda',
+    seeAllComments: 'Sjá allar athugasemdir',
   },
   statusSelect: {
     successToast: 'Uppfærsla á stöðu tókst.',
@@ -165,7 +168,6 @@ export const reportText = {
     outliersPostponedTitle: 'Frestur á úrbótaáætlun.',
     outliersPostponedMessage:
       'Fyrirtækið hefur óskað eftir fresti við skil á úrbótaáætlun.',
-    wageGapHeading: 'Launamunur',
     wageGapDescription: 'Óleiðréttur launamunur milli karla og kvenna',
     avgSalaryMale: 'Meðallaun karla',
     avgSalaryFemale: 'Meðallaun kvenna',
@@ -209,10 +211,14 @@ export const reportText = {
     claimsCase: 'merkir sér málið',
     movesToStatus: 'færir mál í stöðuna:',
   },
+  loadError: 'Villa kom upp við að hlaða skýrslu',
+  loadSidebarError: 'Villa kom upp við að hlaða hliðarstiku',
 }
 
 export const companiesText = {
   heading: 'Fyrirtæki',
+  heroDescription:
+    'Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála.',
   newButton: 'Nýtt fyrirtæki',
   filterHeading: 'Leit og síun',
   filterPlaceholder: 'Sláðu inn leitarorð',
@@ -228,6 +234,9 @@ export const companiesText = {
   expandedRow: {
     salaryRequired: 'Skýrslugjöf skylda',
     validUntilPrefix: 'Gildir til:',
+    avgEmployees: 'Meðalfjöldi starfsmanna',
+    contactPerson: 'Tengiliður',
+    contactEmail: 'Netfang tengiliðar',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
@@ -246,6 +255,9 @@ export const companiesText = {
 }
 
 export const usersText = {
+  heroTitle: 'Ritstjórar',
+  heroDescription:
+    'Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan.',
   createButton: 'Nýr ritstjóri',
   showInactive: 'Sýna óvirka',
   hideInactive: 'Fela óvirka',
@@ -306,6 +318,7 @@ export const sharedText = {
   yesLabel: 'Já',
   noLabel: 'Nei',
   statusLabel: 'Staða',
+  delete: 'Eyða',
   filter: {
     labelClearAll: 'Hreinsa allar síur',
     labelOpen: 'Opna síur',
@@ -322,10 +335,12 @@ export const sharedText = {
     DENIED: 'Hafnað',
     SUPERSEDED: 'Úrelt',
     POSTPONED: 'Frestað',
+    WITHDRAWN: 'Dregin til baka',
   },
   typeLabels: {
     EQUALITY: 'Jafnréttisáætlun',
     SALARY: 'Skýrslugjöf',
+    IMPROVEMENT_PLAN: 'Úrbótaáætlun',
   },
   genders: {
     male: 'Karl',
@@ -334,6 +349,7 @@ export const sharedText = {
   },
   form: {
     nameLabel: 'Nafn',
+    kennitalaLabel: 'Kennitala',
     emailLabel: 'Netfang',
     phoneLabel: 'Símanúmer',
     phoneShortLabel: 'Sími',
@@ -353,4 +369,5 @@ export const sharedText = {
     message:
       'Engin gögn fundust. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar.',
   },
+  files: 'Skjöl',
 }

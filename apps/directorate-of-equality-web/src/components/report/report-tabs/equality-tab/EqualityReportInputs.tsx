@@ -2,6 +2,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 
+import { reportText } from '../../../../lib/text'
 interface EqualityReportInputsProps {
   supervisor?: string
   approvalDate?: Date
@@ -17,30 +18,30 @@ export const EqualityReportInputs = ({
     <Box>
       <Box display="flex" columnGap={2} marginBottom={2}>
         <DatePicker
-          placeholderText="Dagsetning samþykktar"
+          placeholderText={reportText.equalityTab.approvedDateLabel}
           icon={{ name: 'calendar', type: 'outline' }}
           size="sm"
           name="planApprovalDate"
-          label="Dagsetning samþykktar"
+          label={reportText.equalityTab.approvedDateLabel}
           readOnly
           selected={approvalDate}
         />
         <DatePicker
-          placeholderText="Gildistími"
+          placeholderText={reportText.equalityTab.expiryLabel}
           icon={{ name: 'calendar', type: 'outline' }}
           size="sm"
           name="validityPeriod"
-          label="Gildistími"
+          label={reportText.equalityTab.expiryLabel}
           readOnly
           selected={validityPeriod}
         />
       </Box>
       <Box width="half">
         <Input
-          label="Ábyrgðaraðili"
+          label={reportText.equalityTab.responsibleLabel}
           name="reportName"
           size="sm"
-          placeholder="Ábyrgðaraðili"
+          placeholder={reportText.equalityTab.responsibleLabel}
           readOnly
           value={supervisor}
         />

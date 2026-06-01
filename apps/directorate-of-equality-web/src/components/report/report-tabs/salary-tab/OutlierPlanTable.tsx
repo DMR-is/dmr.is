@@ -31,12 +31,12 @@ const genderMap: Record<string, string> = {
 const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
   {
     accessorKey: 'employeeOrdinal',
-    header: 'Númer',
+    header: o.numberHeader,
     cell: ({ getValue }) => getValue<number | null>() ?? dash,
   },
   {
     id: 'starf',
-    header: 'Starf',
+    header: o.roleHeader,
     cell: ({ row }) => row.original.roleTitle ?? dash,
   },
   {

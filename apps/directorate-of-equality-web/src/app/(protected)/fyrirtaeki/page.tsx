@@ -5,16 +5,24 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { CompaniesContainer } from '../../../containers/companies/CompaniesContainer'
+import { NAV_PATHS } from '../../../lib/constants'
+import { companiesText } from '../../../lib/text'
 
 export default async function FyrirtaekiPage() {
   return (
     <Box height="full">
       <Hero
-        title="Fyrirtæki"
-        description="Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála."
-        image={{ src: '/assets/banner-image.svg', alt: 'Fyrirtæki' }}
+        title={companiesText.heading}
+        description={companiesText.heroDescription}
+        image={{ src: '/assets/banner-image.svg', alt: companiesText.heading }}
         breadcrumbs={{
-          items: [{ title: 'Forsíða', href: '/' }, { title: 'Fyrirtæki' }],
+          items: [
+            {
+              title: NAV_PATHS.frontpage.title,
+              href: NAV_PATHS.frontpage.href,
+            },
+            { title: companiesText.heading, href: NAV_PATHS.fyrirtaeki.href },
+          ],
         }}
         variant="default"
         reverse

@@ -11,6 +11,7 @@ import {
   ReportTimelineItemKindEnum,
   UserDto,
 } from '../../../../../gen/fetch'
+import { reportText, sharedText } from '../../../../../lib/text'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
 import {
   formatRelativeDate,
@@ -90,7 +91,7 @@ export function TimelineEntry({
             marginTop={1}
           >
             <Tag disabled outlined variant="blue">
-              Sýnilegt innsendanda
+              {reportText.comments.visibleToApplicant}
             </Tag>
           </Box>
         )}
@@ -103,7 +104,7 @@ export function TimelineEntry({
               icon="trash"
               iconType="outline"
             >
-              Eyða
+              {sharedText.delete}
             </Button>
           </Box>
         )}

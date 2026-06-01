@@ -5,16 +5,27 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
+import { NAV_PATHS } from '../../../lib/constants'
+import { usersText } from '../../../lib/text'
 
 export default function RitstjorarPage() {
   return (
     <Box height="full">
       <Hero
-        title="Ritstjórar"
-        description="Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan."
-        image={{ src: '/assets/banner-image.svg', alt: 'Ritstjórar' }}
+        title={usersText.heroTitle}
+        description={usersText.heroDescription}
+        image={{ src: '/assets/banner-image.svg', alt: usersText.heroTitle }}
         breadcrumbs={{
-          items: [{ title: 'Forsíða', href: '/' }, { title: 'Ritstjórar' }],
+          items: [
+            {
+              title: NAV_PATHS.frontpage.title,
+              href: NAV_PATHS.frontpage.href,
+            },
+            {
+              title: NAV_PATHS.ritstjorn.title,
+              href: NAV_PATHS.ritstjorn.href,
+            },
+          ],
         }}
         variant="default"
         reverse

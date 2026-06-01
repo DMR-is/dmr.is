@@ -10,6 +10,12 @@ import {
   type CompanyDto,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
+import {
+  companiesText,
+  frontPageText,
+  reportText,
+  sharedText,
+} from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
 
@@ -51,11 +57,11 @@ const STATUS_MAP: Record<
   string,
   { label: string; variant: 'mint' | 'red' | 'blue' | 'purple' | 'dark' }
 > = {
-  APPROVED: { label: 'Samþykkt', variant: 'mint' },
-  DENIED: { label: 'Hafnað', variant: 'red' },
-  IN_REVIEW: { label: 'Í vinnslu', variant: 'blue' },
-  SUBMITTED: { label: 'Innsent', variant: 'purple' },
-  SUPERSEDED: { label: 'Úrelt', variant: 'dark' },
+  APPROVED: { label: sharedText.statusLabels.APPROVED, variant: 'mint' },
+  DENIED: { label: sharedText.statusLabels.DENIED, variant: 'red' },
+  IN_REVIEW: { label: sharedText.statusLabels.IN_REVIEW, variant: 'blue' },
+  SUBMITTED: { label: sharedText.statusLabels.SUBMITTED, variant: 'purple' },
+  SUPERSEDED: { label: sharedText.statusLabels.SUPERSEDED, variant: 'dark' },
 }
 
 const ReportStatusTag = ({ status }: { status: string }) => {
@@ -73,13 +79,16 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
   const contactReport = equalityReports[0] ?? salaryReports[0]
 
   const companyFields: FieldRow[] = [
-    { label: 'Kennitala', value: formatNationalId(company.nationalId) },
     {
-      label: 'Meðalfjöldi starfsmanna',
+      label: companiesText.columns.kennitala,
+      value: formatNationalId(company.nationalId),
+    },
+    {
+      label: companiesText.expandedRow.avgEmployees,
       value: COMPANY_SIZE_LABEL[company.employeeCountCategory],
     },
     {
-      label: 'Skýrslugjöf skylda',
+      label: companiesText.expandedRow.salaryRequired,
       value:
         company.salaryReportRequired || company.salaryReportRequiredOverride
           ? 'Já'
@@ -87,8 +96,14 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
     },
     ...(contactReport
       ? [
-          { label: 'Tengiliður', value: contactReport.companyAdminName ?? '–' },
-          { label: 'Netfang', value: contactReport.companyAdminEmail ?? '–' },
+          {
+            label: companiesText.expandedRow.contactPerson,
+            value: contactReport.companyAdminName ?? '–',
+          },
+          {
+            label: companiesText.expandedRow.contactEmail,
+            value: contactReport.companyAdminEmail ?? '–',
+          },
         ]
       : []),
   ]
@@ -103,7 +118,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
             <Divider />
           </Box>
           <Stack space={2}>
-            <Text variant="eyebrow">Skjöl</Text>
+            <Text variant="eyebrow">{sharedText.files}</Text>
             {equalityReports.map((r) => (
               <Box
                 key={r.id}
@@ -116,10 +131,11 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
               >
                 <Stack space={1}>
                   <Text variant="small" fontWeight="semiBold">
-                    Jafnréttisáætlun
+                    {frontPageText.jafnrettisaetlanir.titleSingle}
                   </Text>
                   <Text variant="small" color="dark300">
-                    Gildir til: {formatDate(r.validUntil)}
+                    {companiesText.expandedRow.validUntilPrefix}{' '}
+                    {formatDate(r.validUntil)}
                   </Text>
                 </Stack>
                 <ReportStatusTag status={r.status} />
@@ -137,10 +153,11 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
               >
                 <Stack space={1}>
                   <Text variant="small" fontWeight="semiBold">
-                    Skýrslugjöf
+                    {sharedText.typeLabels.SALARY}
                   </Text>
                   <Text variant="small" color="dark300">
-                    Gildir til: {formatDate(r.validUntil)}
+                    {companiesText.expandedRow.validUntilPrefix}{' '}
+                    {formatDate(r.validUntil)}
                   </Text>
                 </Stack>
                 <ReportStatusTag status={r.status} />
