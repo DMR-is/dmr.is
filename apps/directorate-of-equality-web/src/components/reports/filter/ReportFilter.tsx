@@ -150,9 +150,12 @@ export const ReportFilter = ({
                 ...(hasImprovementPlan ? [IMPROVEMENT_PLAN_VALUE] : []),
               ],
               filters: [
-                { value: 'EQUALITY', label: 'Jafnréttisáætlun' },
-                { value: 'SALARY', label: 'Skýrslugjöf' },
-                { value: IMPROVEMENT_PLAN_VALUE, label: 'Úrbótaáætlun' },
+                { value: 'EQUALITY', label: sharedText.typeLabels.EQUALITY },
+                { value: 'SALARY', label: sharedText.typeLabels.SALARY },
+                {
+                  value: IMPROVEMENT_PLAN_VALUE,
+                  label: sharedText.typeLabels.IMPROVEMENT_PLAN,
+                },
               ],
             },
             ...extraCategories,

@@ -8,7 +8,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { type CompanySizeEnum } from '../../../../gen/fetch'
-import { overviewText, reportText, sharedText } from '../../../../lib/text'
+import { reportText, sharedText } from '../../../../lib/text'
 import {
   COMPANY_SIZE_LABEL,
   formatNationalId,
@@ -21,7 +21,6 @@ import { type ColumnDef } from '@tanstack/react-table'
 const c = reportText.companyTab
 const d = reportText.detailFields
 const f = sharedText.form
-const e = overviewText.createSalaryReport
 
 type Subsidary = {
   name?: string
@@ -36,7 +35,7 @@ const subsidariesColumns: ColumnDef<Subsidary>[] = [
   },
   {
     accessorKey: 'nationalId',
-    header: d.kennitala,
+    header: f.kennitalaLabel,
     cell: ({ getValue }) => {
       const val = getValue<string | undefined>()
       return val ? formatNationalId(val) : sharedText.unknown
@@ -90,9 +89,9 @@ export const CompanyInfoTab = ({
         >
           <InfoItems
             items={[
-              { label: d.company, children: company?.name },
+              { label: f.companyHeading, children: company?.name },
               {
-                label: d.kennitala,
+                label: f.kennitalaLabel,
                 children: formatNationalId(company?.nationalId),
               },
               { label: d.address, children: company?.address },
@@ -135,8 +134,8 @@ export const CompanyInfoTab = ({
           <InfoItems
             colCount={3}
             items={[
-              { label: e.femaleCountLabel, children: employees?.womenCount },
-              { label: e.maleCountLabel, children: employees?.menCount },
+              { label: sharedText.genders.femaleCount, children: employees?.womenCount },
+              { label: sharedText.genders.maleCount, children: employees?.menCount },
               {
                 label: c.genderNeutralRegistry,
                 children: employees?.otherCount,

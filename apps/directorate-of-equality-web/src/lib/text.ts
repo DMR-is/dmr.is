@@ -9,13 +9,9 @@ export const frontPageText = {
     href: '/yfirlit',
   },
   jafnrettisaetlanir: {
-    title: 'Jafnréttisáætlanir',
-    titleSingle: 'Jafnréttisáætlun',
     description: 'Yfirlit jafnréttisáætlana og meðferð þeirra.',
   },
   urbotaaetlanir: {
-    title: 'Úrbótaáætlanir',
-    titleSingle: 'Úrbótaáætlun',
     description: 'Yfirlit úrbótaáætlana og meðferð þeirra.',
   },
   sectionTitle: 'Staða mála',
@@ -88,9 +84,6 @@ export const overviewText = {
     deviationsHeading: 'Frávik',
     deferLabel: 'Fresta skilum frávika',
     deferReasonLabel: 'Ástæða frestunar',
-    maleCountLabel: 'Karlar',
-    femaleCountLabel: 'Konur',
-    neutralCountLabel: 'Kynhlutlægt',
     employeeCountHeading: 'Starfsmannafjöldi',
     excelSuccessToast: 'Excel skrá flutt inn',
     excelErrorToast: 'Villa við innflutning á Excel skrá',
@@ -128,10 +121,6 @@ export const reportText = {
     errorToast: 'Villa við að úthluta starfsmanni.',
   },
   detailFields: {
-    company: 'Fyrirtæki',
-    companyAdmin: 'Æðsti stjórnandi',
-    kennitala: 'Kennitala',
-    email: 'Netfang',
     isatCode: 'ÍSAT atvinnugreinaflokkun',
     companyAdminGender: 'Kyn æðsta stjórnanda',
     employeeCount: 'Fjöldi starfsmanna',
@@ -227,10 +216,6 @@ export const companiesText = {
   dailyFines: 'Dagsektir',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
-  columns: {
-    name: 'Nafn',
-    kennitala: 'Kennitala',
-  },
   expandedRow: {
     salaryRequired: 'Skýrslugjöf skylda',
     validUntilPrefix: 'Gildir til:',
@@ -241,13 +226,11 @@ export const companiesText = {
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
     kennitalaEyebrow: 'Kennitala fyrirtækis',
-    kennitalaLabel: 'Kennitala',
     kennitalaPlaceholder: '000000-0000',
     lookupButton: 'Fletta upp',
     notFoundError: 'Fyrirtæki fannst ekki í þjóðskrá',
     nameLabel: 'Nafn fyrirtækis',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
-    cancel: 'Hætta við',
     submit: 'Skrá fyrirtæki',
     successToast: 'Fyrirtæki skráð',
     errorToast: 'Villa við skráningu fyrirtækis',
@@ -346,6 +329,8 @@ export const sharedText = {
     male: 'Karl',
     female: 'Kona',
     neutral: 'Kynhlutlægt',
+    maleCount: 'Karlar',
+    femaleCount: 'Konur',
   },
   form: {
     nameLabel: 'Nafn',

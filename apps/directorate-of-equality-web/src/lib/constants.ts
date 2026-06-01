@@ -95,10 +95,10 @@ export const COLUMN_REVIEWER: ColumnDef<Case> = {
 }
 
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
-  { label: reportText.detailFields.company, key: 'company' },
-  { label: reportText.detailFields.companyAdmin, key: 'companyAdmin' },
-  { label: reportText.detailFields.kennitala, key: 'kennitala' },
-  { label: reportText.detailFields.email, key: 'email' },
+  { label: sharedText.form.companyHeading, key: 'company' },
+  { label: sharedText.form.topManagerHeading, key: 'companyAdmin' },
+  { label: sharedText.form.kennitalaLabel, key: 'kennitala' },
+  { label: sharedText.form.emailLabel, key: 'email' },
   { label: reportText.detailFields.isatCode, key: 'isatCode' },
   {
     label: reportText.detailFields.companyAdminGender,

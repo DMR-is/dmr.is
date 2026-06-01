@@ -384,7 +384,7 @@ export const CreateSalaryReportDrawer = () => {
           <GridColumn span={['12/12', '4/12']}>
             <TextInput
               name="averageEmployeeMaleCount"
-              label={t.maleCountLabel}
+              label={s.genders.maleCount}
               type="number"
               size="xs"
               value={form.averageEmployeeMaleCount}
@@ -395,7 +395,7 @@ export const CreateSalaryReportDrawer = () => {
           <GridColumn span={['12/12', '4/12']}>
             <TextInput
               name="averageEmployeeFemaleCount"
-              label={t.femaleCountLabel}
+              label={s.genders.femaleCount}
               type="number"
               size="xs"
               value={form.averageEmployeeFemaleCount}
@@ -408,7 +408,7 @@ export const CreateSalaryReportDrawer = () => {
           <GridColumn span={['12/12', '4/12']}>
             <TextInput
               name="averageEmployeeNeutralCount"
-              label={t.neutralCountLabel}
+              label={s.genders.neutral}
               type="number"
               size="xs"
               value={form.averageEmployeeNeutralCount}

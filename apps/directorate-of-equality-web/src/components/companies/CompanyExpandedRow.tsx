@@ -10,12 +10,7 @@ import {
   type CompanyDto,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
-import {
-  companiesText,
-  frontPageText,
-  reportText,
-  sharedText,
-} from '../../lib/text'
+import { companiesText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
 
@@ -80,7 +75,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
 
   const companyFields: FieldRow[] = [
     {
-      label: companiesText.columns.kennitala,
+      label: sharedText.form.kennitalaLabel,
       value: formatNationalId(company.nationalId),
     },
     {
@@ -131,7 +126,7 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
               >
                 <Stack space={1}>
                   <Text variant="small" fontWeight="semiBold">
-                    {frontPageText.jafnrettisaetlanir.titleSingle}
+                    {sharedText.typeLabels.EQUALITY}
                   </Text>
                   <Text variant="small" color="dark300">
                     {companiesText.expandedRow.validUntilPrefix}{' '}
