@@ -22,6 +22,14 @@ describe('ReportCommentService', () => {
     findOneOrThrow: jest.fn(),
   }
 
+  const reportModel = {
+    findByPk: jest.fn(),
+  }
+
+  const mailService = {
+    sendExternalCommentNotification: jest.fn(),
+  }
+
   let service: ReportCommentService
   let reviewerContext: ReportResourceContext
   let companyContext: ReportResourceContext
@@ -31,6 +39,8 @@ describe('ReportCommentService', () => {
     service = new ReportCommentService(
       logger as never,
       reportCommentModel as never,
+      reportModel as never,
+      mailService as never,
     )
     reviewerContext = {
       reportId: 'report-1',
@@ -52,10 +62,9 @@ describe('ReportCommentService', () => {
 
   it('creates a reviewer comment with the current report status snapshot', async () => {
     const commentDto = { id: 'comment-1' }
+    const commentRecord = { id: 'comment-1', fromModel: () => commentDto }
 
-    reportCommentModel.create.mockResolvedValue({
-      fromModel: () => commentDto,
-    })
+    reportCommentModel.create.mockResolvedValue(commentRecord)
 
     const dto: CreateReportCommentDto = {
       visibility: CommentVisibilityEnum.INTERNAL,
@@ -100,6 +109,7 @@ describe('ReportCommentService', () => {
     const commentDto = { id: 'comment-2' }
 
     reportCommentModel.create.mockResolvedValue({
+      id: 'comment-2',
       fromModel: () => commentDto,
     })
 
@@ -139,6 +149,73 @@ describe('ReportCommentService', () => {
     ).rejects.toBeInstanceOf(BadRequestException)
 
     expect(reportCommentModel.create).not.toHaveBeenCalled()
+  })
+
+  it('sends an external comment notification when a reviewer posts an external comment', async () => {
+    const commentRecord = {
+      id: 'comment-3',
+      fromModel: () => ({ id: 'comment-3' }),
+    }
+    const reportRecord = { id: 'report-1' }
+
+    reportCommentModel.create.mockResolvedValue(commentRecord)
+    reportModel.findByPk.mockResolvedValue(reportRecord)
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'Please update the report',
+    })
+
+    expect(reportModel.findByPk).toHaveBeenCalledWith('report-1')
+    expect(mailService.sendExternalCommentNotification).toHaveBeenCalledWith(
+      reportRecord,
+      commentRecord,
+    )
+  })
+
+  it('does not send mail for reviewer internal comments', async () => {
+    reportCommentModel.create.mockResolvedValue({
+      id: 'comment-4',
+      fromModel: () => ({ id: 'comment-4' }),
+    })
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.INTERNAL,
+      body: 'Internal reviewer note',
+    })
+
+    expect(reportModel.findByPk).not.toHaveBeenCalled()
+    expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
+  })
+
+  it('does not send mail for company-authored comments', async () => {
+    reportCommentModel.create.mockResolvedValue({
+      id: 'comment-5',
+      fromModel: () => ({ id: 'comment-5' }),
+    })
+
+    await service.create(companyContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'Reply from company',
+    })
+
+    expect(reportModel.findByPk).not.toHaveBeenCalled()
+    expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
+  })
+
+  it('skips mail when the report cannot be loaded', async () => {
+    reportCommentModel.create.mockResolvedValue({
+      id: 'comment-6',
+      fromModel: () => ({ id: 'comment-6' }),
+    })
+    reportModel.findByPk.mockResolvedValue(null)
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'External reviewer comment',
+    })
+
+    expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
   })
 
   it('allows reviewers to delete their own comments only', async () => {
