@@ -164,7 +164,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
         {!isNew && (
           <Box>
-            <Text variant="eyebrow" marginBottom={1}>
+            <Text variant="eyebrow" color="blue400" marginBottom={1}>
               {u.statusEyebrow}
             </Text>
 
