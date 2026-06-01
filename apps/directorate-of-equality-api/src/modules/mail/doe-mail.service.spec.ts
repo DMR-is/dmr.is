@@ -1,4 +1,7 @@
-import { ReportModel } from '../report/models/report.model'
+import {
+  ReportModel,
+  ReportProviderEnum,
+} from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { DoeMailService } from './doe-mail.service'
 
@@ -109,6 +112,55 @@ describe('DoeMailService', () => {
     const [message] = aws.sendMail.mock.calls[0]
     expect(message.html).not.toContain('<script>')
     expect(message.html).toContain('&lt;script&gt;')
+  })
+
+  it('includes the island.is application link when provider is ISLAND_IS', async () => {
+    aws.sendMail.mockResolvedValue(undefined)
+
+    await service.sendExternalCommentNotification(
+      makeReport({
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'abc-123',
+      }),
+      makeComment(),
+    )
+
+    const [message] = aws.sendMail.mock.calls[0]
+    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa/abc-123'
+    expect(message.html).toContain(`href="${expectedUrl}"`)
+    expect(message.html).toContain('Skoða umsókn')
+    expect(message.text).toContain(expectedUrl)
+  })
+
+  it('omits the application link for non-island.is providers', async () => {
+    aws.sendMail.mockResolvedValue(undefined)
+
+    await service.sendExternalCommentNotification(
+      makeReport({
+        providerType: ReportProviderEnum.SYSTEM,
+        providerId: 'abc-123',
+      }),
+      makeComment(),
+    )
+
+    const [message] = aws.sendMail.mock.calls[0]
+    expect(message.html).not.toContain('island.is/umsoknir/jafnrettisstofa')
+    expect(message.text).not.toContain('Skoða umsókn')
+  })
+
+  it('omits the application link when providerId is missing', async () => {
+    aws.sendMail.mockResolvedValue(undefined)
+
+    await service.sendExternalCommentNotification(
+      makeReport({
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: null,
+      }),
+      makeComment(),
+    )
+
+    const [message] = aws.sendMail.mock.calls[0]
+    expect(message.html).not.toContain('island.is/umsoknir/jafnrettisstofa')
   })
 
   it('logs and swallows SES errors so callers never throw', async () => {
