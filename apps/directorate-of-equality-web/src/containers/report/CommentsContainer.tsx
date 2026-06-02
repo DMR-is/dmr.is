@@ -48,6 +48,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   const { mutate: deleteComment } = useMutation({
     ...trpc.reportComments.delete.mutationOptions(),
     onSuccess: () => {
+      toast.success(reportText.comments.deleteSuccess)
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
@@ -68,7 +69,6 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
 
   const handleDelete = (commentId: string) => {
     deleteComment({ reportId, commentId })
-    toast.success(reportText.comments.deleteSuccess)
   }
 
   return (

@@ -38,7 +38,7 @@ export function ReportTabsContainer({ report }: ReportTabsContainerProps) {
       <AlertMessage
         type="error"
         title={reportText.salaryStatsLoadError}
-        message=""
+        message={reportText.salaryStatsLoadErrorMessage}
       />
     )
   }

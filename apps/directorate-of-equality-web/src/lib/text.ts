@@ -204,6 +204,8 @@ export const reportText = {
     movesToStatus: 'færir mál í stöðuna:',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
+  salaryStatsLoadErrorMessage:
+    'Vinsamlegast reyndu aftur síðar eða hafðu samband við kerfisstjóra ef vandamálið heldur áfram.',
   loadError: 'Villa kom upp við að hlaða skýrslu',
   loadSidebarError: 'Villa kom upp við að hlaða hliðarstiku',
 }
@@ -296,7 +298,8 @@ export const notFoundText = {
 
 export const reportNotFoundText = {
   title: 'Skýrsla fannst ekki',
-  message: 'Engin skýrsla fannst með þetta auðkenni. Mögulega hefur hún verið fjarlægð eða auðkennið er rangt.',
+  message:
+    'Engin skýrsla fannst með þetta auðkenni. Mögulega hefur hún verið fjarlægð eða auðkennið er rangt.',
   backToOverview: 'Til baka í yfirlit',
 }
 

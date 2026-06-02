@@ -85,8 +85,11 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         onClose()
       },
       onError: (error) => {
-        const message = error instanceof Error ? error.message : u.saveError
-        toast.error(u.saveError + ' - ' + message, { autoClose: 5000 })
+        const message =
+          error instanceof Error
+            ? u.saveError + ' - ' + error.message
+            : u.saveError
+        toast.error(message, { autoClose: 5000 })
       },
     }),
   )
