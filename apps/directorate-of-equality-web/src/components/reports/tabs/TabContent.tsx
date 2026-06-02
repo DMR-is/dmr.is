@@ -7,6 +7,7 @@ import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 import { Paging } from '../../../gen/fetch'
 import { useIsTablet } from '../../../hooks/useIsTablet'
 import { type Case, DETAIL_FIELDS } from '../../../lib/constants'
+import { COMPANY_SIZE_LABEL, mapGender } from '../../../lib/utils'
 import * as styles from './TabContent.css'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -35,7 +36,13 @@ const ExpandedRow = ({ row }: { row: Case }) => {
                 {label}
               </Text>
             </div>
-            <Text variant="small">{String(row[key])}</Text>
+            <Text variant="small">
+              {key === 'companyAdminGender'
+                ? mapGender(row[key])
+                : key === 'employeeCount'
+                  ? (COMPANY_SIZE_LABEL[row[key] as keyof typeof COMPANY_SIZE_LABEL] ?? row[key])
+                  : String(row[key])}
+            </Text>
           </Box>
         </Box>
       ))}

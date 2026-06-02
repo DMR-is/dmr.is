@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -120,46 +121,48 @@ export const UsersContainer = () => {
         </GridColumn>
 
         <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
-          <Stack space={2}>
-            <Inline space={1} alignY="center">
-              <Text fontWeight="semiBold">{visibleUsers.length}</Text>
-              <Text>{usersText.resultsText}</Text>
-            </Inline>
-            <Table
-              columns={COLUMNS}
-              data={visibleUsers}
-              noDataMessage={usersText.noData}
-              onRowClick={openEdit}
-            />
-            {isMobile && (
-              <Stack space={2}>
-                <Button
-                  icon="add"
-                  iconType="outline"
-                  fluid
-                  size="small"
-                  onClick={openCreate}
-                  variant="utility"
-                  colorScheme="white"
-                >
-                  {usersText.createButton}
-                </Button>
-                <Button
-                  icon={showInactive ? 'eyeOff' : 'eye'}
-                  iconType="outline"
-                  fluid
-                  size="small"
-                  onClick={() => setShowInactive((v) => !v)}
-                  variant="utility"
-                  colorScheme="white"
-                >
-                  {showInactive
-                    ? usersText.hideInactive
-                    : usersText.showInactive}
-                </Button>
-              </Stack>
-            )}
-          </Stack>
+          <Box marginLeft={[0, 0, 0, 2]}>
+            <Stack space={2}>
+              <Inline space={1} alignY="center">
+                <Text fontWeight="semiBold">{visibleUsers.length}</Text>
+                <Text>{usersText.resultsText}</Text>
+              </Inline>
+              <Table
+                columns={COLUMNS}
+                data={visibleUsers}
+                noDataMessage={usersText.noData}
+                onRowClick={openEdit}
+              />
+              {isMobile && (
+                <Stack space={2}>
+                  <Button
+                    icon="add"
+                    iconType="outline"
+                    fluid
+                    size="small"
+                    onClick={openCreate}
+                    variant="utility"
+                    colorScheme="white"
+                  >
+                    {usersText.createButton}
+                  </Button>
+                  <Button
+                    icon={showInactive ? 'eyeOff' : 'eye'}
+                    iconType="outline"
+                    fluid
+                    size="small"
+                    onClick={() => setShowInactive((v) => !v)}
+                    variant="utility"
+                    colorScheme="white"
+                  >
+                    {showInactive
+                      ? usersText.hideInactive
+                      : usersText.showInactive}
+                  </Button>
+                </Stack>
+              )}
+            </Stack>
+          </Box>
         </GridColumn>
       </GridRow>
 

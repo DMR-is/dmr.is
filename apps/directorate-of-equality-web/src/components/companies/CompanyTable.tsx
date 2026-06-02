@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -12,10 +13,9 @@ import {
   type Paging,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
-import { formatNationalId } from '../../lib/utils'
+import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
-  COMPANY_SIZE_LABEL,
   deriveStatus,
   normalizeId,
   STATUS_LABEL,
@@ -78,33 +78,36 @@ export const CompanyTable = ({
   )
 
   return (
-    <Stack space={2}>
-      <Inline space={1} alignY="center">
-        <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
-          {paging.totalItems}
-        </Text>
-        <Text marginTop={[2, 2, 0]}>fyrirtæki fundust</Text>
-      </Inline>
-      <Table
-        columns={columns}
-        data={rows}
-        sorting={sorting}
-        onSortingChange={onSortingChange}
-        paging={paging}
-        onPageChange={onPageChange}
-        showPageSizeSelect={false}
-        noDataMessage="Engin fyrirtæki skráð"
-        getRowExpanded={(company) => (
-          <CompanyExpandedRow
-            company={company}
-            approvedReports={approvedReports.filter(
-              (r) =>
-                normalizeId(r.companyNationalId) ===
-                normalizeId(company.nationalId),
-            )}
-          />
-        )}
-      />
-    </Stack>
+    <Box marginLeft={[0, 0, 0, 2]}>
+      <Stack space={2}>
+        <Inline space={1} alignY="center">
+          <Text fontWeight="semiBold" marginTop={[2, 2, 0]}>
+            {paging.totalItems}
+          </Text>
+          <Text marginTop={[2, 2, 0]}>fyrirtæki fundust</Text>
+        </Inline>
+
+        <Table
+          columns={columns}
+          data={rows}
+          sorting={sorting}
+          onSortingChange={onSortingChange}
+          paging={paging}
+          onPageChange={onPageChange}
+          showPageSizeSelect={false}
+          noDataMessage="Engin fyrirtæki skráð"
+          getRowExpanded={(company) => (
+            <CompanyExpandedRow
+              company={company}
+              approvedReports={approvedReports.filter(
+                (r) =>
+                  normalizeId(r.companyNationalId) ===
+                  normalizeId(company.nationalId),
+              )}
+            />
+          )}
+        />
+      </Stack>
+    </Box>
   )
 }

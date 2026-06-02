@@ -9,8 +9,11 @@ import { Table } from '@dmr.is/ui/components/Tables/Table'
 
 import { type CompanySizeEnum } from '../../../../gen/fetch'
 import { overviewText, reportText, sharedText } from '../../../../lib/text'
-import { formatNationalId, mapGender } from '../../../../lib/utils'
-import { COMPANY_SIZE_LABEL } from '../../../companies/companyStatus'
+import {
+  COMPANY_SIZE_LABEL,
+  formatNationalId,
+  mapGender,
+} from '../../../../lib/utils'
 import { InfoItems } from './InfoItems'
 
 import { type ColumnDef } from '@tanstack/react-table'

@@ -27,18 +27,6 @@ export const STATUS_TAG_VARIANT: Record<
   compliant: 'mint',
 }
 
-export const EMPLOYEE_RANGES = [
-  { value: CompanySizeEnum.SMALL, label: '0–24' },
-  { value: CompanySizeEnum.MEDIUM, label: '25–49' },
-  { value: CompanySizeEnum.LARGE, label: '50+' },
-]
-
-export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
-  [CompanySizeEnum.SMALL]: '0–24',
-  [CompanySizeEnum.MEDIUM]: '25–49',
-  [CompanySizeEnum.LARGE]: '50+',
-}
-
 export const STATUS_FILTER_OPTIONS = (
   ['missing-equality', 'has-equality', 'missing-salary', 'compliant'] as const
 ).map((value) => ({ value, label: STATUS_LABEL[value] }))
@@ -103,12 +91,12 @@ export function deriveStatus(
   )
   const isSmall = company.employeeCountCategory === CompanySizeEnum.SMALL
 
-  if (needsSalary && hasSalary) return 'compliant'          // LARGE: both reports filed
-  if (needsSalary && hasEquality) return 'missing-salary'  // LARGE: equality done, salary missing
-  if (needsSalary) return 'missing-equality'               // LARGE: equality is the prerequisite
+  if (needsSalary && hasSalary) return 'compliant' // LARGE: both reports filed
+  if (needsSalary && hasEquality) return 'missing-salary' // LARGE: equality done, salary missing
+  if (needsSalary) return 'missing-equality' // LARGE: equality is the prerequisite
   // No salary requirement below this line
-  if (!isSmall && hasEquality) return 'compliant'          // MEDIUM with equality: obligation met
-  if (!isSmall) return 'missing-equality'                  // MEDIUM without equality
-  if (hasEquality) return 'has-equality'                   // SMALL voluntary submission
-  return 'compliant'                                       // SMALL with nothing: no obligation
+  if (!isSmall && hasEquality) return 'compliant' // MEDIUM with equality: obligation met
+  if (!isSmall) return 'missing-equality' // MEDIUM without equality
+  if (hasEquality) return 'has-equality' // SMALL voluntary submission
+  return 'compliant' // SMALL with nothing: no obligation
 }

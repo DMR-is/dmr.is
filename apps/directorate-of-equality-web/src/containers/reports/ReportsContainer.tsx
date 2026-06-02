@@ -252,32 +252,34 @@ export const ReportsContainer = () => {
           </Stack>
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
-          <Stack space={[1, 2]}>
-            <Inline space={1} alignY="center">
-              <Text fontWeight="semiBold" marginTop={isMobile ? 2 : 0}>
-                {data?.paging.totalItems ?? 0}
-              </Text>
-              <Text marginTop={isMobile ? 2 : 0}>
-                {overviewText.resultsText}
-              </Text>
-            </Inline>
-            <TabContent
-              data={data?.reports.map(mapReportToCase)}
-              isLoading={isLoading}
-              columns={allColumns}
-              expandable={expandable}
-              paging={data?.paging}
-              onPageChange={(p) => setFilter({ page: p })}
-            />
-            {isMobile && (
-              <Box marginTop={2}>
-                <Stack space={2}>
-                  <CreateEqualityReportDrawer />
-                  <CreateSalaryReportDrawer />
-                </Stack>
-              </Box>
-            )}
-          </Stack>
+          <Box marginLeft={[0, 0, 0, 2]}>
+            <Stack space={[1, 2]}>
+              <Inline space={1} alignY="center">
+                <Text fontWeight="semiBold" marginTop={isMobile ? 2 : 0}>
+                  {data?.paging.totalItems ?? 0}
+                </Text>
+                <Text marginTop={isMobile ? 2 : 0}>
+                  {overviewText.resultsText}
+                </Text>
+              </Inline>
+              <TabContent
+                data={data?.reports.map(mapReportToCase)}
+                isLoading={isLoading}
+                columns={allColumns}
+                expandable={expandable}
+                paging={data?.paging}
+                onPageChange={(p) => setFilter({ page: p })}
+              />
+              {isMobile && (
+                <Box marginTop={2}>
+                  <Stack space={2}>
+                    <CreateEqualityReportDrawer />
+                    <CreateSalaryReportDrawer />
+                  </Stack>
+                </Box>
+              )}
+            </Stack>
+          </Box>
         </GridColumn>
       </GridRow>
     </Box>

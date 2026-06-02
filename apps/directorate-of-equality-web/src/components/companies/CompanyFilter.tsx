@@ -8,9 +8,9 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsTablet } from '../../hooks/useIsTablet'
 import { companiesText, sharedText } from '../../lib/text'
+import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
   DAILY_FINES_FILTER_OPTIONS,
-  EMPLOYEE_RANGES,
   EXPIRES_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
 } from './companyStatus'
