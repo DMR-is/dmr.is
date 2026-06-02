@@ -134,8 +134,14 @@ export const CompanyInfoTab = ({
           <InfoItems
             colCount={3}
             items={[
-              { label: sharedText.genders.femaleCount, children: employees?.womenCount },
-              { label: sharedText.genders.maleCount, children: employees?.menCount },
+              {
+                label: sharedText.genders.femaleCount,
+                children: employees?.womenCount,
+              },
+              {
+                label: sharedText.genders.maleCount,
+                children: employees?.menCount,
+              },
               {
                 label: c.genderNeutralRegistry,
                 children: employees?.otherCount,

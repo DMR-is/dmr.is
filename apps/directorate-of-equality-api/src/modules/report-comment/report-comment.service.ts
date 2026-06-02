@@ -8,6 +8,8 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { IDoeMailService } from '../mail/doe-mail.service.interface'
+import { ReportModel } from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -28,6 +30,10 @@ export class ReportCommentService implements IReportCommentService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(ReportCommentModel)
     private readonly reportCommentModel: typeof ReportCommentModel,
+    @InjectModel(ReportModel)
+    private readonly reportModel: typeof ReportModel,
+    @Inject(IDoeMailService)
+    private readonly mailService: IDoeMailService,
   ) {}
 
   async getByReportId(
@@ -74,6 +80,11 @@ export class ReportCommentService implements IReportCommentService {
       )
     }
 
+    const visibility =
+      context.actor.kind !== ReportRoleEnum.REVIEWER
+        ? CommentVisibilityEnum.EXTERNAL
+        : dto.visibility
+
     const comment = await this.reportCommentModel.create({
       reportId: context.reportId,
       authorKind:
@@ -84,13 +95,20 @@ export class ReportCommentService implements IReportCommentService {
         context.actor.kind === ReportRoleEnum.REVIEWER
           ? context.actor.userId
           : null,
-      visibility:
-        context.actor.kind !== ReportRoleEnum.REVIEWER
-          ? CommentVisibilityEnum.EXTERNAL
-          : dto.visibility,
+      visibility,
       body,
       reportStatus: context.reportStatus,
     })
+
+    if (
+      context.actor.kind === ReportRoleEnum.REVIEWER &&
+      visibility === CommentVisibilityEnum.EXTERNAL
+    ) {
+      const report = await this.reportModel.findByPk(context.reportId)
+      if (report) {
+        await this.mailService.sendExternalCommentNotification(report, comment)
+      }
+    }
 
     return comment.fromModel()
   }
