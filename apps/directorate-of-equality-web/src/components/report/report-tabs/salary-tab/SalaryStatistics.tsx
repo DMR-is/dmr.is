@@ -2,6 +2,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { reportText } from '../../../../lib/text'
 import { StatisticCard } from '../../../StatisticCard'
 
 interface SalaryStatisticsProps {
@@ -18,10 +19,8 @@ export const SalaryStatistics = ({
   return (
     <Box marginBottom={4}>
       <Stack space={2}>
-        <Text variant="h4">Launamunur</Text>
-        <Text variant="default">
-          Óleiðréttur launamunur milli karla og kvenna
-        </Text>
+        <Text variant="h4">{reportText.salaryTab.wageGapLabel}</Text>
+        <Text variant="default">{reportText.salaryTab.wageGapDescription}</Text>
         <Box
           display="flex"
           columnGap={[0, 0, 0, 4]}
@@ -29,13 +28,16 @@ export const SalaryStatistics = ({
           marginTop={1}
           flexDirection={['column', 'column', 'column', 'row']}
         >
-          <StatisticCard title="Meðallaun karla" content={maleAverageSalary} />
           <StatisticCard
-            title="Meðallaun kvenna"
+            title={reportText.salaryTab.avgSalaryMale}
+            content={maleAverageSalary}
+          />
+          <StatisticCard
+            title={reportText.salaryTab.avgSalaryFemale}
             content={femaleAverageSalary}
           />
           <StatisticCard
-            title="Launamunur"
+            title={reportText.salaryTab.wageGapLabel}
             content={wageGapPercent + '%'}
             color="purple"
           />

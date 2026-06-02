@@ -297,17 +297,17 @@ export const ReportsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `Innsendingar (${(data?.statusCounts.submitted ?? 0) + (data?.statusCounts.postponed ?? 0)})`,
+            label: `${overviewText.tabInnsendingar} (${(data?.statusCounts.submitted ?? 0) + (data?.statusCounts.postponed ?? 0)})`,
             content: filterAndTable(true),
           },
           {
             id: 'i-vinnslu',
-            label: `Í vinnslu (${data?.statusCounts.inReview ?? 0})`,
+            label: `${overviewText.tabInProgress} (${data?.statusCounts.inReview ?? 0})`,
             content: filterAndTable(),
           },
           {
             id: 'afgreitt',
-            label: `Afgreitt (${data?.statusCounts.processed ?? 0})`,
+            label: `${overviewText.tabAfgreitt} (${data?.statusCounts.processed ?? 0})`,
             content: filterAndTable(),
           },
         ]}

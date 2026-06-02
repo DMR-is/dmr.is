@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
-import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -164,7 +163,7 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
 
         {!isNew && (
           <Box>
-            <Text variant="eyebrow" marginBottom={1}>
+            <Text variant="eyebrow" color="blue400" marginBottom={1}>
               {u.statusEyebrow}
             </Text>
 

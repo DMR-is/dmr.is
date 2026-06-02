@@ -4,8 +4,8 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import type { ReportDetailDto } from '../../gen/fetch'
-import { formatDateIS } from '../../lib/constants'
-import { reportText, sharedText } from '../../lib/text'
+import { formatDateIS, NAV_PATHS } from '../../lib/constants'
+import { reportText } from '../../lib/text'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
 type ReportFormContainerProps = {
@@ -30,8 +30,14 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
       <Stack space={[2]}>
         <Breadcrumbs
           items={[
-            { title: sharedText.breadcrumbHome, href: '/' },
-            { title: reportText.breadcrumbOverview, href: '/yfirlit' },
+            {
+              title: NAV_PATHS.frontpage.title,
+              href: NAV_PATHS.frontpage.href,
+            },
+            {
+              title: NAV_PATHS.heildarlisti.title,
+              href: NAV_PATHS.heildarlisti.href,
+            },
             { title: reportText.heroTitle, href: `/yfirlit/${report.id}` },
           ]}
         />

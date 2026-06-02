@@ -11,7 +11,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { companiesText } from '../../lib/text'
+import { companiesText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { employeeCountCategoryFromCount } from './companyStatus'
 
@@ -100,7 +100,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
             >
               <TextInput
                 name="nationalId"
-                label={companiesText.createModal.kennitalaLabel}
+                label={sharedText.form.kennitalaLabel}
                 placeholder={companiesText.createModal.kennitalaPlaceholder}
                 size="xs"
                 value={nationalIdInput}
@@ -149,7 +149,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
 
         <Inline justifyContent="flexEnd" space={2}>
           <Button variant="ghost" size="small" onClick={handleClose}>
-            {companiesText.createModal.cancel}
+            {sharedText.form.cancel}
           </Button>
           <Button
             size="small"

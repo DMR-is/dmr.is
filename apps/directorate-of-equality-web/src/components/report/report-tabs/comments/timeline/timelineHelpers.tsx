@@ -12,6 +12,7 @@ import {
   formatDateIS,
   ReportStatusTranslatedEnum,
 } from '../../../../../lib/constants'
+import { reportText } from '../../../../../lib/text'
 
 export function formatRelativeDate(dateStr: string): string {
   const d = new Date(dateStr)
@@ -54,13 +55,13 @@ export function timelineEntryText(
     const user = usersById.get(comment?.authorUserId ?? '')
     const isCompany = comment?.authorKind === ReportRoleEnum.COMPANY
     const authorName = isCompany
-      ? (companyName ?? 'Fyrirtæki')
+      ? (companyName ?? reportText.timeline.company)
       : user
         ? userName(user)
-        : 'Starfsmaður'
+        : reportText.timeline.employee
     return (
       <>
-        <Bold>{authorName}</Bold> skráir skilaboð
+        <Bold>{authorName}</Bold> {reportText.timeline.registersMessage}
       </>
     )
   }
@@ -72,10 +73,10 @@ export function timelineEntryText(
   if (eventType === ReportEventTypeEnum.SUBMITTED) {
     return companyName ? (
       <>
-        <Bold>{companyName}</Bold> sendir inn skýrslu
+        <Bold>{companyName}</Bold> {reportText.timeline.submitsReport}
       </>
     ) : (
-      'Skýrsla innsend'
+      <>{reportText.timeline.reportSubmitted}</>
     )
   }
 
@@ -83,10 +84,10 @@ export function timelineEntryText(
     const user = usersById.get(assignedUserId)
     return user ? (
       <>
-        <Bold>{userName(user)}</Bold> merkir sér málið
+        <Bold>{userName(user)}</Bold> {reportText.timeline.claimsCase}
       </>
     ) : (
-      'Úthlutað'
+      <>{reportText.timeline.assigned}</>
     )
   }
 
@@ -95,7 +96,7 @@ export function timelineEntryText(
     return (
       <>
         {actor && <Bold>{userName(actor)} </Bold>}
-        tekur sig af málinu
+        {reportText.timeline.unassigned}
       </>
     )
   }
@@ -106,13 +107,14 @@ export function timelineEntryText(
     return (
       <>
         {actor && <Bold>{userName(actor)} </Bold>}
-        færir mál í stöðuna: {statusLabel ? <Bold>{statusLabel}</Bold> : null}
+        {reportText.timeline.movesToStatus}{' '}
+        {statusLabel ? <Bold>{statusLabel}</Bold> : null}
       </>
     )
   }
 
   const FALLBACK: Partial<Record<ReportEventTypeEnum, string>> = {
-    [ReportEventTypeEnum.SUPERSEDED]: 'Úrelt',
+    [ReportEventTypeEnum.SUPERSEDED]: reportText.timeline.superseded,
   }
   return FALLBACK[eventType] ?? eventType
 }

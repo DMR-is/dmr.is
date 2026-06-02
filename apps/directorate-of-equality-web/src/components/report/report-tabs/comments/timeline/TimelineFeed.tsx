@@ -8,6 +8,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Divider } from '@island.is/island-ui/core'
 
 import { ReportTimelineItemDto, UserDto } from '../../../../../gen/fetch'
+import { reportText } from '../../../../../lib/text'
 import { TimelineEntry } from './TimelineEntry'
 
 const HEAD_COUNT = 3
@@ -70,7 +71,7 @@ export function TimelineFeed({
         <Divider />
         <Box paddingY={3} marginLeft={7}>
           <Button variant="text" size="small" onClick={() => setShowAll(true)}>
-            Sjá allar athugasemdir ({hiddenCount})
+            {reportText.comments.seeAllComments} ({hiddenCount})
           </Button>
         </Box>
         <Divider />

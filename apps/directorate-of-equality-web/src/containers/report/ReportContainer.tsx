@@ -7,6 +7,7 @@ import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
 import { ReportDetailDto } from '../../gen/fetch'
+import { reportText } from '../../lib/text'
 import { ReportFormContainer } from './ReportFormContainer'
 import { ReportSidebarContainer } from './ReportSidebarContainer'
 
@@ -24,9 +25,7 @@ export function ReportContainer({ report }: ReportContainerProps) {
               span={['12/12', '12/12', '12/12', '9/12', '9/12']}
               order={[2, 2, 1]}
             >
-              <ErrorBoundary
-                fallback={<div>Villa kom upp við að hlaða skýrslu</div>}
-              >
+              <ErrorBoundary fallback={<div>{reportText.loadError}</div>}>
                 <ReportFormContainer report={report} />
               </ErrorBoundary>
             </GridColumn>
@@ -36,7 +35,7 @@ export function ReportContainer({ report }: ReportContainerProps) {
               className="report-sidebar-column"
             >
               <ErrorBoundary
-                fallback={<div>Villa kom upp við að hlaða hliðarstiku</div>}
+                fallback={<div>{reportText.loadSidebarError}</div>}
               >
                 <ReportSidebarContainer report={report} />
               </ErrorBoundary>

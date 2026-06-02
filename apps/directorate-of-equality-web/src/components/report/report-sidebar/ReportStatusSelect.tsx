@@ -7,7 +7,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../../gen/fetch'
 import { ReportStatusTranslatedEnum } from '../../../lib/constants'
-import { reportText } from '../../../lib/text'
+import { reportText, sharedText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { ReportDenialModal } from './ReportDenialModal'
 
@@ -109,7 +109,7 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
     <>
       <Select
         size="sm"
-        label="Staða"
+        label={sharedText.statusLabel}
         options={options}
         value={currentOption}
         isLoading={isLoading}

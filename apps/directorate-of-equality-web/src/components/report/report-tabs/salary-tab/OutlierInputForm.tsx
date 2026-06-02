@@ -1,5 +1,7 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+
+import { reportText } from '../../../../lib/text'
 interface OutlierInputFormProps {
   outlierDate?: Date
 }
@@ -10,11 +12,11 @@ export const OutlierInputForm = ({ outlierDate }: OutlierInputFormProps) => {
     <Box style={{ maxWidth: 390 }}>
       <DatePicker
         readOnly
-        placeholderText="Valin dagsetning fyrir úrbótafrest"
+        placeholderText={reportText.salaryTab.remedyDeadlinePlaceholder}
         icon={{ name: 'calendar', type: 'outline' }}
         size="sm"
         name="outlierCorrectionDate"
-        label="Frestur til úrbóta"
+        label={reportText.salaryTab.remedyDeadlineLabel}
         selected={outlierDate}
       />
     </Box>

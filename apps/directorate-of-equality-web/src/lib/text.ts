@@ -9,13 +9,9 @@ export const frontPageText = {
     href: '/yfirlit',
   },
   jafnrettisaetlanir: {
-    title: 'Jafnréttisáætlanir',
-    titleSingle: 'Jafnréttisáætlun',
     description: 'Yfirlit jafnréttisáætlana og meðferð þeirra.',
   },
   urbotaaetlanir: {
-    title: 'Úrbótaáætlanir',
-    titleSingle: 'Úrbótaáætlun',
     description: 'Yfirlit úrbótaáætlana og meðferð þeirra.',
   },
   sectionTitle: 'Staða mála',
@@ -57,6 +53,7 @@ export const overviewText = {
   tabAfgreitt: 'Afgreitt',
   resultsText: 'færslur fundust',
   noComments: 'Engar athugasemdir',
+  openAdmin: 'Opna ritjstjórn',
   filter: {
     heading: 'Leit og síun',
     placeholder: 'Sláðu inn leitarorð',
@@ -87,9 +84,6 @@ export const overviewText = {
     deviationsHeading: 'Frávik',
     deferLabel: 'Fresta skilum frávika',
     deferReasonLabel: 'Ástæða frestunar',
-    maleCountLabel: 'Karlar',
-    femaleCountLabel: 'Konur',
-    neutralCountLabel: 'Kynhlutlægt',
     employeeCountHeading: 'Starfsmannafjöldi',
     excelSuccessToast: 'Excel skrá flutt inn',
     excelErrorToast: 'Villa við innflutning á Excel skrá',
@@ -114,6 +108,8 @@ export const reportText = {
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
     submit: 'Vista athugasemd',
+    visibleToApplicant: 'Sýnileg innsendanda',
+    seeAllComments: 'Sjá allar athugasemdir',
   },
   statusSelect: {
     successToast: 'Uppfærsla á stöðu tókst.',
@@ -125,10 +121,6 @@ export const reportText = {
     errorToast: 'Villa við að úthluta starfsmanni.',
   },
   detailFields: {
-    company: 'Fyrirtæki',
-    companyAdmin: 'Æðsti stjórnandi',
-    kennitala: 'Kennitala',
-    email: 'Netfang',
     isatCode: 'ÍSAT atvinnugreinaflokkun',
     companyAdminGender: 'Kyn æðsta stjórnanda',
     employeeCount: 'Fjöldi starfsmanna',
@@ -165,7 +157,6 @@ export const reportText = {
     outliersPostponedTitle: 'Frestur á úrbótaáætlun.',
     outliersPostponedMessage:
       'Fyrirtækið hefur óskað eftir fresti við skil á úrbótaáætlun.',
-    wageGapHeading: 'Launamunur',
     wageGapDescription: 'Óleiðréttur launamunur milli karla og kvenna',
     avgSalaryMale: 'Meðallaun karla',
     avgSalaryFemale: 'Meðallaun kvenna',
@@ -209,10 +200,14 @@ export const reportText = {
     claimsCase: 'merkir sér málið',
     movesToStatus: 'færir mál í stöðuna:',
   },
+  loadError: 'Villa kom upp við að hlaða skýrslu',
+  loadSidebarError: 'Villa kom upp við að hlaða hliðarstiku',
 }
 
 export const companiesText = {
   heading: 'Fyrirtæki',
+  heroDescription:
+    'Hér eru skráð fyrirtæki í kerfinu. Hægt er að leita að fyrirtækjum, sía eftir stærð og skoða stöðu jafnréttismála.',
   newButton: 'Nýtt fyrirtæki',
   filterHeading: 'Leit og síun',
   filterPlaceholder: 'Sláðu inn leitarorð',
@@ -221,24 +216,21 @@ export const companiesText = {
   dailyFines: 'Dagsektir',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
-  columns: {
-    name: 'Nafn',
-    kennitala: 'Kennitala',
-  },
   expandedRow: {
     salaryRequired: 'Skýrslugjöf skylda',
     validUntilPrefix: 'Gildir til:',
+    avgEmployees: 'Meðalfjöldi starfsmanna',
+    contactPerson: 'Tengiliður',
+    contactEmail: 'Netfang tengiliðar',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
     kennitalaEyebrow: 'Kennitala fyrirtækis',
-    kennitalaLabel: 'Kennitala',
     kennitalaPlaceholder: '000000-0000',
     lookupButton: 'Fletta upp',
     notFoundError: 'Fyrirtæki fannst ekki í þjóðskrá',
     nameLabel: 'Nafn fyrirtækis',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
-    cancel: 'Hætta við',
     submit: 'Skrá fyrirtæki',
     successToast: 'Fyrirtæki skráð',
     errorToast: 'Villa við skráningu fyrirtækis',
@@ -246,6 +238,9 @@ export const companiesText = {
 }
 
 export const usersText = {
+  heroTitle: 'Ritstjórar',
+  heroDescription:
+    'Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan.',
   createButton: 'Nýr ritstjóri',
   showInactive: 'Sýna óvirka',
   hideInactive: 'Fela óvirka',
@@ -306,6 +301,7 @@ export const sharedText = {
   yesLabel: 'Já',
   noLabel: 'Nei',
   statusLabel: 'Staða',
+  delete: 'Eyða',
   filter: {
     labelClearAll: 'Hreinsa allar síur',
     labelOpen: 'Opna síur',
@@ -322,18 +318,23 @@ export const sharedText = {
     DENIED: 'Hafnað',
     SUPERSEDED: 'Úrelt',
     POSTPONED: 'Frestað',
+    WITHDRAWN: 'Dregin til baka',
   },
   typeLabels: {
     EQUALITY: 'Jafnréttisáætlun',
     SALARY: 'Skýrslugjöf',
+    IMPROVEMENT_PLAN: 'Úrbótaáætlun',
   },
   genders: {
     male: 'Karl',
     female: 'Kona',
     neutral: 'Kynhlutlægt',
+    maleCount: 'Karlar',
+    femaleCount: 'Konur',
   },
   form: {
     nameLabel: 'Nafn',
+    kennitalaLabel: 'Kennitala',
     emailLabel: 'Netfang',
     phoneLabel: 'Símanúmer',
     phoneShortLabel: 'Sími',
@@ -353,4 +354,5 @@ export const sharedText = {
     message:
       'Engin gögn fundust. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar.',
   },
+  files: 'Skjöl',
 }

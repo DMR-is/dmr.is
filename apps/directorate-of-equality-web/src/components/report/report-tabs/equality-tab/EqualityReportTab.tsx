@@ -9,6 +9,7 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@island.is/island-ui/core'
 
 import { EqualityReportDto } from '../../../../gen/fetch'
+import { reportText } from '../../../../lib/text'
 import { Empty } from '../../../Empty'
 import { EqualityReportInputs } from './EqualityReportInputs'
 
@@ -26,8 +27,8 @@ export const EqualityReportTab = ({
   if (!report?.content) {
     return (
       <Empty
-        title="Engin jafnréttisáætlun"
-        message="Engin jafnréttisáætlun fannst fyrir þessa skýrslu. Vinsamlegast hafðu samband við fyrirtækið til að fá frekari upplýsingar."
+        title={reportText.equalityTab.emptyTitle}
+        message={reportText.equalityTab.emptyMessage}
       />
     )
   }

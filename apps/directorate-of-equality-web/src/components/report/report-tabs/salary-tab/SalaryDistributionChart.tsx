@@ -18,7 +18,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { theme } from '@island.is/island-ui/theme'
 
 import { SalaryByGenderAndScoreDto } from '../../../../gen/fetch'
-
+import { reportText } from '../../../../lib/text'
 function formatSalary(v: number) {
   return new Intl.NumberFormat('is-IS')
     .format(Math.round(v))
@@ -41,7 +41,7 @@ export function SalaryDistributionChart({ data }: Props) {
           color: '#9ca3af',
         }}
       >
-        Engin launagögn til að birta
+        {reportText.salaryTab.noDataMessage}
       </div>
     )
   }
@@ -68,10 +68,9 @@ export function SalaryDistributionChart({ data }: Props) {
 
   return (
     <Box display="flex" flexDirection="column" rowGap={2} marginY={4}>
-      <Text variant="h4">Stig á móti meðallaunum</Text>
+      <Text variant="h4">{reportText.salaryTab.chartTitle}</Text>
       <Text variant="default" marginBottom={4}>
-        Hér má sjá línulega affallsgreiningu á uppreiknuðum launum á milli
-        kynja.
+        {reportText.salaryTab.chartDescription}
       </Text>
 
       <ResponsiveContainer width="100%" height={420}>
@@ -89,7 +88,7 @@ export function SalaryDistributionChart({ data }: Props) {
             tickLine={false}
             tick={{ fill: theme.color.black, fontSize: 14 }}
             label={{
-              value: 'stig',
+              value: reportText.salaryTab.chartScaleScore,
               position: 'insideBottomRight',
               dx: 5,
               dy: 10,
@@ -110,7 +109,7 @@ export function SalaryDistributionChart({ data }: Props) {
             tick={{ fill: theme.color.black, fontSize: 14 }}
             width={95}
             label={{
-              value: 'kr.',
+              value: reportText.salaryTab.chartScaleCurrency,
               position: 'insideTop',
               offset: -22,
               fontWeight: 'bold',
@@ -126,8 +125,12 @@ export function SalaryDistributionChart({ data }: Props) {
               name: string | undefined,
             ) => {
               if (value == null) return ['', name ?? '']
-              if (name === 'score') return [String(value), 'Stig']
-              return [formatSalary(value), 'Laun']
+              if (name === 'score')
+                return [String(value), reportText.salaryTab.chartTooltipScore]
+              return [
+                formatSalary(value),
+                reportText.salaryTab.chartTooltipSalary,
+              ]
             }}
           />
 
