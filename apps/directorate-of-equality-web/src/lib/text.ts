@@ -286,6 +286,14 @@ export const notFoundText = {
     'Ekkert fannst á þessari slóð. Mögulega hefur síðan verið fjarlægð eða færð til.',
 }
 
+export const serverErrorText = {
+  title: 'Eitthvað fór úrskeiðis',
+  message:
+    'Villa kom upp við að sækja gögn. Vinsamlegast reyndu aftur síðar eða hafðu samband við kerfisstjóra ef vandinn líður áfram.',
+  tryAgain: 'Reyna aftur',
+  backToOverview: 'Til baka í yfirlit',
+}
+
 export const headerText = {
   logoAlt: 'Jafnréttisstofa logo',
   brand: 'Jafnréttisstofa',
