@@ -63,6 +63,17 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         toast.success(u.createSuccess)
         onClose()
       },
+      onError: (error) => {
+        //TODO: Revisit error handling here, ideally the API would return a specific error code for this case instead of relying on the error message
+        const userAlreadyExists = 'User with this national ID already exists'
+        const message =
+          error instanceof Error
+            ? error.message === userAlreadyExists
+              ? u.userAlreadyExists
+              : u.createError + ' - ' + error.message
+            : u.createError
+        toast.error(message, { autoClose: 5000 })
+      },
     }),
   )
 
@@ -72,6 +83,10 @@ export const UserModal = ({ user, isOpen, onClose }: Props) => {
         queryClient.invalidateQueries({ queryKey: trpc.user.list.queryKey() })
         toast.success(u.saveSuccess)
         onClose()
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : u.saveError
+        toast.error(u.saveError + ' - ' + message, { autoClose: 5000 })
       },
     }),
   )

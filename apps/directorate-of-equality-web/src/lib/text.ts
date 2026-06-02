@@ -110,6 +110,9 @@ export const reportText = {
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
+    createError: 'Villa við að vista athugasemd',
+    deleteError: 'Villa við að eyða athugasemd',
+    deleteSuccess: 'Athugasemd eytt',
   },
   statusSelect: {
     successToast: 'Uppfærsla á stöðu tókst.',
@@ -200,6 +203,7 @@ export const reportText = {
     claimsCase: 'merkir sér málið',
     movesToStatus: 'færir mál í stöðuna:',
   },
+  salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   loadError: 'Villa kom upp við að hlaða skýrslu',
   loadSidebarError: 'Villa kom upp við að hlaða hliðarstiku',
 }
@@ -261,6 +265,10 @@ export const usersText = {
     save: 'Vista breytingar',
     createSuccess: 'Ritstjóri stofnaður',
     saveSuccess: 'Breytingar vistaðar',
+    createError: 'Villa við stofnun ritstjóra',
+    userAlreadyExists:
+      'Ritstjóri með þessari kennitölu er þegar til. Athugaðu hvort hann geti verið í listanum yfir óvirka ritstjóra.',
+    saveError: 'Villa við vistun breytinga',
   },
 }
 
@@ -284,6 +292,12 @@ export const notFoundText = {
   title: 'Síða fannst ekki',
   message:
     'Ekkert fannst á þessari slóð. Mögulega hefur síðan verið fjarlægð eða færð til.',
+}
+
+export const reportNotFoundText = {
+  title: 'Skýrsla fannst ekki',
+  message: 'Engin skýrsla fannst með þetta auðkenni. Mögulega hefur hún verið fjarlægð eða auðkennið er rangt.',
+  backToOverview: 'Til baka í yfirlit',
 }
 
 export const serverErrorText = {

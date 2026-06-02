@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
 import { theme } from '@dmr.is/island-ui-theme'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -18,10 +19,10 @@ import { TrackerTable } from '@dmr.is/ui/components/Tables/TrackerTable'
 import { Wrapper } from '@dmr.is/ui/components/Wrapper/Wrapper'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
-import { frontPageText, overviewText, sharedText } from '../../lib/text'
+import { frontPageText, overviewText, serverErrorText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
 const PieChart = dynamic(
   () =>
@@ -100,23 +101,26 @@ export const SectionContainer = ({ userId }: Props) => {
   const [statsWindow, setStatsWindow] = useState<StatisticsWindow>('last30Days')
 
   const trpc = useTRPC()
-  const { data: overview } = useSuspenseQuery(
+  const { data: overview, isError: overviewError } = useQuery(
     trpc.reports.overview.queryOptions(),
   )
-  const { data: statistics } = useSuspenseQuery(
+  const { data: statistics, isError: statisticsError } = useQuery(
     trpc.reports.overviewStatistics.queryOptions(),
   )
 
-  const windowItems = statistics[statsWindow].items
-  const pieItems = CHART_STATUSES.map((status) => {
-    const match = windowItems.find((i) => i.status === status)
-    return {
-      color: STATUS_COLORS[status],
-      title: STATUS_LABELS[status],
-      count: match?.count ?? 0,
-      percentage: match?.percentage ?? 0,
-    }
-  })
+  const pieItems = statistics
+    ? CHART_STATUSES.map((status) => {
+        const match = statistics[statsWindow].items.find(
+          (i) => i.status === status,
+        )
+        return {
+          color: STATUS_COLORS[status],
+          title: STATUS_LABELS[status],
+          count: match?.count ?? 0,
+          percentage: match?.percentage ?? 0,
+        }
+      })
+    : []
 
   return (
     <Section bleed variant="blue">
@@ -136,79 +140,97 @@ export const SectionContainer = ({ userId }: Props) => {
                 }
                 linkText={overviewText.openAdmin}
               >
-                <Tabs
-                  label="Mál flokkar"
-                  selected={selectedTab}
-                  onChange={setSelectedTab}
-                  contentBackground="white"
-                  tabs={[
-                    {
-                      id: 'almennt',
-                      label: frontPageText.tabGeneral,
-                      content: (
-                        <TrackerTable
-                          rows={[
-                            {
-                              text: `${overview.general.submittedToday} ný mál hafa borist í dag`,
-                            },
-                            {
-                              text: `${overview.general.inProgress} mál eru til skoðunar hjá starfsmönnum`,
-                            },
-                            {
-                              text: `${overview.general.reportsWithComments} opin mál eru með skráðar athugasemdir`,
-                            },
-                            {
-                              text: `${overview.general.reportsWithoutEmployee} opin mál eru án úthlutaðs starfsmanns`,
-                            },
-                          ]}
-                        />
-                      ),
-                    },
-                    {
-                      id: 'min-mal',
-                      label: frontPageText.tabMine,
-                      content: (
-                        <TrackerTable
-                          rows={[
-                            {
-                              text: `${overview.assigned.totalAssigned} opin mál eru úthlutað til mín`,
-                            },
-                            {
-                              text: `${overview.assigned.assignedWithComments} af mínum málum eru með skráðar athugasemdir`,
-                            },
-                          ]}
-                        />
-                      ),
-                    },
-                  ]}
-                />
+                {overviewError ? (
+                  <AlertMessage
+                    type="error"
+                    title={serverErrorText.title}
+                    message={serverErrorText.message}
+                  />
+                ) : (
+                  <Tabs
+                    label="Mál flokkar"
+                    selected={selectedTab}
+                    onChange={setSelectedTab}
+                    contentBackground="white"
+                    tabs={[
+                      {
+                        id: 'almennt',
+                        label: frontPageText.tabGeneral,
+                        content: (
+                          <TrackerTable
+                            rows={[
+                              {
+                                text: `${overview?.general.submittedToday ?? 0} ný mál hafa borist í dag`,
+                              },
+                              {
+                                text: `${overview?.general.inProgress ?? 0} mál eru til skoðunar hjá starfsmönnum`,
+                              },
+                              {
+                                text: `${overview?.general.reportsWithComments ?? 0} opin mál eru með skráðar athugasemdir`,
+                              },
+                              {
+                                text: `${overview?.general.reportsWithoutEmployee ?? 0} opin mál eru án úthlutaðs starfsmanns`,
+                              },
+                            ]}
+                          />
+                        ),
+                      },
+                      {
+                        id: 'min-mal',
+                        label: frontPageText.tabMine,
+                        content: (
+                          <TrackerTable
+                            rows={[
+                              {
+                                text: `${overview?.assigned.totalAssigned ?? 0} opin mál eru úthlutað til mín`,
+                              },
+                              {
+                                text: `${overview?.assigned.assignedWithComments ?? 0} af mínum málum eru með skráðar athugasemdir`,
+                              },
+                            ]}
+                          />
+                        ),
+                      },
+                    ]}
+                  />
+                )}
               </Wrapper>
             </Stack>
           </GridColumn>
           <GridColumn span={['12/12', '5/12']}>
             <Wrapper title={frontPageText.statsTitle}>
-              <Box
-                display="flex"
-                flexWrap="wrap"
-                columnGap={1}
-                rowGap={1}
-                marginBottom={2}
-              >
-                {STATS_WINDOWS.map(({ id, label, variant }) => (
-                  <Tag
-                    key={id}
-                    active={statsWindow === id}
-                    variant={variant}
-                    onClick={() => setStatsWindow(id)}
+              {statisticsError ? (
+                <AlertMessage
+                  type="error"
+                  title={serverErrorText.title}
+                  message={serverErrorText.message}
+                />
+              ) : (
+                <>
+                  <Box
+                    display="flex"
+                    flexWrap="wrap"
+                    columnGap={1}
+                    rowGap={1}
+                    marginBottom={2}
                   >
-                    {label}
-                  </Tag>
-                ))}
-              </Box>
-              <PieChart
-                intro={STATS_WINDOW_INTROS[statsWindow]}
-                items={pieItems}
-              />
+                    {STATS_WINDOWS.map(({ id, label, variant }) => (
+                      <Tag
+                        key={id}
+                        active={statsWindow === id}
+                        variant={variant}
+                        onClick={() => setStatsWindow(id)}
+                      >
+                        {label}
+                      </Tag>
+                    ))}
+                  </Box>
+                  <PieChart
+                    intro={STATS_WINDOW_INTROS[statsWindow]}
+                    items={pieItems}
+                  />
+                </>
+              )}
             </Wrapper>
           </GridColumn>
         </GridRow>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -23,13 +24,14 @@ import {
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
+import { serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 export const CompaniesContainer = () => {
   const { isTablet } = useIsTablet()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const { data, filter, setFilter, resetFilter } = useCompanies({
+  const { data, isError, filter, setFilter, resetFilter } = useCompanies({
     pageSize: 10,
   })
 
@@ -135,6 +137,15 @@ export const CompaniesContainer = () => {
           {!isTablet && newButton}
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
+          {isError && (
+            <Box marginBottom={3}>
+              <AlertMessage
+                type="error"
+                title={serverErrorText.title}
+                message={serverErrorText.message}
+              />
+            </Box>
+          )}
           {data?.paging && (
             <CompanyTable
               rows={rows}
