@@ -9,7 +9,10 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
-import { ApplicationRequirementStatementEnum } from '../../gen/fetch'
+import {
+  ApplicationRequirementStatementEnum,
+  SettlementType,
+} from '../../gen/fetch'
 import { useUpdateSettlement } from '../../hooks/useUpdateSettlement'
 import {
   BankruptcySettlementAdvertTypes,
@@ -18,6 +21,12 @@ import {
 } from '../../lib/constants'
 import { AdvertSettlement } from '../../lib/trpc/types'
 import { requirementsStatementOptions } from '../create-advert/CreateBankruptcySettlement'
+
+const settlementTypeOptions = [
+  { label: 'Hefðbundið dánarbú', value: 'DEFAULT' },
+  { label: 'Óskipt dánarbú', value: 'UNDIVIDED' },
+  { label: 'Eiganda samlagsfélags', value: 'OWNER' },
+]
 
 type SettlementFieldsProps = {
   advertId: string
@@ -41,6 +50,7 @@ export const SettlementFields = ({
     updateSettlementDeadline,
     updateSettlementName,
     updateSettlementNationalId,
+    updateSettlementType,
     updateRecallStatementType,
     updateRecallStatementLocation,
   } = useUpdateSettlement(advertId, settlement.id)
@@ -84,6 +94,31 @@ export const SettlementFields = ({
 
   return (
     <Stack space={[1, 2]}>
+      {DeceasedSettlementAdvertTypes.includes(templateType) && (
+        <GridRow>
+          <GridColumn span={['12/12', '6/12']}>
+            <Select
+              isDisabled={!canEdit}
+              size="sm"
+              backgroundColor="blue"
+              label="Tegund dánarbús"
+              value={
+                settlementTypeOptions.find(
+                  (opt) => opt.value === settlement.type,
+                ) ?? settlementTypeOptions[0]
+              }
+              options={settlementTypeOptions}
+              onChange={(val) => {
+                if (val) {
+                  updateSettlementType(
+                    (val as { label: string; value: SettlementType }).value,
+                  )
+                }
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+      )}
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input
