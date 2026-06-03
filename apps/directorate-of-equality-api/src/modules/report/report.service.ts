@@ -22,7 +22,6 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { PagingQuery } from '@dmr.is/shared-dto'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -38,6 +37,10 @@ import { ReportRoleResultModel } from '../report-result/models/report-role-resul
 import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
 import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
+import {
+  GetReportOutliersQueryDto,
+  ReportOutlierSortByEnum,
+} from './dto/get-report-outliers.query.dto'
 import {
   GetReportsQueryDto,
   SortDirectionEnum,
@@ -623,7 +626,7 @@ export class ReportService implements IReportService {
 
   async getOutliers(
     reportId: string,
-    query: PagingQuery,
+    query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto> {
     this.logger.debug('Listing report outliers', {
       context: LOGGING_CONTEXT,
@@ -643,7 +646,7 @@ export class ReportService implements IReportService {
         {
           model: ReportEmployeeModel,
           as: 'reportEmployee',
-          attributes: ['id', 'ordinal', 'gender'],
+          attributes: ['id', 'ordinal', 'gender', 'score'],
           where: { reportId: report.id },
           required: true,
           include: [
@@ -656,9 +659,7 @@ export class ReportService implements IReportService {
           ],
         },
       ],
-      // Stable ordinal-based order so paging is deterministic and matches
-      // how the FE renders the improvement-plan list (1, 2, 3, ...).
-      order: [[{ model: ReportEmployeeModel, as: 'reportEmployee' }, 'ordinal', 'ASC']],
+      order: this.buildOutlierOrder(query),
       limit,
       offset,
       distinct: true,
@@ -683,6 +684,44 @@ export class ReportService implements IReportService {
     const paging = generatePaging(outliers, query.page, query.pageSize, count)
 
     return { outliers, paging }
+  }
+
+  /**
+   * Map the outliers sort DTO to a Sequelize `order`. Only DB-backed columns
+   * on the joined `report_employee` (and its `role`) are sortable — the
+   * analysis-snapshot fields aren't part of the query, so they're not exposed
+   * (enum-gated). A secondary `ordinal ASC` keeps paging deterministic when
+   * the primary sort column has ties. With no `sortBy`, falls back to the
+   * default ordinal-ascending order that matches the FE improvement-plan list.
+   */
+  private buildOutlierOrder(query: GetReportOutliersQueryDto): Order {
+    const reportEmployee = { model: ReportEmployeeModel, as: 'reportEmployee' }
+    const ordinalAsc: Order = [[reportEmployee, 'ordinal', 'ASC']]
+
+    if (!query.sortBy) return ordinalAsc
+
+    const direction = query.direction === SortDirectionEnum.DESC ? 'DESC' : 'ASC'
+
+    switch (query.sortBy) {
+      case ReportOutlierSortByEnum.EMPLOYEE_ORDINAL:
+        return [[reportEmployee, 'ordinal', direction]]
+      case ReportOutlierSortByEnum.GENDER:
+        return [[reportEmployee, 'gender', direction], ...ordinalAsc]
+      case ReportOutlierSortByEnum.SCORE:
+        return [[reportEmployee, 'score', direction], ...ordinalAsc]
+      case ReportOutlierSortByEnum.ROLE_TITLE:
+        return [
+          [
+            reportEmployee,
+            { model: ReportEmployeeRoleModel, as: 'role' },
+            'title',
+            direction,
+          ],
+          ...ordinalAsc,
+        ]
+      default:
+        return ordinalAsc
+    }
   }
 
   /**

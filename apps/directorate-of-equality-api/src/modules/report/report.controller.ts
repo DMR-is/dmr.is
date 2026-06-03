@@ -11,12 +11,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
-import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
+import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
@@ -76,11 +76,11 @@ export class ReportController {
     type: GetReportOutliersResponseDto,
     include404: true,
     description:
-      'Paginated list of a report\'s employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by `employeeOrdinal` ascending.',
+      'Paginated list of a report\'s employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to `employeeOrdinal` ascending; override with `sortBy` + `direction`.',
   })
   async getOutliers(
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() query: PagingQuery,
+    @Query() query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto> {
     return this.reportService.getOutliers(id, query)
   }
