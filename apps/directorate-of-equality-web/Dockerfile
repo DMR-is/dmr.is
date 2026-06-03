@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:20-alpine as deps
+FROM public.ecr.aws/docker/library/node:22-alpine as deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 COPY ./apps/directorate-of-equality-web/dist/package.json ./

@@ -88,7 +88,7 @@ Every report row records who submitted it on the upstream side via the pair `(pr
 
 Each new island.is submission gets its own `provider_id` — the type identifies the channel, the id identifies the individual application on that channel. Once a row exists for a given `(provider_type, provider_id)` tuple, that mapping is permanent: the row is never duplicated, and a future resubmission from the same company comes through as a fresh upstream application with a new `provider_id`. SYSTEM-created rows leave both columns null.
 
-**Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists *and the submitting company matches the existing row's parent*, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
+**Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists _and the submitting company matches the existing row's parent_, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
 ## Audit timeline (events + comments)
 
@@ -214,9 +214,9 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
 | `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`               |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`                   |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`                  |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
 
@@ -334,10 +334,10 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
 | `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
-| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
+| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)             |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
 | `identifier`                     | `text`                                                                                                                         |
-| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")          |
+| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")         |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
@@ -412,14 +412,14 @@ One row per outlier the company has acknowledged at submission. Two shapes share
 
 Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ every outlier row has NULL explanations). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills every row and flips status to `SUBMITTED`.
 
-| Column               | Type                                                                  |
-| -------------------- | --------------------------------------------------------------------- |
-| `id`                 | `uuid` PK                                                             |
-| `report_employee_id` | `fk → report_employee`                                                |
-| `reason`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `action`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `signature_name`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `signature_role`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
+| Column               | Type                                                           |
+| -------------------- | -------------------------------------------------------------- |
+| `id`                 | `uuid` PK                                                      |
+| `report_employee_id` | `fk → report_employee`                                         |
+| `reason`             | `text` (nullable — null only when parent `status = POSTPONED`) |
+| `action`             | `text` (nullable — null only when parent `status = POSTPONED`) |
+| `signature_name`     | `text` (nullable — null only when parent `status = POSTPONED`) |
+| `signature_role`     | `text` (nullable — null only when parent `status = POSTPONED`) |
 
 Invariant (enforced via CHECK):
 

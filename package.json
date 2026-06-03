@@ -42,7 +42,7 @@
   },
   "engines": {
     "npm": "please-use-yarn",
-    "node": "20.15.0",
+    "node": "22.22.0",
     "yarn": "4.7"
   },
   "repository": {
@@ -111,7 +111,7 @@
     "@types/license-checker": "^25.0.6",
     "@types/multer": "^1.4.11",
     "@types/multer-s3-transform": "npm:@types/multer-s3@^2.7.10",
-    "@types/node": "20.19.9",
+    "@types/node": "22.19.19",
     "@types/node-fetch": "^2.6.11",
     "@types/pg": "^8.11.6",
     "@types/react": "18.3.28",
@@ -120,6 +120,7 @@
     "@typescript-eslint/eslint-plugin": "7.18.0",
     "@typescript-eslint/parser": "7.18.0",
     "@vanilla-extract/webpack-plugin": "^2.3.22",
+    "@varlock/1password-plugin": "1.1.0",
     "@yarnpkg/types": "4.0.1",
     "babel-jest": "30.0.5",
     "beygla": "1.5.5",
@@ -186,6 +187,7 @@
     "@vanilla-extract/webpack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/webpack-plugin@edaedbb"
   },
   "dependencies": {
-    "@tanstack/react-table": "8.21.3"
+    "@tanstack/react-table": "8.21.3",
+    "varlock": "1.4.0"
   }
 }

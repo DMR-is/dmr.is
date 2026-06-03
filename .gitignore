@@ -127,3 +127,5 @@ backup-json/all-extra.json
 AGENTS.md
 
 apps/directorate-of-equality-api/src/modules/report-excel/template.numbers
+
+!.env.schema
