@@ -1400,7 +1400,7 @@
     },
     "/api/v1/reports/{id}/outliers": {
       "get": {
-        "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by `employeeOrdinal` ascending.",
+        "description": "Paginated list of a report's employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to `employeeOrdinal` ascending; override with `sortBy` + `direction`.",
         "operationId": "getReportOutliers",
         "parameters": [
           {
@@ -1420,6 +1420,18 @@
             "required": false,
             "in": "query",
             "schema": { "default": 10, "example": 10, "type": "number" }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/ReportOutlierSortByEnum" }
+          },
+          {
+            "name": "direction",
+            "required": false,
+            "in": "query",
+            "schema": { "$ref": "#/components/schemas/SortDirectionEnum" }
           }
         ],
         "responses": {
@@ -3543,6 +3555,10 @@
           "roleResults",
           "includesImprovementPlan"
         ]
+      },
+      "ReportOutlierSortByEnum": {
+        "type": "string",
+        "enum": ["employeeOrdinal", "gender", "roleTitle", "score"]
       },
       "ReportEmployeeOutlierDto": {
         "type": "object",
