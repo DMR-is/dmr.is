@@ -89,14 +89,18 @@ export function deriveStatus(
     company,
     approvedReports,
   )
-  const isSmall = company.employeeCountCategory === CompanySizeEnum.SMALL
+  // UNKNOWN and SMALL both carry no reporting obligation. UNKNOWN means the
+  // company size has not been classified yet, so we impose nothing until it is.
+  const noRequirement =
+    company.employeeCountCategory === CompanySizeEnum.SMALL ||
+    company.employeeCountCategory === CompanySizeEnum.UNKNOWN
 
   if (needsSalary && hasSalary) return 'compliant' // LARGE: both reports filed
   if (needsSalary && hasEquality) return 'missing-salary' // LARGE: equality done, salary missing
   if (needsSalary) return 'missing-equality' // LARGE: equality is the prerequisite
   // No salary requirement below this line
-  if (!isSmall && hasEquality) return 'compliant' // MEDIUM with equality: obligation met
-  if (!isSmall) return 'missing-equality' // MEDIUM without equality
-  if (hasEquality) return 'has-equality' // SMALL voluntary submission
-  return 'compliant' // SMALL with nothing: no obligation
+  if (!noRequirement && hasEquality) return 'compliant' // MEDIUM with equality: obligation met
+  if (!noRequirement) return 'missing-equality' // MEDIUM without equality
+  if (hasEquality) return 'has-equality' // SMALL/UNKNOWN voluntary submission
+  return 'compliant' // SMALL/UNKNOWN with nothing: no obligation
 }
