@@ -87,7 +87,7 @@ export class CompanyService implements ICompanyService {
         ? [
             [
               literal(
-                `CASE employee_count_category WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
+                `CASE employee_count_category WHEN 'UNKNOWN' THEN 0 WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
               ),
               sortDir,
             ],
@@ -208,7 +208,7 @@ export class CompanyService implements ICompanyService {
     const company = await this.companyModel.create({
       name,
       nationalId,
-      employeeCountCategory: CompanySizeEnum.SMALL,
+      employeeCountCategory: CompanySizeEnum.UNKNOWN,
     })
 
     return company.fromModel()
@@ -241,7 +241,7 @@ export class CompanyService implements ICompanyService {
       (await this.companyModel.create({
         name: registry.entity.nafn,
         nationalId: input.nationalId,
-        employeeCountCategory: CompanySizeEnum.SMALL,
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
       }))
 
     return {

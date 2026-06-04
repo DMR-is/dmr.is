@@ -106,7 +106,7 @@ describe('CompanyService', () => {
       })
     })
 
-    it('creates a new company with the registry name and zero employee count when missing', async () => {
+    it('creates a new company with the registry name and unknown employee count category when missing', async () => {
       findOne.mockResolvedValue(null)
       getEntityByNationalId.mockResolvedValue({
         entity: makeRegistryEntity({
@@ -119,7 +119,7 @@ describe('CompanyService', () => {
           id: 'company-2',
           name: 'Registry Name ehf.',
           nationalId: '6601234567',
-          employeeCountCategory: CompanySizeEnum.SMALL,
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
 
@@ -131,13 +131,13 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Registry Name ehf.',
         nationalId: '6601234567',
-        employeeCountCategory: CompanySizeEnum.SMALL,
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
       })
       expect(result).toEqual({
         id: 'company-2',
         name: 'Registry Name ehf.',
         nationalId: '6601234567',
-        employeeCountCategory: CompanySizeEnum.SMALL,
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
       })
     })
 
@@ -149,7 +149,7 @@ describe('CompanyService', () => {
           id: 'company-3',
           name: 'Body-provided name',
           nationalId: '7701234567',
-          employeeCountCategory: CompanySizeEnum.SMALL,
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
 
@@ -161,7 +161,7 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Body-provided name',
         nationalId: '7701234567',
-        employeeCountCategory: CompanySizeEnum.SMALL,
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
       })
       expect(result.name).toBe('Body-provided name')
     })
@@ -235,7 +235,7 @@ describe('CompanyService', () => {
           id: 'company-2',
           name: 'Subsidiary ehf.',
           nationalId: '6601234567',
-          employeeCountCategory: CompanySizeEnum.SMALL,
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
 
@@ -247,7 +247,7 @@ describe('CompanyService', () => {
       expect(create).toHaveBeenCalledWith({
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
-        employeeCountCategory: CompanySizeEnum.SMALL,
+        employeeCountCategory: CompanySizeEnum.UNKNOWN,
       })
       expect(result).toEqual({
         companyId: 'company-2',

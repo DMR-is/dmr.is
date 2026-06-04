@@ -37,9 +37,11 @@ export const EMPLOYEE_RANGES = [
   { value: CompanySizeEnum.SMALL, label: '0–24' },
   { value: CompanySizeEnum.MEDIUM, label: '25–49' },
   { value: CompanySizeEnum.LARGE, label: '50+' },
+  { value: CompanySizeEnum.UNKNOWN, label: 'Óþekkt' },
 ]
 
 export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
+  [CompanySizeEnum.UNKNOWN]: 'Óþekkt',
   [CompanySizeEnum.SMALL]: '0–24',
   [CompanySizeEnum.MEDIUM]: '25–49',
   [CompanySizeEnum.LARGE]: '50+',

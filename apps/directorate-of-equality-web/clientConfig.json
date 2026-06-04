@@ -2652,7 +2652,7 @@
       },
       "CompanySizeEnum": {
         "type": "string",
-        "enum": ["SMALL", "MEDIUM", "LARGE"]
+        "enum": ["UNKNOWN", "SMALL", "MEDIUM", "LARGE"]
       },
       "CompanyStatusFilterEnum": {
         "type": "string",
