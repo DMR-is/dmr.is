@@ -49,7 +49,7 @@ export class CreateSettlementDto {
   @ApiOptionalDateTime()
   endingDate?: Date
 
-  @ApiOptionalString({ maxLength: 255 })
+  @ApiOptionalString({ maxLength: 10 })
   partnerNationalId?: string
 
   @ApiOptionalString({ maxLength: 255 })

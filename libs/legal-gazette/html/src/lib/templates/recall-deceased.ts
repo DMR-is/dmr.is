@@ -34,8 +34,12 @@ const getSettlementText = (settlement: RecallDeceasedSettlement): string => {
       const [formattedDateOfDeath] = parseAndFormatDate(
         settlement.partnerDateOfDeath,
       )
-      if (settlement?.partnerName || settlement?.partnerNationalId) {
-        return `${settlement.name || ''} sat í óskiptu búi eftir maka sinn ${settlement?.partnerName || ''}, kt. ${formatNationalId(settlement?.partnerNationalId || '')}, sem lést þann ${formattedDateOfDeath || ''}.`
+      if (
+        settlement?.partnerName &&
+        settlement?.partnerNationalId &&
+        settlement?.partnerDateOfDeath
+      ) {
+        return `${settlement.name || ''} sat í óskiptu búi eftir maka sinn ${settlement.partnerName}, kt. ${formatNationalId(settlement.partnerNationalId)}, sem lést þann ${formattedDateOfDeath}.`
       } else {
         return `${settlement.name || ''} sat í óskiptu búi.`
       }

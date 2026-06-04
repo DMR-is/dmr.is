@@ -240,7 +240,7 @@ export class SettlementDto {
   @ApiOptionalNumber({ nullable: true })
   declaredClaims!: number | null
 
-  @ApiOptionalString({ maxLength: 255, nullable: true })
+  @ApiOptionalString({ maxLength: 10, nullable: true })
   partnerNationalId?: string | null
 
   @ApiOptionalString({ maxLength: 255, nullable: true })
