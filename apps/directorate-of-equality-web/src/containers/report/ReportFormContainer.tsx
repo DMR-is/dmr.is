@@ -5,7 +5,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS, NAV_PATHS } from '../../lib/constants'
-import { headerText, reportText } from '../../lib/text'
+import { headerText, reportText, sharedText } from '../../lib/text'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
 type ReportFormContainerProps = {
@@ -35,7 +35,7 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
               href: NAV_PATHS.frontpage.href,
             },
             {
-              title: 'Ritstjórn',
+              title: sharedText.admin,
               href: NAV_PATHS.heildarlisti.href,
             },
             { title: reportText.heroTitle },

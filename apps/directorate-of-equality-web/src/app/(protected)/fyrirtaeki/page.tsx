@@ -6,7 +6,7 @@ import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/Se
 
 import { CompaniesContainer } from '../../../containers/companies/CompaniesContainer'
 import { NAV_PATHS } from '../../../lib/constants'
-import { companiesText, headerText } from '../../../lib/text'
+import { companiesText, headerText, sharedText } from '../../../lib/text'
 
 export default async function FyrirtaekiPage() {
   return (
@@ -21,7 +21,7 @@ export default async function FyrirtaekiPage() {
               title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
-            { title: 'Ritstjórn' },
+            { title: sharedText.admin },
           ],
         }}
         variant="default"

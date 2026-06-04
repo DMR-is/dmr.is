@@ -310,6 +310,7 @@ export const headerText = {
 
 export const sharedText = {
   breadcrumbHome: 'Forsíða',
+  admin: 'Ritstjórn',
   unknown: 'Óþekkt',
   yesLabel: 'Já',
   noLabel: 'Nei',

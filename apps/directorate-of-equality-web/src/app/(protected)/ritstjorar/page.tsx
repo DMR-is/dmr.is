@@ -6,7 +6,7 @@ import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/Se
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
 import { NAV_PATHS } from '../../../lib/constants'
-import { headerText, usersText } from '../../../lib/text'
+import { headerText, sharedText, usersText } from '../../../lib/text'
 
 export default function RitstjorarPage() {
   return (
@@ -21,7 +21,7 @@ export default function RitstjorarPage() {
               title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
-            { title: 'Ritstjórn' },
+            { title: sharedText.admin },
           ],
         }}
         variant="default"

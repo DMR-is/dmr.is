@@ -5,7 +5,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { ReportsContainer } from '../../../containers/reports/ReportsContainer'
-import { headerText, overviewText } from '../../../lib/text'
+import { headerText, overviewText, sharedText } from '../../../lib/text'
 
 export default function MalPage() {
   return (
@@ -17,7 +17,7 @@ export default function MalPage() {
         breadcrumbs={{
           items: [
             { title: headerText.brand, href: '/' },
-            { title: 'Ritstjórn' },
+            { title: sharedText.admin },
           ],
         }}
         variant="default"
