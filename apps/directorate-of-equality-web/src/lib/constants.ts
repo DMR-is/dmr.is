@@ -53,6 +53,7 @@ export type Case = {
   isatCode: string
   reviewer: string
   employeeCount: string
+  waitingForAction: boolean
 }
 
 export const COLUMNS: ColumnDef<Case>[] = [
