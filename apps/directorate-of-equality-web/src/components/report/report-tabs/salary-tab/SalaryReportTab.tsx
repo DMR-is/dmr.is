@@ -1,4 +1,3 @@
-import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { Stack } from '@island.is/island-ui/core'
@@ -11,7 +10,6 @@ import {
 import { reportText } from '../../../../lib/text'
 import { formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
-import { OutlierInputForm } from './OutlierInputForm'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
