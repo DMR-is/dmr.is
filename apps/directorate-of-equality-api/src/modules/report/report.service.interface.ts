@@ -1,7 +1,6 @@
-import { PagingQuery } from '@dmr.is/shared-dto'
-
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
+import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
@@ -13,7 +12,7 @@ export interface IReportService {
   getById(id: string): Promise<ReportDetailDto>
   getOutliers(
     reportId: string,
-    query: PagingQuery,
+    query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto>
   getActiveEqualityForCompany(
     companyId: string,
