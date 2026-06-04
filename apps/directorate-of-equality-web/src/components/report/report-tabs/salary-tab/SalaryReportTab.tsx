@@ -14,12 +14,16 @@ import { OutlierPlanTable } from './OutlierPlanTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
 
+import { type SortingState } from '@tanstack/react-table'
+
 interface SalaryReportTabProps {
   data: SalaryByGenderAndScoreDto
   outliers: ReportEmployeeOutlierDto[]
   outliersPaging?: Paging
   outliersLoading?: boolean
   onOutliersPageChange: (page: number) => void
+  outliersSorting?: SortingState
+  onOutliersSortingChange?: (sorting: SortingState) => void
   outlierDate?: Date
   outliersPostponed?: boolean
 }
@@ -34,6 +38,8 @@ export const SalaryReportTab = ({
   outliersPaging,
   outliersLoading,
   onOutliersPageChange,
+  outliersSorting,
+  onOutliersSortingChange,
   outlierDate,
 }: SalaryReportTabProps) => {
   if (!data) {
@@ -67,6 +73,8 @@ export const SalaryReportTab = ({
             paging={outliersPaging}
             loading={outliersLoading}
             onPageChange={onOutliersPageChange}
+            sorting={outliersSorting}
+            onSortingChange={onOutliersSortingChange}
           />
           <OutlierInputForm outlierDate={outlierDate} />
         </>
