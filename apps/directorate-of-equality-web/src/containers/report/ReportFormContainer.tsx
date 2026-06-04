@@ -5,7 +5,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import type { ReportDetailDto } from '../../gen/fetch'
 import { formatDateIS, NAV_PATHS } from '../../lib/constants'
-import { reportText } from '../../lib/text'
+import { headerText, reportText, sharedText } from '../../lib/text'
 import { ReportTabsContainer } from './ReportTabsContainer'
 
 type ReportFormContainerProps = {
@@ -31,14 +31,14 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
         <Breadcrumbs
           items={[
             {
-              title: NAV_PATHS.frontpage.title,
+              title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
             {
-              title: NAV_PATHS.heildarlisti.title,
+              title: sharedText.admin,
               href: NAV_PATHS.heildarlisti.href,
             },
-            { title: reportText.heroTitle, href: `/yfirlit/${report.id}` },
+            { title: reportText.heroTitle },
           ]}
         />
         {title}

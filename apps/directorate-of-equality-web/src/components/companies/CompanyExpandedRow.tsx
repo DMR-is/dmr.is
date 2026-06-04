@@ -2,6 +2,7 @@
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
+import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -115,48 +116,60 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
           <Stack space={2}>
             <Text variant="eyebrow">{sharedText.files}</Text>
             {equalityReports.map((r) => (
-              <Box
+              <LinkV2
                 key={r.id}
-                background="white"
-                borderRadius="standard"
-                padding={2}
-                display="flex"
-                justifyContent="spaceBetween"
-                alignItems="center"
+                href={`/yfirlit/${r.id}`}
+                aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.EQUALITY}`}
               >
-                <Stack space={1}>
-                  <Text variant="small" fontWeight="semiBold">
-                    {sharedText.typeLabels.EQUALITY}
-                  </Text>
-                  <Text variant="small" color="dark300">
-                    {companiesText.expandedRow.validUntilPrefix}{' '}
-                    {formatDate(r.validUntil)}
-                  </Text>
-                </Stack>
-                <ReportStatusTag status={r.status} />
-              </Box>
+                <Box
+                  background="white"
+                  borderRadius="standard"
+                  padding={2}
+                  display="flex"
+                  justifyContent="spaceBetween"
+                  alignItems="center"
+                  className={styles.reportCard}
+                >
+                  <Stack space={1}>
+                    <Text variant="small" fontWeight="semiBold">
+                      {sharedText.typeLabels.EQUALITY}
+                    </Text>
+                    <Text variant="small" color="dark300">
+                      {companiesText.expandedRow.validUntilPrefix}{' '}
+                      {formatDate(r.validUntil)}
+                    </Text>
+                  </Stack>
+                  <ReportStatusTag status={r.status} />
+                </Box>
+              </LinkV2>
             ))}
             {salaryReports.map((r) => (
-              <Box
+              <LinkV2
                 key={r.id}
-                background="white"
-                borderRadius="standard"
-                padding={2}
-                display="flex"
-                justifyContent="spaceBetween"
-                alignItems="center"
+                href={`/yfirlit/${r.id}`}
+                aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.SALARY}`}
               >
-                <Stack space={1}>
-                  <Text variant="small" fontWeight="semiBold">
-                    {sharedText.typeLabels.SALARY}
-                  </Text>
-                  <Text variant="small" color="dark300">
-                    {companiesText.expandedRow.validUntilPrefix}{' '}
-                    {formatDate(r.validUntil)}
-                  </Text>
-                </Stack>
-                <ReportStatusTag status={r.status} />
-              </Box>
+                <Box
+                  background="white"
+                  borderRadius="standard"
+                  padding={2}
+                  display="flex"
+                  justifyContent="spaceBetween"
+                  alignItems="center"
+                  className={styles.reportCard}
+                >
+                  <Stack space={1}>
+                    <Text variant="small" fontWeight="semiBold">
+                      {sharedText.typeLabels.SALARY}
+                    </Text>
+                    <Text variant="small" color="dark300">
+                      {companiesText.expandedRow.validUntilPrefix}{' '}
+                      {formatDate(r.validUntil)}
+                    </Text>
+                  </Stack>
+                  <ReportStatusTag status={r.status} />
+                </Box>
+              </LinkV2>
             ))}
           </Stack>
         </>

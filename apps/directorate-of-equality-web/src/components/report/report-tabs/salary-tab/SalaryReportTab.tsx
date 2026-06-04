@@ -1,4 +1,4 @@
-import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
 
 import { Stack } from '@island.is/island-ui/core'
 
@@ -8,8 +8,8 @@ import {
   SalaryByGenderAndScoreDto,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
+import { formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
-import { OutlierInputForm } from './OutlierInputForm'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
@@ -27,9 +27,6 @@ interface SalaryReportTabProps {
   outlierDate?: Date
   outliersPostponed?: boolean
 }
-
-const formatSalary = (v: number) =>
-  new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
 
 export const SalaryReportTab = ({
   data,
@@ -60,24 +57,18 @@ export const SalaryReportTab = ({
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
       />
       {outliers.length > 0 && (
-        <>
-          {outliersPostponed && (
-            <AlertMessage
-              type="warning"
-              title={reportText.salaryTab.outliersPostponedTitle}
-              message={reportText.salaryTab.outliersPostponedMessage}
-            />
-          )}
+        <Box marginBottom={4}>
           <OutlierPlanTable
             outliers={outliers}
             paging={outliersPaging}
             loading={outliersLoading}
+            outliersPostponed={outliersPostponed}
+            outlierDate={outlierDate}
             onPageChange={onOutliersPageChange}
             sorting={outliersSorting}
             onSortingChange={onOutliersSortingChange}
           />
-          <OutlierInputForm outlierDate={outlierDate} />
-        </>
+        </Box>
       )}
     </Stack>
   )

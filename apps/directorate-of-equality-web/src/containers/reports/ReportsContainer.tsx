@@ -76,7 +76,7 @@ const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
   'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
   // tab 3 shows ONLY the three processed statuses — exclude everything else
-  afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW'],
+  afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'POSTPONED'],
 }
 
 const STATUS_VARIANT: Record<string, TagVariant> = {
@@ -119,19 +119,14 @@ function mapReportToCase(report: ReportListItemDto): Case {
   }
 }
 
-const MOCK_COMMENTS: Record<string, string> = {
-  '1': 'Beðið svara',
-  '2': 'Vantar gögn',
-  '3': 'Til skoðunar',
-}
-
 const commentsColumn: ColumnDef<Case> = {
   id: 'comments',
   header: () => null,
   size: 56,
   enableSorting: false,
   cell: ({ row }) => {
-    const comment = MOCK_COMMENTS[row.original.id] ?? overviewText.noComments
+    // TODO: replace with real comments when available from backend
+    const comment = overviewText.noComments
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip
@@ -179,6 +174,14 @@ export const ReportsContainer = () => {
 
   const { data, isLoading, isError, filter, setFilter, resetFilter } =
     useReports(fixedQuery)
+
+  // Unfiltered so tab counts stay stable while user filters within a tab.
+  const { data: totalCountsData } = useQuery(
+    trpc.reports.list.queryOptions(
+      {},
+      { staleTime: 30_000, placeholderData: (prev) => prev },
+    ),
+  )
 
   const needsUsers = activeTab !== 'innsendingar'
   const { data: usersData } = useQuery(
@@ -312,17 +315,17 @@ export const ReportsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `${overviewText.tabInnsendingar} (${(data?.statusCounts.submitted ?? 0) + (data?.statusCounts.postponed ?? 0)})`,
+            label: `${overviewText.tabInnsendingar} (${(totalCountsData?.statusCounts.submitted ?? 0) + (totalCountsData?.statusCounts.postponed ?? 0)})`,
             content: filterAndTable(true),
           },
           {
             id: 'i-vinnslu',
-            label: `${overviewText.tabInProgress} (${data?.statusCounts.inReview ?? 0})`,
+            label: `${overviewText.tabInProgress} (${totalCountsData?.statusCounts.inReview ?? 0})`,
             content: filterAndTable(),
           },
           {
             id: 'afgreitt',
-            label: `${overviewText.tabAfgreitt} (${data?.statusCounts.processed ?? 0})`,
+            label: `${overviewText.tabAfgreitt} (${totalCountsData?.statusCounts.processed ?? 0})`,
             content: filterAndTable(),
           },
         ]}

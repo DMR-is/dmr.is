@@ -1,15 +1,6 @@
 export const NAV_PATHS = {
   frontpage: { title: 'Forsíða', href: '/' },
-  heildarlisti: { title: 'Heildarlisti', href: '/yfirlit' },
-  jafnrettisaetlanir: {
-    title: 'Jafnréttisáætlanir',
-    href: 'yfirlit?type=EQUALITY',
-  },
-  urbotaaetlanir: {
-    title: 'Úrbótaáætlanir',
-    href: '/yfirlit?hasImprovementPlan=true',
-  },
-  skyrslur: { title: 'Skýrslur', href: '/yfirlit?type=SALARY' },
+  heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit' },
   fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
   ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar' },
 }
