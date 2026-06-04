@@ -46,6 +46,19 @@ const mapStatementType = (statementType: string | null | undefined = '') => {
   }
 }
 
+const mapSettlementType = (
+  settlementType: string | null | undefined,
+): 'default' | 'undivided' | 'owner' => {
+  switch (settlementType) {
+    case 'UNDIVIDED':
+      return 'undivided'
+    case 'OWNER':
+      return 'owner'
+    default:
+      return 'default'
+  }
+}
+
 type ApplicationPreview =
   | {
       html: string
@@ -172,6 +185,10 @@ export const getApplicationPreview = (
       const dateOfDeath = answers.fields?.settlementFields?.dateOfDeath
         ? new Date(answers.fields.settlementFields.dateOfDeath)
         : undefined
+      const partnerDateOfDeath = answers.fields?.settlementFields
+        ?.partnerDateOfDeath
+        ? new Date(answers.fields.settlementFields.partnerDateOfDeath)
+        : undefined
 
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.RECALL_DECEASED,
@@ -180,6 +197,7 @@ export const getApplicationPreview = (
         signature: answers.signature,
         title: `Innköllun dánarbús - ${answers.fields?.settlementFields?.name ?? ''}`,
         settlement: {
+          type: mapSettlementType(answers.fields?.settlementFields?.type),
           statementType: mapStatementType(
             answers.fields?.settlementFields?.recallRequirementStatementType,
           ),
@@ -194,6 +212,10 @@ export const getApplicationPreview = (
             answers.fields?.settlementFields?.liquidatorName ?? '',
           name: answers.fields?.settlementFields?.name ?? '',
           nationalId: answers.fields?.settlementFields?.nationalId ?? '',
+          partnerName: answers.fields?.settlementFields?.partnerName ?? '',
+          partnerNationalId:
+            answers.fields?.settlementFields?.partnerNationalId ?? '',
+          partnerDateOfDeath: partnerDateOfDeath,
           companies: answers.fields?.settlementFields?.companies ?? [],
         },
       })

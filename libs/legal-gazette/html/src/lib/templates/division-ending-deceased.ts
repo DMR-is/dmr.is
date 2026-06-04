@@ -18,6 +18,7 @@ export function getDivisionEndingDeceasedTemplate({
   settlementName,
   settlementNationalId,
   settlementDeclaredClaims,
+  content = '',
 }: DivisionEndingTemplateProps): string {
   const [formattedJudgementDate] = parseAndFormatDate(judgementDate)
   const [formattedEndingDate] = parseAndFormatDate(endingDate)
@@ -61,8 +62,7 @@ export function getDivisionEndingDeceasedTemplate({
     </table>
   `
 
-  return `
-    ${intro}
-    ${tableMarkup}
-  `
+  const markupArr = [intro, content, tableMarkup].filter(isNotEmpty)
+
+  return markupArr.join('')
 }

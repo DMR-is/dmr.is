@@ -229,25 +229,27 @@ export const SettlementFields = ({
               onBlur={(evt) => updatePartnerNationalId(evt.target.value)}
             />
           </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <DatePicker
-              disabled={!canEdit}
-              size="sm"
-              placeholderText=""
-              backgroundColor="blue"
-              name="settlement-partner-date-of-death"
-              label="Dánardagur maka"
-              locale="is"
-              selected={
-                settlement.partnerDateOfDeath
-                  ? new Date(settlement.partnerDateOfDeath)
-                  : undefined
-              }
-              handleChange={(date) => {
-                updatePartnerDateOfDeath(date.toISOString())
-              }}
-            />
-          </GridColumn>
+          <GridRow>
+            <GridColumn span={['12/12', '6/12']}>
+              <DatePicker
+                disabled={!canEdit}
+                size="sm"
+                placeholderText=""
+                backgroundColor="blue"
+                name="settlement-partner-date-of-death"
+                label="Dánardagur maka"
+                locale="is"
+                selected={
+                  settlement.partnerDateOfDeath
+                    ? new Date(settlement.partnerDateOfDeath)
+                    : undefined
+                }
+                handleChange={(date) => {
+                  updatePartnerDateOfDeath(date.toISOString())
+                }}
+              />
+            </GridColumn>
+          </GridRow>
         </GridRow>
       )}
       <GridRow>
