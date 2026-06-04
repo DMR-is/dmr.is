@@ -26,10 +26,10 @@ export const reportsRouter = router({
   getOutliers: protectedProcedure
     .input(zGetReportOutliersPath.merge(zGetReportOutliersQuery))
     .query(({ ctx, input }) => {
-      const { id, page, pageSize } = input
+      const { id, page, pageSize, sortBy, direction } = input
       return ctx.api.getReportOutliers({
         path: { id },
-        query: { page, pageSize },
+        query: { page, pageSize, sortBy, direction },
       })
     }),
 

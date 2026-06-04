@@ -14,13 +14,15 @@ import { reportText as r, reportText, sharedText } from '../../../../lib/text'
 import { formatSalary } from '../../../../lib/utils'
 import { OutlierInputForm } from './OutlierInputForm'
 
-import { type ColumnDef } from '@tanstack/react-table'
+import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
 interface OutlierPlanTableProps {
   outliers: ReportEmployeeOutlierDto[]
   paging?: Paging
   loading?: boolean
   onPageChange?: (page: number) => void
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
   outliersPostponed?: boolean
   outlierDate?: Date
 }
@@ -40,27 +42,31 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     accessorKey: 'employeeOrdinal',
     header: o.numberHeader,
     cell: ({ getValue }) => getValue<number | null>() ?? dash,
+    enableSorting: true,
   },
   {
-    id: 'starf',
+    id: 'roleTitle',
     header: o.roleHeader,
     cell: ({ row }) => row.original.roleTitle ?? dash,
+    enableSorting: true,
   },
   {
-    id: 'kyn',
+    id: 'gender',
     header: o.genderHeader,
     accessorFn: (row) => (row.gender ? (genderMap[row.gender] ?? '') : ''),
     cell: ({ row }) =>
       row.original.gender ? (genderMap[row.original.gender] ?? dash) : dash,
+    enableSorting: true,
   },
   {
-    id: 'launafravik',
+    id: 'score',
     header: o.deviationHeader,
     accessorFn: (row) => row.score ?? 0,
     cell: ({ row }) =>
       row.original.differencePercent == null
         ? dash
         : `${row.original.differencePercent.toLocaleString('is-IS')}%`,
+    enableSorting: true,
   },
 ]
 
@@ -108,6 +114,8 @@ export const OutlierPlanTable = ({
   paging,
   loading,
   onPageChange,
+  sorting,
+  onSortingChange,
   outliersPostponed,
   outlierDate,
 }: OutlierPlanTableProps) => {
@@ -138,6 +146,8 @@ export const OutlierPlanTable = ({
         onPageChange={onPageChange}
         showPageSizeSelect={false}
         noDataMessage={s.noDataMessage}
+        sorting={sorting}
+        onSortingChange={onSortingChange}
       />
     </>
   )

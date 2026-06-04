@@ -7,8 +7,10 @@ import { Tabs } from '@island.is/island-ui/core'
 import { CommentsContainer } from '../../../containers/report/CommentsContainer'
 import {
   ReportDetailDto,
+  ReportOutlierSortByEnum,
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
+  SortDirectionEnum,
 } from '../../../gen/fetch'
 import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
@@ -16,7 +18,8 @@ import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { type SortingState } from '@tanstack/react-table'
 
 type ReportTabsProps = {
   report: ReportDetailDto
@@ -32,18 +35,36 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
     isSalary ? 'launagreining' : 'jafnrettisaetlun',
   )
   const [outliersPage, setOutliersPage] = useState(1)
+  const [outliersSorting, setOutliersSorting] = useState<SortingState>([])
 
   useEffect(() => {
     setOutliersPage(1)
   }, [report.id])
+
+  const outlierSortBy = outliersSorting[0]?.id as
+    | ReportOutlierSortByEnum
+    | undefined
+  const outlierDirection = outliersSorting[0]
+    ? outliersSorting[0].desc
+      ? SortDirectionEnum.DESC
+      : SortDirectionEnum.ASC
+    : undefined
+
+  const handleOutliersSortingChange = (next: SortingState) => {
+    setOutliersSorting(next)
+    setOutliersPage(1)
+  }
 
   const { data: outliersData, isLoading: outliersLoading } = useQuery({
     ...trpc.reports.getOutliers.queryOptions({
       id: report.id,
       page: outliersPage,
       pageSize: OUTLIERS_PAGE_SIZE,
+      sortBy: outlierSortBy,
+      direction: outlierDirection,
     }),
     enabled: isSalary && report.includesImprovementPlan,
+    placeholderData: keepPreviousData,
   })
 
   const jafnrettisaetlun = {
@@ -102,6 +123,8 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
                 outliersPaging={outliersData?.paging}
                 outliersLoading={outliersLoading}
                 onOutliersPageChange={setOutliersPage}
+                outliersSorting={outliersSorting}
+                onOutliersSortingChange={handleOutliersSortingChange}
                 outlierDate={
                   report.correctionDeadline
                     ? new Date(report.correctionDeadline)
