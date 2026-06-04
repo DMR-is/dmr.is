@@ -6,7 +6,7 @@ import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/Se
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
 import { NAV_PATHS } from '../../../lib/constants'
-import { usersText } from '../../../lib/text'
+import { headerText, sharedText, usersText } from '../../../lib/text'
 
 export default function RitstjorarPage() {
   return (
@@ -18,13 +18,10 @@ export default function RitstjorarPage() {
         breadcrumbs={{
           items: [
             {
-              title: NAV_PATHS.frontpage.title,
+              title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
-            {
-              title: NAV_PATHS.ritstjorn.title,
-              href: NAV_PATHS.ritstjorn.href,
-            },
+            { title: sharedText.admin },
           ],
         }}
         variant="default"
@@ -32,7 +29,7 @@ export default function RitstjorarPage() {
         imageSpan={'3/12'}
         withOffset={false}
       />
-      <Box background="blue100" paddingY={5} height="full">
+      <Box background="blue100" paddingY={5} style={{ minHeight: '100%' }}>
         <Suspense fallback={<SearchDashboardLoading />}>
           <UsersContainer />
         </Suspense>

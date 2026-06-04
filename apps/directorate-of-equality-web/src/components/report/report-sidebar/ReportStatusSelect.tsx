@@ -2,7 +2,11 @@
 
 import React from 'react'
 
-import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../../gen/fetch'
@@ -19,35 +23,10 @@ type Props = {
   disabled?: boolean
 }
 
-type Option = { value: ReportStatusEnum; label: string }
-
-const TRANSITIONS: Partial<Record<ReportStatusEnum, Option[]>> = {
-  [ReportStatusEnum.SUBMITTED]: [
-    {
-      value: ReportStatusEnum.IN_REVIEW,
-      label: ReportStatusTranslatedEnum.IN_REVIEW,
-    },
-  ],
-  [ReportStatusEnum.IN_REVIEW]: [
-    {
-      value: ReportStatusEnum.APPROVED,
-      label: ReportStatusTranslatedEnum.APPROVED,
-    },
-    {
-      value: ReportStatusEnum.DENIED,
-      label: ReportStatusTranslatedEnum.DENIED,
-    },
-  ],
-}
-
 export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const onSuccess = () => () =>
-    toast.success(reportText.statusSelect.successToast)
-
-  const onError = () => () => toast.error(reportText.statusSelect.errorToast)
 
   const invalidate = () => {
     queryClient.invalidateQueries({
@@ -58,13 +37,16 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
     })
   }
 
+  const onSuccess = () => toast.success(reportText.statusSelect.successToast)
+  const onError = () => toast.error(reportText.statusSelect.errorToast)
+
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),
     onSuccess: () => {
       invalidate()
       onSuccess()
     },
-    onError: onError(),
+    onError,
   })
 
   const approve = useMutation({
@@ -73,7 +55,7 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
       invalidate()
       onSuccess()
     },
-    onError: onError(),
+    onError,
   })
 
   const deny = useMutation({
@@ -83,39 +65,72 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
       onSuccess()
       setIsModalOpen(false)
     },
-    onError: onError(),
+    onError,
   })
 
   const isLoading = assign.isPending || approve.isPending || deny.isPending
-
-  const currentOption: Option = {
-    value: status,
-    label: ReportStatusTranslatedEnum[status],
-  }
-  const options = TRANSITIONS[status] ?? []
-
-  const handleChange = (opt: Option | null) => {
-    if (!opt) return
-    if (opt.value === ReportStatusEnum.IN_REVIEW) {
-      assign.mutate({ reportId })
-    } else if (opt.value === ReportStatusEnum.APPROVED) {
-      approve.mutate({ reportId })
-    } else if (opt.value === ReportStatusEnum.DENIED) {
-      setIsModalOpen(true)
-    }
-  }
+  const isInReview = status === ReportStatusEnum.IN_REVIEW
+  const isSubmitted = status === ReportStatusEnum.SUBMITTED
 
   return (
     <>
-      <Select
-        size="sm"
-        label={sharedText.statusLabel}
-        options={options}
-        value={currentOption}
-        isLoading={isLoading}
-        isDisabled={disabled}
-        onChange={(opt) => handleChange(opt as Option | null)}
-      />
+      <Stack space={2}>
+        <Box background="white" borderRadius="large">
+          <Input
+            name="report-status"
+            readOnly
+            value={ReportStatusTranslatedEnum[status]}
+            size="sm"
+            label={sharedText.statusLabel}
+          />
+        </Box>
+
+        {isSubmitted && (
+          <Button
+            fluid
+            size="small"
+            disabled={disabled || isLoading}
+            loading={assign.isPending}
+            icon="arrowForward"
+            onClick={() => assign.mutate({ reportId })}
+          >
+            <Text color="white" variant="small" fontWeight="semiBold">
+              {reportText.statusSelect.assignButton}
+            </Text>
+          </Button>
+        )}
+
+        <Box display="flex" columnGap={2}>
+          <Box style={{ flex: 1 }}>
+            <Button
+              fluid
+              size="small"
+              colorScheme="destructive"
+              disabled={disabled || isLoading || !isInReview}
+              loading={deny.isPending}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Text color="white" variant="small" fontWeight="semiBold">
+                {reportText.statusSelect.denyButton}
+              </Text>
+            </Button>
+          </Box>
+          <Box style={{ flex: 1 }}>
+            <Button
+              fluid
+              size="small"
+              disabled={disabled || isLoading || !isInReview}
+              loading={approve.isPending}
+              onClick={() => approve.mutate({ reportId })}
+            >
+              <Text color="white" variant="small" fontWeight="semiBold">
+                {reportText.statusSelect.approveButton}
+              </Text>
+            </Button>
+          </Box>
+        </Box>
+      </Stack>
+
       <ReportDenialModal
         visible={isModalOpen}
         isLoading={deny.isPending}

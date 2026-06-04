@@ -5,7 +5,6 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { LinkCard } from '@dmr.is/ui/components/LinkCard/LinkCard'
 
-import { NAV_PATHS } from '../../lib/constants'
 import { frontPageText } from '../../lib/text'
 
 type Props = {
@@ -13,6 +12,21 @@ type Props = {
 }
 
 export const HeroContainer = ({ userName }: Props) => {
+  const paths = {
+    innsendingar: {
+      title: 'Innsendingar',
+      href: '/yfirlit',
+    },
+    jafnrettisaetlanir: {
+      title: 'Jafnréttisáætlanir',
+      href: '/yfirlit?type=EQUALITY',
+    },
+    urbotaaetlanir: {
+      title: 'Úrbótaáætlanir',
+      href: '/yfirlit?hasImprovementPlan=true',
+    },
+    skyrslur: { title: 'Skýrslur', href: '/yfirlit?type=SALARY' },
+  }
   return (
     <Hero
       title={frontPageText.heroTitle}
@@ -29,8 +43,8 @@ export const HeroContainer = ({ userName }: Props) => {
       <GridRow>
         <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[2, 2, 0]}>
           <LinkCard
-            href={NAV_PATHS.heildarlisti.href}
-            title={NAV_PATHS.heildarlisti.title}
+            href={paths.innsendingar.href}
+            title={paths.innsendingar.title}
             description={frontPageText.heildarlisti.description}
             image={{
               src: '/assets/ritstjorn-image.svg',
@@ -39,8 +53,8 @@ export const HeroContainer = ({ userName }: Props) => {
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[2, 2, 0]}>
           <LinkCard
-            href={NAV_PATHS.jafnrettisaetlanir.href}
-            title={NAV_PATHS.jafnrettisaetlanir.title}
+            href={paths.jafnrettisaetlanir.href}
+            title={paths.jafnrettisaetlanir.title}
             description={frontPageText.jafnrettisaetlanir.description}
             image={{
               src: '/assets/utgafa-image.svg',
@@ -49,8 +63,8 @@ export const HeroContainer = ({ userName }: Props) => {
         </GridColumn>
         <GridColumn span={['12/12', '12/12', '4/12']} paddingBottom={[0]}>
           <LinkCard
-            href={NAV_PATHS.urbotaaetlanir.href}
-            title={NAV_PATHS.urbotaaetlanir.title}
+            href={paths.urbotaaetlanir.href}
+            title={paths.urbotaaetlanir.title}
             description={frontPageText.urbotaaetlanir.description}
             image={{
               src: '/assets/heildar-image.svg',
