@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { ApplicationRequirementStatementEnum } from '../gen/fetch'
+import { ApplicationRequirementStatementEnum, SettlementType } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 import { AdvertDetails } from '../lib/trpc/types'
 
@@ -409,6 +409,30 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
     ],
   )
 
+  const updateSettlementType = useCallback(
+    (type: SettlementType) => {
+      if (advert?.settlement?.type === type) {
+        return
+      }
+
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          type,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Tegund búsins vistuð')
+          },
+          onError: () => {
+            toast.error('Ekki tókst að vista tegund búsins')
+          },
+        },
+      )
+    },
+    [advertId, settlementId, updateSettlementMutation, advert?.settlement?.type],
+  )
+
   return {
     updateLiquidatorName,
     updateLiquidatorLocation,
@@ -418,6 +442,7 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
     updateSettlementDeadline,
     updateSettlementDateOfDeath,
     updateDeclaredClaims,
+    updateSettlementType,
     updateRecallStatementType,
     updateRecallStatementLocation,
     isUpdatingSettlement,

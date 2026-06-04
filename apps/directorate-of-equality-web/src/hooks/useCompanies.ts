@@ -26,7 +26,7 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
     ]),
   )
 
-  const { data, isLoading, isFetching } = useQuery(
+  const { data, isLoading, isFetching, isError } = useQuery(
     trpc.company.list.queryOptions(query, {
       placeholderData: (prev) => prev,
       staleTime: 5_000,
@@ -41,5 +41,13 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
       ) as Parameters<typeof setFilter>[0],
     )
 
-  return { data, isLoading, isFetching, filter, setFilter, resetFilter }
+  return {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    filter,
+    setFilter,
+    resetFilter,
+  }
 }

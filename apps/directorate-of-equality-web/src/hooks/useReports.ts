@@ -37,7 +37,7 @@ export function useReports(
     }).map(([k, v]) => [k, v ?? undefined]),
   )
 
-  const { data, isLoading, isFetching } = useQuery(
+  const { data, isLoading, isFetching, isError } = useQuery(
     trpc.reports.list.queryOptions(query, {
       placeholderData: (prev) => prev,
       staleTime: 5_000,
@@ -52,5 +52,13 @@ export function useReports(
       ) as Parameters<typeof setFilter>[0],
     )
 
-  return { data, isLoading, isFetching, filter, setFilter, resetFilter }
+  return {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    filter,
+    setFilter,
+    resetFilter,
+  }
 }

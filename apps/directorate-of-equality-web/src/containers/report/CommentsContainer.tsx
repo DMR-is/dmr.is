@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+
 import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
 import {
   CommentVisibilityEnum,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
+import { reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -39,15 +42,18 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
     },
+    onError: () => toast.error(reportText.comments.createError),
   })
 
   const { mutate: deleteComment } = useMutation({
     ...trpc.reportComments.delete.mutationOptions(),
     onSuccess: () => {
+      toast.success(reportText.comments.deleteSuccess)
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
     },
+    onError: () => toast.error(reportText.comments.deleteError),
   })
 
   const handleSubmit = () => {

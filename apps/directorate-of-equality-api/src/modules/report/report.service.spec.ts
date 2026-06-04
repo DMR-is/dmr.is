@@ -5,7 +5,11 @@ import { Op } from 'sequelize'
 import type { Logger } from '@dmr.is/logging'
 
 import { CompanySizeEnum } from '../company/models/company.enums'
-import type { GetReportsQueryDto } from './dto/get-reports.query.dto'
+import { ReportOutlierSortByEnum } from './dto/get-report-outliers.query.dto'
+import {
+  type GetReportsQueryDto,
+  SortDirectionEnum,
+} from './dto/get-reports.query.dto'
 import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import type { ReportModel } from './models/report.model'
 import { ReportService } from './report.service'
@@ -962,6 +966,76 @@ describe('ReportService.getOutliers', () => {
 
     expect(result.outliers).toEqual([])
     expect(result.paging.totalItems).toBe(0)
+  })
+
+  // Capture the `order` the service hands Sequelize. Each tuple is either
+  // [{ as }, column, direction] (direct column on `reportEmployee`) or
+  // [{ as }, { as }, column, direction] (nested `role.title`).
+  const captureOrder = async (
+    query: Parameters<ReportService['getOutliers']>[1],
+  ) => {
+    const { service, findByPkOrThrow, outlierFindAndCountAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce(
+      makeDetailedSalaryReportRow() as unknown as ReportModel,
+    )
+    outlierFindAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.getOutliers(REPORT_ID, query)
+
+    return outlierFindAndCountAll.mock.calls[0][0].order as Array<
+      Array<{ as?: string } | string>
+    >
+  }
+
+  it('defaults to employee ordinal ascending when no sort is given', async () => {
+    const order = await captureOrder({ page: 1, pageSize: 10 })
+
+    expect(order).toHaveLength(1)
+    expect((order[0][0] as { as: string }).as).toBe('reportEmployee')
+    expect(order[0][1]).toBe('ordinal')
+    expect(order[0][2]).toBe('ASC')
+  })
+
+  it('sorts by a direct employee column with an ordinal tiebreaker', async () => {
+    const order = await captureOrder({
+      page: 1,
+      pageSize: 10,
+      sortBy: ReportOutlierSortByEnum.SCORE,
+      direction: SortDirectionEnum.DESC,
+    })
+
+    expect((order[0][0] as { as: string }).as).toBe('reportEmployee')
+    expect(order[0][1]).toBe('score')
+    expect(order[0][2]).toBe('DESC')
+    // Deterministic paging: ties broken by ordinal ascending.
+    expect(order[1][1]).toBe('ordinal')
+    expect(order[1][2]).toBe('ASC')
+  })
+
+  it('sorts by the nested role title', async () => {
+    const order = await captureOrder({
+      page: 1,
+      pageSize: 10,
+      sortBy: ReportOutlierSortByEnum.ROLE_TITLE,
+      direction: SortDirectionEnum.ASC,
+    })
+
+    expect((order[0][0] as { as: string }).as).toBe('reportEmployee')
+    expect((order[0][1] as { as: string }).as).toBe('role')
+    expect(order[0][2]).toBe('title')
+    expect(order[0][3]).toBe('ASC')
+    expect(order[1][1]).toBe('ordinal')
+  })
+
+  it('defaults the direction to ascending when only sortBy is given', async () => {
+    const order = await captureOrder({
+      page: 1,
+      pageSize: 10,
+      sortBy: ReportOutlierSortByEnum.GENDER,
+    })
+
+    expect(order[0][1]).toBe('gender')
+    expect(order[0][2]).toBe('ASC')
   })
 })
 

@@ -3,6 +3,7 @@
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -34,7 +35,7 @@ import {
   COLUMN_STATUS,
   COLUMNS,
 } from '../../lib/constants'
-import { overviewText, sharedText } from '../../lib/text'
+import { overviewText, serverErrorText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
@@ -171,7 +172,7 @@ export const ReportsContainer = () => {
   const fixedStatus = TAB_FIXED_STATUS[activeTab]
   const fixedQuery = fixedStatus ? { status: fixedStatus } : undefined
 
-  const { data, isLoading, filter, setFilter, resetFilter } =
+  const { data, isLoading, isError, filter, setFilter, resetFilter } =
     useReports(fixedQuery)
 
   // Unfiltered so tab counts stay stable while user filters within a tab.
@@ -287,6 +288,20 @@ export const ReportsContainer = () => {
       </GridRow>
     </Box>
   )
+
+  if (isError) {
+    return (
+      <GridContainer>
+        <Box marginTop={4}>
+          <AlertMessage
+            type="error"
+            title={serverErrorText.title}
+            message={serverErrorText.message}
+          />
+        </Box>
+      </GridContainer>
+    )
+  }
 
   return (
     <GridContainer>

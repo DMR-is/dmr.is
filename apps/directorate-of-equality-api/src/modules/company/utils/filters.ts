@@ -11,6 +11,12 @@ export enum CompanyStatusFilterEnum {
   COMPLIANT = 'compliant',
 }
 
+// Sizes that carry no reporting obligation. UNKNOWN means we have not yet
+// classified the company, so it imposes nothing until an admin sets a size.
+const NO_REQUIREMENT_SIZES = [CompanySizeEnum.SMALL, CompanySizeEnum.UNKNOWN]
+// Sizes that must file an equality report (LARGE additionally needs salary).
+const EQUALITY_REQUIRED_SIZES = [CompanySizeEnum.MEDIUM, CompanySizeEnum.LARGE]
+
 function activeReportExists(type: 'SALARY' | 'EQUALITY'): string {
   return `EXISTS (
     SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
@@ -40,19 +46,19 @@ function statusCondition(status: CompanyStatusFilterEnum): WhereOptions {
           {
             [Op.and]: [needsSalary, literal(activeReportExists('SALARY'))],
           },
-          // MEDIUM: equality requirement fulfilled (no salary needed, not SMALL)
+          // MEDIUM: equality requirement fulfilled (no salary needed)
           {
             [Op.and]: [
               noSalaryNeeded,
-              { employeeCountCategory: { [Op.ne]: CompanySizeEnum.SMALL } },
+              { employeeCountCategory: { [Op.in]: EQUALITY_REQUIRED_SIZES } },
               literal(activeReportExists('EQUALITY')),
             ],
           },
-          // SMALL: no requirements and nothing submitted
+          // SMALL / UNKNOWN: no requirements and nothing submitted
           {
             [Op.and]: [
               noSalaryNeeded,
-              { employeeCountCategory: CompanySizeEnum.SMALL },
+              { employeeCountCategory: { [Op.in]: NO_REQUIREMENT_SIZES } },
               literal(`NOT ${activeReportExists('EQUALITY')}`),
             ],
           },
@@ -82,11 +88,11 @@ function statusCondition(status: CompanyStatusFilterEnum): WhereOptions {
               literal(`NOT ${activeReportExists('EQUALITY')}`),
             ],
           },
-          // Non-SMALL, no salary obligation, no equality
+          // MEDIUM/LARGE, no salary obligation, no equality
           {
             [Op.and]: [
               noSalaryNeeded,
-              { employeeCountCategory: { [Op.ne]: CompanySizeEnum.SMALL } },
+              { employeeCountCategory: { [Op.in]: EQUALITY_REQUIRED_SIZES } },
               literal(`NOT ${activeReportExists('EQUALITY')}`),
             ],
           },
