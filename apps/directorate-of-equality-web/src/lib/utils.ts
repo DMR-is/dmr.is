@@ -39,6 +39,9 @@ export const EMPLOYEE_RANGES = [
   { value: CompanySizeEnum.LARGE, label: '50+' },
 ]
 
+export const formatSalary = (v: number) =>
+  new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
+
 export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
   [CompanySizeEnum.SMALL]: '0–24',
   [CompanySizeEnum.MEDIUM]: '25–49',

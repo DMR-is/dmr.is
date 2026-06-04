@@ -5,7 +5,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { ReportsContainer } from '../../../containers/reports/ReportsContainer'
-import { overviewText, sharedText } from '../../../lib/text'
+import { headerText, overviewText } from '../../../lib/text'
 
 export default function MalPage() {
   return (
@@ -16,8 +16,8 @@ export default function MalPage() {
         image={{ src: '/assets/banner-image.svg', alt: overviewText.imageAlt }}
         breadcrumbs={{
           items: [
-            { title: sharedText.breadcrumbHome, href: '/' },
-            { title: overviewText.breadcrumbOverview },
+            { title: headerText.brand, href: '/' },
+            { title: 'Ritstjórn' },
           ],
         }}
         variant="default"
@@ -25,7 +25,7 @@ export default function MalPage() {
         imageSpan={'3/12'}
         withOffset={false}
       />
-      <Box background="blue100" paddingY={5} height="full">
+      <Box background="blue100" paddingY={5} style={{ minHeight: '100%' }}>
         <Suspense fallback={<SearchDashboardLoading />}>
           <ReportsContainer />
         </Suspense>

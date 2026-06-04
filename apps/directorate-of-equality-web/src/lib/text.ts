@@ -4,8 +4,9 @@ export const frontPageText = {
   heroDescription:
     'Hér má finna jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
   heildarlisti: {
-    description: 'Umsýsla frá innsendingu til útgáfu.',
-    title: 'Heildarlisti',
+    description:
+      'Yfirlit yfir innsendingar sem eru óúthlutaðar og ekki í vinnslu',
+    title: 'Innsendingar',
     href: '/yfirlit',
   },
   jafnrettisaetlanir: {
@@ -43,11 +44,11 @@ export const frontPageText = {
 }
 
 export const overviewText = {
-  heroTitle: 'Yfirlit',
+  heroTitle: 'Vinnslusvæði',
   heroDescription:
-    'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
-  imageAlt: 'Heildarlisti',
-  breadcrumbOverview: 'Heildarlisti',
+    'Hér má finna yfirlit yfir allar innsendar jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
+  imageAlt: 'Innsendingar',
+  breadcrumbOverview: 'Yfirlit',
   tabInnsendingar: 'Innsendingar',
   tabInProgress: 'Í vinnslu',
   tabAfgreitt: 'Afgreitt',
@@ -64,7 +65,9 @@ export const overviewText = {
     companyLabel: 'Fyrirtæki',
     dateRangeLabel: 'Tímabil',
     dateFrom: 'Frá',
+    dateFromPlaceholder: 'Veldu dagsetningu',
     dateTo: 'Til',
+    dateToPlaceholder: 'Veldu dagsetningu',
     clearDates: 'Hreinsa dagsetningar',
   },
   createEqualityReport: {
@@ -114,6 +117,9 @@ export const reportText = {
   statusSelect: {
     successToast: 'Uppfærsla á stöðu tókst.',
     errorToast: 'Villa við að uppfæra stöðu. Vinsamlegast reyndu aftur síðar.',
+    assignButton: 'Færa í vinnslu',
+    approveButton: 'Samþykkja',
+    denyButton: 'Hafna',
   },
   employeeSelect: {
     label: 'Starfsmaður',
@@ -182,6 +188,8 @@ export const reportText = {
       actionLabel: 'Aðgerð',
       signatureNameLabel: 'Nafn undirritanda',
       signatureRoleLabel: 'Hlutverk undirritanda',
+      points: 'Stig',
+      salary: 'Laun',
     },
     remedyDeadlineLabel: 'Frestur til úrbóta',
     remedyDeadlinePlaceholder: 'Valin dagsetning fyrir úrbótafrest',
@@ -194,10 +202,14 @@ export const reportText = {
     reportSubmitted: 'Skýrsla innsend',
     assigned: 'Úthlutað',
     unassigned: 'tekur sig af málinu',
-    superseded: 'Úrelt',
+    superseded: 'Útrunnið',
     registersMessage: 'skráir skilaboð',
     submitsReport: 'sendir inn skýrslu',
     claimsCase: 'merkir sér málið',
+    assignedOther: 'merkti',
+    assignedOtherSuffix: 'á málið',
+    unassignedOther: 'tók',
+    unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
   },
   loadError: 'Villa kom upp við að hlaða skýrslu',
@@ -222,6 +234,7 @@ export const companiesText = {
     avgEmployees: 'Meðalfjöldi starfsmanna',
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
+    viewReport: 'Skoða skýrslu',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
@@ -240,7 +253,7 @@ export const companiesText = {
 export const usersText = {
   heroTitle: 'Ritstjórar',
   heroDescription:
-    'Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða gera ritstjóra óvirkan.',
+    'Hér eru skráðir ritstjórar kerfisins. Hægt er að bæta við nýjum ritstjóra, breyta upplýsingum eða óvirkja ritstjóra.',
   createButton: 'Nýr ritstjóri',
   showInactive: 'Sýna óvirka',
   hideInactive: 'Fela óvirka',
@@ -316,7 +329,7 @@ export const sharedText = {
     IN_REVIEW: 'Í vinnslu',
     APPROVED: 'Samþykkt',
     DENIED: 'Hafnað',
-    SUPERSEDED: 'Úrelt',
+    SUPERSEDED: 'Útrunnið',
     POSTPONED: 'Frestað',
     WITHDRAWN: 'Dregin til baka',
   },

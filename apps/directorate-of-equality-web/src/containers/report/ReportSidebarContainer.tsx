@@ -26,7 +26,10 @@ export function ReportSidebarContainer({
     ...trpc.reports.getById.queryOptions({ id: report.id }),
     initialData: report,
   })
-  const isDisabled = data.status === 'POSTPONED' || data.status === 'DENIED'
+  const isDisabled =
+    data.status === 'POSTPONED' ||
+    data.status === 'DENIED' ||
+    data.status === 'APPROVED'
 
   return (
     <ReportSidebar>

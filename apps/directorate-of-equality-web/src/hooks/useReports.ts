@@ -27,7 +27,7 @@ export function useReports(
   const effectiveStatus =
     mergeStatus && fixedStatus && userStatus
       ? [...new Set([...fixedStatus, ...userStatus])]
-      : userStatus ?? fixedStatus
+      : (userStatus ?? fixedStatus)
 
   const query = Object.fromEntries(
     Object.entries({
@@ -38,7 +38,11 @@ export function useReports(
   )
 
   const { data, isLoading, isFetching } = useQuery(
-    trpc.reports.list.queryOptions(query, { placeholderData: (prev) => prev }),
+    trpc.reports.list.queryOptions(query, {
+      placeholderData: (prev) => prev,
+      staleTime: 5_000,
+      gcTime: 5_000,
+    }),
   )
 
   const resetFilter = () =>

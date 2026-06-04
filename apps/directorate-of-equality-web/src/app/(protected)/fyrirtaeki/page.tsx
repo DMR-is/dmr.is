@@ -6,7 +6,7 @@ import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/Se
 
 import { CompaniesContainer } from '../../../containers/companies/CompaniesContainer'
 import { NAV_PATHS } from '../../../lib/constants'
-import { companiesText } from '../../../lib/text'
+import { companiesText, headerText } from '../../../lib/text'
 
 export default async function FyrirtaekiPage() {
   return (
@@ -18,10 +18,10 @@ export default async function FyrirtaekiPage() {
         breadcrumbs={{
           items: [
             {
-              title: NAV_PATHS.frontpage.title,
+              title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
-            { title: companiesText.heading, href: NAV_PATHS.fyrirtaeki.href },
+            { title: 'Ritstjórn' },
           ],
         }}
         variant="default"
@@ -29,7 +29,7 @@ export default async function FyrirtaekiPage() {
         imageSpan={'3/12'}
         withOffset={false}
       />
-      <Box background="blue100" paddingY={5} height="full">
+      <Box background="blue100" paddingY={5} style={{ minHeight: '100%' }}>
         <Suspense fallback={<SearchDashboardLoading />}>
           <CompaniesContainer />
         </Suspense>

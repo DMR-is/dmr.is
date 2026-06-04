@@ -1,5 +1,18 @@
 import { style } from '@vanilla-extract/css'
 
+export const reportCard = style({
+  border: '1px solid transparent',
+  transition: 'border-color 300ms ease-in-out',
+  selectors: {
+    'a:hover &': {
+      borderColor: '#0061ff',
+    },
+    'a:focus-visible &': {
+      borderColor: '#0061ff',
+    },
+  },
+})
+
 export const grid = style({
   display: 'flex',
   flexWrap: 'wrap',

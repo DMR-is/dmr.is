@@ -178,7 +178,7 @@ export const ReportFilter = ({
                 <Stack space={2}>
                   <DatePicker
                     label={overviewText.filter.dateFrom}
-                    placeholderText={overviewText.filter.dateFrom}
+                    placeholderText={overviewText.filter.dateFromPlaceholder}
                     size="xs"
                     selected={dateFrom}
                     maxDate={dateTo}
@@ -188,7 +188,7 @@ export const ReportFilter = ({
                   />
                   <DatePicker
                     label={overviewText.filter.dateTo}
-                    placeholderText={overviewText.filter.dateTo}
+                    placeholderText={overviewText.filter.dateToPlaceholder}
                     size="xs"
                     selected={dateTo}
                     minDate={dateFrom}

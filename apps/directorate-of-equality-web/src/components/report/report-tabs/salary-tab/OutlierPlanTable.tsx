@@ -1,4 +1,8 @@
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
+import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table } from '@dmr.is/ui/components/Tables/Table/Table'
 
@@ -6,8 +10,9 @@ import {
   type Paging,
   type ReportEmployeeOutlierDto,
 } from '../../../../gen/fetch'
-import { reportText as r, sharedText } from '../../../../lib/text'
-import * as styles from './OutlierPlanTable.css'
+import { reportText as r, reportText, sharedText } from '../../../../lib/text'
+import { formatSalary } from '../../../../lib/utils'
+import { OutlierInputForm } from './OutlierInputForm'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -16,6 +21,8 @@ interface OutlierPlanTableProps {
   paging?: Paging
   loading?: boolean
   onPageChange?: (page: number) => void
+  outliersPostponed?: boolean
+  outlierDate?: Date
 }
 
 const dash = '–'
@@ -58,31 +65,41 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
 ]
 
 const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
-  <Box background="blue100" padding={2}>
-    <Box display="flex" flexWrap="wrap" style={{ columnGap: 16 }}>
-      {[
-        { label: o.reasonLabel, value: row.reason },
-        { label: o.actionLabel, value: row.action },
-        { label: o.signatureNameLabel, value: row.signatureName },
-        { label: o.signatureRoleLabel, value: row.signatureRole },
-      ].map(({ label, value }) => (
-        <Box
-          key={label}
-          paddingX={1}
-          paddingY={1}
-          className={styles.expandedRowItem}
-        >
-          <Box display="flex">
-            <Box style={{ minWidth: 180 }}>
-              <Text variant="small" fontWeight="semiBold">
-                {label}
-              </Text>
-            </Box>
-            <Text variant="small">{value ?? dash}</Text>
-          </Box>
-        </Box>
-      ))}
-    </Box>
+  <Box padding={2} background="blue100">
+    {[
+      { label: o.points, value: row.score },
+      {
+        label: o.salary,
+        value:
+          row.predictedBaseSalary != null
+            ? `${formatSalary(row.predictedBaseSalary)} kr.`
+            : null,
+      },
+      { label: o.reasonLabel, value: row.reason },
+      { label: o.actionLabel, value: row.action },
+      { label: o.signatureNameLabel, value: row.signatureName },
+      { label: o.signatureRoleLabel, value: row.signatureRole },
+    ].map(({ label, value }, index) => (
+      <Box
+        background={index % 2 === 0 ? 'white' : 'blue100'}
+        padding={1}
+        key={label}
+      >
+        <GridRow key={label}>
+          <GridColumn span="4/12">
+            <Text variant="small" fontWeight="semiBold">
+              {label}
+            </Text>
+          </GridColumn>
+
+          <GridColumn>
+            <Text variant="small" textAlign="left">
+              {value ?? dash}
+            </Text>
+          </GridColumn>
+        </GridRow>
+      </Box>
+    ))}
   </Box>
 )
 
@@ -91,12 +108,27 @@ export const OutlierPlanTable = ({
   paging,
   loading,
   onPageChange,
+  outliersPostponed,
+  outlierDate,
 }: OutlierPlanTableProps) => {
   return (
     <>
       <Text variant="h4" marginBottom={4}>
         {o.heading}
       </Text>
+      {outliersPostponed && (
+        <Box marginBottom={2}>
+          <Stack space={2}>
+            <AlertMessage
+              type="warning"
+              title={reportText.salaryTab.outliersPostponedTitle}
+              message={reportText.salaryTab.outliersPostponedMessage}
+            />
+
+            <OutlierInputForm outlierDate={outlierDate} />
+          </Stack>
+        </Box>
+      )}
       <Table
         columns={columns}
         data={outliers}

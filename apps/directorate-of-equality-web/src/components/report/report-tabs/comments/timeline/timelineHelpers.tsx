@@ -81,10 +81,25 @@ export function timelineEntryText(
   }
 
   if (eventType === ReportEventTypeEnum.ASSIGNED && assignedUserId) {
-    const user = usersById.get(assignedUserId)
-    return user ? (
+    const assignedUser = usersById.get(assignedUserId)
+    const actor =
+      actorUserId && actorUserId !== assignedUserId
+        ? usersById.get(actorUserId)
+        : null
+
+    if (actor && assignedUser) {
+      return (
+        <>
+          <Bold>{userName(actor)}</Bold> {reportText.timeline.assignedOther}{' '}
+          <Bold>{userName(assignedUser)}</Bold>{' '}
+          {reportText.timeline.assignedOtherSuffix}
+        </>
+      )
+    }
+
+    return assignedUser ? (
       <>
-        <Bold>{userName(user)}</Bold> {reportText.timeline.claimsCase}
+        <Bold>{userName(assignedUser)}</Bold> {reportText.timeline.claimsCase}
       </>
     ) : (
       <>{reportText.timeline.assigned}</>
@@ -93,6 +108,21 @@ export function timelineEntryText(
 
   if (eventType === ReportEventTypeEnum.UNASSIGNED) {
     const actor = actorUserId ? usersById.get(actorUserId) : null
+    const unassignedUser =
+      assignedUserId && assignedUserId !== actorUserId
+        ? usersById.get(assignedUserId)
+        : null
+
+    if (actor && unassignedUser) {
+      return (
+        <>
+          <Bold>{userName(actor)}</Bold> {reportText.timeline.unassignedOther}{' '}
+          <Bold>{userName(unassignedUser)}</Bold>{' '}
+          {reportText.timeline.unassignedOtherSuffix}
+        </>
+      )
+    }
+
     return (
       <>
         {actor && <Bold>{userName(actor)} </Bold>}
