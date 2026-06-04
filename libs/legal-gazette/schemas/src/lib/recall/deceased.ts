@@ -52,7 +52,13 @@ export const recallDeceasedSchemaRefined = z.object({
       type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
       partnerName: z.string().optional().nullable(),
       partnerNationalId: z.string().optional().nullable(),
-      partnerDateOfDeath: z.string().optional().nullable(),
+      partnerDateOfDeath: z
+        .string()
+        .optional()
+        .nullable()
+        .refine((date) => !date || isDateString(date), {
+          message: 'Dánardagur maka er ógildur',
+        }),
     })
     .refine(
       (settlement) => {

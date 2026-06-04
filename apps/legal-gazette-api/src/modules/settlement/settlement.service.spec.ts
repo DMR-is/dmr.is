@@ -32,6 +32,9 @@ interface MockSettlement {
   deadline: Date | null
   dateOfDeath: Date | null
   declaredClaims: number | null
+  partnerName: string | null
+  partnerNationalId: string | null
+  partnerDateOfDeath: Date | null
   adverts?: MockAdvert[]
   update: jest.Mock
 }
@@ -48,6 +51,9 @@ const createMockSettlement = (
     deadline: overrides.deadline ?? null,
     dateOfDeath: overrides.dateOfDeath ?? null,
     declaredClaims: overrides.declaredClaims ?? null,
+    partnerName: overrides.partnerName ?? null,
+    partnerNationalId: overrides.partnerNationalId ?? null,
+    partnerDateOfDeath: overrides.partnerDateOfDeath ?? null,
     adverts: overrides.adverts || [],
     update: jest.fn(),
   }
@@ -351,6 +357,73 @@ describe('SettlementService - Status Protection', () => {
         expect(settlement.update).toHaveBeenCalledWith({
           declaredClaims: null,
         })
+      })
+    })
+    describe('Partner Fields (undivided settlement)', () => {
+      it('should update partner fields when provided', async () => {
+        const settlement = createMockSettlement({ adverts: [] })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+        const update: UpdateSettlementDto = {
+          partnerName: 'Partner Name',
+          partnerNationalId: '0987654321',
+          partnerDateOfDeath: new Date('2022-03-10T00:00:00.000Z'),
+        }
+        await service.updateSettlement('settlement-123', update)
+        const updateCall = settlement.update.mock.calls[0][0]
+        expect(updateCall).toMatchObject({
+          partnerName: 'Partner Name',
+          partnerNationalId: '0987654321',
+        })
+        expect(updateCall.partnerDateOfDeath).toBeInstanceOf(Date)
+        expect(updateCall.partnerDateOfDeath?.toISOString()).toBe(
+          '2022-03-10T00:00:00.000Z',
+        )
+      })
+      it('should allow setting partnerDateOfDeath to null', async () => {
+        const settlement = createMockSettlement({
+          partnerDateOfDeath: new Date('2022-03-10T00:00:00.000Z'),
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+        await service.updateSettlement('settlement-123', {
+          partnerDateOfDeath: null,
+        })
+        expect(settlement.update).toHaveBeenCalledWith({
+          partnerDateOfDeath: null,
+        })
+      })
+      it('should allow clearing partner name and national id with null', async () => {
+        const settlement = createMockSettlement({
+          partnerName: 'Old Partner',
+          partnerNationalId: '0987654321',
+          adverts: [],
+        })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+        await service.updateSettlement('settlement-123', {
+          partnerName: null,
+          partnerNationalId: null,
+        })
+        expect(settlement.update).toHaveBeenCalledWith({
+          partnerName: null,
+          partnerNationalId: null,
+        })
+      })
+      it('should not include partner fields when undefined', async () => {
+        const settlement = createMockSettlement({ adverts: [] })
+        settlementModel.findByPkOrThrow.mockResolvedValue(
+          settlement as unknown as SettlementModel,
+        )
+        await service.updateSettlement('settlement-123', { name: 'Only Name' })
+        const updateCall = settlement.update.mock.calls[0][0]
+        expect(updateCall).not.toHaveProperty('partnerName')
+        expect(updateCall).not.toHaveProperty('partnerNationalId')
+        expect(updateCall).not.toHaveProperty('partnerDateOfDeath')
       })
     })
   })
