@@ -64,6 +64,17 @@ const createOptimisticDataForSettlement = (
   if (variables.settlementDateOfDeath !== undefined) {
     settlement.dateOfDeath = toIsoStringOrNull(variables.settlementDateOfDeath)
   }
+  if (variables.partnerName !== undefined) {
+    settlement.partnerName = variables.partnerName as string | null
+  }
+  if (variables.partnerNationalId !== undefined) {
+    settlement.partnerNationalId = variables.partnerNationalId as string | null
+  }
+  if (variables.partnerDateOfDeath !== undefined) {
+    settlement.partnerDateOfDeath = toIsoStringOrNull(
+      variables.partnerDateOfDeath,
+    )
+  }
 
   return {
     ...prevData,
@@ -409,6 +420,90 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
     ],
   )
 
+  const updatePartnerName = useCallback(
+    (partnerName: string) => {
+      if (advert?.settlement?.partnerName === partnerName) {
+        return
+      }
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          partnerName,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Nafn maka vistað')
+          },
+          onError: () => {
+            toast.error('Ekki tókst að vista nafn maka')
+          },
+        },
+      )
+    },
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.partnerName,
+    ],
+  )
+
+  const updatePartnerNationalId = useCallback(
+    (partnerNationalId: string) => {
+      if (advert?.settlement?.partnerNationalId === partnerNationalId) {
+        return
+      }
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          partnerNationalId,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Kennitala maka vistuð')
+          },
+          onError: () => {
+            toast.error('Ekki tókst að vista kennitölu maka')
+          },
+        },
+      )
+    },
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.partnerNationalId,
+    ],
+  )
+
+  const updatePartnerDateOfDeath = useCallback(
+    (partnerDateOfDeath: string) => {
+      if (advert?.settlement?.partnerDateOfDeath === partnerDateOfDeath) {
+        return
+      }
+      updateSettlementMutation(
+        {
+          id: settlementId,
+          partnerDateOfDeath: new Date(partnerDateOfDeath),
+        },
+        {
+          onSuccess: () => {
+            toast.success('Dánardagur maka vistaður')
+          },
+          onError: () => {
+            toast.error('Ekki tókst að vista dánardag maka')
+          },
+        },
+      )
+    },
+    [
+      advertId,
+      settlementId,
+      updateSettlementMutation,
+      advert?.settlement?.partnerDateOfDeath,
+    ],
+  )
+
   const updateSettlementType = useCallback(
     (type: SettlementType) => {
       if (advert?.settlement?.type === type) {
@@ -443,6 +538,9 @@ export const useUpdateSettlement = (advertId: string, settlementId: string) => {
     updateSettlementDateOfDeath,
     updateDeclaredClaims,
     updateSettlementType,
+    updatePartnerName,
+    updatePartnerNationalId,
+    updatePartnerDateOfDeath,
     updateRecallStatementType,
     updateRecallStatementLocation,
     isUpdatingSettlement,

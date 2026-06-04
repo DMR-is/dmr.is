@@ -30,6 +30,9 @@ const schema = settlementSchemaRefined.extend({
     }),
   companies: z.array(companySchema).optional(),
   type: z.enum(['DEFAULT', 'UNDIVIDED', 'OWNER']).optional(),
+  partnerName: z.string().optional().nullable(),
+  partnerNationalId: z.string().optional().nullable(),
+  partnerDateOfDeath: z.string().optional().nullable(),
 })
 
 const requirementsStatementOptions = [
@@ -76,6 +79,9 @@ const initalState: Settlement = {
     ApplicationRequirementStatementEnum.LIQUIDATORLOCATION,
   companies: [],
   type: 'DEFAULT',
+  partnerName: '',
+  partnerNationalId: '',
+  partnerDateOfDeath: '',
 }
 
 type Props = {
@@ -217,6 +223,56 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
               }
             />
           </GridColumn>
+        )}
+        {state.type === 'UNDIVIDED' && (
+          <>
+            <GridColumn span={['12/12', '6/12']}>
+              <Input
+                size="sm"
+                backgroundColor="blue"
+                name="settlement.partnerName"
+                label="Nafn maka"
+                value={state.partnerName ?? ''}
+                onChange={(e) =>
+                  setState((prev) => ({
+                    ...prev,
+                    partnerName: e.target.value,
+                  }))
+                }
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <Input
+                size="sm"
+                backgroundColor="blue"
+                name="settlement.partnerNationalId"
+                label="Kennitala maka"
+                value={state.partnerNationalId ?? ''}
+                onChange={(e) =>
+                  setState((prev) => ({
+                    ...prev,
+                    partnerNationalId: e.target.value,
+                  }))
+                }
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <DatePicker
+                locale="is"
+                size="sm"
+                backgroundColor="blue"
+                label="Dánardagur maka"
+                placeholderText=""
+                name="settlement.partnerDateOfDeath"
+                handleChange={(date) =>
+                  setState((prev) => ({
+                    ...prev,
+                    partnerDateOfDeath: date.toISOString(),
+                  }))
+                }
+              />
+            </GridColumn>
+          </>
         )}
         <GridColumn span={['12/12', '6/12']}>
           <Input

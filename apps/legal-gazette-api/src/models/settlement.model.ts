@@ -32,6 +32,9 @@ type SettlementAttributes = {
   liquidatorRecallStatementType?: string | null
   companies?: CompanySchema[]
   endingDate?: Date | null
+  partnerNationalId?: string | null
+  partnerName?: string | null
+  partnerDateOfDeath?: Date | null
 }
 
 export type SettlementCreateAttributes = Omit<
@@ -119,6 +122,30 @@ export class SettlementModel extends ParanoidModel<
   dateOfDeath!: Date | null
 
   @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+    field: 'partner_national_id',
+  })
+  partnerNationalId!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    defaultValue: null,
+    field: 'partner_name',
+  })
+  partnerName!: string | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    defaultValue: null,
+    field: 'partner_date_of_death',
+  })
+  partnerDateOfDeath!: Date | null
+
+  @Column({
     type: DataType.DATE,
     allowNull: true,
     defaultValue: null,
@@ -153,6 +180,9 @@ export class SettlementModel extends ParanoidModel<
       deadline: model.deadline,
       dateOfDeath: model.dateOfDeath,
       declaredClaims: model.declaredClaims,
+      partnerNationalId: model.partnerNationalId,
+      partnerName: model.partnerName,
+      partnerDateOfDeath: model.partnerDateOfDeath,
     }
   }
 
@@ -209,4 +239,13 @@ export class SettlementDto {
 
   @ApiOptionalNumber({ nullable: true })
   declaredClaims!: number | null
+
+  @ApiOptionalString({ maxLength: 10, nullable: true })
+  partnerNationalId?: string | null
+
+  @ApiOptionalString({ maxLength: 255, nullable: true })
+  partnerName?: string | null
+
+  @ApiOptionalDateTime({ nullable: true })
+  partnerDateOfDeath?: Date | null
 }

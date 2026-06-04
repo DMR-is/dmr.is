@@ -206,6 +206,9 @@ export function getAdvertHtmlMarkup(
           liquidatorName: model.settlement?.liquidatorName ?? '',
           name: model.settlement?.name ?? '',
           nationalId: model.settlement?.nationalId ?? '',
+          partnerName: model.settlement?.partnerName ?? '',
+          partnerNationalId: model.settlement?.partnerNationalId ?? '',
+          partnerDateOfDeath: model.settlement?.partnerDateOfDeath ?? undefined,
           statementType: mapStatementType(
             model.settlement?.liquidatorRecallStatementType,
           ),

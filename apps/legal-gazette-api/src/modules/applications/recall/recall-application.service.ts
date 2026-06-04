@@ -72,6 +72,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       deadline: settlement.deadline ?? undefined,
       dateOfDeath: settlement.dateOfDeath ?? undefined,
       endingDate: settlement.endingDate ?? undefined,
+      partnerNationalId: settlement.partnerNationalId ?? undefined,
+      partnerName: settlement.partnerName ?? undefined,
+      partnerDateOfDeath: settlement.partnerDateOfDeath ?? undefined,
       companies: settlement.companies,
       ...overrides,
     }
@@ -577,10 +580,19 @@ export class RecallApplicationService implements IRecallApplicationService {
 
         data = check.data
         settlementOverrides = {
-          dateOfDeath: data.fields.settlementFields.dateOfDeath
-            ? new Date(data.fields.settlementFields.dateOfDeath)
+          dateOfDeath: check.data.fields.settlementFields.dateOfDeath
+            ? new Date(check.data.fields.settlementFields.dateOfDeath)
             : undefined,
-          settlementType: data.fields.settlementFields.type as SettlementType,
+          settlementType: check.data.fields.settlementFields
+            .type as SettlementType,
+          partnerName:
+            check.data.fields.settlementFields.partnerName ?? undefined,
+          partnerNationalId:
+            check.data.fields.settlementFields.partnerNationalId ?? undefined,
+          partnerDateOfDeath: check.data.fields.settlementFields
+            .partnerDateOfDeath
+            ? new Date(check.data.fields.settlementFields.partnerDateOfDeath)
+            : undefined,
         }
         break
       }

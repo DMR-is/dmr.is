@@ -51,9 +51,16 @@ export const SettlementFields = ({
     updateSettlementName,
     updateSettlementNationalId,
     updateSettlementType,
+    updatePartnerName,
+    updatePartnerNationalId,
+    updatePartnerDateOfDeath,
     updateRecallStatementType,
     updateRecallStatementLocation,
   } = useUpdateSettlement(advertId, settlement.id)
+
+  const showUndividedPartnerFields =
+    DeceasedSettlementAdvertTypes.includes(templateType) &&
+    settlement.type === SettlementType.UNDIVIDED
 
   // Determine initial value based on statement type
   const getInitialRecallStatementLocation = () => {
@@ -198,6 +205,51 @@ export const SettlementFields = ({
           </GridColumn>
         )}
       </GridRow>
+      {showUndividedPartnerFields && (
+        <GridRow>
+          <GridColumn span={['12/12', '6/12']}>
+            <Input
+              disabled={!canEdit}
+              size="sm"
+              backgroundColor="blue"
+              name="settlement-partner-name"
+              label="Nafn maka"
+              defaultValue={settlement.partnerName ?? undefined}
+              onBlur={(evt) => updatePartnerName(evt.target.value)}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <Input
+              disabled={!canEdit}
+              size="sm"
+              backgroundColor="blue"
+              name="settlement-partner-national-id"
+              label="Kennitala maka"
+              defaultValue={settlement.partnerNationalId ?? undefined}
+              onBlur={(evt) => updatePartnerNationalId(evt.target.value)}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <DatePicker
+              disabled={!canEdit}
+              size="sm"
+              placeholderText=""
+              backgroundColor="blue"
+              name="settlement-partner-date-of-death"
+              label="Dánardagur maka"
+              locale="is"
+              selected={
+                settlement.partnerDateOfDeath
+                  ? new Date(settlement.partnerDateOfDeath)
+                  : undefined
+              }
+              handleChange={(date) => {
+                updatePartnerDateOfDeath(date.toISOString())
+              }}
+            />
+          </GridColumn>
+        </GridRow>
+      )}
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
           <Input

@@ -325,6 +325,13 @@ export const advertsRouter = router({
             settlementType: input.fields.settlementFields
               .type as RecallDeceasedFieldsDtoSettlementTypeEnum,
             companies: input.fields.settlementFields.companies,
+            partnerName:
+              input.fields.settlementFields.partnerName ?? undefined,
+            partnerNationalId:
+              input.fields.settlementFields.partnerNationalId ?? undefined,
+            partnerDateOfDeath: input.fields.settlementFields.partnerDateOfDeath
+              ? toDate(input.fields.settlementFields.partnerDateOfDeath)
+              : undefined,
           },
         },
       })

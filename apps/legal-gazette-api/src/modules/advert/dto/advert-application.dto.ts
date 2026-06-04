@@ -129,6 +129,17 @@ export class RecallDivisionMeetingOptionalFieldsDto {
   meetingLocation?: string
 }
 
+export class RecallDeceasedPartnerFieldsDto {
+  @ApiOptionalString()
+  partnerName?: string
+
+  @ApiOptionalString()
+  partnerNationalId?: string
+
+  @ApiOptionalDateTime()
+  partnerDateOfDeath?: Date
+}
+
 export class RecallBankruptcyFieldsDto extends IntersectionType(
   RecallDivisionMeetingFieldsDto,
   RecallAdvertFieldsDto,
@@ -136,7 +147,7 @@ export class RecallBankruptcyFieldsDto extends IntersectionType(
 
 export class RecallDeceasedFieldsDto extends IntersectionType(
   RecallDivisionMeetingOptionalFieldsDto,
-  RecallAdvertFieldsDto,
+  IntersectionType(RecallAdvertFieldsDto, RecallDeceasedPartnerFieldsDto),
 ) {}
 
 export class CreateCommonAdvertAndApplicationDto extends SharedApplicationFieldsDto {

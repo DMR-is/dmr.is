@@ -31,8 +31,18 @@ const getIntro = ({
 const getSettlementText = (settlement: RecallDeceasedSettlement): string => {
   switch (settlement.type) {
     case 'undivided': {
-      const [formattedDateOfDeath] = parseAndFormatDate(settlement.dateOfDeath)
-      return `${settlement.name} sat í óskiptu búi eftir sem lést þann ${formattedDateOfDeath}.`
+      const [formattedDateOfDeath] = parseAndFormatDate(
+        settlement.partnerDateOfDeath,
+      )
+      if (
+        settlement?.partnerName &&
+        settlement?.partnerNationalId &&
+        settlement?.partnerDateOfDeath
+      ) {
+        return `${settlement.name || ''} sat í óskiptu búi eftir maka sinn ${settlement.partnerName}, kt. ${formatNationalId(settlement.partnerNationalId)}, sem lést þann ${formattedDateOfDeath}.`
+      } else {
+        return `${settlement.name || ''} sat í óskiptu búi.`
+      }
     }
     case 'owner': {
       const companies = settlement.companies

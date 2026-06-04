@@ -15,7 +15,9 @@ export const htmlAdminRouter = router({
   backfillPublishedHtml: protectedProcedure
     .input(backfillHtmlInput)
     .mutation(async ({ ctx, input }) => {
-      return ctx.api.backfillPublishedHtml({ dryRun: input.dryRun })
+      return ctx.api.backfillPublishedHtml({
+        dryRun: String(input.dryRun ?? false),
+      })
     }),
 
   getBackfillStatus: protectedProcedure.query(async ({ ctx }) => {
