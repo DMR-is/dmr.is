@@ -68,6 +68,15 @@ export class SettlementService {
     if (body.type !== undefined) {
       updateData.type = body.type
     }
+    if (body.partnerNationalId !== undefined) {
+      updateData.partnerNationalId = body.partnerNationalId
+    }
+    if (body.partnerName !== undefined) {
+      updateData.partnerName = body.partnerName
+    }
+    if (body.partnerDateOfDeath !== undefined) {
+      updateData.partnerDateOfDeath = body.partnerDateOfDeath
+    }
 
     await settlement.update(updateData)
 

@@ -3,15 +3,14 @@
   "paths": {
     "/api/v1/html-admin/backfill": {
       "post": {
-        "description": "Generates and persists HTML for all published adverts missing it",
+        "description": "Preview backfill (dryRun=true) or start backfill job",
         "operationId": "backfillPublishedHtml",
         "parameters": [
           {
             "name": "dryRun",
-            "required": false,
+            "required": true,
             "in": "query",
-            "description": "If true, no changes are persisted to the database",
-            "schema": { "type": "boolean", "default": false }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -81,13 +80,52 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/BackfillJobStatusDto"
+                }
               }
             }
           },
-          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         },
         "security": [{ "bearer": [] }],
         "summary": "",
@@ -99,21 +137,72 @@
         "description": "Get paginated list of backfilled publications",
         "operationId": "getBackfilledPublications",
         "parameters": [
-          { "name": "page", "required": false, "in": "query", "schema": { "type": "number" } },
-          { "name": "pageSize", "required": false, "in": "query", "schema": { "type": "number" } }
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number",
+            "schema": { "default": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Page size",
+            "schema": { "default": 50, "type": "number" }
+          }
         ],
         "responses": {
           "200": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BackfilledPublicationsListDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/BackfilledPublicationsListDto"
+                }
               }
             }
           },
-          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         },
         "security": [{ "bearer": [] }],
         "summary": "",
@@ -126,17 +215,56 @@
         "operationId": "startBackfillRevert",
         "parameters": [],
         "responses": {
-          "200": {
+          "202": {
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BackfillStartResponseDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/BackfillStartResponseDto"
+                }
               }
             }
           },
-          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         },
         "security": [{ "bearer": [] }],
         "summary": "",
@@ -153,13 +281,52 @@
             "description": "",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
+                "schema": {
+                  "$ref": "#/components/schemas/BackfillJobStatusDto"
+                }
               }
             }
           },
-          "401": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "403": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } },
-          "500": { "description": "", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorDto" } } } }
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
         },
         "security": [{ "bearer": [] }],
         "summary": "",
@@ -6150,18 +6317,9 @@
             "type": "string",
             "description": "Publication ID"
           },
-          "advertId": {
-            "type": "string",
-            "description": "Advert ID"
-          },
-          "title": {
-            "type": "string",
-            "description": "Advert title"
-          },
-          "type": {
-            "type": "string",
-            "description": "Advert type title"
-          },
+          "advertId": { "type": "string", "description": "Advert ID" },
+          "title": { "type": "string", "description": "Advert title" },
+          "type": { "type": "string", "description": "Advert type title" },
           "version": {
             "type": "string",
             "description": "Publication version letter (A, B, C)"
@@ -6175,7 +6333,14 @@
             "description": "Error message if generation failed"
           }
         },
-        "required": ["publicationId", "advertId", "title", "type", "version", "success"]
+        "required": [
+          "publicationId",
+          "advertId",
+          "title",
+          "type",
+          "version",
+          "success"
+        ]
       },
       "BackfillHtmlResponseDto": {
         "type": "object",
@@ -6186,73 +6351,31 @@
           },
           "total": {
             "type": "number",
-            "description": "Total number of publications found missing HTML"
+            "description": "Total number of publications missing HTML"
           },
           "backfilled": {
             "type": "number",
-            "description": "Number of publications that were backfilled (or would be)"
+            "description": "Number of publications successfully backfilled"
           },
           "failed": {
             "type": "number",
-            "description": "Number of publications that failed to generate HTML"
+            "description": "Number of publications that failed"
           },
           "items": {
+            "description": "Preview items (first page for dry run)",
             "type": "array",
-            "description": "Details per publication",
             "items": { "$ref": "#/components/schemas/BackfillHtmlItemDto" }
           },
-          "message": {
-            "type": "string",
-            "description": "Success message"
-          }
+          "message": { "type": "string", "description": "Result message" }
         },
-        "required": ["dryRun", "total", "backfilled", "failed", "items", "message"]
-      },
-      "BackfillJobStatusDto": {
-        "type": "object",
-        "properties": {
-          "status": { "type": "string", "enum": ["idle", "running", "completed", "failed"] },
-          "total": { "type": "number" },
-          "completed": { "type": "number" },
-          "failed": { "type": "number" },
-          "currentBatch": { "type": "number" },
-          "totalBatches": { "type": "number" },
-          "startedAt": { "type": "string" },
-          "finishedAt": { "type": "string" },
-          "message": { "type": "string" }
-        },
-        "required": ["status", "total", "completed", "failed", "currentBatch", "totalBatches"]
-      },
-      "BackfillStartResponseDto": {
-        "type": "object",
-        "properties": {
-          "started": { "type": "boolean" },
-          "message": { "type": "string" },
-          "status": { "$ref": "#/components/schemas/BackfillJobStatusDto" }
-        },
-        "required": ["started", "status"]
-      },
-      "BackfilledPublicationItemDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "publicationId": { "type": "string" },
-          "title": { "type": "string" },
-          "type": { "type": "string" },
-          "version": { "type": "string" },
-          "backfilledAt": { "type": "string" }
-        },
-        "required": ["id", "publicationId", "title", "type", "version", "backfilledAt"]
-      },
-      "BackfilledPublicationsListDto": {
-        "type": "object",
-        "properties": {
-          "items": { "type": "array", "items": { "$ref": "#/components/schemas/BackfilledPublicationItemDto" } },
-          "total": { "type": "number" },
-          "page": { "type": "number" },
-          "pageSize": { "type": "number" }
-        },
-        "required": ["items", "total", "page", "pageSize"]
+        "required": [
+          "dryRun",
+          "total",
+          "backfilled",
+          "failed",
+          "items",
+          "message"
+        ]
       },
       "ApiErrorDto": {
         "type": "object",
@@ -6292,6 +6415,109 @@
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
+      },
+      "BackfillJobStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Job status",
+            "enum": ["idle", "running", "completed", "failed"]
+          },
+          "total": {
+            "type": "number",
+            "description": "Total publications to process"
+          },
+          "completed": {
+            "type": "number",
+            "description": "Successfully processed count"
+          },
+          "failed": { "type": "number", "description": "Failed count" },
+          "currentBatch": {
+            "type": "number",
+            "description": "Current batch number"
+          },
+          "totalBatches": {
+            "type": "number",
+            "description": "Total number of batches"
+          },
+          "startedAt": {
+            "type": "string",
+            "description": "ISO timestamp when job started"
+          },
+          "finishedAt": {
+            "type": "string",
+            "description": "ISO timestamp when job finished"
+          },
+          "message": { "type": "string", "description": "Status message" }
+        },
+        "required": [
+          "status",
+          "total",
+          "completed",
+          "failed",
+          "currentBatch",
+          "totalBatches"
+        ]
+      },
+      "BackfilledPublicationItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Backfill record ID" },
+          "publicationId": {
+            "type": "string",
+            "description": "Publication ID"
+          },
+          "title": { "type": "string", "description": "Advert title" },
+          "type": { "type": "string", "description": "Advert type" },
+          "version": {
+            "type": "string",
+            "description": "Publication version letter"
+          },
+          "backfilledAt": {
+            "type": "string",
+            "description": "When backfill was performed"
+          }
+        },
+        "required": [
+          "id",
+          "publicationId",
+          "title",
+          "type",
+          "version",
+          "backfilledAt"
+        ]
+      },
+      "BackfilledPublicationsListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Backfilled publication items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackfilledPublicationItemDto"
+            }
+          },
+          "total": { "type": "number", "description": "Total count" },
+          "page": { "type": "number", "description": "Current page" },
+          "pageSize": { "type": "number", "description": "Page size" }
+        },
+        "required": ["items", "total", "page", "pageSize"]
+      },
+      "BackfillStartResponseDto": {
+        "type": "object",
+        "properties": {
+          "started": {
+            "type": "boolean",
+            "description": "Whether the job was started"
+          },
+          "message": { "type": "string", "description": "Info message" },
+          "status": {
+            "description": "Current job status",
+            "allOf": [{ "$ref": "#/components/schemas/BackfillJobStatusDto" }]
+          }
+        },
+        "required": ["started", "status"]
       },
       "RegeneratePdfResponseDto": {
         "type": "object",
@@ -6416,7 +6642,23 @@
             "example": "2026-02-19T10:30:00.000Z",
             "nullable": true
           },
-          "declaredClaims": { "type": "number", "nullable": true }
+          "declaredClaims": { "type": "number", "nullable": true },
+          "partnerNationalId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
         },
         "required": [
           "id",
@@ -6964,6 +7206,13 @@
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           },
+          "partnerNationalId": { "type": "string", "maxLength": 255 },
+          "partnerName": { "type": "string", "maxLength": 255 },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
@@ -7209,6 +7458,13 @@
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/RecallDeceasedCompanyDto" }
+          },
+          "partnerName": { "type": "string" },
+          "partnerNationalId": { "type": "string" },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
           }
         },
         "required": [
@@ -7598,7 +7854,23 @@
             "example": "2026-02-19T10:30:00.000Z",
             "nullable": true
           },
-          "declaredClaims": { "type": "number", "nullable": true }
+          "declaredClaims": { "type": "number", "nullable": true },
+          "partnerNationalId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
         }
       },
       "GetUsersResponse": {

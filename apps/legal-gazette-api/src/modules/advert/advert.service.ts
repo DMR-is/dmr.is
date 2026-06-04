@@ -321,6 +321,9 @@ export class AdvertService implements IAdvertService {
               recallRequirementStatementLocation:
                 body.fields.requirementStatementLocation,
               recallRequirementStatementType: body.fields.requirementStatement,
+              partnerName: body.fields.partnerName,
+              partnerNationalId: body.fields.partnerNationalId,
+              partnerDateOfDeath: body.fields.partnerDateOfDeath?.toISOString(),
             },
           },
         } as ApplicationAnswers,
@@ -356,6 +359,9 @@ export class AdvertService implements IAdvertService {
         recallRequirementStatementLocation:
           body.fields.requirementStatementLocation,
         recallRequirementStatementType: body.fields.requirementStatement,
+        partnerName: body.fields.partnerName,
+        partnerNationalId: body.fields.partnerNationalId,
+        partnerDateOfDeath: body.fields.partnerDateOfDeath,
       },
       scheduledAt: body.publishingDates,
       communicationChannels: body.communicationChannels,

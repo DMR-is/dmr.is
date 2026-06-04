@@ -4194,7 +4194,23 @@
             "example": "2026-02-19T10:30:00.000Z",
             "nullable": true
           },
-          "declaredClaims": { "type": "number", "nullable": true }
+          "declaredClaims": { "type": "number", "nullable": true },
+          "partnerNationalId": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
         },
         "required": [
           "id",
@@ -4737,6 +4753,18 @@
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           },
+          "endingDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "partnerNationalId": { "type": "string", "maxLength": 255 },
+          "partnerName": { "type": "string", "maxLength": 255 },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/SettlementCompanyDto" }
@@ -4982,6 +5010,13 @@
           "companies": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/RecallDeceasedCompanyDto" }
+          },
+          "partnerName": { "type": "string" },
+          "partnerNationalId": { "type": "string" },
+          "partnerDateOfDeath": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
           }
         },
         "required": [

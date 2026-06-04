@@ -49,6 +49,15 @@ export class CreateSettlementDto {
   @ApiOptionalDateTime()
   endingDate?: Date
 
+  @ApiOptionalString({ maxLength: 255 })
+  partnerNationalId?: string
+
+  @ApiOptionalString({ maxLength: 255 })
+  partnerName?: string
+
+  @ApiOptionalDateTime()
+  partnerDateOfDeath?: Date
+
   @ApiOptionalDtoArray(SettlementCompanyDto)
   companies?: SettlementCompanyDto[]
 }

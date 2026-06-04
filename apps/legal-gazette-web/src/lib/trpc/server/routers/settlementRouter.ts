@@ -21,6 +21,9 @@ const updateSettlementSchema = z.object({
     .enum(ApplicationRequirementStatementEnum)
     .optional(),
   type: z.enum(SettlementType).optional(),
+  partnerName: z.string().nullable().optional(),
+  partnerNationalId: z.string().nullable().optional(),
+  partnerDateOfDeath: z.coerce.date().nullable().optional(),
 })
 
 export const settlementRouter = router({
@@ -44,6 +47,9 @@ export const settlementRouter = router({
           liquidatorRecallStatementType:
             updateSettlementDto.liquidatorRecallStatementType,
           type: updateSettlementDto.type,
+          partnerName: updateSettlementDto.partnerName,
+          partnerNationalId: updateSettlementDto.partnerNationalId,
+          partnerDateOfDeath: updateSettlementDto.partnerDateOfDeath,
         },
       })
     }),
