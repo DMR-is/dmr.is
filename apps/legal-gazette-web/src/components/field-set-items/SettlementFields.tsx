@@ -206,29 +206,31 @@ export const SettlementFields = ({
         )}
       </GridRow>
       {showUndividedPartnerFields && (
-        <GridRow>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
-              disabled={!canEdit}
-              size="sm"
-              backgroundColor="blue"
-              name="settlement-partner-name"
-              label="Nafn maka"
-              defaultValue={settlement.partnerName ?? undefined}
-              onBlur={(evt) => updatePartnerName(evt.target.value)}
-            />
-          </GridColumn>
-          <GridColumn span={['12/12', '6/12']}>
-            <Input
-              disabled={!canEdit}
-              size="sm"
-              backgroundColor="blue"
-              name="settlement-partner-national-id"
-              label="Kennitala maka"
-              defaultValue={settlement.partnerNationalId ?? undefined}
-              onBlur={(evt) => updatePartnerNationalId(evt.target.value)}
-            />
-          </GridColumn>
+        <>
+          <GridRow>
+            <GridColumn span={['12/12', '6/12']}>
+              <Input
+                disabled={!canEdit}
+                size="sm"
+                backgroundColor="blue"
+                name="settlement-partner-name"
+                label="Nafn maka"
+                defaultValue={settlement.partnerName ?? undefined}
+                onBlur={(evt) => updatePartnerName(evt.target.value)}
+              />
+            </GridColumn>
+            <GridColumn span={['12/12', '6/12']}>
+              <Input
+                disabled={!canEdit}
+                size="sm"
+                backgroundColor="blue"
+                name="settlement-partner-national-id"
+                label="Kennitala maka"
+                defaultValue={settlement.partnerNationalId ?? undefined}
+                onBlur={(evt) => updatePartnerNationalId(evt.target.value)}
+              />
+            </GridColumn>
+          </GridRow>
           <GridRow>
             <GridColumn span={['12/12', '6/12']}>
               <DatePicker
@@ -250,7 +252,7 @@ export const SettlementFields = ({
               />
             </GridColumn>
           </GridRow>
-        </GridRow>
+        </>
       )}
       <GridRow>
         <GridColumn span={['12/12', '6/12']}>
