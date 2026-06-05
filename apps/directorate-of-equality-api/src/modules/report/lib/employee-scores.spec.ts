@@ -20,6 +20,24 @@ describe('employee-scores', () => {
       expect(run).toThrow(/Duplicate employee ordinal in parsed payload: 1/)
     })
 
+    it.each([1, 9])(
+      'rejects a sub-criterion with %p step(s) (outside the 2–8 range)',
+      (stepCount) => {
+        const parsed = makeParsedReport()
+        parsed.criteria[0].subCriteria[0].steps = Array.from(
+          { length: stepCount },
+          (_, i) => ({ order: i + 1, description: `step ${i + 1}`, score: 10 }),
+        )
+
+        const run = () => assertParsedPayloadIntegrity(parsed)
+
+        expect(run).toThrow(BadRequestException)
+        expect(run).toThrow(
+          new RegExp(`has ${stepCount} step\\(s\\); expected 2–8`),
+        )
+      },
+    )
+
     it.each([0, -0.25])(
       'rejects a non-positive employee work ratio of %p',
       (workRatio) => {
@@ -50,7 +68,10 @@ function makeParsedReport(): ParsedReportDto {
             title: 'People responsibility',
             description: 'People responsibility',
             weight: 5,
-            steps: [{ order: 1, description: 'low', score: 10 }],
+            steps: [
+              { order: 1, description: 'low', score: 10 },
+              { order: 2, description: 'high', score: 20 },
+            ],
           },
         ],
       },
