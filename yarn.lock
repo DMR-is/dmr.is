@@ -11868,12 +11868,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.19.9":
-  version: 20.19.9
-  resolution: "@types/node@npm:20.19.9"
+"@types/node@npm:22.19.19":
+  version: 22.19.19
+  resolution: "@types/node@npm:22.19.19"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/c6738131f1698258a5ac1e0185e4fc56977f7f566cd0ee11167f93f2339478470257bd82c5e1908a936a204e0ad7996d741356a1a07c04997a236161ea23a874
+  checksum: 10c0/402e0f088c94cabda3cd721546bd8e4e75e098e0b342f6e03b90ca1e19c28986f9650112c64fcfd09fc8cebc0f8b20291a513153e90489331cf666e1e5503e16
   languageName: node
   linkType: hard
 
@@ -12734,6 +12734,15 @@ __metadata:
   peerDependencies:
     webpack: ^4.30.0 || ^5.20.2
   checksum: 10c0/682443411e5fecc98ce45311e8f4b895ce5a8cafd7258c57ab2be191034a734bdd49109f3200090c7b11fbd5ea4b12b819659621bc45416d48c876784e777ef9
+  languageName: node
+  linkType: hard
+
+"@varlock/1password-plugin@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@varlock/1password-plugin@npm:1.1.0"
+  peerDependencies:
+    varlock: ^1.1.0
+  checksum: 10c0/f6c4ce51f8222a9e6d97a132b7f5be3cc0766c1b865fb942ac8dbced8a74395fb02b467d7cb2736faf975db4cff030f4a29b470a0adc2dfc5ed18836ebe7a2a2
   languageName: node
   linkType: hard
 
@@ -16257,7 +16266,7 @@ __metadata:
     "@types/license-checker": "npm:^25.0.6"
     "@types/multer": "npm:^1.4.11"
     "@types/multer-s3-transform": "npm:@types/multer-s3@^2.7.10"
-    "@types/node": "npm:20.19.9"
+    "@types/node": "npm:22.19.19"
     "@types/node-fetch": "npm:^2.6.11"
     "@types/pg": "npm:^8.11.6"
     "@types/react": "npm:18.3.28"
@@ -16266,6 +16275,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:7.18.0"
     "@typescript-eslint/parser": "npm:7.18.0"
     "@vanilla-extract/webpack-plugin": "npm:^2.3.22"
+    "@varlock/1password-plugin": "npm:1.1.0"
     "@yarnpkg/types": "npm:4.0.1"
     babel-jest: "npm:30.0.5"
     beygla: "npm:1.5.5"
@@ -16302,6 +16312,7 @@ __metadata:
     ts-node: "npm:10.9.1"
     typescript: "npm:5.8.3"
     url-loader: "npm:^4.1.1"
+    varlock: "npm:1.4.0"
     webpack: "npm:^5.98.0"
   languageName: unknown
   linkType: soft
@@ -29464,6 +29475,15 @@ __metadata:
   version: 6.0.0
   resolution: "varint@npm:6.0.0"
   checksum: 10c0/737fc37088a62ed3bd21466e318d21ca7ac4991d0f25546f518f017703be4ed0f9df1c5559f1dd533dddba4435a1b758fd9230e4772c1a930ef72b42f5c750fd
+  languageName: node
+  linkType: hard
+
+"varlock@npm:1.4.0":
+  version: 1.4.0
+  resolution: "varlock@npm:1.4.0"
+  bin:
+    varlock: bin/cli.js
+  checksum: 10c0/c6e070e2be15cdedef9ed45c0c183c1bb893077072d7fce02d73b02fc392427ef146cf3d6f540f7e4f47f166078d438df3dd73b1e149207764218ad1e6bfc500
   languageName: node
   linkType: hard
 
