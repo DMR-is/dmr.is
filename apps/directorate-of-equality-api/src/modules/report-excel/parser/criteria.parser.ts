@@ -11,7 +11,7 @@
  *
  * - **Undirviðmið** (sub-level + steps): one row per sub-criterion.
  *   `Foreldra viðmið` references a parent criterion title; `Fjöldi þrepa`
- *   fixes the number of steps (1–10), and columns `Þrep 1` … `Þrep 10`
+ *   fixes the number of steps (2–8), and columns `Þrep 1` … `Þrep 10`
  *   carry the step descriptions (only the first `numSteps` are read).
  *
  * Step scores are not stored in the workbook — they are computed here via
@@ -32,6 +32,8 @@ import {
   computeStepScore,
   CRITERION_TEGUND,
   JOB_BASED_TITLE_TO_TYPE,
+  MAX_STEPS,
+  MIN_STEPS,
   SHEETS,
   TABLE_FIRST_DATA_ROW,
 } from '../workbook.schema'
@@ -56,7 +58,6 @@ const SUB_CRITERIA_COLS = {
   firstStepCol: 10,
 } as const
 
-const MAX_STEPS = 10
 const MAX_DATA_ROWS = 40
 
 /**
@@ -207,10 +208,10 @@ const parseSubCriteriaSheet = (
       continue
     }
 
-    if (numSteps < 1 || numSteps > MAX_STEPS) {
+    if (numSteps < MIN_STEPS || numSteps > MAX_STEPS) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Step count ${numSteps} out of range 1–${MAX_STEPS}`,
+        `Step count ${numSteps} out of range ${MIN_STEPS}–${MAX_STEPS}`,
         { row: r, column: SUB_CRITERIA_COLS.numSteps },
       )
       continue

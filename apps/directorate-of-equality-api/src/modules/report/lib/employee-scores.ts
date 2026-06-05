@@ -4,6 +4,7 @@ import {
   ParsedReportDto,
   ParsedRoleDto,
 } from '../../report-excel/dto/parsed-report.dto'
+import { MAX_STEPS, MIN_STEPS } from '../../report-excel/workbook.schema'
 
 export const stepKey = (
   criterionTitle: string,
@@ -14,8 +15,10 @@ export const stepKey = (
 /**
  * Pre-flight integrity checks on the parsed payload — surfaces malformed
  * input as a 400 before any DB writes. Catches duplicate titles/employee
- * ordinals, invalid work ratios, unknown role references in employees, and
- * step assignments that don't resolve to a node in the parsed criteria tree.
+ * ordinals, invalid work ratios, sub-criteria whose step count falls outside
+ * the allowed MIN_STEPS–MAX_STEPS range, unknown role references in
+ * employees, and step assignments that don't resolve to a node in the parsed
+ * criteria tree.
  *
  * Returns a `(criterionTitle|subTitle|stepOrder) → step score` map so the
  * caller can compute employee total scores in memory without re-walking
@@ -52,6 +55,12 @@ export function assertParsedPayloadIntegrity(
         )
       }
       subTitlesInCriterion.add(sub.title)
+
+      if (sub.steps.length < MIN_STEPS || sub.steps.length > MAX_STEPS) {
+        throw new BadRequestException(
+          `Sub-criterion "${criterion.title} / ${sub.title}" has ${sub.steps.length} step(s); expected ${MIN_STEPS}–${MAX_STEPS}`,
+        )
+      }
 
       const stepOrders = new Set<number>()
       for (const step of sub.steps) {

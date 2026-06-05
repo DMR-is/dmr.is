@@ -44,6 +44,16 @@ export const computeStepScore = (
 ): number => (stepOrder / numSteps) * subWeightPct * SCORE_FACTOR
 
 /**
+ * Inclusive bounds on the number of steps (þrep) a sub-criterion may define.
+ * Enforced in two places against a single source of truth: the Excel parser
+ * (on `Fjöldi þrepa`) and the service-side pre-flight guard
+ * (`assertParsedPayloadIntegrity`). The DB itself is intentionally
+ * unconstrained so extreme edge cases can still be persisted manually.
+ */
+export const MIN_STEPS = 2
+export const MAX_STEPS = 8
+
+/**
  * Sheet names the template ships with. Keyed in English for code, valued in
  * Icelandic to match the file. `IGNORE` sheets are not parsed.
  */
