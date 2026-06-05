@@ -53,12 +53,7 @@ export const ModalBase: FC<ModalBaseProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [open, setOpen] = useState(initialVisibility)
-  const [mounted, setMounted] = useState(false)
   const isFirstRender = useRef(true)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const showModal = useCallback(() => {
     const dialog = dialogRef.current
@@ -166,7 +161,7 @@ export const ModalBase: FC<ModalBaseProps> = ({
           'aria-controls': baseId,
         })}
 
-      {renderModal && mounted &&
+      {renderModal &&
         createPortal(
           <dialog
             ref={dialogRef}
