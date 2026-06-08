@@ -1,5 +1,7 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
+
 import { useEffect, useRef, useState } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -16,6 +18,12 @@ import * as styles from './ControlPanel.css'
 export const ControlPanel = () => {
   const [toggle, setToggle] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'ADMIN'
+
+  const navPaths = Object.values(NAV_PATHS).filter(
+    (path) => isAdmin || path.href !== NAV_PATHS.ritstjorn.href,
+  )
 
   useEffect(() => {
     if (!toggle) return
@@ -83,7 +91,7 @@ export const ControlPanel = () => {
           borderRightWidth="standard"
         >
           <Stack space={0}>
-            {Object.values(NAV_PATHS).map((path, i) => (
+            {navPaths.map((path, i) => (
               <LinkV2 href={path.href} key={path.href}>
                 <Box
                   borderTopWidth={i === 0 ? 'standard' : undefined}

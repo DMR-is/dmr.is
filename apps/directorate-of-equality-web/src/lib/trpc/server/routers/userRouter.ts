@@ -46,6 +46,7 @@ export const userRouter = router({
         email: z.string().email().optional(),
         phone: z.string().optional(),
         isActive: z.boolean().optional(),
+        role: z.enum(['ADMIN', 'EDITOR']).optional(),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -57,6 +58,7 @@ export const userRouter = router({
           email: input.email,
           phone: input.phone,
           isActive: input.isActive,
+          role: input.role,
         },
       }),
     ),
