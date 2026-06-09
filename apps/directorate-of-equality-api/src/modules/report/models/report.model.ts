@@ -112,13 +112,29 @@ type ReportCreateAttributes = {
 @Scopes(() => ({
   listview: {
     include: [
-      { model: CompanyReportModel, as: 'companyReport', required: false },
+      // Parent snapshot only — a multi-company report has one `company_report`
+      // row per company (parent + subsidiaries). Without the parent filter the
+      // join multiplies report rows (one per subsidiary), surfacing the same
+      // report multiple times in the list.
+      {
+        model: CompanyReportModel,
+        as: 'companyReport',
+        required: false,
+        where: { parentCompanyId: null },
+      },
       { model: UserModel, as: 'reviewer', required: false },
     ],
   },
   detailed: {
     include: [
-      { model: CompanyReportModel, as: 'companyReport', required: true },
+      // Parent snapshot only — see listview note. The detail view loads
+      // subsidiaries separately via `loadSubsidiaries`.
+      {
+        model: CompanyReportModel,
+        as: 'companyReport',
+        required: true,
+        where: { parentCompanyId: null },
+      },
       { model: UserModel, as: 'reviewer', required: false },
       {
         model: ReportCommentModel,
