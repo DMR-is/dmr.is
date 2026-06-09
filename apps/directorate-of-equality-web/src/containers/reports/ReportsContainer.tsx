@@ -116,6 +116,7 @@ function mapReportToCase(report: ReportListItemDto): Case {
     email: report.companyAdminEmail ?? unknown,
     isatCode: report.companyIsatCategory ?? unknown,
     employeeCount: report.companyEmployeeCountCategory ?? unknown,
+    waitingForAction: report.waitingForAction ?? false,
   }
 }
 
@@ -125,12 +126,11 @@ const commentsColumn: ColumnDef<Case> = {
   size: 56,
   enableSorting: false,
   cell: ({ row }) => {
-    // TODO: replace with real comments when available from backend
-    const comment = overviewText.noComments
+    if (!row.original.waitingForAction) return null
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip
-          text={comment}
+          text={overviewText.waitingForAction}
           placement="right"
           color="blue400"
           iconSize="medium"

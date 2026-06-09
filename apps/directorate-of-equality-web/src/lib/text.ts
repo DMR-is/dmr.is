@@ -54,6 +54,7 @@ export const overviewText = {
   tabAfgreitt: 'Afgreitt',
   resultsText: 'færslur fundust',
   noComments: 'Engar athugasemdir',
+  waitingForAction: 'Beðið svara',
   openAdmin: 'Opna ritjstjórn',
   filter: {
     heading: 'Leit og síun',
