@@ -76,13 +76,14 @@ describe('ReportPdfService', () => {
     mockBrowser()
   })
 
-  describe('generateSalaryReportPdf', () => {
-    it('fetches data, renders, and returns a PDF buffer', async () => {
+  describe('generateReportPdf', () => {
+    it('renders a salary report, fetching statistics and outliers', async () => {
       const { service, reportService, statisticsService } = makeService()
 
-      const result = await service.generateSalaryReportPdf('r1')
+      const result = await service.generateReportPdf('r1')
 
-      expect(Buffer.isBuffer(result)).toBe(true)
+      expect(Buffer.isBuffer(result.pdf)).toBe(true)
+      expect(result.fileName).toBe('launagreining-r1.pdf')
       expect(reportService.getById).toHaveBeenCalledWith('r1')
       expect(
         statisticsService.getBaseSalaryByGenderAndScoreAll,
@@ -91,15 +92,30 @@ describe('ReportPdfService', () => {
       expect(closeMock).toHaveBeenCalled()
     })
 
-    it('rejects non-salary reports', async () => {
-      const { service } = makeService({ type: ReportTypeEnum.EQUALITY })
+    it('renders an equality report without fetching salary statistics or outliers', async () => {
+      const { service, reportService, statisticsService } = makeService({
+        type: ReportTypeEnum.EQUALITY,
+      })
 
-      await expect(service.generateSalaryReportPdf('r1')).rejects.toBeInstanceOf(
+      const result = await service.generateReportPdf('r1')
+
+      expect(Buffer.isBuffer(result.pdf)).toBe(true)
+      expect(result.fileName).toBe('jafnrettisaaetlun-r1.pdf')
+      expect(
+        statisticsService.getBaseSalaryByGenderAndScoreAll,
+      ).not.toHaveBeenCalled()
+      expect(reportService.getOutliers).not.toHaveBeenCalled()
+    })
+
+    it('rejects reports with an unsupported type', async () => {
+      const { service } = makeService({ type: 'UNKNOWN' })
+
+      await expect(service.generateReportPdf('r1')).rejects.toBeInstanceOf(
         BadRequestException,
       )
     })
 
-    it('paginates through all outlier pages', async () => {
+    it('paginates through all outlier pages for salary reports', async () => {
       const { service, reportService } = makeService()
       reportService.getOutliers
         .mockResolvedValueOnce({
@@ -111,7 +127,7 @@ describe('ReportPdfService', () => {
           paging: { page: 2, pageSize: 200, totalPages: 2, totalItems: 250 },
         })
 
-      await service.generateSalaryReportPdf('r1')
+      await service.generateReportPdf('r1')
 
       expect(reportService.getOutliers).toHaveBeenCalledTimes(2)
       expect(reportService.getOutliers).toHaveBeenNthCalledWith(2, 'r1', {
@@ -119,26 +135,13 @@ describe('ReportPdfService', () => {
         pageSize: 200,
       })
     })
-  })
 
-  describe('generateEqualityReportPdf', () => {
-    it('returns a PDF buffer without fetching salary statistics', async () => {
-      const { service, statisticsService } = makeService()
+    it('closes the browser even when rendering fails', async () => {
+      const { service } = makeService()
+      pdfMock.mockRejectedValueOnce(new Error('boom'))
 
-      const result = await service.generateEqualityReportPdf('r1')
-
-      expect(Buffer.isBuffer(result)).toBe(true)
-      expect(
-        statisticsService.getBaseSalaryByGenderAndScoreAll,
-      ).not.toHaveBeenCalled()
+      await expect(service.generateReportPdf('r1')).rejects.toThrow('boom')
+      expect(closeMock).toHaveBeenCalled()
     })
-  })
-
-  it('closes the browser even when rendering fails', async () => {
-    const { service } = makeService()
-    pdfMock.mockRejectedValueOnce(new Error('boom'))
-
-    await expect(service.generateSalaryReportPdf('r1')).rejects.toThrow('boom')
-    expect(closeMock).toHaveBeenCalled()
   })
 })

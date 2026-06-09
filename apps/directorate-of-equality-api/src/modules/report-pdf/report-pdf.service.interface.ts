@@ -1,9 +1,16 @@
-export interface IReportPdfService {
-  /** Generates the salary-report ("Jafnlaunaúttekt") PDF as a binary buffer. */
-  generateSalaryReportPdf(reportId: string): Promise<Buffer>
+export interface ReportPdfResult {
+  /** The rendered PDF as a binary buffer. */
+  pdf: Buffer
+  /** Suggested download file name, derived from the report type. */
+  fileName: string
+}
 
-  /** Generates the equality-report ("Jafnréttisáætlun") PDF as a binary buffer. */
-  generateEqualityReportPdf(reportId: string): Promise<Buffer>
+export interface IReportPdfService {
+  /**
+   * Generates the PDF for a report, choosing the layout
+   * ("Jafnlaunaúttekt" vs. "Jafnréttisáætlun") from the report type.
+   */
+  generateReportPdf(reportId: string): Promise<ReportPdfResult>
 }
 
 export const IReportPdfService = Symbol('IReportPdfService')

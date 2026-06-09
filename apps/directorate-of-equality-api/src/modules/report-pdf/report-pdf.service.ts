@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ReportDetailDto } from '../report/dto/report-detail.dto'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import { IReportService } from '../report/report.service.interface'
 import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee-outlier.dto'
@@ -10,7 +11,10 @@ import { getBrowser } from './lib/browser'
 import { buildEqualityReportHtml } from './lib/equality-report-template'
 import { pdfStyles } from './lib/pdf.css'
 import { buildSalaryReportHtml } from './lib/salary-report-template'
-import { IReportPdfService } from './report-pdf.service.interface'
+import {
+  IReportPdfService,
+  ReportPdfResult,
+} from './report-pdf.service.interface'
 
 const LOGGING_CONTEXT = 'ReportPdfService'
 const OUTLIER_PAGE_SIZE = 200
@@ -24,23 +28,36 @@ export class ReportPdfService implements IReportPdfService {
     private readonly reportStatisticsService: IReportStatisticsService,
   ) {}
 
-  async generateSalaryReportPdf(reportId: string): Promise<Buffer> {
-    this.logger.debug('Generating salary report PDF', {
+  async generateReportPdf(reportId: string): Promise<ReportPdfResult> {
+    this.logger.debug('Generating report PDF', {
       context: LOGGING_CONTEXT,
       reportId,
     })
 
     const report = await this.reportService.getById(reportId)
 
-    if (report.type !== ReportTypeEnum.SALARY) {
-      throw new BadRequestException(
-        `Report "${reportId}" is not a salary report`,
-      )
+    switch (report.type) {
+      case ReportTypeEnum.SALARY:
+        return {
+          pdf: await this.buildSalaryReportPdf(report),
+          fileName: `launagreining-${reportId}.pdf`,
+        }
+      case ReportTypeEnum.EQUALITY:
+        return {
+          pdf: await this.buildEqualityReportPdf(report),
+          fileName: `jafnrettisaaetlun-${reportId}.pdf`,
+        }
+      default:
+        throw new BadRequestException(
+          `Report "${reportId}" has an unsupported type "${report.type}"`,
+        )
     }
+  }
 
+  private async buildSalaryReportPdf(report: ReportDetailDto): Promise<Buffer> {
     const [statistics, outliers] = await Promise.all([
-      this.reportStatisticsService.getBaseSalaryByGenderAndScoreAll(reportId),
-      this.fetchAllOutliers(reportId),
+      this.reportStatisticsService.getBaseSalaryByGenderAndScoreAll(report.id),
+      this.fetchAllOutliers(report.id),
     ])
 
     const html = buildSalaryReportHtml({ report, statistics, outliers })
@@ -48,14 +65,9 @@ export class ReportPdfService implements IReportPdfService {
     return this.generatePdfFromHtml(html)
   }
 
-  async generateEqualityReportPdf(reportId: string): Promise<Buffer> {
-    this.logger.debug('Generating equality report PDF', {
-      context: LOGGING_CONTEXT,
-      reportId,
-    })
-
-    const report = await this.reportService.getById(reportId)
-
+  private async buildEqualityReportPdf(
+    report: ReportDetailDto,
+  ): Promise<Buffer> {
     const html = buildEqualityReportHtml(report)
 
     return this.generatePdfFromHtml(html)

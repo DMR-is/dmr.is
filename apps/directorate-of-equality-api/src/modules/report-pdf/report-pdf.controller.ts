@@ -29,34 +29,20 @@ export class ReportPdfController {
 
   @Get()
   @DoeResponse({
-    operationId: 'getSalaryReportPdf',
+    operationId: 'getReportPdf',
     include404: true,
     produces: 'application/pdf',
     successDescription:
-      'Generates and returns the salary report ("Jafnlaunaúttekt") as a PDF.',
+      'Generates and returns the report as a PDF. The layout ' +
+      '("Jafnlaunaúttekt" or "Jafnréttisáætlun") is chosen from the report type.',
   })
-  async getSalaryReportPdf(
+  async getReportPdf(
     @Param('reportId', ParseUUIDPipe) reportId: string,
     @Res() res: Response,
   ): Promise<void> {
-    const pdf = await this.reportPdfService.generateSalaryReportPdf(reportId)
-    this.sendPdf(res, pdf, `launagreining-${reportId}.pdf`)
-  }
-
-  @Get('equality')
-  @DoeResponse({
-    operationId: 'getEqualityReportPdf',
-    include404: true,
-    produces: 'application/pdf',
-    successDescription:
-      'Generates and returns the equality report ("Jafnréttisáætlun") as a PDF.',
-  })
-  async getEqualityReportPdf(
-    @Param('reportId', ParseUUIDPipe) reportId: string,
-    @Res() res: Response,
-  ): Promise<void> {
-    const pdf = await this.reportPdfService.generateEqualityReportPdf(reportId)
-    this.sendPdf(res, pdf, `jafnrettisaaetlun-${reportId}.pdf`)
+    const { pdf, fileName } =
+      await this.reportPdfService.generateReportPdf(reportId)
+    this.sendPdf(res, pdf, fileName)
   }
 
   private sendPdf(res: Response, pdf: Buffer, fileName: string): void {
