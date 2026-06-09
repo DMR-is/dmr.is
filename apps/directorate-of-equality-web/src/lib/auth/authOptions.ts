@@ -84,6 +84,7 @@ export const authOptions: AuthOptions = {
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           userId: user.id,
+          role: user.role,
           idToken: account.id_token,
         } as JWT
       }
@@ -97,6 +98,7 @@ export const authOptions: AuthOptions = {
         name: token.name as string,
         nationalId: token.nationalId,
         id: token.userId as string,
+        role: token.role as 'ADMIN' | 'EDITOR',
       }
 
       session.accessToken = token.accessToken as string
@@ -128,6 +130,7 @@ export const authOptions: AuthOptions = {
         user.nationalId = nationalId
         user.name = `${authMember.firstName} ${authMember.lastName}`
         user.id = authMember.id
+        user.role = authMember.role
         return true
       }
 

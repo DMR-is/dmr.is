@@ -26,6 +26,8 @@ declare module 'next-auth/jwt' {
     idToken?: string
     nationalId?: string
     name?: string
+    userId?: string
+    role?: 'ADMIN' | 'EDITOR'
     invalid?: boolean
     error?: string
   }

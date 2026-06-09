@@ -47,6 +47,23 @@ const COLUMNS: ColumnDef<UserDto>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: 'role',
+    header: usersText.roleLabel,
+    enableSorting: true,
+    cell: ({ getValue }) => {
+      const isAdmin = getValue<string>() === 'ADMIN'
+      return (
+        <TableCell
+          items={{
+            type: 'tag',
+            variant: isAdmin ? 'blue' : 'purple',
+            children: isAdmin ? usersText.roleAdmin : usersText.roleEditor,
+          }}
+        />
+      )
+    },
+  },
+  {
     accessorKey: 'isActive',
     header: sharedText.statusLabel,
     enableSorting: true,
