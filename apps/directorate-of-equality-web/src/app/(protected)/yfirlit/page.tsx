@@ -13,7 +13,10 @@ export default function MalPage() {
       <Hero
         title={overviewText.heroTitle}
         description={overviewText.heroDescription}
-        image={{ src: '/assets/banner-image.svg', alt: overviewText.imageAlt }}
+        image={{
+          src: '/assets/woman-on-computer.svg',
+          alt: overviewText.imageAlt,
+        }}
         breadcrumbs={{
           items: [
             { title: headerText.brand, href: '/' },
