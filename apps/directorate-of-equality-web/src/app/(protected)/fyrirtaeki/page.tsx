@@ -14,14 +14,17 @@ export default async function FyrirtaekiPage() {
       <Hero
         title={companiesText.heading}
         description={companiesText.heroDescription}
-        image={{ src: '/assets/banner-image.svg', alt: companiesText.heading }}
+        image={{
+          src: '/assets/chair-and-files.svg',
+          alt: companiesText.heading,
+        }}
         breadcrumbs={{
           items: [
             {
               title: headerText.brand,
               href: NAV_PATHS.frontpage.href,
             },
-            { title: sharedText.admin },
+            { title: sharedText.companies },
           ],
         }}
         variant="default"
