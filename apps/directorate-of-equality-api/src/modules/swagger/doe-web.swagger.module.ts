@@ -5,6 +5,7 @@ import { CompanyApiModule } from '../company/company.api.module'
 import { ConfigApiModule } from '../config/config.api.module'
 import { ReportApiModule } from '../report/report.api.module'
 import { ReportCommentApiModule } from '../report-comment/report-comment.api.module'
+import { ReportPdfApiModule } from '../report-pdf/report-pdf.api.module'
 import { ReportStatisticsApiModule } from '../report-statistics/report-statistics.api.module'
 import { ReportWorkflowApiModule } from '../report-workflow/report-workflow.api.module'
 import { UserApiModule } from '../user/user.api.module'
@@ -18,7 +19,8 @@ import { UserApiModule } from '../user/user.api.module'
     ReportApiModule,
     ReportCommentApiModule,
     ReportWorkflowApiModule,
-    ReportStatisticsApiModule
+    ReportStatisticsApiModule,
+    ReportPdfApiModule,
   ],
 })
 export class DoeWebSwaggerModule {}
