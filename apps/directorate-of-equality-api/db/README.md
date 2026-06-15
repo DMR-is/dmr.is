@@ -194,7 +194,7 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. The same row also snapshots the salary-outlier regression analysis: the fitted base-salary regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's adjusted base salary vs predicted base salary at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
+`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns — see `report_employee`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. The same row also snapshots the salary-outlier regression analysis: the fitted base-salary regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's adjusted base salary vs predicted base salary at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
 
 ### Reconstructing the gender-vs-score chart from a stored result
 
@@ -389,12 +389,27 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `start_date`              | `date`                      |
 | `work_ratio`              | `decimal(5, 4)`             |
 | `base_salary`             | `decimal(14, 2)`            |
-| `additional_salary`       | `decimal(14, 2)`            |
-| `bonus_salary`            | `decimal(14, 2)` (nullable) |
+| `additional_fixed_overtime` | `decimal(14, 2)` (nullable) |
+| `additional_fixed_car_allowance` | `decimal(14, 2)` (nullable) |
+| `bonus_occasional_car_allowance` | `decimal(14, 2)` (nullable) |
+| `bonus_occasional_overtime` | `decimal(14, 2)` (nullable) |
+| `bonus_payments`          | `decimal(14, 2)` (nullable) |
+| `bonus_other`             | `decimal(14, 2)` (nullable) |
 | `gender`                  | `GenderEnum`                |
 | `report_employee_role_id` | `fk → report_employee_role` |
 | `report_id`               | `fk → report`               |
 | `score`                   | `decimal(6, 2)`             |
+
+The two parent salary concepts are **derived, not stored**. Each is the sum of its
+sub-component columns, with a `NULL` child treated as `0`:
+
+- **viðbótarlaun** (`additionalSalary`) = `additional_fixed_overtime` + `additional_fixed_car_allowance`
+- **aukagreiðslur** (`bonusSalary`) = `bonus_occasional_car_allowance` + `bonus_occasional_overtime` + `bonus_payments` + `bonus_other`
+
+`ReportEmployeeModel` exposes both as computed getters and the API returns them
+alongside the raw children. A `NULL` child means "not entered", distinct from an
+entered `0` — only stored children carry that distinction; the derived parents
+never do.
 
 ### `report_employee_role`
 

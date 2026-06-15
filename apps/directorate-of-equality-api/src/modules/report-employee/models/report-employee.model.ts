@@ -7,6 +7,39 @@ import { GenderEnum, ReportModel } from '../../report/models/report.model'
 import type { ReportEmployeeDto } from '../dto/report-employee.dto'
 import { ReportEmployeeRoleModel } from './report-employee-role.model'
 
+/** DECIMAL columns come back from the driver as strings; null stays null. */
+const parseNullableDecimal = (value: unknown): number | null =>
+  value !== null && value !== undefined
+    ? parseFloat(value as string)
+    : null
+
+/**
+ * Viðbótarlaun (additional salary) = sum of its fixed sub-components, each
+ * `null` (not entered) treated as `0`. Pure so the composition rule is
+ * testable without a model instance.
+ */
+export const computeAdditionalSalary = (children: {
+  additionalFixedOvertime: number | null
+  additionalFixedCarAllowance: number | null
+}): number =>
+  (children.additionalFixedOvertime ?? 0) +
+  (children.additionalFixedCarAllowance ?? 0)
+
+/**
+ * Aukagreiðslur (bonus salary) = sum of its occasional / bonus sub-components,
+ * each `null` (not entered) treated as `0`.
+ */
+export const computeBonusSalary = (children: {
+  bonusOccasionalCarAllowance: number | null
+  bonusOccasionalOvertime: number | null
+  bonusPayments: number | null
+  bonusOther: number | null
+}): number =>
+  (children.bonusOccasionalCarAllowance ?? 0) +
+  (children.bonusOccasionalOvertime ?? 0) +
+  (children.bonusPayments ?? 0) +
+  (children.bonusOther ?? 0)
+
 export enum EducationEnum {
   COMPULSORY = 'COMPULSORY',
   UPPER_SECONDARY = 'UPPER_SECONDARY',
@@ -25,8 +58,12 @@ type ReportEmployeeAttributes = {
   startDate: string
   workRatio: number
   baseSalary: number
-  additionalSalary: number
-  bonusSalary: number | null
+  additionalFixedOvertime: number | null
+  additionalFixedCarAllowance: number | null
+  bonusOccasionalCarAllowance: number | null
+  bonusOccasionalOvertime: number | null
+  bonusPayments: number | null
+  bonusOther: number | null
   gender: GenderEnum
   reportEmployeeRoleId: string
   reportId: string
@@ -41,8 +78,12 @@ type ReportEmployeeCreateAttributes = {
   startDate: string
   workRatio: number
   baseSalary: number
-  additionalSalary: number
-  bonusSalary?: number | null
+  additionalFixedOvertime?: number | null
+  additionalFixedCarAllowance?: number | null
+  bonusOccasionalCarAllowance?: number | null
+  bonusOccasionalOvertime?: number | null
+  bonusPayments?: number | null
+  bonusOther?: number | null
   gender: GenderEnum
   reportEmployeeRoleId: string
   reportId: string
@@ -100,29 +141,83 @@ export class ReportEmployeeModel extends MutableModel<
 
   @Column({
     type: DataType.DECIMAL(14, 2),
-    allowNull: false,
-    field: 'additional_salary',
+    allowNull: true,
+    field: 'additional_fixed_overtime',
     get() {
-      const value = this.getDataValue('additionalSalary')
-      return value !== null && value !== undefined
-        ? parseFloat(value as unknown as string)
-        : null
+      return parseNullableDecimal(this.getDataValue('additionalFixedOvertime'))
     },
   })
-  additionalSalary!: number
+  additionalFixedOvertime!: number | null
 
   @Column({
     type: DataType.DECIMAL(14, 2),
     allowNull: true,
-    field: 'bonus_salary',
+    field: 'additional_fixed_car_allowance',
     get() {
-      const value = this.getDataValue('bonusSalary')
-      return value !== null && value !== undefined
-        ? parseFloat(value as unknown as string)
-        : null
+      return parseNullableDecimal(
+        this.getDataValue('additionalFixedCarAllowance'),
+      )
     },
   })
-  bonusSalary!: number | null
+  additionalFixedCarAllowance!: number | null
+
+  @Column({
+    type: DataType.DECIMAL(14, 2),
+    allowNull: true,
+    field: 'bonus_occasional_car_allowance',
+    get() {
+      return parseNullableDecimal(
+        this.getDataValue('bonusOccasionalCarAllowance'),
+      )
+    },
+  })
+  bonusOccasionalCarAllowance!: number | null
+
+  @Column({
+    type: DataType.DECIMAL(14, 2),
+    allowNull: true,
+    field: 'bonus_occasional_overtime',
+    get() {
+      return parseNullableDecimal(this.getDataValue('bonusOccasionalOvertime'))
+    },
+  })
+  bonusOccasionalOvertime!: number | null
+
+  @Column({
+    type: DataType.DECIMAL(14, 2),
+    allowNull: true,
+    field: 'bonus_payments',
+    get() {
+      return parseNullableDecimal(this.getDataValue('bonusPayments'))
+    },
+  })
+  bonusPayments!: number | null
+
+  @Column({
+    type: DataType.DECIMAL(14, 2),
+    allowNull: true,
+    field: 'bonus_other',
+    get() {
+      return parseNullableDecimal(this.getDataValue('bonusOther'))
+    },
+  })
+  bonusOther!: number | null
+
+  /**
+   * Viðbótarlaun — derived, not stored. Sum of its fixed sub-components, each
+   * treated as 0 when not entered.
+   */
+  get additionalSalary(): number {
+    return computeAdditionalSalary(this)
+  }
+
+  /**
+   * Aukagreiðslur — derived, not stored. Sum of its occasional / bonus
+   * sub-components, each treated as 0 when not entered.
+   */
+  get bonusSalary(): number {
+    return computeBonusSalary(this)
+  }
 
   @Column({
     type: DataType.ENUM(...Object.values(GenderEnum)),
@@ -173,6 +268,12 @@ export class ReportEmployeeModel extends MutableModel<
       startDate: model.startDate,
       workRatio: model.workRatio,
       baseSalary: model.baseSalary,
+      additionalFixedOvertime: model.additionalFixedOvertime,
+      additionalFixedCarAllowance: model.additionalFixedCarAllowance,
+      bonusOccasionalCarAllowance: model.bonusOccasionalCarAllowance,
+      bonusOccasionalOvertime: model.bonusOccasionalOvertime,
+      bonusPayments: model.bonusPayments,
+      bonusOther: model.bonusOther,
       additionalSalary: model.additionalSalary,
       bonusSalary: model.bonusSalary,
       gender: model.gender,

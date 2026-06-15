@@ -272,9 +272,17 @@ function makeEmployee(
     gender,
     workRatio,
     baseSalary,
+    // Plain object cast to the model: the derived getters don't fire, so keep
+    // the parent totals as explicit own-properties for the service to read.
     additionalSalary,
     bonusSalary,
-  } as ReportEmployeeModel
+    additionalFixedOvertime: null,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: null,
+    bonusOther: null,
+  } as unknown as ReportEmployeeModel
 }
 
 function makeOutlierAnalysis() {

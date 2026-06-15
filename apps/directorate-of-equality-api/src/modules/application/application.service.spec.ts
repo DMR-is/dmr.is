@@ -1237,8 +1237,12 @@ function makeEmployee({
     startDate: '2021-01-01',
     workRatio: 1,
     baseSalary,
-    additionalSalary: 100000,
-    bonusSalary: null,
+    additionalFixedOvertime: 100000,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: null,
+    bonusOther: null,
     personalStepAssignments: [
       {
         criterionTitle: 'Abyrgd',
