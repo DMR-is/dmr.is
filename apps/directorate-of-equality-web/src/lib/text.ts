@@ -255,6 +255,18 @@ export const companiesText = {
     successToast: 'Fyrirtæki skráð',
     errorToast: 'Villa við skráningu fyrirtækis',
   },
+  detailView: {
+    heading: 'Upplýsingar um fyrirtæki',
+    tabInfo: 'Upplýsingar',
+    tabReports: 'Skýrslur',
+    tabsLabel: 'Fyrirtækjaflippar',
+    timelineHeading: 'Breytingaferill',
+    sidebarTitle: 'Staða fyrirtækis',
+    statusLabel: 'Staða',
+    finesButton: 'Hefja dagsektir',
+    noReports: 'Engar skýrslur skráðar',
+    reportsLoadError: 'Villa við að hlaða skýrslur',
+  },
 }
 
 export const usersText = {
