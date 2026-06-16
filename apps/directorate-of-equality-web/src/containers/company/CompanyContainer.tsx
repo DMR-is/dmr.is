@@ -26,8 +26,9 @@ export function CompanyContainer({
       <GridContainer className="print-hidden">
         <GridRow>
           <GridColumn
-            span={['12/12', '12/12', '12/12', '9/12', '9/12']}
+            span={['12/12', '12/12', '12/12', '10/12']}
             order={[2, 2, 1]}
+            offset={['0', '0', '0', '1/12']}
           >
             <ErrorBoundary
               fallback={<div>{companiesText.detailView.reportsLoadError}</div>}
