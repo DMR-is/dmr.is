@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
 import {
+  ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.model'
@@ -25,6 +26,12 @@ describe('ReportWorkflowService', () => {
     emitUnassigned: jest.fn(),
     emitStatusChanged: jest.fn(),
     emitSuperseded: jest.fn(),
+  }
+
+  const applicationSystemService = {
+    notifyApproved: jest.fn(),
+    notifyDenied: jest.fn(),
+    notifyEdited: jest.fn(),
   }
 
   const reportModel = {
@@ -67,6 +74,7 @@ describe('ReportWorkflowService', () => {
     service = new ReportWorkflowService(
       logger as never,
       reportEventService as never,
+      applicationSystemService as never,
       reportModel as never,
       companyReportModel as never,
       userModel as never,
@@ -270,6 +278,56 @@ describe('ReportWorkflowService', () => {
       )
     })
 
+    it('notifies the application system when the report is island.is-sourced', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue({
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid-1',
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(applicationSystemService.notifyDenied).toHaveBeenCalledWith(
+        'app-uuid-1',
+      )
+    })
+
+    it('does not notify the application system for non-island.is reports', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue({
+        providerType: ReportProviderEnum.SYSTEM,
+        providerId: null,
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(applicationSystemService.notifyDenied).not.toHaveBeenCalled()
+    })
+
+    it('does not fail the denial when the application system notification throws', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue({
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid-1',
+      })
+      applicationSystemService.notifyDenied.mockRejectedValue(
+        new Error('boom'),
+      )
+
+      await expect(
+        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          denialReason: 'reason',
+        }),
+      ).resolves.toBeUndefined()
+    })
+
     it('rejects non-IN_REVIEW reports', async () => {
       await expect(
         service.deny(reviewerContext(ReportStatusEnum.SUBMITTED), {
@@ -387,6 +445,29 @@ describe('ReportWorkflowService', () => {
 
       expect(reportModel.update).toHaveBeenCalledTimes(1)
       expect(reportEventService.emitSuperseded).not.toHaveBeenCalled()
+    })
+
+    it('notifies the application system on approval of an island.is report', async () => {
+      reportEmployeeOutlierModel.findOne.mockResolvedValue(null)
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne
+        // supersede type lookup
+        .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
+        // notify provider lookup
+        .mockResolvedValueOnce({
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'app-uuid-1',
+        })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(applicationSystemService.notifyApproved).toHaveBeenCalledWith(
+        'app-uuid-1',
+      )
     })
 
     it('rejects non-IN_REVIEW reports', async () => {
