@@ -318,7 +318,7 @@ const makeRegulationPdf = (
               // Ignore unlink errors — the file may not have been created.
               const tryUnlink = (file: string) =>
                 unlink(file).catch(() => {
-                  /* best-effort cleanup */
+                  /* best-effort cleanup. */
                 })
               tryUnlink(htmlFile)
               if (err) {
