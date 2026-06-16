@@ -14,6 +14,7 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { UserModel } from '../user/models/user.model'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { ReportCommentDto } from './dto/report-comment.dto'
 import {
@@ -52,6 +53,7 @@ export class ReportCommentService implements IReportCommentService {
               visibility: CommentVisibilityEnum.EXTERNAL,
             },
       order: [['createdAt', 'ASC']],
+      include: [{ model: UserModel, as: 'author', required: false }],
     })
 
     return comments.map((comment) => comment.fromModel())
@@ -109,6 +111,12 @@ export class ReportCommentService implements IReportCommentService {
         await this.mailService.sendExternalCommentNotification(report, comment)
       }
     }
+
+    // Reload with the author so the response carries authorName (the freshly
+    // created instance has no association loaded).
+    await comment.reload({
+      include: [{ model: UserModel, as: 'author', required: false }],
+    })
 
     return comment.fromModel()
   }

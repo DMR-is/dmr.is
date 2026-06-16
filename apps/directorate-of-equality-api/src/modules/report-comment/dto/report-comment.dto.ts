@@ -1,6 +1,7 @@
 import {
   ApiDateTime,
   ApiEnum,
+  ApiOptionalString,
   ApiOptionalUuid,
   ApiString,
   ApiUUId,
@@ -24,6 +25,13 @@ export class ReportCommentDto {
 
   @ApiOptionalUuid({ nullable: true })
   authorUserId!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Full name of the authoring reviewer. Null for company-authored comments (no individual person).',
+  })
+  authorName!: string | null
 
   @ApiEnum(CommentVisibilityEnum, { enumName: 'CommentVisibilityEnum' })
   visibility!: CommentVisibilityEnum

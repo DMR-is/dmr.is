@@ -1,10 +1,12 @@
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyInput } from './dto/create-company-input.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
 import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snapshot-source.dto'
+import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 
 export {
   CreateCompanyInput,
@@ -27,6 +29,12 @@ export interface ICompanyService {
   getOrCreateSubsidiaryReportSnapshotSource(
     input: SubsidiaryReportSnapshotLookup,
   ): Promise<SubsidiaryReportSnapshotSourceDto>
+  updateStatus(
+    id: string,
+    dto: UpdateCompanyStatusDto,
+    actorUserId: string,
+  ): Promise<CompanyDto>
+  getTimeline(id: string): Promise<CompanyTimelineItemDto[]>
 }
 
 export const ICompanyService = Symbol('ICompanyService')

@@ -4,6 +4,7 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { UserModel } from '../user/models/user.model'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { CommentVisibilityEnum } from './models/report-comment.model'
 import { ReportCommentService } from './report-comment.service'
@@ -62,7 +63,11 @@ describe('ReportCommentService', () => {
 
   it('creates a reviewer comment with the current report status snapshot', async () => {
     const commentDto = { id: 'comment-1' }
-    const commentRecord = { id: 'comment-1', fromModel: () => commentDto }
+    const commentRecord = {
+      id: 'comment-1',
+      fromModel: () => commentDto,
+      reload: jest.fn(),
+    }
 
     reportCommentModel.create.mockResolvedValue(commentRecord)
 
@@ -101,6 +106,7 @@ describe('ReportCommentService', () => {
         visibility: CommentVisibilityEnum.EXTERNAL,
       },
       order: [['createdAt', 'ASC']],
+      include: [{ model: UserModel, as: 'author', required: false }],
     })
     expect(result).toEqual([commentDto])
   })
@@ -111,6 +117,7 @@ describe('ReportCommentService', () => {
     reportCommentModel.create.mockResolvedValue({
       id: 'comment-2',
       fromModel: () => commentDto,
+      reload: jest.fn(),
     })
 
     const result = await service.create(companyContext, {
@@ -155,6 +162,7 @@ describe('ReportCommentService', () => {
     const commentRecord = {
       id: 'comment-3',
       fromModel: () => ({ id: 'comment-3' }),
+      reload: jest.fn(),
     }
     const reportRecord = { id: 'report-1' }
 
@@ -177,6 +185,7 @@ describe('ReportCommentService', () => {
     reportCommentModel.create.mockResolvedValue({
       id: 'comment-4',
       fromModel: () => ({ id: 'comment-4' }),
+      reload: jest.fn(),
     })
 
     await service.create(reviewerContext, {
@@ -192,6 +201,7 @@ describe('ReportCommentService', () => {
     reportCommentModel.create.mockResolvedValue({
       id: 'comment-5',
       fromModel: () => ({ id: 'comment-5' }),
+      reload: jest.fn(),
     })
 
     await service.create(companyContext, {
@@ -207,6 +217,7 @@ describe('ReportCommentService', () => {
     reportCommentModel.create.mockResolvedValue({
       id: 'comment-6',
       fromModel: () => ({ id: 'comment-6' }),
+      reload: jest.fn(),
     })
     reportModel.findByPk.mockResolvedValue(null)
 

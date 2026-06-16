@@ -2,6 +2,8 @@ export const CLS_NAMESPACE = 'directory-of-equality-api:transaction'
 
 export enum DoeModels {
   USER = 'doe_user',
+  REGION = 'region',
+  POSTCODE = 'postcode',
   COMPANY = 'company',
   COMPANY_REPORT = 'company_report',
   REPORT = 'report',
@@ -18,5 +20,7 @@ export enum DoeModels {
   PUBLIC_REPORT = 'public_report',
   REPORT_EVENT = 'report_event',
   REPORT_COMMENT = 'report_comment',
+  COMPANY_EVENT = 'company_event',
+  COMPANY_COMMENT = 'company_comment',
   CONFIG = 'config',
 }

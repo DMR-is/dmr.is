@@ -8,7 +8,10 @@ import {
 } from '@dmr.is/clients-national-registry'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanySizeEnum } from './models/company.enums'
+import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
+import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
+import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { CompanyService } from './company.service'
 
@@ -25,12 +28,20 @@ describe('CompanyService', () => {
   let findOne: jest.Mock
   let create: jest.Mock
   let getEntityByNationalId: jest.Mock
+  let emitCreated: jest.Mock
+  let emitStatusChanged: jest.Mock
+  let eventsByCompanyId: jest.Mock
+  let commentsByCompanyId: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
     getEntityByNationalId = jest.fn()
+    emitCreated = jest.fn()
+    emitStatusChanged = jest.fn()
+    eventsByCompanyId = jest.fn().mockResolvedValue([])
+    commentsByCompanyId = jest.fn().mockResolvedValue([])
 
     const module = await Test.createTestingModule({
       providers: [
@@ -43,6 +54,18 @@ describe('CompanyService', () => {
         {
           provide: getModelToken(CompanyModel),
           useValue: { findOneOrThrow, findOne, create },
+        },
+        {
+          provide: ICompanyEventService,
+          useValue: {
+            emitCreated,
+            emitStatusChanged,
+            getByCompanyId: eventsByCompanyId,
+          },
+        },
+        {
+          provide: ICompanyCommentService,
+          useValue: { getByCompanyId: commentsByCompanyId },
         },
       ],
     }).compile()
@@ -272,6 +295,132 @@ describe('CompanyService', () => {
 
       expect(findOne).not.toHaveBeenCalled()
       expect(create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('create', () => {
+    it('emits a CREATED event after inserting the company', async () => {
+      findOne.mockResolvedValue(null)
+      create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-9',
+          status: CompanyStatusEnum.ACTIVE,
+        }),
+      )
+
+      await service.create({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(emitCreated).toHaveBeenCalledWith(
+        'company-9',
+        CompanyStatusEnum.ACTIVE,
+      )
+    })
+  })
+
+  describe('updateStatus', () => {
+    it('updates the status and emits STATUS_CHANGED with the reason', async () => {
+      const update = jest.fn()
+      let current = CompanyStatusEnum.ACTIVE
+      const company = {
+        id: 'company-1',
+        get status() {
+          return current
+        },
+        update: update.mockImplementation(async ({ status }) => {
+          current = status
+        }),
+        fromModel: () => ({ id: 'company-1', status: current }),
+      }
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateStatus(
+        'company-1',
+        { status: CompanyStatusEnum.INACTIVE, reason: 'bankruptcy' },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        status: CompanyStatusEnum.INACTIVE,
+      })
+      expect(emitStatusChanged).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        CompanyStatusEnum.INACTIVE,
+        'admin-1',
+        'bankruptcy',
+      )
+      expect(result.status).toBe(CompanyStatusEnum.INACTIVE)
+    })
+
+    it('is a no-op when the status is unchanged', async () => {
+      const update = jest.fn()
+      findOneOrThrow.mockResolvedValue({
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        update,
+        fromModel: () => ({ id: 'company-1', status: CompanyStatusEnum.ACTIVE }),
+      })
+
+      await service.updateStatus(
+        'company-1',
+        { status: CompanyStatusEnum.ACTIVE },
+        'admin-1',
+      )
+
+      expect(update).not.toHaveBeenCalled()
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateStatus(
+          'missing',
+          { status: CompanyStatusEnum.INACTIVE },
+          'admin-1',
+        ),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getTimeline', () => {
+    it('merges events and comments sorted ascending by createdAt', async () => {
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-1' }))
+      eventsByCompanyId.mockResolvedValue([
+        { id: 'e1', companyId: 'company-1', createdAt: new Date('2026-01-01') },
+      ])
+      commentsByCompanyId.mockResolvedValue([
+        { id: 'c1', companyId: 'company-1', createdAt: new Date('2026-02-01') },
+      ])
+
+      const timeline = await service.getTimeline('company-1')
+
+      expect(timeline).toHaveLength(2)
+      expect(timeline[0]).toMatchObject({
+        kind: CompanyTimelineItemKindEnum.EVENT,
+        event: { id: 'e1' },
+        comment: null,
+      })
+      expect(timeline[1]).toMatchObject({
+        kind: CompanyTimelineItemKindEnum.COMMENT,
+        comment: { id: 'c1' },
+        event: null,
+      })
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(service.getTimeline('missing')).rejects.toThrow(
+        NotFoundException,
+      )
     })
   })
 })

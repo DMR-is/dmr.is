@@ -27,3 +27,20 @@ export enum CompanySizeEnum {
   MEDIUM = 'MEDIUM',
   LARGE = 'LARGE',
 }
+
+/**
+ * Lifecycle status of a company in the DoE register.
+ *
+ *   ACTIVE   → operating; subject to the usual reporting obligations.
+ *   INACTIVE → no longer operating (e.g. bankruptcy, merged into another
+ *              company). Set by an admin; the reason is captured on the
+ *              `company_event` STATUS_CHANGED row, not here.
+ *
+ * Status changes are recorded as `company_event` STATUS_CHANGED events
+ * (with from/to status + optional reason), so the full history is explorable
+ * via the company timeline rather than a separate status-history table.
+ */
+export enum CompanyStatusEnum {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}

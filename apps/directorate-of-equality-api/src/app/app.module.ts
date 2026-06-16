@@ -14,8 +14,12 @@ import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { ApplicationApiModule } from '../modules/application/application.api.module'
 import { CompanyModel } from '../modules/company/models/company.model'
+import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
+import { CompanyEventModel } from '../modules/company/models/company-event.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
 import { ConfigModel } from '../modules/config/models/config.model'
+import { PostcodeModel } from '../modules/location/models/postcode.model'
+import { RegionModel } from '../modules/location/models/region.model'
 import { PublicReportModel } from '../modules/public-report/models/public-report.model'
 import { ReportModel } from '../modules/report/models/report.model'
 import { ReportEventModel } from '../modules/report/models/report-event.model'
@@ -52,6 +56,8 @@ import { HealthController } from './health.controller'
           autoLoadModels: false,
           models: [
             UserModel,
+            RegionModel,
+            PostcodeModel,
             CompanyModel,
             ReportEmployeeRoleModel,
             ReportModel,
@@ -68,6 +74,8 @@ import { HealthController } from './health.controller'
             PublicReportModel,
             ReportEventModel,
             ReportCommentModel,
+            CompanyEventModel,
+            CompanyCommentModel,
             ConfigModel,
           ],
         }),
