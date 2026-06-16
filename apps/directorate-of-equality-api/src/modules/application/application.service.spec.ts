@@ -913,6 +913,103 @@ describe('ApplicationService', () => {
     })
   })
 
+  describe('withdraw', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
+
+    it('withdraws a non-terminal report and emits STATUS_CHANGED', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.SUBMITTED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await service.withdraw(PROVIDER_ID, COMPANY)
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { status: ReportStatusEnum.WITHDRAWN },
+        { where: { id: REPORT_ID } },
+      )
+      expect(emitStatusChanged).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.SUBMITTED,
+        ReportStatusEnum.WITHDRAWN,
+      )
+    })
+
+    it('is an idempotent no-op when the report is already WITHDRAWN', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.WITHDRAWN,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.withdraw(PROVIDER_ID, COMPANY),
+      ).resolves.toBeUndefined()
+
+      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+
+    it('rejects withdrawing a report that has reached a terminal state', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.APPROVED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await expect(
+        service.withdraw(PROVIDER_ID, COMPANY),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportUpdate).not.toHaveBeenCalled()
+      expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+
+    it("throws NotFoundException when the resolved company isn't the parent", async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.SUBMITTED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({
+          reportId: REPORT_ID,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        }),
+      ])
+
+      await expect(
+        service.withdraw(PROVIDER_ID, COMPANY),
+      ).rejects.toBeInstanceOf(NotFoundException)
+
+      expect(reportUpdate).not.toHaveBeenCalled()
+    })
+  })
+
   describe('editOutliers', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'

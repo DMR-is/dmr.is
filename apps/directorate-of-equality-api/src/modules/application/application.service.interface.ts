@@ -54,6 +54,7 @@ export interface IApplicationService {
     input: EditOutliersDto,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
+  withdraw(providerId: string, company: CompanyDto): Promise<void>
   getEqualityTemplateHtml(): string
   getEqualityTemplateDocx(): Buffer
 }
