@@ -1,5 +1,8 @@
+import Link from 'next/link'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
@@ -38,9 +41,20 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
           <Text variant="eyebrow" color="purple400">
             {formatDateIS(report.createdAt)}
           </Text>
-          <Text variant="h3" marginBottom={4}>
-            {report.company.name}
-          </Text>
+          <Box marginBottom={4}>
+            <Link
+              href={`${NAV_PATHS.fyrirtaeki.href}/${report.company.companyId}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            >
+              <Text variant="h3">{report.company.name}</Text>
+              <Icon
+                icon="arrowForward"
+                type="outline"
+                size="medium"
+                color="dark400"
+              />
+            </Link>
+          </Box>
         </Stack>
       </Stack>
       <ReportTabsContainer report={report} />

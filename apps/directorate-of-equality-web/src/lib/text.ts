@@ -244,7 +244,7 @@ export const companiesText = {
     avgEmployees: 'Meðalfjöldi starfsmanna',
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
-    viewReport: 'Skoða skýrslu',
+    viewReport: 'Opna skýrslu',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
