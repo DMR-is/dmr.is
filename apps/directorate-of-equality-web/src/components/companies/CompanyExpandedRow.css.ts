@@ -1,6 +1,7 @@
 import { theme } from '@dmr.is/island-ui-theme'
 
-import { style } from '@vanilla-extract/css'
+import { globalStyle, style } from '@vanilla-extract/css'
+
 export const reportCard = style({
   border: '1px solid transparent',
   transition: 'border-color 300ms ease-in-out',
@@ -15,19 +16,34 @@ export const reportCard = style({
 })
 
 export const grid = style({
-  display: 'flex',
-  flexWrap: 'wrap',
-  columnGap: theme.spacing[2],
-})
-
-export const item = style({
-  flex: `0 0 calc(50% - ${theme.spacing[1]})`,
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: theme.spacing[1],
 
   '@media': {
     '(max-width: 768px)': {
-      flex: '0 0 100%',
+      gridTemplateColumns: '1fr',
     },
   },
+})
+
+export const item = style({
+  background: theme.color.white,
+})
+
+// Desktop (2 columns): items 3–4, 7–8, 11–12… → blue
+globalStyle(
+  `${grid} ${item}:nth-child(4n+3), ${grid} ${item}:nth-child(4n+4)`,
+  { background: theme.color.blue100 },
+)
+
+// Mobile (1 column): override — even items blue, odd items white
+globalStyle(`${grid} ${item}:nth-child(odd)`, {
+  '@media': { '(max-width: 768px)': { background: theme.color.white } },
+})
+
+globalStyle(`${grid} ${item}:nth-child(even)`, {
+  '@media': { '(max-width: 768px)': { background: theme.color.blue100 } },
 })
 
 export const label = style({
