@@ -284,7 +284,7 @@ module.exports = {
     -- explorable status history; no separate history table is needed.
     -- ============================================================
 
-    CREATE TYPE company_event_type_enum AS ENUM ('STATUS_CHANGED');
+    CREATE TYPE company_event_type_enum AS ENUM ('CREATED', 'STATUS_CHANGED');
 
     CREATE TABLE company_event (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

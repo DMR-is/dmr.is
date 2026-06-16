@@ -12,10 +12,13 @@ import { CompanyModel } from './company.model'
  * Timeline event types for a company. Mirrors the report-event pattern but
  * scoped to the company lifecycle.
  *
+ *   CREATED        → the company was registered. Origin point of the timeline;
+ *                    no from/to status (status holds the initial status).
  *   STATUS_CHANGED → an admin moved the company between ACTIVE/INACTIVE.
  *                    Carries from/to status and an optional reason.
  */
 export enum CompanyEventTypeEnum {
+  CREATED = 'CREATED',
   STATUS_CHANGED = 'STATUS_CHANGED',
 }
 
