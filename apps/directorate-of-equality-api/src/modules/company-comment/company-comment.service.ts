@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyCommentDto } from '../company/dto/company-comment.dto'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyCommentModel } from '../company/models/company-comment.model'
+import { UserModel } from '../user/models/user.model'
 import { CreateCompanyCommentDto } from './dto/create-company-comment.dto'
 import { ICompanyCommentService } from './company-comment.service.interface'
 
@@ -29,6 +30,7 @@ export class CompanyCommentService implements ICompanyCommentService {
     const comments = await this.companyCommentModel.findAll({
       where: { companyId },
       order: [['createdAt', 'ASC']],
+      include: [{ model: UserModel, as: 'author', required: false }],
     })
 
     return comments.map((comment) => comment.fromModel())
@@ -60,6 +62,12 @@ export class CompanyCommentService implements ICompanyCommentService {
       companyId,
       authorUserId,
       body,
+    })
+
+    // Reload with the author so the response carries authorName (the freshly
+    // created instance has no association loaded).
+    await comment.reload({
+      include: [{ model: UserModel, as: 'author', required: false }],
     })
 
     return comment.fromModel()

@@ -6,6 +6,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyCommentModel } from '../company/models/company-comment.model'
+import { UserModel } from '../user/models/user.model'
 import { CompanyCommentService } from './company-comment.service'
 
 const mockLogger = {
@@ -51,7 +52,10 @@ describe('CompanyCommentService', () => {
   })
 
   it('create trims the body and inserts an admin-authored comment', async () => {
-    commentCreate.mockResolvedValue({ fromModel: () => ({ id: 'comment-1' }) })
+    commentCreate.mockResolvedValue({
+      fromModel: () => ({ id: 'comment-1' }),
+      reload: jest.fn(),
+    })
 
     const result = await service.create('company-1', 'admin-1', {
       body: '  needs follow-up  ',
@@ -96,6 +100,7 @@ describe('CompanyCommentService', () => {
     expect(commentFindAll).toHaveBeenCalledWith({
       where: { companyId: 'company-1' },
       order: [['createdAt', 'ASC']],
+      include: [{ model: UserModel, as: 'author', required: false }],
     })
     expect(result).toEqual([{ id: 'c1' }, { id: 'c2' }])
   })

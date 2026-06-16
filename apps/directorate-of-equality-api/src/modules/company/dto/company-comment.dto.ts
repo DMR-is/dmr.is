@@ -1,5 +1,6 @@
 import {
   ApiDateTime,
+  ApiOptionalString,
   ApiOptionalUuid,
   ApiString,
   ApiUUId,
@@ -14,6 +15,12 @@ export class CompanyCommentDto {
 
   @ApiOptionalUuid({ nullable: true })
   authorUserId!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Full name of the admin who authored the comment.',
+  })
+  authorName!: string | null
 
   @ApiString({ description: 'Plain text comment body' })
   body!: string

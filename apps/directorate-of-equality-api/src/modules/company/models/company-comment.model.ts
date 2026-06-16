@@ -52,6 +52,9 @@ export class CompanyCommentModel extends ParanoidModel<
       id: model.id,
       companyId: model.companyId,
       authorUserId: model.authorUserId,
+      authorName: model.author
+        ? `${model.author.firstName} ${model.author.lastName}`
+        : null,
       body: model.body,
       createdAt: model.createdAt,
     }

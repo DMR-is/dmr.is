@@ -80,6 +80,9 @@ export class ReportCommentModel extends ParanoidModel<
       reportId: model.reportId,
       authorKind: model.authorKind,
       authorUserId: model.authorUserId,
+      authorName: model.author
+        ? `${model.author.firstName} ${model.author.lastName}`
+        : null,
       visibility: model.visibility,
       body: model.body,
       reportStatus: model.reportStatus,
