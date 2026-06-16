@@ -1,6 +1,13 @@
-import { ApiBoolean, ApiEnum, ApiString, ApiUUId } from '@dmr.is/decorators'
+import {
+  ApiBoolean,
+  ApiEnum,
+  ApiOptionalString,
+  ApiOptionalUuid,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
 
-import { CompanySizeEnum } from '../models/company.enums'
+import { CompanySizeEnum, CompanyStatusEnum } from '../models/company.enums'
 
 export class CompanyDto {
   @ApiUUId()
@@ -14,6 +21,15 @@ export class CompanyDto {
 
   @ApiString()
   nationalId!: string
+
+  @ApiEnum(CompanyStatusEnum, { enumName: 'CompanyStatusEnum' })
+  status!: CompanyStatusEnum
+
+  @ApiOptionalString({ nullable: true })
+  address!: string | null
+
+  @ApiOptionalUuid({ nullable: true })
+  postcodeId!: string | null
 
   @ApiBoolean()
   salaryReportRequired!: boolean
