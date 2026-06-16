@@ -229,6 +229,10 @@ export const ReportsContainer = () => {
               reviewerUserId={filter.reviewerUserId as string[] | null}
               reviewers={needsUsers ? reviewerOptions : undefined}
               hasImprovementPlan={filter.hasImprovementPlan ?? null}
+              dateFrom={
+                filter.createdFrom ? new Date(filter.createdFrom) : undefined
+              }
+              dateTo={filter.createdTo ? new Date(filter.createdTo) : undefined}
               onQChange={(q) => setFilter({ q })}
               onTypeChange={(type) =>
                 setFilter({ type: type as typeof filter.type })
@@ -245,6 +249,18 @@ export const ReportsContainer = () => {
               onHasImprovementPlanChange={(v) =>
                 setFilter({ hasImprovementPlan: v })
               }
+              onDateFromChange={(date) => {
+                if (!date) return setFilter({ createdFrom: null })
+                const d = new Date(date)
+                d.setUTCHours(0, 0, 0, 0)
+                setFilter({ createdFrom: d.toISOString() })
+              }}
+              onDateToChange={(date) => {
+                if (!date) return setFilter({ createdTo: null })
+                const d = new Date(date)
+                d.setUTCHours(23, 59, 59, 999)
+                setFilter({ createdTo: d.toISOString() })
+              }}
               onReset={resetFilter}
             />
             {!isMobile && (

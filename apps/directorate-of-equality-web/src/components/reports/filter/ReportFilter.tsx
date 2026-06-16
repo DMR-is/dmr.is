@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -31,11 +29,15 @@ type Props = {
   reviewerUserId: string[] | null
   reviewers?: FilterOption[]
   hasImprovementPlan: boolean | null
+  dateFrom: Date | undefined
+  dateTo: Date | undefined
   onQChange: (value: string | null) => void
   onTypeChange: (values: string[] | null) => void
   onStatusChange: (values: string[] | null) => void
   onReviewerChange: (values: string[] | null) => void
   onHasImprovementPlanChange: (value: boolean | null) => void
+  onDateFromChange: (date: Date | undefined) => void
+  onDateToChange: (date: Date | undefined) => void
   onReset: () => void
 }
 
@@ -47,21 +49,23 @@ export const ReportFilter = ({
   reviewerUserId,
   reviewers,
   hasImprovementPlan,
+  dateFrom,
+  dateTo,
   onQChange,
   onTypeChange,
   onStatusChange,
   onReviewerChange,
   onHasImprovementPlanChange,
+  onDateFromChange,
+  onDateToChange,
   onReset,
 }: Props) => {
-  const [dateFrom, setDateFrom] = useState<Date | undefined>()
-  const [dateTo, setDateTo] = useState<Date | undefined>()
   const { isMobile } = useIsMobile()
   const { isTablet } = useIsTablet()
 
   const handleReset = () => {
-    setDateFrom(undefined)
-    setDateTo(undefined)
+    onDateFromChange(undefined)
+    onDateToChange(undefined)
     onReset()
   }
 
@@ -182,7 +186,7 @@ export const ReportFilter = ({
                     size="xs"
                     selected={dateFrom}
                     maxDate={dateTo}
-                    handleChange={(date) => setDateFrom(date ?? undefined)}
+                    handleChange={(date) => onDateFromChange(date ?? undefined)}
                     locale="is"
                     appearInline
                   />
@@ -192,7 +196,7 @@ export const ReportFilter = ({
                     size="xs"
                     selected={dateTo}
                     minDate={dateFrom}
-                    handleChange={(date) => setDateTo(date ?? undefined)}
+                    handleChange={(date) => onDateToChange(date ?? undefined)}
                   />
                   {(dateFrom || dateTo) && (
                     <Box textAlign="right">
@@ -201,8 +205,8 @@ export const ReportFilter = ({
                         size="small"
                         variant="text"
                         onClick={() => {
-                          setDateFrom(undefined)
-                          setDateTo(undefined)
+                          onDateFromChange(undefined)
+                          onDateToChange(undefined)
                         }}
                       >
                         {overviewText.filter.clearDates}
