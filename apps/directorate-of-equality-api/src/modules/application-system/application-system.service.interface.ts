@@ -1,10 +1,6 @@
 /**
  * Events sent to the island.is application system to drive its application
  * state machine when a DoE report's review concludes.
- *
- * TODO: confirm the exact event strings the DoE application template expects.
- * These placeholders mirror the OJ `submitApplication(id, event)` contract
- * (`PUT .../applications/{id}/submit` with a form-urlencoded `event`).
  */
 export enum ApplicationSystemEvent {
   APPROVE = 'APPROVE',

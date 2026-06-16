@@ -61,10 +61,9 @@ export class ApplicationSystemService implements IApplicationSystemService {
   }
 
   /**
-   * Drives the island.is application state machine by submitting an event.
-   *
-   * TODO: confirm the callback path/version for the DoE application template.
-   * Defaults to the OJ contract: `PUT .../application-callback-v2/applications/{id}/submit`.
+   * Drives the island.is application state machine by submitting an event:
+   * `PUT .../application-callback-v2/applications/{id}/submit` with the event
+   * as a form-urlencoded body.
    */
   private async submitEvent(
     applicationId: string,
