@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { ApplicationSystemCoreModule } from '../application-system/application-system.core.module'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
@@ -18,6 +19,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
       ReportEmployeeOutlierModel,
     ]),
     ReportEventCoreModule,
+    ApplicationSystemCoreModule,
   ],
   providers: [
     {

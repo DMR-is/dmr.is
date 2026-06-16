@@ -1,0 +1,73 @@
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/sequelize'
+
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
+import { CompanyEventDto } from '../company/dto/company-event.dto'
+import { CompanyStatusEnum } from '../company/models/company.enums'
+import {
+  CompanyEventModel,
+  CompanyEventTypeEnum,
+} from '../company/models/company-event.model'
+import { ICompanyEventService } from './company-event.service.interface'
+
+const LOGGING_CONTEXT = 'CompanyEventService'
+
+@Injectable()
+export class CompanyEventService implements ICompanyEventService {
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectModel(CompanyEventModel)
+    private readonly companyEventModel: typeof CompanyEventModel,
+  ) {}
+
+  async emitCreated(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting CREATED event for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.CREATED,
+      actorUserId: actorUserId ?? null,
+      status,
+    })
+  }
+
+  async emitStatusChanged(
+    companyId: string,
+    fromStatus: CompanyStatusEnum,
+    toStatus: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting STATUS_CHANGED event for company ${companyId}: ${fromStatus} → ${toStatus}`,
+      { context: LOGGING_CONTEXT, companyId, fromStatus, toStatus },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.STATUS_CHANGED,
+      actorUserId: actorUserId ?? null,
+      status: toStatus,
+      fromStatus,
+      toStatus,
+      reason: reason ?? null,
+    })
+  }
+
+  async getByCompanyId(companyId: string): Promise<CompanyEventDto[]> {
+    const events = await this.companyEventModel.findAll({
+      where: { companyId },
+      order: [['createdAt', 'ASC']],
+    })
+
+    return events.map((event) => event.fromModel())
+  }
+}

@@ -10,9 +10,11 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { IApplicationSystemService } from '../application-system/application-system.service.interface'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import {
   ReportModel,
+  ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.model'
@@ -36,6 +38,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IReportEventService)
     private readonly reportEventService: IReportEventService,
+    @Inject(IApplicationSystemService)
+    private readonly applicationSystemService: IApplicationSystemService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -183,6 +187,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
       actorUserId,
       denialReason,
     )
+
+    await this.notifyApplicationSystem(context.reportId, ReportStatusEnum.DENIED)
   }
 
   async approve(context: ReportResourceContext): Promise<void> {
@@ -226,7 +232,56 @@ export class ReportWorkflowService implements IReportWorkflowService {
       actorUserId,
     )
 
+    await this.notifyApplicationSystem(
+      context.reportId,
+      ReportStatusEnum.APPROVED,
+    )
+
     // TODO: insert public_report row as part of approval pipeline
+  }
+
+  /**
+   * Best-effort outbound notification to the island.is application system that
+   * a report's review concluded. Only island.is-sourced reports have an
+   * application to update — Excel-imported / system reports are skipped.
+   *
+   * The local status change is already committed and event-logged at this
+   * point; a failed outbound call must NOT surface as an error to the admin
+   * (the approval/denial stands). We log and move on. A retry/outbox mechanism
+   * can be layered on later if eventual consistency proves insufficient.
+   */
+  private async notifyApplicationSystem(
+    reportId: string,
+    status: ReportStatusEnum.APPROVED | ReportStatusEnum.DENIED,
+  ): Promise<void> {
+    const report = await this.reportModel.findOne({
+      where: { id: reportId },
+      attributes: ['providerType', 'providerId'],
+    })
+
+    if (
+      report?.providerType !== ReportProviderEnum.ISLAND_IS ||
+      !report.providerId
+    ) {
+      return
+    }
+
+    try {
+      if (status === ReportStatusEnum.APPROVED) {
+        await this.applicationSystemService.notifyApproved(report.providerId)
+      } else {
+        await this.applicationSystemService.notifyDenied(report.providerId)
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to notify application system for report ${reportId} (${status})`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: report.providerId,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
   }
 
   async startFines(context: ReportResourceContext): Promise<void> {

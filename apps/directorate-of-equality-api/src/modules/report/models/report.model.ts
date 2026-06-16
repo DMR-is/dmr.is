@@ -142,6 +142,7 @@ type ReportCreateAttributes = {
         required: false,
         separate: true,
         order: [['createdAt', 'DESC']],
+        include: [{ model: UserModel, as: 'author', required: false }],
       },
       // Salary-only aggregate — null for equality reports. Per-role
       // breakdown + employee outliers are loaded via separate queries

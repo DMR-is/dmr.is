@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -322,5 +323,27 @@ export class ApplicationController {
     @Body() input: EditOutliersDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.editOutliers(providerId, input, company)
+  }
+
+  @Delete('reports/:providerId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'withdrawApplicationReport',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Withdraws the report tied to an island.is application the applicant deleted upstream. Sets status to `WITHDRAWN` and emits `STATUS_CHANGED`. Allowed only before the report reaches a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report.',
+  })
+  async withdrawReport(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.applicationService.withdraw(providerId, company)
   }
 }

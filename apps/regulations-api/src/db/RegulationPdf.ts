@@ -315,13 +315,21 @@ const makeRegulationPdf = (
               `  --timeout ${90 * SECOND}` +
               `  --output ${tmpFileName}`,
             (err) => {
-              unlink(htmlFile)
+              // Ignore unlink errors — the file may not have been created.
+              const tryUnlink = (file: string) =>
+                unlink(file).catch(() => {
+                  /* best-effort cleanup. */
+                })
+              tryUnlink(htmlFile)
               if (err) {
+                // pagedjs-cli may have written a partial/complete output file
+                // before failing; clean it up so it doesn't leak to disk.
+                tryUnlink(tmpFileName)
                 reject(err)
               } else {
                 resolve(
                   readFile(tmpFileName).then((file) => {
-                    unlink(tmpFileName)
+                    tryUnlink(tmpFileName)
                     return file
                   }),
                 )

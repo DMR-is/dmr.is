@@ -15,13 +15,20 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
+import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import {
+  CompanyTimelineItemDto,
+  CompanyTimelineItemKindEnum,
+} from './dto/company-timeline-item.dto'
 import {
   CompanySortByEnum,
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
@@ -43,6 +50,10 @@ export class CompanyService implements ICompanyService {
     private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CompanyModel)
     private readonly companyModel: typeof CompanyModel,
+    @Inject(ICompanyEventService)
+    private readonly companyEventService: ICompanyEventService,
+    @Inject(ICompanyCommentService)
+    private readonly companyCommentService: ICompanyCommentService,
   ) {}
 
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
@@ -161,6 +172,8 @@ export class CompanyService implements ICompanyService {
       employeeCountCategory: input.employeeCountCategory,
     })
 
+    await this.companyEventService.emitCreated(company.id, company.status)
+
     return company.fromModel()
   }
 
@@ -211,6 +224,8 @@ export class CompanyService implements ICompanyService {
       employeeCountCategory: CompanySizeEnum.UNKNOWN,
     })
 
+    await this.companyEventService.emitCreated(company.id, company.status)
+
     return company.fromModel()
   }
 
@@ -236,13 +251,15 @@ export class CompanyService implements ICompanyService {
       where: { nationalId: input.nationalId },
     })
 
-    const company =
-      existingCompany ??
-      (await this.companyModel.create({
+    let company = existingCompany
+    if (!company) {
+      company = await this.companyModel.create({
         name: registry.entity.nafn,
         nationalId: input.nationalId,
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
-      }))
+      })
+      await this.companyEventService.emitCreated(company.id, company.status)
+    }
 
     return {
       companyId: company.id,
@@ -253,5 +270,70 @@ export class CompanyService implements ICompanyService {
       postcode: registry.entity.postaritun,
       isatCategory: '',
     }
+  }
+
+  async updateStatus(
+    id: string,
+    dto: UpdateCompanyStatusDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyModel.findOneOrThrow(
+      { where: { id } },
+      `Company "${id}" not found`,
+    )
+
+    // No-op when the status is unchanged — avoids a spurious STATUS_CHANGED
+    // event with from === to (which the DB check constraint would anyway need).
+    if (company.status === dto.status) {
+      return company.fromModel()
+    }
+
+    const fromStatus = company.status
+
+    this.logger.info(
+      `Updating company ${id} status: ${fromStatus} → ${dto.status}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ status: dto.status })
+    await this.companyEventService.emitStatusChanged(
+      id,
+      fromStatus,
+      dto.status,
+      actorUserId,
+      dto.reason ?? null,
+    )
+
+    return company.fromModel()
+  }
+
+  async getTimeline(id: string): Promise<CompanyTimelineItemDto[]> {
+    await this.companyModel.findOneOrThrow(
+      { where: { id } },
+      `Company "${id}" not found`,
+    )
+
+    const [events, comments] = await Promise.all([
+      this.companyEventService.getByCompanyId(id),
+      this.companyCommentService.getByCompanyId(id),
+    ])
+
+    const eventItems: CompanyTimelineItemDto[] = events.map((event) => ({
+      kind: CompanyTimelineItemKindEnum.EVENT,
+      createdAt: event.createdAt,
+      event,
+      comment: null,
+    }))
+
+    const commentItems: CompanyTimelineItemDto[] = comments.map((comment) => ({
+      kind: CompanyTimelineItemKindEnum.COMMENT,
+      createdAt: comment.createdAt,
+      event: null,
+      comment,
+    }))
+
+    return [...eventItems, ...commentItems].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    )
   }
 }

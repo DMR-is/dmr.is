@@ -1,3 +1,6 @@
+import { notFound } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+
 import { Suspense } from 'react'
 
 import { Hero } from '@dmr.is/ui/components/Hero/Hero'
@@ -5,16 +8,26 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SearchDashboardLoading } from '@dmr.is/ui/components/SearchDashboard/SearchDashboardLoading'
 
 import { UsersContainer } from '../../../containers/users/UsersContainer'
+import { authOptions } from '../../../lib/auth/authOptions'
 import { NAV_PATHS } from '../../../lib/constants'
 import { headerText, sharedText, usersText } from '../../../lib/text'
 
-export default function RitstjorarPage() {
+export default async function RitstjorarPage() {
+  const session = await getServerSession(authOptions)
+
+  if (session?.user?.role !== 'ADMIN') {
+    notFound()
+  }
+
   return (
     <Box height="full">
       <Hero
         title={usersText.heroTitle}
         description={usersText.heroDescription}
-        image={{ src: '/assets/banner-image.svg', alt: usersText.heroTitle }}
+        image={{
+          src: '/assets/image-with-text-1.svg',
+          alt: usersText.heroTitle,
+        }}
         breadcrumbs={{
           items: [
             {

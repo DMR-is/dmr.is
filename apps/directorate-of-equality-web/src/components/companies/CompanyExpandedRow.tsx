@@ -29,10 +29,9 @@ type FieldRow = { label: string; value: React.ReactNode }
 
 const FieldGrid = ({ fields }: { fields: FieldRow[] }) => (
   <div className={styles.grid}>
-    {fields.map(({ label, value }, index) => (
+    {fields.map(({ label, value }) => (
       <Box
         key={label}
-        background={Math.floor(index / 2) % 2 === 0 ? 'white' : 'blue100'}
         padding={1}
         className={styles.item}
       >

@@ -386,6 +386,60 @@ export class ApplicationService implements IApplicationService {
   }
 
   /**
+   * Withdraws the report tied to an island.is application that the applicant
+   * has deleted upstream. Applicants may only delete an application before it
+   * is approved, so withdrawal is rejected once the report has reached a
+   * terminal state (APPROVED / DENIED / SUPERSEDED).
+   *
+   * Idempotent: the upstream delete callback may be retried, so an
+   * already-WITHDRAWN report is a no-op rather than an error.
+   *
+   * Emits `STATUS_CHANGED` (no actor — the applicant, not a reviewer, drives
+   * this) and no related report (cf. `emitWithdrawn`, which is for the
+   * superseded-by-sibling case).
+   */
+  async withdraw(providerId: string, company: CompanyDto): Promise<void> {
+    this.logger.info('Withdrawing report from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      providerId,
+    })
+
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+    )
+
+    if (report.status === ReportStatusEnum.WITHDRAWN) {
+      return
+    }
+
+    const WITHDRAWABLE_STATUSES = [
+      ReportStatusEnum.DRAFT,
+      ReportStatusEnum.SUBMITTED,
+      ReportStatusEnum.POSTPONED,
+      ReportStatusEnum.IN_REVIEW,
+    ]
+
+    if (!WITHDRAWABLE_STATUSES.includes(report.status)) {
+      throw new BadRequestException(
+        `Cannot withdraw a report in status ${report.status}`,
+      )
+    }
+
+    await this.reportModel.update(
+      { status: ReportStatusEnum.WITHDRAWN },
+      { where: { id: report.id } },
+    )
+
+    await this.reportEventService.emitStatusChanged(
+      report.id,
+      report.status,
+      ReportStatusEnum.WITHDRAWN,
+    )
+  }
+
+  /**
    * In-place edit of a SALARY report's outlier explanations.
    *
    * Allowed in two statuses:
