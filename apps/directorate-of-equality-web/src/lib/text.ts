@@ -136,6 +136,8 @@ export const reportText = {
     employeeCount: 'Fjöldi starfsmanna',
     address: 'Heimilisfang',
     city: 'Sveitarfélag',
+    province: 'Landshluti',
+    fines: 'Dagsektir',
   },
   companyTab: {
     companyInfoHeading: 'Upplýsingar fyrirtækis',
@@ -237,6 +239,7 @@ export const companiesText = {
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
     salaryRequired: 'Skýrslugjöf skylda',
+    equalityRequired: 'Jafnréttisáætlun skylda',
     validUntilPrefix: 'Gildir til:',
     avgEmployees: 'Meðalfjöldi starfsmanna',
     contactPerson: 'Tengiliður',
@@ -259,13 +262,23 @@ export const companiesText = {
     heading: 'Upplýsingar um fyrirtæki',
     tabInfo: 'Upplýsingar',
     tabReports: 'Skýrslur',
-    tabsLabel: 'Fyrirtækjaflippar',
-    timelineHeading: 'Breytingaferill',
+    tabsLabel: 'Fyrirtækjaflipar',
+    timelineHeading: 'Saga fyrirtækis',
     sidebarTitle: 'Staða fyrirtækis',
     statusLabel: 'Staða',
+
     finesButton: 'Hefja dagsektir',
+    finesStartedToast: 'Dagsektarferli hafið',
+    finesErrorToast: 'Villa við að hefja dagsektir',
     noReports: 'Engar skýrslur skráðar',
     reportsLoadError: 'Villa við að hlaða skýrslur',
+    noCompany: 'Fyrirtæki fannst ekki',
+    comments: {
+      heading: 'Athugasemdir',
+      label: 'Athugasemd',
+      placeholder: 'Skrifaðu athugasemd...',
+      submit: 'Senda',
+    },
   },
 }
 

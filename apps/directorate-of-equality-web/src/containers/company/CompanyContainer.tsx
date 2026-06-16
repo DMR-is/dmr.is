@@ -3,25 +3,24 @@
 import { useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
-
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
-import { CompanyDto } from '../../gen/fetch'
+import { CompanyDto, ReportListItemDto } from '../../gen/fetch'
 import { companiesText } from '../../lib/text'
 import { CompanyFormContainer } from './CompanyFormContainer'
-import { CompanySidebarContainer } from './CompanySidebarContainer'
 
 type CompanyContainerProps = {
   company: CompanyDto
+  approvedReports: ReportListItemDto[]
 }
 
-export function CompanyContainer({ company }: CompanyContainerProps) {
-  // Mocked status — replace with API call when endpoint is available
-  const [status, setStatus] = useState('missing-equality')
-
+export function CompanyContainer({
+  company,
+  approvedReports,
+}: CompanyContainerProps) {
   return (
     <Box paddingY={[2, 2, 6]} background="purple100">
       <GridContainer className="print-hidden">
@@ -33,19 +32,23 @@ export function CompanyContainer({ company }: CompanyContainerProps) {
             <ErrorBoundary
               fallback={<div>{companiesText.detailView.reportsLoadError}</div>}
             >
-              <CompanyFormContainer company={company} />
+              <CompanyFormContainer
+                company={company}
+                approvedReports={approvedReports}
+              />
             </ErrorBoundary>
           </GridColumn>
-          <GridColumn
+          {/* Hidden for now - decide later what should be in the sidebar */}
+          {/* <GridColumn
             span={['12/12', '12/12', '12/12', '3/12', '3/12']}
             order={[1, 1, 2]}
             className="report-sidebar-column"
           >
             <CompanySidebarContainer
               status={status}
-              onStatusChange={setStatus}
+              onStatusChange={(s) => setStatus(s as typeof derivedStatus)}
             />
-          </GridColumn>
+          </GridColumn> */}
         </GridRow>
       </GridContainer>
     </Box>

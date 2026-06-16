@@ -13,13 +13,6 @@ type ReportFormContainerProps = {
 }
 
 export function ReportFormContainer({ report }: ReportFormContainerProps) {
-  const title = (
-    <>
-      <Text variant="h2">{reportText.heroTitle}</Text>
-      <Text marginBottom={4}>{reportText.heroDescription}</Text>
-    </>
-  )
-
   return (
     <Box
       background="white"
@@ -41,7 +34,6 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
             { title: reportText.heroTitle },
           ]}
         />
-        {title}
         <Stack space={1}>
           <Text variant="eyebrow" color="purple400">
             {formatDateIS(report.createdAt)}

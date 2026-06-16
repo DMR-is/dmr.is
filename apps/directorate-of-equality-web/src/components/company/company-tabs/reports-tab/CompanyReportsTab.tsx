@@ -11,8 +11,15 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { ReportTypeEnum } from '../../../../gen/fetch'
-import { ReportStatusTranslatedEnum } from '../../../../lib/constants'
-import { companiesText, serverErrorText } from '../../../../lib/text'
+import {
+  NAV_PATHS,
+  ReportStatusTranslatedEnum,
+} from '../../../../lib/constants'
+import {
+  companiesText,
+  serverErrorText,
+  sharedText,
+} from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
 
 const t = companiesText.detailView
@@ -69,12 +76,19 @@ export const CompanyReportsTab = ({ nationalId }: Props) => {
         {reports.map((report) => (
           <ActionCard
             key={report.id}
+            headingVariant="h4"
             heading={
               report.type === ReportTypeEnum.SALARY
-                ? 'Launagreining'
-                : 'Jafnréttisáætlun'
+                ? report.includesImprovementPlan
+                  ? sharedText.typeLabels.IMPROVEMENT_PLAN
+                  : sharedText.typeLabels.SALARY
+                : sharedText.typeLabels.EQUALITY
             }
-            text={report.companyName ?? report.identifier ?? report.id}
+            text={
+              report.createdAt
+                ? new Date(report.createdAt).toLocaleDateString()
+                : ''
+            }
             tag={{
               label: ReportStatusTranslatedEnum[report.status],
               variant: 'blue',
@@ -82,7 +96,8 @@ export const CompanyReportsTab = ({ nationalId }: Props) => {
             cta={{
               label: companiesText.expandedRow.viewReport,
               buttonType: { variant: 'text' },
-              onClick: () => router.push(`/yfirlit/${report.id}`),
+              onClick: () =>
+                router.push(`${NAV_PATHS.heildarlisti.href}/${report.id}`),
             }}
           />
         ))}
