@@ -1,6 +1,7 @@
 'use client'
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
+import { useMemo } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -198,6 +199,15 @@ export const ReportsContainer = () => {
     (o) => !excluded.includes(o.value),
   )
 
+  const dateFrom = useMemo(
+    () => (filter.createdFrom ? new Date(filter.createdFrom) : undefined),
+    [filter.createdFrom],
+  )
+  const dateTo = useMemo(
+    () => (filter.createdTo ? new Date(filter.createdTo) : undefined),
+    [filter.createdTo],
+  )
+
   const handleTabChange = (tab: string) => {
     resetFilter()
     setActiveTab(tab as TabId)
@@ -219,7 +229,7 @@ export const ReportsContainer = () => {
   const filterAndTable = (expandable?: boolean) => (
     <Box paddingTop={[0, 0, 4]}>
       <GridRow>
-        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '4/12', '3/12']}>
           <Stack space={3}>
             <ReportFilter
               q={filter.q}
@@ -229,10 +239,8 @@ export const ReportsContainer = () => {
               reviewerUserId={filter.reviewerUserId as string[] | null}
               reviewers={needsUsers ? reviewerOptions : undefined}
               hasImprovementPlan={filter.hasImprovementPlan ?? null}
-              dateFrom={
-                filter.createdFrom ? new Date(filter.createdFrom) : undefined
-              }
-              dateTo={filter.createdTo ? new Date(filter.createdTo) : undefined}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
               onQChange={(q) => setFilter({ q })}
               onTypeChange={(type) =>
                 setFilter({ type: type as typeof filter.type })
@@ -271,7 +279,7 @@ export const ReportsContainer = () => {
             )}
           </Stack>
         </GridColumn>
-        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '8/12', '9/12']}>
           <Box marginLeft={[0, 0, 0, 2]}>
             <Stack space={[1, 2]}>
               <Inline space={1} alignY="center">

@@ -197,6 +197,8 @@ export const ReportFilter = ({
                     selected={dateTo}
                     minDate={dateFrom}
                     handleChange={(date) => onDateToChange(date ?? undefined)}
+                    locale="is"
+                    appearInline
                   />
                   {(dateFrom || dateTo) && (
                     <Box textAlign="right">
