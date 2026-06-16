@@ -24,7 +24,10 @@ export default async function RitstjorarPage() {
       <Hero
         title={usersText.heroTitle}
         description={usersText.heroDescription}
-        image={{ src: '/assets/banner-image.svg', alt: usersText.heroTitle }}
+        image={{
+          src: '/assets/image-with-text-1.svg',
+          alt: usersText.heroTitle,
+        }}
         breadcrumbs={{
           items: [
             {

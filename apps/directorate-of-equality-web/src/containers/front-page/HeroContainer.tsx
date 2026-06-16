@@ -36,7 +36,7 @@ export const HeroContainer = ({ userName }: Props) => {
           : frontPageText.heroDescription
       }
       image={{
-        src: '/assets/banner-image.svg',
+        src: '/assets/two-persons-on-computer.svg',
         alt: frontPageText.heroImageAlt,
       }}
     >
@@ -47,7 +47,7 @@ export const HeroContainer = ({ userName }: Props) => {
             title={paths.innsendingar.title}
             description={frontPageText.heildarlisti.description}
             image={{
-              src: '/assets/ritstjorn-image.svg',
+              src: '/assets/new-report.svg',
             }}
           />
         </GridColumn>
@@ -57,7 +57,7 @@ export const HeroContainer = ({ userName }: Props) => {
             title={paths.jafnrettisaetlanir.title}
             description={frontPageText.jafnrettisaetlanir.description}
             image={{
-              src: '/assets/utgafa-image.svg',
+              src: '/assets/ritstjorn-image.svg',
             }}
           />
         </GridColumn>
@@ -67,7 +67,7 @@ export const HeroContainer = ({ userName }: Props) => {
             title={paths.urbotaaetlanir.title}
             description={frontPageText.urbotaaetlanir.description}
             image={{
-              src: '/assets/heildar-image.svg',
+              src: '/assets/shaking-hands.svg',
             }}
           />
         </GridColumn>

@@ -348,6 +348,7 @@ export const sharedText = {
   noLabel: 'Nei',
   statusLabel: 'Staða',
   delete: 'Eyða',
+  companies: 'Fyrirtæki',
   filter: {
     labelClearAll: 'Hreinsa allar síur',
     labelOpen: 'Opna síur',
