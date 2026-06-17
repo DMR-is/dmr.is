@@ -9,7 +9,6 @@ import {
   CommentVisibilityEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
-  UserDto,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
@@ -21,7 +20,6 @@ import {
 
 type Props = {
   item: ReportTimelineItemDto
-  usersById: Map<string, UserDto>
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void
@@ -29,13 +27,12 @@ type Props = {
 
 export function TimelineEntry({
   item,
-  usersById,
   companyName,
   currentUserId,
   onDelete,
 }: Props) {
   const kind = timelineEntryKind(item)
-  const text = timelineEntryText(item, usersById, companyName)
+  const text = timelineEntryText(item, companyName)
   const date = formatRelativeDate(
     item.comment?.createdAt ?? item.event?.createdAt ?? '',
   )

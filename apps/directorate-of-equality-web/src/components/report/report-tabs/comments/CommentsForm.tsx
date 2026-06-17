@@ -3,14 +3,13 @@
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import { ReportTimelineItemDto, UserDto } from '../../../../gen/fetch'
+import { ReportTimelineItemDto } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
 import { TimelineFeed } from './timeline/TimelineFeed'
 import { CommentInputForm } from './CommentInputForm'
 
 type Props = {
   timeline: ReportTimelineItemDto[]
-  usersById: Map<string, UserDto>
   companyName?: string | null
   currentUserId?: string | null
   readonly?: boolean
@@ -25,7 +24,6 @@ type Props = {
 
 export const CommentsForm = ({
   timeline,
-  usersById,
   companyName,
   currentUserId,
   readonly = false,
@@ -51,7 +49,6 @@ export const CommentsForm = ({
       >
         <TimelineFeed
           timeline={timeline}
-          usersById={usersById}
           companyName={companyName}
           currentUserId={currentUserId}
           onDelete={onDelete}

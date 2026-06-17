@@ -9,6 +9,7 @@ import {
   CompanyEventModel,
   CompanyEventTypeEnum,
 } from '../company/models/company-event.model'
+import { UserModel } from '../user/models/user.model'
 import { ICompanyEventService } from './company-event.service.interface'
 
 const LOGGING_CONTEXT = 'CompanyEventService'
@@ -65,6 +66,7 @@ export class CompanyEventService implements ICompanyEventService {
   async getByCompanyId(companyId: string): Promise<CompanyEventDto[]> {
     const events = await this.companyEventModel.findAll({
       where: { companyId },
+      include: [{ model: UserModel, as: 'actor', required: false }],
       order: [['createdAt', 'ASC']],
     })
 

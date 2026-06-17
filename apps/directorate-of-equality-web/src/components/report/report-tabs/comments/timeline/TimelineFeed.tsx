@@ -7,7 +7,7 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 import { Divider } from '@island.is/island-ui/core'
 
-import { ReportTimelineItemDto, UserDto } from '../../../../../gen/fetch'
+import { ReportTimelineItemDto } from '../../../../../gen/fetch'
 import { reportText } from '../../../../../lib/text'
 import { TimelineEntry } from './TimelineEntry'
 
@@ -17,7 +17,6 @@ const COLLAPSE_THRESHOLD = HEAD_COUNT + TAIL_COUNT
 
 type Props = {
   timeline: ReportTimelineItemDto[]
-  usersById: Map<string, UserDto>
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void
@@ -29,7 +28,6 @@ function entryKey(item: ReportTimelineItemDto, i: number) {
 
 export function TimelineFeed({
   timeline,
-  usersById,
   companyName,
   currentUserId,
   onDelete,
@@ -49,7 +47,6 @@ export function TimelineFeed({
     <TimelineEntry
       key={entryKey(item, i)}
       item={item}
-      usersById={usersById}
       companyName={companyName}
       currentUserId={currentUserId}
       onDelete={onDelete}

@@ -12,6 +12,7 @@ import {
   STATUS_LABEL,
   STATUS_TAG_VARIANT,
 } from '../../components/companies/companyStatus'
+import { CompanyTimeline } from '../../components/company/company-timeline/CompanyTimeline'
 import { CompanyDto, ReportListItemDto } from '../../gen/fetch'
 import { useStartFines } from '../../hooks/useStartFines'
 import { NAV_PATHS } from '../../lib/constants'
@@ -78,6 +79,9 @@ export function CompanyFormContainer({
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />
+      <Box marginTop={6}>
+        <CompanyTimeline companyId={company.id} />
+      </Box>
     </Box>
   )
 }

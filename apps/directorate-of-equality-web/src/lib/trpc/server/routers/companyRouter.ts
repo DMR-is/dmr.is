@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 import {
   zCreateCompanyBody,
+  zCreateCompanyCommentBody,
+  zCreateCompanyCommentPath,
+  zDeleteCompanyCommentPath,
+  zGetCompanyCommentsPath,
+  zGetCompanyTimelinePath,
   zRskLookupCompanyPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
@@ -35,4 +40,35 @@ export const companyRouter = router({
   create: protectedProcedure
     .input(zCreateCompanyBody)
     .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
+
+  getTimeline: protectedProcedure
+    .input(zGetCompanyTimelinePath)
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyTimeline({ path: { id: input.id } }),
+    ),
+
+  comments: router({
+    list: protectedProcedure
+      .input(zGetCompanyCommentsPath)
+      .query(({ ctx, input }) =>
+        ctx.api.getCompanyComments({ path: { id: input.id } }),
+      ),
+
+    create: protectedProcedure
+      .input(zCreateCompanyCommentPath.extend(zCreateCompanyCommentBody.shape))
+      .mutation(({ ctx, input }) =>
+        ctx.api.createCompanyComment({
+          path: { id: input.id },
+          body: { body: input.body },
+        }),
+      ),
+
+    delete: protectedProcedure
+      .input(zDeleteCompanyCommentPath)
+      .mutation(async ({ ctx, input }) => {
+        await ctx.api.deleteCompanyComment({
+          path: { id: input.id, commentId: input.commentId },
+        })
+      }),
+  }),
 })

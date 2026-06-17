@@ -28,10 +28,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     trpc.reports.getById.queryOptions({ id: reportId }),
   )
 
-  const { data: users = [] } = useQuery(trpc.user.list.queryOptions())
   const { data: me } = useQuery(trpc.user.getMyUser.queryOptions())
-
-  const usersById = new Map(users.map((u) => [u.id, u]))
 
   const { mutate: createComment, isPending } = useMutation({
     ...trpc.reportComments.create.mutationOptions(),
@@ -74,7 +71,6 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   return (
     <CommentsForm
       timeline={report?.timeline ?? []}
-      usersById={usersById}
       companyName={report?.company?.name}
       currentUserId={me?.id}
       readonly={

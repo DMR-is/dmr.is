@@ -2,15 +2,14 @@
 
 import { useState } from 'react'
 
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
-  ReportCommentDto,
-  ReportEventTypeEnum,
+  CommentVisibilityEnum,
+  CompanyTimelineItemDto,
   ReportRoleEnum,
   ReportStatusEnum,
   ReportTimelineItemDto,
@@ -20,93 +19,86 @@ import { companiesText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { TimelineFeed } from '../../report/report-tabs/comments/timeline/TimelineFeed'
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 const t = companiesText.detailView
 
-// Mocked until company timeline API endpoint is available
-const MOCKED_EVENTS: ReportTimelineItemDto[] = [
-  {
-    kind: ReportTimelineItemKindEnum.EVENT,
-    createdAt: '2026-01-10T09:00:00Z',
-    event: {
-      id: 'mock-event-1',
-      reportId: '',
-      eventType: ReportEventTypeEnum.SUBMITTED,
-      reportStatus: ReportStatusEnum.SUBMITTED,
-      fromStatus: null,
-      toStatus: ReportStatusEnum.SUBMITTED,
-      createdAt: '2026-01-10T09:00:00Z',
-    },
-  },
-  {
-    kind: ReportTimelineItemKindEnum.EVENT,
-    createdAt: '2026-02-14T11:30:00Z',
-    event: {
-      id: 'mock-event-2',
-      reportId: '',
-      eventType: ReportEventTypeEnum.STATUS_CHANGED,
-      reportStatus: ReportStatusEnum.IN_REVIEW,
-      fromStatus: ReportStatusEnum.SUBMITTED,
-      toStatus: ReportStatusEnum.IN_REVIEW,
-      createdAt: '2026-02-14T11:30:00Z',
-    },
-  },
-  {
-    kind: ReportTimelineItemKindEnum.EVENT,
-    createdAt: '2026-04-03T14:00:00Z',
-    event: {
-      id: 'mock-event-3',
-      reportId: '',
-      eventType: ReportEventTypeEnum.STATUS_CHANGED,
-      reportStatus: ReportStatusEnum.APPROVED,
-      fromStatus: ReportStatusEnum.IN_REVIEW,
-      toStatus: ReportStatusEnum.APPROVED,
-      createdAt: '2026-04-03T14:00:00Z',
-    },
-  },
-]
+type Props = {
+  companyId: string
+}
 
-export const CompanyTimeline = () => {
+function adaptTimeline(
+  items: CompanyTimelineItemDto[],
+): ReportTimelineItemDto[] {
+  return items.map((item) => ({
+    kind: item.kind as unknown as ReportTimelineItemKindEnum,
+    createdAt: item.createdAt,
+    event: item.event
+      ? {
+          id: item.event.id,
+          reportId: item.event.companyId,
+          eventType: item.event.eventType as unknown as never,
+          reportStatus: item.event.status as unknown as ReportStatusEnum,
+          fromStatus:
+            (item.event.fromStatus as unknown as ReportStatusEnum) ?? null,
+          toStatus:
+            (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
+          reason: item.event.reason ?? null,
+          createdAt: item.event.createdAt,
+        }
+      : null,
+    comment: item.comment
+      ? {
+          id: item.comment.id,
+          reportId: item.comment.companyId,
+          authorKind: ReportRoleEnum.REVIEWER,
+          authorUserId: item.comment.authorUserId ?? null,
+          authorName: item.comment.authorName ?? null,
+          visibility: CommentVisibilityEnum.INTERNAL,
+          body: item.comment.body,
+          reportStatus: ReportStatusEnum.SUBMITTED,
+          createdAt: item.comment.createdAt,
+        }
+      : null,
+  }))
+}
+
+export const CompanyTimeline = ({ companyId }: Props) => {
   const trpc = useTRPC()
+  const queryClient = useQueryClient()
   const [body, setBody] = useState('')
-  const [comments, setComments] = useState<ReportTimelineItemDto[]>([])
 
-  const { data: users = [] } = useQuery(trpc.user.list.queryOptions())
+  const timelineQuery = trpc.company.getTimeline.queryOptions({ id: companyId })
+  const { data: timelineItems = [] } = useQuery(timelineQuery)
+
   const { data: me } = useQuery(trpc.user.getMyUser.queryOptions())
 
-  const usersById = new Map(users.map((u) => [u.id, u]))
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: timelineQuery.queryKey })
 
-  const timeline = [...MOCKED_EVENTS, ...comments].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  const createComment = useMutation(
+    trpc.company.comments.create.mutationOptions({
+      onSuccess: invalidate,
+    }),
+  )
+
+  const deleteComment = useMutation(
+    trpc.company.comments.delete.mutationOptions({
+      onSuccess: invalidate,
+    }),
   )
 
   const handleSubmit = () => {
     if (!body.trim()) return
-
-    const newComment: ReportCommentDto = {
-      id: `local-${Date.now()}`,
-      reportId: '',
-      authorKind: ReportRoleEnum.REVIEWER,
-      authorUserId: me?.id ?? null,
-      visibility: 'INTERNAL' as const,
-      body: body.trim(),
-      reportStatus: ReportStatusEnum.SUBMITTED,
-      createdAt: new Date().toISOString(),
-    }
-
-    setComments((prev) => [
-      ...prev,
-      {
-        kind: ReportTimelineItemKindEnum.COMMENT,
-        createdAt: newComment.createdAt,
-        comment: newComment,
-      },
-    ])
+    createComment.mutate({ id: companyId, body: body.trim() })
     setBody('')
   }
 
   const handleDelete = (commentId: string) => {
-    setComments((prev) => prev.filter((item) => item.comment?.id !== commentId))
+    deleteComment.mutate({ id: companyId, commentId })
   }
+
+  const timeline = adaptTimeline(timelineItems)
 
   return (
     <>
@@ -122,7 +114,6 @@ export const CompanyTimeline = () => {
       >
         <TimelineFeed
           timeline={timeline}
-          usersById={usersById}
           currentUserId={me?.id}
           onDelete={handleDelete}
         />
@@ -137,7 +128,10 @@ export const CompanyTimeline = () => {
             onChange={(e) => setBody(e.target.value)}
           />
           <Box alignSelf="flexEnd">
-            <Button onClick={handleSubmit} disabled={!body.trim()}>
+            <Button
+              onClick={handleSubmit}
+              disabled={!body.trim() || createComment.isPending}
+            >
               {t.comments.submit}
             </Button>
           </Box>

@@ -23,6 +23,9 @@ export class ReportEventDto {
   @ApiOptionalUuid({ nullable: true })
   actorUserId!: string | null
 
+  @ApiOptionalString({ nullable: true })
+  actorName!: string | null
+
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   reportStatus!: ReportStatusEnum
 
@@ -40,6 +43,9 @@ export class ReportEventDto {
 
   @ApiOptionalUuid({ nullable: true })
   assignedUserId!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  assignedUserName!: string | null
 
   @ApiOptionalString({ nullable: true })
   reason!: string | null

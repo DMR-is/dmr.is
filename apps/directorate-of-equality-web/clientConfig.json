@@ -452,6 +452,361 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/status": {
+      "patch": {
+        "operationId": "updateCompanyStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/timeline": {
+      "get": {
+        "operationId": "getCompanyTimeline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyTimelineItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/comments": {
+      "get": {
+        "operationId": "getCompanyComments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CompanyCommentDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      },
+      "post": {
+        "operationId": "createCompanyComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyCommentDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/comments/{commentId}": {
+      "delete": {
+        "operationId": "deleteCompanyComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "getMyUser",
@@ -2360,6 +2715,72 @@
         "summary": "",
         "tags": ["Report Statistics"]
       }
+    },
+    "/api/v1/reports/{reportId}/pdf": {
+      "get": {
+        "operationId": "getReportPdf",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generates and returns the report as a PDF. The layout (\"Jafnlaunaúttekt\" or \"Jafnréttisáætlun\") is chosen from the report type.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report PDF"]
+      }
     }
   },
   "info": {
@@ -2684,6 +3105,7 @@
         "enum": ["name", "employeeCount"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
       "CompanyDto": {
         "type": "object",
         "properties": {
@@ -2693,6 +3115,15 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "nationalId": { "type": "string" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "address": { "type": "string", "nullable": true },
+          "postcodeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "salaryReportRequired": { "type": "boolean" },
           "salaryReportRequiredOverride": { "type": "boolean" }
         },
@@ -2701,6 +3132,7 @@
           "name",
           "employeeCountCategory",
           "nationalId",
+          "status",
           "salaryReportRequired",
           "salaryReportRequiredOverride"
         ]
@@ -2762,6 +3194,120 @@
           }
         },
         "required": ["nationalId", "name", "employeeCountCategory"]
+      },
+      "UpdateCompanyStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for the change, e.g. bankruptcy or merger."
+          }
+        },
+        "required": ["status"]
+      },
+      "CompanyTimelineItemKindEnum": {
+        "type": "string",
+        "enum": ["EVENT", "COMMENT"]
+      },
+      "CompanyEventTypeEnum": {
+        "type": "string",
+        "enum": ["CREATED", "STATUS_CHANGED"]
+      },
+      "CompanyEventDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "eventType": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEventTypeEnum" }]
+          },
+          "actorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "actorName": { "type": "string", "nullable": true },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "fromStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "toStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "reason": { "type": "string", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "companyId", "eventType", "status", "createdAt"]
+      },
+      "CompanyCommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full name of the admin who authored the comment."
+          },
+          "body": {
+            "type": "string",
+            "description": "Plain text comment body"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "companyId", "body", "createdAt"]
+      },
+      "CompanyTimelineItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyTimelineItemKindEnum" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "event": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEventDto" }]
+          },
+          "comment": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyCommentDto" }]
+          }
+        },
+        "required": ["kind", "createdAt"]
+      },
+      "CreateCompanyCommentDto": {
+        "type": "object",
+        "properties": {
+          "body": { "type": "string", "description": "Plain text comment body" }
+        },
+        "required": ["body"]
       },
       "UserDto": {
         "type": "object",
@@ -3130,6 +3676,7 @@
             "format": "uuid",
             "nullable": true
           },
+          "actorName": { "type": "string", "nullable": true },
           "reportStatus": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
@@ -3146,6 +3693,7 @@
             "format": "uuid",
             "nullable": true
           },
+          "assignedUserName": { "type": "string", "nullable": true },
           "reason": { "type": "string", "nullable": true },
           "relatedReportId": {
             "type": "string",
@@ -3178,6 +3726,11 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full name of the authoring reviewer. Null for company-authored comments (no individual person)."
           },
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]
