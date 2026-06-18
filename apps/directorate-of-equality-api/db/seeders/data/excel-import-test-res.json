@@ -807,8 +807,12 @@
       "startDate": "2021-04-27",
       "workRatio": 1,
       "baseSalary": 2258000,
-      "additionalSalary": 222000,
-      "bonusSalary": 42000,
+      "additionalFixedOvertime": 222000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 42000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -853,8 +857,12 @@
       "startDate": "2022-08-24",
       "workRatio": 1,
       "baseSalary": 1279000,
-      "additionalSalary": 207000,
-      "bonusSalary": 38000,
+      "additionalFixedOvertime": 207000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 38000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -899,8 +907,12 @@
       "startDate": "2015-12-03",
       "workRatio": 0.7,
       "baseSalary": 873000,
-      "additionalSalary": 98000,
-      "bonusSalary": 21000,
+      "additionalFixedOvertime": 98000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 21000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -945,8 +957,12 @@
       "startDate": "2019-09-26",
       "workRatio": 1,
       "baseSalary": 858000,
-      "additionalSalary": 86000,
-      "bonusSalary": 2000,
+      "additionalFixedOvertime": 86000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 2000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -991,8 +1007,12 @@
       "startDate": "2011-09-10",
       "workRatio": 1,
       "baseSalary": 743000,
-      "additionalSalary": 40000,
-      "bonusSalary": 6000,
+      "additionalFixedOvertime": 40000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 6000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1037,8 +1057,12 @@
       "startDate": "2024-12-20",
       "workRatio": 0.8,
       "baseSalary": 647000,
-      "additionalSalary": 17000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 17000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1083,8 +1107,12 @@
       "startDate": "2011-07-11",
       "workRatio": 1,
       "baseSalary": 534000,
-      "additionalSalary": 18000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1129,8 +1157,12 @@
       "startDate": "2017-04-08",
       "workRatio": 1,
       "baseSalary": 663000,
-      "additionalSalary": 17000,
-      "bonusSalary": 9000,
+      "additionalFixedOvertime": 17000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 9000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1175,8 +1207,12 @@
       "startDate": "2024-09-17",
       "workRatio": 1,
       "baseSalary": 701000,
-      "additionalSalary": 49000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 49000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1221,8 +1257,12 @@
       "startDate": "2020-10-10",
       "workRatio": 1,
       "baseSalary": 754000,
-      "additionalSalary": 109000,
-      "bonusSalary": 18000,
+      "additionalFixedOvertime": 109000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 18000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1267,8 +1307,12 @@
       "startDate": "2017-03-12",
       "workRatio": 1,
       "baseSalary": 808000,
-      "additionalSalary": 92000,
-      "bonusSalary": 1000,
+      "additionalFixedOvertime": 92000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 1000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1313,8 +1357,12 @@
       "startDate": "2016-04-14",
       "workRatio": 1,
       "baseSalary": 515000,
-      "additionalSalary": 13000,
-      "bonusSalary": 7000,
+      "additionalFixedOvertime": 13000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 7000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1359,8 +1407,12 @@
       "startDate": "2017-02-09",
       "workRatio": 1,
       "baseSalary": 703000,
-      "additionalSalary": 51000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 51000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1405,8 +1457,12 @@
       "startDate": "2019-10-30",
       "workRatio": 1,
       "baseSalary": 747000,
-      "additionalSalary": 30000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 30000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1451,8 +1507,12 @@
       "startDate": "2024-12-10",
       "workRatio": 0.8,
       "baseSalary": 555000,
-      "additionalSalary": 6000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 6000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1497,8 +1557,12 @@
       "startDate": "2020-12-13",
       "workRatio": 0.6,
       "baseSalary": 564000,
-      "additionalSalary": 32000,
-      "bonusSalary": 2000,
+      "additionalFixedOvertime": 32000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 2000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1543,8 +1607,12 @@
       "startDate": "2021-08-23",
       "workRatio": 1,
       "baseSalary": 570000,
-      "additionalSalary": 26000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 26000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1589,8 +1657,12 @@
       "startDate": "2015-12-12",
       "workRatio": 1,
       "baseSalary": 817000,
-      "additionalSalary": 80000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 80000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1635,8 +1707,12 @@
       "startDate": "2017-12-08",
       "workRatio": 1,
       "baseSalary": 617000,
-      "additionalSalary": 8000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1681,8 +1757,12 @@
       "startDate": "2023-11-26",
       "workRatio": 1,
       "baseSalary": 615000,
-      "additionalSalary": 0,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 0,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1727,8 +1807,12 @@
       "startDate": "2012-01-01",
       "workRatio": 1,
       "baseSalary": 619000,
-      "additionalSalary": 18000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1773,8 +1857,12 @@
       "startDate": "2018-09-29",
       "workRatio": 0.6,
       "baseSalary": 712000,
-      "additionalSalary": 27000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 27000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1819,8 +1907,12 @@
       "startDate": "2025-06-01",
       "workRatio": 0.8,
       "baseSalary": 629000,
-      "additionalSalary": 17000,
-      "bonusSalary": 1000,
+      "additionalFixedOvertime": 17000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 1000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1865,8 +1957,12 @@
       "startDate": "2013-09-01",
       "workRatio": 1,
       "baseSalary": 860000,
-      "additionalSalary": 95000,
-      "bonusSalary": 17000,
+      "additionalFixedOvertime": 95000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 17000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1911,8 +2007,12 @@
       "startDate": "2018-10-10",
       "workRatio": 1,
       "baseSalary": 521000,
-      "additionalSalary": 5000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 5000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -1957,8 +2057,12 @@
       "startDate": "2015-11-26",
       "workRatio": 1,
       "baseSalary": 1195000,
-      "additionalSalary": 109000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 109000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2003,8 +2107,12 @@
       "startDate": "2011-11-02",
       "workRatio": 1,
       "baseSalary": 784000,
-      "additionalSalary": 75000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 75000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2049,8 +2157,12 @@
       "startDate": "2012-11-04",
       "workRatio": 0.8,
       "baseSalary": 948000,
-      "additionalSalary": 73000,
-      "bonusSalary": 8000,
+      "additionalFixedOvertime": 73000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 8000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2095,8 +2207,12 @@
       "startDate": "2014-07-25",
       "workRatio": 1,
       "baseSalary": 798000,
-      "additionalSalary": 113000,
-      "bonusSalary": 1000,
+      "additionalFixedOvertime": 113000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 1000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2141,8 +2257,12 @@
       "startDate": "2014-11-07",
       "workRatio": 1,
       "baseSalary": 1169000,
-      "additionalSalary": 180000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 180000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2187,8 +2307,12 @@
       "startDate": "2013-06-17",
       "workRatio": 1,
       "baseSalary": 627000,
-      "additionalSalary": 21000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 21000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2233,8 +2357,12 @@
       "startDate": "2016-04-25",
       "workRatio": 1,
       "baseSalary": 810000,
-      "additionalSalary": 114000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 114000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2279,8 +2407,12 @@
       "startDate": "2024-02-17",
       "workRatio": 1,
       "baseSalary": 738000,
-      "additionalSalary": 10000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 10000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2325,8 +2457,12 @@
       "startDate": "2016-01-05",
       "workRatio": 0.8,
       "baseSalary": 711000,
-      "additionalSalary": 71000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 71000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2371,8 +2507,12 @@
       "startDate": "2021-04-26",
       "workRatio": 1,
       "baseSalary": 802000,
-      "additionalSalary": 71000,
-      "bonusSalary": 0,
+      "additionalFixedOvertime": 71000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 0,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2417,8 +2557,12 @@
       "startDate": "2013-09-09",
       "workRatio": 1,
       "baseSalary": 1062000,
-      "additionalSalary": 216000,
-      "bonusSalary": 34000,
+      "additionalFixedOvertime": 216000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 34000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2463,8 +2607,12 @@
       "startDate": "2020-05-30",
       "workRatio": 0.8,
       "baseSalary": 809000,
-      "additionalSalary": 110000,
-      "bonusSalary": 5000,
+      "additionalFixedOvertime": 110000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 5000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2509,8 +2657,12 @@
       "startDate": "2018-09-10",
       "workRatio": 0.8,
       "baseSalary": 581000,
-      "additionalSalary": 8000,
-      "bonusSalary": 4000,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 4000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2555,8 +2707,12 @@
       "startDate": "2017-01-30",
       "workRatio": 1,
       "baseSalary": 877000,
-      "additionalSalary": 59000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 59000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2601,8 +2757,12 @@
       "startDate": "2015-07-12",
       "workRatio": 1,
       "baseSalary": 1199000,
-      "additionalSalary": 249000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 249000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2647,8 +2807,12 @@
       "startDate": "2015-04-11",
       "workRatio": 1,
       "baseSalary": 944000,
-      "additionalSalary": 93000,
-      "bonusSalary": 17000,
+      "additionalFixedOvertime": 93000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 17000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2693,8 +2857,12 @@
       "startDate": "2012-04-08",
       "workRatio": 1,
       "baseSalary": 723000,
-      "additionalSalary": 25000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 25000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2739,8 +2907,12 @@
       "startDate": "2020-05-22",
       "workRatio": 1,
       "baseSalary": 814000,
-      "additionalSalary": 57000,
-      "bonusSalary": 14000,
+      "additionalFixedOvertime": 57000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 14000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2785,8 +2957,12 @@
       "startDate": "2024-05-22",
       "workRatio": 1,
       "baseSalary": 947000,
-      "additionalSalary": 85000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 85000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2831,8 +3007,12 @@
       "startDate": "2025-10-08",
       "workRatio": 0.5,
       "baseSalary": 497000,
-      "additionalSalary": 20000,
-      "bonusSalary": 0,
+      "additionalFixedOvertime": 20000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 0,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2877,8 +3057,12 @@
       "startDate": "2012-08-09",
       "workRatio": 1,
       "baseSalary": 819000,
-      "additionalSalary": 72000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 72000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2923,8 +3107,12 @@
       "startDate": "2021-10-11",
       "workRatio": 1,
       "baseSalary": 599000,
-      "additionalSalary": 18000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -2969,8 +3157,12 @@
       "startDate": "2014-04-11",
       "workRatio": 1,
       "baseSalary": 803000,
-      "additionalSalary": 37000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 37000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3015,8 +3207,12 @@
       "startDate": "2016-06-16",
       "workRatio": 1,
       "baseSalary": 657000,
-      "additionalSalary": 31000,
-      "bonusSalary": 5000,
+      "additionalFixedOvertime": 31000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 5000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3061,8 +3257,12 @@
       "startDate": "2020-09-19",
       "workRatio": 1,
       "baseSalary": 837000,
-      "additionalSalary": 101000,
-      "bonusSalary": 18000,
+      "additionalFixedOvertime": 101000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 18000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3107,8 +3307,12 @@
       "startDate": "2021-06-20",
       "workRatio": 0.8,
       "baseSalary": 577000,
-      "additionalSalary": 10000,
-      "bonusSalary": 5000,
+      "additionalFixedOvertime": 10000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 5000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3153,8 +3357,12 @@
       "startDate": "2017-02-09",
       "workRatio": 1,
       "baseSalary": 920000,
-      "additionalSalary": 121000,
-      "bonusSalary": 16000,
+      "additionalFixedOvertime": 121000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 16000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3199,8 +3407,12 @@
       "startDate": "2011-05-02",
       "workRatio": 1,
       "baseSalary": 704000,
-      "additionalSalary": 51000,
-      "bonusSalary": 12000,
+      "additionalFixedOvertime": 51000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 12000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3245,8 +3457,12 @@
       "startDate": "2020-08-02",
       "workRatio": 1,
       "baseSalary": 934000,
-      "additionalSalary": 95000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 95000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3291,8 +3507,12 @@
       "startDate": "2013-01-01",
       "workRatio": 1,
       "baseSalary": 1045000,
-      "additionalSalary": 138000,
-      "bonusSalary": 16000,
+      "additionalFixedOvertime": 138000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 16000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3337,8 +3557,12 @@
       "startDate": "2025-03-16",
       "workRatio": 0.8,
       "baseSalary": 792000,
-      "additionalSalary": 62000,
-      "bonusSalary": 17000,
+      "additionalFixedOvertime": 62000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 17000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3383,8 +3607,12 @@
       "startDate": "2022-02-02",
       "workRatio": 0.6,
       "baseSalary": 553000,
-      "additionalSalary": 36000,
-      "bonusSalary": 7000,
+      "additionalFixedOvertime": 36000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 7000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3429,8 +3657,12 @@
       "startDate": "2022-11-17",
       "workRatio": 0.8,
       "baseSalary": 568000,
-      "additionalSalary": 36000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 36000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3475,8 +3707,12 @@
       "startDate": "2016-08-10",
       "workRatio": 1,
       "baseSalary": 537000,
-      "additionalSalary": 16000,
-      "bonusSalary": 7000,
+      "additionalFixedOvertime": 16000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 7000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3521,8 +3757,12 @@
       "startDate": "2024-05-27",
       "workRatio": 1,
       "baseSalary": 942000,
-      "additionalSalary": 66000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 66000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3567,8 +3807,12 @@
       "startDate": "2019-10-06",
       "workRatio": 1,
       "baseSalary": 635000,
-      "additionalSalary": 22000,
-      "bonusSalary": 4000,
+      "additionalFixedOvertime": 22000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 4000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3613,8 +3857,12 @@
       "startDate": "2023-01-13",
       "workRatio": 0.8,
       "baseSalary": 530000,
-      "additionalSalary": 13000,
-      "bonusSalary": 3000,
+      "additionalFixedOvertime": 13000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 3000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3659,8 +3907,12 @@
       "startDate": "2019-05-28",
       "workRatio": 1,
       "baseSalary": 665000,
-      "additionalSalary": 29000,
-      "bonusSalary": 1000,
+      "additionalFixedOvertime": 29000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 1000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3705,8 +3957,12 @@
       "startDate": "2024-03-05",
       "workRatio": 1,
       "baseSalary": 490000,
-      "additionalSalary": 13000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 13000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3751,8 +4007,12 @@
       "startDate": "2011-08-12",
       "workRatio": 0.5,
       "baseSalary": 548000,
-      "additionalSalary": 18000,
-      "bonusSalary": 2000,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 2000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3797,8 +4057,12 @@
       "startDate": "2017-01-24",
       "workRatio": 0.7,
       "baseSalary": 908000,
-      "additionalSalary": 102000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 102000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3843,8 +4107,12 @@
       "startDate": "2016-01-10",
       "workRatio": 1,
       "baseSalary": 676000,
-      "additionalSalary": 18000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3889,8 +4157,12 @@
       "startDate": "2025-01-03",
       "workRatio": 1,
       "baseSalary": 681000,
-      "additionalSalary": 0,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 0,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3935,8 +4207,12 @@
       "startDate": "2015-05-10",
       "workRatio": 0.8,
       "baseSalary": 533000,
-      "additionalSalary": 6000,
-      "bonusSalary": 2000,
+      "additionalFixedOvertime": 6000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 2000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -3981,8 +4257,12 @@
       "startDate": "2015-11-16",
       "workRatio": 1,
       "baseSalary": 2264000,
-      "additionalSalary": 203000,
-      "bonusSalary": 45000,
+      "additionalFixedOvertime": 203000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 45000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4027,8 +4307,12 @@
       "startDate": "2015-12-25",
       "workRatio": 0.8,
       "baseSalary": 880000,
-      "additionalSalary": 74000,
-      "bonusSalary": 15000,
+      "additionalFixedOvertime": 74000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 15000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4073,8 +4357,12 @@
       "startDate": "2014-11-02",
       "workRatio": 0.8,
       "baseSalary": 497000,
-      "additionalSalary": 8000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4119,8 +4407,12 @@
       "startDate": "2018-06-26",
       "workRatio": 0.8,
       "baseSalary": 698000,
-      "additionalSalary": 31000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 31000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4165,8 +4457,12 @@
       "startDate": "2019-02-02",
       "workRatio": 1,
       "baseSalary": 748000,
-      "additionalSalary": 70000,
-      "bonusSalary": 7000,
+      "additionalFixedOvertime": 70000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 7000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4211,8 +4507,12 @@
       "startDate": "2023-12-22",
       "workRatio": 0.5,
       "baseSalary": 518000,
-      "additionalSalary": 15000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 15000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4257,8 +4557,12 @@
       "startDate": "2017-04-23",
       "workRatio": 1,
       "baseSalary": 922000,
-      "additionalSalary": 59000,
-      "bonusSalary": 8000,
+      "additionalFixedOvertime": 59000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 8000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4303,8 +4607,12 @@
       "startDate": "2020-12-16",
       "workRatio": 0.7,
       "baseSalary": 927000,
-      "additionalSalary": 102000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 102000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4349,8 +4657,12 @@
       "startDate": "2018-12-13",
       "workRatio": 1,
       "baseSalary": 505000,
-      "additionalSalary": 14000,
-      "bonusSalary": 4000,
+      "additionalFixedOvertime": 14000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 4000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4395,8 +4707,12 @@
       "startDate": "2020-10-28",
       "workRatio": 1,
       "baseSalary": 526000,
-      "additionalSalary": 5000,
-      "bonusSalary": 9000,
+      "additionalFixedOvertime": 5000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 9000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4441,8 +4757,12 @@
       "startDate": "2013-12-19",
       "workRatio": 1,
       "baseSalary": 1235000,
-      "additionalSalary": 165000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 165000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4487,8 +4807,12 @@
       "startDate": "2015-05-22",
       "workRatio": 0.5,
       "baseSalary": 588000,
-      "additionalSalary": 8000,
-      "bonusSalary": 4000,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 4000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4533,8 +4857,12 @@
       "startDate": "2013-07-13",
       "workRatio": 1,
       "baseSalary": 879000,
-      "additionalSalary": 77000,
-      "bonusSalary": 12000,
+      "additionalFixedOvertime": 77000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 12000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4579,8 +4907,12 @@
       "startDate": "2011-12-12",
       "workRatio": 0.8,
       "baseSalary": 623000,
-      "additionalSalary": 14000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 14000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4625,8 +4957,12 @@
       "startDate": "2016-05-03",
       "workRatio": 0.8,
       "baseSalary": 724000,
-      "additionalSalary": 8000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4671,8 +5007,12 @@
       "startDate": "2014-04-27",
       "workRatio": 1,
       "baseSalary": 733000,
-      "additionalSalary": 77000,
-      "bonusSalary": 6000,
+      "additionalFixedOvertime": 77000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 6000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4717,8 +5057,12 @@
       "startDate": "2015-09-21",
       "workRatio": 1,
       "baseSalary": 673000,
-      "additionalSalary": 18000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 18000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4763,8 +5107,12 @@
       "startDate": "2014-03-11",
       "workRatio": 1,
       "baseSalary": 951000,
-      "additionalSalary": 121000,
-      "bonusSalary": 22000,
+      "additionalFixedOvertime": 121000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 22000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4809,8 +5157,12 @@
       "startDate": "2015-08-26",
       "workRatio": 0.8,
       "baseSalary": 577000,
-      "additionalSalary": 20000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 20000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4855,8 +5207,12 @@
       "startDate": "2023-08-11",
       "workRatio": 0.6,
       "baseSalary": 566000,
-      "additionalSalary": 40000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 40000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4901,8 +5257,12 @@
       "startDate": "2014-02-09",
       "workRatio": 0.7,
       "baseSalary": 760000,
-      "additionalSalary": 108000,
-      "bonusSalary": 14000,
+      "additionalFixedOvertime": 108000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 14000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4947,8 +5307,12 @@
       "startDate": "2021-05-09",
       "workRatio": 1,
       "baseSalary": 605000,
-      "additionalSalary": 19000,
-      "bonusSalary": 4000,
+      "additionalFixedOvertime": 19000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 4000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -4993,8 +5357,12 @@
       "startDate": "2017-04-18",
       "workRatio": 1,
       "baseSalary": 794000,
-      "additionalSalary": 109000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 109000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5039,8 +5407,12 @@
       "startDate": "2018-09-29",
       "workRatio": 0.8,
       "baseSalary": 904000,
-      "additionalSalary": 132000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 132000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5085,8 +5457,12 @@
       "startDate": "2022-12-01",
       "workRatio": 1,
       "baseSalary": 1045000,
-      "additionalSalary": 120000,
-      "bonusSalary": 16000,
+      "additionalFixedOvertime": 120000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 16000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5131,8 +5507,12 @@
       "startDate": "2023-04-09",
       "workRatio": 0.7,
       "baseSalary": 988000,
-      "additionalSalary": 82000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 82000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5177,8 +5557,12 @@
       "startDate": "2015-07-18",
       "workRatio": 1,
       "baseSalary": 563000,
-      "additionalSalary": 8000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 8000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5223,8 +5607,12 @@
       "startDate": "2011-10-18",
       "workRatio": 1,
       "baseSalary": 606000,
-      "additionalSalary": 39000,
-      "bonusSalary": 10000,
+      "additionalFixedOvertime": 39000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 10000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5269,8 +5657,12 @@
       "startDate": "2022-11-24",
       "workRatio": 1,
       "baseSalary": 825000,
-      "additionalSalary": 96000,
-      "bonusSalary": 2000,
+      "additionalFixedOvertime": 96000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": 2000,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5315,8 +5707,12 @@
       "startDate": "2016-01-19",
       "workRatio": 1,
       "baseSalary": 783000,
-      "additionalSalary": 88000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 88000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",
@@ -5361,8 +5757,12 @@
       "startDate": "2016-02-05",
       "workRatio": 1,
       "baseSalary": 817000,
-      "additionalSalary": 71000,
-      "bonusSalary": null,
+      "additionalFixedOvertime": 71000,
+      "additionalFixedCarAllowance": null,
+      "bonusOccasionalCarAllowance": null,
+      "bonusOccasionalOvertime": null,
+      "bonusPayments": null,
+      "bonusOther": null,
       "personalStepAssignments": [
         {
           "criterionTitle": "Sérhæfing",

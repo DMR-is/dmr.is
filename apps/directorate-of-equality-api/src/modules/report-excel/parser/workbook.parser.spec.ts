@@ -31,10 +31,14 @@ const writeEmployeeRow = (
     workRatioPct: number
     education: string
     baseSalary: number
+    additionalFixedOvertime: number | null
+    additionalFixedCarAllowance: number | null
+    bonusOccasionalCarAllowance: number | null
+    bonusOccasionalOvertime: number | null
+    bonusPayments: number | null
+    bonusOther: number | null
     field: string
-    additionalSalary: number
     department: string
-    bonusSalary: number | null
     startDate: Date
   },
 ) => {
@@ -46,12 +50,16 @@ const writeEmployeeRow = (
   s.getCell(`D${r}`).value = values.gender
   s.getCell(`E${r}`).value = values.workRatioPct
   s.getCell(`F${r}`).value = values.education
-  s.getCell(`G${r}`).value = values.baseSalary
-  s.getCell(`H${r}`).value = values.field
-  s.getCell(`I${r}`).value = values.additionalSalary
-  s.getCell(`J${r}`).value = values.department
-  s.getCell(`K${r}`).value = values.bonusSalary
-  s.getCell(`L${r}`).value = values.startDate
+  s.getCell(`G${r}`).value = values.field
+  s.getCell(`H${r}`).value = values.department
+  s.getCell(`I${r}`).value = values.startDate
+  s.getCell(`J${r}`).value = values.baseSalary
+  s.getCell(`K${r}`).value = values.additionalFixedOvertime
+  s.getCell(`L${r}`).value = values.additionalFixedCarAllowance
+  s.getCell(`M${r}`).value = values.bonusOccasionalCarAllowance
+  s.getCell(`N${r}`).value = values.bonusOccasionalOvertime
+  s.getCell(`O${r}`).value = values.bonusPayments
+  s.getCell(`P${r}`).value = values.bonusOther
 }
 
 const fillRoleClassification = (
@@ -160,10 +168,14 @@ const buildValidFilled = async (): Promise<Buffer> => {
     workRatioPct: 100,
     education: 'Háskólapróf (BA/BS)',
     baseSalary: 900000,
+    additionalFixedOvertime: 100000,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: 50000,
+    bonusOther: null,
     field: 'Stjórnun',
-    additionalSalary: 100000,
     department: 'Framkvæmd',
-    bonusSalary: 50000,
     startDate: new Date('2023-01-01'),
   })
   writeEmployeeRow(wb, 2, {
@@ -173,10 +185,14 @@ const buildValidFilled = async (): Promise<Buffer> => {
     workRatioPct: 100,
     education: 'Meistarapróf (MA/MS)',
     baseSalary: 700000,
+    additionalFixedOvertime: 50000,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: null,
+    bonusOther: null,
     field: 'Tækni',
-    additionalSalary: 50000,
     department: 'Tækni',
-    bonusSalary: null,
     startDate: new Date('2023-06-01'),
   })
   writeEmployeeRow(wb, 3, {
@@ -186,10 +202,14 @@ const buildValidFilled = async (): Promise<Buffer> => {
     workRatioPct: 80,
     education: 'Iðn-/starfsmenntun',
     baseSalary: 600000,
+    additionalFixedOvertime: 40000,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: 10000,
+    bonusOther: null,
     field: 'Rekstur',
-    additionalSalary: 40000,
     department: 'Verkstæði',
-    bonusSalary: 10000,
     startDate: new Date('2022-03-15'),
   })
 
@@ -332,10 +352,14 @@ describe('parseWorkbook', () => {
         workRatioPct: 100,
         education: 'Háskólapróf (BA/BS)',
         baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
         field: 'X',
-        additionalSalary: 0,
         department: 'X',
-        bonusSalary: null,
         startDate: new Date('2024-01-01'),
       })
       fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
@@ -358,10 +382,14 @@ describe('parseWorkbook', () => {
         workRatioPct: 100,
         education: 'Made-up degree',
         baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
         field: 'X',
-        additionalSalary: 0,
         department: 'X',
-        bonusSalary: null,
         startDate: new Date('2024-01-01'),
       })
       fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
@@ -386,10 +414,14 @@ describe('parseWorkbook', () => {
         workRatioPct: 150,
         education: 'Háskólapróf (BA/BS)',
         baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
         field: 'X',
-        additionalSalary: 0,
         department: 'X',
-        bonusSalary: null,
         startDate: new Date('2024-01-01'),
       })
       fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
@@ -415,10 +447,14 @@ describe('parseWorkbook', () => {
         workRatioPct: 100,
         education: '',
         baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
         field: 'X',
-        additionalSalary: 0,
         department: 'X',
-        bonusSalary: null,
         startDate: new Date('2024-01-01'),
       })
       fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
@@ -445,10 +481,14 @@ describe('parseWorkbook', () => {
         workRatioPct: 100,
         education: 'Háskólapróf (BA/BS)',
         baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
         field: 'X',
-        additionalSalary: 0,
         department: 'X',
-        bonusSalary: null,
         startDate: new Date('2024-01-01'),
       })
       fillRoleClassification(wb, [[99, 1, 1, 1, 1, 1, 1]])

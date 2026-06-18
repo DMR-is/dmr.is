@@ -53,8 +53,12 @@ const employee = (
   startDate: '2024-01-01',
   workRatio: 1,
   baseSalary: 1000,
-  additionalSalary: 0,
-  bonusSalary: null,
+  additionalFixedOvertime: 0,
+  additionalFixedCarAllowance: null,
+  bonusOccasionalCarAllowance: null,
+  bonusOccasionalOvertime: null,
+  bonusPayments: null,
+  bonusOther: null,
   personalStepAssignments,
 })
 

@@ -42,6 +42,16 @@ import {
 } from './cell'
 import { ErrorBag } from './errors'
 
+/**
+ * Column letters in the Starfsmenn sheet. These MUST match the hand-authored
+ * `template.xlsx` layout — the parser reads cells positionally, not by header.
+ *
+ * The salary breakdown lives in K–P (6 sub-components). The template also has
+ * two trailing computed columns — Q "Viðbótarlaun" (`=SUM(K:L)`) and R
+ * "Hlunnindi" (`=SUM(M:P)`) — which the parser deliberately does NOT read: the
+ * parents are derived server-side from the children, so the spreadsheet
+ * formulas are display-only.
+ */
 const COLS = {
   ordinal: 'A',
   name: 'B',
@@ -49,12 +59,18 @@ const COLS = {
   gender: 'D',
   workRatio: 'E',
   education: 'F',
-  baseSalary: 'G',
-  field: 'H',
-  additionalSalary: 'I',
-  department: 'J',
-  bonusSalary: 'K',
-  startDate: 'L',
+  field: 'G',
+  department: 'H',
+  startDate: 'I',
+  baseSalary: 'J',
+  // Viðbótarlaun (additional salary) sub-components
+  additionalFixedOvertime: 'K',
+  additionalFixedCarAllowance: 'L',
+  // Hlunnindi / aukagreiðslur (bonus salary) sub-components
+  bonusOccasionalCarAllowance: 'M',
+  bonusOccasionalOvertime: 'N',
+  bonusPayments: 'O',
+  bonusOther: 'P',
 } as const
 
 /**
@@ -103,10 +119,14 @@ type RawRow = {
   workRatioPct: number | null
   educationDisplay: string | null
   baseSalary: number | null
+  additionalFixedOvertime: number | null
+  additionalFixedCarAllowance: number | null
+  bonusOccasionalCarAllowance: number | null
+  bonusOccasionalOvertime: number | null
+  bonusPayments: number | null
+  bonusOther: number | null
   field: string | null
-  additionalSalary: number | null
   department: string | null
-  bonusSalary: number | null
   startDate: Date | null
 }
 
@@ -117,10 +137,22 @@ const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
   workRatioPct: readNumber(sheet.getCell(`${COLS.workRatio}${r}`)),
   educationDisplay: readString(sheet.getCell(`${COLS.education}${r}`)),
   baseSalary: readNumber(sheet.getCell(`${COLS.baseSalary}${r}`)),
+  additionalFixedOvertime: readNumber(
+    sheet.getCell(`${COLS.additionalFixedOvertime}${r}`),
+  ),
+  additionalFixedCarAllowance: readNumber(
+    sheet.getCell(`${COLS.additionalFixedCarAllowance}${r}`),
+  ),
+  bonusOccasionalCarAllowance: readNumber(
+    sheet.getCell(`${COLS.bonusOccasionalCarAllowance}${r}`),
+  ),
+  bonusOccasionalOvertime: readNumber(
+    sheet.getCell(`${COLS.bonusOccasionalOvertime}${r}`),
+  ),
+  bonusPayments: readNumber(sheet.getCell(`${COLS.bonusPayments}${r}`)),
+  bonusOther: readNumber(sheet.getCell(`${COLS.bonusOther}${r}`)),
   field: readString(sheet.getCell(`${COLS.field}${r}`)),
-  additionalSalary: readNumber(sheet.getCell(`${COLS.additionalSalary}${r}`)),
   department: readString(sheet.getCell(`${COLS.department}${r}`)),
-  bonusSalary: readNumber(sheet.getCell(`${COLS.bonusSalary}${r}`)),
   startDate: readDate(sheet.getCell(`${COLS.startDate}${r}`)),
 })
 
@@ -130,10 +162,14 @@ const isEmptyRow = (row: RawRow): boolean =>
   row.workRatioPct == null &&
   !row.educationDisplay &&
   row.baseSalary == null &&
+  row.additionalFixedOvertime == null &&
+  row.additionalFixedCarAllowance == null &&
+  row.bonusOccasionalCarAllowance == null &&
+  row.bonusOccasionalOvertime == null &&
+  row.bonusPayments == null &&
+  row.bonusOther == null &&
   !row.field &&
-  row.additionalSalary == null &&
   !row.department &&
-  row.bonusSalary == null &&
   !row.startDate
 
 /**
@@ -155,10 +191,14 @@ const buildEmployee = (
     workRatioPct,
     educationDisplay,
     baseSalary,
+    additionalFixedOvertime,
+    additionalFixedCarAllowance,
+    bonusOccasionalCarAllowance,
+    bonusOccasionalOvertime,
+    bonusPayments,
+    bonusOther,
     field,
-    additionalSalary,
     department,
-    bonusSalary,
     startDate,
   } = row
 
@@ -179,14 +219,14 @@ const buildEmployee = (
     ok = false
   }
 
+  // The 6 salary sub-components are all optional — no missing-field guards.
+  // An absent value stays null in storage; parents derive it as 0.
   if (!role) missingField(COLS.role, 'Starf')
   if (!genderDisplay) missingField(COLS.gender, 'Kyn')
   if (workRatioPct == null) missingField(COLS.workRatio, 'Starfshlutfall')
   if (!educationDisplay) missingField(COLS.education, 'Menntun')
   if (baseSalary == null) missingField(COLS.baseSalary, 'Grunnlaun')
   if (!field) missingField(COLS.field, 'Svið')
-  if (additionalSalary == null)
-    missingField(COLS.additionalSalary, 'Viðbótarlaun')
   if (!department) missingField(COLS.department, 'Deild')
   if (!startDate) missingField(COLS.startDate, 'Ráðningardagur')
 
@@ -198,7 +238,6 @@ const buildEmployee = (
     educationDisplay == null ||
     baseSalary == null ||
     field == null ||
-    additionalSalary == null ||
     department == null ||
     startDate == null
   ) {
@@ -248,8 +287,12 @@ const buildEmployee = (
     startDate: toIsoDate(startDate),
     workRatio: workRatioPct / 100,
     baseSalary,
-    additionalSalary,
-    bonusSalary,
+    additionalFixedOvertime,
+    additionalFixedCarAllowance,
+    bonusOccasionalCarAllowance,
+    bonusOccasionalOvertime,
+    bonusPayments,
+    bonusOther,
     personalStepAssignments: [],
   }
 }

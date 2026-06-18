@@ -1047,8 +1047,12 @@ function makeInput(): CreateReportDto {
           startDate: '2021-01-01',
           workRatio: 1,
           baseSalary: 1000000,
-          additionalSalary: 100000,
-          bonusSalary: null,
+          additionalFixedOvertime: 100000,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
           personalStepAssignments: [
             {
               criterionTitle: 'Abyrgd',
@@ -1098,8 +1102,12 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
     startDate: '2021-01-01',
     workRatio: 1,
     baseSalary: baseSalary as number,
-    additionalSalary: 100000,
-    bonusSalary: null,
+    additionalFixedOvertime: 100000,
+    additionalFixedCarAllowance: null,
+    bonusOccasionalCarAllowance: null,
+    bonusOccasionalOvertime: null,
+    bonusPayments: null,
+    bonusOther: null,
     personalStepAssignments: [
       {
         criterionTitle: 'Abyrgd',

@@ -2294,7 +2294,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/benefits-breakdown": {
       "get": {
-        "description": "Average bonus salary (viðbótarlaun) and additional salary (aukagreiðslur) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
+        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
         "operationId": "getBenefitsBreakdown",
         "parameters": [
           {
@@ -2466,8 +2466,12 @@
           "startDate": { "type": "string" },
           "workRatio": { "type": "number" },
           "baseSalary": { "type": "number" },
-          "additionalSalary": { "type": "number" },
-          "bonusSalary": { "type": "number", "nullable": true },
+          "additionalFixedOvertime": { "type": "number", "nullable": true },
+          "additionalFixedCarAllowance": { "type": "number", "nullable": true },
+          "bonusOccasionalCarAllowance": { "type": "number", "nullable": true },
+          "bonusOccasionalOvertime": { "type": "number", "nullable": true },
+          "bonusPayments": { "type": "number", "nullable": true },
+          "bonusOther": { "type": "number", "nullable": true },
           "personalStepAssignments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
@@ -2484,7 +2488,6 @@
           "startDate",
           "workRatio",
           "baseSalary",
-          "additionalSalary",
           "personalStepAssignments"
         ]
       },

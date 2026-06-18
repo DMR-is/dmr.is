@@ -288,12 +288,18 @@ function employeesSql() {
       const score = scoreByOrdinal.get(e.ordinal)
       if (score === undefined)
         throw new Error(`No analysis score for employee ordinal ${e.ordinal}`)
+      const nullableSalary = (value) =>
+        value === null || value === undefined
+          ? 'NULL'
+          : num(Number(value).toFixed(2))
       return (
         `  (${escStr(empId)}, ${escStr(RICH_SAL)}, ${num(e.ordinal)}, ` +
         `${escStr(e.education)}, ${escStr(e.field)}, ${escStr(e.department)}, ` +
         `${escStr(e.startDate)}, ${num(e.workRatio)}, ` +
-        `${num(Number(e.baseSalary).toFixed(2))}, ${num(Number(e.additionalSalary).toFixed(2))}, ` +
-        `${e.bonusSalary === null || e.bonusSalary === undefined ? 'NULL' : num(Number(e.bonusSalary).toFixed(2))}, ` +
+        `${num(Number(e.baseSalary).toFixed(2))}, ` +
+        `${nullableSalary(e.additionalFixedOvertime)}, ${nullableSalary(e.additionalFixedCarAllowance)}, ` +
+        `${nullableSalary(e.bonusOccasionalCarAllowance)}, ${nullableSalary(e.bonusOccasionalOvertime)}, ` +
+        `${nullableSalary(e.bonusPayments)}, ${nullableSalary(e.bonusOther)}, ` +
         `${escStr(e.gender)}, ${escStr(roleId)}, ${num(Number(score).toFixed(2))})`
       )
     })
@@ -321,7 +327,9 @@ function employeesSql() {
 BEGIN;
 
 INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
-  start_date, work_ratio, base_salary, additional_salary, bonus_salary,
+  start_date, work_ratio, base_salary,
+  additional_fixed_overtime, additional_fixed_car_allowance,
+  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
 ${empValues};
 
