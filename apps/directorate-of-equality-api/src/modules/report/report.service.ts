@@ -33,6 +33,7 @@ import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportRoleResultModel } from '../report-result/models/report-role-result.model'
 import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
@@ -657,6 +658,19 @@ export class ReportService implements IReportService {
               required: false,
             },
           ],
+        },
+        {
+          model: ReportOutlierGroupModel,
+          as: 'group',
+          attributes: [
+            'id',
+            'name',
+            'reason',
+            'action',
+            'signatureName',
+            'signatureRole',
+          ],
+          required: true,
         },
       ],
       order: this.buildOutlierOrder(query),

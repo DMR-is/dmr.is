@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
@@ -30,6 +31,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -64,6 +66,7 @@ describe('ReportCreateService', () => {
   let roleStepBulkCreate: jest.Mock
   let personalStepBulkCreate: jest.Mock
   let outlierBulkCreate: jest.Mock
+  let outlierGroupCreate: jest.Mock
   let criterionCreate: jest.Mock
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
@@ -103,6 +106,11 @@ describe('ReportCreateService', () => {
     outlierBulkCreate = jest.fn(async (rows) =>
       rows.map((r: object, i: number) => ({ ...r, id: `dev-${i}` })),
     )
+    let groupSeq = 0
+    outlierGroupCreate = jest.fn(async (row) => ({
+      ...row,
+      id: `group-${groupSeq++}`,
+    }))
     criterionCreate = jest.fn(async (input) => ({
       ...input,
       id: `cri-${Date.now()}-${Math.random()}`,
@@ -176,6 +184,10 @@ describe('ReportCreateService', () => {
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
           useValue: { bulkCreate: outlierBulkCreate },
+        },
+        {
+          provide: getModelToken(ReportOutlierGroupModel),
+          useValue: { create: outlierGroupCreate },
         },
         {
           provide: getModelToken(ReportCriterionModel),
@@ -361,22 +373,24 @@ describe('ReportCreateService', () => {
 
   it('skips the outlier insert when none are flagged', async () => {
     const input = makeInput()
-    input.outliers = []
+    input.outlierGroups = []
 
     await service.createSalary(input)
 
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('persists outliers resolving employeeOrdinal to the new employee id', async () => {
+  it('persists a group + outlier rows resolving employeeOrdinal to the new employee id', async () => {
     const input = makeInputWithDetectedOutlier()
-    input.outliers = [
+    input.outlierGroups = [
       {
-        employeeOrdinal: 1,
+        name: 'Parental leave',
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
         signatureRole: 'HR Manager',
+        employeeOrdinals: [1],
       },
     ]
 
@@ -388,108 +402,135 @@ describe('ReportCreateService', () => {
     expect(reportCreate.mock.calls[0][0]).not.toHaveProperty(
       'outliersPostponed',
     )
-    expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
-    expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
+
+    // One group row carrying the explanation...
+    expect(outlierGroupCreate).toHaveBeenCalledTimes(1)
+    expect(outlierGroupCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        reportEmployeeId: 'emp-0',
+        reportId: REPORT_ID,
+        name: 'Parental leave',
         reason: 'On parental leave for 6 months',
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
         signatureRole: 'HR Manager',
       }),
-    ])
-    expect(outlierBulkCreate.mock.calls[0][0][0]).not.toHaveProperty(
-      'postponed',
     )
+
+    // ...and one thin outlier row pointing at that group.
+    expect(outlierBulkCreate).toHaveBeenCalledTimes(1)
+    expect(outlierBulkCreate.mock.calls[0][0]).toEqual([
+      { reportEmployeeId: 'emp-0', groupId: 'group-0' },
+    ])
   })
 
-  it('rejects outliers referencing an unknown employee ordinal', async () => {
-    const input = makeInput()
-    input.outliers = [
+  it('defaults the group name when none is supplied', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outlierGroups = [
       {
-        employeeOrdinal: 999,
         reason: 'r',
         action: 'a',
         signatureName: 'n',
         signatureRole: 'role',
+        employeeOrdinals: [1],
       },
     ]
 
-    await expect(service.createSalary(input)).rejects.toThrow(
-      BadRequestException,
+    await service.createSalary(input)
+
+    expect(outlierGroupCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ name: DEFAULT_OUTLIER_GROUP_NAME }),
     )
-    expect(reportCreate).not.toHaveBeenCalled()
-    expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('rejects an outlier row submitted for a non-outlier employee (extras)', async () => {
-    // The single-employee fixture has no detected outliers — submitting one
-    // row should be rejected as an extra by the submit-side guard.
+  it('rejects a group referencing a non-outlier employee ordinal (extras)', async () => {
+    // The single-employee fixture has no detected outliers — referencing one
+    // should be rejected as an extra by the submit-side guard.
     const input = makeInput()
-    input.outliers = [
+    input.outlierGroups = [
       {
-        employeeOrdinal: 1,
         reason: 'r',
         action: 'a',
         signatureName: 'n',
         signatureRole: 'role',
+        employeeOrdinals: [1],
       },
     ]
 
     await expect(service.createSalary(input)).rejects.toThrow(
       /non-outlier employee ordinal/,
     )
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('rejects when a detected outlier has no acknowledgement row (missing)', async () => {
+  it('rejects when detected outliers are present but no groups are provided', async () => {
     const input = makeInputWithDetectedOutlier()
-    input.outliers = []
+    input.outlierGroups = []
 
     await expect(service.createSalary(input)).rejects.toThrow(
-      /missing acknowledgement/,
+      /no outlier groups were provided/,
     )
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects an ordinal that appears in more than one group', async () => {
+    const input = makeInputWithDetectedOutlier()
+    input.outlierGroups = [
+      {
+        reason: 'r',
+        action: 'a',
+        signatureName: 'n',
+        signatureRole: 'role',
+        employeeOrdinals: [1],
+      },
+      {
+        reason: 'r2',
+        action: 'a2',
+        signatureName: 'n2',
+        signatureRole: 'role2',
+        employeeOrdinals: [1],
+      },
+    ]
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      /appears in more than one outlier group/,
+    )
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
   it('rejects postponement when the salary report has no detected outliers', async () => {
     const input = makeInput()
     input.outliersPostponed = true
-    input.outliers = []
+    input.outlierGroups = []
 
     await expect(service.createSalary(input)).rejects.toThrow(
       'Cannot postpone outlier explanations because this salary report has no detected outliers.',
     )
     expect(reportCreate).not.toHaveBeenCalled()
-    expect(outlierBulkCreate).not.toHaveBeenCalled()
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
   })
 
   it('submits a zero-outlier salary report normally when postponement is not requested', async () => {
     const input = makeInput()
     input.outliersPostponed = false
-    input.outliers = []
+    input.outlierGroups = []
 
     await service.createSalary(input)
 
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
     )
+    expect(outlierGroupCreate).not.toHaveBeenCalled()
     expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
-  it('persists every outlier with NULL explanation columns when the report is postponed', async () => {
+  it('creates a single default group with NULL explanation when postponed', async () => {
     const input = makeInputWithDetectedOutlier()
     input.outliersPostponed = true
-    input.outliers = [
-      {
-        employeeOrdinal: 1,
-        // Explanation fields supplied here are ignored when the report is postponed.
-        reason: 'should be discarded',
-        action: 'should be discarded',
-        signatureName: 'should be discarded',
-        signatureRole: 'should be discarded',
-      },
-    ]
+    // Any supplied groups are ignored on the postpone path.
+    input.outlierGroups = undefined
 
     await service.createSalary(input)
 
@@ -499,14 +540,23 @@ describe('ReportCreateService', () => {
     expect(reportCreate.mock.calls[0][0]).not.toHaveProperty(
       'outliersPostponed',
     )
-    expect(outlierBulkCreate).toHaveBeenCalledWith([
+
+    // Single default group with all explanation fields NULL...
+    expect(outlierGroupCreate).toHaveBeenCalledTimes(1)
+    expect(outlierGroupCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        reportEmployeeId: 'emp-0',
+        reportId: REPORT_ID,
+        name: DEFAULT_OUTLIER_GROUP_NAME,
         reason: null,
         action: null,
         signatureName: null,
         signatureRole: null,
       }),
+    )
+
+    // ...covering the detected outlier via a thin row.
+    expect(outlierBulkCreate).toHaveBeenCalledWith([
+      { reportEmployeeId: 'emp-0', groupId: 'group-0' },
     ])
 
     // The SUBMITTED audit event snapshots the actual landing status —
@@ -519,42 +569,6 @@ describe('ReportCreateService', () => {
         reportStatus: ReportStatusEnum.POSTPONED,
       }),
     )
-  })
-
-  it('accepts a postponed report with bare acknowledgement rows (no explanations supplied)', async () => {
-    const input = makeInputWithDetectedOutlier()
-    input.outliersPostponed = true
-    input.outliers = [{ employeeOrdinal: 1 }]
-
-    await service.createSalary(input)
-
-    expect(outlierBulkCreate).toHaveBeenCalledWith([
-      expect.objectContaining({
-        reportEmployeeId: 'emp-0',
-        reason: null,
-        action: null,
-        signatureName: null,
-        signatureRole: null,
-      }),
-    ])
-  })
-
-  it('rejects a non-postponed outlier with missing explanation fields', async () => {
-    const input = makeInputWithDetectedOutlier()
-    input.outliers = [
-      {
-        employeeOrdinal: 1,
-        reason: '',
-        action: 'something',
-        signatureName: 'somebody',
-        signatureRole: '',
-      },
-    ]
-
-    await expect(service.createSalary(input)).rejects.toThrow(
-      /Outlier for employee ordinal .* missing required field\(s\): reason, signatureRole/,
-    )
-    expect(outlierBulkCreate).not.toHaveBeenCalled()
   })
 
   // ── createEquality path ────────────────────────────────────────────

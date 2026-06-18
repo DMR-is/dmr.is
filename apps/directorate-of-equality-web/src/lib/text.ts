@@ -188,6 +188,8 @@ export const reportText = {
       roleHeader: 'Starf',
       genderHeader: 'Kyn',
       deviationHeader: 'Launafrávik',
+      groupHeader: 'Hópur',
+      groupLabel: 'Hópur',
       reasonLabel: 'Ástæða',
       actionLabel: 'Aðgerð',
       signatureNameLabel: 'Nafn undirritanda',
