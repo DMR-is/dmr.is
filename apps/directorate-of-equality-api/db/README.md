@@ -322,15 +322,19 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 
 ### `company`
 
-| Column                            | Type      |
-| --------------------------------- | --------- |
-| `id`                              | `uuid` PK |
-| `name`                            | `text`    |
-| `average_employee_count_from_rsk` | `int`     |
-| `national_id`                     | `text`    |
-| `salary_report_required`          | `boolean` |
-| `salary_report_required_override` | `boolean` |
-| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable) |
+| Column                            | Type                                                |
+| --------------------------------- | --------------------------------------------------- |
+| `id`                              | `uuid` PK                                           |
+| `name`                            | `text`                                              |
+| `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`) |
+| `national_id`                     | `text` (unique)                                     |
+| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`/`UNKNOWN`) |
+| `salary_report_required`          | `boolean`                                           |
+| `salary_report_required_override` | `boolean`                                           |
+| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)        |
+
+`status = UNKNOWN` is set by the company import for a company we hold that is absent
+from the authoritative register (see [Company import](#company-import-annual-register)).
 
 ### `isat_category`
 

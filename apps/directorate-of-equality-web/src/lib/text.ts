@@ -255,6 +255,33 @@ export const companiesText = {
     successToast: 'Fyrirtæki skráð',
     errorToast: 'Villa við skráningu fyrirtækis',
   },
+  importModal: {
+    title: 'Flytja inn fyrirtækjaskrá',
+    description:
+      'Veldu Excel-skrá (.xlsx) með árlegri fyrirtækjaskrá. Skráin er staðreyndaruppspretta — fyrirtæki eru stofnuð, uppfærð eða merkt óþekkt eftir innihaldi hennar.',
+    button: 'Flytja inn skrá',
+    chooseFile: 'Velja skrá',
+    reading: 'Les skrá…',
+    yearLabel: 'Tekjuár',
+    noChanges: 'Engar breytingar fundust í skránni.',
+    noticeCount: 'athugasemd(ir)',
+    confirm: 'Staðfesta innflutning',
+    cancel: 'Hætta við',
+    close: 'Loka',
+    chooseAnother: 'Velja aðra skrá',
+    successToast: 'Innflutningur staðfestur',
+    errorToast: 'Villa við innflutning',
+    committedBanner: 'Innflutningur staðfestur',
+    sections: {
+      created: 'Ný fyrirtæki',
+      updated: 'Uppfærð',
+      reactivated: 'Endurvirkjuð',
+      markedUnknown: 'Merkt óþekkt (vantar í skrá)',
+      unchanged: 'Óbreytt',
+      invalid: 'Ógildar línur',
+    },
+    rowPrefix: 'Lína',
+  },
 }
 
 export const usersText = {
