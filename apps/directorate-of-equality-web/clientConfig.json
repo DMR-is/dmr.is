@@ -452,6 +452,569 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/status": {
+      "patch": {
+        "operationId": "updateCompanyStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/isat": {
+      "patch": {
+        "operationId": "updateCompanyIsat",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyIsatDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/timeline": {
+      "get": {
+        "operationId": "getCompanyTimeline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyTimelineItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/comments": {
+      "get": {
+        "operationId": "getCompanyComments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CompanyCommentDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      },
+      "post": {
+        "operationId": "createCompanyComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyCommentDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/comments/{commentId}": {
+      "delete": {
+        "operationId": "deleteCompanyComment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/import/preview": {
+      "post": {
+        "operationId": "previewCompanyImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyImportResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Import"]
+      }
+    },
+    "/api/v1/companies/import/apply": {
+      "post": {
+        "operationId": "applyCompanyImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyImportResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Import"]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "getMyUser",
@@ -2360,6 +2923,72 @@
         "summary": "",
         "tags": ["Report Statistics"]
       }
+    },
+    "/api/v1/reports/{reportId}/pdf": {
+      "get": {
+        "operationId": "getReportPdf",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generates and returns the report as a PDF. The layout (\"Jafnlaunaúttekt\" or \"Jafnréttisáætlun\") is chosen from the report type.",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report PDF"]
+      }
     }
   },
   "info": {
@@ -2687,6 +3316,32 @@
         "enum": ["name", "employeeCount"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "CompanyStatusEnum": {
+        "type": "string",
+        "enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]
+      },
+      "IsatCategoryDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Normalized ÍSAT2008 leaf code, e.g. \"01110\"."
+          },
+          "codeDotted": {
+            "type": "string",
+            "description": "Display (dotted) form, e.g. \"01.11.0\"."
+          },
+          "description": {
+            "type": "string",
+            "description": "Icelandic description."
+          },
+          "descriptionEn": {
+            "type": "string",
+            "description": "English description."
+          }
+        },
+        "required": ["code", "codeDotted", "description", "descriptionEn"]
+      },
       "CompanyDto": {
         "type": "object",
         "properties": {
@@ -2696,14 +3351,33 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "nationalId": { "type": "string" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "address": { "type": "string", "nullable": true },
+          "postcodeId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "salaryReportRequired": { "type": "boolean" },
-          "salaryReportRequiredOverride": { "type": "boolean" }
+          "salaryReportRequiredOverride": { "type": "boolean" },
+          "isatCategoryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Normalized ÍSAT2008 leaf code (admin-owned statistics field), e.g. \"01110\"."
+          },
+          "isatCategory": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
+          }
         },
         "required": [
           "id",
           "name",
           "employeeCountCategory",
           "nationalId",
+          "status",
           "salaryReportRequired",
           "salaryReportRequiredOverride"
         ]
@@ -2765,6 +3439,261 @@
           }
         },
         "required": ["nationalId", "name", "employeeCountCategory"]
+      },
+      "UpdateCompanyStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for the change, e.g. bankruptcy or merger."
+          }
+        },
+        "required": ["status"]
+      },
+      "UpdateCompanyIsatDto": {
+        "type": "object",
+        "properties": {
+          "isatCategoryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Normalized ÍSAT2008 leaf code, e.g. \"01110\". Null clears the classification."
+          }
+        }
+      },
+      "CompanyTimelineItemKindEnum": {
+        "type": "string",
+        "enum": ["EVENT", "COMMENT"]
+      },
+      "CompanyEventTypeEnum": {
+        "type": "string",
+        "enum": ["CREATED", "STATUS_CHANGED"]
+      },
+      "CompanyEventDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "eventType": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEventTypeEnum" }]
+          },
+          "actorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "fromStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "toStatus": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "reason": { "type": "string", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "companyId", "eventType", "status", "createdAt"]
+      },
+      "CompanyCommentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full name of the admin who authored the comment."
+          },
+          "body": {
+            "type": "string",
+            "description": "Plain text comment body"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          }
+        },
+        "required": ["id", "companyId", "body", "createdAt"]
+      },
+      "CompanyTimelineItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyTimelineItemKindEnum" }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "event": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEventDto" }]
+          },
+          "comment": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/CompanyCommentDto" }]
+          }
+        },
+        "required": ["kind", "createdAt"]
+      },
+      "CreateCompanyCommentDto": {
+        "type": "object",
+        "properties": {
+          "body": { "type": "string", "description": "Plain text comment body" }
+        },
+        "required": ["body"]
+      },
+      "CompanyImportOutcomeEnum": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "UPDATED",
+          "UNCHANGED",
+          "MARKED_UNKNOWN",
+          "REACTIVATED"
+        ]
+      },
+      "CompanyImportFieldChangeDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Company field that changed, e.g. \"name\"."
+          },
+          "from": {
+            "type": "string",
+            "nullable": true,
+            "description": "Previous value."
+          },
+          "to": {
+            "type": "string",
+            "nullable": true,
+            "description": "New value from the file."
+          }
+        },
+        "required": ["field"]
+      },
+      "CompanyImportRowResultDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "name": { "type": "string" },
+          "outcome": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyImportOutcomeEnum" }
+            ]
+          },
+          "changedFields": {
+            "description": "Field-level diff (UPDATED / REACTIVATED only).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportFieldChangeDto"
+            }
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "Soft notice, e.g. an unresolved postcode that was left unset."
+          }
+        },
+        "required": ["nationalId", "name", "outcome", "changedFields"]
+      },
+      "CompanyImportErrorDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "number",
+            "description": "Spreadsheet row number (1-based, incl. header)."
+          },
+          "nationalId": { "type": "string", "nullable": true },
+          "reason": {
+            "type": "string",
+            "description": "Why the row was rejected."
+          }
+        },
+        "required": ["row", "reason"]
+      },
+      "CompanyImportResultDto": {
+        "type": "object",
+        "properties": {
+          "committed": {
+            "type": "boolean",
+            "description": "false = preview (no writes); true = applied (committed)."
+          },
+          "year": {
+            "type": "number",
+            "nullable": true,
+            "description": "Reporting year (TEKJUAR) from the file, if consistent."
+          },
+          "noticeCount": {
+            "type": "number",
+            "description": "Notice from a soft issue, e.g. an unresolved postcode."
+          },
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "updated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "unchanged": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "markedUnknown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "reactivated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "invalid": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompanyImportErrorDto" }
+          }
+        },
+        "required": [
+          "committed",
+          "noticeCount",
+          "created",
+          "updated",
+          "unchanged",
+          "markedUnknown",
+          "reactivated",
+          "invalid"
+        ]
       },
       "UserDto": {
         "type": "object",
@@ -3181,6 +4110,11 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Full name of the authoring reviewer. Null for company-authored comments (no individual person)."
           },
           "visibility": {
             "allOf": [{ "$ref": "#/components/schemas/CommentVisibilityEnum" }]

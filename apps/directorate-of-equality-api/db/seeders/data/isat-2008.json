@@ -1,0 +1,3992 @@
+[
+  {
+    "isat2008_normalized": "01110",
+    "description": "Kornrækt (að undanskildum hrísgrjónum), ræktun belgjurta og olíufræja",
+    "isat2008": "01.11.0",
+    "description_en": "Growing of cereals (except rice), leguminous crops and oil seeds"
+  },
+  {
+    "isat2008_normalized": "01120",
+    "description": "Hrísgrjónarækt",
+    "isat2008": "01.12.0",
+    "description_en": "Growing of rice"
+  },
+  {
+    "isat2008_normalized": "01131",
+    "description": "Ræktun á aldingrænmeti og papriku",
+    "isat2008": "01.13.1",
+    "description_en": "Growing of fruit bearing vegatables and capsicum"
+  },
+  {
+    "isat2008_normalized": "01132",
+    "description": "Ræktun á kartöflum",
+    "isat2008": "01.13.2",
+    "description_en": "Growing of potatoes"
+  },
+  {
+    "isat2008_normalized": "01139",
+    "description": "Ræktun á öðru ótöldu grænmeti, rótum og hnýði",
+    "isat2008": "01.13.9",
+    "description_en": "Growing of other vegatable, roots and tubers"
+  },
+  {
+    "isat2008_normalized": "01140",
+    "description": "Ræktun sykurreyrs",
+    "isat2008": "01.14.0",
+    "description_en": "Growing of sugar cane"
+  },
+  {
+    "isat2008_normalized": "01150",
+    "description": "Tóbaksræktun",
+    "isat2008": "01.15.0",
+    "description_en": "Growing of tobacco"
+  },
+  {
+    "isat2008_normalized": "01160",
+    "description": "Ræktun trefjajurta",
+    "isat2008": "01.16.0",
+    "description_en": "Growing of fibre crops"
+  },
+  {
+    "isat2008_normalized": "01191",
+    "description": "Blómarækt",
+    "isat2008": "01.19.1",
+    "description_en": "Growing of flowers"
+  },
+  {
+    "isat2008_normalized": "01199",
+    "description": "Önnur ótalin ræktun nytjajurta sem ekki eru fjölærar",
+    "isat2008": "01.19.9",
+    "description_en": "Growing of other non-perennial crops n.e.c."
+  },
+  {
+    "isat2008_normalized": "01210",
+    "description": "Ræktun á þrúgum",
+    "isat2008": "01.21.0",
+    "description_en": "Growing of grapes"
+  },
+  {
+    "isat2008_normalized": "01220",
+    "description": "Ræktun ávaxta frá hitabeltinu og heittempraða beltinu",
+    "isat2008": "01.22.0",
+    "description_en": "Growing of tropical and subtropical fruits"
+  },
+  {
+    "isat2008_normalized": "01230",
+    "description": "Ræktun sítrusávaxta",
+    "isat2008": "01.23.0",
+    "description_en": "Growing of citrus fruits"
+  },
+  {
+    "isat2008_normalized": "01240",
+    "description": "Ræktun kjarnaávaxta og steinaldina",
+    "isat2008": "01.24.0",
+    "description_en": "Growing of pome fruits and stone fruits"
+  },
+  {
+    "isat2008_normalized": "01250",
+    "description": "Ræktun annarra ávaxta og hneta af trjám og runnum",
+    "isat2008": "01.25.0",
+    "description_en": "Growing of other tree and bush fruits and nuts"
+  },
+  {
+    "isat2008_normalized": "01260",
+    "description": "Ræktun olíuríkra ávaxta",
+    "isat2008": "01.26.0",
+    "description_en": "Growing of oleaginous fruits"
+  },
+  {
+    "isat2008_normalized": "01270",
+    "description": "Ræktun jurta til drykkjargerðar",
+    "isat2008": "01.27.0",
+    "description_en": "Growing of beverage crops"
+  },
+  {
+    "isat2008_normalized": "01280",
+    "description": "Ræktun krydd- , ilm- og lyfjajurta",
+    "isat2008": "01.28.0",
+    "description_en": "Growing of spices, aromatic, drug and pharmaceutical crops"
+  },
+  {
+    "isat2008_normalized": "01290",
+    "description": "Ræktun annarra fjölærra nytjajurta",
+    "isat2008": "01.29.0",
+    "description_en": "Growing of other perennial crops"
+  },
+  {
+    "isat2008_normalized": "01300",
+    "description": "Plöntufjölgun",
+    "isat2008": "01.30.0",
+    "description_en": "Plant propagation"
+  },
+  {
+    "isat2008_normalized": "01410",
+    "description": "Ræktun mjólkurkúa",
+    "isat2008": "01.41.0",
+    "description_en": "Raising of dairy cattle"
+  },
+  {
+    "isat2008_normalized": "01420",
+    "description": "Önnur nautgriparækt",
+    "isat2008": "01.42.0",
+    "description_en": "Raising of other cattle and buffaloes"
+  },
+  {
+    "isat2008_normalized": "01430",
+    "description": "Hrossarækt og ræktun annarra dýra af hrossaætt",
+    "isat2008": "01.43.0",
+    "description_en": "Raising of horses and other equines"
+  },
+  {
+    "isat2008_normalized": "01440",
+    "description": "Úlfaldarækt og ræktun dýra af úlfaldaætt",
+    "isat2008": "01.44.0",
+    "description_en": "Raising of camels and camelids"
+  },
+  {
+    "isat2008_normalized": "01450",
+    "description": "Sauðfjár- og geitarækt",
+    "isat2008": "01.45.0",
+    "description_en": "Raising of sheep and  goats"
+  },
+  {
+    "isat2008_normalized": "01460",
+    "description": "Svínarækt",
+    "isat2008": "01.46.0",
+    "description_en": "Raising of swine/pigs"
+  },
+  {
+    "isat2008_normalized": "01471",
+    "description": "Alifuglarækt",
+    "isat2008": "01.47.1",
+    "description_en": "Raising of poultry"
+  },
+  {
+    "isat2008_normalized": "01472",
+    "description": "Eggjaframleiðsla",
+    "isat2008": "01.47.2",
+    "description_en": "Egg production"
+  },
+  {
+    "isat2008_normalized": "01491",
+    "description": "Loðdýrabú",
+    "isat2008": "01.49.1",
+    "description_en": "Raising of fur animals"
+  },
+  {
+    "isat2008_normalized": "01492",
+    "description": "Æðarrækt og æðardúnstekja",
+    "isat2008": "01.49.2",
+    "description_en": "Gathering of eiderdown"
+  },
+  {
+    "isat2008_normalized": "01499",
+    "description": "Ræktun annarra ótalinna dýra",
+    "isat2008": "01.49.9",
+    "description_en": "Raising of other animals n.e.c."
+  },
+  {
+    "isat2008_normalized": "01500",
+    "description": "Blandaður búskapur",
+    "isat2008": "01.50.0",
+    "description_en": "Mixed farming"
+  },
+  {
+    "isat2008_normalized": "01610",
+    "description": "Þjónustustarfsemi við ræktun nytjajurta",
+    "isat2008": "01.61.0",
+    "description_en": "Support activities for crop production"
+  },
+  {
+    "isat2008_normalized": "01620",
+    "description": "Þjónustustarfsemi við búfjárrækt",
+    "isat2008": "01.62.0",
+    "description_en": "Support activities for animal production"
+  },
+  {
+    "isat2008_normalized": "01630",
+    "description": "Starfsemi að lokinni uppskeru",
+    "isat2008": "01.63.0",
+    "description_en": "Post-harvest crop activities"
+  },
+  {
+    "isat2008_normalized": "01640",
+    "description": "Vinnsla fræja fyrir sáningu",
+    "isat2008": "01.64.0",
+    "description_en": "Seed processing for propagation"
+  },
+  {
+    "isat2008_normalized": "01700",
+    "description": "Veiðar og tengd þjónustustarfsemi",
+    "isat2008": "01.70.0",
+    "description_en": "Hunting, trapping and related service activities"
+  },
+  {
+    "isat2008_normalized": "02101",
+    "description": "Rekstur gróðrastöðva fyrir skógartré",
+    "isat2008": "02.10.1",
+    "description_en": "Operation of forest tree nurseries"
+  },
+  {
+    "isat2008_normalized": "02109",
+    "description": "Skógrækt og önnur ótalin starfsemi tengd henni",
+    "isat2008": "02.10.9",
+    "description_en": "Silviculture and other forestry activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "02200",
+    "description": "Skógarhögg",
+    "isat2008": "02.20.0",
+    "description_en": "Logging"
+  },
+  {
+    "isat2008_normalized": "02300",
+    "description": "Söfnun afurða sem vaxa villtar en eru ekki tré",
+    "isat2008": "02.30.0",
+    "description_en": "Gathering of wild growing non-wood products"
+  },
+  {
+    "isat2008_normalized": "02400",
+    "description": "Þjónustustarfsemi við skógrækt",
+    "isat2008": "02.40.0",
+    "description_en": "Support services to forestry"
+  },
+  {
+    "isat2008_normalized": "03111",
+    "description": "Útgerð smábáta",
+    "isat2008": "03.11.1",
+    "description_en": "Operation fishing boats smaller than 15 GT"
+  },
+  {
+    "isat2008_normalized": "03112",
+    "description": "Útgerð fiskiskipa",
+    "isat2008": "03.11.2",
+    "description_en": "Operation of fishing vessels larger than 15 GT"
+  },
+  {
+    "isat2008_normalized": "03113",
+    "description": "Hvalveiðar",
+    "isat2008": "03.11.3",
+    "description_en": "Whaling"
+  },
+  {
+    "isat2008_normalized": "03120",
+    "description": "Ferskvatnsveiði",
+    "isat2008": "03.12.0",
+    "description_en": "Freshwater fishing"
+  },
+  {
+    "isat2008_normalized": "03210",
+    "description": "Eldi og ræktun í sjó",
+    "isat2008": "03.21.0",
+    "description_en": "Marine aquaculture"
+  },
+  {
+    "isat2008_normalized": "03220",
+    "description": "Eldi og ræktun í ferskvatni",
+    "isat2008": "03.22.0",
+    "description_en": "Freshwater aquaculture"
+  },
+  {
+    "isat2008_normalized": "05100",
+    "description": "Steinkolanám",
+    "isat2008": "05.10.0",
+    "description_en": "Mining of hard coal"
+  },
+  {
+    "isat2008_normalized": "05200",
+    "description": "Brúnkolanám",
+    "isat2008": "05.20.0",
+    "description_en": "Mining of lignite"
+  },
+  {
+    "isat2008_normalized": "06100",
+    "description": "Vinnsla á hráolíu",
+    "isat2008": "06.10.0",
+    "description_en": "Extraction of crude petroleum"
+  },
+  {
+    "isat2008_normalized": "06200",
+    "description": "Vinnsla á jarðgasi",
+    "isat2008": "06.20.0",
+    "description_en": "Extraction of natural gas"
+  },
+  {
+    "isat2008_normalized": "07100",
+    "description": "Járnnám",
+    "isat2008": "07.10.0",
+    "description_en": "Mining of iron ores"
+  },
+  {
+    "isat2008_normalized": "07210",
+    "description": "Nám á úran- og þórínmálmgrýti",
+    "isat2008": "07.21.0",
+    "description_en": "Mining of uranium and thorium ores"
+  },
+  {
+    "isat2008_normalized": "07290",
+    "description": "Nám annarra málma en járns",
+    "isat2008": "07.29.0",
+    "description_en": "Mining of other non-ferrous metal ores"
+  },
+  {
+    "isat2008_normalized": "08110",
+    "description": "Grjótnám til skrautsteinagerðar og til bygginga, kalksteins-, gifs-, krítar- og flögubergsnám",
+    "isat2008": "08.11.0",
+    "description_en": "Quarrying of ornamental and building stone, limestone, gypsum, chalk and slate"
+  },
+  {
+    "isat2008_normalized": "08120",
+    "description": "Malar-, sand- og leirnám",
+    "isat2008": "08.12.0",
+    "description_en": "Operation of gravel and sand pits; mining of clays and kaolin"
+  },
+  {
+    "isat2008_normalized": "08910",
+    "description": "Nám og vinnsla á steinefnum til efnaiðnaðar og áburðargerðar",
+    "isat2008": "08.91.0",
+    "description_en": "Mining of chemical and fertiliser minerals"
+  },
+  {
+    "isat2008_normalized": "08920",
+    "description": "Mótekja",
+    "isat2008": "08.92.0",
+    "description_en": "Extraction of peat"
+  },
+  {
+    "isat2008_normalized": "08930",
+    "description": "Saltnám",
+    "isat2008": "08.93.0",
+    "description_en": "Extraction of salt"
+  },
+  {
+    "isat2008_normalized": "08990",
+    "description": "Nám og vinnsla annarra ótalinna hráefna úr jörðu",
+    "isat2008": "08.99.0",
+    "description_en": "Other mining and quarrying n.e.c."
+  },
+  {
+    "isat2008_normalized": "09100",
+    "description": "Þjónustustarfsemi við námuvinnslu á jarðolíu og jarðgasi",
+    "isat2008": "09.10.0",
+    "description_en": "Support activities for petroleum and natural gas extraction"
+  },
+  {
+    "isat2008_normalized": "09900",
+    "description": "Þjónustustarfsemi fyrir vinnslu annarra hráefna úr jörðu",
+    "isat2008": "09.90.0",
+    "description_en": "Support activities for other mining and quarrying"
+  },
+  {
+    "isat2008_normalized": "10110",
+    "description": "Slátrun og vinnsla á kjöti, þó ekki alifuglakjöti",
+    "isat2008": "10.11.0",
+    "description_en": "Processing and preserving of meat"
+  },
+  {
+    "isat2008_normalized": "10120",
+    "description": "Slátrun og vinnsla á alifuglakjöti",
+    "isat2008": "10.12.0",
+    "description_en": "Processing and preserving of poultry meat"
+  },
+  {
+    "isat2008_normalized": "10130",
+    "description": "Framleiðsla á kjötafurðum",
+    "isat2008": "10.13.0",
+    "description_en": "Production of meat and poultry meat products"
+  },
+  {
+    "isat2008_normalized": "10201",
+    "description": "Frysting fiskafurða, krabbadýra og lindýra",
+    "isat2008": "10.20.1",
+    "description_en": "Freezing of fish, fish fillets, crustaceans and molluscs"
+  },
+  {
+    "isat2008_normalized": "10202",
+    "description": "Söltun, þurrkun og hersla fiskafurða, krabbadýra og lindýra",
+    "isat2008": "10.20.2",
+    "description_en": "Drying and salting of fish, crustaceans and molluscs"
+  },
+  {
+    "isat2008_normalized": "10203",
+    "description": "Mjöl- og lýsisvinnsla",
+    "isat2008": "10.20.3",
+    "description_en": "Manufacture of fish meal and crude fish oils"
+  },
+  {
+    "isat2008_normalized": "10204",
+    "description": "Framleiðsla lagmetis úr fiskafurðum, krabbadýrum og lindýrum",
+    "isat2008": "10.20.4",
+    "description_en": "Canning and preserving of fish, crustaceans and molluscs"
+  },
+  {
+    "isat2008_normalized": "10209",
+    "description": "Önnur ótalin vinnsla fiskafurða, krabbadýra og lindýra",
+    "isat2008": "10.20.9",
+    "description_en": "Processing and preserving of fish and fish products n.e.c."
+  },
+  {
+    "isat2008_normalized": "10310",
+    "description": "Vinnsla á kartöflum",
+    "isat2008": "10.31.0",
+    "description_en": "Processing and preserving of potatoes"
+  },
+  {
+    "isat2008_normalized": "10320",
+    "description": "Framleiðsla á ávaxta- og grænmetissafa",
+    "isat2008": "10.32.0",
+    "description_en": "Manufacture of fruit and vegetable juice"
+  },
+  {
+    "isat2008_normalized": "10390",
+    "description": "Önnur ótalin vinnsla ávaxta og grænmetis",
+    "isat2008": "10.39.0",
+    "description_en": "Other processing and preserving of fruit and vegetables"
+  },
+  {
+    "isat2008_normalized": "10410",
+    "description": "Framleiðsla á olíu og feiti",
+    "isat2008": "10.41.0",
+    "description_en": "Manufacture of oils and fats"
+  },
+  {
+    "isat2008_normalized": "10420",
+    "description": "Framleiðsla á smjörlíki og svipaðri feiti til manneldis",
+    "isat2008": "10.42.0",
+    "description_en": "Manufacture of margarine and similar edible fats"
+  },
+  {
+    "isat2008_normalized": "10510",
+    "description": "Mjólkurbú og ostagerð",
+    "isat2008": "10.51.0",
+    "description_en": "Operation of dairies and cheese making"
+  },
+  {
+    "isat2008_normalized": "10520",
+    "description": "Ísgerð",
+    "isat2008": "10.52.0",
+    "description_en": "Manufacture of ice cream"
+  },
+  {
+    "isat2008_normalized": "10610",
+    "description": "Framleiðsla á kornvöru",
+    "isat2008": "10.61.0",
+    "description_en": "Manufacture of grain mill products"
+  },
+  {
+    "isat2008_normalized": "10620",
+    "description": "Framleiðsla á mjölva og mjölvavöru",
+    "isat2008": "10.62.0",
+    "description_en": "Manufacture of starches and starch products"
+  },
+  {
+    "isat2008_normalized": "10710",
+    "description": "Framleiðsla á brauði, nýju sætabrauði og kökum",
+    "isat2008": "10.71.0",
+    "description_en": "Manufacture of bread; manufacture of fresh pastry goods and cakes"
+  },
+  {
+    "isat2008_normalized": "10720",
+    "description": "Framleiðsla á tvíbökum og kexi, framleiðsla á geymsluþolnu sætabrauði og kökum",
+    "isat2008": "10.72.0",
+    "description_en": "Manufacture of rusks and biscuits; manufacture of preserved pastry goods and cakes"
+  },
+  {
+    "isat2008_normalized": "10730",
+    "description": "Framleiðsla á pastavörum og svipuðum vörum",
+    "isat2008": "10.73.0",
+    "description_en": "Manufacture of macaroni, noodles, couscous and similar farinaceous products"
+  },
+  {
+    "isat2008_normalized": "10810",
+    "description": "Sykurframleiðsla",
+    "isat2008": "10.81.0",
+    "description_en": "Manufacture of sugar"
+  },
+  {
+    "isat2008_normalized": "10820",
+    "description": "Framleiðsla á súkkulaði og sælgæti; kakói",
+    "isat2008": "10.82.0",
+    "description_en": "Manufacture of cocoa, chocolate and sugar confectionery"
+  },
+  {
+    "isat2008_normalized": "10830",
+    "description": "Te- og kaffivinnsla",
+    "isat2008": "10.83.0",
+    "description_en": "Processing of tea and coffee"
+  },
+  {
+    "isat2008_normalized": "10840",
+    "description": "Framleiðsla á bragðefnum og kryddi",
+    "isat2008": "10.84.0",
+    "description_en": "Manufacture of condiments and seasonings"
+  },
+  {
+    "isat2008_normalized": "10850",
+    "description": "Framleiðsla á tilbúnum máltíðum og réttum",
+    "isat2008": "10.85.0",
+    "description_en": "Manufacture of prepared meals and dishes"
+  },
+  {
+    "isat2008_normalized": "10860",
+    "description": "Framleiðsla á jafnblönduðum matvælum og sérfæði",
+    "isat2008": "10.86.0",
+    "description_en": "Manufacture of homogenised food preparations and dietetic food"
+  },
+  {
+    "isat2008_normalized": "10890",
+    "description": "Önnur ótalin framleiðsla á matvælum",
+    "isat2008": "10.89.0",
+    "description_en": "Manufacture of other food products n.e.c."
+  },
+  {
+    "isat2008_normalized": "10910",
+    "description": "Framleiðsla húsdýrafóðurs",
+    "isat2008": "10.91.0",
+    "description_en": "Manufacture of prepared feeds for farm animals"
+  },
+  {
+    "isat2008_normalized": "10920",
+    "description": "Framleiðsla gæludýrafóðurs",
+    "isat2008": "10.92.0",
+    "description_en": "Manufacture of prepared pet foods"
+  },
+  {
+    "isat2008_normalized": "11010",
+    "description": "Eiming, hreinsun og blöndun áfengra drykkja",
+    "isat2008": "11.01.0",
+    "description_en": "Distilling, rectifying and blending of spirits"
+  },
+  {
+    "isat2008_normalized": "11020",
+    "description": "Framleiðsla á víni úr þrúgum",
+    "isat2008": "11.02.0",
+    "description_en": "Manufacture of wine from grape"
+  },
+  {
+    "isat2008_normalized": "11030",
+    "description": "Framleiðsla annarra ávaxtavína",
+    "isat2008": "11.03.0",
+    "description_en": "Manufacture of cider and other fruit wines"
+  },
+  {
+    "isat2008_normalized": "11040",
+    "description": "Framleiðsla á öðrum óeimuðum, gerjuðum drykkjarvörum",
+    "isat2008": "11.04.0",
+    "description_en": "Manufacture of other non-distilled fermented beverages"
+  },
+  {
+    "isat2008_normalized": "11050",
+    "description": "Bjórgerð",
+    "isat2008": "11.05.0",
+    "description_en": "Manufacture of beer"
+  },
+  {
+    "isat2008_normalized": "11060",
+    "description": "Maltgerð",
+    "isat2008": "11.06.0",
+    "description_en": "Manufacture of malt"
+  },
+  {
+    "isat2008_normalized": "11070",
+    "description": "Framleiðsla á gosdrykkjum, ölkelduvatni og öðru átöppuðu vatni",
+    "isat2008": "11.07.0",
+    "description_en": "Manufacture of soft drinks; production of mineral waters and other bottled waters"
+  },
+  {
+    "isat2008_normalized": "12000",
+    "description": "Framleiðsla á tóbaksvörum",
+    "isat2008": "12.00.0",
+    "description_en": "Manufacture of tobacco products"
+  },
+  {
+    "isat2008_normalized": "13100",
+    "description": "Forvinnsla og spuni á textíltrefjum",
+    "isat2008": "13.10.0",
+    "description_en": "Preparation and spinning of textile fibres"
+  },
+  {
+    "isat2008_normalized": "13200",
+    "description": "Textílvefnaður",
+    "isat2008": "13.20.0",
+    "description_en": "Weaving of textiles"
+  },
+  {
+    "isat2008_normalized": "13300",
+    "description": "Frágangur á textílum",
+    "isat2008": "13.30.0",
+    "description_en": "Finishing of textiles"
+  },
+  {
+    "isat2008_normalized": "13910",
+    "description": "Framleiðsla á hekluðum og prjónuðum dúk",
+    "isat2008": "13.91.0",
+    "description_en": "Manufacture of knitted and crocheted fabrics"
+  },
+  {
+    "isat2008_normalized": "13920",
+    "description": "Framleiðsla á tilbúinni spunavöru annarri en fatnaði",
+    "isat2008": "13.92.0",
+    "description_en": "Manufacture of made-up textile articles, except apparel"
+  },
+  {
+    "isat2008_normalized": "13930",
+    "description": "Framleiðsla á gólfteppum og mottum",
+    "isat2008": "13.93.0",
+    "description_en": "Manufacture of carpets and rugs"
+  },
+  {
+    "isat2008_normalized": "13940",
+    "description": "Framleiðsla á köðlum, seglgarni og netum",
+    "isat2008": "13.94.0",
+    "description_en": "Manufacture of cordage, rope, twine and netting"
+  },
+  {
+    "isat2008_normalized": "13950",
+    "description": "Framleiðsla á trefjadúk og vörum úr þeim, þó ekki fatnaði",
+    "isat2008": "13.95.0",
+    "description_en": "Manufacture of non-wovens and articles made from non-wovens, except apparel"
+  },
+  {
+    "isat2008_normalized": "13960",
+    "description": "Framleiðsla annarra tækni- og iðnaðartextíla",
+    "isat2008": "13.96.0",
+    "description_en": "Manufacture of other technical and industrial textiles"
+  },
+  {
+    "isat2008_normalized": "13990",
+    "description": "Framleiðsla á annarri ótalinni textílvöru",
+    "isat2008": "13.99.0",
+    "description_en": "Manufacture of other textiles n.e.c."
+  },
+  {
+    "isat2008_normalized": "14110",
+    "description": "Framleiðsla á leðurfatnaði",
+    "isat2008": "14.11.0",
+    "description_en": "Manufacture of leather clothes"
+  },
+  {
+    "isat2008_normalized": "14120",
+    "description": "Vinnufatagerð",
+    "isat2008": "14.12.0",
+    "description_en": "Manufacture of workwear"
+  },
+  {
+    "isat2008_normalized": "14130",
+    "description": "Framleiðsla á öðrum yfirfatnaði",
+    "isat2008": "14.13.0",
+    "description_en": "Manufacture of other outerwear"
+  },
+  {
+    "isat2008_normalized": "14140",
+    "description": "Framleiðsla á nærfatnaði",
+    "isat2008": "14.14.0",
+    "description_en": "Manufacture of underwear"
+  },
+  {
+    "isat2008_normalized": "14190",
+    "description": "Framleiðsla á öðrum fatnaði og fylgihlutum",
+    "isat2008": "14.19.0",
+    "description_en": "Manufacture of other wearing apparel and accessories"
+  },
+  {
+    "isat2008_normalized": "14200",
+    "description": "Framleiðsla á vörum úr loðskinnum",
+    "isat2008": "14.20.0",
+    "description_en": "Manufacture of articles of fur"
+  },
+  {
+    "isat2008_normalized": "14310",
+    "description": "Framleiðsla á sokkum og sokkavörum",
+    "isat2008": "14.31.0",
+    "description_en": "Manufacture of knitted and crocheted hosiery"
+  },
+  {
+    "isat2008_normalized": "14390",
+    "description": "Framleiðsla á öðrum prjónuðum og hekluðum fatnaði",
+    "isat2008": "14.39.0",
+    "description_en": "Manufacture of other knitted and crocheted apparel"
+  },
+  {
+    "isat2008_normalized": "15110",
+    "description": "Sútun leðurs; sútun og litun á loðskinni",
+    "isat2008": "15.11.0",
+    "description_en": "Tanning and dressing of leather; dressing and dyeing of fur"
+  },
+  {
+    "isat2008_normalized": "15120",
+    "description": "Framleiðsla á ferðatöskum, handtöskum og áþekkum vörum; reiðtygjum og skyldum vörum",
+    "isat2008": "15.12.0",
+    "description_en": "Manufacture of luggage, handbags and the like, saddlery and harness"
+  },
+  {
+    "isat2008_normalized": "15200",
+    "description": "Framleiðsla á skófatnaði",
+    "isat2008": "15.20.0",
+    "description_en": "Manufacture of footwear"
+  },
+  {
+    "isat2008_normalized": "16100",
+    "description": "Sögun, heflun og fúavörn á viði",
+    "isat2008": "16.10.0",
+    "description_en": "Sawmilling and planing of wood"
+  },
+  {
+    "isat2008_normalized": "16210",
+    "description": "Framleiðsla á viðarspæni og plötum að grunni til úr viði",
+    "isat2008": "16.21.0",
+    "description_en": "Manufacture of veneer sheets and wood-based panels"
+  },
+  {
+    "isat2008_normalized": "16220",
+    "description": "Framleiðsla á samsettum parketgólfum",
+    "isat2008": "16.22.0",
+    "description_en": "Manufacture of assembled parquet floors"
+  },
+  {
+    "isat2008_normalized": "16230",
+    "description": "Framleiðsla á öðrum trésmíðavörum til bygginga",
+    "isat2008": "16.23.0",
+    "description_en": "Manufacture of other builders' carpentry and joinery"
+  },
+  {
+    "isat2008_normalized": "16240",
+    "description": "Framleiðsla á umbúðum úr viði",
+    "isat2008": "16.24.0",
+    "description_en": "Manufacture of wooden containers"
+  },
+  {
+    "isat2008_normalized": "16290",
+    "description": "Framleiðsla á annarri viðarvöru; framleiðsla á vörum úr korki, hálmi og fléttiefnum",
+    "isat2008": "16.29.0",
+    "description_en": "Manufacture of other products of wood; manufacture of articles of cork, straw and plaiting materials"
+  },
+  {
+    "isat2008_normalized": "17110",
+    "description": "Framleiðsla á pappírskvoðu",
+    "isat2008": "17.11.0",
+    "description_en": "Manufacture of pulp"
+  },
+  {
+    "isat2008_normalized": "17120",
+    "description": "Framleiðsla á pappír og pappa",
+    "isat2008": "17.12.0",
+    "description_en": "Manufacture of paper and paperboard"
+  },
+  {
+    "isat2008_normalized": "17210",
+    "description": "Framleiðsla á bylgjupappír og -pappa og umbúðum úr pappír og pappa",
+    "isat2008": "17.21.0",
+    "description_en": "Manufacture of corrugated paper and paperboard and of containers of paper and paperboard"
+  },
+  {
+    "isat2008_normalized": "17220",
+    "description": "Framleiðsla á heimilis- og hreinlætisvörum úr pappír og pappa",
+    "isat2008": "17.22.0",
+    "description_en": "Manufacture of household and sanitary goods and of toilet requisites"
+  },
+  {
+    "isat2008_normalized": "17230",
+    "description": "Framleiðsla á skrifpappír og skrifstofuvörum úr pappír og pappa",
+    "isat2008": "17.23.0",
+    "description_en": "Manufacture of paper stationery"
+  },
+  {
+    "isat2008_normalized": "17240",
+    "description": "Framleiðsla á veggfóðri",
+    "isat2008": "17.24.0",
+    "description_en": "Manufacture of wallpaper"
+  },
+  {
+    "isat2008_normalized": "17290",
+    "description": "Framleiðsla á annarri pappírs- og pappavöru",
+    "isat2008": "17.29.0",
+    "description_en": "Manufacture of other articles of paper and paperboard"
+  },
+  {
+    "isat2008_normalized": "18110",
+    "description": "Prentun dagblaða",
+    "isat2008": "18.11.0",
+    "description_en": "Printing of newspapers"
+  },
+  {
+    "isat2008_normalized": "18120",
+    "description": "Önnur prentun",
+    "isat2008": "18.12.0",
+    "description_en": "Other printing"
+  },
+  {
+    "isat2008_normalized": "18130",
+    "description": "Undirbúningur fyrir prentun",
+    "isat2008": "18.13.0",
+    "description_en": "Pre-press and pre-media services"
+  },
+  {
+    "isat2008_normalized": "18140",
+    "description": "Bókband og tengd þjónusta",
+    "isat2008": "18.14.0",
+    "description_en": "Binding and related services"
+  },
+  {
+    "isat2008_normalized": "18200",
+    "description": "Fjölföldun upptekins efnis",
+    "isat2008": "18.20.0",
+    "description_en": "Reproduction of recorded media"
+  },
+  {
+    "isat2008_normalized": "19100",
+    "description": "Koksframleiðsla",
+    "isat2008": "19.10.0",
+    "description_en": "Manufacture of coke oven products"
+  },
+  {
+    "isat2008_normalized": "19200",
+    "description": "Framleiðsla á hreinsuðum olíuvörum",
+    "isat2008": "19.20.0",
+    "description_en": "Manufacture of refined petroleum products"
+  },
+  {
+    "isat2008_normalized": "20110",
+    "description": "Framleiðsla á iðnaðargasi",
+    "isat2008": "20.11.0",
+    "description_en": "Manufacture of industrial gases"
+  },
+  {
+    "isat2008_normalized": "20120",
+    "description": "Framleiðsla á lit og litarefnum",
+    "isat2008": "20.12.0",
+    "description_en": "Manufacture of dyes and pigments"
+  },
+  {
+    "isat2008_normalized": "20130",
+    "description": "Framleiðsla á öðrum ólífrænum grunnefnum til efnaiðnaðar",
+    "isat2008": "20.13.0",
+    "description_en": "Manufacture of other inorganic basic chemicals"
+  },
+  {
+    "isat2008_normalized": "20140",
+    "description": "Framleiðsla á öðrum lífrænum grunnefnum til efnaiðnaðar",
+    "isat2008": "20.14.0",
+    "description_en": "Manufacture of other organic basic chemicals"
+  },
+  {
+    "isat2008_normalized": "20150",
+    "description": "Framleiðsla á tilbúnum áburði og köfnunarefnissamböndum",
+    "isat2008": "20.15.0",
+    "description_en": "Manufacture of fertilisers and nitrogen compounds"
+  },
+  {
+    "isat2008_normalized": "20160",
+    "description": "Framleiðsla á plasthráefnum",
+    "isat2008": "20.16.0",
+    "description_en": "Manufacture of plastics in primary forms"
+  },
+  {
+    "isat2008_normalized": "20170",
+    "description": "Framleiðsla á syntetísku gúmmíi til úrvinnslu",
+    "isat2008": "20.17.0",
+    "description_en": "Manufacture of synthetic rubber in primary forms"
+  },
+  {
+    "isat2008_normalized": "20200",
+    "description": "Framleiðsla á skordýra- og illgresiseyði og öðrum efnum til nota í landbúnaði",
+    "isat2008": "20.20.0",
+    "description_en": "Manufacture of pesticides and other agrochemical products"
+  },
+  {
+    "isat2008_normalized": "20300",
+    "description": "Framleiðsla á málningu, lökkum og svipuðum þekjuefnum, prentbleki og fylli- og þéttiefnum",
+    "isat2008": "20.30.0",
+    "description_en": "Manufacture of paints, varnishes and similar coatings, printing ink and mastics"
+  },
+  {
+    "isat2008_normalized": "20410",
+    "description": "Framleiðsla á sápu, hreinsi- og þvottaefnum, hreingerningar- og fægiefnum",
+    "isat2008": "20.41.0",
+    "description_en": "Manufacture of soap and detergents, cleaning and polishing preparations"
+  },
+  {
+    "isat2008_normalized": "20420",
+    "description": "Framleiðsla á ilmvatni og snyrtivörum",
+    "isat2008": "20.42.0",
+    "description_en": "Manufacture of perfumes and toilet preparations"
+  },
+  {
+    "isat2008_normalized": "20510",
+    "description": "Framleiðsla á sprengiefnum",
+    "isat2008": "20.51.0",
+    "description_en": "Manufacture of explosives"
+  },
+  {
+    "isat2008_normalized": "20520",
+    "description": "Framleiðsla á lími",
+    "isat2008": "20.52.0",
+    "description_en": "Manufacture of glues"
+  },
+  {
+    "isat2008_normalized": "20530",
+    "description": "Framleiðsla á ilmolíum",
+    "isat2008": "20.53.0",
+    "description_en": "Manufacture of essential oils"
+  },
+  {
+    "isat2008_normalized": "20590",
+    "description": "Framleiðsla á annarri ótalinni efnavöru",
+    "isat2008": "20.59.0",
+    "description_en": "Manufacture of other chemical products n.e.c."
+  },
+  {
+    "isat2008_normalized": "20600",
+    "description": "Framleiðsla gerviþráðar",
+    "isat2008": "20.60.0",
+    "description_en": "Manufacture of man-made fibres"
+  },
+  {
+    "isat2008_normalized": "21100",
+    "description": "Framleiðsla á efnum til lyfjagerðar",
+    "isat2008": "21.10.0",
+    "description_en": "Manufacture of basic pharmaceutical products"
+  },
+  {
+    "isat2008_normalized": "21200",
+    "description": "Lyfjaframleiðsla",
+    "isat2008": "21.20.0",
+    "description_en": "Manufacture of pharmaceutical preparations"
+  },
+  {
+    "isat2008_normalized": "22110",
+    "description": "Framleiðsla á gúmmíhjólbörðum og hjólbarðaslöngum, sólun notaðra gúmmíhjólbarða",
+    "isat2008": "22.11.0",
+    "description_en": "Manufacture of rubber tyres and tubes; retreading and rebuilding of rubber tyres"
+  },
+  {
+    "isat2008_normalized": "22190",
+    "description": "Framleiðsla á öðrum gúmmívörum",
+    "isat2008": "22.19.0",
+    "description_en": "Manufacture of other rubber products"
+  },
+  {
+    "isat2008_normalized": "22210",
+    "description": "Framleiðsla á plötum, þynnum, slöngum og prófílum úr plasti",
+    "isat2008": "22.21.0",
+    "description_en": "Manufacture of plastic plates, sheets, tubes and profiles"
+  },
+  {
+    "isat2008_normalized": "22221",
+    "description": "Framleiðsla á plastvörum til nota í sjávarútvegi",
+    "isat2008": "22.22.1",
+    "description_en": "Manufacture of plastic products for the fisheries"
+  },
+  {
+    "isat2008_normalized": "22229",
+    "description": "Framleiðsla á öðru umbúðaplasti",
+    "isat2008": "22.22.9",
+    "description_en": "Manufacture of other plastic packing goods"
+  },
+  {
+    "isat2008_normalized": "22230",
+    "description": "Framleiðsla á byggingarvörum úr plasti",
+    "isat2008": "22.23.0",
+    "description_en": "Manufacture of builders’ ware of plastic"
+  },
+  {
+    "isat2008_normalized": "22290",
+    "description": "Framleiðsla á öðrum plastvörum",
+    "isat2008": "22.29.0",
+    "description_en": "Manufacture of other plastic products"
+  },
+  {
+    "isat2008_normalized": "23110",
+    "description": "Framleiðsla á flotgleri",
+    "isat2008": "23.11.0",
+    "description_en": "Manufacture of flat glass"
+  },
+  {
+    "isat2008_normalized": "23120",
+    "description": "Skurður og vinnsla á flotgleri",
+    "isat2008": "23.12.0",
+    "description_en": "Shaping and processing of flat glass"
+  },
+  {
+    "isat2008_normalized": "23130",
+    "description": "Framleiðsla á glerílátum",
+    "isat2008": "23.13.0",
+    "description_en": "Manufacture of hollow glass"
+  },
+  {
+    "isat2008_normalized": "23140",
+    "description": "Framleiðsla á glertrefjum",
+    "isat2008": "23.14.0",
+    "description_en": "Manufacture of glass fibres"
+  },
+  {
+    "isat2008_normalized": "23190",
+    "description": "Framleiðsla og vinnsla á öðru gleri, þ.m.t. glervara til tæknilegra nota",
+    "isat2008": "23.19.0",
+    "description_en": "Manufacture and processing of other glass, including technical glassware"
+  },
+  {
+    "isat2008_normalized": "23200",
+    "description": "Framleiðsla á eldföstum vörum",
+    "isat2008": "23.20.0",
+    "description_en": "Manufacture of refractory products"
+  },
+  {
+    "isat2008_normalized": "23310",
+    "description": "Framleiðsla á flísum og hellum úr leir",
+    "isat2008": "23.31.0",
+    "description_en": "Manufacture of ceramic tiles and flags"
+  },
+  {
+    "isat2008_normalized": "23320",
+    "description": "Framleiðsla á byggingarvörum úr brenndum leir",
+    "isat2008": "23.32.0",
+    "description_en": "Manufacture of bricks, tiles and construction products, in baked clay"
+  },
+  {
+    "isat2008_normalized": "23410",
+    "description": "Framleiðsla á heimilisvörum og skrautmunum úr leir og postulíni",
+    "isat2008": "23.41.0",
+    "description_en": "Manufacture of ceramic household and ornamental articles"
+  },
+  {
+    "isat2008_normalized": "23420",
+    "description": "Framleiðsla á hreinlætistækjum úr leir og postulíni",
+    "isat2008": "23.42.0",
+    "description_en": "Manufacture of ceramic sanitary fixtures"
+  },
+  {
+    "isat2008_normalized": "23430",
+    "description": "Framleiðsla á einangrurum og tengjum úr leir",
+    "isat2008": "23.43.0",
+    "description_en": "Manufacture of ceramic insulators and insulating fittings"
+  },
+  {
+    "isat2008_normalized": "23440",
+    "description": "Framleiðsla á annarri leirvöru til tæknilegra nota",
+    "isat2008": "23.44.0",
+    "description_en": "Manufacture of other technical ceramic products"
+  },
+  {
+    "isat2008_normalized": "23490",
+    "description": "Framleiðsla á öðrum leirvörum",
+    "isat2008": "23.49.0",
+    "description_en": "Manufacture of other ceramic products"
+  },
+  {
+    "isat2008_normalized": "23510",
+    "description": "Sementsframleiðsla",
+    "isat2008": "23.51.0",
+    "description_en": "Manufacture of cement"
+  },
+  {
+    "isat2008_normalized": "23520",
+    "description": "Kalk- og gifsframleiðsla",
+    "isat2008": "23.52.0",
+    "description_en": "Manufacture of lime and plaster"
+  },
+  {
+    "isat2008_normalized": "23610",
+    "description": "Framleiðsla á byggingarefni úr steinsteypu",
+    "isat2008": "23.61.0",
+    "description_en": "Manufacture of concrete products for construction purposes"
+  },
+  {
+    "isat2008_normalized": "23620",
+    "description": "Framleiðsla á byggingarefni úr gifsi",
+    "isat2008": "23.62.0",
+    "description_en": "Manufacture of plaster products for construction purposes"
+  },
+  {
+    "isat2008_normalized": "23630",
+    "description": "Framleiðsla á tilbúinni steinsteypu",
+    "isat2008": "23.63.0",
+    "description_en": "Manufacture of ready-mixed concrete"
+  },
+  {
+    "isat2008_normalized": "23640",
+    "description": "Framleiðsla á steinlími",
+    "isat2008": "23.64.0",
+    "description_en": "Manufacture of mortars"
+  },
+  {
+    "isat2008_normalized": "23650",
+    "description": "Framleiðsla á vörum úr trefjasementi",
+    "isat2008": "23.65.0",
+    "description_en": "Manufacture of fibre cement"
+  },
+  {
+    "isat2008_normalized": "23690",
+    "description": "Framleiðsla á öðrum vörum úr steinsteypu, sementi og gifsi",
+    "isat2008": "23.69.0",
+    "description_en": "Manufacture of other articles of concrete, plaster and cement"
+  },
+  {
+    "isat2008_normalized": "23700",
+    "description": "Steinsmíði",
+    "isat2008": "23.70.0",
+    "description_en": "Cutting, shaping and finishing of stone"
+  },
+  {
+    "isat2008_normalized": "23910",
+    "description": "Framleiðsla á vörum til slípunar",
+    "isat2008": "23.91.0",
+    "description_en": "Production of abrasive products"
+  },
+  {
+    "isat2008_normalized": "23990",
+    "description": "Framleiðsla á öðrum ótöldum vörum úr málmlausum steinefnum",
+    "isat2008": "23.99.0",
+    "description_en": "Manufacture of other non-metallic mineral products n.e.c."
+  },
+  {
+    "isat2008_normalized": "24100",
+    "description": "Framleiðsla á járni, stáli og járnblendi",
+    "isat2008": "24.10.0",
+    "description_en": "Manufacture of basic iron and steel and of ferro-alloys "
+  },
+  {
+    "isat2008_normalized": "24200",
+    "description": "Framleiðsla á rörum, pípum, holum prófílum og tengihlutum úr stáli",
+    "isat2008": "24.20.0",
+    "description_en": "Manufacture of tubes, pipes, hollow profiles and related fittings, of steel"
+  },
+  {
+    "isat2008_normalized": "24310",
+    "description": "Kalddráttur stanga",
+    "isat2008": "24.31.0",
+    "description_en": "Cold drawing of bars"
+  },
+  {
+    "isat2008_normalized": "24320",
+    "description": "Kaldvölsun flatstáls",
+    "isat2008": "24.32.0",
+    "description_en": "Cold rolling of narrow strip"
+  },
+  {
+    "isat2008_normalized": "24330",
+    "description": "Kaldmótun",
+    "isat2008": "24.33.0",
+    "description_en": "Cold forming or folding"
+  },
+  {
+    "isat2008_normalized": "24340",
+    "description": "Kalddráttur víra",
+    "isat2008": "24.34.0",
+    "description_en": "Cold drawing of wire"
+  },
+  {
+    "isat2008_normalized": "24410",
+    "description": "Framleiðsla góðmálma",
+    "isat2008": "24.41.0",
+    "description_en": "Precious metals production"
+  },
+  {
+    "isat2008_normalized": "24420",
+    "description": "Álframleiðsla",
+    "isat2008": "24.42.0",
+    "description_en": "Aluminium production"
+  },
+  {
+    "isat2008_normalized": "24430",
+    "description": "Blý-, sink- og tinframleiðsla",
+    "isat2008": "24.43.0",
+    "description_en": "Lead, zinc and tin production"
+  },
+  {
+    "isat2008_normalized": "24440",
+    "description": "Koparframleiðsla",
+    "isat2008": "24.44.0",
+    "description_en": "Copper production"
+  },
+  {
+    "isat2008_normalized": "24450",
+    "description": "Framleiðsla annarra málma sem ekki innihalda járn",
+    "isat2008": "24.45.0",
+    "description_en": "Other non-ferrous metal production"
+  },
+  {
+    "isat2008_normalized": "24460",
+    "description": "Vinnsla á kjarnorkueldsneyti",
+    "isat2008": "24.46.0",
+    "description_en": "Processing of nuclear fuel "
+  },
+  {
+    "isat2008_normalized": "24510",
+    "description": "Járnsteypa",
+    "isat2008": "24.51.0",
+    "description_en": "Casting of iron"
+  },
+  {
+    "isat2008_normalized": "24520",
+    "description": "Stálsteypa",
+    "isat2008": "24.52.0",
+    "description_en": "Casting of steel"
+  },
+  {
+    "isat2008_normalized": "24530",
+    "description": "Steypa léttmálma",
+    "isat2008": "24.53.0",
+    "description_en": "Casting of light metals"
+  },
+  {
+    "isat2008_normalized": "24540",
+    "description": "Steypa annarra málma sem ekki innihalda járn",
+    "isat2008": "24.54.0",
+    "description_en": "Casting of other non-ferrous metals"
+  },
+  {
+    "isat2008_normalized": "25110",
+    "description": "Framleiðsla á  burðarvirkjum og byggingareiningum úr málmi",
+    "isat2008": "25.11.0",
+    "description_en": "Manufacture of metal structures and parts of structures"
+  },
+  {
+    "isat2008_normalized": "25120",
+    "description": "Framleiðsla á hurðum og gluggum úr málmi",
+    "isat2008": "25.12.0",
+    "description_en": "Manufacture of doors and windows of metal"
+  },
+  {
+    "isat2008_normalized": "25210",
+    "description": "Framleiðsla á miðstöðvarofnum og -kötlum",
+    "isat2008": "25.21.0",
+    "description_en": "Manufacture of central heating radiators and boilers"
+  },
+  {
+    "isat2008_normalized": "25290",
+    "description": "Framleiðsla á öðrum geymum, kerum og ílátum úr málmi",
+    "isat2008": "25.29.0",
+    "description_en": "Manufacture of other tanks, reservoirs and containers of metal"
+  },
+  {
+    "isat2008_normalized": "25300",
+    "description": "Framleiðsla á gufukötlum, þó ekki miðstöðvarkötlum",
+    "isat2008": "25.30.0",
+    "description_en": "Manufacture of steam generators, except central heating hot water boilers"
+  },
+  {
+    "isat2008_normalized": "25400",
+    "description": "Vopna- og skotfæraframleiðsla",
+    "isat2008": "25.40.0",
+    "description_en": "Manufacture of weapons and ammunition"
+  },
+  {
+    "isat2008_normalized": "25500",
+    "description": "Eldsmíði og önnur málmsmíði; sindurmótun",
+    "isat2008": "25.50.0",
+    "description_en": "Forging, pressing, stamping and roll-forming of metal; powder metallurgy"
+  },
+  {
+    "isat2008_normalized": "25610",
+    "description": "Meðhöndlun og húðun málma",
+    "isat2008": "25.61.0",
+    "description_en": "Treatment and coating of metals"
+  },
+  {
+    "isat2008_normalized": "25620",
+    "description": "Vélvinnsla málma",
+    "isat2008": "25.62.0",
+    "description_en": "Machining"
+  },
+  {
+    "isat2008_normalized": "25710",
+    "description": "Framleiðsla á hnífapörum, hnífum, skærum, o.þ.h.",
+    "isat2008": "25.71.0",
+    "description_en": "Manufacture of cutlery"
+  },
+  {
+    "isat2008_normalized": "25720",
+    "description": "Framleiðsla á lásum og lömum",
+    "isat2008": "25.72.0",
+    "description_en": "Manufacture of locks and hinges"
+  },
+  {
+    "isat2008_normalized": "25730",
+    "description": "Framleiðsla á verkfærum, þó ekki vélknúnum",
+    "isat2008": "25.73.0",
+    "description_en": "Manufacture of tools"
+  },
+  {
+    "isat2008_normalized": "25910",
+    "description": "Framleiðsla á stáltunnum og svipuðum ílátum",
+    "isat2008": "25.91.0",
+    "description_en": "Manufacture of steel drums and similar containers"
+  },
+  {
+    "isat2008_normalized": "25920",
+    "description": "Framleiðsla á umbúðum úr léttmálmi",
+    "isat2008": "25.92.0",
+    "description_en": "Manufacture of light metal packaging "
+  },
+  {
+    "isat2008_normalized": "25930",
+    "description": "Framleiðsla á keðjum,  fjöðrum og vörum úr vír",
+    "isat2008": "25.93.0",
+    "description_en": "Manufacture of wire products, chain and springs"
+  },
+  {
+    "isat2008_normalized": "25940",
+    "description": "Framleiðsla á boltum og skrúfum",
+    "isat2008": "25.94.0",
+    "description_en": "Manufacture of fasteners and screw machine products"
+  },
+  {
+    "isat2008_normalized": "25990",
+    "description": "Framleiðsla á öðrum ótöldum málmvörum",
+    "isat2008": "25.99.0",
+    "description_en": "Manufacture of other fabricated metal products n.e.c."
+  },
+  {
+    "isat2008_normalized": "26110",
+    "description": "Framleiðsla á rafeindaíhlutum",
+    "isat2008": "26.11.0",
+    "description_en": "Manufacture of electronic components"
+  },
+  {
+    "isat2008_normalized": "26120",
+    "description": "Framleiðsla á fullbúnum rafeindaspjöldum",
+    "isat2008": "26.12.0",
+    "description_en": "Manufacture of loaded electronic boards"
+  },
+  {
+    "isat2008_normalized": "26200",
+    "description": "Framleiðsla á tölvum og jaðarbúnaði",
+    "isat2008": "26.20.0",
+    "description_en": "Manufacture of computers and peripheral equipment"
+  },
+  {
+    "isat2008_normalized": "26300",
+    "description": "Framleiðsla fjarskiptabúnaðar",
+    "isat2008": "26.30.0",
+    "description_en": "Manufacture of communication equipment"
+  },
+  {
+    "isat2008_normalized": "26400",
+    "description": "Framleiðsla á sjónvarps-, útvarps- og hljómtækjum og skyldum búnaði",
+    "isat2008": "26.40.0",
+    "description_en": "Manufacture of consumer electronics"
+  },
+  {
+    "isat2008_normalized": "26510",
+    "description": "Framleiðsla á tækjum og búnaði til mælinga, prófana og leiðsögu",
+    "isat2008": "26.51.0",
+    "description_en": "Manufacture of instruments and appliances for measuring, testing and navigation"
+  },
+  {
+    "isat2008_normalized": "26520",
+    "description": "Framleiðsla á úrum og klukkum",
+    "isat2008": "26.52.0",
+    "description_en": "Manufacture of watches and clocks"
+  },
+  {
+    "isat2008_normalized": "26600",
+    "description": "Framleiðsla á búnaði til geislunar, raftækjabúnaði til lækninga og meðferðar",
+    "isat2008": "26.60.0",
+    "description_en": "Manufacture of irradiation, electromedical and electrotherapeutic equipment"
+  },
+  {
+    "isat2008_normalized": "26700",
+    "description": "Framleiðsla á optískum tækjum og ljósmyndabúnaði",
+    "isat2008": "26.70.0",
+    "description_en": "Manufacture of optical instruments and photographic equipment"
+  },
+  {
+    "isat2008_normalized": "26800",
+    "description": "Framleiðsla á segul- og optískum miðlum",
+    "isat2008": "26.80.0",
+    "description_en": "Manufacture of magnetic and optical media"
+  },
+  {
+    "isat2008_normalized": "27110",
+    "description": "Framleiðsla á rafhreyflum, rafölum og spennubreytum",
+    "isat2008": "27.11.0",
+    "description_en": "Manufacture of electric motors, generators and transformers"
+  },
+  {
+    "isat2008_normalized": "27120",
+    "description": "Framleiðsla á dreifi- og stjórnbúnaði fyrir raforku",
+    "isat2008": "27.12.0",
+    "description_en": "Manufacture of electricity distribution and control apparatus"
+  },
+  {
+    "isat2008_normalized": "27200",
+    "description": "Framleiðsla rafhlaðna og rafgeyma",
+    "isat2008": "27.20.0",
+    "description_en": "Manufacture of batteries and accumulators"
+  },
+  {
+    "isat2008_normalized": "27310",
+    "description": "Framleiðsla á ljósleiðaraköplum",
+    "isat2008": "27.31.0",
+    "description_en": "Manufacture of fibre optic cables"
+  },
+  {
+    "isat2008_normalized": "27320",
+    "description": "Framleiðsla á öðrum rafeinda- og rafmagnsvírum og köplum",
+    "isat2008": "27.32.0",
+    "description_en": "Manufacture of other electronic and electric wires and cables"
+  },
+  {
+    "isat2008_normalized": "27330",
+    "description": "Framleiðsla á leiðslubúnaði",
+    "isat2008": "27.33.0",
+    "description_en": "Manufacture of wiring devices"
+  },
+  {
+    "isat2008_normalized": "27400",
+    "description": "Framleiðsla á rafljósabúnaði",
+    "isat2008": "27.40.0",
+    "description_en": "Manufacture of electric lighting equipment"
+  },
+  {
+    "isat2008_normalized": "27510",
+    "description": "Framleiðsla rafknúinna heimilistækja",
+    "isat2008": "27.51.0",
+    "description_en": "Manufacture of electric domestic appliances"
+  },
+  {
+    "isat2008_normalized": "27520",
+    "description": "Framleiðsla heimilistækja, annarra en rafknúinna",
+    "isat2008": "27.52.0",
+    "description_en": "Manufacture of non-electric domestic appliances"
+  },
+  {
+    "isat2008_normalized": "27900",
+    "description": "Framleiðsla á öðrum rafbúnaði",
+    "isat2008": "27.90.0",
+    "description_en": "Manufacture of other electrical equipment"
+  },
+  {
+    "isat2008_normalized": "28110",
+    "description": "Framleiðsla hreyfla og hverfla, þó ekki í loftför, ökutæki eða vélhjól",
+    "isat2008": "28.11.0",
+    "description_en": "Manufacture of engines and turbines, except aircraft, vehicle and cycle engines"
+  },
+  {
+    "isat2008_normalized": "28120",
+    "description": "Framleiðsla á vökvaaflsbúnaði",
+    "isat2008": "28.12.0",
+    "description_en": "Manufacture of fluid power equipment"
+  },
+  {
+    "isat2008_normalized": "28130",
+    "description": "Framleiðsla á öðrum dælum og þjöppum",
+    "isat2008": "28.13.0",
+    "description_en": "Manufacture of other pumps and compressors"
+  },
+  {
+    "isat2008_normalized": "28140",
+    "description": "Framleiðsla á krönum og lokum",
+    "isat2008": "28.14.0",
+    "description_en": "Manufacture of other taps and valves"
+  },
+  {
+    "isat2008_normalized": "28150",
+    "description": "Framleiðsla á legum, tannhjólum, drifum og drifbúnaði",
+    "isat2008": "28.15.0",
+    "description_en": "Manufacture of bearings, gears, gearing and driving elements"
+  },
+  {
+    "isat2008_normalized": "28210",
+    "description": "Framleiðsla á ofnum, bræðsluofnum og brennurum",
+    "isat2008": "28.21.0",
+    "description_en": "Manufacture of ovens, furnaces and furnace burners"
+  },
+  {
+    "isat2008_normalized": "28220",
+    "description": "Framleiðsla á lyftitækjum og færslubúnaði",
+    "isat2008": "28.22.0",
+    "description_en": "Manufacture of lifting and handling equipment"
+  },
+  {
+    "isat2008_normalized": "28230",
+    "description": "Framleiðsla á skrifstofuvélum og –búnaði, þó ekki tölvum og jaðarbúnaði",
+    "isat2008": "28.23.0",
+    "description_en": "Manufacture of office machinery and equipment (except computers and peripheral equipment)"
+  },
+  {
+    "isat2008_normalized": "28240",
+    "description": "Framleiðsla á aflknúnum handverkfærum",
+    "isat2008": "28.24.0",
+    "description_en": "Manufacture of power-driven hand tools"
+  },
+  {
+    "isat2008_normalized": "28250",
+    "description": "Framleiðsla á kæli- og loftræstibúnaði, þó ekki til  heimilisnota",
+    "isat2008": "28.25.0",
+    "description_en": "Manufacture of non-domestic cooling and ventilation equipment"
+  },
+  {
+    "isat2008_normalized": "28290",
+    "description": "Framleiðsla á öðrum ótöldum vélum til almennra nota",
+    "isat2008": "28.29.0",
+    "description_en": "Manufacture of other general-purpose machinery n.e.c."
+  },
+  {
+    "isat2008_normalized": "28300",
+    "description": "Framleiðsla á vélum til nota í landbúnaði og skógrækt",
+    "isat2008": "28.30.0",
+    "description_en": "Manufacture of agricultural and forestry machinery"
+  },
+  {
+    "isat2008_normalized": "28410",
+    "description": "Framleiðsla á vélum til mótunar á málmi",
+    "isat2008": "28.41.0",
+    "description_en": "Manufacture of metal forming machinery"
+  },
+  {
+    "isat2008_normalized": "28490",
+    "description": "Framleiðsla á öðrum ótöldum smíðavélum",
+    "isat2008": "28.49.0",
+    "description_en": "Manufacture of other machine tools"
+  },
+  {
+    "isat2008_normalized": "28910",
+    "description": "Framleiðsla á vélum til málmvinnslu",
+    "isat2008": "28.91.0",
+    "description_en": "Manufacture of machinery for metallurgy"
+  },
+  {
+    "isat2008_normalized": "28920",
+    "description": "Framleiðsla á vélum til mannvirkjagerðar, námugraftrar og vinnslu hráefna úr jörðu",
+    "isat2008": "28.92.0",
+    "description_en": "Manufacture of machinery for mining, quarrying and construction"
+  },
+  {
+    "isat2008_normalized": "28930",
+    "description": "Framleiðsla á vélum fyrir matvæla-, drykkjarvöru- og tóbaksvinnslu",
+    "isat2008": "28.93.0",
+    "description_en": "Manufacture of machinery for food, beverage and tobacco processing"
+  },
+  {
+    "isat2008_normalized": "28940",
+    "description": "Framleiðsla á vélum fyrir textíl-, fata- og leðurframleiðslu",
+    "isat2008": "28.94.0",
+    "description_en": "Manufacture of machinery for textile, apparel and leather production"
+  },
+  {
+    "isat2008_normalized": "28950",
+    "description": "Framleiðsla á vélum til pappírs- og pappaframleiðslu",
+    "isat2008": "28.95.0",
+    "description_en": "Manufacture of machinery for paper and paperboard production"
+  },
+  {
+    "isat2008_normalized": "28960",
+    "description": "Framleiðsla á vélum til plast- og gúmmívinnslu",
+    "isat2008": "28.96.0",
+    "description_en": "Manufacture of plastics and rubber machinery"
+  },
+  {
+    "isat2008_normalized": "28990",
+    "description": "Framleiðsla á öðrum ótöldum sérhæfðum vélum",
+    "isat2008": "28.99.0",
+    "description_en": "Manufacture of other special-purpose machinery n.e.c."
+  },
+  {
+    "isat2008_normalized": "29100",
+    "description": "Framleiðsla vélknúinna ökutækja",
+    "isat2008": "29.10.0",
+    "description_en": "Manufacture of motor vehicles"
+  },
+  {
+    "isat2008_normalized": "29200",
+    "description": "Smíði yfirbygginga fyrir vélknúin ökutæki og framleiðsla tengivagna",
+    "isat2008": "29.20.0",
+    "description_en": "Manufacture of bodies (coachwork) for motor vehicles; manufacture of trailers and semi-trailers"
+  },
+  {
+    "isat2008_normalized": "29310",
+    "description": "Framleiðsla á raf- og rafeindabúnaði í vélknúin ökutæki og hreyfla þeirra",
+    "isat2008": "29.31.0",
+    "description_en": "Manufacture of electrical and electronic equipment for motor vehicles"
+  },
+  {
+    "isat2008_normalized": "29320",
+    "description": "Framleiðsla á öðrum íhlutum og aukabúnaði í vélknúin ökutæki og hreyfla þeirra",
+    "isat2008": "29.32.0",
+    "description_en": "Manufacture of other parts and accessories for motor vehicles"
+  },
+  {
+    "isat2008_normalized": "30110",
+    "description": "Smíði skipa og annarra fljótandi mannvirkja",
+    "isat2008": "30.11.0",
+    "description_en": "Building of ships and floating structures"
+  },
+  {
+    "isat2008_normalized": "30120",
+    "description": "Smíði skemmti- og sportbáta",
+    "isat2008": "30.12.0",
+    "description_en": "Building of pleasure and sporting boats"
+  },
+  {
+    "isat2008_normalized": "30200",
+    "description": "Framleiðsla eimreiða og járnbrautarvagna",
+    "isat2008": "30.20.0",
+    "description_en": "Manufacture of railway locomotives and rolling stock"
+  },
+  {
+    "isat2008_normalized": "30300",
+    "description": "Framleiðsla á loft- og geimförum og tengdum vélbúnaði",
+    "isat2008": "30.30.0",
+    "description_en": "Manufacture of air and spacecraft and related machinery"
+  },
+  {
+    "isat2008_normalized": "30400",
+    "description": "Framleiðsla á hernaðarökutækjum",
+    "isat2008": "30.40.0",
+    "description_en": "Manufacture of military fighting vehicles"
+  },
+  {
+    "isat2008_normalized": "30910",
+    "description": "Framleiðsla vélhjóla",
+    "isat2008": "30.91.0",
+    "description_en": "Manufacture of motorcycles"
+  },
+  {
+    "isat2008_normalized": "30920",
+    "description": "Framleiðsla á reiðhjólum, barnavögnum og farartækjum fyrir hreyfihamlaða",
+    "isat2008": "30.92.0",
+    "description_en": "Manufacture of bicycles and invalid carriages"
+  },
+  {
+    "isat2008_normalized": "30990",
+    "description": "Framleiðsla annarra ótaldra farartækja",
+    "isat2008": "30.99.0",
+    "description_en": "Manufacture of other transport equipment n.e.c."
+  },
+  {
+    "isat2008_normalized": "31010",
+    "description": "Framleiðsla á húsgögnum og innréttingum fyrir atvinnuhúsnæði",
+    "isat2008": "31.01.0",
+    "description_en": "Manufacture of office and shop furniture"
+  },
+  {
+    "isat2008_normalized": "31020",
+    "description": "Framleiðsla á húsgögnum og innréttingum í eldhús",
+    "isat2008": "31.02.0",
+    "description_en": "Manufacture of kitchen furniture"
+  },
+  {
+    "isat2008_normalized": "31030",
+    "description": "Framleiðsla á dýnum",
+    "isat2008": "31.03.0",
+    "description_en": "Manufacture of mattresses"
+  },
+  {
+    "isat2008_normalized": "31090",
+    "description": "Framleiðsla á öðrum húsgögnum og innréttingum",
+    "isat2008": "31.09.0",
+    "description_en": "Manufacture of other furniture"
+  },
+  {
+    "isat2008_normalized": "32110",
+    "description": "Myntslátta",
+    "isat2008": "32.11.0",
+    "description_en": "Striking of coins"
+  },
+  {
+    "isat2008_normalized": "32120",
+    "description": "Skartgripasmíði og skyld framleiðsla",
+    "isat2008": "32.12.0",
+    "description_en": "Manufacture of jewellery and related articles"
+  },
+  {
+    "isat2008_normalized": "32130",
+    "description": "Framleiðsla á óekta skartgripum og skyldum vörum",
+    "isat2008": "32.13.0",
+    "description_en": "Manufacture of imitation jewellery and related articles"
+  },
+  {
+    "isat2008_normalized": "32200",
+    "description": "Hljóðfærasmíði",
+    "isat2008": "32.20.0",
+    "description_en": "Manufacture of musical instruments"
+  },
+  {
+    "isat2008_normalized": "32300",
+    "description": "Framleiðsla á íþróttavörum",
+    "isat2008": "32.30.0",
+    "description_en": "Manufacture of sports goods"
+  },
+  {
+    "isat2008_normalized": "32400",
+    "description": "Framleiðsla á spilum og leikföngum",
+    "isat2008": "32.40.0",
+    "description_en": "Manufacture of games and toys"
+  },
+  {
+    "isat2008_normalized": "32500",
+    "description": "Framleiðsla á tækjum og vörum til lækninga og tannlækninga",
+    "isat2008": "32.50.0",
+    "description_en": "Manufacture of medical and dental instruments and supplies"
+  },
+  {
+    "isat2008_normalized": "32910",
+    "description": "Framleiðsla á sópum og burstum",
+    "isat2008": "32.91.0",
+    "description_en": "Manufacture of brooms and brushes"
+  },
+  {
+    "isat2008_normalized": "32990",
+    "description": "Önnur ótalin framleiðsla",
+    "isat2008": "32.99.0",
+    "description_en": "Other manufacturing n.e.c. "
+  },
+  {
+    "isat2008_normalized": "33110",
+    "description": "Viðgerðir á málmvörum",
+    "isat2008": "33.11.0",
+    "description_en": "Repair of fabricated metal products"
+  },
+  {
+    "isat2008_normalized": "33120",
+    "description": "Viðgerðir á vélbúnaði",
+    "isat2008": "33.12.0",
+    "description_en": "Repair of machinery"
+  },
+  {
+    "isat2008_normalized": "33130",
+    "description": "Viðgerðir á rafeindabúnaði og optískum tækjum",
+    "isat2008": "33.13.0",
+    "description_en": "Repair of electronic and optical equipment"
+  },
+  {
+    "isat2008_normalized": "33140",
+    "description": "Viðgerðir á rafbúnaði",
+    "isat2008": "33.14.0",
+    "description_en": "Repair of electrical equipment"
+  },
+  {
+    "isat2008_normalized": "33150",
+    "description": "Viðgerðir og viðhald á skipum og bátum",
+    "isat2008": "33.15.0",
+    "description_en": "Repair and maintenance of ships and boats"
+  },
+  {
+    "isat2008_normalized": "33160",
+    "description": "Viðgerðir og viðhald á loftförum og geimförum",
+    "isat2008": "33.16.0",
+    "description_en": "Repair and maintenance of aircraft and spacecraft"
+  },
+  {
+    "isat2008_normalized": "33170",
+    "description": "Viðgerðir og viðhald á öðrum ótöldum flutningatækjum",
+    "isat2008": "33.17.0",
+    "description_en": "Repair and maintenance of other transport equipment"
+  },
+  {
+    "isat2008_normalized": "33190",
+    "description": "Viðgerðir á öðrum búnaði",
+    "isat2008": "33.19.0",
+    "description_en": "Repair of other equipment"
+  },
+  {
+    "isat2008_normalized": "33200",
+    "description": "Uppsetning á vélum og búnaði til nota í atvinnuskyni",
+    "isat2008": "33.20.0",
+    "description_en": "Installation of industrial machinery and equipment"
+  },
+  {
+    "isat2008_normalized": "35110",
+    "description": "Framleiðsla rafmagns",
+    "isat2008": "35.11.0",
+    "description_en": "Production of electricity"
+  },
+  {
+    "isat2008_normalized": "35120",
+    "description": "Flutningur rafmagns",
+    "isat2008": "35.12.0",
+    "description_en": "Transmission of electricity"
+  },
+  {
+    "isat2008_normalized": "35130",
+    "description": "Dreifing rafmagns",
+    "isat2008": "35.13.0",
+    "description_en": "Distribution of electricity"
+  },
+  {
+    "isat2008_normalized": "35140",
+    "description": "Viðskipti með rafmagn",
+    "isat2008": "35.14.0",
+    "description_en": "Trade of electricity"
+  },
+  {
+    "isat2008_normalized": "35210",
+    "description": "Gasframleiðsla",
+    "isat2008": "35.21.0",
+    "description_en": "Manufacture of gas"
+  },
+  {
+    "isat2008_normalized": "35220",
+    "description": "Dreifing á loftkenndu eldsneyti um leiðslur",
+    "isat2008": "35.22.0",
+    "description_en": "Distribution of gaseous fuels through mains"
+  },
+  {
+    "isat2008_normalized": "35230",
+    "description": "Viðskipti með gas um leiðslur",
+    "isat2008": "35.23.0",
+    "description_en": "Trade of gas through mains"
+  },
+  {
+    "isat2008_normalized": "35300",
+    "description": "Hitaveita; kæli- og loftræstiveita",
+    "isat2008": "35.30.0",
+    "description_en": "Steam and air conditioning supply"
+  },
+  {
+    "isat2008_normalized": "36000",
+    "description": "Vatnsveita, öflun og meðferð vatns",
+    "isat2008": "36.00.0",
+    "description_en": "Water collection, treatment and supply"
+  },
+  {
+    "isat2008_normalized": "37000",
+    "description": "Fráveita",
+    "isat2008": "37.00.0",
+    "description_en": "Sewerage"
+  },
+  {
+    "isat2008_normalized": "38110",
+    "description": "Söfnun hættulítils sorps",
+    "isat2008": "38.11.0",
+    "description_en": "Collection of non-hazardous waste"
+  },
+  {
+    "isat2008_normalized": "38120",
+    "description": "Söfnun hættulegs úrgangs",
+    "isat2008": "38.12.0",
+    "description_en": "Collection of hazardous waste"
+  },
+  {
+    "isat2008_normalized": "38210",
+    "description": "Meðhöndlun og förgun hættulítils sorps",
+    "isat2008": "38.21.0",
+    "description_en": "Treatment and disposal of non-hazardous waste"
+  },
+  {
+    "isat2008_normalized": "38220",
+    "description": "Meðhöndlun og förgun hættulegs úrgangs",
+    "isat2008": "38.22.0",
+    "description_en": "Treatment and disposal of hazardous waste"
+  },
+  {
+    "isat2008_normalized": "38310",
+    "description": "Niðurrif á ónýtum hlutum",
+    "isat2008": "38.31.0",
+    "description_en": "Dismantling of wrecks"
+  },
+  {
+    "isat2008_normalized": "38320",
+    "description": "Endurnýting flokkaðra efna",
+    "isat2008": "38.32.0",
+    "description_en": "Recovery of sorted materials"
+  },
+  {
+    "isat2008_normalized": "39000",
+    "description": "Afmengun og önnur þjónusta við meðhöndlun úrgangs",
+    "isat2008": "39.00.0",
+    "description_en": "Remediation activities and other waste management services"
+  },
+  {
+    "isat2008_normalized": "41100",
+    "description": "Þróun byggingarverkefna",
+    "isat2008": "41.10.0",
+    "description_en": "Development of building projects"
+  },
+  {
+    "isat2008_normalized": "41200",
+    "description": "Bygging íbúðar- og atvinnuhúsnæðis",
+    "isat2008": "41.20.0",
+    "description_en": "Construction of residential and non-residential buildings"
+  },
+  {
+    "isat2008_normalized": "42110",
+    "description": "Vegagerð",
+    "isat2008": "42.11.0",
+    "description_en": "Construction of roads and motorways"
+  },
+  {
+    "isat2008_normalized": "42120",
+    "description": "Lagning járnbrauta og neðanjarðarjárnbrauta",
+    "isat2008": "42.12.0",
+    "description_en": "Construction of railways and underground railways"
+  },
+  {
+    "isat2008_normalized": "42130",
+    "description": "Brúarsmíði og jarðgangagerð",
+    "isat2008": "42.13.0",
+    "description_en": "Construction of bridges and tunnels"
+  },
+  {
+    "isat2008_normalized": "42210",
+    "description": "Gerð þjónustumannvirkja fyrir vatn",
+    "isat2008": "42.21.0",
+    "description_en": "Construction of utility projects for fluids"
+  },
+  {
+    "isat2008_normalized": "42220",
+    "description": "Bygging þjónustumannvirkja fyrir rafmagn og fjarskipti",
+    "isat2008": "42.22.0",
+    "description_en": "Construction of utility projects for electricity and telecommunications"
+  },
+  {
+    "isat2008_normalized": "42910",
+    "description": "Gerð vatnsmannvirkja",
+    "isat2008": "42.91.0",
+    "description_en": "Construction of water projects"
+  },
+  {
+    "isat2008_normalized": "42990",
+    "description": "Bygging annarra ótalinna mannvirkja",
+    "isat2008": "42.99.0",
+    "description_en": "Construction of other civil engineering projects n.e.c."
+  },
+  {
+    "isat2008_normalized": "43110",
+    "description": "Niðurrif",
+    "isat2008": "43.11.0",
+    "description_en": "Demolition"
+  },
+  {
+    "isat2008_normalized": "43120",
+    "description": "Undirbúningsvinna á byggingarsvæði",
+    "isat2008": "43.12.0",
+    "description_en": "Site preparation"
+  },
+  {
+    "isat2008_normalized": "43130",
+    "description": "Tilraunaboranir og borvinna",
+    "isat2008": "43.13.0",
+    "description_en": "Test drilling and boring"
+  },
+  {
+    "isat2008_normalized": "43210",
+    "description": "Raflagnir",
+    "isat2008": "43.21.0",
+    "description_en": "Electrical installation"
+  },
+  {
+    "isat2008_normalized": "43220",
+    "description": "Pípulagnir, uppsetning hitunar- og loftræstikerfa",
+    "isat2008": "43.22.0",
+    "description_en": "Plumbing, heat and air-conditioning installation"
+  },
+  {
+    "isat2008_normalized": "43290",
+    "description": "Önnur uppsetning í mannvirki",
+    "isat2008": "43.29.0",
+    "description_en": "Other construction installation"
+  },
+  {
+    "isat2008_normalized": "43310",
+    "description": "Múrhúðun",
+    "isat2008": "43.31.0",
+    "description_en": "Plastering"
+  },
+  {
+    "isat2008_normalized": "43320",
+    "description": "Uppsetning innréttinga",
+    "isat2008": "43.32.0",
+    "description_en": "Joinery installation"
+  },
+  {
+    "isat2008_normalized": "43330",
+    "description": "Lagning gólfefna og veggefna",
+    "isat2008": "43.33.0",
+    "description_en": "Floor and wall covering"
+  },
+  {
+    "isat2008_normalized": "43341",
+    "description": "Málningarvinna",
+    "isat2008": "43.34.1",
+    "description_en": "Painting"
+  },
+  {
+    "isat2008_normalized": "43342",
+    "description": "Glerjun",
+    "isat2008": "43.34.2",
+    "description_en": "Glazing"
+  },
+  {
+    "isat2008_normalized": "43390",
+    "description": "Annar frágangur bygginga",
+    "isat2008": "43.39.0",
+    "description_en": "Other building completion and finishing"
+  },
+  {
+    "isat2008_normalized": "43910",
+    "description": "Vinna við þök",
+    "isat2008": "43.91.0",
+    "description_en": "Roofing activities"
+  },
+  {
+    "isat2008_normalized": "43990",
+    "description": "Önnur ótalin sérhæfð byggingarstarfsemi",
+    "isat2008": "43.99.0",
+    "description_en": "Other specialised construction activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "45110",
+    "description": "Bílasala",
+    "isat2008": "45.11.0",
+    "description_en": "Sale of cars and light motor vehicles"
+  },
+  {
+    "isat2008_normalized": "45191",
+    "description": "Sala á húsbílum og húsvögnum",
+    "isat2008": "45.19.1",
+    "description_en": "Sale of camping vehicles"
+  },
+  {
+    "isat2008_normalized": "45199",
+    "description": "Sala á öðrum ótöldum vélknúnum ökutækjum og tengivögnum",
+    "isat2008": "45.19.9",
+    "description_en": "Sale of other motor vehicles"
+  },
+  {
+    "isat2008_normalized": "45201",
+    "description": "Almenn bílaverkstæði",
+    "isat2008": "45.20.1",
+    "description_en": "General maintenance and repair of motor vehicles"
+  },
+  {
+    "isat2008_normalized": "45202",
+    "description": "Bílaréttingar og -sprautun",
+    "isat2008": "45.20.2",
+    "description_en": "Bodywork repair and painting of motor vehicles"
+  },
+  {
+    "isat2008_normalized": "45203",
+    "description": "Dekkjaverkstæði og smurstöðvar",
+    "isat2008": "45.20.3",
+    "description_en": "Tyre and lubrication services"
+  },
+  {
+    "isat2008_normalized": "45204",
+    "description": "Bón- og þvottastöðvar",
+    "isat2008": "45.20.4",
+    "description_en": "Washing and  polishing of motor vehicles"
+  },
+  {
+    "isat2008_normalized": "45310",
+    "description": "Heildverslun með varahluti og aukabúnað í bíla",
+    "isat2008": "45.31.0",
+    "description_en": "Wholesale trade of motor vehicle parts and accessories"
+  },
+  {
+    "isat2008_normalized": "45320",
+    "description": "Smásala á varahlutum og aukabúnaði í bíla",
+    "isat2008": "45.32.0",
+    "description_en": "Retail trade of motor vehicle parts and accessories"
+  },
+  {
+    "isat2008_normalized": "45400",
+    "description": "Sala, viðhald og viðgerðir vélhjóla og hluta og aukabúnaðar til þeirra",
+    "isat2008": "45.40.0",
+    "description_en": "Sale, maintenance and repair of motorcycles and related parts and accessories"
+  },
+  {
+    "isat2008_normalized": "46110",
+    "description": "Umboðsverslun með hráefni úr landbúnaði, lifandi dýr, textílhráefni og hálfunna vöru",
+    "isat2008": "46.11.0",
+    "description_en": "Agents involved in the sale of agricultural raw materials, live animals, textile raw materials and semi-finished goods"
+  },
+  {
+    "isat2008_normalized": "46120",
+    "description": "Umboðsverslun með eldsneyti, málmgrýti, málma og íðefni til iðnaðarnota",
+    "isat2008": "46.12.0",
+    "description_en": "Agents involved in the sale of fuels, ores, metals and industrial chemicals"
+  },
+  {
+    "isat2008_normalized": "46130",
+    "description": "Umboðsverslun með timbur og byggingarefni",
+    "isat2008": "46.13.0",
+    "description_en": "Agents involved in the sale of timber and building materials"
+  },
+  {
+    "isat2008_normalized": "46140",
+    "description": "Umboðsverslun með vélar, iðnaðarvélar, skip og loftför",
+    "isat2008": "46.14.0",
+    "description_en": "Agents involved in the sale of machinery, industrial equipment, ships and aircraft"
+  },
+  {
+    "isat2008_normalized": "46150",
+    "description": "Umboðsverslun með húsgögn, heimilisbúnað og járnvörur",
+    "isat2008": "46.15.0",
+    "description_en": "Agents involved in the sale of furniture, household goods, hardware and ironmongery"
+  },
+  {
+    "isat2008_normalized": "46160",
+    "description": "Umboðsverslun með textílefni, fatnað, loðfelda, skófatnað og leðurvörur",
+    "isat2008": "46.16.0",
+    "description_en": "Agents involved in the sale of textiles, clothing, fur, footwear and leather goods"
+  },
+  {
+    "isat2008_normalized": "46171",
+    "description": "Umboðsverslun með fisk og fiskafurðir",
+    "isat2008": "46.17.1",
+    "description_en": "Agents involved in the sale of marine products"
+  },
+  {
+    "isat2008_normalized": "46172",
+    "description": "Fiskmarkaðir",
+    "isat2008": "46.17.2",
+    "description_en": "Fish markets"
+  },
+  {
+    "isat2008_normalized": "46179",
+    "description": "Umboðsverslun með aðra matvöru, drykkjarvöru og tóbak",
+    "isat2008": "46.17.9",
+    "description_en": "Agents involved in the sale of food, beverages and tobacco, excl. marine products"
+  },
+  {
+    "isat2008_normalized": "46180",
+    "description": "Umboðsverslun sem sérhæfir sig í sölu á öðrum tilteknum vörum eða vöruflokkum",
+    "isat2008": "46.18.0",
+    "description_en": "Agents specialised in the sale of other particular products"
+  },
+  {
+    "isat2008_normalized": "46190",
+    "description": "Blönduð umboðsverslun",
+    "isat2008": "46.19.0",
+    "description_en": "Agents involved in the sale of a variety of goods"
+  },
+  {
+    "isat2008_normalized": "46210",
+    "description": "Heildverslun með korn, óunnið tóbak, fræ og dýrafóður",
+    "isat2008": "46.21.0",
+    "description_en": "Wholesale of grain, unmanufactured tobacco, seeds and animal feeds"
+  },
+  {
+    "isat2008_normalized": "46220",
+    "description": "Heildverslun með blóm og plöntur",
+    "isat2008": "46.22.0",
+    "description_en": "Wholesale of flowers and plants"
+  },
+  {
+    "isat2008_normalized": "46230",
+    "description": "Heildverslun með lifandi dýr",
+    "isat2008": "46.23.0",
+    "description_en": "Wholesale of live animals"
+  },
+  {
+    "isat2008_normalized": "46240",
+    "description": "Heildverslun með húðir, skinn og leður",
+    "isat2008": "46.24.0",
+    "description_en": "Wholesale of hides, skins and leather"
+  },
+  {
+    "isat2008_normalized": "46310",
+    "description": "Heildverslun með ávexti og grænmeti",
+    "isat2008": "46.31.0",
+    "description_en": "Wholesale of fruit and vegetables"
+  },
+  {
+    "isat2008_normalized": "46320",
+    "description": "Heildverslun með kjöt og kjötvöru",
+    "isat2008": "46.32.0",
+    "description_en": "Wholesale of meat and meat products"
+  },
+  {
+    "isat2008_normalized": "46330",
+    "description": "Heildverslun með mjólkurafurðir, egg, matarolíu og -feiti",
+    "isat2008": "46.33.0",
+    "description_en": "Wholesale of dairy products, eggs and edible oils and fats"
+  },
+  {
+    "isat2008_normalized": "46340",
+    "description": "Heildverslun með drykkjarvörur",
+    "isat2008": "46.34.0",
+    "description_en": "Wholesale of beverages"
+  },
+  {
+    "isat2008_normalized": "46350",
+    "description": "Heildverslun með tóbaksvöru",
+    "isat2008": "46.35.0",
+    "description_en": "Wholesale of tobacco products"
+  },
+  {
+    "isat2008_normalized": "46360",
+    "description": "Heildverslun með sykur, súkkulaði og sælgæti",
+    "isat2008": "46.36.0",
+    "description_en": "Wholesale of sugar and chocolate and sugar confectionery"
+  },
+  {
+    "isat2008_normalized": "46370",
+    "description": "Heildverslun með kaffi, te, kakó og krydd",
+    "isat2008": "46.37.0",
+    "description_en": "Wholesale of coffee, tea, cocoa and spices"
+  },
+  {
+    "isat2008_normalized": "46381",
+    "description": "Heildverslun með fisk og fiskafurðir",
+    "isat2008": "46.38.1",
+    "description_en": "Wholesale of fish and fish products"
+  },
+  {
+    "isat2008_normalized": "46389",
+    "description": "Heildverslun með önnur ótalin matvæli",
+    "isat2008": "46.38.9",
+    "description_en": "Wholesale of other food n.e.c."
+  },
+  {
+    "isat2008_normalized": "46390",
+    "description": "Blönduð heildverslun með matvæli, drykkjarvöru og tóbak",
+    "isat2008": "46.39.0",
+    "description_en": "Non-specialised wholesale of food, beverages and tobacco"
+  },
+  {
+    "isat2008_normalized": "46410",
+    "description": "Heildverslun með textílvöru",
+    "isat2008": "46.41.0",
+    "description_en": "Wholesale of textiles"
+  },
+  {
+    "isat2008_normalized": "46420",
+    "description": "Heildverslun með fatnað og skófatnað",
+    "isat2008": "46.42.0",
+    "description_en": "Wholesale of clothing and footwear"
+  },
+  {
+    "isat2008_normalized": "46430",
+    "description": "Heildverslun með heimilistæki, útvörp, sjónvörp og tengdar vörur",
+    "isat2008": "46.43.0",
+    "description_en": "Wholesale of electrical household appliances"
+  },
+  {
+    "isat2008_normalized": "46441",
+    "description": "Heildverslun með postulín og glervöru",
+    "isat2008": "46.44.1",
+    "description_en": "Wholesale of china and glassware"
+  },
+  {
+    "isat2008_normalized": "46442",
+    "description": "Heildverslun með hreingerningarefni",
+    "isat2008": "46.44.2",
+    "description_en": "Wholesale of cleaning materials"
+  },
+  {
+    "isat2008_normalized": "46450",
+    "description": "Heildverslun með ilmvötn og snyrtivörur",
+    "isat2008": "46.45.0",
+    "description_en": "Wholesale of perfume and cosmetics"
+  },
+  {
+    "isat2008_normalized": "46460",
+    "description": "Heildverslun með lyf og lækningavörur",
+    "isat2008": "46.46.0",
+    "description_en": "Wholesale of pharmaceutical goods"
+  },
+  {
+    "isat2008_normalized": "46470",
+    "description": "Heildverslun með húsgögn, teppi og ljósabúnað",
+    "isat2008": "46.47.0",
+    "description_en": "Wholesale of furniture, carpets and lighting equipment"
+  },
+  {
+    "isat2008_normalized": "46480",
+    "description": "Heildverslun með úr og skartgripi",
+    "isat2008": "46.48.0",
+    "description_en": "Wholesale of watches and jewellery"
+  },
+  {
+    "isat2008_normalized": "46490",
+    "description": "Heildverslun með aðrar vörur til heimilisnota",
+    "isat2008": "46.49.0",
+    "description_en": "Wholesale of other household goods"
+  },
+  {
+    "isat2008_normalized": "46510",
+    "description": "Heildverslun með tölvur, jaðartæki fyrir tölvur og hugbúnað",
+    "isat2008": "46.51.0",
+    "description_en": "Wholesale of computers, computer peripheral equipment and software"
+  },
+  {
+    "isat2008_normalized": "46520",
+    "description": "Heildverslun með rafeinda- og fjarskiptabúnað og tengda hluti",
+    "isat2008": "46.52.0",
+    "description_en": "Wholesale of electronic and telecommunications equipment and parts"
+  },
+  {
+    "isat2008_normalized": "46610",
+    "description": "Heildverslun með landbúnaðarvélar, -tæki og hluti til þeirra",
+    "isat2008": "46.61.0",
+    "description_en": "Wholesale of agricultural machinery, equipment and supplies"
+  },
+  {
+    "isat2008_normalized": "46620",
+    "description": "Heildverslun með smíðavélar",
+    "isat2008": "46.62.0",
+    "description_en": "Wholesale of machine tools"
+  },
+  {
+    "isat2008_normalized": "46630",
+    "description": "Heildverslun með vélbúnað til námavinnslu, byggingarstarfsemi og mannvirkjagerðar",
+    "isat2008": "46.63.0",
+    "description_en": "Wholesale of mining, construction and civil engineering machinery"
+  },
+  {
+    "isat2008_normalized": "46640",
+    "description": "Heildverslun með vélar til textíliðnaðar, sauma- og prjónavélar",
+    "isat2008": "46.64.0",
+    "description_en": "Wholesale of machinery for the textile industry and of sewing and knitting machines"
+  },
+  {
+    "isat2008_normalized": "46650",
+    "description": "Heildverslun með skrifstofuhúsgögn",
+    "isat2008": "46.65.0",
+    "description_en": "Wholesale of office furniture"
+  },
+  {
+    "isat2008_normalized": "46660",
+    "description": "Heildverslun með aðrar skrifstofuvélar og tæki",
+    "isat2008": "46.66.0",
+    "description_en": "Wholesale of other office machinery and equipment"
+  },
+  {
+    "isat2008_normalized": "46691",
+    "description": "Heildverslun með skipsbúnað, veiðarfæri og fiskvinnsluvélar",
+    "isat2008": "46.69.1",
+    "description_en": "Wholesale of fishing gear and fish-processing machinery"
+  },
+  {
+    "isat2008_normalized": "46699",
+    "description": "Heildverslun með aðrar ótaldar vélar og tæki",
+    "isat2008": "46.69.9",
+    "description_en": "Wholesale of other machinery and equipment n.e.c."
+  },
+  {
+    "isat2008_normalized": "46710",
+    "description": "Heildverslun með fast, fljótandi og loftkennt eldsneyti og skyldar vörur",
+    "isat2008": "46.71.0",
+    "description_en": "Wholesale of solid, liquid and gaseous fuels and related products"
+  },
+  {
+    "isat2008_normalized": "46720",
+    "description": "Heildverslun með málma og málmgrýti",
+    "isat2008": "46.72.0",
+    "description_en": "Wholesale of metals and metal ores"
+  },
+  {
+    "isat2008_normalized": "46730",
+    "description": "Heildverslun með timbur, byggingarefni og hreinlætistæki",
+    "isat2008": "46.73.0",
+    "description_en": "Wholesale of wood, construction materials and sanitary equipment"
+  },
+  {
+    "isat2008_normalized": "46740",
+    "description": "Heildverslun með járnvöru, búnað til pípu- og hitalagna og hluti til þeirra",
+    "isat2008": "46.74.0",
+    "description_en": "Wholesale of hardware, plumbing and heating equipment and supplies"
+  },
+  {
+    "isat2008_normalized": "46750",
+    "description": "Heildverslun með efnavörur",
+    "isat2008": "46.75.0",
+    "description_en": "Wholesale of chemical products"
+  },
+  {
+    "isat2008_normalized": "46760",
+    "description": "Heildverslun með aðrar hálfunnar vörur",
+    "isat2008": "46.76.0",
+    "description_en": "Wholesale of other intermediate products"
+  },
+  {
+    "isat2008_normalized": "46770",
+    "description": "Heildverslun með úrgangsefni og brotajárn",
+    "isat2008": "46.77.0",
+    "description_en": "Wholesale of waste and scrap"
+  },
+  {
+    "isat2008_normalized": "46900",
+    "description": "Blönduð heildverslun",
+    "isat2008": "46.90.0",
+    "description_en": "Non-specialised wholesale trade"
+  },
+  {
+    "isat2008_normalized": "47111",
+    "description": "Stórmarkaðir og matvöruverslanir",
+    "isat2008": "47.11.1",
+    "description_en": "Supermarkets and convenience stores"
+  },
+  {
+    "isat2008_normalized": "47112",
+    "description": "Söluturnar",
+    "isat2008": "47.11.2",
+    "description_en": "Kiosks"
+  },
+  {
+    "isat2008_normalized": "47190",
+    "description": "Önnur blönduð smásala",
+    "isat2008": "47.19.0",
+    "description_en": "Other retail sale in non-specialised stores"
+  },
+  {
+    "isat2008_normalized": "47210",
+    "description": "Smásala á ávöxtum og grænmeti í sérverslunum",
+    "isat2008": "47.21.0",
+    "description_en": "Retail sale of fruit and vegetables in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47220",
+    "description": "Smásala á kjöti og kjötvöru í sérverslunum",
+    "isat2008": "47.22.0",
+    "description_en": "Retail sale of meat and meat products in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47230",
+    "description": "Fiskbúðir",
+    "isat2008": "47.23.0",
+    "description_en": "Retail sale of fish, crustaceans and molluscs in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47240",
+    "description": "Smásala á brauði, kökum, sætabrauði og sælgæti í sérverslunum",
+    "isat2008": "47.24.0",
+    "description_en": "Retail sale of bread, cakes, flour confectionery and sugar confectionery in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47250",
+    "description": "Smásala á drykkjarvöru í sérverslunum",
+    "isat2008": "47.25.0",
+    "description_en": "Retail sale of beverages in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47260",
+    "description": "Smásala á tóbaksvörum í sérverslunum",
+    "isat2008": "47.26.0",
+    "description_en": "Retail sale of tobacco products in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47290",
+    "description": "Önnur smásala á matvælum í sérverslunum",
+    "isat2008": "47.29.0",
+    "description_en": "Other retail sale of food in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47300",
+    "description": "Bensínstöðvar",
+    "isat2008": "47.30.0",
+    "description_en": "Retail sale of automotive fuel in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47410",
+    "description": "Smásala á tölvum, jaðarbúnaði og hugbúnaði í sérverslunum",
+    "isat2008": "47.41.0",
+    "description_en": "Retail sale of computers, peripheral units and software in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47420",
+    "description": "Smásala á fjarskiptabúnaði í sérverslunum",
+    "isat2008": "47.42.0",
+    "description_en": "Retail sale of telecommunications equipment in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47430",
+    "description": "Smásala á hljóð- og myndbandsbúnaði í sérverslunum",
+    "isat2008": "47.43.0",
+    "description_en": "Retail sale of audio and video equipment in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47510",
+    "description": "Smásala á textílvörum í sérverslunum",
+    "isat2008": "47.51.0",
+    "description_en": "Retail sale of textiles in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47521",
+    "description": "Smásala á járn- og byggingarvöru í sérverslunum",
+    "isat2008": "47.52.1",
+    "description_en": "Retail sale of hardware in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47522",
+    "description": "Smásala á málningu í sérverslunum",
+    "isat2008": "47.52.2",
+    "description_en": "Retail sale of paints and glass in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47530",
+    "description": "Smásala á teppum, mottum, gluggatjöldum, vegg- og gólfefnum í sérverslunum",
+    "isat2008": "47.53.0",
+    "description_en": "Retail sale of carpets, rugs, wall and floor coverings in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47540",
+    "description": "Smásala á heimilistækjum í sérverslunum",
+    "isat2008": "47.54.0",
+    "description_en": "Retail sale of electrical household appliances in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47591",
+    "description": "Smásala á húsgögnum í sérverslunum",
+    "isat2008": "47.59.1",
+    "description_en": "Retail sale of furniture in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47592",
+    "description": "Smásala á ljósabúnaði í sérverslunum",
+    "isat2008": "47.59.2",
+    "description_en": "Retail sale of lighting equipment in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47593",
+    "description": "Smásala á hljóðfærum í sérverslunum",
+    "isat2008": "47.59.3",
+    "description_en": "Retail sale of musical instruments in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47599",
+    "description": "Smásala á öðrum ótöldum heimilisbúnaði í sérverslunum",
+    "isat2008": "47.59.9",
+    "description_en": "Retail sale of other household articles in specialised stores, n.e.c."
+  },
+  {
+    "isat2008_normalized": "47610",
+    "description": "Smásala á bókum í sérverslunum",
+    "isat2008": "47.61.0",
+    "description_en": "Retail sale of books in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47620",
+    "description": "Smásala á dagblöðum og ritföngum í sérverslunum",
+    "isat2008": "47.62.0",
+    "description_en": "Retail sale of newspapers and stationery in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47630",
+    "description": "Smásala á tónlistar- og myndupptökum í sérverslunum",
+    "isat2008": "47.63.0",
+    "description_en": "Retail sale of music and video recordings in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47640",
+    "description": "Smásala á íþrótta- og tómstundabúnaði í sérverslunum",
+    "isat2008": "47.64.0",
+    "description_en": "Retail sale of sporting equipment in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47650",
+    "description": "Smásala á spilum og leikföngum í sérverslunum",
+    "isat2008": "47.65.0",
+    "description_en": "Retail sale of games and toys in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47711",
+    "description": "Fataverslanir",
+    "isat2008": "47.71.1",
+    "description_en": "Retail sale of clothing (execpt children's clothing) in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47712",
+    "description": "Barnafataverslanir",
+    "isat2008": "47.71.2",
+    "description_en": "Retail sale of children's clothing in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47721",
+    "description": "Smásala á skófatnaði í sérverslunum",
+    "isat2008": "47.72.1",
+    "description_en": "Retail sale of footwear in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47722",
+    "description": "Smásala á leðurvörum í sérverslunum",
+    "isat2008": "47.72.2",
+    "description_en": "Retail sale of leather goods in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47730",
+    "description": "Lyfjaverslanir",
+    "isat2008": "47.73.0",
+    "description_en": "Dispensing chemist in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47740",
+    "description": "Smásala á lækninga- og hjúkrunarvörum í sérverslunum",
+    "isat2008": "47.74.0",
+    "description_en": "Retail sale of medical and orthopaedic goods in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47750",
+    "description": "Smásala á snyrtivörum og sápum í sérverslunum",
+    "isat2008": "47.75.0",
+    "description_en": "Retail sale of cosmetic and toilet articles in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47761",
+    "description": "Smásala á blómum, plöntum, fræjum og áburði í sérverslunum",
+    "isat2008": "47.76.1",
+    "description_en": "Retail sale of flowers, plants, seeds and fertilisers in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47762",
+    "description": "Smásala á gæludýrum og gæludýrafóðri í sérverslunum",
+    "isat2008": "47.76.2",
+    "description_en": "Retail sale of pet animals and pet food in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47770",
+    "description": "Smásala á úrum og skartgripum í sérverslunum",
+    "isat2008": "47.77.0",
+    "description_en": "Retail sale of watches and jewellery in specialised stores"
+  },
+  {
+    "isat2008_normalized": "47781",
+    "description": "Smásala á gleraugum og sjóntækjum í sérverslunum",
+    "isat2008": "47.78.1",
+    "description_en": "Retail sale of glasses and optical equipment"
+  },
+  {
+    "isat2008_normalized": "47782",
+    "description": "Smásala á ljósmyndavörum í sérverslunum",
+    "isat2008": "47.78.2",
+    "description_en": "Retail sale of photographic equipment"
+  },
+  {
+    "isat2008_normalized": "47783",
+    "description": "Starfsemi listmunahúsa og listaverkasala",
+    "isat2008": "47.78.3",
+    "description_en": "Activities of commercial art galleries"
+  },
+  {
+    "isat2008_normalized": "47789",
+    "description": "Önnur ótalin smásala á nýjum vörum í sérverslunum",
+    "isat2008": "47.78.9",
+    "description_en": "Other retail sale of new goods in specialised stores, n.e.c."
+  },
+  {
+    "isat2008_normalized": "47790",
+    "description": "Smásala á notuðum vörum í verslunum",
+    "isat2008": "47.79.0",
+    "description_en": "Retail sale of second-hand goods in stores"
+  },
+  {
+    "isat2008_normalized": "47810",
+    "description": "Smásala á mat-, drykkjar- og tóbaksvörum úr söluvögnum og á mörkuðum",
+    "isat2008": "47.81.0",
+    "description_en": "Retail sale via stalls and markets of food, beverages and tobacco products"
+  },
+  {
+    "isat2008_normalized": "47820",
+    "description": "Smásala á textílvörum, fatnaði og skófatnaði úr söluvögnum og á mörkuðum",
+    "isat2008": "47.82.0",
+    "description_en": "Retail sale via stalls and markets of textiles, clothing and footwear"
+  },
+  {
+    "isat2008_normalized": "47890",
+    "description": "Smásala á öðrum vörum úr söluvögnum og á mörkuðum",
+    "isat2008": "47.89.0",
+    "description_en": "Retail sale via stalls and markets of other goods"
+  },
+  {
+    "isat2008_normalized": "47910",
+    "description": "Smásala póstverslana eða um Netið",
+    "isat2008": "47.91.0",
+    "description_en": "Retail sale via mail order houses or via Internet"
+  },
+  {
+    "isat2008_normalized": "47990",
+    "description": "Önnur smásala, ekki í verslunum, úr söluvögnum eða á mörkuðum",
+    "isat2008": "47.99.0",
+    "description_en": "Other retail sale not in stores, stalls or markets"
+  },
+  {
+    "isat2008_normalized": "49100",
+    "description": "Farþegaflutningar með járnbrautarlestum milli borga",
+    "isat2008": "49.10.0",
+    "description_en": "Passenger rail transport, interurban"
+  },
+  {
+    "isat2008_normalized": "49200",
+    "description": "Vöruflutningar með járnbrautarlestum",
+    "isat2008": "49.20.0",
+    "description_en": "Freight rail transport"
+  },
+  {
+    "isat2008_normalized": "49310",
+    "description": "Farþegaflutningar á landi, innanbæjar og í úthverfum",
+    "isat2008": "49.31.0",
+    "description_en": "Urban and suburban passenger land transport"
+  },
+  {
+    "isat2008_normalized": "49320",
+    "description": "Rekstur leigubíla",
+    "isat2008": "49.32.0",
+    "description_en": "Taxi operation"
+  },
+  {
+    "isat2008_normalized": "49390",
+    "description": "Aðrir farþegaflutningar á landi",
+    "isat2008": "49.39.0",
+    "description_en": "Other passenger land transport n.e.c."
+  },
+  {
+    "isat2008_normalized": "49411",
+    "description": "Akstur sendibíla",
+    "isat2008": "49.41.1",
+    "description_en": "Delivery van services"
+  },
+  {
+    "isat2008_normalized": "49412",
+    "description": "Akstur vörubíla",
+    "isat2008": "49.41.2",
+    "description_en": "Open-lorry services"
+  },
+  {
+    "isat2008_normalized": "49419",
+    "description": "Aðrir vöruflutningar á vegum",
+    "isat2008": "49.41.9",
+    "description_en": "Other lorry services (incl. container trucks)"
+  },
+  {
+    "isat2008_normalized": "49420",
+    "description": "Flutningsþjónusta",
+    "isat2008": "49.42.0",
+    "description_en": "Removal services"
+  },
+  {
+    "isat2008_normalized": "49500",
+    "description": "Flutningar eftir leiðslum",
+    "isat2008": "49.50.0",
+    "description_en": "Transport via pipeline"
+  },
+  {
+    "isat2008_normalized": "50100",
+    "description": "Millilanda- og strandsiglingar með farþega",
+    "isat2008": "50.10.0",
+    "description_en": "Sea and coastal passenger water transport"
+  },
+  {
+    "isat2008_normalized": "50200",
+    "description": "Millilanda- og strandsiglingar með vörur",
+    "isat2008": "50.20.0",
+    "description_en": "Sea and coastal freight water transport"
+  },
+  {
+    "isat2008_normalized": "50300",
+    "description": "Farþegaflutningar á skipgengum vatnaleiðum",
+    "isat2008": "50.30.0",
+    "description_en": "Inland passenger water transport"
+  },
+  {
+    "isat2008_normalized": "50400",
+    "description": "Vöruflutningar á skipgengum vatnaleiðum",
+    "isat2008": "50.40.0",
+    "description_en": "Inland freight water transport"
+  },
+  {
+    "isat2008_normalized": "51101",
+    "description": "Farþegaflutningar með áætlunarflugi",
+    "isat2008": "51.10.1",
+    "description_en": "Scheduled air transport"
+  },
+  {
+    "isat2008_normalized": "51102",
+    "description": "Farþegaflutningar með leiguflugi",
+    "isat2008": "51.10.2",
+    "description_en": "Non-scheduled air transport"
+  },
+  {
+    "isat2008_normalized": "51210",
+    "description": "Vöruflutningar með flugi",
+    "isat2008": "51.21.0",
+    "description_en": "Freight air transport"
+  },
+  {
+    "isat2008_normalized": "51220",
+    "description": "Geimferðir",
+    "isat2008": "51.22.0",
+    "description_en": "Space transport"
+  },
+  {
+    "isat2008_normalized": "52100",
+    "description": "Vörugeymsla",
+    "isat2008": "52.10.0",
+    "description_en": "Warehousing and storage"
+  },
+  {
+    "isat2008_normalized": "52210",
+    "description": "Þjónustustarfsemi tengd flutningum á landi",
+    "isat2008": "52.21.0",
+    "description_en": "Service activities incidental to land transportation"
+  },
+  {
+    "isat2008_normalized": "52220",
+    "description": "Þjónustustarfsemi tengd flutningum á sjó og vatni",
+    "isat2008": "52.22.0",
+    "description_en": "Service activities incidental to water transportation"
+  },
+  {
+    "isat2008_normalized": "52230",
+    "description": "Þjónustustarfsemi tengd flutningum með flugi",
+    "isat2008": "52.23.0",
+    "description_en": "Service activities incidental to air transportation"
+  },
+  {
+    "isat2008_normalized": "52240",
+    "description": "Vöruafgreiðsla",
+    "isat2008": "52.24.0",
+    "description_en": "Cargo handling"
+  },
+  {
+    "isat2008_normalized": "52290",
+    "description": "Önnur þjónusta tengd flutningum",
+    "isat2008": "52.29.0",
+    "description_en": "Other transportation support activities "
+  },
+  {
+    "isat2008_normalized": "53100",
+    "description": "Almenn póstþjónusta",
+    "isat2008": "53.10.0",
+    "description_en": "Postal activities under universal service obligation"
+  },
+  {
+    "isat2008_normalized": "53200",
+    "description": "Önnur póst- og boðberaþjónusta",
+    "isat2008": "53.20.0",
+    "description_en": "Other postal and courier activities"
+  },
+  {
+    "isat2008_normalized": "55101",
+    "description": "Hótel og gistiheimili með veitingaþjónustu",
+    "isat2008": "55.10.1",
+    "description_en": "Hotels and similar accommodation, without restaurants"
+  },
+  {
+    "isat2008_normalized": "55102",
+    "description": "Hótel og gistiheimili án veitingaþjónustu",
+    "isat2008": "55.10.2",
+    "description_en": "Hotels and similar accommodation, with restaurants"
+  },
+  {
+    "isat2008_normalized": "55200",
+    "description": "Orlofsdvalarstaðir og annars konar gistiaðstaða",
+    "isat2008": "55.20.0",
+    "description_en": "Holiday and other short-stay accommodation"
+  },
+  {
+    "isat2008_normalized": "55300",
+    "description": "Tjaldsvæði, svæði fyrir húsbíla og hjólhýsi",
+    "isat2008": "55.30.0",
+    "description_en": "Camping grounds, recreational vehicle parks and trailer parks"
+  },
+  {
+    "isat2008_normalized": "55900",
+    "description": "Önnur gistiaðstaða",
+    "isat2008": "55.90.0",
+    "description_en": "Other accommodation"
+  },
+  {
+    "isat2008_normalized": "56100",
+    "description": "Veitingastaðir",
+    "isat2008": "56.10.0",
+    "description_en": "Restaurants and mobile food service activities"
+  },
+  {
+    "isat2008_normalized": "56210",
+    "description": "Veisluþjónusta",
+    "isat2008": "56.21.0",
+    "description_en": "Event catering activities"
+  },
+  {
+    "isat2008_normalized": "56290",
+    "description": "Önnur ótalin veitingaþjónusta",
+    "isat2008": "56.29.0",
+    "description_en": "Other food service activities"
+  },
+  {
+    "isat2008_normalized": "56300",
+    "description": "Krár, kaffihús og dansstaðir o.þ.h.",
+    "isat2008": "56.30.0",
+    "description_en": "Beverage serving activities"
+  },
+  {
+    "isat2008_normalized": "58110",
+    "description": "Bókaútgáfa",
+    "isat2008": "58.11.0",
+    "description_en": "Book publishing"
+  },
+  {
+    "isat2008_normalized": "58120",
+    "description": "Útgáfa skráa og póstlista",
+    "isat2008": "58.12.0",
+    "description_en": "Publishing of directories and mailing lists"
+  },
+  {
+    "isat2008_normalized": "58130",
+    "description": "Dagblaðaútgáfa",
+    "isat2008": "58.13.0",
+    "description_en": "Publishing of newspapers"
+  },
+  {
+    "isat2008_normalized": "58140",
+    "description": "Tímaritaútgáfa",
+    "isat2008": "58.14.0",
+    "description_en": "Publishing of journals and periodicals"
+  },
+  {
+    "isat2008_normalized": "58190",
+    "description": "Önnur útgáfustarfsemi",
+    "isat2008": "58.19.0",
+    "description_en": "Other publishing activities"
+  },
+  {
+    "isat2008_normalized": "58210",
+    "description": "Útgáfa tölvuleikja",
+    "isat2008": "58.21.0",
+    "description_en": "Publishing of computer games"
+  },
+  {
+    "isat2008_normalized": "58290",
+    "description": "Önnur hugbúnaðarútgáfa",
+    "isat2008": "58.29.0",
+    "description_en": "Other software publishing"
+  },
+  {
+    "isat2008_normalized": "59110",
+    "description": "Framleiðsla á kvikmyndum, myndböndum og sjónvarpsefni",
+    "isat2008": "59.11.0",
+    "description_en": "Motion picture, video and television programme production activities"
+  },
+  {
+    "isat2008_normalized": "59120",
+    "description": "Eftirvinnsla kvikmynda, myndbanda og sjónvarpsefnis",
+    "isat2008": "59.12.0",
+    "description_en": "Motion picture, video and television programme post-production activities"
+  },
+  {
+    "isat2008_normalized": "59130",
+    "description": "Dreifing á kvikmyndum, myndböndum og sjónvarpsefni",
+    "isat2008": "59.13.0",
+    "description_en": "Motion picture, video and television programme distribution activities"
+  },
+  {
+    "isat2008_normalized": "59140",
+    "description": "Kvikmyndasýningar",
+    "isat2008": "59.14.0",
+    "description_en": "Motion picture projection activities"
+  },
+  {
+    "isat2008_normalized": "59200",
+    "description": "Hljóðupptaka og tónlistarútgáfa",
+    "isat2008": "59.20.0",
+    "description_en": "Sound recording and music publishing activities"
+  },
+  {
+    "isat2008_normalized": "60100",
+    "description": "Útvarpsútsending og dagskrárgerð",
+    "isat2008": "60.10.0",
+    "description_en": "Radio broadcasting"
+  },
+  {
+    "isat2008_normalized": "60200",
+    "description": "Sjónvarpsútsendingar og dagskrárgerð",
+    "isat2008": "60.20.0",
+    "description_en": "Television programming and broadcasting activities"
+  },
+  {
+    "isat2008_normalized": "61100",
+    "description": "Fjarskipti um streng",
+    "isat2008": "61.10.0",
+    "description_en": "Wired telecommunications activities"
+  },
+  {
+    "isat2008_normalized": "61200",
+    "description": "Þráðlaus fjarskipti",
+    "isat2008": "61.20.0",
+    "description_en": "Wireless telecommunications activities"
+  },
+  {
+    "isat2008_normalized": "61300",
+    "description": "Gervihnattafjarskipti",
+    "isat2008": "61.30.0",
+    "description_en": "Satellite telecommunications activities"
+  },
+  {
+    "isat2008_normalized": "61900",
+    "description": "Önnur fjarskiptastarfsemi",
+    "isat2008": "61.90.0",
+    "description_en": "Other telecommunications activities"
+  },
+  {
+    "isat2008_normalized": "62010",
+    "description": "Hugbúnaðargerð",
+    "isat2008": "62.01.0",
+    "description_en": "Computer programming activities"
+  },
+  {
+    "isat2008_normalized": "62020",
+    "description": "Ráðgjafarstarfsemi á sviði upplýsingatækni",
+    "isat2008": "62.02.0",
+    "description_en": "Computer consultancy activities"
+  },
+  {
+    "isat2008_normalized": "62030",
+    "description": "Rekstur tölvukerfa",
+    "isat2008": "62.03.0",
+    "description_en": "Computer facilities management activities"
+  },
+  {
+    "isat2008_normalized": "62090",
+    "description": "Önnur þjónustustarfsemi á sviði upplýsingatækni",
+    "isat2008": "62.09.0",
+    "description_en": "Other information technology and computer service activities"
+  },
+  {
+    "isat2008_normalized": "63110",
+    "description": "Gagnavinnsla, hýsing og tengd starfsemi",
+    "isat2008": "63.11.0",
+    "description_en": "Data processing, hosting and related activities"
+  },
+  {
+    "isat2008_normalized": "63120",
+    "description": "Vefgáttir",
+    "isat2008": "63.12.0",
+    "description_en": "Web portals"
+  },
+  {
+    "isat2008_normalized": "63910",
+    "description": "Starfsemi fréttastofa",
+    "isat2008": "63.91.0",
+    "description_en": "News agency activities"
+  },
+  {
+    "isat2008_normalized": "63990",
+    "description": "Önnur ótalin starfsemi á sviði upplýsingaþjónustu",
+    "isat2008": "63.99.0",
+    "description_en": "Other information service activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "64110",
+    "description": "Starfsemi seðlabanka",
+    "isat2008": "64.11.0",
+    "description_en": "Central banking"
+  },
+  {
+    "isat2008_normalized": "64190",
+    "description": "Önnur fjármálafyrirtæki",
+    "isat2008": "64.19.0",
+    "description_en": "Other monetary intermediation"
+  },
+  {
+    "isat2008_normalized": "64200",
+    "description": "Starfsemi eignarhaldsfélaga",
+    "isat2008": "64.20.0",
+    "description_en": "Activities of holding companies"
+  },
+  {
+    "isat2008_normalized": "64300",
+    "description": "Fjárvörslusjóðir, sjóðir og önnur sérhæfð fjársýslufélög",
+    "isat2008": "64.30.0",
+    "description_en": "Trusts, funds and similar financial entities"
+  },
+  {
+    "isat2008_normalized": "64910",
+    "description": "Fjármögnunarleiga",
+    "isat2008": "64.91.0",
+    "description_en": "Financial leasing"
+  },
+  {
+    "isat2008_normalized": "64920",
+    "description": "Önnur lánaþjónusta",
+    "isat2008": "64.92.0",
+    "description_en": "Other credit granting"
+  },
+  {
+    "isat2008_normalized": "64990",
+    "description": "Önnur ótalin fjármálaþjónusta, þó ekki vátryggingafélög og lífeyrissjóðir",
+    "isat2008": "64.99.0",
+    "description_en": "Other financial service activities, except insurance and pension funding n.e.c."
+  },
+  {
+    "isat2008_normalized": "65110",
+    "description": "Líftryggingar",
+    "isat2008": "65.11.0",
+    "description_en": "Life insurance"
+  },
+  {
+    "isat2008_normalized": "65120",
+    "description": "Skaðatryggingar",
+    "isat2008": "65.12.0",
+    "description_en": "Non-life insurance"
+  },
+  {
+    "isat2008_normalized": "65200",
+    "description": "Endurtryggingar",
+    "isat2008": "65.20.0",
+    "description_en": "Reinsurance"
+  },
+  {
+    "isat2008_normalized": "65300",
+    "description": "Lífeyrissjóðir",
+    "isat2008": "65.30.0",
+    "description_en": "Pension funding"
+  },
+  {
+    "isat2008_normalized": "66110",
+    "description": "Stjórnun fjármálamarkaða",
+    "isat2008": "66.11.0",
+    "description_en": "Administration of financial markets"
+  },
+  {
+    "isat2008_normalized": "66120",
+    "description": "Starfsemi við miðlun verðbréfa og hrávörusamninga",
+    "isat2008": "66.12.0",
+    "description_en": "Security and commodity contracts brokerage"
+  },
+  {
+    "isat2008_normalized": "66190",
+    "description": "Önnur ótalin starfsemi tengd fjármálaþjónustu, þó ekki vátryggingafélögum og lífeyrissjóðum",
+    "isat2008": "66.19.0",
+    "description_en": "Other activities auxiliary to financial services, except insurance and pension funding"
+  },
+  {
+    "isat2008_normalized": "66210",
+    "description": "Áhættu- og tjónamat",
+    "isat2008": "66.21.0",
+    "description_en": "Risk and damage evaluation"
+  },
+  {
+    "isat2008_normalized": "66220",
+    "description": "Starfsemi umboðsmanna og miðlara í vátryggingum",
+    "isat2008": "66.22.0",
+    "description_en": "Activities of insurance agents and brokers"
+  },
+  {
+    "isat2008_normalized": "66290",
+    "description": "Önnur starfsemi tengd vátryggingum og lífeyrissjóðum",
+    "isat2008": "66.29.0",
+    "description_en": "Other activities auxiliary to insurance and pension funding"
+  },
+  {
+    "isat2008_normalized": "66300",
+    "description": "Stýring verðbréfasjóða",
+    "isat2008": "66.30.0",
+    "description_en": "Fund management activities"
+  },
+  {
+    "isat2008_normalized": "68100",
+    "description": "Kaup og sala á eigin fasteignum",
+    "isat2008": "68.10.0",
+    "description_en": "Buying and selling of own real estate"
+  },
+  {
+    "isat2008_normalized": "68201",
+    "description": "Leiga íbúðarhúsnæðis",
+    "isat2008": "68.20.1",
+    "description_en": "Letting of residential housing"
+  },
+  {
+    "isat2008_normalized": "68202",
+    "description": "Leiga atvinnuhúsnæðis",
+    "isat2008": "68.20.2",
+    "description_en": "Letting of non-residential housing"
+  },
+  {
+    "isat2008_normalized": "68203",
+    "description": "Leiga á landi og landréttindum",
+    "isat2008": "68.20.3",
+    "description_en": "Letting of land and land rights"
+  },
+  {
+    "isat2008_normalized": "68310",
+    "description": "Fasteignamiðlun",
+    "isat2008": "68.31.0",
+    "description_en": "Real estate agencies"
+  },
+  {
+    "isat2008_normalized": "68320",
+    "description": "Fasteignarekstur gegn þóknun eða samkvæmt samningi",
+    "isat2008": "68.32.0",
+    "description_en": "Management of real estate on a fee or contract basis"
+  },
+  {
+    "isat2008_normalized": "69100",
+    "description": "Lögfræðiþjónusta",
+    "isat2008": "69.10.0",
+    "description_en": "Legal activities"
+  },
+  {
+    "isat2008_normalized": "69200",
+    "description": "Reikningshald, bókhald og endurskoðun; skattaráðgjöf",
+    "isat2008": "69.20.0",
+    "description_en": "Accounting, bookkeeping and auditing activities; tax consultancy"
+  },
+  {
+    "isat2008_normalized": "70100",
+    "description": "Starfsemi höfuðstöðva",
+    "isat2008": "70.10.0",
+    "description_en": "Activities of head offices"
+  },
+  {
+    "isat2008_normalized": "70210",
+    "description": "Almannatengsl",
+    "isat2008": "70.21.0",
+    "description_en": "Public relations and communication activities"
+  },
+  {
+    "isat2008_normalized": "70220",
+    "description": "Viðskiptaráðgjöf og önnur rekstrarráðgjöf",
+    "isat2008": "70.22.0",
+    "description_en": "Business and other management consultancy activities"
+  },
+  {
+    "isat2008_normalized": "71110",
+    "description": "Starfsemi arkitekta og skyld tæknileg ráðgjöf",
+    "isat2008": "71.11.0",
+    "description_en": "Architectural activities "
+  },
+  {
+    "isat2008_normalized": "71121",
+    "description": "Starfsemi verkfræðinga og skyld tæknileg ráðgjöf",
+    "isat2008": "71.12.1",
+    "description_en": "Engineering activities"
+  },
+  {
+    "isat2008_normalized": "71122",
+    "description": "Starfsemi á sviði landmælinga; jarðfræðilegar rannsóknir",
+    "isat2008": "71.12.2",
+    "description_en": "Geological research and prospecting activities"
+  },
+  {
+    "isat2008_normalized": "71200",
+    "description": "Tæknilegar prófanir og greining",
+    "isat2008": "71.20.0",
+    "description_en": "Technical testing and analysis"
+  },
+  {
+    "isat2008_normalized": "72110",
+    "description": "Rannsóknir og þróunarstarf í líftækni",
+    "isat2008": "72.11.0",
+    "description_en": "Research and experimental development on biotechnology"
+  },
+  {
+    "isat2008_normalized": "72190",
+    "description": "Aðrar rannsóknir og þróunarstarf í raunvísindum og verkfræði",
+    "isat2008": "72.19.0",
+    "description_en": "Other research and experimental development on natural sciences and engineering"
+  },
+  {
+    "isat2008_normalized": "72200",
+    "description": "Rannsóknir og þróunarstarf í félags- og hugvísindum",
+    "isat2008": "72.20.0",
+    "description_en": "Research and experimental development on social sciences and humanities"
+  },
+  {
+    "isat2008_normalized": "73110",
+    "description": "Auglýsingastofur",
+    "isat2008": "73.11.0",
+    "description_en": "Advertising agencies"
+  },
+  {
+    "isat2008_normalized": "73120",
+    "description": "Auglýsingamiðlun",
+    "isat2008": "73.12.0",
+    "description_en": "Media representation"
+  },
+  {
+    "isat2008_normalized": "73200",
+    "description": "Markaðsrannsóknir og skoðanakannanir",
+    "isat2008": "73.20.0",
+    "description_en": "Market research and public opinion polling"
+  },
+  {
+    "isat2008_normalized": "74100",
+    "description": "Sérhæfð hönnun",
+    "isat2008": "74.10.0",
+    "description_en": "Specialised design activities"
+  },
+  {
+    "isat2008_normalized": "74200",
+    "description": "Ljósmyndaþjónusta",
+    "isat2008": "74.20.0",
+    "description_en": "Photographic activities"
+  },
+  {
+    "isat2008_normalized": "74300",
+    "description": "Þýðingar- og túlkunarþjónusta",
+    "isat2008": "74.30.0",
+    "description_en": "Translation and interpretation activities"
+  },
+  {
+    "isat2008_normalized": "74900",
+    "description": "Önnur ótalin sérfræðileg, vísindaleg og tæknileg starfsemi",
+    "isat2008": "74.90.0",
+    "description_en": "Other professional, scientific and technical activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "75000",
+    "description": "Dýralækningar",
+    "isat2008": "75.00.0",
+    "description_en": "Veterinary activities"
+  },
+  {
+    "isat2008_normalized": "77110",
+    "description": "Leiga á bifreiðum og léttum vélknúnum ökutækjum",
+    "isat2008": "77.11.0",
+    "description_en": "Renting and leasing of cars and light motor vehicles"
+  },
+  {
+    "isat2008_normalized": "77120",
+    "description": "Leiga á vörubifreiðum",
+    "isat2008": "77.12.0",
+    "description_en": "Renting and leasing of trucks"
+  },
+  {
+    "isat2008_normalized": "77210",
+    "description": "Leiga á tómstunda- og íþróttavörum",
+    "isat2008": "77.21.0",
+    "description_en": "Renting and leasing of recreational and sports goods"
+  },
+  {
+    "isat2008_normalized": "77220",
+    "description": "Leiga á myndböndum og -diskum",
+    "isat2008": "77.22.0",
+    "description_en": "Renting of video tapes and disks"
+  },
+  {
+    "isat2008_normalized": "77290",
+    "description": "Leiga á öðrum ótöldum munum til einka- og heimilisnota",
+    "isat2008": "77.29.0",
+    "description_en": "Renting and leasing of other personal and household goods"
+  },
+  {
+    "isat2008_normalized": "77310",
+    "description": "Leiga á landbúnaðarvélum og -tækjum",
+    "isat2008": "77.31.0",
+    "description_en": "Renting and leasing of agricultural machinery and equipment"
+  },
+  {
+    "isat2008_normalized": "77320",
+    "description": "Leiga á vinnuvélum og tækjum til byggingaframkvæmda og mannvirkjagerðar",
+    "isat2008": "77.32.0",
+    "description_en": "Renting and leasing of construction and civil engineering machinery and equipment"
+  },
+  {
+    "isat2008_normalized": "77330",
+    "description": "Leiga á tölvum, skrifstofuvélum og -búnaði",
+    "isat2008": "77.33.0",
+    "description_en": "Renting and leasing of office machinery and equipment (including computers)"
+  },
+  {
+    "isat2008_normalized": "77340",
+    "description": "Leiga á búnaði til flutninga á sjó- og vatnaleiðum",
+    "isat2008": "77.34.0",
+    "description_en": "Renting and leasing of water transport equipment"
+  },
+  {
+    "isat2008_normalized": "77350",
+    "description": "Leiga á loftförum",
+    "isat2008": "77.35.0",
+    "description_en": "Renting and leasing of air transport equipment"
+  },
+  {
+    "isat2008_normalized": "77390",
+    "description": "Leiga á öðrum ótöldum vélum og búnaði",
+    "isat2008": "77.39.0",
+    "description_en": "Renting and leasing of other machinery, equipment and tangible goods n.e.c."
+  },
+  {
+    "isat2008_normalized": "77400",
+    "description": "Leiga á hugverkum og skyldum eignum sem ekki njóta höfundarréttar",
+    "isat2008": "77.40.0",
+    "description_en": "Leasing of intellectual property and similar products, except copyrighted works"
+  },
+  {
+    "isat2008_normalized": "78100",
+    "description": "Ráðningarstofur",
+    "isat2008": "78.10.0",
+    "description_en": "Activities of employment placement agencies"
+  },
+  {
+    "isat2008_normalized": "78200",
+    "description": "Starfsmannaleigur",
+    "isat2008": "78.20.0",
+    "description_en": "Temporary employment agency activities"
+  },
+  {
+    "isat2008_normalized": "78300",
+    "description": "Önnur þjónusta tengd starfsmannahaldi",
+    "isat2008": "78.30.0",
+    "description_en": "Other human resources provision"
+  },
+  {
+    "isat2008_normalized": "79110",
+    "description": "Ferðaskrifstofur",
+    "isat2008": "79.11.0",
+    "description_en": "Travel agency activities"
+  },
+  {
+    "isat2008_normalized": "79120",
+    "description": "Ferðaskipuleggjendur",
+    "isat2008": "79.12.0",
+    "description_en": "Tour operator activities"
+  },
+  {
+    "isat2008_normalized": "79900",
+    "description": "Önnur bókunarþjónusta og önnur starfsemi tengd ferðaþjónustu",
+    "isat2008": "79.90.0",
+    "description_en": "Other reservation service and related activities"
+  },
+  {
+    "isat2008_normalized": "80100",
+    "description": "Einkarekin öryggisþjónusta",
+    "isat2008": "80.10.0",
+    "description_en": "Private security activities"
+  },
+  {
+    "isat2008_normalized": "80200",
+    "description": "Starfsemi við öryggiskerfaþjónustu",
+    "isat2008": "80.20.0",
+    "description_en": "Security systems service activities"
+  },
+  {
+    "isat2008_normalized": "80300",
+    "description": "Rannsóknarstarfsemi",
+    "isat2008": "80.30.0",
+    "description_en": "Investigation activities"
+  },
+  {
+    "isat2008_normalized": "81100",
+    "description": "Blönduð fasteignarumsýsla",
+    "isat2008": "81.10.0",
+    "description_en": "Combined facilities support activities"
+  },
+  {
+    "isat2008_normalized": "81210",
+    "description": "Almenn þrif bygginga",
+    "isat2008": "81.21.0",
+    "description_en": "General cleaning of buildings"
+  },
+  {
+    "isat2008_normalized": "81220",
+    "description": "Önnur þrif á byggingum og í iðnaði",
+    "isat2008": "81.22.0",
+    "description_en": "Other building and industrial cleaning activities"
+  },
+  {
+    "isat2008_normalized": "81290",
+    "description": "Önnur ótalin hreingerningarþjónusta",
+    "isat2008": "81.29.0",
+    "description_en": "Other cleaning activities"
+  },
+  {
+    "isat2008_normalized": "81300",
+    "description": "Skrúðgarðyrkja",
+    "isat2008": "81.30.0",
+    "description_en": "Landscape service activities"
+  },
+  {
+    "isat2008_normalized": "82110",
+    "description": "Blönduð skrifstofuþjónusta",
+    "isat2008": "82.11.0",
+    "description_en": "Combined office administrative service activities"
+  },
+  {
+    "isat2008_normalized": "82190",
+    "description": "Ljósritun, meðferð skjala og önnur sérhæfð skrifstofuþjónusta",
+    "isat2008": "82.19.0",
+    "description_en": "Photocopying, document preparation and other specialised office support activities"
+  },
+  {
+    "isat2008_normalized": "82200",
+    "description": "Símsvörun og úthringiþjónusta",
+    "isat2008": "82.20.0",
+    "description_en": "Activities of call centres"
+  },
+  {
+    "isat2008_normalized": "82300",
+    "description": "Skipulagning á ráðstefnum og vörusýningum",
+    "isat2008": "82.30.0",
+    "description_en": "Organisation of conventions and trade shows"
+  },
+  {
+    "isat2008_normalized": "82910",
+    "description": "Innheimtuþjónusta og upplýsingar um lánstraust",
+    "isat2008": "82.91.0",
+    "description_en": "Activities of collection agencies and credit bureaus"
+  },
+  {
+    "isat2008_normalized": "82920",
+    "description": "Pökkunarstarfsemi",
+    "isat2008": "82.92.0",
+    "description_en": "Packaging activities"
+  },
+  {
+    "isat2008_normalized": "82990",
+    "description": "Önnur ótalin þjónusta við atvinnurekstur",
+    "isat2008": "82.99.0",
+    "description_en": "Other business support service activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "84110",
+    "description": "Almenn stjórnsýsla og löggjöf",
+    "isat2008": "84.11.0",
+    "description_en": "General public administration activities"
+  },
+  {
+    "isat2008_normalized": "84120",
+    "description": "Stjórnsýsla á sviði heilbrigðisþjónustu, mennta- og menningarmála og félagsmála, þó ekki almannatryggingar",
+    "isat2008": "84.12.0",
+    "description_en": "Regulation of the activities of providing health care, education, cultural services and other social services, excluding social security"
+  },
+  {
+    "isat2008_normalized": "84130",
+    "description": "Stjórnsýsla í þágu atvinnuveganna",
+    "isat2008": "84.13.0",
+    "description_en": "Regulation of and contribution to more efficient operation of businesses"
+  },
+  {
+    "isat2008_normalized": "84210",
+    "description": "Utanríkisþjónusta",
+    "isat2008": "84.21.0",
+    "description_en": "Foreign affairs"
+  },
+  {
+    "isat2008_normalized": "84220",
+    "description": "Varnarmál",
+    "isat2008": "84.22.0",
+    "description_en": "Defence activities"
+  },
+  {
+    "isat2008_normalized": "84230",
+    "description": "Dómstólar og fangelsi",
+    "isat2008": "84.23.0",
+    "description_en": "Justice and judicial activities"
+  },
+  {
+    "isat2008_normalized": "84240",
+    "description": "Löggæsla og almannaöryggi",
+    "isat2008": "84.24.0",
+    "description_en": "Public order and safety activities"
+  },
+  {
+    "isat2008_normalized": "84250",
+    "description": "Slökkviliðs- og björgunarstarfsemi",
+    "isat2008": "84.25.0",
+    "description_en": "Fire service activities"
+  },
+  {
+    "isat2008_normalized": "84300",
+    "description": "Almannatryggingar",
+    "isat2008": "84.30.0",
+    "description_en": "Compulsory social security activities"
+  },
+  {
+    "isat2008_normalized": "85100",
+    "description": "Fræðslustarfsemi á leikskólastigi",
+    "isat2008": "85.10.0",
+    "description_en": "Pre-primary education "
+  },
+  {
+    "isat2008_normalized": "85200",
+    "description": "Fræðslustarfsemi á grunnskólastigi",
+    "isat2008": "85.20.0",
+    "description_en": "Primary education "
+  },
+  {
+    "isat2008_normalized": "85310",
+    "description": "Fræðslustarfsemi á framhaldsskólastigi - bóknám",
+    "isat2008": "85.31.0",
+    "description_en": "General secondary education "
+  },
+  {
+    "isat2008_normalized": "85320",
+    "description": "Fræðslustarfsemi á framhaldsskólastigi – iðn- og verknám",
+    "isat2008": "85.32.0",
+    "description_en": "Technical and vocational secondary education "
+  },
+  {
+    "isat2008_normalized": "85410",
+    "description": "Fræðslustarfsemi á viðbótarstigi",
+    "isat2008": "85.41.0",
+    "description_en": "Post-secondary non-tertiary education"
+  },
+  {
+    "isat2008_normalized": "85420",
+    "description": "Fræðslustarfsemi á háskólastigi",
+    "isat2008": "85.42.0",
+    "description_en": "Tertiary education"
+  },
+  {
+    "isat2008_normalized": "85510",
+    "description": "Íþrótta- og tómstundakennsla",
+    "isat2008": "85.51.0",
+    "description_en": "Sports and recreation education"
+  },
+  {
+    "isat2008_normalized": "85520",
+    "description": "Listnám",
+    "isat2008": "85.52.0",
+    "description_en": "Cultural education"
+  },
+  {
+    "isat2008_normalized": "85530",
+    "description": "Ökuskólar, flugskólar o.þ.h.",
+    "isat2008": "85.53.0",
+    "description_en": "Driving school activities"
+  },
+  {
+    "isat2008_normalized": "85590",
+    "description": "Önnur ótalin fræðslustarfsemi",
+    "isat2008": "85.59.0",
+    "description_en": "Other education n.e.c."
+  },
+  {
+    "isat2008_normalized": "85600",
+    "description": "Þjónusta við fræðslustarfsemi",
+    "isat2008": "85.60.0",
+    "description_en": "Educational support activities"
+  },
+  {
+    "isat2008_normalized": "86100",
+    "description": "Sjúkrahús",
+    "isat2008": "86.10.0",
+    "description_en": "Hospital activities"
+  },
+  {
+    "isat2008_normalized": "86210",
+    "description": "Heilsugæsla og heimilislækningar",
+    "isat2008": "86.21.0",
+    "description_en": "General medical practice activities"
+  },
+  {
+    "isat2008_normalized": "86220",
+    "description": "Sérfræðilækningar",
+    "isat2008": "86.22.0",
+    "description_en": "Specialist medical practice activities"
+  },
+  {
+    "isat2008_normalized": "86230",
+    "description": "Tannlækningar",
+    "isat2008": "86.23.0",
+    "description_en": "Dental practice activities"
+  },
+  {
+    "isat2008_normalized": "86901",
+    "description": "Starfsemi sjúkraþjálfara",
+    "isat2008": "86.90.1",
+    "description_en": "Practicing physiotherapists"
+  },
+  {
+    "isat2008_normalized": "86902",
+    "description": "Starfsemi sálfræðinga",
+    "isat2008": "86.90.2",
+    "description_en": "Practicing psychologists"
+  },
+  {
+    "isat2008_normalized": "86903",
+    "description": "Rannsóknarstofur í læknisfræði",
+    "isat2008": "86.90.3",
+    "description_en": "Medical laboratories"
+  },
+  {
+    "isat2008_normalized": "86909",
+    "description": "Önnur ótalin heilbrigðisþjónusta",
+    "isat2008": "86.90.9",
+    "description_en": "Other human health activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "87100",
+    "description": "Dvalarheimili með hjúkrun",
+    "isat2008": "87.10.0",
+    "description_en": "Residential nursing care activities"
+  },
+  {
+    "isat2008_normalized": "87200",
+    "description": "Dvalarheimili á sviði þroskahömlunar, geðheilbrigðis og vímuefnamisnotkunar",
+    "isat2008": "87.20.0",
+    "description_en": "Residential care activities for mental retardation, mental health and substance abuse"
+  },
+  {
+    "isat2008_normalized": "87301",
+    "description": "Dvalarheimili fyrir aldraða",
+    "isat2008": "87.30.1",
+    "description_en": "Residential care activities for the elderly"
+  },
+  {
+    "isat2008_normalized": "87302",
+    "description": "Heimili fyrir fatlaða",
+    "isat2008": "87.30.2",
+    "description_en": "Residential care activities for the disabled"
+  },
+  {
+    "isat2008_normalized": "87900",
+    "description": "Önnur ótalin dvalarheimili",
+    "isat2008": "87.90.0",
+    "description_en": "Other residential care activities"
+  },
+  {
+    "isat2008_normalized": "88100",
+    "description": "Félagsþjónusta án gistiaðstöðu fyrir aldraða og fatlaða",
+    "isat2008": "88.10.0",
+    "description_en": "Social work activities without accommodation for the elderly and disabled"
+  },
+  {
+    "isat2008_normalized": "88911",
+    "description": "Starfsemi dagmæðra og önnur dagvistun ungbarna",
+    "isat2008": "88.91.1",
+    "description_en": "Child daycare centres"
+  },
+  {
+    "isat2008_normalized": "88912",
+    "description": "Starfsemi skóladagheimila og frístundaheimila",
+    "isat2008": "88.91.2",
+    "description_en": "School daycare centres "
+  },
+  {
+    "isat2008_normalized": "88990",
+    "description": "Önnur ótalin félagsþjónusta án dvalar á stofnun",
+    "isat2008": "88.99.0",
+    "description_en": "Other social work activities without accommodation n.e.c."
+  },
+  {
+    "isat2008_normalized": "90010",
+    "description": "Sviðslistir",
+    "isat2008": "90.01.0",
+    "description_en": "Performing arts"
+  },
+  {
+    "isat2008_normalized": "90020",
+    "description": "Þjónusta við sviðslistir",
+    "isat2008": "90.02.0",
+    "description_en": "Support activities to performing arts"
+  },
+  {
+    "isat2008_normalized": "90030",
+    "description": "Listsköpun",
+    "isat2008": "90.03.0",
+    "description_en": "Artistic creation"
+  },
+  {
+    "isat2008_normalized": "90040",
+    "description": "Rekstur húsnæðis og annarrar aðstöðu fyrir menningarstarfsemi",
+    "isat2008": "90.04.0",
+    "description_en": "Operation of arts facilities"
+  },
+  {
+    "isat2008_normalized": "91010",
+    "description": "Starfsemi bóka- og skjalasafna",
+    "isat2008": "91.01.0",
+    "description_en": "Library and archives activities"
+  },
+  {
+    "isat2008_normalized": "91020",
+    "description": "Starfsemi safna",
+    "isat2008": "91.02.0",
+    "description_en": "Museums activities"
+  },
+  {
+    "isat2008_normalized": "91030",
+    "description": "Rekstur sögulegra staða og bygginga og áþekkra ferðamannastaða",
+    "isat2008": "91.03.0",
+    "description_en": "Operation of historical sites and buildings and similar visitor attractions"
+  },
+  {
+    "isat2008_normalized": "91040",
+    "description": "Starfsemi grasagarða, dýragarða og þjóðgarða",
+    "isat2008": "91.04.0",
+    "description_en": "Botanical and zoological gardens and nature reserves activities"
+  },
+  {
+    "isat2008_normalized": "92000",
+    "description": "Fjárhættu- og veðmálastarfsemi",
+    "isat2008": "92.00.0",
+    "description_en": "Gambling and betting activities"
+  },
+  {
+    "isat2008_normalized": "93110",
+    "description": "Rekstur íþróttamannvirkja",
+    "isat2008": "93.11.0",
+    "description_en": "Operation of sports facilities"
+  },
+  {
+    "isat2008_normalized": "93120",
+    "description": "Starfsemi íþróttafélaga",
+    "isat2008": "93.12.0",
+    "description_en": "Activities of sport clubs"
+  },
+  {
+    "isat2008_normalized": "93130",
+    "description": "Heilsu- og líkamsræktarstöðvar",
+    "isat2008": "93.13.0",
+    "description_en": "Fitness facilities"
+  },
+  {
+    "isat2008_normalized": "93190",
+    "description": "Önnur íþróttastarfsemi",
+    "isat2008": "93.19.0",
+    "description_en": "Other sports activities"
+  },
+  {
+    "isat2008_normalized": "93210",
+    "description": "Starfsemi skemmti- og þemagarða",
+    "isat2008": "93.21.0",
+    "description_en": "Activities of amusement parks and theme parks"
+  },
+  {
+    "isat2008_normalized": "93290",
+    "description": "Önnur ótalin skemmtun og tómstundastarf",
+    "isat2008": "93.29.0",
+    "description_en": "Other amusement and recreation activities"
+  },
+  {
+    "isat2008_normalized": "94110",
+    "description": "Starfsemi samtaka í atvinnulífinu og félaga atvinnurekenda",
+    "isat2008": "94.11.0",
+    "description_en": "Activities of business and employers membership organisations"
+  },
+  {
+    "isat2008_normalized": "94120",
+    "description": "Starfsemi fagfélaga",
+    "isat2008": "94.12.0",
+    "description_en": "Activities of professional membership organisations"
+  },
+  {
+    "isat2008_normalized": "94200",
+    "description": "Starfsemi stéttarfélaga",
+    "isat2008": "94.20.0",
+    "description_en": "Activities of trade unions"
+  },
+  {
+    "isat2008_normalized": "94910",
+    "description": "Starfsemi trúfélaga",
+    "isat2008": "94.91.0",
+    "description_en": "Activities of religious organisations"
+  },
+  {
+    "isat2008_normalized": "94920",
+    "description": "Starfsemi stjórnmálasamtaka",
+    "isat2008": "94.92.0",
+    "description_en": "Activities of political organisations"
+  },
+  {
+    "isat2008_normalized": "94991",
+    "description": "Starfsemi húsfélaga íbúðareigenda",
+    "isat2008": "94.99.1",
+    "description_en": "Apartment-building associations (of individual owners)"
+  },
+  {
+    "isat2008_normalized": "94999",
+    "description": "Starfsemi annarra ótalinna félagasamtaka",
+    "isat2008": "94.99.9",
+    "description_en": "Activities of other membership organisations n.e.c."
+  },
+  {
+    "isat2008_normalized": "95110",
+    "description": "Viðgerðir á tölvum og jaðarbúnaði",
+    "isat2008": "95.11.0",
+    "description_en": "Repair of computers and peripheral equipment"
+  },
+  {
+    "isat2008_normalized": "95120",
+    "description": "Viðgerðir á fjarskiptabúnaði",
+    "isat2008": "95.12.0",
+    "description_en": "Repair of communication equipment"
+  },
+  {
+    "isat2008_normalized": "95210",
+    "description": "Viðgerðir á sjónvarps-, útvarps- og hljómtækjum og skyldum búnaði",
+    "isat2008": "95.21.0",
+    "description_en": "Repair of consumer electronics"
+  },
+  {
+    "isat2008_normalized": "95220",
+    "description": "Viðgerðir á heimilistækjum og heimilis- og garðyrkjuáhöldum",
+    "isat2008": "95.22.0",
+    "description_en": "Repair of household appliances and home and garden equipment"
+  },
+  {
+    "isat2008_normalized": "95230",
+    "description": "Viðgerðir á skófatnaði og leðurvörum",
+    "isat2008": "95.23.0",
+    "description_en": "Repair of footwear and leather goods"
+  },
+  {
+    "isat2008_normalized": "95240",
+    "description": "Viðgerðir á húsgögnum og áklæðum",
+    "isat2008": "95.24.0",
+    "description_en": "Repair of furniture and home furnishings"
+  },
+  {
+    "isat2008_normalized": "95250",
+    "description": "Viðgerðir á úrum, klukkum og skartgripum",
+    "isat2008": "95.25.0",
+    "description_en": "Repair of watches, clocks and jewellery"
+  },
+  {
+    "isat2008_normalized": "95290",
+    "description": "Viðgerðir á öðrum hlutum til einka- og heimilisnota",
+    "isat2008": "95.29.0",
+    "description_en": "Repair of other personal and household goods"
+  },
+  {
+    "isat2008_normalized": "96010",
+    "description": "Þvottahús og efnalaugar",
+    "isat2008": "96.01.0",
+    "description_en": "Washing and (dry-)cleaning of textile and fur products"
+  },
+  {
+    "isat2008_normalized": "96021",
+    "description": "Hársnyrtistofur",
+    "isat2008": "96.02.1",
+    "description_en": "Hairdressing"
+  },
+  {
+    "isat2008_normalized": "96022",
+    "description": "Snyrtistofur",
+    "isat2008": "96.02.2",
+    "description_en": "Other beauty treatment"
+  },
+  {
+    "isat2008_normalized": "96030",
+    "description": "Útfararþjónusta og tengd starfsemi",
+    "isat2008": "96.03.0",
+    "description_en": "Funeral and related activities"
+  },
+  {
+    "isat2008_normalized": "96040",
+    "description": "Nuddstofur, sólbaðsstofur, gufuböð o.þ.h.",
+    "isat2008": "96.04.0",
+    "description_en": "Physical well-being activities"
+  },
+  {
+    "isat2008_normalized": "96090",
+    "description": "Önnur ótalin þjónustustarfsemi",
+    "isat2008": "96.09.0",
+    "description_en": "Other personal service activities n.e.c."
+  },
+  {
+    "isat2008_normalized": "97000",
+    "description": "Heimilishald með launuðu starfsfólki",
+    "isat2008": "97.00.0",
+    "description_en": "Activities of households as employers of domestic personnel"
+  },
+  {
+    "isat2008_normalized": "98100",
+    "description": "Framleiðsla á heimilum á ýmis konar vöru til eigin nota",
+    "isat2008": "98.10.0",
+    "description_en": "Undifferentiated goods-producing activities of private households for own use"
+  },
+  {
+    "isat2008_normalized": "98200",
+    "description": "Þjónustustarfsemi á heimilum í eigin þágu",
+    "isat2008": "98.20.0",
+    "description_en": "Undifferentiated service-producing activities of private households for own use"
+  },
+  {
+    "isat2008_normalized": "99000",
+    "description": "Starfsemi alþjóðlegra stofnana og samtaka með úrlendisrétt",
+    "isat2008": "99.00.0",
+    "description_en": "Activities of extraterritorial organisations and bodies"
+  },
+  {
+    "isat2008_normalized": "99999",
+    "description": "Óþekkt starfsemi",
+    "isat2008": "99.99.9",
+    "description_en": "Unknown activity"
+  }
+]

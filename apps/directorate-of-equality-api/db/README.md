@@ -39,6 +39,38 @@ Every company must submit an `EQUALITY` report — no gating column, no exceptio
 
 `salary_report_required_override` marks rows whose flag has been set manually (e.g. institutions that must report regardless of headcount, or any other case where the law-by-headcount rule doesn't apply). When `salary_report_required_override = true`, the trigger skips the row entirely — the manual value stands even as the RSK count crosses the 50-threshold in either direction.
 
+## Industry classification (ÍSAT2008)
+
+Companies carry an industry classification using the Icelandic ÍSAT2008 standard (Hagstofan), stored on `company.isat_category_code` as a FK into the `isat_category` reference table. This is **statistics data** — it powers industry breakdowns of approved reports — and is **not** part of the report-submission or eligibility flow.
+
+How we handle it:
+
+- **Leaf codes only.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes. A company is always classified at its own leaf — sections, divisions, groups, and classes are not stored. The 2-digit division is recoverable from the leaf prefix (`01110` → `01`); the section letter (`A`) is not numerically derivable and is intentionally dropped.
+- **Normalized code is the key.** `isat_category.code` is the normalized 5-digit form (`01110`). The dotted form (`01.11.0`) is kept alongside for display only. Company-level classification is always the normalized code.
+- **Admin-owned.** `company.isat_category_code` is set and kept current by DoE admins, in the same spirit as the `salary_report_required*` flags — not supplied by company admins at submission. It is refreshed by a **manual job run once a year** against an admin-uploaded company-info file.
+- **Snapshot independence.** `company.isat_category_code` and `company_report.isat_category` are unrelated. The latter is a free-text dotted code frozen at submission (a snapshot is just a snapshot); the former is the live admin-maintained classification. The submission flow never reads from or writes to the company-level value, and `company_report` is never updated when the company's classification changes.
+
+> **Subject to change.** This is an interim design while the feature is in development. The long-term intent is to source classification directly from the RSK API once we have access; until then, the annual admin-uploaded file is the source of truth. The stored format (normalized leaf code) and admin ownership may change when that integration lands.
+
+## Company import (annual register)
+
+Company records are refreshed from an authoritative `.xlsx` register an admin uploads once a year (columns: kennitala, name, address, postcode, ÍSAT, size bucket). The file is the **source of truth**; the import reconciles `company` against it, matched on `national_id`. Endpoints run **preview → confirm**: `POST /companies/import/preview` returns the diff and writes nothing; `POST /companies/import/apply` commits in one transaction. Both return the same categorized summary so the admin UI can show exactly what happened.
+
+Per company:
+
+- **In file, not in DB** → created (status `ACTIVE`).
+- **In file + DB, fields differ** → the differing authoritative fields (`name`, `address`, `postcodeId`, `isat_category_code`, `employee_count_category`) are updated.
+- **In file + DB, identical** → unchanged.
+- **In DB, absent from file** → status set to **`UNKNOWN`** ("should be in the list — something is off"). `INACTIVE` companies are left as-is (deliberate deactivation is not overridden); already-`UNKNOWN` rows are untouched.
+- **Reappears in file** after `UNKNOWN`/`INACTIVE` → reactivated to `ACTIVE`.
+- **Invalid rows** (bad kennitala, unknown ÍSAT code, duplicate kennitala in file) → reported, never applied.
+
+Size comes from the `LAUNAFLOKKUR` column (`50+`→`LARGE`, `25-49`→`MEDIUM`, else→`SMALL`); `salary_report_required` is then derived by the usual DB trigger. ÍSAT codes are normalized to 5 digits and validated against `isat_category`. A postcode that doesn't resolve is a soft note, not a rejection.
+
+Only the status transitions the import performs (`ACTIVE→UNKNOWN`, `UNKNOWN/INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
+
+> **Subject to change.** Interim design; in development. Same RSK-API caveat as above — the annual upload is expected to be replaced by a direct RSK feed eventually.
+
 ## Report lifecycle
 
 `report.status` drives every transition. Resubmissions are new rows; there is no FK chain back to the prior submission.
@@ -298,6 +330,18 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `national_id`                     | `text`    |
 | `salary_report_required`          | `boolean` |
 | `salary_report_required_override` | `boolean` |
+| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable) |
+
+### `isat_category`
+
+Reference table of ÍSAT2008 industry classifications, seeded from `ISAT_2008.json` (665 leaf codes — see [Industry classification](#industry-classification-ísat2008)). Read-only at runtime; refreshed only when the standard changes. `company.isat_category_code` FKs into `code`.
+
+| Column           | Type                                |
+| ---------------- | ----------------------------------- |
+| `code`           | `text` PK (normalized, e.g. `01110`) |
+| `code_dotted`    | `text` (display form, e.g. `01.11.0`) |
+| `description`    | `text` (Icelandic)                  |
+| `description_en` | `text` (English)                    |
 
 ### `company_report`
 
