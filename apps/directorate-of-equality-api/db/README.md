@@ -102,6 +102,35 @@ State-by-state:
 - **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
 - **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
 
+## Outlier deadlines
+
+> **Status:** this section describes the intended domain model. It is **subject to change** and largely **not yet implemented** — see "Implementation status" at the end. The single `report.correction_deadline` column exists today but is never written, and the email / fine actions below do not exist yet.
+
+A **`SALARY` report that contains outliers** can carry up to **two** distinct deadline dates. Both are measured from the **report submission date** (`created_at` on the row when it reaches `SUBMITTED`). A salary report with **no** detected outliers needs neither — there is nothing to correct or explain. `EQUALITY` reports are not subject to either deadline.
+
+The column is currently named `correction_deadline`, which is a poor fit because two different concepts are in play. Treat the name as provisional.
+
+### 1. Outlier correction deadline (the "fix the gap" clock)
+
+Every salary report **with outliers** gets a deadline to actually *correct* the pay gap. This is a fixed policy, not a per-report or reviewer-set value:
+
+- **Default 9 months** from submission. Today this is uniform — every applicable report gets exactly 9 months, with no expectation that the duration will vary per report.
+- The intended action: ~9 months after submission the submitter receives an email asking whether they have fixed their outliers, and answers **yes/no**. (This email/follow-up action does not exist yet.)
+
+### 2. Postponement deadline (the "submit your explanations" clock)
+
+Only applies when a submitter **opts in to postpone** their outlier explanations at submit time (`outliersPostponed = true`, landing the report in `POSTPONED` status — see "Report lifecycle"):
+
+- The submitter then has **3 months** from submission to provide the explanations (via `PUT /api/v1/application/reports/:providerId/outliers`, which resolves `POSTPONED → SUBMITTED`).
+- If they do not submit within those 3 months, the report enters a state of **possible daily fines** (see "Fines accrual").
+- This 3-month window **does not extend** the 9-month correction deadline. It lives **inside** the 9-month period — the gap-correction clock keeps running regardless of when (or whether) the explanations are submitted.
+
+### Implementation status
+
+- **Today:** only the single nullable `report.correction_deadline` column exists. Nothing writes to it; it is always `null` in practice. Postponement is modeled purely as the `POSTPONED` status with NULL outlier explanation columns — no postponement deadline is persisted.
+- **Not yet built:** automatic computation of either deadline at submission, the 9-month follow-up email (yes/no), and the daily-fine transition when a 3-month postponement window lapses. The `report_fine` accrual table is likewise undesigned (see "Fines accrual").
+- **Likely future shape:** the two concepts probably want two separate columns (e.g. an outlier-correction deadline and a postponement deadline) rather than the single overloaded `correction_deadline`. Not decided.
+
 ## Resubmission
 
 A resubmission is always a **new row** in `report`. It is never an update of an existing report. There is no FK linking the new row back to the one it replaces — old and new are correlated via `company_report.company_id` + `report.created_at` ordering, not a direct reference. Children (`report_criterion`, `report_employee`, `report_result`, etc.) belong to the new row — old children stay with the old row.
@@ -172,7 +201,7 @@ If a mistake is discovered post-publication, the retraction flow (TBD) kicks in.
 
 ## Fines accrual
 
-A company that misses its deadline accrues daily fines.
+A company that misses its deadline accrues daily fines. The primary trigger is a lapsed postponement window — a `POSTPONED` salary report whose 3-month explanation deadline passes without resolution (see "Outlier deadlines").
 
 - Reviewer sets `report.fines_started_at` in the UI when a company has failed to submit or has submitted something incomplete.
 - A daily cron iterates reports where `fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')` and writes a fine row per day. (The `report_fine` accrual table is not yet designed.)
@@ -390,7 +419,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
 | `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
-| `correction_deadline`            | `timestamp` (nullable)                                                                                                         |
+| `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                        |
 | `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
 | `fines_started_at`               | `timestamp` (nullable)                                                                                                         |
 
@@ -471,7 +500,7 @@ never do.
 One row per outlier the company has acknowledged at submission. Two shapes share the table, distinguished by the parent report's `status`:
 
 - **Filled** (parent `status != POSTPONED`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
-- **Postponed** (parent `status = POSTPONED`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later via `PUT /api/v1/application/reports/:providerId/outliers`. Reviewer can chase up via the report-level `correction_deadline`, but cannot pick up a `POSTPONED` report (the resolve happens applicant-side).
+- **Postponed** (parent `status = POSTPONED`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later via `PUT /api/v1/application/reports/:providerId/outliers`. The applicant has a postponement window to provide the explanations before fines may start (see "Outlier deadlines"); the reviewer cannot pick up a `POSTPONED` report (the resolve happens applicant-side).
 
 Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ every outlier row has NULL explanations). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills every row and flips status to `SUBMITTED`.
 
