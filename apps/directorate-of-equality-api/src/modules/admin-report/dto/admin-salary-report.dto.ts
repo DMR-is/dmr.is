@@ -13,7 +13,7 @@ import {
   GenderEnum,
   ReportProviderEnum,
 } from '../../report/models/report.enums'
-import { CreateReportOutlierDto } from '../../report-create/dto/create-report.dto'
+import { CreateReportOutlierGroupDto } from '../../report-create/dto/create-report.dto'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
 export class AdminSalaryReportDto {
@@ -62,6 +62,6 @@ export class AdminSalaryReportDto {
   @ApiOptionalBoolean()
   postponed?: boolean
 
-  @ApiOptionalDtoArray(CreateReportOutlierDto)
-  outliers?: CreateReportOutlierDto[]
+  @ApiOptionalDtoArray(CreateReportOutlierGroupDto)
+  outlierGroups?: CreateReportOutlierGroupDto[]
 }

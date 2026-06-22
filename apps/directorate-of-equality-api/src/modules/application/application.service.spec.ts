@@ -10,7 +10,10 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
-import { CompanySizeEnum } from '../company/models/company.enums'
+import {
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../company/models/company.enums'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
@@ -37,6 +40,7 @@ import { IReportCreateService } from '../report-create/report-create.service.int
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
@@ -56,6 +60,9 @@ const COMPANY: CompanyDto = {
   name: 'Acme ehf.',
   employeeCountCategory: CompanySizeEnum.LARGE,
   nationalId: '5501234567',
+  status: CompanyStatusEnum.ACTIVE,
+  address: 'Laugavegur 1',
+  postcodeId: null,
   salaryReportRequired: true,
   salaryReportRequiredOverride: false,
 }
@@ -74,6 +81,9 @@ describe('ApplicationService', () => {
   let outlierFindAndCountAll: jest.Mock
   let outlierCount: jest.Mock
   let outlierUpdate: jest.Mock
+  let outlierGroupCreate: jest.Mock
+  let outlierGroupFindAll: jest.Mock
+  let outlierGroupDestroy: jest.Mock
   let eventFindOne: jest.Mock
   let getCommentsByReportId: jest.Mock
   let createComment: jest.Mock
@@ -99,6 +109,13 @@ describe('ApplicationService', () => {
     outlierFindAndCountAll = jest.fn().mockResolvedValue({ rows: [], count: 0 })
     outlierCount = jest.fn().mockResolvedValue(0)
     outlierUpdate = jest.fn().mockResolvedValue([1])
+    let groupSeq = 0
+    outlierGroupCreate = jest.fn(async (row) => ({
+      ...row,
+      id: `group-${groupSeq++}`,
+    }))
+    outlierGroupFindAll = jest.fn().mockResolvedValue([])
+    outlierGroupDestroy = jest.fn().mockResolvedValue(0)
     eventFindOne = jest.fn().mockResolvedValue(null)
     getCommentsByReportId = jest.fn().mockResolvedValue([])
     createComment = jest.fn()
@@ -162,6 +179,14 @@ describe('ApplicationService', () => {
             findAndCountAll: outlierFindAndCountAll,
             count: outlierCount,
             update: outlierUpdate,
+          },
+        },
+        {
+          provide: getModelToken(ReportOutlierGroupModel),
+          useValue: {
+            create: outlierGroupCreate,
+            findAll: outlierGroupFindAll,
+            destroy: outlierGroupDestroy,
           },
         },
         {
@@ -274,7 +299,7 @@ describe('ApplicationService', () => {
         parsed: input.parsed,
         companies: [makeCompanySnapshot()],
         outliersPostponed: undefined,
-        outliers: undefined,
+        outlierGroups: undefined,
       })
       expect(result).toEqual({ reportId: 'report-1' })
     })
@@ -1017,15 +1042,16 @@ describe('ApplicationService', () => {
     const detectedSnapshot = (ordinals: number[]) =>
       makeReportResultDto(REPORT_ID, ordinals)
 
-    const validRow = (ordinal: number) => ({
-      employeeOrdinal: ordinal,
+    const validGroup = (...ordinals: number[]) => ({
+      name: 'Group',
       reason: 'Parental leave, salary frozen',
       action: 'No adjustment, frozen for the period',
       signatureName: 'Anna Admin',
       signatureRole: 'HR',
+      employeeOrdinals: ordinals,
     })
 
-    it('POSTPONED → SUBMITTED resolution: updates outliers, flips status, emits STATUS_CHANGED + EDITED', async () => {
+    it('POSTPONED → SUBMITTED resolution: replaces groups, re-points rows, flips status, emits STATUS_CHANGED + EDITED', async () => {
       const postponedSalary = makeReportRow({
         id: REPORT_ID,
         providerId: PROVIDER_ID,
@@ -1052,23 +1078,36 @@ describe('ApplicationService', () => {
           reportEmployee: { id: 'emp-1', ordinal: 1 },
         },
       ])
+      // The postponed default group that gets replaced.
+      outlierGroupFindAll.mockResolvedValueOnce([{ id: 'old-group-1' }])
       getCommentsByReportId.mockResolvedValueOnce([])
 
       await service.editOutliers(
         PROVIDER_ID,
-        { outliers: [validRow(1)] },
+        { groups: [validGroup(1)] },
         COMPANY,
       )
 
-      expect(outlierUpdate).toHaveBeenCalledWith(
+      // New group created with the explanation...
+      expect(outlierGroupCreate).toHaveBeenCalledWith(
         expect.objectContaining({
+          reportId: REPORT_ID,
+          name: 'Group',
           reason: 'Parental leave, salary frozen',
           action: 'No adjustment, frozen for the period',
           signatureName: 'Anna Admin',
           signatureRole: 'HR',
         }),
+      )
+      // ...outlier row re-pointed at it...
+      expect(outlierUpdate).toHaveBeenCalledWith(
+        { groupId: 'group-0' },
         { where: { id: 'outlier-1' } },
       )
+      // ...and the old group deleted.
+      expect(outlierGroupDestroy).toHaveBeenCalledWith({
+        where: { id: ['old-group-1'] },
+      })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.SUBMITTED },
         { where: { id: REPORT_ID } },
@@ -1086,7 +1125,7 @@ describe('ApplicationService', () => {
       )
     })
 
-    it('IN_REVIEW correction: updates outliers, preserves status, emits EDITED only', async () => {
+    it('IN_REVIEW correction: replaces groups, preserves status, emits EDITED only', async () => {
       const inReviewSalary = makeReportRow({
         id: REPORT_ID,
         providerId: PROVIDER_ID,
@@ -1106,16 +1145,18 @@ describe('ApplicationService', () => {
           reportEmployee: { id: 'emp-1', ordinal: 1 },
         },
       ])
+      outlierGroupFindAll.mockResolvedValueOnce([{ id: 'old-group-1' }])
       getCommentsByReportId.mockResolvedValueOnce([])
 
       await service.editOutliers(
         PROVIDER_ID,
-        { outliers: [validRow(1)] },
+        { groups: [validGroup(1)] },
         COMPANY,
       )
 
+      expect(outlierGroupCreate).toHaveBeenCalledTimes(1)
       expect(outlierUpdate).toHaveBeenCalledTimes(1)
-      // Status is NOT updated — only outlier rows are.
+      // Status is NOT updated — only the grouping is.
       expect(reportUpdate).not.toHaveBeenCalled()
       expect(emitStatusChanged).not.toHaveBeenCalled()
       expect(emitEdited).toHaveBeenCalledWith(
@@ -1142,15 +1183,16 @@ describe('ApplicationService', () => {
       await expect(
         service.editOutliers(
           PROVIDER_ID,
-          { outliers: [validRow(1), validRow(2)] },
+          { groups: [validGroup(1, 2)] },
           COMPANY,
         ),
       ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierGroupCreate).not.toHaveBeenCalled()
       expect(outlierUpdate).not.toHaveBeenCalled()
       expect(reportUpdate).not.toHaveBeenCalled()
     })
 
-    it('rejects missing (detected ordinal not in submitted)', async () => {
+    it('rejects missing (detected ordinal not covered by any group)', async () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
           id: REPORT_ID,
@@ -1165,12 +1207,13 @@ describe('ApplicationService', () => {
       getResultByReportId.mockResolvedValueOnce(detectedSnapshot([1, 2]))
 
       await expect(
-        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
+        service.editOutliers(PROVIDER_ID, { groups: [validGroup(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierGroupCreate).not.toHaveBeenCalled()
       expect(outlierUpdate).not.toHaveBeenCalled()
     })
 
-    it('rejects duplicates (same ordinal submitted twice)', async () => {
+    it('rejects an ordinal that appears in more than one group', async () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
           id: REPORT_ID,
@@ -1186,10 +1229,11 @@ describe('ApplicationService', () => {
       await expect(
         service.editOutliers(
           PROVIDER_ID,
-          { outliers: [validRow(1), validRow(1)] },
+          { groups: [validGroup(1), validGroup(1)] },
           COMPANY,
         ),
       ).rejects.toBeInstanceOf(BadRequestException)
+      expect(outlierGroupCreate).not.toHaveBeenCalled()
       expect(outlierUpdate).not.toHaveBeenCalled()
     })
 
@@ -1207,7 +1251,7 @@ describe('ApplicationService', () => {
       ])
 
       await expect(
-        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
+        service.editOutliers(PROVIDER_ID, { groups: [validGroup(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
     })
 
@@ -1225,7 +1269,7 @@ describe('ApplicationService', () => {
       ])
 
       await expect(
-        service.editOutliers(PROVIDER_ID, { outliers: [validRow(1)] }, COMPANY),
+        service.editOutliers(PROVIDER_ID, { groups: [validGroup(1)] }, COMPANY),
       ).rejects.toBeInstanceOf(BadRequestException)
     })
   })
@@ -1476,10 +1520,15 @@ function makeOutlierRow(
   return {
     id: 'outlier-1',
     reportEmployeeId: 'employee-1',
-    reason: 'Reason',
-    action: 'Action',
-    signatureName: 'Anna Admin',
-    signatureRole: 'HR',
+    groupId: 'group-1',
+    group: {
+      id: 'group-1',
+      name: 'Group',
+      reason: 'Reason',
+      action: 'Action',
+      signatureName: 'Anna Admin',
+      signatureRole: 'HR',
+    },
     reportEmployee: {
       gender: GenderEnum.FEMALE,
       role: { title: 'Manager' },

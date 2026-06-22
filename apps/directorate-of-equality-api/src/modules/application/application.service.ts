@@ -16,6 +16,7 @@ import {
   getLimitAndOffset,
 } from '@dmr.is/utils-server/serverUtils'
 
+import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
@@ -58,6 +59,7 @@ import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
@@ -118,6 +120,8 @@ export class ApplicationService implements IApplicationService {
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(ReportEmployeeOutlierModel)
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
+    @InjectModel(ReportOutlierGroupModel)
+    private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
     @InjectModel(ReportEventModel)
     private readonly reportEventModel: typeof ReportEventModel,
   ) {}
@@ -440,7 +444,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   /**
-   * In-place edit of a SALARY report's outlier explanations.
+   * In-place edit of a SALARY report's outlier groups (replace-all).
    *
    * Allowed in two statuses:
    *   - `POSTPONED` (primary path): applicant is resolving postponement.
@@ -449,10 +453,13 @@ export class ApplicationService implements IApplicationService {
    *   - `IN_REVIEW` (correction path): reviewer asked for corrections via
    *     comment. Status is preserved; only `EDITED` is emitted.
    *
-   * The submitted set must match the canonical detected outliers on the
-   * report (read from `report_result.outlierAnalysisSnapshot.employees`
-   * filtered to `isOutlier = true`) — every detected ordinal must appear
-   * exactly once, and no extras are allowed.
+   * The union of every group's `employeeOrdinals` must match the canonical
+   * detected outliers on the report (read from
+   * `report_result.outlierAnalysisSnapshot.employees` filtered to
+   * `isOutlier = true`) — every detected ordinal covered exactly once, no
+   * extras, no missing, no ordinal in two groups. The report's existing groups
+   * are replaced wholesale: the outlier rows are re-pointed at freshly created
+   * groups and the old groups are deleted.
    */
   async editOutliers(
     providerId: string,
@@ -485,17 +492,20 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    // 1. Pure request validation — detect duplicate ordinals before any DB
-    //    fetch. Failing fast keeps the error message specific to the input
-    //    and avoids unnecessary work.
+    // 1. Pure request validation — flatten the groups into a single ordinal
+    //    set, rejecting any ordinal that appears in more than one group (an
+    //    outlier belongs to exactly one group). Failing fast keeps the error
+    //    message specific to the input and avoids unnecessary work.
     const submittedOrdinals = new Set<number>()
-    for (const submitted of input.outliers) {
-      if (submittedOrdinals.has(submitted.employeeOrdinal)) {
-        throw new BadRequestException(
-          `Duplicate outlier row for employee ordinal ${submitted.employeeOrdinal}`,
-        )
+    for (const group of input.groups) {
+      for (const ordinal of group.employeeOrdinals) {
+        if (submittedOrdinals.has(ordinal)) {
+          throw new BadRequestException(
+            `Employee ordinal ${ordinal} appears in more than one outlier group`,
+          )
+        }
+        submittedOrdinals.add(ordinal)
       }
-      submittedOrdinals.add(submitted.employeeOrdinal)
     }
 
     // 2. Canonical detected set, frozen at submit time on the report_result.
@@ -511,7 +521,7 @@ export class ApplicationService implements IApplicationService {
     )
     if (extras.length > 0) {
       throw new BadRequestException(
-        `Outlier row(s) submitted for non-outlier employee ordinal(s): ${extras.join(', ')}`,
+        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(', ')}`,
       )
     }
 
@@ -520,7 +530,7 @@ export class ApplicationService implements IApplicationService {
     )
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Detected outlier(s) missing acknowledgement for employee ordinal(s): ${missing.join(', ')}`,
+        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(', ')}`,
       )
     }
 
@@ -544,26 +554,45 @@ export class ApplicationService implements IApplicationService {
       }
     }
 
-    // 4. Update each outlier row's explanation fields. The set-match
-    //    validation above guarantees every submitted ordinal resolves.
-    for (const submitted of input.outliers) {
-      const row = outlierByOrdinal.get(submitted.employeeOrdinal)
-      if (!row) {
-        // Shouldn't happen — detected set is read from report_result which
-        // is built from the same employees that have outlier rows. Defensive.
-        throw new InternalServerErrorException(
-          `Outlier row missing for detected employee ordinal ${submitted.employeeOrdinal}`,
+    // 4. Replace-all. Capture the report's current groups, create the new
+    //    ones, re-point each outlier row at its new group, then delete the
+    //    old groups (now unreferenced — group_id is NOT NULL, so the
+    //    re-point must happen before the delete).
+    const previousGroups = await this.reportOutlierGroupModel.findAll({
+      where: { reportId: report.id },
+      attributes: ['id'],
+    })
+
+    for (const group of input.groups) {
+      const groupRow = await this.reportOutlierGroupModel.create({
+        reportId: report.id,
+        name: group.name?.trim() || DEFAULT_OUTLIER_GROUP_NAME,
+        reason: group.reason,
+        action: group.action,
+        signatureName: group.signatureName,
+        signatureRole: group.signatureRole,
+      })
+
+      for (const ordinal of group.employeeOrdinals) {
+        const row = outlierByOrdinal.get(ordinal)
+        if (!row) {
+          // Shouldn't happen — detected set is read from report_result which
+          // is built from the same employees that have outlier rows. Defensive.
+          throw new InternalServerErrorException(
+            `Outlier row missing for detected employee ordinal ${ordinal}`,
+          )
+        }
+        await this.reportEmployeeOutlierModel.update(
+          { groupId: groupRow.id },
+          { where: { id: row.id } },
         )
       }
-      await this.reportEmployeeOutlierModel.update(
-        {
-          reason: submitted.reason,
-          action: submitted.action,
-          signatureName: submitted.signatureName,
-          signatureRole: submitted.signatureRole,
-        },
-        { where: { id: row.id } },
-      )
+    }
+
+    if (previousGroups.length > 0) {
+      await this.reportOutlierGroupModel.destroy({
+        where: { id: previousGroups.map((group) => group.id) },
+      })
     }
 
     // 5. If we were resolving postponement, transition POSTPONED → SUBMITTED.
@@ -647,7 +676,7 @@ export class ApplicationService implements IApplicationService {
       parsed: input.parsed,
       companies,
       outliersPostponed: input.outliersPostponed,
-      outliers: input.outliers,
+      outlierGroups: input.outlierGroups,
     }
   }
 
@@ -835,6 +864,19 @@ export class ApplicationService implements IApplicationService {
                 required: false,
               },
             ],
+          },
+          {
+            model: ReportOutlierGroupModel,
+            as: 'group',
+            attributes: [
+              'id',
+              'name',
+              'reason',
+              'action',
+              'signatureName',
+              'signatureRole',
+            ],
+            required: true,
           },
         ],
         order: [
