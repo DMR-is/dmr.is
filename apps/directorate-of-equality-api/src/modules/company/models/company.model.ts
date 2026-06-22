@@ -18,6 +18,8 @@ type CompanyAttributes = {
   postcodeId: string | null
   salaryReportRequired: boolean
   salaryReportRequiredOverride: boolean
+  nextEqualityReportDueAt: Date | null
+  nextSalaryReportDueAt: Date | null
   isatCategoryCode: string | null
 }
 
@@ -30,6 +32,8 @@ type CompanyCreateAttributes = {
   postcodeId?: string | null
   salaryReportRequired?: boolean
   salaryReportRequiredOverride?: boolean
+  nextEqualityReportDueAt?: Date | null
+  nextSalaryReportDueAt?: Date | null
   isatCategoryCode?: string | null
 }
 
@@ -84,6 +88,20 @@ export class CompanyModel extends MutableModel<
   })
   salaryReportRequiredOverride!: boolean
 
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'next_equality_report_due_at',
+  })
+  nextEqualityReportDueAt!: Date | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'next_salary_report_due_at',
+  })
+  nextSalaryReportDueAt!: Date | null
+
   @ForeignKey(() => IsatCategoryModel)
   @Column({ type: DataType.TEXT, allowNull: true, field: 'isat_category_code' })
   isatCategoryCode!: string | null
@@ -106,9 +124,11 @@ export class CompanyModel extends MutableModel<
       postcodeId: model.postcodeId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
+      nextEqualityReportDueAt: model.nextEqualityReportDueAt,
+      nextSalaryReportDueAt: model.nextSalaryReportDueAt,
       isatCategoryCode: model.isatCategoryCode,
       isatCategory: model.isatCategory
-        ? IsatCategoryModel.fromModel(model.isatCategory)
+        ? model.isatCategory.fromModel()
         : null,
     }
   }
