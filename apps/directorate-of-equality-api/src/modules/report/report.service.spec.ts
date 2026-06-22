@@ -310,7 +310,7 @@ describe('ReportService.list — filter & query building', () => {
   })
 
   describe('free-text search', () => {
-    it('adds an Op.or across identifier, contact name, contact email, company name, kennitala', async () => {
+    it('adds an Op.or across identifier, company name, kennitala (no person fields)', async () => {
       const { service, findAndCountAll } = makeService()
       findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
 
@@ -321,17 +321,17 @@ describe('ReportService.list — filter & query building', () => {
       >
 
       const orBranches = where[Op.or] as Array<Record<string, unknown>>
-      expect(orBranches).toHaveLength(5)
+      expect(orBranches).toHaveLength(3)
       const keys = orBranches.map((b) => Object.keys(b)[0])
       expect(keys).toEqual(
         expect.arrayContaining([
           'identifier',
-          'contactName',
-          'contactEmail',
           '$companyReport.name$',
           '$companyReport.national_id$',
         ]),
       )
+      expect(keys).not.toContain('contactName')
+      expect(keys).not.toContain('contactEmail')
     })
 
     it('pattern wraps the term in % on both sides', async () => {
