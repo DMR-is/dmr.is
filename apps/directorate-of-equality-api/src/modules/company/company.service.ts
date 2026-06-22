@@ -62,6 +62,29 @@ export class CompanyService implements ICompanyService {
     private readonly companyCommentService: ICompanyCommentService,
   ) {}
 
+  /**
+   * `CompanyModel` scoped to also select the derived `reportStatus`. The cast
+   * restores the custom `*OrThrow` statics that Sequelize's `.scope()` erases
+   * from the return type.
+   */
+  private get companyWithReportStatus(): typeof CompanyModel {
+    return this.companyModel.scope('withReportStatus') as typeof CompanyModel
+  }
+
+  /**
+   * Re-read a company through the `withReportStatus` scope and map it to a DTO.
+   * Used after a write (create) where the in-memory instance has no computed
+   * `reportStatus` virtual yet.
+   */
+  private async loadCompanyDto(id: string): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    return company.fromModel()
+  }
+
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
     const { limit, offset } = getLimitAndOffset(query)
 
@@ -111,14 +134,15 @@ export class CompanyService implements ICompanyService {
           ]
         : [['name', sortDir]]
 
-    const { rows, count } = await this.companyModel.findAndCountAll({
-      where,
-      order,
-      limit,
-      offset,
-      distinct: true,
-      col: 'id',
-    })
+    const { rows, count } = await this.companyWithReportStatus
+      .findAndCountAll({
+        where,
+        order,
+        limit,
+        offset,
+        distinct: true,
+        col: 'id',
+      })
 
     const companies = rows.map((c) => c.fromModel())
     const paging = generatePaging(companies, query.page, query.pageSize, count)
@@ -130,12 +154,7 @@ export class CompanyService implements ICompanyService {
       context: LOGGING_CONTEXT,
     })
 
-    const company = await this.companyModel.findOneOrThrow(
-      { where: { id } },
-      companyMessages.notFound(id),
-    )
-
-    return company.fromModel()
+    return this.loadCompanyDto(id)
   }
 
   async rskLookup(nationalId: string): Promise<CompanyLookupDto> {
@@ -180,7 +199,7 @@ export class CompanyService implements ICompanyService {
 
     await this.companyEventService.emitCreated(company.id, company.status)
 
-    return company.fromModel()
+    return this.loadCompanyDto(company.id)
   }
 
   async getByNationalId(nationalId: string): Promise<CompanyDto> {
@@ -188,7 +207,7 @@ export class CompanyService implements ICompanyService {
       context: LOGGING_CONTEXT,
     })
 
-    const company = await this.companyModel.findOneOrThrow(
+    const company = await this.companyWithReportStatus.findOneOrThrow(
       { where: { nationalId } },
       companyMessages.notFoundByNationalId(nationalId),
     )
@@ -200,9 +219,8 @@ export class CompanyService implements ICompanyService {
     nationalId: string,
     fallbackName?: string,
   ): Promise<CompanyDto> {
-    const existing = await this.companyModel.findOne({
-      where: { nationalId },
-    })
+    const existing = await this.companyWithReportStatus
+      .findOne({ where: { nationalId } })
 
     if (existing) {
       return existing.fromModel()
@@ -232,7 +250,7 @@ export class CompanyService implements ICompanyService {
 
     await this.companyEventService.emitCreated(company.id, company.status)
 
-    return company.fromModel()
+    return this.loadCompanyDto(company.id)
   }
 
   async getOrCreateSubsidiaryReportSnapshotSource(
@@ -283,7 +301,10 @@ export class CompanyService implements ICompanyService {
     dto: UpdateCompanyStatusDto,
     actorUserId: string,
   ): Promise<CompanyDto> {
-    const company = await this.companyModel.findOneOrThrow(
+    // Scoped read so the returned DTO carries reportStatus. The company's
+    // status column does not feed reportStatus, so the value loaded here stays
+    // correct after the update below.
+    const company = await this.companyWithReportStatus.findOneOrThrow(
       { where: { id } },
       companyMessages.notFound(id),
     )

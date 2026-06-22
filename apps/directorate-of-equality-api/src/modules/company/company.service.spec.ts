@@ -47,6 +47,16 @@ describe('CompanyService', () => {
     eventsByCompanyId = jest.fn().mockResolvedValue([])
     commentsByCompanyId = jest.fn().mockResolvedValue([])
 
+    // `.scope('withReportStatus')` returns a scoped copy of the model; the
+    // service then calls findOne/findOneOrThrow on it. Resolve scope back to
+    // the same mock so those calls land on the shared jest.fns.
+    const companyModelMock: Record<string, unknown> = {
+      findOneOrThrow,
+      findOne,
+      create,
+    }
+    companyModelMock.scope = jest.fn(() => companyModelMock)
+
     const module = await Test.createTestingModule({
       providers: [
         CompanyService,
@@ -57,7 +67,7 @@ describe('CompanyService', () => {
         },
         {
           provide: getModelToken(CompanyModel),
-          useValue: { findOneOrThrow, findOne, create },
+          useValue: companyModelMock,
         },
         {
           provide: getModelToken(IsatCategoryModel),
@@ -153,6 +163,15 @@ describe('CompanyService', () => {
           employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
+      // loadCompanyDto re-reads the created row through the report-status scope.
+      findOneOrThrow.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-2',
+          name: 'Registry Name ehf.',
+          nationalId: '6601234567',
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        }),
+      )
 
       const result = await service.getOrCreateByNationalId(
         '6601234567',
@@ -176,6 +195,14 @@ describe('CompanyService', () => {
       findOne.mockResolvedValue(null)
       getEntityByNationalId.mockResolvedValue({ entity: null })
       create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-3',
+          name: 'Body-provided name',
+          nationalId: '7701234567',
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        }),
+      )
+      findOneOrThrow.mockResolvedValue(
         makeCompanyModel({
           id: 'company-3',
           name: 'Body-provided name',
@@ -315,6 +342,8 @@ describe('CompanyService', () => {
           status: CompanyStatusEnum.ACTIVE,
         }),
       )
+      // loadCompanyDto re-reads the created row through the report-status scope.
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-9' }))
 
       await service.create({
         name: 'New ehf.',

@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Scopes,
+} from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
@@ -6,7 +12,12 @@ import { DoeModels } from '../../../core/constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
-import { CompanySizeEnum, CompanyStatusEnum } from './company.enums'
+import { companyReportStatusLiteral } from '../utils/report-status'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from './company.enums'
 import { IsatCategoryModel } from './isat-category.model'
 
 type CompanyAttributes = {
@@ -33,6 +44,19 @@ type CompanyCreateAttributes = {
   isatCategoryCode?: string | null
 }
 
+/**
+ * `withReportStatus` selects the derived `reportStatus` alongside the stored
+ * columns. It is the read scope for every path that returns a `CompanyDto` —
+ * the value is computed in SQL (see `companyReportStatusLiteral`) so it can be
+ * filtered/sorted, and so the column matches the list status filter exactly.
+ */
+@Scopes(() => ({
+  withReportStatus: {
+    attributes: {
+      include: [[companyReportStatusLiteral(), 'reportStatus']],
+    },
+  },
+}))
 @MutableTable({ tableName: DoeModels.COMPANY })
 export class CompanyModel extends MutableModel<
   CompanyAttributes,
@@ -95,6 +119,12 @@ export class CompanyModel extends MutableModel<
   })
   isatCategory?: IsatCategoryModel | null
 
+  // Derived compliance status — not a stored column. Populated by the
+  // `withReportStatus` scope; undefined when the model is loaded outside it, so
+  // every CompanyDto read goes through that scope.
+  @Column(DataType.VIRTUAL)
+  reportStatus!: CompanyReportStatusEnum
+
   static fromModel(model: CompanyModel): CompanyDto {
     return {
       id: model.id,
@@ -110,6 +140,7 @@ export class CompanyModel extends MutableModel<
       isatCategory: model.isatCategory
         ? IsatCategoryModel.fromModel(model.isatCategory)
         : null,
+      reportStatus: model.reportStatus,
     }
   }
 

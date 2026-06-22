@@ -49,3 +49,27 @@ export enum CompanyStatusEnum {
   INACTIVE = 'INACTIVE',
   UNKNOWN = 'UNKNOWN',
 }
+
+/**
+ * Derived reporting-compliance status surfaced on `CompanyDto`. Not persisted —
+ * computed from the company's size/obligations and its reports (see
+ * `utils/report-status.ts`). A single value, evaluated in priority order; the
+ * first unmet obligation wins (most critical first).
+ *
+ *   MISSING_EQUALITY_REPORT → "Vantar jafnréttisáætlun": 25+ employees
+ *       (MEDIUM|LARGE) with no active/approved equality report.
+ *   MISSING_SALARY_REPORT   → "Vantar launagreiningu": a salary report is
+ *       required (50+/LARGE, or admin override — i.e. `salary_report_required`)
+ *       with no active/approved salary report.
+ *   MISSING_ACTION_PLAN     → "Vantar úrbótaáætlun": a salary report is
+ *       POSTPONED, i.e. it has pay-gap outliers whose explanations are still
+ *       deferred.
+ *   SATISFACTORY            → "Fullnægjandi": none of the above; the company
+ *       has met its obligations.
+ */
+export enum CompanyReportStatusEnum {
+  MISSING_EQUALITY_REPORT = 'MISSING_EQUALITY_REPORT',
+  MISSING_SALARY_REPORT = 'MISSING_SALARY_REPORT',
+  MISSING_ACTION_PLAN = 'MISSING_ACTION_PLAN',
+  SATISFACTORY = 'SATISFACTORY',
+}
