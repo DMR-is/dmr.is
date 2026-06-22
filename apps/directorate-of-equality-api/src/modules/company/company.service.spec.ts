@@ -13,6 +13,7 @@ import { ICompanyEventService } from '../company-event/company-event.service.int
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { companyMessages } from './company.messages'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { CompanyService } from './company.service'
 
@@ -93,7 +94,7 @@ describe('CompanyService', () => {
 
     expect(findOneOrThrow).toHaveBeenCalledWith(
       { where: { nationalId: '5501234567' } },
-      'Company with national id "5501234567" not found',
+      companyMessages.notFoundByNationalId('5501234567'),
     )
     expect(result).toEqual({
       id: 'company-1',

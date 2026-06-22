@@ -42,6 +42,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
       err.details = details
     }
 
+    // A curated, localized message thrown alongside the error (see
+    // error-messages files). Survives the status switch below, which only
+    // sets the generic English `message`.
+    if (
+      typeof exceptionResponse === 'object' &&
+      'translatedMessage' in exceptionResponse &&
+      typeof exceptionResponse.translatedMessage === 'string'
+    ) {
+      err.translatedMessage = exceptionResponse.translatedMessage
+    }
+
     logger.warn(`${exception.name} - ${exception.message}`, {
       context: LOGGING_CONTEXT,
       exception,
