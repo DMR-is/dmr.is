@@ -35,6 +35,7 @@ import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
+import { companyMessages } from './company.messages'
 import {
   CreateCompanyInput,
   GetCompaniesQueryDto,
@@ -131,7 +132,7 @@ export class CompanyService implements ICompanyService {
 
     const company = await this.companyModel.findOneOrThrow(
       { where: { id } },
-      `Company "${id}" not found`,
+      companyMessages.notFound(id),
     )
 
     return company.fromModel()
@@ -148,7 +149,7 @@ export class CompanyService implements ICompanyService {
 
     if (!result.entity) {
       throw new NotFoundException(
-        `No entity found in national registry for "${nationalId}"`,
+        companyMessages.registryEntityNotFound(nationalId),
       )
     }
 
@@ -167,7 +168,7 @@ export class CompanyService implements ICompanyService {
 
     if (existing) {
       throw new ConflictException(
-        `Company with national id "${input.nationalId}" already exists`,
+        companyMessages.alreadyExists(input.nationalId),
       )
     }
 
@@ -189,7 +190,7 @@ export class CompanyService implements ICompanyService {
 
     const company = await this.companyModel.findOneOrThrow(
       { where: { nationalId } },
-      `Company with national id "${nationalId}" not found`,
+      companyMessages.notFoundByNationalId(nationalId),
     )
 
     return company.fromModel()
@@ -214,7 +215,7 @@ export class CompanyService implements ICompanyService {
 
     if (!name) {
       throw new NotFoundException(
-        `No entity found in national registry for "${nationalId}" and no fallback name provided`,
+        companyMessages.registryEntityNotFoundNoFallback(nationalId),
       )
     }
 
@@ -248,7 +249,7 @@ export class CompanyService implements ICompanyService {
 
     if (!registry.entity) {
       throw new NotFoundException(
-        `No entity found in national registry for "${input.nationalId}"`,
+        companyMessages.registryEntityNotFound(input.nationalId),
       )
     }
 
@@ -284,7 +285,7 @@ export class CompanyService implements ICompanyService {
   ): Promise<CompanyDto> {
     const company = await this.companyModel.findOneOrThrow(
       { where: { id } },
-      `Company "${id}" not found`,
+      companyMessages.notFound(id),
     )
 
     // No-op when the status is unchanged — avoids a spurious STATUS_CHANGED
@@ -356,7 +357,7 @@ export class CompanyService implements ICompanyService {
   async getTimeline(id: string): Promise<CompanyTimelineItemDto[]> {
     await this.companyModel.findOneOrThrow(
       { where: { id } },
-      `Company "${id}" not found`,
+      companyMessages.notFound(id),
     )
 
     const [events, comments] = await Promise.all([

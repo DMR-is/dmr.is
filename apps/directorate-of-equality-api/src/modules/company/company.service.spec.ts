@@ -14,6 +14,7 @@ import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
+import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
 const mockLogger = {
@@ -93,7 +94,7 @@ describe('CompanyService', () => {
 
     expect(findOneOrThrow).toHaveBeenCalledWith(
       { where: { nationalId: '5501234567' } },
-      'Company with national id "5501234567" not found',
+      companyMessages.notFoundByNationalId('5501234567'),
     )
     expect(result).toEqual({
       id: 'company-1',
@@ -369,7 +370,10 @@ describe('CompanyService', () => {
         id: 'company-1',
         status: CompanyStatusEnum.ACTIVE,
         update,
-        fromModel: () => ({ id: 'company-1', status: CompanyStatusEnum.ACTIVE }),
+        fromModel: () => ({
+          id: 'company-1',
+          status: CompanyStatusEnum.ACTIVE,
+        }),
       })
 
       await service.updateStatus(

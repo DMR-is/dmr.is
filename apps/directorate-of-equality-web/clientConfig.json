@@ -3173,6 +3173,10 @@
             ]
           },
           "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
