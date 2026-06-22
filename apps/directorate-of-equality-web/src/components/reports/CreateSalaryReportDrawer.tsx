@@ -141,36 +141,24 @@ export const CreateSalaryReportDrawer = () => {
     }
 
     try {
+      // A postponed submit needs no outlier payload — the API recomputes the
+      // detected set server-side and creates a single default outlier group
+      // (explanation deferred). The admin tool has no per-outlier explanation
+      // UI, so when outliers are detected the report must be postponed.
       await submitMutation.mutateAsync({ path: { companyId }, body })
       onSuccess()
     } catch (firstError) {
       const message = firstError instanceof Error ? firstError.message : ''
       const ordinals = parseOutlierOrdinals(message)
 
-      if (!ordinals) {
-        toast.error(s.form.errorToast)
-        return
-      }
-
-      if (!postpone) {
+      if (ordinals && !postpone) {
         toast.error(
           `Frávik fundust fyrir ${ordinals.length} starfsmenn. Merktu "Fresta skilum frávika" og gefðu ástæðu til að senda inn.`,
         )
         return
       }
 
-      try {
-        await submitMutation.mutateAsync({
-          path: { companyId },
-          body: {
-            ...body,
-            outliers: ordinals.map((employeeOrdinal) => ({ employeeOrdinal })),
-          },
-        })
-        onSuccess()
-      } catch {
-        toast.error(s.form.errorToast)
-      }
+      toast.error(s.form.errorToast)
     }
   }
 

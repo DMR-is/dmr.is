@@ -30,10 +30,23 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalNumber({ nullable: true })
   score!: number | null
 
+  @ApiUUId({
+    description:
+      'Id of the outlier group this outlier belongs to. Every outlier always belongs to exactly one group.',
+  })
+  groupId!: string
+
   @ApiOptionalString({
     nullable: true,
     description:
-      'Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty.',
+      'Name of the outlier group this outlier belongs to. Denormalized from the group for convenient client-side grouping/labeling.',
+  })
+  groupName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Explanation shared by the group. Denormalized from the outlier group — every outlier in the same group carries the same value. Null only while the parent report has `status = POSTPONED`.',
   })
   reason!: string | null
 

@@ -33,6 +33,7 @@ import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/re
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
+import { ReportOutlierGroupModel } from '../modules/report-employee/models/report-outlier-group.model'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
@@ -69,6 +70,7 @@ import { HealthController } from './health.controller'
             ReportSubCriterionStepModel,
             ReportEmployeeModel,
             ReportEmployeeOutlierModel,
+            ReportOutlierGroupModel,
             ReportEmployeeRoleCriterionStepModel,
             ReportEmployeePersonalCriterionStepModel,
             ReportResultModel,

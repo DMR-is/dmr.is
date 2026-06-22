@@ -49,7 +49,7 @@ describe('ReportWorkflowService', () => {
     findOne: jest.fn(),
   }
 
-  const reportEmployeeOutlierModel = {
+  const reportOutlierGroupModel = {
     findOne: jest.fn(),
   }
 
@@ -78,7 +78,7 @@ describe('ReportWorkflowService', () => {
       reportModel as never,
       companyReportModel as never,
       userModel as never,
-      reportEmployeeOutlierModel as never,
+      reportOutlierGroupModel as never,
     )
   })
 
@@ -448,7 +448,7 @@ describe('ReportWorkflowService', () => {
     })
 
     it('notifies the application system on approval of an island.is report', async () => {
-      reportEmployeeOutlierModel.findOne.mockResolvedValue(null)
+      reportOutlierGroupModel.findOne.mockResolvedValue(null)
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne
         // supersede type lookup
@@ -484,9 +484,9 @@ describe('ReportWorkflowService', () => {
       ).rejects.toBeInstanceOf(ForbiddenException)
     })
 
-    it('rejects when any outlier row on the report still has null explanation fields', async () => {
-      reportEmployeeOutlierModel.findOne.mockResolvedValueOnce({
-        id: 'outlier-1',
+    it('rejects when any outlier group on the report still has a null explanation', async () => {
+      reportOutlierGroupModel.findOne.mockResolvedValueOnce({
+        id: 'group-1',
       })
 
       await expect(
@@ -498,8 +498,8 @@ describe('ReportWorkflowService', () => {
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
     })
 
-    it('proceeds with approval when no outlier row has missing explanations (EQUALITY no-op or SALARY resolved)', async () => {
-      reportEmployeeOutlierModel.findOne.mockResolvedValueOnce(null)
+    it('proceeds with approval when no outlier group has a missing explanation (EQUALITY no-op or SALARY resolved)', async () => {
+      reportOutlierGroupModel.findOne.mockResolvedValueOnce(null)
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
       reportModel.findAll.mockResolvedValue([])
@@ -510,7 +510,7 @@ describe('ReportWorkflowService', () => {
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
       // Gate ran first, then the APPROVED update.
-      expect(reportEmployeeOutlierModel.findOne).toHaveBeenCalledTimes(1)
+      expect(reportOutlierGroupModel.findOne).toHaveBeenCalledTimes(1)
       expect(reportModel.update).toHaveBeenCalledWith(
         expect.objectContaining({ status: ReportStatusEnum.APPROVED }),
         { where: { id: 'report-1' } },

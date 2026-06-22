@@ -3177,31 +3177,30 @@
         },
         "required": ["statusCode", "timestamp"]
       },
-      "CreateReportOutlierDto": {
+      "CreateReportOutlierGroupDto": {
         "type": "object",
         "properties": {
-          "employeeOrdinal": {
-            "type": "number",
-            "description": "Ordinal of the employee in `parsed.employees[]` this outlier justification applies to."
-          },
-          "reason": {
+          "name": {
             "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
+            "description": "Applicant-supplied label for the group. Not required to be unique. When omitted (the implicit single-group case) the server assigns a default name."
           },
-          "action": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
-          },
-          "signatureName": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
-          },
-          "signatureRole": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
+          "reason": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "signatureName": { "type": "string", "minLength": 1 },
+          "signatureRole": { "type": "string", "minLength": 1 },
+          "employeeOrdinals": {
+            "description": "Ordinals of the employees in `parsed.employees[]` this group covers.",
+            "type": "array",
+            "items": { "type": "number" }
           }
         },
-        "required": ["employeeOrdinal"]
+        "required": [
+          "reason",
+          "action",
+          "signatureName",
+          "signatureRole",
+          "employeeOrdinals"
+        ]
       },
       "AdminSalaryReportDto": {
         "type": "object",
@@ -3229,9 +3228,11 @@
             "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
           },
           "postponed": { "type": "boolean" },
-          "outliers": {
+          "outlierGroups": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
+            "items": {
+              "$ref": "#/components/schemas/CreateReportOutlierGroupDto"
+            }
           }
         },
         "required": [
@@ -4513,10 +4514,20 @@
           },
           "roleTitle": { "type": "string", "nullable": true },
           "score": { "type": "number", "nullable": true },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Id of the outlier group this outlier belongs to. Every outlier always belongs to exactly one group."
+          },
+          "groupName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the outlier group this outlier belongs to. Denormalized from the group for convenient client-side grouping/labeling."
+          },
           "reason": {
             "type": "string",
             "nullable": true,
-            "description": "Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty."
+            "description": "Explanation shared by the group. Denormalized from the outlier group — every outlier in the same group carries the same value. Null only while the parent report has `status = POSTPONED`."
           },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
@@ -4549,7 +4560,7 @@
             "description": "Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time."
           }
         },
-        "required": ["id", "reportEmployeeId"]
+        "required": ["id", "reportEmployeeId", "groupId"]
       },
       "GetReportOutliersResponseDto": {
         "type": "object",

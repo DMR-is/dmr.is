@@ -14,6 +14,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportCreateService } from './report-create.service'
 import { IReportCreateService } from './report-create.service.interface'
@@ -28,6 +29,7 @@ import { IReportCreateService } from './report-create.service.interface'
       ReportEmployeeRoleModel,
       ReportEmployeeModel,
       ReportEmployeeOutlierModel,
+      ReportOutlierGroupModel,
       ReportEmployeeRoleCriterionStepModel,
       ReportEmployeePersonalCriterionStepModel,
       ReportCriterionModel,
