@@ -13,7 +13,12 @@ const zGetCompaniesQuery = z.object({
   employeeCountCategory: z.enum(['UNKNOWN', 'SMALL', 'MEDIUM', 'LARGE']).optional(),
   companyStatus: z
     .array(
-      z.enum(['missing-equality', 'has-equality', 'missing-salary', 'compliant']),
+      z.enum([
+        'MISSING_EQUALITY_REPORT',
+        'MISSING_SALARY_REPORT',
+        'MISSING_ACTION_PLAN',
+        'SATISFACTORY',
+      ]),
     )
     .optional(),
   expiresWithin: z.array(z.enum(['30d', '3m', 'soon'])).optional(),

@@ -1,112 +1,21 @@
 import { literal, Op, WhereOptions } from 'sequelize'
 
 import { DoeModels } from '../../../core/constants'
-import { CompanySizeEnum } from '../models/company.enums'
-import { CompanyModel } from '../models/company.model'
+import { CompanyReportStatusEnum } from '../models/company.enums'
+import { COMPANY_QUERY_ALIAS,companyReportStatusCaseSql } from './report-status'
 
-export enum CompanyStatusFilterEnum {
-  MISSING_EQUALITY = 'missing-equality',
-  HAS_EQUALITY = 'has-equality',
-  MISSING_SALARY = 'missing-salary',
-  COMPLIANT = 'compliant',
-}
-
-// Sizes that carry no reporting obligation. UNKNOWN means we have not yet
-// classified the company, so it imposes nothing until an admin sets a size.
-const NO_REQUIREMENT_SIZES = [CompanySizeEnum.SMALL, CompanySizeEnum.UNKNOWN]
-// Sizes that must file an equality report (LARGE additionally needs salary).
-const EQUALITY_REQUIRED_SIZES = [CompanySizeEnum.MEDIUM, CompanySizeEnum.LARGE]
-
-function activeReportExists(type: 'SALARY' | 'EQUALITY'): string {
-  return `EXISTS (
-    SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
-    JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
-    WHERE cr.company_id = "${CompanyModel.name}"."id"
-    AND r.type = '${type}'
-    AND r.status = 'APPROVED'
-    AND r.valid_until > NOW()
-  )`
-}
-
-const needsSalary: WhereOptions = {
-  [Op.or]: [{ salaryReportRequired: true }, { salaryReportRequiredOverride: true }],
-}
-
-const noSalaryNeeded: WhereOptions = {
-  salaryReportRequired: false,
-  salaryReportRequiredOverride: false,
-}
-
-function statusCondition(status: CompanyStatusFilterEnum): WhereOptions {
-  switch (status) {
-    case CompanyStatusFilterEnum.COMPLIANT:
-      return {
-        [Op.or]: [
-          // LARGE: salary requirement fulfilled
-          {
-            [Op.and]: [needsSalary, literal(activeReportExists('SALARY'))],
-          },
-          // MEDIUM: equality requirement fulfilled (no salary needed)
-          {
-            [Op.and]: [
-              noSalaryNeeded,
-              { employeeCountCategory: { [Op.in]: EQUALITY_REQUIRED_SIZES } },
-              literal(activeReportExists('EQUALITY')),
-            ],
-          },
-          // SMALL / UNKNOWN: no requirements and nothing submitted
-          {
-            [Op.and]: [
-              noSalaryNeeded,
-              { employeeCountCategory: { [Op.in]: NO_REQUIREMENT_SIZES } },
-              literal(`NOT ${activeReportExists('EQUALITY')}`),
-            ],
-          },
-        ],
-      }
-
-    case CompanyStatusFilterEnum.MISSING_SALARY:
-      // needsSalary flag drives this — equality is prerequisite, salary not yet filed
-      return {
-        [Op.and]: [
-          needsSalary,
-          literal(activeReportExists('EQUALITY')),
-          literal(`NOT ${activeReportExists('SALARY')}`),
-        ],
-      }
-
-    case CompanyStatusFilterEnum.HAS_EQUALITY:
-      return literal(activeReportExists('EQUALITY'))
-
-    case CompanyStatusFilterEnum.MISSING_EQUALITY:
-      return {
-        [Op.or]: [
-          // needsSalary flag set but equality (prerequisite) not yet filed
-          {
-            [Op.and]: [
-              needsSalary,
-              literal(`NOT ${activeReportExists('EQUALITY')}`),
-            ],
-          },
-          // MEDIUM/LARGE, no salary obligation, no equality
-          {
-            [Op.and]: [
-              noSalaryNeeded,
-              { employeeCountCategory: { [Op.in]: EQUALITY_REQUIRED_SIZES } },
-              literal(`NOT ${activeReportExists('EQUALITY')}`),
-            ],
-          },
-        ],
-      }
-  }
-}
-
+/**
+ * Filter the company list by compliance status. Filters on the very same
+ * `CASE` expression that drives the displayed `reportStatus` column (see
+ * `report-status.ts`), so the value an admin sees and the value they filter on
+ * are guaranteed to match.
+ */
 export function buildCompanyStatusWhere(
-  statuses: CompanyStatusFilterEnum[],
+  statuses: CompanyReportStatusEnum[],
 ): WhereOptions {
   if (!statuses.length) return {}
-  const conditions = statuses.map(statusCondition)
-  return conditions.length === 1 ? conditions[0] : { [Op.or]: conditions }
+  const values = statuses.map((status) => `'${status}'`).join(', ')
+  return literal(`${companyReportStatusCaseSql()} IN (${values})`)
 }
 
 export enum CompanyExpiryFilterEnum {
@@ -131,7 +40,7 @@ export function buildCompanyExpiryWhere(
       literal(`EXISTS (
         SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
         JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
-        WHERE cr.company_id = "${CompanyModel.name}"."id"
+        WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
         AND r.status = 'APPROVED'
         AND r.valid_until > NOW()
         AND r.valid_until <= NOW() + ${interval}

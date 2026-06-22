@@ -17,10 +17,9 @@ import { companiesText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
-  deriveStatus,
   normalizeId,
-  STATUS_LABEL,
-  STATUS_TAG_VARIANT,
+  REPORT_STATUS_LABEL,
+  REPORT_STATUS_TAG_VARIANT,
 } from './companyStatus'
 
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
@@ -66,20 +65,20 @@ export const CompanyTable = ({
         header: sharedText.statusLabel,
         enableSorting: false,
         cell: ({ row }) => {
-          const status = deriveStatus(row.original, approvedReports)
+          const status = row.original.reportStatus
           return (
             <TableCell
               items={{
                 type: 'tag',
-                variant: STATUS_TAG_VARIANT[status],
-                children: STATUS_LABEL[status],
+                variant: REPORT_STATUS_TAG_VARIANT[status],
+                children: REPORT_STATUS_LABEL[status],
               }}
             />
           )
         },
       },
     ],
-    [approvedReports],
+    [],
   )
 
   return (

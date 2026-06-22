@@ -245,11 +245,11 @@
             "name": "companyStatus",
             "required": false,
             "in": "query",
-            "description": "Return only companies that match at least one of the provided status values. Omit for no constraint.",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/CompanyStatusFilterEnum"
+                "$ref": "#/components/schemas/CompanyReportStatusEnum"
               }
             }
           },
@@ -3303,13 +3303,13 @@
         "type": "string",
         "enum": ["UNKNOWN", "SMALL", "MEDIUM", "LARGE"]
       },
-      "CompanyStatusFilterEnum": {
+      "CompanyReportStatusEnum": {
         "type": "string",
         "enum": [
-          "missing-equality",
-          "has-equality",
-          "missing-salary",
-          "compliant"
+          "MISSING_EQUALITY_REPORT",
+          "MISSING_SALARY_REPORT",
+          "MISSING_ACTION_PLAN",
+          "SATISFACTORY"
         ]
       },
       "CompanyExpiryFilterEnum": {
@@ -3375,6 +3375,11 @@
           "isatCategory": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
+          },
+          "reportStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
+            ]
           }
         },
         "required": [
@@ -3384,7 +3389,8 @@
           "nationalId",
           "status",
           "salaryReportRequired",
-          "salaryReportRequiredOverride"
+          "salaryReportRequiredOverride",
+          "reportStatus"
         ]
       },
       "Paging": {

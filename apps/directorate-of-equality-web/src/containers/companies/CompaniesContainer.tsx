@@ -19,8 +19,8 @@ import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
 import {
   CompanyExpiryFilterEnum,
+  CompanyReportStatusEnum,
   CompanySizeEnum,
-  CompanyStatusFilterEnum,
   ReportStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -41,7 +41,7 @@ export const CompaniesContainer = () => {
     employees: filter.employeeCountCategory
       ? [filter.employeeCountCategory]
       : [],
-    status: (filter.companyStatus ?? []) as CompanyStatusFilterEnum[],
+    status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     dailyFines: [],
   })
@@ -75,7 +75,7 @@ export const CompaniesContainer = () => {
   const handleFiltersChange = (key: keyof CompanyFilters, val: string[]) => {
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
-      setFilter({ companyStatus: val as CompanyStatusFilterEnum[], page: 1 })
+      setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
     } else if (key === 'employees') {
       // API supports a single employeeCountCategory; pass first selected value.
       // Multi-select >1 categories would require an API change.

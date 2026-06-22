@@ -6,10 +6,13 @@ import { ApiProperty } from '@nestjs/swagger'
 import { ApiOptionalEnum, ApiOptionalString } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
-import { CompanySizeEnum } from '../models/company.enums'
-import { CompanyExpiryFilterEnum, CompanyStatusFilterEnum } from '../utils/filters'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+} from '../models/company.enums'
+import { CompanyExpiryFilterEnum } from '../utils/filters'
 
-export { CompanyExpiryFilterEnum, CompanyStatusFilterEnum }
+export { CompanyExpiryFilterEnum }
 
 export enum CompanySortByEnum {
   NAME = 'name',
@@ -38,12 +41,12 @@ export class GetCompaniesQueryDto extends PagingQuery {
   employeeCountCategory?: CompanySizeEnum
 
   @ApiProperty({
-    enum: CompanyStatusFilterEnum,
-    enumName: 'CompanyStatusFilterEnum',
+    enum: CompanyReportStatusEnum,
+    enumName: 'CompanyReportStatusEnum',
     isArray: true,
     required: false,
     description:
-      'Return only companies that match at least one of the provided status values. Omit for no constraint.',
+      'Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined
@@ -51,8 +54,8 @@ export class GetCompaniesQueryDto extends PagingQuery {
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(CompanyStatusFilterEnum, { each: true })
-  companyStatus?: CompanyStatusFilterEnum[]
+  @IsEnum(CompanyReportStatusEnum, { each: true })
+  companyStatus?: CompanyReportStatusEnum[]
 
   @ApiProperty({
     enum: CompanyExpiryFilterEnum,

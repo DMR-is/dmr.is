@@ -9,7 +9,11 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import { CompanySizeEnum, CompanyStatusEnum } from '../models/company.enums'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../models/company.enums'
 import { IsatCategoryDto } from './isat-category.dto'
 
 export class CompanyDto {
@@ -49,4 +53,7 @@ export class CompanyDto {
 
   @ApiPropertyOptional({ type: IsatCategoryDto, nullable: true })
   isatCategory!: IsatCategoryDto | null
+
+  @ApiEnum(CompanyReportStatusEnum, { enumName: 'CompanyReportStatusEnum' })
+  reportStatus!: CompanyReportStatusEnum
 }

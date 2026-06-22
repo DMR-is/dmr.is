@@ -1,35 +1,36 @@
 import {
-  type CompanyDto,
+  CompanyReportStatusEnum,
   CompanySizeEnum,
-  type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
 
-export type CompanyStatus =
-  | 'missing-equality'
-  | 'has-equality'
-  | 'missing-salary'
-  | 'compliant'
-
-export const STATUS_LABEL: Record<CompanyStatus, string> = {
-  'missing-equality': 'Vantar jafnréttisáætlun',
-  'has-equality': 'Jafnréttisáætlun virk',
-  'missing-salary': 'Vantar launagreiningu',
-  compliant: 'Fullnægjandi',
+// Icelandic labels + tag colours for the company report status. The status
+// itself is computed server-side and returned on `CompanyDto.reportStatus`;
+// the same map drives both the list column and the status filter options so
+// the displayed value and the filter value always agree.
+export const REPORT_STATUS_LABEL: Record<CompanyReportStatusEnum, string> = {
+  [CompanyReportStatusEnum.MISSING_EQUALITY_REPORT]: 'Vantar jafnréttisáætlun',
+  [CompanyReportStatusEnum.MISSING_SALARY_REPORT]: 'Vantar launagreiningu',
+  [CompanyReportStatusEnum.MISSING_ACTION_PLAN]: 'Vantar úrbótaáætlun',
+  [CompanyReportStatusEnum.SATISFACTORY]: 'Fullnægjandi',
 }
 
-export const STATUS_TAG_VARIANT: Record<
-  CompanyStatus,
-  'red' | 'mint' | 'purple'
+export const REPORT_STATUS_TAG_VARIANT: Record<
+  CompanyReportStatusEnum,
+  'red' | 'mint' | 'purple' | 'blue'
 > = {
-  'missing-equality': 'red',
-  'has-equality': 'mint',
-  'missing-salary': 'purple',
-  compliant: 'mint',
+  [CompanyReportStatusEnum.MISSING_EQUALITY_REPORT]: 'red',
+  [CompanyReportStatusEnum.MISSING_SALARY_REPORT]: 'purple',
+  [CompanyReportStatusEnum.MISSING_ACTION_PLAN]: 'blue',
+  [CompanyReportStatusEnum.SATISFACTORY]: 'mint',
 }
 
-export const STATUS_FILTER_OPTIONS = (
-  ['missing-equality', 'has-equality', 'missing-salary', 'compliant'] as const
-).map((value) => ({ value, label: STATUS_LABEL[value] }))
+// Priority order — most critical first — matching the server's evaluation.
+export const STATUS_FILTER_OPTIONS = [
+  CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
+  CompanyReportStatusEnum.MISSING_SALARY_REPORT,
+  CompanyReportStatusEnum.MISSING_ACTION_PLAN,
+  CompanyReportStatusEnum.SATISFACTORY,
+].map((value) => ({ value, label: REPORT_STATUS_LABEL[value] }))
 
 export const EXPIRES_FILTER_OPTIONS = [
   { value: '30d', label: 'Rennur út innan 30 daga' },
@@ -52,55 +53,4 @@ export const employeeCountCategoryFromCount = (
   if (count >= 50) return CompanySizeEnum.LARGE
   if (count >= 25) return CompanySizeEnum.MEDIUM
   return CompanySizeEnum.SMALL
-}
-
-function getActiveReportTypes(
-  company: CompanyDto,
-  approvedReports: ReportListItemDto[],
-) {
-  const now = new Date()
-  const companyId = normalizeId(company.nationalId)
-  const companyReports = companyId
-    ? approvedReports.filter(
-        (r) => normalizeId(r.companyNationalId) === companyId,
-      )
-    : []
-
-  const hasActive = (type: 'EQUALITY' | 'SALARY') =>
-    companyReports.some(
-      (r) => r.type === type && (!r.validUntil || new Date(r.validUntil) > now),
-    )
-
-  const needsSalary =
-    company.salaryReportRequired || company.salaryReportRequiredOverride
-
-  return {
-    hasEquality: hasActive('EQUALITY'),
-    hasSalary: hasActive('SALARY'),
-    needsSalary,
-  }
-}
-
-export function deriveStatus(
-  company: CompanyDto,
-  approvedReports: ReportListItemDto[],
-): CompanyStatus {
-  const { hasEquality, hasSalary, needsSalary } = getActiveReportTypes(
-    company,
-    approvedReports,
-  )
-  // UNKNOWN and SMALL both carry no reporting obligation. UNKNOWN means the
-  // company size has not been classified yet, so we impose nothing until it is.
-  const noRequirement =
-    company.employeeCountCategory === CompanySizeEnum.SMALL ||
-    company.employeeCountCategory === CompanySizeEnum.UNKNOWN
-
-  if (needsSalary && hasSalary) return 'compliant' // LARGE: both reports filed
-  if (needsSalary && hasEquality) return 'missing-salary' // LARGE: equality done, salary missing
-  if (needsSalary) return 'missing-equality' // LARGE: equality is the prerequisite
-  // No salary requirement below this line
-  if (!noRequirement && hasEquality) return 'compliant' // MEDIUM with equality: obligation met
-  if (!noRequirement) return 'missing-equality' // MEDIUM without equality
-  if (hasEquality) return 'has-equality' // SMALL/UNKNOWN voluntary submission
-  return 'compliant' // SMALL/UNKNOWN with nothing: no obligation
 }
