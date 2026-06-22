@@ -3,6 +3,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger'
 import {
   ApiBoolean,
   ApiEnum,
+  ApiOptionalDateTime,
   ApiOptionalString,
   ApiOptionalUuid,
   ApiString,
@@ -43,6 +44,12 @@ export class CompanyDto {
 
   @ApiBoolean()
   salaryReportRequiredOverride!: boolean
+
+  @ApiOptionalDateTime({ nullable: true })
+  nextEqualityReportDueAt!: Date | null
+
+  @ApiOptionalDateTime({ nullable: true })
+  nextSalaryReportDueAt!: Date | null
 
   @ApiOptionalString({
     nullable: true,
