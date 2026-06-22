@@ -13,8 +13,8 @@ import { ICompanyEventService } from '../company-event/company-event.service.int
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
-import { companyMessages } from './company.messages'
 import { IsatCategoryModel } from './models/isat-category.model'
+import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
 const mockLogger = {
@@ -370,7 +370,10 @@ describe('CompanyService', () => {
         id: 'company-1',
         status: CompanyStatusEnum.ACTIVE,
         update,
-        fromModel: () => ({ id: 'company-1', status: CompanyStatusEnum.ACTIVE }),
+        fromModel: () => ({
+          id: 'company-1',
+          status: CompanyStatusEnum.ACTIVE,
+        }),
       })
 
       await service.updateStatus(
