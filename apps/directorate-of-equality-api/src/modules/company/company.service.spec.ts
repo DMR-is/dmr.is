@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -13,6 +13,7 @@ import { ICompanyEventService } from '../company-event/company-event.service.int
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { IsatCategoryModel } from './models/isat-category.model'
 import { CompanyService } from './company.service'
 
 const mockLogger = {
@@ -32,11 +33,13 @@ describe('CompanyService', () => {
   let emitStatusChanged: jest.Mock
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
+  let isatFindByPk: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
+    isatFindByPk = jest.fn()
     getEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
@@ -54,6 +57,10 @@ describe('CompanyService', () => {
         {
           provide: getModelToken(CompanyModel),
           useValue: { findOneOrThrow, findOne, create },
+        },
+        {
+          provide: getModelToken(IsatCategoryModel),
+          useValue: { findByPk: isatFindByPk },
         },
         {
           provide: ICompanyEventService,
@@ -387,6 +394,86 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateIsat', () => {
+    it('sets a valid ÍSAT code after validating it exists', async () => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-1',
+          isatCategoryCode: null,
+          update,
+          fromModel: () => ({ id: 'company-1' }),
+        })
+        .mockResolvedValueOnce({
+          fromModel: () => ({ id: 'company-1', isatCategoryCode: '01110' }),
+        })
+      isatFindByPk.mockResolvedValue({ code: '01110' })
+
+      const result = await service.updateIsat(
+        'company-1',
+        { isatCategoryCode: '01110' },
+        'admin-1',
+      )
+
+      expect(isatFindByPk).toHaveBeenCalledWith('01110')
+      expect(update).toHaveBeenCalledWith({ isatCategoryCode: '01110' })
+      expect(result.isatCategoryCode).toBe('01110')
+    })
+
+    it('rejects an unknown ÍSAT code and does not update', async () => {
+      const update = jest.fn()
+      findOneOrThrow.mockResolvedValueOnce({
+        id: 'company-1',
+        isatCategoryCode: null,
+        update,
+        fromModel: () => ({ id: 'company-1' }),
+      })
+      isatFindByPk.mockResolvedValue(null)
+
+      await expect(
+        service.updateIsat(
+          'company-1',
+          { isatCategoryCode: 'nope' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('clears the classification when passed null (no code lookup)', async () => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-1',
+          isatCategoryCode: '01110',
+          update,
+          fromModel: () => ({ id: 'company-1' }),
+        })
+        .mockResolvedValueOnce({
+          fromModel: () => ({ id: 'company-1', isatCategoryCode: null }),
+        })
+
+      const result = await service.updateIsat(
+        'company-1',
+        { isatCategoryCode: null },
+        'admin-1',
+      )
+
+      expect(isatFindByPk).not.toHaveBeenCalled()
+      expect(update).toHaveBeenCalledWith({ isatCategoryCode: null })
+      expect(result.isatCategoryCode).toBeNull()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateIsat('missing', { isatCategoryCode: '01110' }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
     })
   })
 

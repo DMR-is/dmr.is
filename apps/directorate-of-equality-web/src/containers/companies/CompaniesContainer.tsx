@@ -14,6 +14,7 @@ import {
   CompanyFilter,
   type CompanyFilters,
 } from '../../components/companies/CompanyFilter'
+import { CompanyImportModal } from '../../components/companies/CompanyImportModal'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
 import {
@@ -24,12 +25,13 @@ import {
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
-import { serverErrorText } from '../../lib/text'
+import { companiesText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 export const CompaniesContainer = () => {
   const { isTablet } = useIsTablet()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   const { data, isError, filter, setFilter, resetFilter } = useCompanies({
     pageSize: 10,
@@ -109,7 +111,7 @@ export const CompaniesContainer = () => {
   }, [data, filters.dailyFines])
 
   const newButton = (
-    <Box display="flex" marginTop={2}>
+    <Box display="flex" flexDirection="column" rowGap={1} marginTop={2}>
       <Button
         icon="add"
         iconType="outline"
@@ -120,6 +122,17 @@ export const CompaniesContainer = () => {
         fluid
       >
         Nýtt fyrirtæki
+      </Button>
+      <Button
+        icon="upload"
+        iconType="outline"
+        onClick={() => setIsImportOpen(true)}
+        size="small"
+        variant="utility"
+        colorScheme="white"
+        fluid
+      >
+        {companiesText.importModal.button}
       </Button>
     </Box>
   )
@@ -162,6 +175,10 @@ export const CompaniesContainer = () => {
       <CreateCompanyModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <CompanyImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
       />
     </GridContainer>
   )

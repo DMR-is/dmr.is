@@ -30,6 +30,7 @@ import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyDto } from './dto/create-company.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { ICompanyService } from './company.service.interface'
 
@@ -89,6 +90,21 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateStatus(id, dto, admin.id)
+  }
+
+  @Patch(':id/isat')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyIsat',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateIsat(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyIsatDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateIsat(id, dto, admin.id)
   }
 
   @Get(':id/timeline')

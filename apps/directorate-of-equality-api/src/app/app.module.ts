@@ -17,6 +17,7 @@ import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
 import { CompanyEventModel } from '../modules/company/models/company-event.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { IsatCategoryModel } from '../modules/company/models/isat-category.model'
 import { ConfigModel } from '../modules/config/models/config.model'
 import { PostcodeModel } from '../modules/location/models/postcode.model'
 import { RegionModel } from '../modules/location/models/region.model'
@@ -59,6 +60,7 @@ import { HealthController } from './health.controller'
             UserModel,
             RegionModel,
             PostcodeModel,
+            IsatCategoryModel,
             CompanyModel,
             ReportEmployeeRoleModel,
             ReportModel,

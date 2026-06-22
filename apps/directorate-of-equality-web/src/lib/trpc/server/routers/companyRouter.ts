@@ -35,4 +35,25 @@ export const companyRouter = router({
   create: protectedProcedure
     .input(zCreateCompanyBody)
     .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
+
+  // Annual register import. The file arrives base64-encoded (tRPC has no
+  // multipart), is rebuilt into a Blob, and forwarded to the multipart API.
+  // `preview` writes nothing; `apply` commits. Same input shape for both.
+  importPreview: protectedProcedure
+    .input(z.object({ file: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.api.previewCompanyImport({ body: { file: toXlsxBlob(input.file) } }),
+    ),
+
+  importApply: protectedProcedure
+    .input(z.object({ file: z.string() }))
+    .mutation(({ ctx, input }) =>
+      ctx.api.applyCompanyImport({ body: { file: toXlsxBlob(input.file) } }),
+    ),
 })
+
+const XLSX_MIME =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+const toXlsxBlob = (base64: string): Blob =>
+  new Blob([Buffer.from(base64, 'base64')], { type: XLSX_MIME })

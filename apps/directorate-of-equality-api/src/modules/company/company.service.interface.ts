@@ -6,6 +6,7 @@ import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
 import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snapshot-source.dto'
+import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 
 export {
@@ -32,6 +33,11 @@ export interface ICompanyService {
   updateStatus(
     id: string,
     dto: UpdateCompanyStatusDto,
+    actorUserId: string,
+  ): Promise<CompanyDto>
+  updateIsat(
+    id: string,
+    dto: UpdateCompanyIsatDto,
     actorUserId: string,
   ): Promise<CompanyDto>
   getTimeline(id: string): Promise<CompanyTimelineItemDto[]>

@@ -1,3 +1,5 @@
+import { ApiPropertyOptional } from '@nestjs/swagger'
+
 import {
   ApiBoolean,
   ApiEnum,
@@ -8,6 +10,7 @@ import {
 } from '@dmr.is/decorators'
 
 import { CompanySizeEnum, CompanyStatusEnum } from '../models/company.enums'
+import { IsatCategoryDto } from './isat-category.dto'
 
 export class CompanyDto {
   @ApiUUId()
@@ -36,4 +39,14 @@ export class CompanyDto {
 
   @ApiBoolean()
   salaryReportRequiredOverride!: boolean
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Normalized ÍSAT2008 leaf code (admin-owned statistics field), e.g. "01110".',
+  })
+  isatCategoryCode!: string | null
+
+  @ApiPropertyOptional({ type: IsatCategoryDto, nullable: true })
+  isatCategory!: IsatCategoryDto | null
 }

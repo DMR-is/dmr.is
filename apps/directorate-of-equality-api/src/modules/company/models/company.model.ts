@@ -7,6 +7,7 @@ import { PostcodeModel } from '../../location/models/postcode.model'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './company.enums'
+import { IsatCategoryModel } from './isat-category.model'
 
 type CompanyAttributes = {
   name: string
@@ -17,6 +18,7 @@ type CompanyAttributes = {
   postcodeId: string | null
   salaryReportRequired: boolean
   salaryReportRequiredOverride: boolean
+  isatCategoryCode: string | null
 }
 
 type CompanyCreateAttributes = {
@@ -28,6 +30,7 @@ type CompanyCreateAttributes = {
   postcodeId?: string | null
   salaryReportRequired?: boolean
   salaryReportRequiredOverride?: boolean
+  isatCategoryCode?: string | null
 }
 
 @MutableTable({ tableName: DoeModels.COMPANY })
@@ -81,6 +84,17 @@ export class CompanyModel extends MutableModel<
   })
   salaryReportRequiredOverride!: boolean
 
+  @ForeignKey(() => IsatCategoryModel)
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'isat_category_code' })
+  isatCategoryCode!: string | null
+
+  @BelongsTo(() => IsatCategoryModel, {
+    foreignKey: 'isatCategoryCode',
+    targetKey: 'code',
+    as: 'isatCategory',
+  })
+  isatCategory?: IsatCategoryModel | null
+
   static fromModel(model: CompanyModel): CompanyDto {
     return {
       id: model.id,
@@ -92,9 +106,16 @@ export class CompanyModel extends MutableModel<
       postcodeId: model.postcodeId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
+      isatCategoryCode: model.isatCategoryCode,
+      isatCategory: model.isatCategory
+        ? IsatCategoryModel.fromModel(model.isatCategory)
+        : null,
     }
   }
 
+  // NOTE: company-level ISAT (isatCategoryCode) is admin-owned statistics data
+  // and is intentionally NOT snapshotted here — report_company.isat_category is
+  // an independent free-text submission snapshot. See db/README.md.
   static toSnapshot(dto: CompanyDto): CreateReportCompanySnapshotDto {
     return {
       companyId: dto.id,

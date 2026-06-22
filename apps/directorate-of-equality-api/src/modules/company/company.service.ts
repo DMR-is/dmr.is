@@ -1,6 +1,7 @@
 import { literal, Op, Order, WhereOptions } from 'sequelize'
 
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -28,9 +29,11 @@ import {
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { IsatCategoryModel } from './models/isat-category.model'
 import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
 import {
   CreateCompanyInput,
@@ -50,6 +53,8 @@ export class CompanyService implements ICompanyService {
     private readonly nationalRegistryService: INationalRegistryService,
     @InjectModel(CompanyModel)
     private readonly companyModel: typeof CompanyModel,
+    @InjectModel(IsatCategoryModel)
+    private readonly isatCategoryModel: typeof IsatCategoryModel,
     @Inject(ICompanyEventService)
     private readonly companyEventService: ICompanyEventService,
     @Inject(ICompanyCommentService)
@@ -305,6 +310,47 @@ export class CompanyService implements ICompanyService {
     )
 
     return company.fromModel()
+  }
+
+  /**
+   * Admin-owned ÍSAT2008 classification (statistics data). Independent of the
+   * report-submission snapshot — see db/README.md. Pass `isatCategoryCode: null`
+   * to clear. The FK also guards bad codes; we validate up-front for a clean 400.
+   */
+  async updateIsat(
+    id: string,
+    dto: UpdateCompanyIsatDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyModel.findOneOrThrow(
+      { where: { id } },
+      `Company "${id}" not found`,
+    )
+
+    const code = dto.isatCategoryCode ?? null
+
+    if (code !== null) {
+      const category = await this.isatCategoryModel.findByPk(code)
+      if (!category) {
+        throw new BadRequestException(`Unknown ÍSAT2008 code "${code}"`)
+      }
+    }
+
+    this.logger.info(
+      `Updating company ${id} ÍSAT: ${company.isatCategoryCode ?? '∅'} → ${
+        code ?? '∅'
+      } (by ${actorUserId})`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ isatCategoryCode: code })
+
+    const updated = await this.companyModel.findOneOrThrow({
+      where: { id },
+      include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
+    })
+
+    return updated.fromModel()
   }
 
   async getTimeline(id: string): Promise<CompanyTimelineItemDto[]> {
