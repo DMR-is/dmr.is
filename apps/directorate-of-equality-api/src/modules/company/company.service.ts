@@ -29,12 +29,18 @@ import {
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
+import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
-import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
+import {
+  buildCompanyExpiryWhere,
+  buildCompanyOverdueWhere,
+  buildCompanyStatusWhere,
+} from './utils/filters'
 import { companyMessages } from './company.messages'
 import {
   CreateCompanyInput,
@@ -112,6 +118,18 @@ export class CompanyService implements ICompanyService {
       conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
     }
 
+    if (query.finesStarted !== undefined) {
+      conditions.push({ finesStarted: query.finesStarted })
+    }
+
+    if (query.quarantined !== undefined) {
+      conditions.push({ quarantined: query.quarantined })
+    }
+
+    if (query.overdue) {
+      conditions.push(buildCompanyOverdueWhere())
+    }
+
     const where: WhereOptions =
       conditions.length === 0
         ? {}
@@ -122,17 +140,27 @@ export class CompanyService implements ICompanyService {
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
     ).toUpperCase()
-    const order: Order =
-      query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
-        ? [
-            [
-              literal(
-                `CASE employee_count_category WHEN 'UNKNOWN' THEN 0 WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
-              ),
-              sortDir,
-            ],
-          ]
-        : [['name', sortDir]]
+    let order: Order
+    if (query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT) {
+      order = [
+        [
+          literal(
+            `CASE employee_count_category WHEN 'UNKNOWN' THEN 0 WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
+          ),
+          sortDir,
+        ],
+      ]
+    } else if (query.sortBy === CompanySortByEnum.NEXT_REPORT_DUE) {
+      // Soonest (most overdue) of the two next-due dates first; companies with
+      // no due date sort last regardless of direction.
+      order = [
+        literal(
+          `LEAST(next_equality_report_due_at, next_salary_report_due_at) ${sortDir} NULLS LAST`,
+        ),
+      ]
+    } else {
+      order = [['name', sortDir]]
+    }
 
     const { rows, count } = await this.companyWithReportStatus
       .findAndCountAll({
@@ -330,6 +358,99 @@ export class CompanyService implements ICompanyService {
       actorUserId,
       dto.reason ?? null,
     )
+
+    return company.fromModel()
+  }
+
+  /**
+   * Toggle the daily-fines flag. The fines process itself is handled outside
+   * this system — the flag just records that it is in progress. Both
+   * transitions emit a `company_event` (with optional reason) for audit.
+   */
+  async updateFines(
+    id: string,
+    dto: UpdateCompanyFinesDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    // No-op when the flag is unchanged — avoids a spurious timeline event.
+    if (company.finesStarted === dto.finesStarted) {
+      return company.fromModel()
+    }
+
+    this.logger.info(
+      `Updating company ${id} fines flag: ${company.finesStarted} → ${dto.finesStarted}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ finesStarted: dto.finesStarted })
+
+    if (dto.finesStarted) {
+      await this.companyEventService.emitFinesStarted(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    } else {
+      await this.companyEventService.emitFinesStopped(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    }
+
+    return company.fromModel()
+  }
+
+  /**
+   * Quarantine a company — an admin halt switch. While quarantined, every
+   * outbound touchpoint (scheduled jobs, emails, notifications) must skip the
+   * company. Purely manual; both transitions emit a `company_event` (with
+   * optional reason) for audit.
+   */
+  async updateQuarantine(
+    id: string,
+    dto: UpdateCompanyQuarantineDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    // No-op when the flag is unchanged — avoids a spurious timeline event.
+    if (company.quarantined === dto.quarantined) {
+      return company.fromModel()
+    }
+
+    this.logger.info(
+      `Updating company ${id} quarantine: ${company.quarantined} → ${dto.quarantined}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ quarantined: dto.quarantined })
+
+    if (dto.quarantined) {
+      await this.companyEventService.emitQuarantined(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    } else {
+      await this.companyEventService.emitUnquarantined(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    }
 
     return company.fromModel()
   }

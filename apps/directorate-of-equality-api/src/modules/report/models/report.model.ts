@@ -63,7 +63,6 @@ type ReportAttributes = {
   validUntil: Date | null
   correctionDeadline: Date | null
   equalityReportContent: string | null
-  finesStartedAt: Date | null
 }
 
 type ReportCreateAttributes = {
@@ -95,7 +94,6 @@ type ReportCreateAttributes = {
   validUntil?: Date | null
   correctionDeadline?: Date | null
   equalityReportContent?: string | null
-  finesStartedAt?: Date | null
 }
 
 /**
@@ -292,9 +290,6 @@ export class ReportModel extends MutableModel<
   })
   equalityReportContent!: string | null
 
-  @Column({ type: DataType.DATE, allowNull: true, field: 'fines_started_at' })
-  finesStartedAt!: Date | null
-
   @BelongsTo(() => ReportModel, {
     foreignKey: 'equalityReportId',
     as: 'equalityReport',
@@ -347,7 +342,6 @@ export class ReportModel extends MutableModel<
       validUntil: model.validUntil,
       correctionDeadline: model.correctionDeadline,
       equalityReportContent: model.equalityReportContent,
-      finesStartedAt: model.finesStartedAt,
       reviewer:
         model.reviewer === undefined
           ? undefined

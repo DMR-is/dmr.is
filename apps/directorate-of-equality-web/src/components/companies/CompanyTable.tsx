@@ -7,6 +7,7 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
+import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   type CompanyDto,
@@ -66,15 +67,26 @@ export const CompanyTable = ({
         enableSorting: false,
         cell: ({ row }) => {
           const status = row.original.reportStatus
-          return (
-            <TableCell
-              items={{
-                type: 'tag',
-                variant: REPORT_STATUS_TAG_VARIANT[status],
-                children: REPORT_STATUS_LABEL[status],
-              }}
-            />
-          )
+          const items: TableCellItem[] = [
+            {
+              type: 'tag',
+              variant: REPORT_STATUS_TAG_VARIANT[status],
+              children: REPORT_STATUS_LABEL[status],
+            },
+          ]
+          // Overdue obligation — prompts the admin to look at the company and
+          // possibly start the daily-fines process.
+          if (
+            row.original.equalityReportOverdue ||
+            row.original.salaryReportOverdue
+          ) {
+            items.push({
+              type: 'tag',
+              variant: 'red',
+              children: companiesText.overdueTag,
+            })
+          }
+          return <TableCell items={items} />
         },
       },
     ],

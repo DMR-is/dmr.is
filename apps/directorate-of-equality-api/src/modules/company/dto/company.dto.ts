@@ -45,6 +45,18 @@ export class CompanyDto {
   @ApiBoolean()
   salaryReportRequiredOverride!: boolean
 
+  @ApiBoolean({
+    description:
+      'Daily-fines flag. `true` means the company is in the daily-fines process, handled outside this system.',
+  })
+  finesStarted!: boolean
+
+  @ApiBoolean({
+    description:
+      'Admin halt switch. `true` means all outbound activity (scheduled jobs, emails, notifications) for the company is suspended.',
+  })
+  quarantined!: boolean
+
   @ApiOptionalDateTime({ nullable: true })
   nextEqualityReportDueAt!: Date | null
 
@@ -63,4 +75,16 @@ export class CompanyDto {
 
   @ApiEnum(CompanyReportStatusEnum, { enumName: 'CompanyReportStatusEnum' })
   reportStatus!: CompanyReportStatusEnum
+
+  @ApiBoolean({
+    description:
+      'Derived: the company\'s next equality-report due date has passed.',
+  })
+  equalityReportOverdue!: boolean
+
+  @ApiBoolean({
+    description:
+      'Derived: the company\'s next salary-report due date has passed.',
+  })
+  salaryReportOverdue!: boolean
 }

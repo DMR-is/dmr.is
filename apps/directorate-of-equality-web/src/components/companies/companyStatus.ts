@@ -42,6 +42,14 @@ export const DAILY_FINES_FILTER_OPTIONS = [
   { value: 'active', label: 'Dagsektir í gangi' },
 ]
 
+export const OVERDUE_FILTER_OPTIONS = [
+  { value: 'overdue', label: 'Skiladagur liðinn' },
+]
+
+export const QUARANTINE_FILTER_OPTIONS = [
+  { value: 'quarantined', label: 'Í sóttkví' },
+]
+
 export const PAGE_SIZE = 10
 
 export const normalizeId = (id: string | null | undefined) =>

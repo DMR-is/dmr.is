@@ -4,7 +4,6 @@ import {
   zAssignReportPath,
   zDenyReportBody,
   zDenyReportPath,
-  zStartReportFinesPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
@@ -31,14 +30,6 @@ export const reportWorkflowRouter = router({
     .input(zApproveReportPath)
     .mutation(async ({ ctx, input }) => {
       await ctx.api.approveReport({
-        path: { reportId: input.reportId },
-      })
-    }),
-
-  startFines: protectedProcedure
-    .input(zStartReportFinesPath)
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.startReportFines({
         path: { reportId: input.reportId },
       })
     }),

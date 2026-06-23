@@ -12,7 +12,11 @@ import { DoeModels } from '../../../core/constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
-import { companyReportStatusLiteral } from '../utils/report-status'
+import {
+  companyReportStatusLiteral,
+  equalityReportOverdueLiteral,
+  salaryReportOverdueLiteral,
+} from '../utils/report-status'
 import {
   CompanyReportStatusEnum,
   CompanySizeEnum,
@@ -29,6 +33,8 @@ type CompanyAttributes = {
   postcodeId: string | null
   salaryReportRequired: boolean
   salaryReportRequiredOverride: boolean
+  finesStarted: boolean
+  quarantined: boolean
   nextEqualityReportDueAt: Date | null
   nextSalaryReportDueAt: Date | null
   isatCategoryCode: string | null
@@ -43,6 +49,8 @@ type CompanyCreateAttributes = {
   postcodeId?: string | null
   salaryReportRequired?: boolean
   salaryReportRequiredOverride?: boolean
+  finesStarted?: boolean
+  quarantined?: boolean
   nextEqualityReportDueAt?: Date | null
   nextSalaryReportDueAt?: Date | null
   isatCategoryCode?: string | null
@@ -57,7 +65,11 @@ type CompanyCreateAttributes = {
 @Scopes(() => ({
   withReportStatus: {
     attributes: {
-      include: [[companyReportStatusLiteral(), 'reportStatus']],
+      include: [
+        [companyReportStatusLiteral(), 'reportStatus'],
+        [equalityReportOverdueLiteral(), 'equalityReportOverdue'],
+        [salaryReportOverdueLiteral(), 'salaryReportOverdue'],
+      ],
     },
   },
 }))
@@ -112,6 +124,30 @@ export class CompanyModel extends MutableModel<
   })
   salaryReportRequiredOverride!: boolean
 
+  // Daily-fines flag. `true` means the company is in the daily-fines process,
+  // which is handled OUTSIDE this system — admins use it to know not to act on
+  // the company through the normal flow. Toggled by an admin (both ways); the
+  // "when" + reason live on the emitted `company_event` row. See db/README.md.
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'fines_started',
+  })
+  finesStarted!: boolean
+
+  // Admin-only halt switch. When true, ALL outbound activity for the company
+  // (scheduled jobs, emails/notifications, any automated touchpoint) must be
+  // skipped. Purely manual — no computed signal sets it. The "when" + reason
+  // live on the emitted `company_event` row. See db/README.md.
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'quarantined',
+  })
+  quarantined!: boolean
+
   @Column({
     type: DataType.DATE,
     allowNull: true,
@@ -143,6 +179,14 @@ export class CompanyModel extends MutableModel<
   @Column(DataType.VIRTUAL)
   reportStatus!: CompanyReportStatusEnum
 
+  // Derived overdue flags — true when the matching next-due date has passed.
+  // Populated by the `withReportStatus` scope alongside `reportStatus`.
+  @Column(DataType.VIRTUAL)
+  equalityReportOverdue!: boolean
+
+  @Column(DataType.VIRTUAL)
+  salaryReportOverdue!: boolean
+
   static fromModel(model: CompanyModel): CompanyDto {
     return {
       id: model.id,
@@ -154,6 +198,8 @@ export class CompanyModel extends MutableModel<
       postcodeId: model.postcodeId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
+      finesStarted: model.finesStarted,
+      quarantined: model.quarantined,
       nextEqualityReportDueAt: model.nextEqualityReportDueAt,
       nextSalaryReportDueAt: model.nextSalaryReportDueAt,
       isatCategoryCode: model.isatCategoryCode,
@@ -161,6 +207,8 @@ export class CompanyModel extends MutableModel<
         ? model.isatCategory.fromModel()
         : null,
       reportStatus: model.reportStatus,
+      equalityReportOverdue: model.equalityReportOverdue,
+      salaryReportOverdue: model.salaryReportOverdue,
     }
   }
 

@@ -235,6 +235,9 @@ export const companiesText = {
   avgEmployeeCount: 'Meðalfjöldi starfsmanna',
   validPeriod: 'Gildistími',
   dailyFines: 'Dagsektir',
+  overdue: 'Skiladagur',
+  overdueTag: 'Skiladagur liðinn',
+  quarantine: 'Sóttkví',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
@@ -244,6 +247,8 @@ export const companiesText = {
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
     viewReport: 'Skoða skýrslu',
+    equalityDueAt: 'Næsti skiladagur jafnréttisáætlunar',
+    salaryDueAt: 'Næsti skiladagur launagreiningar',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',
