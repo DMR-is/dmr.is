@@ -36,24 +36,23 @@ export const companyRouter = router({
     .input(zCreateCompanyBody)
     .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
 
-  // Annual register import. The file arrives base64-encoded (tRPC has no
-  // multipart), is rebuilt into a Blob, and forwarded to the multipart API.
-  // `preview` writes nothing; `apply` commits. Same input shape for both.
+  // Annual register import. The client uploads the .xlsx straight to S3 via a
+  // presigned URL, then passes the resulting object `key` here. The same key is
+  // previewed and then applied (uploaded once). `preview` writes nothing;
+  // `apply` commits.
+  requestImportUpload: protectedProcedure.mutation(({ ctx }) =>
+    ctx.api.presignAdminImportUpload(),
+  ),
+
   importPreview: protectedProcedure
-    .input(z.object({ file: z.string() }))
+    .input(z.object({ key: z.string() }))
     .mutation(({ ctx, input }) =>
-      ctx.api.previewCompanyImport({ body: { file: toXlsxBlob(input.file) } }),
+      ctx.api.previewCompanyImport({ body: { key: input.key } }),
     ),
 
   importApply: protectedProcedure
-    .input(z.object({ file: z.string() }))
+    .input(z.object({ key: z.string() }))
     .mutation(({ ctx, input }) =>
-      ctx.api.applyCompanyImport({ body: { file: toXlsxBlob(input.file) } }),
+      ctx.api.applyCompanyImport({ body: { key: input.key } }),
     ),
 })
-
-const XLSX_MIME =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-const toXlsxBlob = (base64: string): Blob =>
-  new Blob([Buffer.from(base64, 'base64')], { type: XLSX_MIME })

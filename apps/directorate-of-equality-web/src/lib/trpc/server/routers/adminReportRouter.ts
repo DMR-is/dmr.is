@@ -31,21 +31,23 @@ export const adminReportRouter = router({
       ctx.api.submitAdminSalaryReport({ path: input.path, body: input.body }),
     ),
 
+  // The client uploads the .xlsx to S3 via a presigned URL, then passes the
+  // resulting object `key` here to be fetched and parsed.
+  requestImportUpload: protectedProcedure.mutation(({ ctx }) =>
+    ctx.api.presignAdminImportUpload(),
+  ),
+
   importWorkbook: protectedProcedure
     .input(
       z.object({
         path: z.object({ companyId: z.string() }),
-        body: z.object({ file: z.string() }),
+        body: z.object({ key: z.string() }),
       }),
     )
-    .mutation(({ ctx, input }) => {
-      const buffer = Buffer.from(input.body.file, 'base64')
-      const blob = new Blob([buffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      })
-      return ctx.api.importAdminSalaryReportWorkbook({
+    .mutation(({ ctx, input }) =>
+      ctx.api.importAdminSalaryReportWorkbook({
         path: input.path,
-        body: { file: blob },
-      })
-    }),
+        body: { key: input.body.key },
+      }),
+    ),
 })

@@ -128,6 +128,13 @@ export const getS3Bucket = () =>
   process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
 
 /**
+ * Bucket used for transient DOE Excel import uploads (presigned PUT staging).
+ * TODO: replace the placeholder default once the real bucket name is provisioned.
+ */
+export const getDoeImportsBucket = () =>
+  process.env.AWS_DOE_IMPORTS_BUCKET ?? 'DOE_IMPORTS_BUCKET_TBD'
+
+/**
  * Creates the key for the application file
  * @param applicationId string
  * @param isOriginal boolean

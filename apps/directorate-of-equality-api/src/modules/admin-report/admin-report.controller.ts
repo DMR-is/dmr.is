@@ -2,37 +2,28 @@ import {
   Body,
   Controller,
   Inject,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
   ParseUUIDPipe,
   Post,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
 import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
 import { IAdminReportService } from './admin-report.service.interface'
-
-const ONE_MB = 1024 * 1024
-const MAX_UPLOAD_BYTES = ONE_MB * 20
 
 @Controller({
   path: 'admin-report',
@@ -47,33 +38,29 @@ export class AdminReportController {
     private readonly adminReportService: IAdminReportService,
     @Inject(IReportExcelService)
     private readonly reportExcelService: IReportExcelService,
+    @Inject(IImportUploadService)
+    private readonly importUploadService: IImportUploadService,
   ) {}
 
   @Post('companies/:companyId/reports/excel/import')
-  @ApiConsumes('multipart/form-data')
   @ApiParam({ name: 'companyId', type: String })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
-      required: ['file'],
-    },
-  })
   @DoeResponse({
     operationId: 'importAdminSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
     @Param('companyId', ParseUUIDPipe) _companyId: string,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_BYTES })],
-      }),
-    )
-    file: Express.Multer.File,
+    @Body() body: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    return this.reportExcelService.importWorkbook(file.buffer)
+    const buffer = await this.importUploadService.fetchWorkbook(
+      body.key,
+      ImportUploadBoundary.ADMIN,
+    )
+    try {
+      return await this.reportExcelService.importWorkbook(buffer)
+    } finally {
+      await this.importUploadService.cleanup(body.key)
+    }
   }
 
   @Post('companies/:companyId/reports/salary')
