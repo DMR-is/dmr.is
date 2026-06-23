@@ -4,6 +4,7 @@ import { IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validato
 import { ApiProperty } from '@nestjs/swagger'
 
 import {
+  ApiOptionalArray,
   ApiOptionalBoolean,
   ApiOptionalEnum,
   ApiOptionalString,
@@ -105,6 +106,45 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsOptional()
   @IsBoolean()
   overdue?: boolean
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. "01110").',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  isatCategoryCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies located in one of the given regions (landshluti), by region code (e.g. "CAPITAL"). Resolved via the company postcode.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  regionCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies with one of the given postcodes (póstnúmer, e.g. "101").',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  postcode?: string[]
 
   @ApiOptionalEnum(CompanySortByEnum, { enumName: 'CompanySortByEnum' })
   @IsOptional()

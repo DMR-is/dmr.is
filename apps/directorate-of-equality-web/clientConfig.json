@@ -287,6 +287,27 @@
             "schema": { "type": "boolean" }
           },
           {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -366,6 +387,75 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/isat-categories": {
+      "get": {
+        "operationId": "searchIsatCategories",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search on ÍSAT code or description (Icelandic/English). Returns the top matches.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "codes",
+            "required": false,
+            "in": "query",
+            "description": "Resolve these exact ÍSAT leaf codes — used to label an existing selection. Takes precedence over `q`.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/IsatCategoryDto" }
+                }
               }
             }
           },
@@ -1754,6 +1844,122 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Config"]
+      }
+    },
+    "/api/v1/location/regions": {
+      "get": {
+        "operationId": "getRegions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RegionDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
+      }
+    },
+    "/api/v1/location/postcodes": {
+      "get": {
+        "operationId": "getPostcodes",
+        "parameters": [
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only postcodes belonging to one of the given region codes (e.g. \"CAPITAL\"). Omit for all postcodes.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PostcodeDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
       }
     },
     "/api/v1/reports/overview": {
@@ -3960,6 +4166,37 @@
           "description": { "type": "string", "nullable": true }
         },
         "required": ["value"]
+      },
+      "RegionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Stable machine key for the region, e.g. CAPITAL"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name (Icelandic), e.g. Höfuðborgarsvæðið"
+          }
+        },
+        "required": ["id", "code", "name"]
+      },
+      "PostcodeDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Three-digit Icelandic postcode, e.g. 101"
+          },
+          "place": {
+            "type": "string",
+            "description": "Locality / place name, e.g. Reykjavík"
+          },
+          "regionId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["id", "code", "place", "regionId"]
       },
       "ReportOverviewGeneralDto": {
         "type": "object",

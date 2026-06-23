@@ -30,6 +30,8 @@ import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyDto } from './dto/create-company.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { IsatCategoryDto } from './dto/isat-category.dto'
+import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
@@ -57,6 +59,17 @@ export class CompanyController {
     @Query() query: GetCompaniesQueryDto,
   ): Promise<GetCompaniesResponseDto> {
     return this.companyService.getAll(query)
+  }
+
+  @Get('isat-categories')
+  @DoeResponse({
+    operationId: 'searchIsatCategories',
+    type: [IsatCategoryDto],
+  })
+  async searchIsatCategories(
+    @Query() query: SearchIsatCategoriesQueryDto,
+  ): Promise<IsatCategoryDto[]> {
+    return this.companyService.searchIsatCategories(query)
   }
 
   @Get('lookup/:nationalId')
