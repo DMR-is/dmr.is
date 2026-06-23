@@ -2,6 +2,8 @@ import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
 import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyInput } from './dto/create-company-input.dto'
+import { IsatCategoryDto } from './dto/isat-category.dto'
+import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
@@ -41,6 +43,9 @@ export interface ICompanyService {
     actorUserId: string,
   ): Promise<CompanyDto>
   getTimeline(id: string): Promise<CompanyTimelineItemDto[]>
+  searchIsatCategories(
+    query: SearchIsatCategoriesQueryDto,
+  ): Promise<IsatCategoryDto[]>
 }
 
 export const ICompanyService = Symbol('ICompanyService')

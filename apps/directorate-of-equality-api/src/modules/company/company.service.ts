@@ -29,12 +29,19 @@ import {
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { IsatCategoryDto } from './dto/isat-category.dto'
+import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
-import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
+import {
+  buildCompanyExpiryWhere,
+  buildCompanyIsatWhere,
+  buildCompanyLocationInclude,
+  buildCompanyStatusWhere,
+} from './utils/filters'
 import { companyMessages } from './company.messages'
 import {
   CreateCompanyInput,
@@ -112,6 +119,15 @@ export class CompanyService implements ICompanyService {
       conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
     }
 
+    if (query.isatCategoryCode?.length) {
+      conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
+    }
+
+    const locationInclude = buildCompanyLocationInclude({
+      postcodes: query.postcode,
+      regionCodes: query.regionCode,
+    })
+
     const where: WhereOptions =
       conditions.length === 0
         ? {}
@@ -142,6 +158,7 @@ export class CompanyService implements ICompanyService {
         offset,
         distinct: true,
         col: 'id',
+        ...(locationInclude ? { include: [locationInclude] } : {}),
       })
 
     const companies = rows.map((c) => c.fromModel())
@@ -373,6 +390,45 @@ export class CompanyService implements ICompanyService {
     })
 
     return updated.fromModel()
+  }
+
+  /**
+   * Backs the ÍSAT filter picker. With `codes`, returns those exact leaf codes;
+   * with `q`, returns matches across code and descriptions; with neither, the
+   * full ÍSAT2008 list (~665 leaf codes) — small enough to load once and search
+   * client-side. Always ordered by code, unbounded.
+   */
+  async searchIsatCategories(
+    query: SearchIsatCategoriesQueryDto,
+  ): Promise<IsatCategoryDto[]> {
+    if (query.codes?.length) {
+      const byCode = await this.isatCategoryModel.findAll({
+        where: { code: { [Op.in]: query.codes } },
+        order: [['code', 'ASC']],
+      })
+      return byCode.map((category) => category.fromModel())
+    }
+
+    const term = query.q?.trim()
+    const pattern = term ? `%${term}%` : null
+
+    const rows = await this.isatCategoryModel.findAll({
+      order: [['code', 'ASC']],
+      ...(pattern
+        ? {
+            where: {
+              [Op.or]: [
+                { code: { [Op.iLike]: pattern } },
+                { codeDotted: { [Op.iLike]: pattern } },
+                { description: { [Op.iLike]: pattern } },
+                { descriptionEn: { [Op.iLike]: pattern } },
+              ],
+            },
+          }
+        : {}),
+    })
+
+    return rows.map((category) => category.fromModel())
   }
 
   async getTimeline(id: string): Promise<CompanyTimelineItemDto[]> {

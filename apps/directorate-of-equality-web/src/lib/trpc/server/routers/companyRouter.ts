@@ -22,14 +22,30 @@ const zGetCompaniesQuery = z.object({
     )
     .optional(),
   expiresWithin: z.array(z.enum(['30d', '3m', 'soon'])).optional(),
+  isatCategoryCode: z.array(z.string()).optional(),
+  regionCode: z.array(z.string()).optional(),
+  postcode: z.array(z.string()).optional(),
   sortBy: z.enum(['name', 'employeeCount']).optional(),
   direction: z.enum(['asc', 'desc']).optional(),
+})
+
+const zSearchIsatCategoriesQuery = z.object({
+  q: z.string().optional(),
+  codes: z.array(z.string()).optional(),
 })
 
 export const companyRouter = router({
   list: protectedProcedure
     .input(zGetCompaniesQuery.optional())
     .query(({ ctx, input }) => ctx.api.getCompanies({ query: input as never })),
+
+  // Backs the searchable ÍSAT filter: free-text `q` for matches, or `codes` to
+  // resolve the labels of an existing selection.
+  isatCategories: protectedProcedure
+    .input(zSearchIsatCategoriesQuery.optional())
+    .query(({ ctx, input }) =>
+      ctx.api.searchIsatCategories({ query: input as never }),
+    ),
 
   rskLookup: protectedProcedure
     .input(zRskLookupCompanyPath)

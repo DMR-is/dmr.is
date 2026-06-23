@@ -44,6 +44,9 @@ export const CompaniesContainer = () => {
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     dailyFines: [],
+    regionCode: filter.regionCode ?? [],
+    postcode: filter.postcode ?? [],
+    isatCategoryCode: filter.isatCategoryCode ?? [],
   })
 
   const trpc = useTRPC()
@@ -54,6 +57,38 @@ export const CompaniesContainer = () => {
     }),
   )
   const approvedReports = reportsData?.reports ?? []
+
+  const { data: regionsData } = useQuery(
+    trpc.location.regions.queryOptions(undefined, {
+      staleTime: 60 * 60_000,
+    }),
+  )
+
+  // Postcodes are narrowed to the selected region(s) — refetched whenever the
+  // region selection changes, so the postcode options only ever show postcodes
+  // that belong to the chosen region.
+  const { data: postcodesData } = useQuery(
+    trpc.location.postcodes.queryOptions(
+      {
+        regionCode: filters.regionCode.length ? filters.regionCode : undefined,
+      },
+      { staleTime: 60 * 60_000, placeholderData: (prev) => prev },
+    ),
+  )
+
+  const regionOptions = useMemo(
+    () => (regionsData ?? []).map((r) => ({ value: r.code, label: r.name })),
+    [regionsData],
+  )
+
+  const postcodeOptions = useMemo(
+    () =>
+      (postcodesData ?? []).map((p) => ({
+        value: p.code,
+        label: `${p.code} ${p.place}`,
+      })),
+    [postcodesData],
+  )
 
   const sorting = filter.sortBy
     ? [{ id: filter.sortBy, desc: filter.direction === 'desc' }]
@@ -73,6 +108,14 @@ export const CompaniesContainer = () => {
   }
 
   const handleFiltersChange = (key: keyof CompanyFilters, val: string[]) => {
+    if (key === 'regionCode') {
+      // Region narrows the postcode options; clear the postcode selection so a
+      // postcode outside the chosen region can't linger and contradict it.
+      setFilters((prev) => ({ ...prev, regionCode: val, postcode: [] }))
+      setFilter({ regionCode: val, postcode: null, page: 1 })
+      return
+    }
+
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
       setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
@@ -85,6 +128,10 @@ export const CompaniesContainer = () => {
       })
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
+    } else if (key === 'postcode') {
+      setFilter({ postcode: val, page: 1 })
+    } else if (key === 'isatCategoryCode') {
+      setFilter({ isatCategoryCode: val, page: 1 })
     } else {
       setFilter({ page: 1 })
     }
@@ -92,7 +139,15 @@ export const CompaniesContainer = () => {
 
   const handleReset = () => {
     resetFilter()
-    setFilters({ employees: [], status: [], expires: [], dailyFines: [] })
+    setFilters({
+      employees: [],
+      status: [],
+      expires: [],
+      dailyFines: [],
+      regionCode: [],
+      postcode: [],
+      isatCategoryCode: [],
+    })
   }
 
   const rows = useMemo(() => {
@@ -146,6 +201,8 @@ export const CompaniesContainer = () => {
             filters={filters}
             onFiltersChange={handleFiltersChange}
             onReset={handleReset}
+            regionOptions={regionOptions}
+            postcodeOptions={postcodeOptions}
           />
           {!isTablet && newButton}
         </GridColumn>
