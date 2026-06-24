@@ -100,9 +100,6 @@ export class ReportDto {
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
 
-  @ApiOptionalDateTime({ nullable: true })
-  finesStartedAt!: Date | null
-
   @ApiOptionalDto(UserDto, { nullable: true })
   reviewer?: UserDto | null
 

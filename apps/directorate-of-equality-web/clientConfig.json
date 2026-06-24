@@ -266,6 +266,27 @@
             }
           },
           {
+            "name": "finesStarted",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "quarantined",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only quarantined companies (quarantined = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "overdue",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies whose next equality or salary report due date has passed.",
+            "schema": { "type": "boolean" }
+          },
+          {
             "name": "isatCategoryCode",
             "required": false,
             "in": "query",
@@ -634,6 +655,156 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateCompanyIsatDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/fines": {
+      "patch": {
+        "operationId": "updateCompanyFines",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyFinesDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/quarantine": {
+      "patch": {
+        "operationId": "updateCompanyQuarantine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyQuarantineDto"
+              }
             }
           }
         },
@@ -2661,65 +2832,6 @@
         "tags": ["Report Workflow"]
       }
     },
-    "/api/v1/reports/{reportId}/start-fines": {
-      "post": {
-        "operationId": "startReportFines",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Workflow"]
-      }
-    },
     "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
       "get": {
         "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
@@ -3199,7 +3311,7 @@
   },
   "info": {
     "title": "Directorate of Equality — Internal API",
-    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve, start fines), comments, statistics, and user administration. Not intended for external consumers.",
+    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve), company administration (status, ÍSAT, daily-fines flag), comments, statistics, and user administration. Not intended for external consumers.",
     "version": "1.0",
     "contact": {}
   },
@@ -3524,7 +3636,7 @@
       },
       "CompanySortByEnum": {
         "type": "string",
-        "enum": ["name", "employeeCount"]
+        "enum": ["name", "employeeCount", "nextReportDue"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "CompanyStatusEnum": {
@@ -3573,6 +3685,14 @@
           },
           "salaryReportRequired": { "type": "boolean" },
           "salaryReportRequiredOverride": { "type": "boolean" },
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Daily-fines flag. `true` means the company is in the daily-fines process, handled outside this system."
+          },
+          "quarantined": {
+            "type": "boolean",
+            "description": "Admin halt switch. `true` means all outbound activity (scheduled jobs, emails, notifications) for the company is suspended."
+          },
           "nextEqualityReportDueAt": {
             "type": "string",
             "format": "date-time",
@@ -3598,6 +3718,14 @@
             "allOf": [
               { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
             ]
+          },
+          "equalityReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next equality-report due date has passed."
+          },
+          "salaryReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next salary-report due date has passed."
           }
         },
         "required": [
@@ -3608,7 +3736,11 @@
           "status",
           "salaryReportRequired",
           "salaryReportRequiredOverride",
-          "reportStatus"
+          "finesStarted",
+          "quarantined",
+          "reportStatus",
+          "equalityReportOverdue",
+          "salaryReportOverdue"
         ]
       },
       "Paging": {
@@ -3693,13 +3825,50 @@
           }
         }
       },
+      "UpdateCompanyFinesDto": {
+        "type": "object",
+        "properties": {
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Whether the company is in the daily-fines process (handled outside this system). `true` starts it, `false` stops it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for starting/stopping the fines process, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["finesStarted"]
+      },
+      "UpdateCompanyQuarantineDto": {
+        "type": "object",
+        "properties": {
+          "quarantined": {
+            "type": "boolean",
+            "description": "Whether the company is quarantined (all outbound activity halted). `true` quarantines it, `false` lifts it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for quarantining/lifting, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["quarantined"]
+      },
       "CompanyTimelineItemKindEnum": {
         "type": "string",
         "enum": ["EVENT", "COMMENT"]
       },
       "CompanyEventTypeEnum": {
         "type": "string",
-        "enum": ["CREATED", "STATUS_CHANGED"]
+        "enum": [
+          "CREATED",
+          "STATUS_CHANGED",
+          "FINES_STARTED",
+          "FINES_STOPPED",
+          "QUARANTINED",
+          "UNQUARANTINED"
+        ]
       },
       "CompanyEventDto": {
         "type": "object",
@@ -4699,12 +4868,6 @@
             "nullable": true
           },
           "equalityReportContent": { "type": "string", "nullable": true },
-          "finesStartedAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
-            "nullable": true
-          },
           "reviewer": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]

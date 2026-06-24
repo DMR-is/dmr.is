@@ -429,7 +429,6 @@ describe('ReportService.getById', () => {
     validUntil: null,
     correctionDeadline: null,
     equalityReportContent: null,
-    finesStartedAt: null,
     reviewer: null,
     companyReport: {
       id: 'cr1',

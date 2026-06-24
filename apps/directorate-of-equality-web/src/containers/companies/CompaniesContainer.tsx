@@ -43,7 +43,9 @@ export const CompaniesContainer = () => {
       : [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
-    dailyFines: [],
+    dailyFines: filter.finesStarted ? ['active'] : [],
+    overdue: filter.overdue ? ['overdue'] : [],
+    quarantined: filter.quarantined ? ['quarantined'] : [],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
     isatCategoryCode: filter.isatCategoryCode ?? [],
@@ -128,6 +130,13 @@ export const CompaniesContainer = () => {
       })
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
+    } else if (key === 'dailyFines') {
+      // Boolean server param: any selection means "in the fines process".
+      setFilter({ finesStarted: val.length ? true : null, page: 1 })
+    } else if (key === 'overdue') {
+      setFilter({ overdue: val.length ? true : null, page: 1 })
+    } else if (key === 'quarantined') {
+      setFilter({ quarantined: val.length ? true : null, page: 1 })
     } else if (key === 'postcode') {
       setFilter({ postcode: val, page: 1 })
     } else if (key === 'isatCategoryCode') {
@@ -144,26 +153,16 @@ export const CompaniesContainer = () => {
       status: [],
       expires: [],
       dailyFines: [],
+      overdue: [],
+      quarantined: [],
       regionCode: [],
       postcode: [],
       isatCategoryCode: [],
     })
   }
 
-  const rows = useMemo(() => {
-    const companies = data?.companies ?? []
-
-    return companies.filter(() => {
-      // employees: filtered server-side via useCompanies (employeeCountCategory URL param)
-      // status:    filtered server-side via useCompanies (companyStatus URL param)
-      // expires:   filtered server-side via useCompanies (expiresWithin URL param)
-
-      // TODO: daily fines requires finesStartedAt on the list endpoint
-      if (filters.dailyFines.length) return false
-
-      return true
-    })
-  }, [data, filters.dailyFines])
+  // All filtering (incl. daily fines + overdue) is server-side via useCompanies.
+  const rows = data?.companies ?? []
 
   const newButton = (
     <Box display="flex" flexDirection="column" rowGap={1} marginTop={2}>

@@ -1,10 +1,11 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import {
   ApiOptionalArray,
+  ApiOptionalBoolean,
   ApiOptionalEnum,
   ApiOptionalString,
 } from '@dmr.is/decorators'
@@ -21,6 +22,7 @@ export { CompanyExpiryFilterEnum }
 export enum CompanySortByEnum {
   NAME = 'name',
   EMPLOYEE_COUNT = 'employeeCount',
+  NEXT_REPORT_DUE = 'nextReportDue',
 }
 
 export enum CompanySortDirectionEnum {
@@ -77,6 +79,33 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(CompanyExpiryFilterEnum, { each: true })
   expiresWithin?: CompanyExpiryFilterEnum[]
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies in the daily-fines process (finesStarted = true).',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  finesStarted?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only quarantined companies (quarantined = true).',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  quarantined?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies whose next equality or salary report due date has passed.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  overdue?: boolean
 
   @ApiOptionalArray({
     type: String,

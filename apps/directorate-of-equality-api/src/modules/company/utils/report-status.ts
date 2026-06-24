@@ -71,3 +71,25 @@ export function companyReportStatusCaseSql(): string {
 export function companyReportStatusLiteral() {
   return literal(companyReportStatusCaseSql())
 }
+
+/**
+ * SQL boolean: the company's next equality-report due date exists and is in the
+ * past. Surfaced on `CompanyDto.equalityReportOverdue` so admins can spot
+ * companies that need attention (and possibly the daily-fines process).
+ */
+export function equalityReportOverdueSql(): string {
+  return `("${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
+}
+
+/** SQL boolean: the company's next salary-report due date exists and is past. */
+export function salaryReportOverdueSql(): string {
+  return `("${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
+}
+
+export function equalityReportOverdueLiteral() {
+  return literal(equalityReportOverdueSql())
+}
+
+export function salaryReportOverdueLiteral() {
+  return literal(salaryReportOverdueSql())
+}

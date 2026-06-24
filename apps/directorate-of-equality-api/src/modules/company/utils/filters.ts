@@ -4,7 +4,12 @@ import { DoeModels } from '../../../core/constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import { RegionModel } from '../../location/models/region.model'
 import { CompanyReportStatusEnum } from '../models/company.enums'
-import { COMPANY_QUERY_ALIAS,companyReportStatusCaseSql } from './report-status'
+import {
+  COMPANY_QUERY_ALIAS,
+  companyReportStatusCaseSql,
+  equalityReportOverdueSql,
+  salaryReportOverdueSql,
+} from './report-status'
 
 /**
  * Filter the company list by compliance status. Filters on the very same
@@ -18,6 +23,15 @@ export function buildCompanyStatusWhere(
   if (!statuses.length) return {}
   const values = statuses.map((status) => `'${status}'`).join(', ')
   return literal(`${companyReportStatusCaseSql()} IN (${values})`)
+}
+
+/**
+ * Filter to companies with an overdue report — either the equality or the
+ * salary next-due date has passed. Matches the derived `equalityReportOverdue`
+ * / `salaryReportOverdue` columns shown on each company.
+ */
+export function buildCompanyOverdueWhere(): WhereOptions {
+  return literal(`(${equalityReportOverdueSql()} OR ${salaryReportOverdueSql()})`)
 }
 
 /**

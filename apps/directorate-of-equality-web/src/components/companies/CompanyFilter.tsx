@@ -18,6 +18,8 @@ import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
   DAILY_FINES_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
+  OVERDUE_FILTER_OPTIONS,
+  QUARANTINE_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
 } from './companyStatus'
 import { IsatCategoryFilter } from './IsatCategoryFilter'
@@ -30,6 +32,8 @@ export type CompanyFilters = {
   status: string[]
   expires: string[]
   dailyFines: string[]
+  overdue: string[]
+  quarantined: string[]
   regionCode: string[]
   postcode: string[]
   isatCategoryCode: string[]
@@ -92,6 +96,18 @@ export const CompanyFilter = ({
       label: companiesText.dailyFines,
       selected: filters.dailyFines,
       filters: DAILY_FINES_FILTER_OPTIONS,
+    },
+    {
+      id: 'overdue',
+      label: companiesText.overdue,
+      selected: filters.overdue,
+      filters: OVERDUE_FILTER_OPTIONS,
+    },
+    {
+      id: 'quarantined',
+      label: companiesText.quarantine,
+      selected: filters.quarantined,
+      filters: QUARANTINE_FILTER_OPTIONS,
     },
   ]
 

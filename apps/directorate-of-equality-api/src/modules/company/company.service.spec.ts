@@ -32,6 +32,10 @@ describe('CompanyService', () => {
   let getEntityByNationalId: jest.Mock
   let emitCreated: jest.Mock
   let emitStatusChanged: jest.Mock
+  let emitFinesStarted: jest.Mock
+  let emitFinesStopped: jest.Mock
+  let emitQuarantined: jest.Mock
+  let emitUnquarantined: jest.Mock
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
@@ -44,6 +48,10 @@ describe('CompanyService', () => {
     getEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
+    emitFinesStarted = jest.fn()
+    emitFinesStopped = jest.fn()
+    emitQuarantined = jest.fn()
+    emitUnquarantined = jest.fn()
     eventsByCompanyId = jest.fn().mockResolvedValue([])
     commentsByCompanyId = jest.fn().mockResolvedValue([])
 
@@ -78,6 +86,10 @@ describe('CompanyService', () => {
           useValue: {
             emitCreated,
             emitStatusChanged,
+            emitFinesStarted,
+            emitFinesStopped,
+            emitQuarantined,
+            emitUnquarantined,
             getByCompanyId: eventsByCompanyId,
           },
         },
@@ -427,6 +439,172 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateFines', () => {
+    const makeFinesCompany = (finesStarted: boolean) => {
+      let current = finesStarted
+      const update = jest.fn().mockImplementation(async (values) => {
+        if ('finesStarted' in values) current = values.finesStarted
+      })
+      return {
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        get finesStarted() {
+          return current
+        },
+        update,
+        fromModel: () => ({ id: 'company-1', finesStarted: current }),
+        _update: update,
+      }
+    }
+
+    it('starts fines and emits FINES_STARTED with the reason', async () => {
+      const company = makeFinesCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateFines(
+        'company-1',
+        { finesStarted: true, reason: 'missed deadline' },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ finesStarted: true })
+      expect(emitFinesStarted).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        'missed deadline',
+      )
+      expect(emitFinesStopped).not.toHaveBeenCalled()
+      expect(result.finesStarted).toBe(true)
+    })
+
+    it('stops fines and emits FINES_STOPPED', async () => {
+      const company = makeFinesCompany(true)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateFines(
+        'company-1',
+        { finesStarted: false },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ finesStarted: false })
+      expect(emitFinesStopped).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        null,
+      )
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+    })
+
+    it('is a no-op when the flag is unchanged', async () => {
+      const company = makeFinesCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateFines('company-1', { finesStarted: false }, 'admin-1')
+
+      expect(company._update).not.toHaveBeenCalled()
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+      expect(emitFinesStopped).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateFines('missing', { finesStarted: true }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateQuarantine', () => {
+    const makeQuarantineCompany = (quarantined: boolean) => {
+      let current = quarantined
+      const update = jest.fn().mockImplementation(async (values) => {
+        if ('quarantined' in values) current = values.quarantined
+      })
+      return {
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        get quarantined() {
+          return current
+        },
+        update,
+        fromModel: () => ({ id: 'company-1', quarantined: current }),
+        _update: update,
+      }
+    }
+
+    it('quarantines and emits QUARANTINED with the reason', async () => {
+      const company = makeQuarantineCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateQuarantine(
+        'company-1',
+        { quarantined: true, reason: 'special case' },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ quarantined: true })
+      expect(emitQuarantined).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        'special case',
+      )
+      expect(emitUnquarantined).not.toHaveBeenCalled()
+      expect(result.quarantined).toBe(true)
+    })
+
+    it('lifts quarantine and emits UNQUARANTINED', async () => {
+      const company = makeQuarantineCompany(true)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateQuarantine(
+        'company-1',
+        { quarantined: false },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ quarantined: false })
+      expect(emitUnquarantined).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        null,
+      )
+      expect(emitQuarantined).not.toHaveBeenCalled()
+    })
+
+    it('is a no-op when the flag is unchanged', async () => {
+      const company = makeQuarantineCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateQuarantine(
+        'company-1',
+        { quarantined: false },
+        'admin-1',
+      )
+
+      expect(company._update).not.toHaveBeenCalled()
+      expect(emitQuarantined).not.toHaveBeenCalled()
+      expect(emitUnquarantined).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateQuarantine('missing', { quarantined: true }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitQuarantined).not.toHaveBeenCalled()
     })
   })
 
