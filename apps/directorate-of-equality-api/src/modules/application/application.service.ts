@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -77,6 +78,7 @@ import {
   SalaryAnalysisOutlierDto,
   SalaryAnalysisResponseDto,
 } from './dto/salary-analysis.response.dto'
+import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import type {
@@ -86,6 +88,7 @@ import type {
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
+import { evaluateSalaryRenewalEligibility } from './lib/salary-renewal-eligibility'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
@@ -194,8 +197,29 @@ export class ApplicationService implements IApplicationService {
       identifier: input.identifier,
     })
 
+    // Renewal-window gate: a company may only submit a salary report once its
+    // current one is due in 6 months or less. Same verdict the eligibility
+    // endpoint returns, so the pre-check and this block cannot drift. Only the
+    // company-facing portal path is gated — admin/system creation is not.
+    const eligibility = this.getSalaryReportEligibility(company)
+    if (!eligibility.eligible) {
+      throw new ConflictException(
+        `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${eligibility.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
+      )
+    }
+
     const createInput = await this.createSalaryReportInput(input, company)
     return this.reportCreateService.createSalary(createInput)
+  }
+
+  getSalaryReportEligibility(company: CompanyDto): SalaryReportEligibilityDto {
+    const { eligible, reason, dueAt, earliestSubmissionDate } =
+      evaluateSalaryRenewalEligibility(
+        company.nextSalaryReportDueAt ?? null,
+        new Date(),
+      )
+
+    return { eligible, reason, dueAt, earliestSubmissionDate }
   }
 
   async submitEquality(

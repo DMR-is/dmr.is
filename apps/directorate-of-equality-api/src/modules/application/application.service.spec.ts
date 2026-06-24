@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
@@ -11,6 +12,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import {
+  CompanyReportStatusEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../company/models/company.enums'
@@ -65,6 +67,15 @@ const COMPANY: CompanyDto = {
   postcodeId: null,
   salaryReportRequired: true,
   salaryReportRequiredOverride: false,
+  finesStarted: false,
+  quarantined: false,
+  nextEqualityReportDueAt: null,
+  nextSalaryReportDueAt: null,
+  isatCategoryCode: null,
+  isatCategory: null,
+  reportStatus: CompanyReportStatusEnum.SATISFACTORY,
+  equalityReportOverdue: false,
+  salaryReportOverdue: false,
 }
 
 describe('ApplicationService', () => {
@@ -383,6 +394,52 @@ describe('ApplicationService', () => {
       )
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).not.toHaveBeenCalled()
+    })
+
+    it('blocks (409) when the renewal window is not open yet (due date > 6 months out)', async () => {
+      const input = makeSubmitSalaryInput()
+      const farFuture = new Date()
+      farFuture.setFullYear(farFuture.getFullYear() + 2)
+      const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
+
+      await expect(service.submitSalary(input, company)).rejects.toThrow(
+        ConflictException,
+      )
+      expect(createSalary).not.toHaveBeenCalled()
+    })
+
+    it('allows submission when the due date is within 6 months', async () => {
+      const input = makeSubmitSalaryInput()
+      const soon = new Date()
+      soon.setMonth(soon.getMonth() + 3)
+      const company = { ...COMPANY, nextSalaryReportDueAt: soon }
+
+      await service.submitSalary(input, company)
+
+      expect(createSalary).toHaveBeenCalled()
+    })
+  })
+
+  describe('getSalaryReportEligibility', () => {
+    it('is eligible when there is no due date', () => {
+      const result = service.getSalaryReportEligibility(COMPANY)
+
+      expect(result.eligible).toBe(true)
+      expect(result.reason).toBeNull()
+      expect(result.dueAt).toBeNull()
+    })
+
+    it('is ineligible with a reason when the due date is more than 6 months out', () => {
+      const farFuture = new Date()
+      farFuture.setFullYear(farFuture.getFullYear() + 2)
+      const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
+
+      const result = service.getSalaryReportEligibility(company)
+
+      expect(result.eligible).toBe(false)
+      expect(result.reason).toBe('RENEWAL_WINDOW_NOT_OPEN')
+      expect(result.dueAt).toEqual(farFuture)
+      expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
     })
   })
 

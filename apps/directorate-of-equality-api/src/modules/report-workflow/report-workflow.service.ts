@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import {
   ReportModel,
@@ -41,6 +42,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
+    @InjectModel(CompanyModel)
+    private readonly companyModel: typeof CompanyModel,
     @InjectModel(UserModel)
     private readonly userModel: typeof UserModel,
     @InjectModel(ReportOutlierGroupModel)
@@ -220,6 +223,12 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { where: { id: context.reportId } },
     )
 
+    // Keep the company's next-due date in step with the report's validity. The
+    // launch seed sets these dates initially (no reports exist yet); from then
+    // on every approval advances them, so `next_*_report_due_at` stays the live
+    // source of truth the salary renewal-window check reads.
+    await this.advanceCompanyReportDueDate(context.reportId, validUntil)
+
     await this.supersedePreviousApproved(context.reportId)
 
     await this.reportEventService.emitStatusChanged(
@@ -309,6 +318,46 @@ export class ReportWorkflowService implements IReportWorkflowService {
     }
   }
 
+  /**
+   * Mirror an approved report's `validUntil` onto its parent company's
+   * next-due column (`next_salary_report_due_at` for SALARY,
+   * `next_equality_report_due_at` for EQUALITY). The "due" date a company is
+   * measured against is the validity end of its current report, so the two are
+   * kept identical here. Subsidiaries carry no obligation of their own; only the
+   * parent (`parentCompanyId IS NULL`) snapshot is updated.
+   */
+  private async advanceCompanyReportDueDate(
+    reportId: string,
+    validUntil: Date,
+  ): Promise<void> {
+    const report = await this.reportModel.findOne({
+      where: { id: reportId },
+      attributes: ['type'],
+    })
+
+    if (!report) {
+      return
+    }
+
+    const parentSnapshot = await this.companyReportModel.findOne({
+      where: { reportId, parentCompanyId: null },
+      attributes: ['companyId'],
+    })
+
+    if (!parentSnapshot) {
+      return
+    }
+
+    const column =
+      report.type === ReportTypeEnum.SALARY
+        ? { nextSalaryReportDueAt: validUntil }
+        : { nextEqualityReportDueAt: validUntil }
+
+    await this.companyModel.update(column, {
+      where: { id: parentSnapshot.companyId },
+    })
+  }
+
   private async supersedePreviousApproved(reportId: string): Promise<void> {
     // Supersession is scoped to `(company, type)` — approving a new SALARY
     // must not invalidate a still-valid APPROVED EQUALITY (and vice versa).
@@ -359,6 +408,10 @@ export class ReportWorkflowService implements IReportWorkflowService {
       return
     }
 
+    // Close out the old report's validity at "now". Deliberately does NOT touch
+    // the company's next-due date — that was already advanced to the new
+    // report's validUntil in approve(); the superseded report is no longer the
+    // company's current obligation.
     await this.reportModel.update(
       { status: ReportStatusEnum.SUPERSEDED, validUntil: new Date() },
       { where: { id: toSupersede.map((r) => r.id) } },
