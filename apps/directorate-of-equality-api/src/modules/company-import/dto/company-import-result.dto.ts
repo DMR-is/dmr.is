@@ -19,9 +19,9 @@ export enum CompanyImportOutcomeEnum {
   UPDATED = 'UPDATED',
   /** In file + DB, identical and already ACTIVE → no change. */
   UNCHANGED = 'UNCHANGED',
-  /** In DB (was ACTIVE), absent from file → status set to UNKNOWN. */
-  MARKED_UNKNOWN = 'MARKED_UNKNOWN',
-  /** In file, was UNKNOWN/INACTIVE → status flipped back to ACTIVE. */
+  /** In DB (was ACTIVE), absent from file → status set to INACTIVE. */
+  DEACTIVATED = 'DEACTIVATED',
+  /** In file, was INACTIVE → status flipped back to ACTIVE. */
   REACTIVATED = 'REACTIVATED',
 }
 
@@ -73,7 +73,7 @@ export class CompanyImportTotalsDto {
   @ApiNumber() created!: number
   @ApiNumber() updated!: number
   @ApiNumber() unchanged!: number
-  @ApiNumber() markedUnknown!: number
+  @ApiNumber() deactivated!: number
   @ApiNumber() reactivated!: number
   @ApiNumber() invalid!: number
 }
@@ -103,7 +103,7 @@ export class CompanyImportResultDto {
   unchanged!: CompanyImportRowResultDto[]
 
   @ApiDtoArray(CompanyImportRowResultDto)
-  markedUnknown!: CompanyImportRowResultDto[]
+  deactivated!: CompanyImportRowResultDto[]
 
   @ApiDtoArray(CompanyImportRowResultDto)
   reactivated!: CompanyImportRowResultDto[]

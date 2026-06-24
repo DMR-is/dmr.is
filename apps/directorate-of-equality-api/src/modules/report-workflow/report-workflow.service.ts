@@ -281,21 +281,6 @@ export class ReportWorkflowService implements IReportWorkflowService {
     }
   }
 
-  async startFines(context: ReportResourceContext): Promise<void> {
-    this.logger.info(`Starting fines for report ${context.reportId}`, {
-      context: LOGGING_CONTEXT,
-    })
-
-    if (context.actor.kind !== ReportRoleEnum.REVIEWER) {
-      throw new ForbiddenException('Only reviewers may start fines')
-    }
-
-    await this.reportModel.update(
-      { finesStartedAt: new Date() },
-      { where: { id: context.reportId } },
-    )
-  }
-
   /**
    * Belt-and-suspenders gate: a SALARY report with an outlier group whose
    * explanation has not been filled in (i.e. was submitted with

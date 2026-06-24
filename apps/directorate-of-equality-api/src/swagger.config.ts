@@ -8,7 +8,8 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
     swaggerTitle: 'Directorate of Equality — Internal API',
     swaggerDescription:
       'Internal API for direct communication between the DoE web application (doe-web) and the DoE API. ' +
-      'Covers report management, workflow transitions (assign, deny, approve, start fines), ' +
+      'Covers report management, workflow transitions (assign, deny, approve), ' +
+      'company administration (status, ÍSAT, daily-fines flag), ' +
       'comments, statistics, and user administration. ' +
       'Not intended for external consumers.',
     tag: 'Internal API',

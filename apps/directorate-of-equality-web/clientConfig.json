@@ -239,11 +239,11 @@
             "name": "companyStatus",
             "required": false,
             "in": "query",
-            "description": "Return only companies that match at least one of the provided status values. Omit for no constraint.",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/CompanyStatusFilterEnum"
+                "$ref": "#/components/schemas/CompanyReportStatusEnum"
               }
             }
           },
@@ -258,6 +258,48 @@
                 "$ref": "#/components/schemas/CompanyExpiryFilterEnum"
               }
             }
+          },
+          {
+            "name": "finesStarted",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "quarantined",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only quarantined companies (quarantined = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "overdue",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies whose next equality or salary report due date has passed.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "sortBy",
@@ -339,6 +381,75 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/isat-categories": {
+      "get": {
+        "operationId": "searchIsatCategories",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search on ÍSAT code or description (Icelandic/English). Returns the top matches.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "codes",
+            "required": false,
+            "in": "query",
+            "description": "Resolve these exact ÍSAT leaf codes — used to label an existing selection. Takes precedence over `q`.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/IsatCategoryDto" }
+                }
               }
             }
           },
@@ -538,6 +649,156 @@
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/UpdateCompanyIsatDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/fines": {
+      "patch": {
+        "operationId": "updateCompanyFines",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyFinesDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/quarantine": {
+      "patch": {
+        "operationId": "updateCompanyQuarantine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyQuarantineDto"
+              }
             }
           }
         },
@@ -1620,6 +1881,122 @@
         "tags": ["Config"]
       }
     },
+    "/api/v1/location/regions": {
+      "get": {
+        "operationId": "getRegions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RegionDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
+      }
+    },
+    "/api/v1/location/postcodes": {
+      "get": {
+        "operationId": "getPostcodes",
+        "parameters": [
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only postcodes belonging to one of the given region codes (e.g. \"CAPITAL\"). Omit for all postcodes.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PostcodeDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
+      }
+    },
     "/api/v1/reports/overview": {
       "get": {
         "operationId": "getReportOverview",
@@ -1865,7 +2242,7 @@
             "name": "q",
             "required": false,
             "in": "query",
-            "description": "Free-text search across company name, kennitala, report identifier, contact name, and contact email. Case-insensitive partial match.",
+            "description": "Free-text search across company name, kennitala, and report identifier. Case-insensitive partial match. Person fields (contacts and company admin/CEO) are not searched.",
             "schema": { "type": "string" }
           },
           {
@@ -2490,65 +2867,6 @@
         "tags": ["Report Workflow"]
       }
     },
-    "/api/v1/reports/{reportId}/start-fines": {
-      "post": {
-        "operationId": "startReportFines",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Workflow"]
-      }
-    },
     "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
       "get": {
         "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
@@ -3028,7 +3346,7 @@
   },
   "info": {
     "title": "Directorate of Equality — Internal API",
-    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve, start fines), comments, statistics, and user administration. Not intended for external consumers.",
+    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve), company administration (status, ÍSAT, daily-fines flag), comments, statistics, and user administration. Not intended for external consumers.",
     "version": "1.0",
     "contact": {}
   },
@@ -3219,6 +3537,10 @@
             ]
           },
           "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
@@ -3345,13 +3667,13 @@
         "type": "string",
         "enum": ["UNKNOWN", "SMALL", "MEDIUM", "LARGE"]
       },
-      "CompanyStatusFilterEnum": {
+      "CompanyReportStatusEnum": {
         "type": "string",
         "enum": [
-          "missing-equality",
-          "has-equality",
-          "missing-salary",
-          "compliant"
+          "MISSING_EQUALITY_REPORT",
+          "MISSING_SALARY_REPORT",
+          "MISSING_ACTION_PLAN",
+          "SATISFACTORY"
         ]
       },
       "CompanyExpiryFilterEnum": {
@@ -3360,13 +3682,10 @@
       },
       "CompanySortByEnum": {
         "type": "string",
-        "enum": ["name", "employeeCount"]
+        "enum": ["name", "employeeCount", "nextReportDue"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
-      "CompanyStatusEnum": {
-        "type": "string",
-        "enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]
-      },
+      "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
       "IsatCategoryDto": {
         "type": "object",
         "properties": {
@@ -3409,6 +3728,26 @@
           },
           "salaryReportRequired": { "type": "boolean" },
           "salaryReportRequiredOverride": { "type": "boolean" },
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Daily-fines flag. `true` means the company is in the daily-fines process, handled outside this system."
+          },
+          "quarantined": {
+            "type": "boolean",
+            "description": "Admin halt switch. `true` means all outbound activity (scheduled jobs, emails, notifications) for the company is suspended."
+          },
+          "nextEqualityReportDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "nextSalaryReportDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
           "isatCategoryCode": {
             "type": "string",
             "nullable": true,
@@ -3417,6 +3756,19 @@
           "isatCategory": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
+          },
+          "reportStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
+            ]
+          },
+          "equalityReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next equality-report due date has passed."
+          },
+          "salaryReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next salary-report due date has passed."
           }
         },
         "required": [
@@ -3426,7 +3778,12 @@
           "nationalId",
           "status",
           "salaryReportRequired",
-          "salaryReportRequiredOverride"
+          "salaryReportRequiredOverride",
+          "finesStarted",
+          "quarantined",
+          "reportStatus",
+          "equalityReportOverdue",
+          "salaryReportOverdue"
         ]
       },
       "Paging": {
@@ -3511,13 +3868,50 @@
           }
         }
       },
+      "UpdateCompanyFinesDto": {
+        "type": "object",
+        "properties": {
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Whether the company is in the daily-fines process (handled outside this system). `true` starts it, `false` stops it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for starting/stopping the fines process, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["finesStarted"]
+      },
+      "UpdateCompanyQuarantineDto": {
+        "type": "object",
+        "properties": {
+          "quarantined": {
+            "type": "boolean",
+            "description": "Whether the company is quarantined (all outbound activity halted). `true` quarantines it, `false` lifts it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for quarantining/lifting, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["quarantined"]
+      },
       "CompanyTimelineItemKindEnum": {
         "type": "string",
         "enum": ["EVENT", "COMMENT"]
       },
       "CompanyEventTypeEnum": {
         "type": "string",
-        "enum": ["CREATED", "STATUS_CHANGED"]
+        "enum": [
+          "CREATED",
+          "STATUS_CHANGED",
+          "FINES_STARTED",
+          "FINES_STOPPED",
+          "QUARANTINED",
+          "UNQUARANTINED"
+        ]
       },
       "CompanyEventDto": {
         "type": "object",
@@ -3616,7 +4010,7 @@
           "CREATED",
           "UPDATED",
           "UNCHANGED",
-          "MARKED_UNKNOWN",
+          "DEACTIVATED",
           "REACTIVATED"
         ]
       },
@@ -3714,7 +4108,7 @@
               "$ref": "#/components/schemas/CompanyImportRowResultDto"
             }
           },
-          "markedUnknown": {
+          "deactivated": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompanyImportRowResultDto"
@@ -3737,7 +4131,7 @@
           "created",
           "updated",
           "unchanged",
-          "markedUnknown",
+          "deactivated",
           "reactivated",
           "invalid"
         ]
@@ -3829,6 +4223,37 @@
           "description": { "type": "string", "nullable": true }
         },
         "required": ["value"]
+      },
+      "RegionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Stable machine key for the region, e.g. CAPITAL"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name (Icelandic), e.g. Höfuðborgarsvæðið"
+          }
+        },
+        "required": ["id", "code", "name"]
+      },
+      "PostcodeDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Three-digit Icelandic postcode, e.g. 101"
+          },
+          "place": {
+            "type": "string",
+            "description": "Locality / place name, e.g. Reykjavík"
+          },
+          "regionId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["id", "code", "place", "regionId"]
       },
       "ReportOverviewGeneralDto": {
         "type": "object",
@@ -4500,12 +4925,6 @@
             "nullable": true
           },
           "equalityReportContent": { "type": "string", "nullable": true },
-          "finesStartedAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
-            "nullable": true
-          },
           "reviewer": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]

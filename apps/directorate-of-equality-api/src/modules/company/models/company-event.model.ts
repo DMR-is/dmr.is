@@ -16,10 +16,23 @@ import { CompanyModel } from './company.model'
  *                    no from/to status (status holds the initial status).
  *   STATUS_CHANGED → an admin moved the company between ACTIVE/INACTIVE.
  *                    Carries from/to status and an optional reason.
+ *   FINES_STARTED  → an admin flagged the company as being in the daily-fines
+ *                    process (handled outside this system). No from/to status;
+ *                    carries an optional reason.
+ *   FINES_STOPPED  → an admin cleared the daily-fines flag. No from/to status;
+ *                    carries an optional reason.
+ *   QUARANTINED    → an admin halted the company (all outbound activity
+ *                    suspended). No from/to status; carries an optional reason.
+ *   UNQUARANTINED  → an admin lifted the quarantine. No from/to status;
+ *                    carries an optional reason.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
   STATUS_CHANGED = 'STATUS_CHANGED',
+  FINES_STARTED = 'FINES_STARTED',
+  FINES_STOPPED = 'FINES_STOPPED',
+  QUARANTINED = 'QUARANTINED',
+  UNQUARANTINED = 'UNQUARANTINED',
 }
 
 type CompanyEventAttributes = {

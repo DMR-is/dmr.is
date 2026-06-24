@@ -39,6 +39,14 @@ export class ApiErrorDto {
   message?: string
 
   @ApiProperty({
+    type: String,
+    required: false,
+    description:
+      'User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation.',
+  })
+  translatedMessage?: string
+
+  @ApiProperty({
     type: [String],
     required: false,
   })

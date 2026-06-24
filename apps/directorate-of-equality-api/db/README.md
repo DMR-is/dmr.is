@@ -27,7 +27,7 @@ Invariants the FK implies (enforce via CHECK + trigger, not by plain FK alone):
 ## Actors
 
 - **Company admin** — fills out and submits reports on behalf of a company. In parent/subsidiary groups, one company acts as the parent and reports on its daughter companies in the same submission.
-- **DoE reviewer (admin)** — reads submitted reports, denies with reason, approves when valid, flags fine accrual. Identified by a row in the `doe_user` table.
+- **DoE reviewer (admin)** — reads submitted reports, denies with reason, approves when valid. Admins also flag a company into the daily-fines process (a company-level flag — see "Fines accrual"). Identified by a row in the `doe_user` table.
 - **Public consumer** — browses anonymized aggregates on the public site. Has no access to PII or to denied/draft reports.
 
 ## Eligibility
@@ -63,13 +63,13 @@ Per company:
 - **In file, not in DB** → created (status `ACTIVE`).
 - **In file + DB, fields differ** → the differing authoritative fields (`name`, `address`, `postcodeId`, `isat_category_code`, `employee_count_category`) are updated.
 - **In file + DB, identical** → unchanged.
-- **In DB, absent from file** → status set to **`UNKNOWN`** ("should be in the list — something is off"). `INACTIVE` companies are left as-is (deliberate deactivation is not overridden); already-`UNKNOWN` rows are untouched.
-- **Reappears in file** after `UNKNOWN`/`INACTIVE` → reactivated to `ACTIVE`.
+- **In DB, absent from file** → **deactivated** (status set to `INACTIVE`). The file is the source of truth: a company that drops out of the register is no longer active. Already-`INACTIVE` companies are left as-is (nothing to change).
+- **Reappears in file** after `INACTIVE` → reactivated to `ACTIVE`.
 - **Invalid rows** (bad kennitala, unknown ÍSAT code, duplicate kennitala in file) → reported, never applied.
 
 Size comes from the `LAUNAFLOKKUR` column (`50+`→`LARGE`, `25-49`→`MEDIUM`, else→`SMALL`); `salary_report_required` is then derived by the usual DB trigger. ÍSAT codes are normalized to 5 digits and validated against `isat_category`. A postcode that doesn't resolve is a soft note, not a rejection.
 
-Only the status transitions the import performs (`ACTIVE→UNKNOWN`, `UNKNOWN/INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
+Only the status transitions the import performs (`ACTIVE→INACTIVE`, `INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
 
 > **Subject to change.** Interim design; in development. Same RSK-API caveat as above — the annual upload is expected to be replaced by a direct RSK feed eventually.
 
@@ -144,13 +144,13 @@ Every salary report **with outliers** gets a deadline to actually *correct* the 
 Only applies when a submitter **opts in to postpone** their outlier explanations at submit time (`outliersPostponed = true`, landing the report in `POSTPONED` status — see "Report lifecycle"):
 
 - The submitter then has **3 months** from submission to provide the explanations (via `PUT /api/v1/application/reports/:providerId/outliers`, which resolves `POSTPONED → SUBMITTED`).
-- If they do not submit within those 3 months, the report enters a state of **possible daily fines** (see "Fines accrual").
+- If they do not submit within those 3 months, an admin may flag the company into the **daily-fines process** (a company-level flag — see "Fines accrual").
 - This 3-month window **does not extend** the 9-month correction deadline. It lives **inside** the 9-month period — the gap-correction clock keeps running regardless of when (or whether) the explanations are submitted.
 
 ### Implementation status
 
 - **Today:** only the single nullable `report.correction_deadline` column exists. Nothing writes to it; it is always `null` in practice. Postponement is modeled purely as the `POSTPONED` status with NULL outlier explanation columns — no postponement deadline is persisted.
-- **Not yet built:** automatic computation of either deadline at submission, the 9-month follow-up email (yes/no), and the daily-fine transition when a 3-month postponement window lapses. The `report_fine` accrual table is likewise undesigned (see "Fines accrual").
+- **Not yet built:** automatic computation of either deadline at submission and the 9-month follow-up email (yes/no). The daily-fines step is now a manual, company-level admin flag rather than an automatic per-report transition — there is no accrual table or cron (see "Fines accrual").
 - **Likely future shape:** the two concepts probably want two separate columns (e.g. an outlier-correction deadline and a postponement deadline) rather than the single overloaded `correction_deadline`. Not decided.
 
 ## Resubmission
@@ -177,7 +177,7 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
 
-- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment / unassignment, status transitions, applicant in-place edits (`EDITED`), and supersession (future: fines started, retraction). Never edited, never deleted.
+- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment / unassignment, status transitions, applicant in-place edits (`EDITED`), and supersession (future: retraction). Daily fines are tracked on the **company**, not the report, so they emit a `company_event` (`FINES_STARTED` / `FINES_STOPPED`) rather than a `report_event`. Never edited, never deleted.
 - **`report_comment`** — human-written messages. Either **internal** (reviewer-to-reviewer, hidden from the company) or **external** (reviewer ↔ company admin, visible to both sides). Company admins can post on external comments only.
 
 ### Mutability
@@ -223,11 +223,29 @@ If a mistake is discovered post-publication, the retraction flow (TBD) kicks in.
 
 ## Fines accrual
 
-A company that misses its deadline accrues daily fines. The primary trigger is a lapsed postponement window — a `POSTPONED` salary report whose 3-month explanation deadline passes without resolution (see "Outlier deadlines").
+When a company misses its deadline it may be placed into the **daily-fines process**. That process — issuing and tracking the actual fines — is handled **outside this system** (the matter is escalated and dealt with elsewhere). This database only records **that** a company is in the process, not the individual fines.
 
-- Reviewer sets `report.fines_started_at` in the UI when a company has failed to submit or has submitted something incomplete.
-- A daily cron iterates reports where `fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')` and writes a fine row per day. (The `report_fine` accrual table is not yet designed.)
-- Grace is implicit: once the report transitions to `APPROVED` (or `SUPERSEDED`), the filter excludes it and accrual stops.
+- Modeled as a single boolean flag, `company.fines_started`, defaulting to `false`.
+- An admin toggles it **both ways** (`PATCH /api/v1/companies/:id/fines`). `true` tells admins "this company is being handled in the fines process — don't act on it through the normal flow"; `false` clears it once the matter is resolved.
+- The "when" + an optional reason are captured on the emitted `company_event` (`FINES_STARTED` / `FINES_STOPPED`) so the company timeline carries the full audit. The flag itself stores no timestamp.
+- The list endpoint exposes a `finesStarted` filter so admins can see exactly which companies are in the process.
+
+No accrual table and no cron: the fines themselves live outside this system, so the earlier per-report `report.fines_started_at` timestamp, the `report_fines_cron_idx` index, and the planned `report_fine` accrual table were all removed.
+
+### Overdue reports (the prompt to act)
+
+So admins know **when** to consider starting the fines process, the company list surfaces overdue obligations. `company.next_equality_report_due_at` / `next_salary_report_due_at` hold each company's next due dates (seeded; nullable when there's no obligation). Two derived booleans, `equalityReportOverdue` / `salaryReportOverdue` (computed in SQL on read, not stored), are `true` when the matching due date is in the past. They drive an overdue indicator in the UI plus an `overdue` list filter and a `nextReportDue` sort, so an admin can spot a lapsed company and decide whether to flag it into the fines process.
+
+## Quarantine
+
+`company.quarantined` is an **admin-only halt switch**. While a company is quarantined, the system performs **no outbound activity** for it: scheduled jobs (eventual crons), emails / notifications, and any other automated touchpoint must skip a quarantined company. It is a hard "leave this company alone" signal, distinct from `fines_started` (which says the company is being handled elsewhere) and from `status` (its lifecycle state) — a company can be any status and still be quarantined.
+
+- **Purely manual.** There is no computed signal that decides quarantine. An admin sets it for a specific, agreed-upon case — typically after direct discussion with the company.
+- **Boolean flag**, `quarantined`, defaulting to `false`. An admin toggles it **both ways** (`PATCH /api/v1/companies/:id/quarantine`); `true` halts, `false` lifts.
+- The "when" + an optional reason are captured on the emitted `company_event` (`QUARANTINED` / `UNQUARANTINED`) so the company timeline carries the full audit. The flag itself stores no timestamp.
+- The list endpoint exposes a `quarantined` filter.
+
+**Enforcement is the caller's responsibility.** This database/flag only records the decision; every outbound code path (mail service, future scheduled jobs, notification hooks) must check `company.quarantined` and skip quarantined companies. Those gates are added per touchpoint as they are built — there are no automated outbound jobs gated on it yet.
 
 ## Application-facing reads and writes
 
@@ -379,13 +397,26 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `name`                            | `text`                                              |
 | `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`) |
 | `national_id`                     | `text` (unique)                                     |
-| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`/`UNKNOWN`) |
+| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)         |
 | `salary_report_required`          | `boolean`                                           |
 | `salary_report_required_override` | `boolean`                                           |
+| `fines_started`                   | `boolean` (default `false`)                         |
+| `quarantined`                     | `boolean` (default `false`)                         |
+| `next_equality_report_due_at`     | `timestamptz` (nullable)                            |
+| `next_salary_report_due_at`       | `timestamptz` (nullable)                            |
 | `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)        |
 
-`status = UNKNOWN` is set by the company import for a company we hold that is absent
-from the authoritative register (see [Company import](#company-import-annual-register)).
+`status` is `ACTIVE` while a company is in the authoritative register and `INACTIVE`
+once it is not. It is set to `INACTIVE` either deliberately by an admin (bankruptcy,
+merger) or automatically by the company import when a company we hold is absent from
+the latest register, and flips back to `ACTIVE` if it reappears
+(see [Company import](#company-import-annual-register)).
+
+`fines_started` flags a company as being in the daily-fines process, which is handled
+outside this system (see [Fines accrual](#fines-accrual)). `quarantined` is an admin
+halt switch (see [Quarantine](#quarantine)). `next_*_report_due_at` are the company's
+next due dates; admins act on them via the derived `equalityReportOverdue` /
+`salaryReportOverdue` read-only flags.
 
 ### `isat_category`
 
@@ -443,7 +474,6 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `valid_until`                    | `timestamp` (nullable — approved_at + 3y; stamped `now()` on supersede)                                                        |
 | `correction_deadline`            | `timestamp` (nullable — provisional name; never written today. See "Outlier deadlines")                                        |
 | `equality_report_content`        | `text` (nullable — narrative body for `type = EQUALITY`)                                                                       |
-| `fines_started_at`               | `timestamp` (nullable)                                                                                                         |
 
 ### `report_criterion`
 
@@ -707,7 +737,7 @@ No FKs, no relationships. Standalone lookup table.
 ## Notes / open questions
 
 - **Retraction flow deferred.** If a critical error surfaces in an already-approved public report, flow TBD. `ReportStatusEnum` is open for a future `RETRACTED` value; `public_report` columns for retraction (e.g. `retracted_at`, `retraction_reason`, `replaced_by_id`) not added yet.
-- **Fines cron.** Daily job: `SELECT * FROM report WHERE fines_started_at IS NOT NULL AND status NOT IN ('APPROVED', 'SUPERSEDED')`. Accrual table (`report_fine` or similar) not yet designed.
+- **Fines.** Daily fines are a company-level flag (`company.fines_started`), toggled by an admin; the fines themselves are handled outside this system. No accrual table, no cron (see [Fines accrual](#fines-accrual)).
 - **Scope.** This schema targets companies with ≥50 employees. Smaller-company flows + edge cases (mergers, liquidation, exemptions) TBD.
 - **Cascade vs soft-delete.** Postgres `ON DELETE CASCADE` only fires on real `DELETE` rows. Lifecycle here is status-based, not soft-delete — do not add `deleted_at` to children expecting cascade propagation.
 - **Outlier-preview endpoint.** Lands as `POST /api/v1/application/reports/salary-analysis` in the `application` module. Takes the unsaved parsed payload, computes employee scores with `report/lib/employee-scores.ts`, runs the canonical `detectOutliers(...)` helper from `report/lib/compensation-aggregates.ts` (half the configured `salary_difference_threshold_percent` around each employee's predicted adjusted base salary on the score regression line), and returns the flagged employees plus the gender-vs-score chart so the company can verify before submitting.

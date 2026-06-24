@@ -1,4 +1,10 @@
-import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  Scopes,
+} from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
@@ -6,7 +12,16 @@ import { DoeModels } from '../../../core/constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
-import { CompanySizeEnum, CompanyStatusEnum } from './company.enums'
+import {
+  companyReportStatusLiteral,
+  equalityReportOverdueLiteral,
+  salaryReportOverdueLiteral,
+} from '../utils/report-status'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from './company.enums'
 import { IsatCategoryModel } from './isat-category.model'
 
 type CompanyAttributes = {
@@ -18,6 +33,10 @@ type CompanyAttributes = {
   postcodeId: string | null
   salaryReportRequired: boolean
   salaryReportRequiredOverride: boolean
+  finesStarted: boolean
+  quarantined: boolean
+  nextEqualityReportDueAt: Date | null
+  nextSalaryReportDueAt: Date | null
   isatCategoryCode: string | null
 }
 
@@ -30,9 +49,30 @@ type CompanyCreateAttributes = {
   postcodeId?: string | null
   salaryReportRequired?: boolean
   salaryReportRequiredOverride?: boolean
+  finesStarted?: boolean
+  quarantined?: boolean
+  nextEqualityReportDueAt?: Date | null
+  nextSalaryReportDueAt?: Date | null
   isatCategoryCode?: string | null
 }
 
+/**
+ * `withReportStatus` selects the derived `reportStatus` alongside the stored
+ * columns. It is the read scope for every path that returns a `CompanyDto` —
+ * the value is computed in SQL (see `companyReportStatusLiteral`) so it can be
+ * filtered/sorted, and so the column matches the list status filter exactly.
+ */
+@Scopes(() => ({
+  withReportStatus: {
+    attributes: {
+      include: [
+        [companyReportStatusLiteral(), 'reportStatus'],
+        [equalityReportOverdueLiteral(), 'equalityReportOverdue'],
+        [salaryReportOverdueLiteral(), 'salaryReportOverdue'],
+      ],
+    },
+  },
+}))
 @MutableTable({ tableName: DoeModels.COMPANY })
 export class CompanyModel extends MutableModel<
   CompanyAttributes,
@@ -84,6 +124,44 @@ export class CompanyModel extends MutableModel<
   })
   salaryReportRequiredOverride!: boolean
 
+  // Daily-fines flag. `true` means the company is in the daily-fines process,
+  // which is handled OUTSIDE this system — admins use it to know not to act on
+  // the company through the normal flow. Toggled by an admin (both ways); the
+  // "when" + reason live on the emitted `company_event` row. See db/README.md.
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'fines_started',
+  })
+  finesStarted!: boolean
+
+  // Admin-only halt switch. When true, ALL outbound activity for the company
+  // (scheduled jobs, emails/notifications, any automated touchpoint) must be
+  // skipped. Purely manual — no computed signal sets it. The "when" + reason
+  // live on the emitted `company_event` row. See db/README.md.
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'quarantined',
+  })
+  quarantined!: boolean
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'next_equality_report_due_at',
+  })
+  nextEqualityReportDueAt!: Date | null
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+    field: 'next_salary_report_due_at',
+  })
+  nextSalaryReportDueAt!: Date | null
+
   @ForeignKey(() => IsatCategoryModel)
   @Column({ type: DataType.TEXT, allowNull: true, field: 'isat_category_code' })
   isatCategoryCode!: string | null
@@ -94,6 +172,20 @@ export class CompanyModel extends MutableModel<
     as: 'isatCategory',
   })
   isatCategory?: IsatCategoryModel | null
+
+  // Derived compliance status — not a stored column. Populated by the
+  // `withReportStatus` scope; undefined when the model is loaded outside it, so
+  // every CompanyDto read goes through that scope.
+  @Column(DataType.VIRTUAL)
+  reportStatus!: CompanyReportStatusEnum
+
+  // Derived overdue flags — true when the matching next-due date has passed.
+  // Populated by the `withReportStatus` scope alongside `reportStatus`.
+  @Column(DataType.VIRTUAL)
+  equalityReportOverdue!: boolean
+
+  @Column(DataType.VIRTUAL)
+  salaryReportOverdue!: boolean
 
   static fromModel(model: CompanyModel): CompanyDto {
     return {
@@ -106,10 +198,17 @@ export class CompanyModel extends MutableModel<
       postcodeId: model.postcodeId,
       salaryReportRequired: model.salaryReportRequired,
       salaryReportRequiredOverride: model.salaryReportRequiredOverride,
+      finesStarted: model.finesStarted,
+      quarantined: model.quarantined,
+      nextEqualityReportDueAt: model.nextEqualityReportDueAt,
+      nextSalaryReportDueAt: model.nextSalaryReportDueAt,
       isatCategoryCode: model.isatCategoryCode,
       isatCategory: model.isatCategory
-        ? IsatCategoryModel.fromModel(model.isatCategory)
+        ? model.isatCategory.fromModel()
         : null,
+      reportStatus: model.reportStatus,
+      equalityReportOverdue: model.equalityReportOverdue,
+      salaryReportOverdue: model.salaryReportOverdue,
     }
   }
 

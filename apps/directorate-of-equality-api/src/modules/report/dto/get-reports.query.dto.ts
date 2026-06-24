@@ -138,7 +138,7 @@ export class GetReportsQueryDto extends PagingQuery {
 
   @ApiOptionalString({
     description:
-      'Free-text search across company name, kennitala, report identifier, contact name, and contact email. Case-insensitive partial match.',
+      'Free-text search across company name, kennitala, and report identifier. Case-insensitive partial match. Person fields (contacts and company admin/CEO) are not searched.',
   })
   q?: string
 

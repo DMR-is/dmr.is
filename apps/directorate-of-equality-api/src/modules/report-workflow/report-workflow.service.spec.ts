@@ -517,23 +517,4 @@ describe('ReportWorkflowService', () => {
       )
     })
   })
-
-  describe('startFines', () => {
-    it('stamps finesStartedAt on the report', async () => {
-      reportModel.update.mockResolvedValue([1])
-
-      await service.startFines(reviewerContext(ReportStatusEnum.IN_REVIEW))
-
-      expect(reportModel.update).toHaveBeenCalledWith(
-        { finesStartedAt: expect.any(Date) },
-        { where: { id: 'report-1' } },
-      )
-    })
-
-    it('rejects company actors', async () => {
-      await expect(
-        service.startFines(companyContext(ReportStatusEnum.IN_REVIEW)),
-      ).rejects.toBeInstanceOf(ForbiddenException)
-    })
-  })
 })

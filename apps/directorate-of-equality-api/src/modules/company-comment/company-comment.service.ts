@@ -3,11 +3,13 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { companyMessages } from '../company/company.messages'
 import { CompanyCommentDto } from '../company/dto/company-comment.dto'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyCommentModel } from '../company/models/company-comment.model'
 import { UserModel } from '../user/models/user.model'
 import { CreateCompanyCommentDto } from './dto/create-company-comment.dto'
+import { companyCommentMessages } from './company-comment.messages'
 import { ICompanyCommentService } from './company-comment.service.interface'
 
 const LOGGING_CONTEXT = 'CompanyCommentService'
@@ -48,14 +50,14 @@ export class CompanyCommentService implements ICompanyCommentService {
     const body = dto.body.trim()
 
     if (!body) {
-      throw new BadRequestException('Comment body cannot be empty')
+      throw new BadRequestException(companyCommentMessages.bodyEmpty)
     }
 
     // Resolve the company first so a bad id is a clean 404 rather than an FK
     // violation surfacing as a 500.
     await this.companyModel.findOneOrThrow(
       { where: { id: companyId } },
-      `Company "${companyId}" not found`,
+      companyMessages.notFound(companyId),
     )
 
     const comment = await this.companyCommentModel.create({
@@ -81,7 +83,7 @@ export class CompanyCommentService implements ICompanyCommentService {
 
     const comment = await this.companyCommentModel.findOneOrThrow(
       { where: { id: commentId, companyId } },
-      `Comment "${commentId}" not found`,
+      companyCommentMessages.notFound(commentId),
     )
 
     await comment.destroy()

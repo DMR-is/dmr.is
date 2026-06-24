@@ -74,7 +74,12 @@ const ALL_STATUS_OPTIONS: FilterOption[] = (
 ).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
-  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
+  // tab 1 is locked to SUBMITTED + POSTPONED (see SUBMITTED above); let the
+  // admin narrow to either one, but exclude every other status so they can't
+  // escape the tab's domain
+  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value).filter(
+    (v) => v !== ReportStatusEnum.SUBMITTED && v !== ReportStatusEnum.POSTPONED,
+  ),
   'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
   // tab 3 shows ONLY the three processed statuses — exclude everything else
   afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'POSTPONED'],
@@ -176,13 +181,7 @@ export const ReportsContainer = () => {
   const { data, isLoading, isError, filter, setFilter, resetFilter } =
     useReports(fixedQuery)
 
-  // Unfiltered so tab counts stay stable while user filters within a tab.
-  const { data: totalCountsData } = useQuery(
-    trpc.reports.list.queryOptions(
-      {},
-      { staleTime: 30_000, placeholderData: (prev) => prev },
-    ),
-  )
+  const totalCountsData = data?.statusCounts
 
   const needsUsers = activeTab !== 'innsendingar'
   const { data: usersData } = useQuery(
@@ -339,17 +338,17 @@ export const ReportsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `${overviewText.tabInnsendingar} (${(totalCountsData?.statusCounts.submitted ?? 0) + (totalCountsData?.statusCounts.postponed ?? 0)})`,
+            label: `${overviewText.tabInnsendingar} (${(totalCountsData?.submitted ?? 0) + (totalCountsData?.postponed ?? 0)})`,
             content: filterAndTable(true),
           },
           {
             id: 'i-vinnslu',
-            label: `${overviewText.tabInProgress} (${totalCountsData?.statusCounts.inReview ?? 0})`,
+            label: `${overviewText.tabInProgress} (${totalCountsData?.inReview ?? 0})`,
             content: filterAndTable(),
           },
           {
             id: 'afgreitt',
-            label: `${overviewText.tabAfgreitt} (${totalCountsData?.statusCounts.processed ?? 0})`,
+            label: `${overviewText.tabAfgreitt} (${totalCountsData?.processed ?? 0})`,
             content: filterAndTable(),
           },
         ]}

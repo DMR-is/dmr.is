@@ -594,12 +594,16 @@ INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, r
 `
 
   if (hasOutliers) {
+    const groupId = uid(base + 81)
     const exp = outliersExplained
       ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
       : `NULL, NULL, NULL, NULL`
     sql += `
-INSERT INTO report_employee_outlier (id, report_employee_id, reason, action, signature_name, signature_role)
-VALUES ('${uid(base + 80)}', '${empIds[0]}', ${exp});
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
+VALUES ('${groupId}', '${reportId}', 'Útlagar', ${exp});
+
+INSERT INTO report_employee_outlier (id, report_employee_id, group_id)
+VALUES ('${uid(base + 80)}', '${empIds[0]}', '${groupId}');
 `
   }
 
@@ -888,6 +892,8 @@ DELETE FROM report_employee_outlier
     JOIN report r ON r.id = re.report_id
     WHERE r.company_national_id LIKE '500101%'
   );
+DELETE FROM report_outlier_group
+  WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_employee_role_criterion_step
   WHERE report_sub_criterion_step_id IN (
     SELECT rscs.id FROM report_sub_criterion_step rscs

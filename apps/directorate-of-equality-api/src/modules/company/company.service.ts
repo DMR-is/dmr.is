@@ -29,12 +29,23 @@ import {
   CompanySortDirectionEnum,
 } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { IsatCategoryDto } from './dto/isat-category.dto'
+import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
+import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
+import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { CompanySizeEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
-import { buildCompanyExpiryWhere, buildCompanyStatusWhere } from './utils/filters'
+import {
+  buildCompanyExpiryWhere,
+  buildCompanyIsatWhere,
+  buildCompanyLocationInclude,
+  buildCompanyOverdueWhere,
+  buildCompanyStatusWhere,
+} from './utils/filters'
+import { companyMessages } from './company.messages'
 import {
   CreateCompanyInput,
   GetCompaniesQueryDto,
@@ -60,6 +71,29 @@ export class CompanyService implements ICompanyService {
     @Inject(ICompanyCommentService)
     private readonly companyCommentService: ICompanyCommentService,
   ) {}
+
+  /**
+   * `CompanyModel` scoped to also select the derived `reportStatus`. The cast
+   * restores the custom `*OrThrow` statics that Sequelize's `.scope()` erases
+   * from the return type.
+   */
+  private get companyWithReportStatus(): typeof CompanyModel {
+    return this.companyModel.scope('withReportStatus') as typeof CompanyModel
+  }
+
+  /**
+   * Re-read a company through the `withReportStatus` scope and map it to a DTO.
+   * Used after a write (create) where the in-memory instance has no computed
+   * `reportStatus` virtual yet.
+   */
+  private async loadCompanyDto(id: string): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    return company.fromModel()
+  }
 
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
     const { limit, offset } = getLimitAndOffset(query)
@@ -88,6 +122,27 @@ export class CompanyService implements ICompanyService {
       conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
     }
 
+    if (query.finesStarted !== undefined) {
+      conditions.push({ finesStarted: query.finesStarted })
+    }
+
+    if (query.quarantined !== undefined) {
+      conditions.push({ quarantined: query.quarantined })
+    }
+
+    if (query.overdue) {
+      conditions.push(buildCompanyOverdueWhere())
+    }
+
+    if (query.isatCategoryCode?.length) {
+      conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
+    }
+
+    const locationInclude = buildCompanyLocationInclude({
+      postcodes: query.postcode,
+      regionCodes: query.regionCode,
+    })
+
     const where: WhereOptions =
       conditions.length === 0
         ? {}
@@ -98,26 +153,38 @@ export class CompanyService implements ICompanyService {
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
     ).toUpperCase()
-    const order: Order =
-      query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT
-        ? [
-            [
-              literal(
-                `CASE employee_count_category WHEN 'UNKNOWN' THEN 0 WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
-              ),
-              sortDir,
-            ],
-          ]
-        : [['name', sortDir]]
+    let order: Order
+    if (query.sortBy === CompanySortByEnum.EMPLOYEE_COUNT) {
+      order = [
+        [
+          literal(
+            `CASE employee_count_category WHEN 'UNKNOWN' THEN 0 WHEN 'SMALL' THEN 1 WHEN 'MEDIUM' THEN 2 WHEN 'LARGE' THEN 3 END`,
+          ),
+          sortDir,
+        ],
+      ]
+    } else if (query.sortBy === CompanySortByEnum.NEXT_REPORT_DUE) {
+      // Soonest (most overdue) of the two next-due dates first; companies with
+      // no due date sort last regardless of direction.
+      order = [
+        literal(
+          `LEAST(next_equality_report_due_at, next_salary_report_due_at) ${sortDir} NULLS LAST`,
+        ),
+      ]
+    } else {
+      order = [['name', sortDir]]
+    }
 
-    const { rows, count } = await this.companyModel.findAndCountAll({
-      where,
-      order,
-      limit,
-      offset,
-      distinct: true,
-      col: 'id',
-    })
+    const { rows, count } = await this.companyWithReportStatus
+      .findAndCountAll({
+        where,
+        order,
+        limit,
+        offset,
+        distinct: true,
+        col: 'id',
+        ...(locationInclude ? { include: [locationInclude] } : {}),
+      })
 
     const companies = rows.map((c) => c.fromModel())
     const paging = generatePaging(companies, query.page, query.pageSize, count)
@@ -129,12 +196,7 @@ export class CompanyService implements ICompanyService {
       context: LOGGING_CONTEXT,
     })
 
-    const company = await this.companyModel.findOneOrThrow(
-      { where: { id } },
-      `Company "${id}" not found`,
-    )
-
-    return company.fromModel()
+    return this.loadCompanyDto(id)
   }
 
   async rskLookup(nationalId: string): Promise<CompanyLookupDto> {
@@ -148,7 +210,7 @@ export class CompanyService implements ICompanyService {
 
     if (!result.entity) {
       throw new NotFoundException(
-        `No entity found in national registry for "${nationalId}"`,
+        companyMessages.registryEntityNotFound(nationalId),
       )
     }
 
@@ -167,7 +229,7 @@ export class CompanyService implements ICompanyService {
 
     if (existing) {
       throw new ConflictException(
-        `Company with national id "${input.nationalId}" already exists`,
+        companyMessages.alreadyExists(input.nationalId),
       )
     }
 
@@ -179,7 +241,7 @@ export class CompanyService implements ICompanyService {
 
     await this.companyEventService.emitCreated(company.id, company.status)
 
-    return company.fromModel()
+    return this.loadCompanyDto(company.id)
   }
 
   async getByNationalId(nationalId: string): Promise<CompanyDto> {
@@ -187,9 +249,9 @@ export class CompanyService implements ICompanyService {
       context: LOGGING_CONTEXT,
     })
 
-    const company = await this.companyModel.findOneOrThrow(
+    const company = await this.companyWithReportStatus.findOneOrThrow(
       { where: { nationalId } },
-      `Company with national id "${nationalId}" not found`,
+      companyMessages.notFoundByNationalId(nationalId),
     )
 
     return company.fromModel()
@@ -199,9 +261,8 @@ export class CompanyService implements ICompanyService {
     nationalId: string,
     fallbackName?: string,
   ): Promise<CompanyDto> {
-    const existing = await this.companyModel.findOne({
-      where: { nationalId },
-    })
+    const existing = await this.companyWithReportStatus
+      .findOne({ where: { nationalId } })
 
     if (existing) {
       return existing.fromModel()
@@ -214,7 +275,7 @@ export class CompanyService implements ICompanyService {
 
     if (!name) {
       throw new NotFoundException(
-        `No entity found in national registry for "${nationalId}" and no fallback name provided`,
+        companyMessages.registryEntityNotFoundNoFallback(nationalId),
       )
     }
 
@@ -231,7 +292,7 @@ export class CompanyService implements ICompanyService {
 
     await this.companyEventService.emitCreated(company.id, company.status)
 
-    return company.fromModel()
+    return this.loadCompanyDto(company.id)
   }
 
   async getOrCreateSubsidiaryReportSnapshotSource(
@@ -248,7 +309,7 @@ export class CompanyService implements ICompanyService {
 
     if (!registry.entity) {
       throw new NotFoundException(
-        `No entity found in national registry for "${input.nationalId}"`,
+        companyMessages.registryEntityNotFound(input.nationalId),
       )
     }
 
@@ -282,9 +343,12 @@ export class CompanyService implements ICompanyService {
     dto: UpdateCompanyStatusDto,
     actorUserId: string,
   ): Promise<CompanyDto> {
-    const company = await this.companyModel.findOneOrThrow(
+    // Scoped read so the returned DTO carries reportStatus. The company's
+    // status column does not feed reportStatus, so the value loaded here stays
+    // correct after the update below.
+    const company = await this.companyWithReportStatus.findOneOrThrow(
       { where: { id } },
-      `Company "${id}" not found`,
+      companyMessages.notFound(id),
     )
 
     // No-op when the status is unchanged — avoids a spurious STATUS_CHANGED
@@ -308,6 +372,99 @@ export class CompanyService implements ICompanyService {
       actorUserId,
       dto.reason ?? null,
     )
+
+    return company.fromModel()
+  }
+
+  /**
+   * Toggle the daily-fines flag. The fines process itself is handled outside
+   * this system — the flag just records that it is in progress. Both
+   * transitions emit a `company_event` (with optional reason) for audit.
+   */
+  async updateFines(
+    id: string,
+    dto: UpdateCompanyFinesDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    // No-op when the flag is unchanged — avoids a spurious timeline event.
+    if (company.finesStarted === dto.finesStarted) {
+      return company.fromModel()
+    }
+
+    this.logger.info(
+      `Updating company ${id} fines flag: ${company.finesStarted} → ${dto.finesStarted}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ finesStarted: dto.finesStarted })
+
+    if (dto.finesStarted) {
+      await this.companyEventService.emitFinesStarted(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    } else {
+      await this.companyEventService.emitFinesStopped(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    }
+
+    return company.fromModel()
+  }
+
+  /**
+   * Quarantine a company — an admin halt switch. While quarantined, every
+   * outbound touchpoint (scheduled jobs, emails, notifications) must skip the
+   * company. Purely manual; both transitions emit a `company_event` (with
+   * optional reason) for audit.
+   */
+  async updateQuarantine(
+    id: string,
+    dto: UpdateCompanyQuarantineDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    // No-op when the flag is unchanged — avoids a spurious timeline event.
+    if (company.quarantined === dto.quarantined) {
+      return company.fromModel()
+    }
+
+    this.logger.info(
+      `Updating company ${id} quarantine: ${company.quarantined} → ${dto.quarantined}`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ quarantined: dto.quarantined })
+
+    if (dto.quarantined) {
+      await this.companyEventService.emitQuarantined(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    } else {
+      await this.companyEventService.emitUnquarantined(
+        id,
+        company.status,
+        actorUserId,
+        dto.reason ?? null,
+      )
+    }
 
     return company.fromModel()
   }
@@ -353,10 +510,49 @@ export class CompanyService implements ICompanyService {
     return updated.fromModel()
   }
 
+  /**
+   * Backs the ÍSAT filter picker. With `codes`, returns those exact leaf codes;
+   * with `q`, returns matches across code and descriptions; with neither, the
+   * full ÍSAT2008 list (~665 leaf codes) — small enough to load once and search
+   * client-side. Always ordered by code, unbounded.
+   */
+  async searchIsatCategories(
+    query: SearchIsatCategoriesQueryDto,
+  ): Promise<IsatCategoryDto[]> {
+    if (query.codes?.length) {
+      const byCode = await this.isatCategoryModel.findAll({
+        where: { code: { [Op.in]: query.codes } },
+        order: [['code', 'ASC']],
+      })
+      return byCode.map((category) => category.fromModel())
+    }
+
+    const term = query.q?.trim()
+    const pattern = term ? `%${term}%` : null
+
+    const rows = await this.isatCategoryModel.findAll({
+      order: [['code', 'ASC']],
+      ...(pattern
+        ? {
+            where: {
+              [Op.or]: [
+                { code: { [Op.iLike]: pattern } },
+                { codeDotted: { [Op.iLike]: pattern } },
+                { description: { [Op.iLike]: pattern } },
+                { descriptionEn: { [Op.iLike]: pattern } },
+              ],
+            },
+          }
+        : {}),
+    })
+
+    return rows.map((category) => category.fromModel())
+  }
+
   async getTimeline(id: string): Promise<CompanyTimelineItemDto[]> {
     await this.companyModel.findOneOrThrow(
       { where: { id } },
-      `Company "${id}" not found`,
+      companyMessages.notFound(id),
     )
 
     const [events, comments] = await Promise.all([

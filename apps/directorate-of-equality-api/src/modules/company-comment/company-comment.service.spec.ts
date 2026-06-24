@@ -7,6 +7,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyCommentModel } from '../company/models/company-comment.model'
 import { UserModel } from '../user/models/user.model'
+import { companyCommentMessages } from './company-comment.messages'
 import { CompanyCommentService } from './company-comment.service'
 
 const mockLogger = {
@@ -113,7 +114,7 @@ describe('CompanyCommentService', () => {
 
     expect(commentFindOneOrThrow).toHaveBeenCalledWith(
       { where: { id: 'comment-1', companyId: 'company-1' } },
-      expect.any(String),
+      companyCommentMessages.notFound('comment-1'),
     )
     expect(destroy).toHaveBeenCalled()
   })

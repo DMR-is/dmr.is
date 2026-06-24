@@ -31,14 +31,14 @@ export enum CompanySizeEnum {
 /**
  * Lifecycle status of a company in the DoE register.
  *
- *   ACTIVE   → operating; subject to the usual reporting obligations.
- *   INACTIVE → no longer operating (e.g. bankruptcy, merged into another
- *              company). Set by an admin; the reason is captured on the
+ *   ACTIVE   → in the authoritative register; subject to the usual reporting
+ *              obligations. Set when a company appears in the annual import.
+ *   INACTIVE → not in the authoritative register. Set either deliberately by
+ *              an admin (e.g. bankruptcy, merged into another company) or
+ *              automatically by the company import when a company we hold is
+ *              absent from the latest import. Flips back to ACTIVE if it
+ *              reappears in a later import. The reason is captured on the
  *              `company_event` STATUS_CHANGED row, not here.
- *   UNKNOWN  → the company is in our register but absent from the latest
- *              authoritative annual import — it should be in the list, so
- *              something is off, but we don't yet know what. Set by the
- *              company import; flips back to ACTIVE when it reappears.
  *
  * Status changes are recorded as `company_event` STATUS_CHANGED events
  * (with from/to status + optional reason), so the full history is explorable
@@ -47,5 +47,28 @@ export enum CompanySizeEnum {
 export enum CompanyStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  UNKNOWN = 'UNKNOWN',
+}
+
+/**
+ * Derived reporting-compliance status surfaced on `CompanyDto`. Not persisted —
+ * computed from the company's size/obligations and its reports (see
+ * `utils/report-status.ts`). A single value, evaluated in priority order; the
+ * first unmet obligation wins (most critical first).
+ *
+ *   MISSING_EQUALITY_REPORT → "Vantar jafnréttisáætlun": 25+ employees
+ *       (MEDIUM|LARGE) with no active/approved equality report.
+ *   MISSING_SALARY_REPORT   → "Vantar launagreiningu": a salary report is
+ *       required (50+/LARGE, or admin override — i.e. `salary_report_required`)
+ *       with no active/approved salary report.
+ *   MISSING_ACTION_PLAN     → "Vantar úrbótaáætlun": a salary report is
+ *       POSTPONED, i.e. it has pay-gap outliers whose explanations are still
+ *       deferred.
+ *   SATISFACTORY            → "Fullnægjandi": none of the above; the company
+ *       has met its obligations.
+ */
+export enum CompanyReportStatusEnum {
+  MISSING_EQUALITY_REPORT = 'MISSING_EQUALITY_REPORT',
+  MISSING_SALARY_REPORT = 'MISSING_SALARY_REPORT',
+  MISSING_ACTION_PLAN = 'MISSING_ACTION_PLAN',
+  SATISFACTORY = 'SATISFACTORY',
 }

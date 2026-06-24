@@ -62,6 +62,86 @@ export class CompanyEventService implements ICompanyEventService {
     })
   }
 
+  async emitFinesStarted(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting FINES_STARTED event for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.FINES_STARTED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: reason ?? null,
+    })
+  }
+
+  async emitFinesStopped(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting FINES_STOPPED event for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.FINES_STOPPED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: reason ?? null,
+    })
+  }
+
+  async emitQuarantined(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting QUARANTINED event for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.QUARANTINED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: reason ?? null,
+    })
+  }
+
+  async emitUnquarantined(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(`Emitting UNQUARANTINED event for company ${companyId}`, {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.UNQUARANTINED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: reason ?? null,
+    })
+  }
+
   async getByCompanyId(companyId: string): Promise<CompanyEventDto[]> {
     const events = await this.companyEventModel.findAll({
       where: { companyId },

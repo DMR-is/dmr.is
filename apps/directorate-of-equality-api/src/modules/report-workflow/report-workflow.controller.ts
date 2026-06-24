@@ -61,13 +61,4 @@ export class ReportWorkflowController {
   ): Promise<void> {
     return this.reportWorkflowService.approve(context)
   }
-
-  @Post('start-fines')
-  @HttpCode(204)
-  @DoeResponse({ operationId: 'startReportFines', include404: true })
-  async startFines(
-    @CurrentReportResourceContext() context: ReportResourceContext,
-  ): Promise<void> {
-    return this.reportWorkflowService.startFines(context)
-  }
 }

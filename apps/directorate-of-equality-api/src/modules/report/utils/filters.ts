@@ -11,13 +11,17 @@ import { ReportModel } from '../models/report.model'
 
 /**
  * Build the `Op.or` clause for the `q` free-text search. Matches
- * case-insensitive partial strings across the five fields admins actually
+ * case-insensitive partial strings across the fields admins actually
  * search by:
  *
  * - `report.identifier` — the `ABC-001` code admins refer to in Slack/tickets
- * - `report.contactName`, `report.contactEmail` — the person at the company
  * - `company.name`, `company.nationalId` — looked up via the nested-include
  *   column-ref syntax `$relation.column$` so Sequelize builds the JOIN
+ *
+ * Person fields are intentionally excluded: contacts (`contactName`,
+ * `contactEmail`) and the company admin / CEO (`companyAdminName`,
+ * `companyAdminEmail`) are not matched — admins search by report or company,
+ * not by the individuals on a report.
  *
  * If you add columns here, make sure the corresponding include is still
  * present in the service's `findAndCountAll` call — Sequelize needs the
@@ -28,8 +32,6 @@ export const buildFreeTextWhere = (term: string): WhereOptions => {
   return {
     [Op.or]: [
       { identifier: { [Op.iLike]: pattern } },
-      { contactName: { [Op.iLike]: pattern } },
-      { contactEmail: { [Op.iLike]: pattern } },
       { '$companyReport.name$': { [Op.iLike]: pattern } },
       { '$companyReport.national_id$': { [Op.iLike]: pattern } },
     ],

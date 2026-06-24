@@ -32,14 +32,14 @@ const t = companiesText.importModal
 const ROW_SECTIONS: {
   key: keyof Pick<
     CompanyImportResultDto,
-    'created' | 'updated' | 'reactivated' | 'markedUnknown' | 'unchanged'
+    'created' | 'updated' | 'reactivated' | 'deactivated' | 'unchanged'
   >
   label: string
 }[] = [
   { key: 'created', label: t.sections.created },
   { key: 'updated', label: t.sections.updated },
   { key: 'reactivated', label: t.sections.reactivated },
-  { key: 'markedUnknown', label: t.sections.markedUnknown },
+  { key: 'deactivated', label: t.sections.deactivated },
   { key: 'unchanged', label: t.sections.unchanged },
 ]
 
@@ -267,8 +267,8 @@ const ImportSummary = ({ result }: { result: CompanyImportResultDto }) => (
       n={result.reactivated.length}
     />
     <Summary
-      label={companiesText.importModal.sections.markedUnknown}
-      n={result.markedUnknown.length}
+      label={companiesText.importModal.sections.deactivated}
+      n={result.deactivated.length}
     />
     <Summary
       label={companiesText.importModal.sections.unchanged}
