@@ -292,7 +292,7 @@ export const companiesText = {
       created: 'Ný fyrirtæki',
       updated: 'Uppfærð',
       reactivated: 'Endurvirkjuð',
-      markedUnknown: 'Merkt óþekkt (vantar í skrá)',
+      deactivated: 'Óvirkjuð (vantar í skrá)',
       unchanged: 'Óbreytt',
       invalid: 'Ógildar línur',
     },
