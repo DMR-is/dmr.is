@@ -31,14 +31,14 @@ export enum CompanySizeEnum {
 /**
  * Lifecycle status of a company in the DoE register.
  *
- *   ACTIVE   → operating; subject to the usual reporting obligations.
- *   INACTIVE → no longer operating (e.g. bankruptcy, merged into another
- *              company). Set by an admin; the reason is captured on the
+ *   ACTIVE   → in the authoritative register; subject to the usual reporting
+ *              obligations. Set when a company appears in the annual import.
+ *   INACTIVE → not in the authoritative register. Set either deliberately by
+ *              an admin (e.g. bankruptcy, merged into another company) or
+ *              automatically by the company import when a company we hold is
+ *              absent from the latest import. Flips back to ACTIVE if it
+ *              reappears in a later import. The reason is captured on the
  *              `company_event` STATUS_CHANGED row, not here.
- *   UNKNOWN  → the company is in our register but absent from the latest
- *              authoritative annual import — it should be in the list, so
- *              something is off, but we don't yet know what. Set by the
- *              company import; flips back to ACTIVE when it reappears.
  *
  * Status changes are recorded as `company_event` STATUS_CHANGED events
  * (with from/to status + optional reason), so the full history is explorable
@@ -47,7 +47,6 @@ export enum CompanySizeEnum {
 export enum CompanyStatusEnum {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  UNKNOWN = 'UNKNOWN',
 }
 
 /**

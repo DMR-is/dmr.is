@@ -61,13 +61,13 @@ Per company:
 - **In file, not in DB** → created (status `ACTIVE`).
 - **In file + DB, fields differ** → the differing authoritative fields (`name`, `address`, `postcodeId`, `isat_category_code`, `employee_count_category`) are updated.
 - **In file + DB, identical** → unchanged.
-- **In DB, absent from file** → status set to **`UNKNOWN`** ("should be in the list — something is off"). `INACTIVE` companies are left as-is (deliberate deactivation is not overridden); already-`UNKNOWN` rows are untouched.
-- **Reappears in file** after `UNKNOWN`/`INACTIVE` → reactivated to `ACTIVE`.
+- **In DB, absent from file** → **deactivated** (status set to `INACTIVE`). The file is the source of truth: a company that drops out of the register is no longer active. Already-`INACTIVE` companies are left as-is (nothing to change).
+- **Reappears in file** after `INACTIVE` → reactivated to `ACTIVE`.
 - **Invalid rows** (bad kennitala, unknown ÍSAT code, duplicate kennitala in file) → reported, never applied.
 
 Size comes from the `LAUNAFLOKKUR` column (`50+`→`LARGE`, `25-49`→`MEDIUM`, else→`SMALL`); `salary_report_required` is then derived by the usual DB trigger. ÍSAT codes are normalized to 5 digits and validated against `isat_category`. A postcode that doesn't resolve is a soft note, not a rejection.
 
-Only the status transitions the import performs (`ACTIVE→UNKNOWN`, `UNKNOWN/INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
+Only the status transitions the import performs (`ACTIVE→INACTIVE`, `INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
 
 > **Subject to change.** Interim design; in development. Same RSK-API caveat as above — the annual upload is expected to be replaced by a direct RSK feed eventually.
 
@@ -375,7 +375,7 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `name`                            | `text`                                              |
 | `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`) |
 | `national_id`                     | `text` (unique)                                     |
-| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`/`UNKNOWN`) |
+| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)         |
 | `salary_report_required`          | `boolean`                                           |
 | `salary_report_required_override` | `boolean`                                           |
 | `fines_started`                   | `boolean` (default `false`)                         |
@@ -384,8 +384,11 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `next_salary_report_due_at`       | `timestamptz` (nullable)                            |
 | `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)        |
 
-`status = UNKNOWN` is set by the company import for a company we hold that is absent
-from the authoritative register (see [Company import](#company-import-annual-register)).
+`status` is `ACTIVE` while a company is in the authoritative register and `INACTIVE`
+once it is not. It is set to `INACTIVE` either deliberately by an admin (bankruptcy,
+merger) or automatically by the company import when a company we hold is absent from
+the latest register, and flips back to `ACTIVE` if it reappears
+(see [Company import](#company-import-annual-register)).
 
 `fines_started` flags a company as being in the daily-fines process, which is handled
 outside this system (see [Fines accrual](#fines-accrual)). `quarantined` is an admin

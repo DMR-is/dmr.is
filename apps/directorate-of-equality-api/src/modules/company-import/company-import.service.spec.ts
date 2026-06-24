@@ -144,10 +144,10 @@ describe('CompanyImportService', () => {
     expect(fields).toEqual(expect.arrayContaining(['name', 'size']))
   })
 
-  it('flips an UNKNOWN company back to ACTIVE as REACTIVATED', async () => {
+  it('flips an INACTIVE company back to ACTIVE as REACTIVATED', async () => {
     mockParse.mockResolvedValue({ rows: [makeRow()], errors: [], year: 2025 })
     companyFindAll.mockResolvedValue([
-      makeCompany({ status: CompanyStatusEnum.UNKNOWN }),
+      makeCompany({ status: CompanyStatusEnum.INACTIVE }),
     ])
 
     const result = await service.preview(BUF)
@@ -155,12 +155,12 @@ describe('CompanyImportService', () => {
     expect(result.reactivated).toHaveLength(1)
     expect(result.reactivated[0].changedFields[0]).toMatchObject({
       field: 'status',
-      from: CompanyStatusEnum.UNKNOWN,
+      from: CompanyStatusEnum.INACTIVE,
       to: CompanyStatusEnum.ACTIVE,
     })
   })
 
-  it('marks a DB company absent from the file as MARKED_UNKNOWN', async () => {
+  it('marks a DB company absent from the file as DEACTIVATED', async () => {
     mockParse.mockResolvedValue({ rows: [], errors: [], year: 2025 })
     companyFindAll.mockResolvedValue([
       makeCompany({ nationalId: '4101680229' }),
@@ -168,13 +168,18 @@ describe('CompanyImportService', () => {
 
     const result = await service.preview(BUF)
 
-    expect(result.markedUnknown).toHaveLength(1)
-    expect(result.markedUnknown[0].outcome).toBe(
-      CompanyImportOutcomeEnum.MARKED_UNKNOWN,
+    expect(result.deactivated).toHaveLength(1)
+    expect(result.deactivated[0].outcome).toBe(
+      CompanyImportOutcomeEnum.DEACTIVATED,
     )
+    expect(result.deactivated[0].changedFields[0]).toMatchObject({
+      field: 'status',
+      from: CompanyStatusEnum.ACTIVE,
+      to: CompanyStatusEnum.INACTIVE,
+    })
   })
 
-  it('leaves an INACTIVE company absent from the file untouched', async () => {
+  it('leaves an already-INACTIVE company absent from the file untouched', async () => {
     mockParse.mockResolvedValue({ rows: [], errors: [], year: 2025 })
     companyFindAll.mockResolvedValue([
       makeCompany({
@@ -185,7 +190,7 @@ describe('CompanyImportService', () => {
 
     const result = await service.preview(BUF)
 
-    expect(result.markedUnknown).toHaveLength(0)
+    expect(result.deactivated).toHaveLength(0)
   })
 
   it('rejects a row with an unknown ÍSAT code', async () => {
@@ -232,7 +237,7 @@ describe('CompanyImportService', () => {
 
     const result = await service.preview(BUF)
 
-    expect(result.markedUnknown).toHaveLength(0)
+    expect(result.deactivated).toHaveLength(0)
   })
 
   describe('apply', () => {
@@ -253,7 +258,7 @@ describe('CompanyImportService', () => {
     })
 
     it('updates fields and emits STATUS_CHANGED only for status flips', async () => {
-      const company = makeCompany({ status: CompanyStatusEnum.UNKNOWN })
+      const company = makeCompany({ status: CompanyStatusEnum.INACTIVE })
       mockParse.mockResolvedValue({
         rows: [makeRow({ name: 'Renamed ehf.' })],
         errors: [],
@@ -271,14 +276,14 @@ describe('CompanyImportService', () => {
       )
       expect(emitStatusChanged).toHaveBeenCalledWith(
         'c1',
-        CompanyStatusEnum.UNKNOWN,
+        CompanyStatusEnum.INACTIVE,
         CompanyStatusEnum.ACTIVE,
         'admin-1',
         expect.any(String),
       )
     })
 
-    it('marks absent companies UNKNOWN and emits the transition', async () => {
+    it('deactivates absent companies and emits the transition', async () => {
       const company = makeCompany({ nationalId: '4101680229' })
       mockParse.mockResolvedValue({ rows: [], errors: [], year: 2025 })
       companyFindAll.mockResolvedValue([company])
@@ -286,12 +291,12 @@ describe('CompanyImportService', () => {
       await service.apply(BUF, 'admin-1')
 
       expect(company.update).toHaveBeenCalledWith({
-        status: CompanyStatusEnum.UNKNOWN,
+        status: CompanyStatusEnum.INACTIVE,
       })
       expect(emitStatusChanged).toHaveBeenCalledWith(
         'c1',
         CompanyStatusEnum.ACTIVE,
-        CompanyStatusEnum.UNKNOWN,
+        CompanyStatusEnum.INACTIVE,
         'admin-1',
         expect.any(String),
       )

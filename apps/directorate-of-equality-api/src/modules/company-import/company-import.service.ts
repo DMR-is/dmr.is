@@ -123,11 +123,11 @@ export class CompanyImportService implements ICompanyImportService {
 
       for (const m of plan.marked) {
         const from = m.company.status
-        await m.company.update({ status: CompanyStatusEnum.UNKNOWN })
+        await m.company.update({ status: CompanyStatusEnum.INACTIVE })
         await this.companyEventService.emitStatusChanged(
           m.company.id,
           from,
-          CompanyStatusEnum.UNKNOWN,
+          CompanyStatusEnum.INACTIVE,
           actorUserId,
           'Absent from company import',
         )
@@ -139,7 +139,7 @@ export class CompanyImportService implements ICompanyImportService {
       `Company import applied by ${actorUserId} (year ${result.year ?? 'n/a'}): ` +
         `created=${result.created.length} updated=${result.updated.length} ` +
         `unchanged=${result.unchanged.length} reactivated=${result.reactivated.length} ` +
-        `markedUnknown=${result.markedUnknown.length} invalid=${result.invalid.length}`,
+        `deactivated=${result.deactivated.length} invalid=${result.invalid.length}`,
       { context: LOGGING_CONTEXT },
     )
 
@@ -245,9 +245,7 @@ export class CompanyImportService implements ICompanyImportService {
         postcodeUnresolved ? undefined : resolvedPostcodeId,
       )
 
-      const reactivating =
-        company.status === CompanyStatusEnum.UNKNOWN ||
-        company.status === CompanyStatusEnum.INACTIVE
+      const reactivating = company.status === CompanyStatusEnum.INACTIVE
       const statusChange = reactivating
         ? { from: company.status, to: CompanyStatusEnum.ACTIVE }
         : null
@@ -288,22 +286,22 @@ export class CompanyImportService implements ICompanyImportService {
       })
     }
 
-    // Companies we hold that are absent from the file.
+    // Companies we hold that are absent from the file → deactivated.
     for (const company of companies) {
       if (fileNationalIds.has(company.nationalId)) continue
-      // Leave deliberate deactivations and already-unknown rows untouched.
+      // Already-inactive companies stay as-is (nothing to change).
       if (company.status !== CompanyStatusEnum.ACTIVE) continue
       plan.marked.push({
         company,
         result: {
           nationalId: company.nationalId,
           name: company.name,
-          outcome: CompanyImportOutcomeEnum.MARKED_UNKNOWN,
+          outcome: CompanyImportOutcomeEnum.DEACTIVATED,
           changedFields: [
             {
               field: 'status',
               from: CompanyStatusEnum.ACTIVE,
-              to: CompanyStatusEnum.UNKNOWN,
+              to: CompanyStatusEnum.INACTIVE,
             },
           ],
           note: null,
@@ -388,7 +386,7 @@ export class CompanyImportService implements ICompanyImportService {
       .filter((u) => u.result.outcome === CompanyImportOutcomeEnum.REACTIVATED)
       .map((u) => u.result)
     const created = plan.creates.map((c) => c.result)
-    const markedUnknown = plan.marked.map((m) => m.result)
+    const deactivated = plan.marked.map((m) => m.result)
 
     const noticeCount = [
       ...created,
@@ -404,7 +402,7 @@ export class CompanyImportService implements ICompanyImportService {
       created,
       updated,
       unchanged: plan.unchanged,
-      markedUnknown,
+      deactivated,
       reactivated,
       invalid: plan.invalid,
     }

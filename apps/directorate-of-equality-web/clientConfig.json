@@ -3639,10 +3639,7 @@
         "enum": ["name", "employeeCount", "nextReportDue"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
-      "CompanyStatusEnum": {
-        "type": "string",
-        "enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]
-      },
+      "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
       "IsatCategoryDto": {
         "type": "object",
         "properties": {
@@ -3967,7 +3964,7 @@
           "CREATED",
           "UPDATED",
           "UNCHANGED",
-          "MARKED_UNKNOWN",
+          "DEACTIVATED",
           "REACTIVATED"
         ]
       },
@@ -4065,7 +4062,7 @@
               "$ref": "#/components/schemas/CompanyImportRowResultDto"
             }
           },
-          "markedUnknown": {
+          "deactivated": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CompanyImportRowResultDto"
@@ -4088,7 +4085,7 @@
           "created",
           "updated",
           "unchanged",
-          "markedUnknown",
+          "deactivated",
           "reactivated",
           "invalid"
         ]
