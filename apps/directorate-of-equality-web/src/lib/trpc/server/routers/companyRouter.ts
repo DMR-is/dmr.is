@@ -14,7 +14,9 @@ const zGetCompaniesQuery = z.object({
   page: z.number().min(1).optional(),
   pageSize: z.number().min(1).optional(),
   q: z.string().optional(),
-  employeeCountCategory: z.enum(['UNKNOWN', 'SMALL', 'MEDIUM', 'LARGE']).optional(),
+  employeeCountCategory: z
+    .enum(['UNKNOWN', 'SMALL', 'MEDIUM', 'LARGE'])
+    .optional(),
   companyStatus: z
     .array(
       z.enum([
@@ -64,7 +66,6 @@ export const companyRouter = router({
     .input(zCreateCompanyBody)
     .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
 
-<<<<<<< HEAD
   // Annual register import. The client uploads the .xlsx straight to S3 via a
   // presigned URL, then passes the resulting object `key` here. The same key is
   // previewed and then applied (uploaded once). `preview` writes nothing;
@@ -73,7 +74,6 @@ export const companyRouter = router({
     ctx.api.presignAdminImportUpload(),
   ),
 
-=======
   // Toggle the daily-fines flag (handled outside this system). `finesStarted`
   // true starts the process, false clears it; `reason` is kept on the company
   // timeline for audit.
@@ -102,7 +102,6 @@ export const companyRouter = router({
   // Annual register import. The file arrives base64-encoded (tRPC has no
   // multipart), is rebuilt into a Blob, and forwarded to the multipart API.
   // `preview` writes nothing; `apply` commits. Same input shape for both.
->>>>>>> main
   importPreview: protectedProcedure
     .input(z.object({ key: z.string() }))
     .mutation(({ ctx, input }) =>
