@@ -129,10 +129,16 @@ export const getS3Bucket = () =>
 
 /**
  * Bucket used for transient DOE Excel import uploads (presigned PUT staging).
- * TODO: replace the placeholder default once the real bucket name is provisioned.
+ * Throws if unset rather than silently falling back to the application-files
+ * bucket — these uploads must land in their own bucket.
  */
-export const getDoeImportsBucket = () =>
-  process.env.AWS_DOE_IMPORTS_BUCKET ?? 'DOE_IMPORTS_BUCKET_TBD'
+export const getDoeImportsBucket = () => {
+  const bucket = process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+  if (!bucket) {
+    throw new Error('AWS_SALARY_ANALYSIS_FILES_BUCKET is not set')
+  }
+  return bucket
+}
 
 /**
  * Creates the key for the application file

@@ -89,9 +89,9 @@ Two **guard boundaries**, two presign endpoints, keys namespaced so a request ca
 - **`admin`** (`AdminGuard`) — `POST /imports/presign` feeds the admin importers: `POST /admin-report/companies/:companyId/reports/excel/import`, `POST /companies/import/preview`, `POST /companies/import/apply`, and `POST /reports/excel/import`.
 - **`application`** (`CompanyResourceGuard`) — `POST /application/reports/excel/presign` feeds the company-admin importer `POST /application/reports/excel/import`.
 
-The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; each controller only binds it to its guard. The bucket is resolved by `getDoeImportsBucket()` (env `AWS_DOE_IMPORTS_BUCKET`).
+The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; each controller only binds it to its guard. The bucket is resolved by `getDoeImportsBucket()` (env `AWS_SALARY_ANALYSIS_FILES_BUCKET`).
 
-> **Infra prerequisites.** The DoE imports bucket needs (a) CORS allowing `PUT` from the web origins, or the browser upload fails, and (b) a lifecycle rule to expire `doe-imports/` objects. The env var must be set per environment.
+> **Infra prerequisites.** The bucket needs (a) CORS allowing `PUT` from the web origins, or the browser upload fails, and (b) a lifecycle rule to expire `doe-imports/` objects. `AWS_SALARY_ANALYSIS_FILES_BUCKET` must be set per environment (the resolver throws if it's missing).
 
 ## Report lifecycle
 

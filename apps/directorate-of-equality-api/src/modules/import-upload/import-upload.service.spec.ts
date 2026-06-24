@@ -30,11 +30,11 @@ describe('ImportUploadService', () => {
   let service: ImportUploadService
 
   beforeAll(() => {
-    process.env.AWS_DOE_IMPORTS_BUCKET = BUCKET
+    process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET = BUCKET
   })
 
   afterAll(() => {
-    delete process.env.AWS_DOE_IMPORTS_BUCKET
+    delete process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
   })
 
   beforeEach(() => {
