@@ -53,6 +53,10 @@ export const companyRouter = router({
     .input(zGetCompaniesQuery.optional())
     .query(({ ctx, input }) => ctx.api.getCompanies({ query: input as never })),
 
+  get: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(({ ctx, input }) => ctx.api.getCompanyById({ path: { id: input.id } })),
+
   // Backs the searchable ÍSAT filter: free-text `q` for matches, or `codes` to
   // resolve the labels of an existing selection.
   isatCategories: protectedProcedure

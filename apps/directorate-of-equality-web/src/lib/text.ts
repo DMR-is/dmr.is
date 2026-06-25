@@ -301,6 +301,24 @@ export const companiesText = {
     },
     rowPrefix: 'Lína',
   },
+  detailView: {
+    heading: 'Upplýsingar um fyrirtæki',
+    tabInfo: 'Upplýsingar',
+    tabReports: 'Skýrslur',
+    tabsLabel: 'Fyrirtækjaflippar',
+    timelineHeading: 'Saga fyrirtækis',
+    sidebarTitle: 'Staða fyrirtækis',
+    statusLabel: 'Staða',
+    finesButton: 'Hefja dagsektir',
+    noReports: 'Engar skýrslur skráðar',
+    reportsLoadError: 'Villa við að hlaða skýrslur',
+    noCompany: 'Fyrirtæki fannst ekki',
+    comments: {
+      label: 'Athugasemdir',
+      placeholder: 'Bættu við athugasemd',
+      submit: 'Vista athugasemd',
+    },
+  },
 }
 
 export const usersText = {

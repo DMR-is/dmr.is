@@ -8,12 +8,11 @@ import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
-  deriveStatus,
-  STATUS_LABEL,
-  STATUS_TAG_VARIANT,
+  REPORT_STATUS_LABEL,
+  REPORT_STATUS_TAG_VARIANT,
 } from '../../components/companies/companyStatus'
 import { CompanyTimeline } from '../../components/company/company-timeline/CompanyTimeline'
-import { CompanyDto, ReportListItemDto } from '../../gen/fetch'
+import { CompanyDto } from '../../gen/fetch'
 import { useStartFines } from '../../hooks/useStartFines'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, headerText } from '../../lib/text'
@@ -23,14 +22,9 @@ const t = companiesText.detailView
 
 type CompanyFormContainerProps = {
   company: CompanyDto
-  approvedReports: ReportListItemDto[]
 }
 
-export function CompanyFormContainer({
-  company,
-  approvedReports,
-}: CompanyFormContainerProps) {
-  const status = deriveStatus(company, approvedReports)
+export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const startFines = useStartFines()
 
   return (
@@ -59,8 +53,12 @@ export function CompanyFormContainer({
           >
             <Text variant="h3">{company.name}</Text>
             <Box>
-              <Tag variant={STATUS_TAG_VARIANT[status]} disabled outlined>
-                {STATUS_LABEL[status]}
+              <Tag
+                variant={REPORT_STATUS_TAG_VARIANT[company.reportStatus]}
+                disabled
+                outlined
+              >
+                {REPORT_STATUS_LABEL[company.reportStatus]}
               </Tag>
             </Box>
           </Box>
@@ -79,9 +77,6 @@ export function CompanyFormContainer({
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />
-      <Box marginTop={6}>
-        <CompanyTimeline companyId={company.id} />
-      </Box>
     </Box>
   )
 }

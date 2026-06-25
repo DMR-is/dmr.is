@@ -5,8 +5,6 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 
-import { ReportStatusEnum } from '../../gen/fetch'
-import { useCompanies } from '../../hooks/useCompanies'
 import { companiesText, serverErrorText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CompanyContainer } from './CompanyContainer'
@@ -16,16 +14,12 @@ type CompanyDetailContainerProps = {
 }
 
 export function CompanyDetailContainer({ id }: CompanyDetailContainerProps) {
-  const { data, isLoading, isError } = useCompanies({})
-
   const trpc = useTRPC()
-  const { data: reportsData } = useQuery(
-    trpc.reports.list.queryOptions({
-      status: [ReportStatusEnum.APPROVED],
-      pageSize: 500,
-    }),
-  )
-  const approvedReports = reportsData?.reports ?? []
+  const {
+    data: company,
+    isLoading,
+    isError,
+  } = useQuery(trpc.company.get.queryOptions({ id }))
 
   if (isLoading) {
     return (
@@ -47,8 +41,6 @@ export function CompanyDetailContainer({ id }: CompanyDetailContainerProps) {
     )
   }
 
-  const company = data?.companies.find((c) => c.id === id)
-
   if (!company) {
     return (
       <Box paddingY={4}>
@@ -61,7 +53,5 @@ export function CompanyDetailContainer({ id }: CompanyDetailContainerProps) {
     )
   }
 
-  return (
-    <CompanyContainer company={company} approvedReports={approvedReports} />
-  )
+  return <CompanyContainer company={company} />
 }
