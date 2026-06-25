@@ -288,12 +288,18 @@ function employeesSql() {
       const score = scoreByOrdinal.get(e.ordinal)
       if (score === undefined)
         throw new Error(`No analysis score for employee ordinal ${e.ordinal}`)
+      const nullableSalary = (value) =>
+        value === null || value === undefined
+          ? 'NULL'
+          : num(Number(value).toFixed(2))
       return (
         `  (${escStr(empId)}, ${escStr(RICH_SAL)}, ${num(e.ordinal)}, ` +
         `${escStr(e.education)}, ${escStr(e.field)}, ${escStr(e.department)}, ` +
         `${escStr(e.startDate)}, ${num(e.workRatio)}, ` +
-        `${num(Number(e.baseSalary).toFixed(2))}, ${num(Number(e.additionalSalary).toFixed(2))}, ` +
-        `${e.bonusSalary === null || e.bonusSalary === undefined ? 'NULL' : num(Number(e.bonusSalary).toFixed(2))}, ` +
+        `${num(Number(e.baseSalary).toFixed(2))}, ` +
+        `${nullableSalary(e.additionalFixedOvertime)}, ${nullableSalary(e.additionalFixedCarAllowance)}, ` +
+        `${nullableSalary(e.bonusOccasionalCarAllowance)}, ${nullableSalary(e.bonusOccasionalOvertime)}, ` +
+        `${nullableSalary(e.bonusPayments)}, ${nullableSalary(e.bonusOther)}, ` +
         `${escStr(e.gender)}, ${escStr(roleId)}, ${num(Number(score).toFixed(2))})`
       )
     })
@@ -321,7 +327,9 @@ function employeesSql() {
 BEGIN;
 
 INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
-  start_date, work_ratio, base_salary, additional_salary, bonus_salary,
+  start_date, work_ratio, base_salary,
+  additional_fixed_overtime, additional_fixed_car_allowance,
+  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
 ${empValues};
 
@@ -422,35 +430,50 @@ COMMIT;
 }
 
 // 8. Outliers (~20 rows, |differencePercent| >= 32) ------------------------
+// The explanation (reason / action / signature) now lives on an outlier
+// group; each outlier is a thin join referencing its group_id. We create two
+// groups: one "explained" (all four fields populated) and one "unexplained"
+// (all four NULL) — both satisfy the group CHECK and exercise both UI branches.
 function outliersSql() {
   const filtered = analysis.outliers.filter(
     (o) => Math.abs(o.differencePercent) >= 32,
   )
 
-  // Mark roughly the first third as "explained" (all four fields populated);
-  // the rest remain unexplained (all four NULL) — both states satisfy the
-  // CHECK constraint and exercise both UI branches.
+  // Roughly the first third go in the explained group; the rest unexplained.
   const explainedCutoff = Math.ceil(filtered.length / 3)
 
-  const values = filtered.map((o, i) => {
+  const explainedGroupId = newUid()
+  const unexplainedGroupId = newUid()
+
+  const groupValues = [
+    `  (${escStr(explainedGroupId)}, ${escStr(RICH_SAL)}, ${escStr(
+      'Útskýrður hópur',
+    )}, ${escStr(
+      'Sérfræðiþekking og reynsla starfsmanns réttlætir frávikið.',
+    )}, ${escStr('Endurmat við næstu launaviðræður.')}, ${escStr(
+      'Sigrún Sigrúnardóttir',
+    )}, ${escStr('Framkvæmdastjóri')})`,
+    `  (${escStr(unexplainedGroupId)}, ${escStr(RICH_SAL)}, ${escStr(
+      'Óútskýrður hópur',
+    )}, NULL, NULL, NULL, NULL)`,
+  ]
+
+  const outlierValues = filtered.map((o, i) => {
     const empId = empIdByOrdinal.get(o.employeeOrdinal)
     if (!empId)
       throw new Error(`Outlier references unknown ordinal ${o.employeeOrdinal}`)
-    if (i < explainedCutoff) {
-      return `  (${escStr(newUid())}, ${escStr(empId)}, ${escStr(
-        'Sérfræðiþekking og reynsla starfsmanns réttlætir frávikið.',
-      )}, ${escStr('Endurmat við næstu launaviðræður.')}, ${escStr(
-        'Sigrún Sigrúnardóttir',
-      )}, ${escStr('Framkvæmdastjóri')})`
-    }
-    return `  (${escStr(newUid())}, ${escStr(empId)}, NULL, NULL, NULL, NULL)`
+    const groupId = i < explainedCutoff ? explainedGroupId : unexplainedGroupId
+    return `  (${escStr(newUid())}, ${escStr(empId)}, ${escStr(groupId)})`
   })
 
   return `
 BEGIN;
 
-INSERT INTO report_employee_outlier (id, report_employee_id, reason, action, signature_name, signature_role) VALUES
-${values.join(',\n')};
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role) VALUES
+${groupValues.join(',\n')};
+
+INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES
+${outlierValues.join(',\n')};
 
 COMMIT;
   `
@@ -492,6 +515,7 @@ DELETE FROM report_employee_personal_criterion_step
   WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(RICH_SAL)});
 DELETE FROM report_employee_outlier
   WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(RICH_SAL)});
+DELETE FROM report_outlier_group WHERE report_id = ${escStr(RICH_SAL)};
 DELETE FROM report_employee_role_criterion_step
   WHERE report_sub_criterion_step_id IN (
     SELECT rscs.id FROM report_sub_criterion_step rscs

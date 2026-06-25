@@ -1,6 +1,7 @@
-import { ArrayMinSize } from 'class-validator'
+import { ArrayMinSize, IsInt } from 'class-validator'
 
 import {
+  ApiArray,
   ApiBoolean,
   ApiDto,
   ApiDtoArray,
@@ -21,46 +22,47 @@ import {
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
 /**
- * One row per employee flagged as a salary outlier. Populated by the company
- * after the salary-analysis preview step (see `db/README.md` Notes / open
- * questions). Persisted into `report_employee_outlier`.
+ * One outlier group the company defined after the salary-analysis preview step
+ * (see `db/README.md` Notes / open questions). Persisted into
+ * `report_outlier_group`, with one `report_employee_outlier` row per covered
+ * employee pointing at it.
  *
- * Postponement is an all-or-none property of the parent report — see
- * `CreateReportDto.outliersPostponed`. When the parent is postponed, this
- * row's explanation fields are ignored and persisted as NULL. When the parent
- * is not postponed, all four explanation fields are required (validated
- * server-side and at the DB CHECK constraint).
+ * Only used when the parent report is NOT postponed — see
+ * `CreateReportDto.outliersPostponed`. The applicant supplies the shared
+ * explanation (all four fields required, non-empty) plus the ordinals of the
+ * detected outliers this group covers. Across all groups every detected
+ * outlier must be covered by exactly one group (validated server-side). When
+ * the parent is postponed, no groups are created — the outlier rows are
+ * written with `group_id = NULL` and resolved later via the outliers edit
+ * endpoint.
  */
-export class CreateReportOutlierDto {
-  @ApiNumber({
-    description:
-      'Ordinal of the employee in `parsed.employees[]` this outlier justification applies to.',
-  })
-  employeeOrdinal!: number
-
+export class CreateReportOutlierGroupDto {
   @ApiOptionalString({
     description:
-      'Required when the parent report is not postponed; ignored when it is.',
+      'Applicant-supplied label for the group. Not required to be unique. When omitted (the implicit single-group case) the server assigns a default name.',
   })
-  reason?: string
+  name?: string
 
-  @ApiOptionalString({
-    description:
-      'Required when the parent report is not postponed; ignored when it is.',
-  })
-  action?: string
+  @ApiString({ minLength: 1 })
+  reason!: string
 
-  @ApiOptionalString({
-    description:
-      'Required when the parent report is not postponed; ignored when it is.',
-  })
-  signatureName?: string
+  @ApiString({ minLength: 1 })
+  action!: string
 
-  @ApiOptionalString({
+  @ApiString({ minLength: 1 })
+  signatureName!: string
+
+  @ApiString({ minLength: 1 })
+  signatureRole!: string
+
+  @ApiArray({
+    type: [Number],
     description:
-      'Required when the parent report is not postponed; ignored when it is.',
+      'Ordinals of the employees in `parsed.employees[]` this group covers.',
   })
-  signatureRole?: string
+  @ArrayMinSize(1)
+  @IsInt({ each: true })
+  employeeOrdinals!: number[]
 }
 
 export class CreateReportCompanySnapshotDto {
@@ -161,9 +163,10 @@ export class CreateReportDto {
 
   /**
    * All-or-none. When true, the company is acknowledging every detected
-   * outlier but deferring the explanations — explanation fields on each
-   * `outliers[]` row are ignored and persisted as NULL. When false (default)
-   * each `outliers[]` row must carry all four explanation fields.
+   * outlier but deferring the explanations — `outlierGroups` is ignored and no
+   * groups are created. The outlier rows are written with `group_id = NULL`
+   * and resolved later via the outliers edit endpoint. When false (default),
+   * `outlierGroups` must cover every detected outlier exactly once.
    */
   @ApiOptionalBoolean({
     description:
@@ -172,10 +175,12 @@ export class CreateReportDto {
   outliersPostponed?: boolean
 
   /**
-   * Salary outliers the company has justified. Optional — empty/undefined is
-   * fine when no outliers were flagged. Each entry references its employee
-   * by `ordinal` from `parsed.employees[]`.
+   * Outlier groups the company has defined. Required (non-empty) when the
+   * report has detected outliers and is not postponed: the union of each
+   * group's `employeeOrdinals` must cover every detected outlier exactly once.
+   * Ignored when `outliersPostponed` is true. Omit when no outliers were
+   * detected.
    */
-  @ApiOptionalDtoArray(CreateReportOutlierDto)
-  outliers?: CreateReportOutlierDto[]
+  @ApiOptionalDtoArray(CreateReportOutlierGroupDto)
+  outlierGroups?: CreateReportOutlierGroupDto[]
 }

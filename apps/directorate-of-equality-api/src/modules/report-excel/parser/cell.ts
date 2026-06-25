@@ -64,10 +64,27 @@ export const readInteger = (cell: ExcelJS.Cell): number | null => {
   return Number.isInteger(n) ? n : null
 }
 
+/**
+ * Excel's day-zero is 1899-12-30 (the off-by-one accommodates Excel's
+ * fictional 1900 leap day). Date cells whose number-format was stripped —
+ * common after paste / fill-down in the data-entry template — round-trip
+ * through xlsx as a bare serial number rather than a typed date, so we
+ * coerce numeric serials back to dates here.
+ */
+const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30)
+const MS_PER_DAY = 86_400_000
+/** Guard band: serials outside ~[1900, 9999] are almost certainly not dates. */
+const MIN_DATE_SERIAL = 1
+const MAX_DATE_SERIAL = 2_958_465 // 9999-12-31
+
 export const readDate = (cell: ExcelJS.Cell): Date | null => {
   const v = cell.value
   if (v == null) return null
   if (v instanceof Date) return v
+  if (typeof v === 'number') {
+    if (v < MIN_DATE_SERIAL || v > MAX_DATE_SERIAL) return null
+    return new Date(EXCEL_EPOCH_UTC + Math.round(v) * MS_PER_DAY)
+  }
   if (typeof v === 'object' && 'formula' in v) return null
   return null
 }

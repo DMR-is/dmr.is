@@ -245,11 +245,11 @@
             "name": "companyStatus",
             "required": false,
             "in": "query",
-            "description": "Return only companies that match at least one of the provided status values. Omit for no constraint.",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/CompanyStatusFilterEnum"
+                "$ref": "#/components/schemas/CompanyReportStatusEnum"
               }
             }
           },
@@ -264,6 +264,48 @@
                 "$ref": "#/components/schemas/CompanyExpiryFilterEnum"
               }
             }
+          },
+          {
+            "name": "finesStarted",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "quarantined",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only quarantined companies (quarantined = true).",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "overdue",
+            "required": false,
+            "in": "query",
+            "description": "When true, return only companies whose next equality or salary report due date has passed.",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "isatCategoryCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          },
+          {
+            "name": "postcode",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "schema": { "type": "array", "items": { "type": "string" } }
           },
           {
             "name": "sortBy",
@@ -345,6 +387,75 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/isat-categories": {
+      "get": {
+        "operationId": "searchIsatCategories",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Free-text search on ÍSAT code or description (Icelandic/English). Returns the top matches.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "codes",
+            "required": false,
+            "in": "query",
+            "description": "Resolve these exact ÍSAT leaf codes — used to label an existing selection. Takes precedence over `q`.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/IsatCategoryDto" }
+                }
               }
             }
           },
@@ -469,6 +580,230 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCompanyStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/isat": {
+      "patch": {
+        "operationId": "updateCompanyIsat",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyIsatDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/fines": {
+      "patch": {
+        "operationId": "updateCompanyFines",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyFinesDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/{id}/quarantine": {
+      "patch": {
+        "operationId": "updateCompanyQuarantine",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyQuarantineDto"
               }
             }
           }
@@ -805,6 +1140,140 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Companies"]
+      }
+    },
+    "/api/v1/companies/import/preview": {
+      "post": {
+        "operationId": "previewCompanyImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyImportResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Import"]
+      }
+    },
+    "/api/v1/companies/import/apply": {
+      "post": {
+        "operationId": "applyCompanyImport",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyImportResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Import"]
       }
     },
     "/api/v1/users/me": {
@@ -1377,6 +1846,122 @@
         "tags": ["Config"]
       }
     },
+    "/api/v1/location/regions": {
+      "get": {
+        "operationId": "getRegions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RegionDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
+      }
+    },
+    "/api/v1/location/postcodes": {
+      "get": {
+        "operationId": "getPostcodes",
+        "parameters": [
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Return only postcodes belonging to one of the given region codes (e.g. \"CAPITAL\"). Omit for all postcodes.",
+            "schema": { "type": "array", "items": { "type": "string" } }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PostcodeDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Location"]
+      }
+    },
     "/api/v1/reports/overview": {
       "get": {
         "operationId": "getReportOverview",
@@ -1622,7 +2207,7 @@
             "name": "q",
             "required": false,
             "in": "query",
-            "description": "Free-text search across company name, kennitala, report identifier, contact name, and contact email. Case-insensitive partial match.",
+            "description": "Free-text search across company name, kennitala, and report identifier. Case-insensitive partial match. Person fields (contacts and company admin/CEO) are not searched.",
             "schema": { "type": "string" }
           },
           {
@@ -2247,65 +2832,6 @@
         "tags": ["Report Workflow"]
       }
     },
-    "/api/v1/reports/{reportId}/start-fines": {
-      "post": {
-        "operationId": "startReportFines",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "204": { "description": "" },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Workflow"]
-      }
-    },
     "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
       "get": {
         "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
@@ -2649,7 +3175,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/benefits-breakdown": {
       "get": {
-        "description": "Average bonus salary (viðbótarlaun) and additional salary (aukagreiðslur) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
+        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
         "operationId": "getBenefitsBreakdown",
         "parameters": [
           {
@@ -2785,7 +3311,7 @@
   },
   "info": {
     "title": "Directorate of Equality — Internal API",
-    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve, start fines), comments, statistics, and user administration. Not intended for external consumers.",
+    "description": "Internal API for direct communication between the DoE web application (doe-web) and the DoE API. Covers report management, workflow transitions (assign, deny, approve), company administration (status, ÍSAT, daily-fines flag), comments, statistics, and user administration. Not intended for external consumers.",
     "version": "1.0",
     "contact": {}
   },
@@ -2887,8 +3413,12 @@
           "startDate": { "type": "string" },
           "workRatio": { "type": "number" },
           "baseSalary": { "type": "number" },
-          "additionalSalary": { "type": "number" },
-          "bonusSalary": { "type": "number", "nullable": true },
+          "additionalFixedOvertime": { "type": "number", "nullable": true },
+          "additionalFixedCarAllowance": { "type": "number", "nullable": true },
+          "bonusOccasionalCarAllowance": { "type": "number", "nullable": true },
+          "bonusOccasionalOvertime": { "type": "number", "nullable": true },
+          "bonusPayments": { "type": "number", "nullable": true },
+          "bonusOther": { "type": "number", "nullable": true },
           "personalStepAssignments": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ParsedStepAssignmentDto" }
@@ -2905,7 +3435,6 @@
           "startDate",
           "workRatio",
           "baseSalary",
-          "additionalSalary",
           "personalStepAssignments"
         ]
       },
@@ -2962,35 +3491,38 @@
             ]
           },
           "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
       },
-      "CreateReportOutlierDto": {
+      "CreateReportOutlierGroupDto": {
         "type": "object",
         "properties": {
-          "employeeOrdinal": {
-            "type": "number",
-            "description": "Ordinal of the employee in `parsed.employees[]` this outlier justification applies to."
-          },
-          "reason": {
+          "name": {
             "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
+            "description": "Applicant-supplied label for the group. Not required to be unique. When omitted (the implicit single-group case) the server assigns a default name."
           },
-          "action": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
-          },
-          "signatureName": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
-          },
-          "signatureRole": {
-            "type": "string",
-            "description": "Required when the parent report is not postponed; ignored when it is."
+          "reason": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "signatureName": { "type": "string", "minLength": 1 },
+          "signatureRole": { "type": "string", "minLength": 1 },
+          "employeeOrdinals": {
+            "description": "Ordinals of the employees in `parsed.employees[]` this group covers.",
+            "type": "array",
+            "items": { "type": "number" }
           }
         },
-        "required": ["employeeOrdinal"]
+        "required": [
+          "reason",
+          "action",
+          "signatureName",
+          "signatureRole",
+          "employeeOrdinals"
+        ]
       },
       "AdminSalaryReportDto": {
         "type": "object",
@@ -3018,9 +3550,11 @@
             "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
           },
           "postponed": { "type": "boolean" },
-          "outliers": {
+          "outlierGroups": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/CreateReportOutlierDto" }
+            "items": {
+              "$ref": "#/components/schemas/CreateReportOutlierGroupDto"
+            }
           }
         },
         "required": [
@@ -3087,13 +3621,13 @@
         "type": "string",
         "enum": ["UNKNOWN", "SMALL", "MEDIUM", "LARGE"]
       },
-      "CompanyStatusFilterEnum": {
+      "CompanyReportStatusEnum": {
         "type": "string",
         "enum": [
-          "missing-equality",
-          "has-equality",
-          "missing-salary",
-          "compliant"
+          "MISSING_EQUALITY_REPORT",
+          "MISSING_SALARY_REPORT",
+          "MISSING_ACTION_PLAN",
+          "SATISFACTORY"
         ]
       },
       "CompanyExpiryFilterEnum": {
@@ -3102,10 +3636,32 @@
       },
       "CompanySortByEnum": {
         "type": "string",
-        "enum": ["name", "employeeCount"]
+        "enum": ["name", "employeeCount", "nextReportDue"]
       },
       "CompanySortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
       "CompanyStatusEnum": { "type": "string", "enum": ["ACTIVE", "INACTIVE"] },
+      "IsatCategoryDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Normalized ÍSAT2008 leaf code, e.g. \"01110\"."
+          },
+          "codeDotted": {
+            "type": "string",
+            "description": "Display (dotted) form, e.g. \"01.11.0\"."
+          },
+          "description": {
+            "type": "string",
+            "description": "Icelandic description."
+          },
+          "descriptionEn": {
+            "type": "string",
+            "description": "English description."
+          }
+        },
+        "required": ["code", "codeDotted", "description", "descriptionEn"]
+      },
       "CompanyDto": {
         "type": "object",
         "properties": {
@@ -3125,7 +3681,49 @@
             "nullable": true
           },
           "salaryReportRequired": { "type": "boolean" },
-          "salaryReportRequiredOverride": { "type": "boolean" }
+          "salaryReportRequiredOverride": { "type": "boolean" },
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Daily-fines flag. `true` means the company is in the daily-fines process, handled outside this system."
+          },
+          "quarantined": {
+            "type": "boolean",
+            "description": "Admin halt switch. `true` means all outbound activity (scheduled jobs, emails, notifications) for the company is suspended."
+          },
+          "nextEqualityReportDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "nextSalaryReportDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "isatCategoryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Normalized ÍSAT2008 leaf code (admin-owned statistics field), e.g. \"01110\"."
+          },
+          "isatCategory": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
+          },
+          "reportStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
+            ]
+          },
+          "equalityReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next equality-report due date has passed."
+          },
+          "salaryReportOverdue": {
+            "type": "boolean",
+            "description": "Derived: the company's next salary-report due date has passed."
+          }
         },
         "required": [
           "id",
@@ -3134,7 +3732,12 @@
           "nationalId",
           "status",
           "salaryReportRequired",
-          "salaryReportRequiredOverride"
+          "salaryReportRequiredOverride",
+          "finesStarted",
+          "quarantined",
+          "reportStatus",
+          "equalityReportOverdue",
+          "salaryReportOverdue"
         ]
       },
       "Paging": {
@@ -3209,13 +3812,60 @@
         },
         "required": ["status"]
       },
+      "UpdateCompanyIsatDto": {
+        "type": "object",
+        "properties": {
+          "isatCategoryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Normalized ÍSAT2008 leaf code, e.g. \"01110\". Null clears the classification."
+          }
+        }
+      },
+      "UpdateCompanyFinesDto": {
+        "type": "object",
+        "properties": {
+          "finesStarted": {
+            "type": "boolean",
+            "description": "Whether the company is in the daily-fines process (handled outside this system). `true` starts it, `false` stops it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for starting/stopping the fines process, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["finesStarted"]
+      },
+      "UpdateCompanyQuarantineDto": {
+        "type": "object",
+        "properties": {
+          "quarantined": {
+            "type": "boolean",
+            "description": "Whether the company is quarantined (all outbound activity halted). `true` quarantines it, `false` lifts it."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional reason for quarantining/lifting, kept on the company timeline for later audit."
+          }
+        },
+        "required": ["quarantined"]
+      },
       "CompanyTimelineItemKindEnum": {
         "type": "string",
         "enum": ["EVENT", "COMMENT"]
       },
       "CompanyEventTypeEnum": {
         "type": "string",
-        "enum": ["CREATED", "STATUS_CHANGED"]
+        "enum": [
+          "CREATED",
+          "STATUS_CHANGED",
+          "FINES_STARTED",
+          "FINES_STOPPED",
+          "QUARANTINED",
+          "UNQUARANTINED"
+        ]
       },
       "CompanyEventDto": {
         "type": "object",
@@ -3309,6 +3959,138 @@
         },
         "required": ["body"]
       },
+      "CompanyImportOutcomeEnum": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "UPDATED",
+          "UNCHANGED",
+          "DEACTIVATED",
+          "REACTIVATED"
+        ]
+      },
+      "CompanyImportFieldChangeDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Company field that changed, e.g. \"name\"."
+          },
+          "from": {
+            "type": "string",
+            "nullable": true,
+            "description": "Previous value."
+          },
+          "to": {
+            "type": "string",
+            "nullable": true,
+            "description": "New value from the file."
+          }
+        },
+        "required": ["field"]
+      },
+      "CompanyImportRowResultDto": {
+        "type": "object",
+        "properties": {
+          "nationalId": { "type": "string" },
+          "name": { "type": "string" },
+          "outcome": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyImportOutcomeEnum" }
+            ]
+          },
+          "changedFields": {
+            "description": "Field-level diff (UPDATED / REACTIVATED only).",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportFieldChangeDto"
+            }
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "Soft notice, e.g. an unresolved postcode that was left unset."
+          }
+        },
+        "required": ["nationalId", "name", "outcome", "changedFields"]
+      },
+      "CompanyImportErrorDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "number",
+            "description": "Spreadsheet row number (1-based, incl. header)."
+          },
+          "nationalId": { "type": "string", "nullable": true },
+          "reason": {
+            "type": "string",
+            "description": "Why the row was rejected."
+          }
+        },
+        "required": ["row", "reason"]
+      },
+      "CompanyImportResultDto": {
+        "type": "object",
+        "properties": {
+          "committed": {
+            "type": "boolean",
+            "description": "false = preview (no writes); true = applied (committed)."
+          },
+          "year": {
+            "type": "number",
+            "nullable": true,
+            "description": "Reporting year (TEKJUAR) from the file, if consistent."
+          },
+          "noticeCount": {
+            "type": "number",
+            "description": "Notice from a soft issue, e.g. an unresolved postcode."
+          },
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "updated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "unchanged": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "deactivated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "reactivated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyImportRowResultDto"
+            }
+          },
+          "invalid": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CompanyImportErrorDto" }
+          }
+        },
+        "required": [
+          "committed",
+          "noticeCount",
+          "created",
+          "updated",
+          "unchanged",
+          "deactivated",
+          "reactivated",
+          "invalid"
+        ]
+      },
       "UserDto": {
         "type": "object",
         "properties": {
@@ -3382,6 +4164,37 @@
           "description": { "type": "string", "nullable": true }
         },
         "required": ["value"]
+      },
+      "RegionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Stable machine key for the region, e.g. CAPITAL"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name (Icelandic), e.g. Höfuðborgarsvæðið"
+          }
+        },
+        "required": ["id", "code", "name"]
+      },
+      "PostcodeDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "code": {
+            "type": "string",
+            "description": "Three-digit Icelandic postcode, e.g. 101"
+          },
+          "place": {
+            "type": "string",
+            "description": "Locality / place name, e.g. Reykjavík"
+          },
+          "regionId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["id", "code", "place", "regionId"]
       },
       "ReportOverviewGeneralDto": {
         "type": "object",
@@ -4055,12 +4868,6 @@
             "nullable": true
           },
           "equalityReportContent": { "type": "string", "nullable": true },
-          "finesStartedAt": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2026-02-19T10:30:00.000Z",
-            "nullable": true
-          },
           "reviewer": {
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
@@ -4129,10 +4936,20 @@
           },
           "roleTitle": { "type": "string", "nullable": true },
           "score": { "type": "number", "nullable": true },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Id of the outlier group this outlier belongs to. Every outlier always belongs to exactly one group."
+          },
+          "groupName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the outlier group this outlier belongs to. Denormalized from the group for convenient client-side grouping/labeling."
+          },
           "reason": {
             "type": "string",
             "nullable": true,
-            "description": "Null only when the parent report has `status = POSTPONED`. Otherwise required and non-empty."
+            "description": "Explanation shared by the group. Denormalized from the outlier group — every outlier in the same group carries the same value. Null only while the parent report has `status = POSTPONED`."
           },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
@@ -4165,7 +4982,7 @@
             "description": "Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time."
           }
         },
-        "required": ["id", "reportEmployeeId"]
+        "required": ["id", "reportEmployeeId", "groupId"]
       },
       "GetReportOutliersResponseDto": {
         "type": "object",

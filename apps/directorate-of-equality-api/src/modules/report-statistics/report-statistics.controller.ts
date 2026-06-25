@@ -109,7 +109,7 @@ export class ReportStatisticsController {
     operationId: 'getBenefitsBreakdown',
     include404: true,
     description:
-      'Average bonus salary (viðbótarlaun) and additional salary (aukagreiðslur) by gender. ' +
+      'Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. ' +
       'Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.',
     type: BenefitsBreakdownDto,
   })

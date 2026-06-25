@@ -12,6 +12,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
@@ -39,6 +40,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ParsedStepAssignmentDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
@@ -73,6 +75,8 @@ export class ReportCreateService implements IReportCreateService {
     private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
     @InjectModel(ReportEmployeeOutlierModel)
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
+    @InjectModel(ReportOutlierGroupModel)
+    private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
     @InjectModel(ReportCriterionModel)
     private readonly reportCriterionModel: typeof ReportCriterionModel,
     @InjectModel(ReportSubCriterionModel)
@@ -114,8 +118,11 @@ export class ReportCreateService implements IReportCreateService {
 
     const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
-    this.assertOutliersReferenceParsedEmployees(input)
-    await this.assertOutliersMatchDetectedOutliers(input, employeeScores)
+    const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
+      input,
+      employeeScores,
+    )
+    this.assertOutlierGroupsMatchDetected(input, detectedOrdinals)
 
     await this.assertEqualityReportApproved(input.equalityReportId)
 
@@ -233,8 +240,12 @@ export class ReportCreateService implements IReportCreateService {
         startDate: employee.startDate,
         workRatio: employee.workRatio,
         baseSalary: employee.baseSalary,
-        additionalSalary: employee.additionalSalary,
-        bonusSalary: employee.bonusSalary,
+        additionalFixedOvertime: employee.additionalFixedOvertime,
+        additionalFixedCarAllowance: employee.additionalFixedCarAllowance,
+        bonusOccasionalCarAllowance: employee.bonusOccasionalCarAllowance,
+        bonusOccasionalOvertime: employee.bonusOccasionalOvertime,
+        bonusPayments: employee.bonusPayments,
+        bonusOther: employee.bonusOther,
         gender: employee.gender,
         reportEmployeeRoleId: this.requireRoleId(
           roleTitleToId,
@@ -256,33 +267,57 @@ export class ReportCreateService implements IReportCreateService {
       await this.personalStepModel.bulkCreate(personalStepRows)
     }
 
-    // 8. Salary outliers — only employees the company flagged
-    //    via the outlier-preview flow get a row here. When the report is
-    //    postponed (status = POSTPONED), every row's explanation columns
-    //    are written as NULL; the applicant fills them in later via
-    //    PUT /application/reports/:providerId/outliers.
-    if (input.outliers && input.outliers.length > 0) {
+    // 8. Outlier groups + outlier rows. Every detected outlier belongs to
+    //    exactly one group (group_id NOT NULL):
+    //      - postponed → one default group with a NULL explanation covering
+    //        every detected outlier; the applicant fills it in (or splits it)
+    //        later via PUT /application/reports/:providerId/outliers.
+    //      - not postponed → the groups the company defined; the union of
+    //        their ordinals covers the detected set exactly (validated above).
+    if (detectedOrdinals.length > 0) {
       const employeeOrdinalToId = new Map<number, string>()
       input.parsed.employees.forEach((employee, index) => {
         employeeOrdinalToId.set(employee.ordinal, employeeRows[index].id)
       })
 
-      await this.reportEmployeeOutlierModel.bulkCreate(
-        input.outliers.map((outlier) => ({
-          // Pre-flight already verified every ordinal resolves.
-          reportEmployeeId: employeeOrdinalToId.get(
-            outlier.employeeOrdinal,
-          ) as string,
-          reason: outliersPostponed ? null : (outlier.reason ?? null),
-          action: outliersPostponed ? null : (outlier.action ?? null),
-          signatureName: outliersPostponed
-            ? null
-            : (outlier.signatureName ?? null),
-          signatureRole: outliersPostponed
-            ? null
-            : (outlier.signatureRole ?? null),
-        })),
-      )
+      const groupsToCreate = outliersPostponed
+        ? [
+            {
+              name: DEFAULT_OUTLIER_GROUP_NAME,
+              reason: null,
+              action: null,
+              signatureName: null,
+              signatureRole: null,
+              employeeOrdinals: detectedOrdinals,
+            },
+          ]
+        : (input.outlierGroups ?? []).map((group) => ({
+            name: group.name?.trim() || DEFAULT_OUTLIER_GROUP_NAME,
+            reason: group.reason,
+            action: group.action,
+            signatureName: group.signatureName,
+            signatureRole: group.signatureRole,
+            employeeOrdinals: group.employeeOrdinals,
+          }))
+
+      for (const group of groupsToCreate) {
+        const groupRow = await this.reportOutlierGroupModel.create({
+          reportId: report.id,
+          name: group.name,
+          reason: group.reason,
+          action: group.action,
+          signatureName: group.signatureName,
+          signatureRole: group.signatureRole,
+        })
+
+        await this.reportEmployeeOutlierModel.bulkCreate(
+          group.employeeOrdinals.map((ordinal: number) => ({
+            // Validation above guarantees every ordinal resolves.
+            reportEmployeeId: employeeOrdinalToId.get(ordinal) as string,
+            groupId: groupRow.id,
+          })),
+        )
+      }
     }
 
     // 9. Persisted snapshot — reviewers need the computed aggregates available
@@ -589,47 +624,17 @@ export class ReportCreateService implements IReportCreateService {
     )
   }
 
-/**
-   * Each `outliers[].employeeOrdinal` must match an `ordinal` in the parsed
-   * employees array. The submit-side guard below verifies the submitted set
-   * against the canonical regression-based detection result.
-   */
-  private assertOutliersReferenceParsedEmployees(input: CreateReportDto) {
-    if (!input.outliers || input.outliers.length === 0) {
-      return
-    }
-    const knownOrdinals = new Set(input.parsed.employees.map((e) => e.ordinal))
-    for (const outlier of input.outliers) {
-      if (!knownOrdinals.has(outlier.employeeOrdinal)) {
-        throw new BadRequestException(
-          `Outlier references unknown employee ordinal ${outlier.employeeOrdinal}`,
-        )
-      }
-    }
-  }
-
   /**
-   * Submit-side outlier guard. Recomputes the canonical outlier set with
-   * `detectOutliers` (same helper the application-side preview uses) and
-   * asserts:
-   *
-   * - Every detected outlier has an `outliers[]` row. Missing rows reject —
-   *   postponement is acknowledgement-with-deferred-explanation, not skip-
-   *   the-row.
-   * - Every `outliers[]` row references a detected outlier. Extras reject.
-   * - When `outliersPostponed` is false, every row has all four explanation
-   *   columns filled. When true, explanation fields are ignored.
-   *
-   * Threshold is re-read from `config` here, so a tiny drift between preview
-   * and submit is possible — rejection in that case just means "re-run
-   * preview".
+   * Recompute the canonical detected outlier set with `detectOutliers` (the
+   * same helper the application-side preview uses) and return the detected
+   * ordinals. Threshold is re-read from `config` here, so a tiny drift between
+   * preview and submit is possible — a downstream rejection in that case just
+   * means "re-run preview".
    */
-  private async assertOutliersMatchDetectedOutliers(
+  private async computeDetectedOutlierOrdinals(
     input: CreateReportDto,
     employeeScores: number[],
-  ) {
-    const submittedOutliers = input.outliers ?? []
-    const outliersPostponed = input.outliersPostponed ?? false
+  ): Promise<number[]> {
     const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
 
     const detected = detectOutliers({
@@ -643,52 +648,70 @@ export class ReportCreateService implements IReportCreateService {
       thresholdPercent,
     })
 
-    const detectedOrdinals = new Set(detected.map((d) => d.ordinal))
-    const submittedOrdinals = new Set(
-      submittedOutliers.map((o) => o.employeeOrdinal),
-    )
+    return detected.map((d) => d.ordinal)
+  }
 
-    if (outliersPostponed && detectedOrdinals.size === 0) {
-      throw new BadRequestException(
-        'Cannot postpone outlier explanations because this salary report has no detected outliers.',
-      )
-    }
-
-    const extras = [...submittedOrdinals].filter(
-      (ordinal) => !detectedOrdinals.has(ordinal),
-    )
-    if (extras.length > 0) {
-      throw new BadRequestException(
-        `Outlier row(s) submitted for non-outlier employee ordinal(s): ${extras.join(', ')}`,
-      )
-    }
-
-    const missing = [...detectedOrdinals].filter(
-      (ordinal) => !submittedOrdinals.has(ordinal),
-    )
-    if (missing.length > 0) {
-      throw new BadRequestException(
-        `Detected outlier(s) missing acknowledgement for employee ordinal(s): ${missing.join(', ')}`,
-      )
-    }
+  /**
+   * Submit-side outlier-group guard, given the canonical detected ordinals:
+   *
+   * - Postponed: there must be at least one detected outlier (can't postpone
+   *   nothing). `outlierGroups` is ignored — a single default group with a NULL
+   *   explanation is created at persist time.
+   * - Not postponed: the union of every group's `employeeOrdinals` must cover
+   *   the detected set exactly — no extras, no missing, and no ordinal in two
+   *   groups. Explanation completeness (all four fields non-empty) is enforced
+   *   by the DTO.
+   */
+  private assertOutlierGroupsMatchDetected(
+    input: CreateReportDto,
+    detectedOrdinals: number[],
+  ) {
+    const outliersPostponed = input.outliersPostponed ?? false
+    const detectedSet = new Set(detectedOrdinals)
 
     if (outliersPostponed) {
+      if (detectedSet.size === 0) {
+        throw new BadRequestException(
+          'Cannot postpone outlier explanations because this salary report has no detected outliers.',
+        )
+      }
       return
     }
 
-    for (const outlier of submittedOutliers) {
-      const missingFields = [
-        ['reason', outlier.reason],
-        ['action', outlier.action],
-        ['signatureName', outlier.signatureName],
-        ['signatureRole', outlier.signatureRole],
-      ].filter(([, value]) => !value || (value as string).length === 0)
+    const groups = input.outlierGroups ?? []
 
-      if (missingFields.length > 0) {
-        throw new BadRequestException(
-          `Outlier for employee ordinal ${outlier.employeeOrdinal} is missing required field(s): ${missingFields.map(([name]) => name).join(', ')}`,
-        )
+    if (detectedSet.size > 0 && groups.length === 0) {
+      throw new BadRequestException(
+        'This salary report has detected outliers but no outlier groups were provided.',
+      )
+    }
+
+    // Union of ordinals across all groups, rejecting any ordinal that appears
+    // in more than one group (an outlier belongs to exactly one group).
+    const submittedOrdinals = new Set<number>()
+    for (const group of groups) {
+      for (const ordinal of group.employeeOrdinals) {
+        if (submittedOrdinals.has(ordinal)) {
+          throw new BadRequestException(
+            `Employee ordinal ${ordinal} appears in more than one outlier group`,
+          )
+        }
+        submittedOrdinals.add(ordinal)
       }
+    }
+
+    const extras = [...submittedOrdinals].filter((o) => !detectedSet.has(o))
+    if (extras.length > 0) {
+      throw new BadRequestException(
+        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(', ')}`,
+      )
+    }
+
+    const missing = [...detectedSet].filter((o) => !submittedOrdinals.has(o))
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(', ')}`,
+      )
     }
   }
 

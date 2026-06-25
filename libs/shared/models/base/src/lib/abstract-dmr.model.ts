@@ -17,6 +17,15 @@ export interface AbstractDmrModelAttributes {
   id: string
 }
 
+/**
+ * Accepted by the `*OrThrow` helpers. A plain string is used as the developer
+ * message; an object additionally carries a `translatedMessage` that the HTTP
+ * exception filter forwards to the client for display.
+ */
+export type OrThrowMessage =
+  | string
+  | { message: string; translatedMessage?: string }
+
 export interface AbstractDmrModelStatic<T extends AbstractDmrModel = AbstractDmrModel>
   extends ModelStatic<T> {
   findByPkOrThrow(
@@ -27,7 +36,7 @@ export interface AbstractDmrModelStatic<T extends AbstractDmrModel = AbstractDmr
   findOneOrThrow<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
-    errorMessage?: string,
+    errorMessage?: OrThrowMessage,
   ): Promise<T>
 }
 
@@ -109,7 +118,7 @@ export abstract class AbstractDmrModel<
   static async findOneOrThrow<T extends AbstractDmrModel>(
     this: ModelStatic<T>,
     options: FindOptions<T>,
-    errorMessage?: string,
+    errorMessage?: OrThrowMessage,
   ): Promise<T> {
     const result = await this.findOne(options)
 

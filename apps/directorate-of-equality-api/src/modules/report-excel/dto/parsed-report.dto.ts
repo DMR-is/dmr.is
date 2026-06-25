@@ -110,11 +110,25 @@ export class ParsedEmployeeDto {
   @ApiNumber()
   baseSalary!: number
 
-  @ApiNumber()
-  additionalSalary!: number
+  // ── Viðbótarlaun (additional salary) sub-components ──
+  @ApiOptionalNumber({ nullable: true })
+  additionalFixedOvertime!: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  bonusSalary!: number | null
+  additionalFixedCarAllowance!: number | null
+
+  // ── Aukagreiðslur (bonus salary) sub-components ──
+  @ApiOptionalNumber({ nullable: true })
+  bonusOccasionalCarAllowance!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusOccasionalOvertime!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusPayments!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusOther!: number | null
 
   @ApiDtoArray(ParsedStepAssignmentDto)
   personalStepAssignments!: ParsedStepAssignmentDto[]

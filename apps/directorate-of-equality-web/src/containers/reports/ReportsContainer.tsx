@@ -1,6 +1,7 @@
 'use client'
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
+import { useMemo } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -73,7 +74,12 @@ const ALL_STATUS_OPTIONS: FilterOption[] = (
 ).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
-  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
+  // tab 1 is locked to SUBMITTED + POSTPONED (see SUBMITTED above); let the
+  // admin narrow to either one, but exclude every other status so they can't
+  // escape the tab's domain
+  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value).filter(
+    (v) => v !== ReportStatusEnum.SUBMITTED && v !== ReportStatusEnum.POSTPONED,
+  ),
   'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
   // tab 3 shows ONLY the three processed statuses — exclude everything else
   afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'POSTPONED'],
@@ -175,13 +181,7 @@ export const ReportsContainer = () => {
   const { data, isLoading, isError, filter, setFilter, resetFilter } =
     useReports(fixedQuery)
 
-  // Unfiltered so tab counts stay stable while user filters within a tab.
-  const { data: totalCountsData } = useQuery(
-    trpc.reports.list.queryOptions(
-      {},
-      { staleTime: 30_000, placeholderData: (prev) => prev },
-    ),
-  )
+  const totalCountsData = data?.statusCounts
 
   const needsUsers = activeTab !== 'innsendingar'
   const { data: usersData } = useQuery(
@@ -196,6 +196,15 @@ export const ReportsContainer = () => {
   const excluded = EXCLUDED_FROM_STATUS_FILTER[activeTab]
   const statusOptions = ALL_STATUS_OPTIONS.filter(
     (o) => !excluded.includes(o.value),
+  )
+
+  const dateFrom = useMemo(
+    () => (filter.createdFrom ? new Date(filter.createdFrom) : undefined),
+    [filter.createdFrom],
+  )
+  const dateTo = useMemo(
+    () => (filter.createdTo ? new Date(filter.createdTo) : undefined),
+    [filter.createdTo],
   )
 
   const handleTabChange = (tab: string) => {
@@ -219,7 +228,7 @@ export const ReportsContainer = () => {
   const filterAndTable = (expandable?: boolean) => (
     <Box paddingTop={[0, 0, 4]}>
       <GridRow>
-        <GridColumn span={['12/12', '12/12', '12/12', '3/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '4/12', '3/12']}>
           <Stack space={3}>
             <ReportFilter
               q={filter.q}
@@ -229,6 +238,8 @@ export const ReportsContainer = () => {
               reviewerUserId={filter.reviewerUserId as string[] | null}
               reviewers={needsUsers ? reviewerOptions : undefined}
               hasImprovementPlan={filter.hasImprovementPlan ?? null}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
               onQChange={(q) => setFilter({ q })}
               onTypeChange={(type) =>
                 setFilter({ type: type as typeof filter.type })
@@ -245,6 +256,18 @@ export const ReportsContainer = () => {
               onHasImprovementPlanChange={(v) =>
                 setFilter({ hasImprovementPlan: v })
               }
+              onDateFromChange={(date) => {
+                if (!date) return setFilter({ createdFrom: null })
+                const d = new Date(date)
+                d.setUTCHours(0, 0, 0, 0)
+                setFilter({ createdFrom: d.toISOString() })
+              }}
+              onDateToChange={(date) => {
+                if (!date) return setFilter({ createdTo: null })
+                const d = new Date(date)
+                d.setUTCHours(23, 59, 59, 999)
+                setFilter({ createdTo: d.toISOString() })
+              }}
               onReset={resetFilter}
             />
             {!isMobile && (
@@ -255,7 +278,7 @@ export const ReportsContainer = () => {
             )}
           </Stack>
         </GridColumn>
-        <GridColumn span={['12/12', '12/12', '12/12', '9/12']}>
+        <GridColumn span={['12/12', '12/12', '12/12', '8/12', '9/12']}>
           <Box marginLeft={[0, 0, 0, 2]}>
             <Stack space={[1, 2]}>
               <Inline space={1} alignY="center">
@@ -315,17 +338,17 @@ export const ReportsContainer = () => {
         tabs={[
           {
             id: 'innsendingar',
-            label: `${overviewText.tabInnsendingar} (${(totalCountsData?.statusCounts.submitted ?? 0) + (totalCountsData?.statusCounts.postponed ?? 0)})`,
+            label: `${overviewText.tabInnsendingar} (${(totalCountsData?.submitted ?? 0) + (totalCountsData?.postponed ?? 0)})`,
             content: filterAndTable(true),
           },
           {
             id: 'i-vinnslu',
-            label: `${overviewText.tabInProgress} (${totalCountsData?.statusCounts.inReview ?? 0})`,
+            label: `${overviewText.tabInProgress} (${totalCountsData?.inReview ?? 0})`,
             content: filterAndTable(),
           },
           {
             id: 'afgreitt',
-            label: `${overviewText.tabAfgreitt} (${totalCountsData?.statusCounts.processed ?? 0})`,
+            label: `${overviewText.tabAfgreitt} (${totalCountsData?.processed ?? 0})`,
             content: filterAndTable(),
           },
         ]}

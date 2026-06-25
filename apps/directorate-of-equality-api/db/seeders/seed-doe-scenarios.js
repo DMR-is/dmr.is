@@ -572,14 +572,16 @@ INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, re
   ('${uid(base + 75)}', '${ROLE_ADSTODARMADUR}',  '${stepIds[3]}');
 
 INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
-  start_date, work_ratio, base_salary, additional_salary, bonus_salary,
+  start_date, work_ratio, base_salary,
+  additional_fixed_overtime, additional_fixed_car_allowance,
+  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
-  ('${empIds[0]}','${reportId}',1,'MASTER',         'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,100000.00,'MALE',  '${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[1]}','${reportId}',2,'MASTER',         'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00, 80000.00,'FEMALE','${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[2]}','${reportId}',3,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00, 50000.00,'MALE',  '${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[3]}','${reportId}',4,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00, 40000.00,'FEMALE','${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[4]}','${reportId}',5,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,     NULL,'MALE',  '${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00),
-  ('${empIds[5]}','${reportId}',6,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,     NULL,'FEMALE','${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00);
+  ('${empIds[0]}','${reportId}',1,'MASTER',         'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[1]}','${reportId}',2,'MASTER',         'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[2]}','${reportId}',3,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[3]}','${reportId}',4,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[4]}','${reportId}',5,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00),
+  ('${empIds[5]}','${reportId}',6,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00);
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
@@ -592,12 +594,16 @@ INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, r
 `
 
   if (hasOutliers) {
+    const groupId = uid(base + 81)
     const exp = outliersExplained
       ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
       : `NULL, NULL, NULL, NULL`
     sql += `
-INSERT INTO report_employee_outlier (id, report_employee_id, reason, action, signature_name, signature_role)
-VALUES ('${uid(base + 80)}', '${empIds[0]}', ${exp});
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
+VALUES ('${groupId}', '${reportId}', 'Útlagar', ${exp});
+
+INSERT INTO report_employee_outlier (id, report_employee_id, group_id)
+VALUES ('${uid(base + 80)}', '${empIds[0]}', '${groupId}');
 `
   }
 
@@ -886,6 +892,8 @@ DELETE FROM report_employee_outlier
     JOIN report r ON r.id = re.report_id
     WHERE r.company_national_id LIKE '500101%'
   );
+DELETE FROM report_outlier_group
+  WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_employee_role_criterion_step
   WHERE report_sub_criterion_step_id IN (
     SELECT rscs.id FROM report_sub_criterion_step rscs

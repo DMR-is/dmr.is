@@ -18,6 +18,38 @@ export interface ICompanyEventService {
     reason?: string | null,
   ): Promise<void>
 
+  /** Records the company being flagged into the daily-fines process. */
+  emitFinesStarted(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
+  /** Records the company being cleared from the daily-fines process. */
+  emitFinesStopped(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
+  /** Records the company being quarantined (all outbound activity halted). */
+  emitQuarantined(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
+  /** Records the company's quarantine being lifted. */
+  emitUnquarantined(
+    companyId: string,
+    status: CompanyStatusEnum,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
   /** All events for a company, oldest first — used to build the timeline. */
   getByCompanyId(companyId: string): Promise<CompanyEventDto[]>
 }

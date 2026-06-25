@@ -5,6 +5,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../../core/constants'
 import type { ReportEmployeeOutlierDto } from '../dto/report-employee-outlier.dto'
 import { ReportEmployeeModel } from './report-employee.model'
+import { ReportOutlierGroupModel } from './report-outlier-group.model'
 
 /**
  * Shape of the per-employee entry on the canonical outlier analysis. Defined
@@ -26,18 +27,12 @@ export type OutlierAnalysisEntry = {
 
 type ReportEmployeeOutlierAttributes = {
   reportEmployeeId: string
-  reason: string | null
-  action: string | null
-  signatureName: string | null
-  signatureRole: string | null
+  groupId: string
 }
 
 type ReportEmployeeOutlierCreateAttributes = {
   reportEmployeeId: string
-  reason?: string | null
-  action?: string | null
-  signatureName?: string | null
-  signatureRole?: string | null
+  groupId: string
 }
 
 @MutableTable({ tableName: DoeModels.REPORT_EMPLOYEE_OUTLIER })
@@ -53,17 +48,12 @@ export class ReportEmployeeOutlierModel extends MutableModel<
   })
   reportEmployeeId!: string
 
-  @Column({ type: DataType.TEXT, allowNull: true })
-  reason!: string | null
-
-  @Column({ type: DataType.TEXT, allowNull: true })
-  action!: string | null
-
-  @Column({ type: DataType.TEXT, allowNull: true, field: 'signature_name' })
-  signatureName!: string | null
-
-  @Column({ type: DataType.TEXT, allowNull: true, field: 'signature_role' })
-  signatureRole!: string | null
+  // Every outlier always belongs to a group. When a report is submitted with
+  // outliers postponed the rows point at a single default group whose
+  // explanation fields are NULL until the applicant resolves them.
+  @ForeignKey(() => ReportOutlierGroupModel)
+  @Column({ type: DataType.UUID, allowNull: false, field: 'group_id' })
+  groupId!: string
 
   @BelongsTo(() => ReportEmployeeModel, {
     foreignKey: 'reportEmployeeId',
@@ -71,10 +61,21 @@ export class ReportEmployeeOutlierModel extends MutableModel<
   })
   reportEmployee?: ReportEmployeeModel
 
+  @BelongsTo(() => ReportOutlierGroupModel, {
+    foreignKey: 'groupId',
+    as: 'group',
+  })
+  group?: ReportOutlierGroupModel
+
   /**
-   * Project an outlier row to its DTO. The persisted row only carries the
-   * applicant's improvement-plan response (reason / action / signature). The
-   * analysis numbers (`adjustedBaseSalary`, regression prediction, score
+   * Project an outlier row to its DTO. The persisted row is a thin join
+   * `(report_employee_id, group_id)`. The improvement-plan explanation
+   * (reason / action / signature) lives on the joined group and is
+   * denormalized onto each outlier in the projection — pass the row with its
+   * `group` association loaded. While the report's outliers are still postponed
+   * the group exists but its explanation fields are null.
+   *
+   * The analysis numbers (`adjustedBaseSalary`, regression prediction, score
    * bucket, direction, etc.) live in `report_result.outlier_analysis_snapshot`
    * as the canonical "what the engine detected at submit time" — callers are
    * expected to look that up by the joined `reportEmployee.ordinal` and pass
@@ -92,10 +93,12 @@ export class ReportEmployeeOutlierModel extends MutableModel<
       gender: model.reportEmployee?.gender ?? null,
       roleTitle: model.reportEmployee?.role?.title ?? null,
       score: model.reportEmployee?.score ?? null,
-      reason: model.reason,
-      action: model.action,
-      signatureName: model.signatureName,
-      signatureRole: model.signatureRole,
+      groupId: model.groupId,
+      groupName: model.group?.name ?? null,
+      reason: model.group?.reason ?? null,
+      action: model.group?.action ?? null,
+      signatureName: model.group?.signatureName ?? null,
+      signatureRole: model.group?.signatureRole ?? null,
       adjustedBaseSalary: analysis?.adjustedBaseSalary ?? null,
       predictedBaseSalary: analysis?.predictedBaseSalary ?? null,
       scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,

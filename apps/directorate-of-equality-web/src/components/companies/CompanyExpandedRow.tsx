@@ -2,6 +2,7 @@
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
+import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
@@ -59,6 +60,28 @@ const STATUS_MAP: Record<
   SUPERSEDED: { label: sharedText.statusLabels.SUPERSEDED, variant: 'dark' },
 }
 
+const DueDate = ({
+  iso,
+  overdue,
+}: {
+  iso: string | null | undefined
+  overdue: boolean
+}) => {
+  if (!iso) return <>–</>
+  return (
+    <Inline space={1} alignY="center">
+      <Text variant="small" color={overdue ? 'red600' : undefined}>
+        {formatDate(iso)}
+      </Text>
+      {overdue && (
+        <Tag variant="red" outlined disabled>
+          {companiesText.overdueTag}
+        </Tag>
+      )}
+    </Inline>
+  )
+}
+
 const ReportStatusTag = ({ status }: { status: string }) => {
   const { label = status, variant = 'blue' } = STATUS_MAP[status] ?? {}
   return (
@@ -88,6 +111,24 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
         company.salaryReportRequired || company.salaryReportRequiredOverride
           ? 'Já'
           : 'Nei',
+    },
+    {
+      label: companiesText.expandedRow.equalityDueAt,
+      value: (
+        <DueDate
+          iso={company.nextEqualityReportDueAt}
+          overdue={company.equalityReportOverdue}
+        />
+      ),
+    },
+    {
+      label: companiesText.expandedRow.salaryDueAt,
+      value: (
+        <DueDate
+          iso={company.nextSalaryReportDueAt}
+          overdue={company.salaryReportOverdue}
+        />
+      ),
     },
     ...(contactReport
       ? [

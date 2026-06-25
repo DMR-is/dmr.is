@@ -6,12 +6,13 @@ import { NationalRegistryModule } from '@dmr.is/clients-national-registry'
 import { CompanyCommentCoreModule } from '../company-comment/company-comment.core.module'
 import { CompanyEventCoreModule } from '../company-event/company-event.core.module'
 import { CompanyModel } from './models/company.model'
+import { IsatCategoryModel } from './models/isat-category.model'
 import { CompanyService } from './company.service'
 import { ICompanyService } from './company.service.interface'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([CompanyModel]),
+    SequelizeModule.forFeature([CompanyModel, IsatCategoryModel]),
     NationalRegistryModule,
     CompanyEventCoreModule,
     CompanyCommentCoreModule,

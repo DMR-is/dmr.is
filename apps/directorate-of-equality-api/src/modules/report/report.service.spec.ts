@@ -310,7 +310,7 @@ describe('ReportService.list — filter & query building', () => {
   })
 
   describe('free-text search', () => {
-    it('adds an Op.or across identifier, contact name, contact email, company name, kennitala', async () => {
+    it('adds an Op.or across identifier, company name, kennitala (no person fields)', async () => {
       const { service, findAndCountAll } = makeService()
       findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
 
@@ -321,17 +321,17 @@ describe('ReportService.list — filter & query building', () => {
       >
 
       const orBranches = where[Op.or] as Array<Record<string, unknown>>
-      expect(orBranches).toHaveLength(5)
+      expect(orBranches).toHaveLength(3)
       const keys = orBranches.map((b) => Object.keys(b)[0])
       expect(keys).toEqual(
         expect.arrayContaining([
           'identifier',
-          'contactName',
-          'contactEmail',
           '$companyReport.name$',
           '$companyReport.national_id$',
         ]),
       )
+      expect(keys).not.toContain('contactName')
+      expect(keys).not.toContain('contactEmail')
     })
 
     it('pattern wraps the term in % on both sides', async () => {
@@ -429,7 +429,6 @@ describe('ReportService.getById', () => {
     validUntil: null,
     correctionDeadline: null,
     equalityReportContent: null,
-    finesStartedAt: null,
     reviewer: null,
     companyReport: {
       id: 'cr1',
@@ -864,10 +863,15 @@ describe('ReportService.getOutliers', () => {
   ) => ({
     id: 'outlier-1',
     reportEmployeeId: 'employee-1',
-    reason: 'Tenure premium',
-    action: 'Reviewed',
-    signatureName: 'Reviewer',
-    signatureRole: 'HR',
+    groupId: 'group-1',
+    group: {
+      id: 'group-1',
+      name: 'Tenure',
+      reason: 'Tenure premium',
+      action: 'Reviewed',
+      signatureName: 'Reviewer',
+      signatureRole: 'HR',
+    },
     reportEmployee: {
       id: 'employee-1',
       ordinal: 1,
@@ -888,16 +892,19 @@ describe('ReportService.getOutliers', () => {
       const r = this as unknown as Record<string, unknown>
       const re = r.reportEmployee as Record<string, unknown> | undefined
       const role = re?.role as Record<string, unknown> | undefined
+      const group = r.group as Record<string, unknown> | undefined
       return {
         id: r.id,
         reportEmployeeId: r.reportEmployeeId,
         employeeOrdinal: re?.ordinal ?? null,
         gender: re?.gender ?? null,
         roleTitle: role?.title ?? null,
-        reason: r.reason,
-        action: r.action,
-        signatureName: r.signatureName,
-        signatureRole: r.signatureRole,
+        groupId: r.groupId,
+        groupName: group?.name ?? null,
+        reason: group?.reason ?? null,
+        action: group?.action ?? null,
+        signatureName: group?.signatureName ?? null,
+        signatureRole: group?.signatureRole ?? null,
         adjustedBaseSalary: analysis?.adjustedBaseSalary ?? null,
         predictedBaseSalary: analysis?.predictedBaseSalary ?? null,
         scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
@@ -931,6 +938,8 @@ describe('ReportService.getOutliers', () => {
         employeeOrdinal: 1,
         roleTitle: 'Engineer',
         gender: 'FEMALE',
+        groupId: 'group-1',
+        groupName: 'Tenure',
         reason: 'Tenure premium',
         adjustedBaseSalary: 950000,
         predictedBaseSalary: 1000000,

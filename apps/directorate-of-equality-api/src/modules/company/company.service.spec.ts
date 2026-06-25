@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -13,6 +13,8 @@ import { ICompanyEventService } from '../company-event/company-event.service.int
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
+import { IsatCategoryModel } from './models/isat-category.model'
+import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
 const mockLogger = {
@@ -30,18 +32,38 @@ describe('CompanyService', () => {
   let getEntityByNationalId: jest.Mock
   let emitCreated: jest.Mock
   let emitStatusChanged: jest.Mock
+  let emitFinesStarted: jest.Mock
+  let emitFinesStopped: jest.Mock
+  let emitQuarantined: jest.Mock
+  let emitUnquarantined: jest.Mock
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
+  let isatFindByPk: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
+    isatFindByPk = jest.fn()
     getEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
+    emitFinesStarted = jest.fn()
+    emitFinesStopped = jest.fn()
+    emitQuarantined = jest.fn()
+    emitUnquarantined = jest.fn()
     eventsByCompanyId = jest.fn().mockResolvedValue([])
     commentsByCompanyId = jest.fn().mockResolvedValue([])
+
+    // `.scope('withReportStatus')` returns a scoped copy of the model; the
+    // service then calls findOne/findOneOrThrow on it. Resolve scope back to
+    // the same mock so those calls land on the shared jest.fns.
+    const companyModelMock: Record<string, unknown> = {
+      findOneOrThrow,
+      findOne,
+      create,
+    }
+    companyModelMock.scope = jest.fn(() => companyModelMock)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -53,13 +75,21 @@ describe('CompanyService', () => {
         },
         {
           provide: getModelToken(CompanyModel),
-          useValue: { findOneOrThrow, findOne, create },
+          useValue: companyModelMock,
+        },
+        {
+          provide: getModelToken(IsatCategoryModel),
+          useValue: { findByPk: isatFindByPk },
         },
         {
           provide: ICompanyEventService,
           useValue: {
             emitCreated,
             emitStatusChanged,
+            emitFinesStarted,
+            emitFinesStopped,
+            emitQuarantined,
+            emitUnquarantined,
             getByCompanyId: eventsByCompanyId,
           },
         },
@@ -86,7 +116,7 @@ describe('CompanyService', () => {
 
     expect(findOneOrThrow).toHaveBeenCalledWith(
       { where: { nationalId: '5501234567' } },
-      'Company with national id "5501234567" not found',
+      companyMessages.notFoundByNationalId('5501234567'),
     )
     expect(result).toEqual({
       id: 'company-1',
@@ -145,6 +175,15 @@ describe('CompanyService', () => {
           employeeCountCategory: CompanySizeEnum.UNKNOWN,
         }),
       )
+      // loadCompanyDto re-reads the created row through the report-status scope.
+      findOneOrThrow.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-2',
+          name: 'Registry Name ehf.',
+          nationalId: '6601234567',
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        }),
+      )
 
       const result = await service.getOrCreateByNationalId(
         '6601234567',
@@ -168,6 +207,14 @@ describe('CompanyService', () => {
       findOne.mockResolvedValue(null)
       getEntityByNationalId.mockResolvedValue({ entity: null })
       create.mockResolvedValue(
+        makeCompanyModel({
+          id: 'company-3',
+          name: 'Body-provided name',
+          nationalId: '7701234567',
+          employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        }),
+      )
+      findOneOrThrow.mockResolvedValue(
         makeCompanyModel({
           id: 'company-3',
           name: 'Body-provided name',
@@ -307,6 +354,8 @@ describe('CompanyService', () => {
           status: CompanyStatusEnum.ACTIVE,
         }),
       )
+      // loadCompanyDto re-reads the created row through the report-status scope.
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-9' }))
 
       await service.create({
         name: 'New ehf.',
@@ -362,7 +411,10 @@ describe('CompanyService', () => {
         id: 'company-1',
         status: CompanyStatusEnum.ACTIVE,
         update,
-        fromModel: () => ({ id: 'company-1', status: CompanyStatusEnum.ACTIVE }),
+        fromModel: () => ({
+          id: 'company-1',
+          status: CompanyStatusEnum.ACTIVE,
+        }),
       })
 
       await service.updateStatus(
@@ -387,6 +439,252 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(emitStatusChanged).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateFines', () => {
+    const makeFinesCompany = (finesStarted: boolean) => {
+      let current = finesStarted
+      const update = jest.fn().mockImplementation(async (values) => {
+        if ('finesStarted' in values) current = values.finesStarted
+      })
+      return {
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        get finesStarted() {
+          return current
+        },
+        update,
+        fromModel: () => ({ id: 'company-1', finesStarted: current }),
+        _update: update,
+      }
+    }
+
+    it('starts fines and emits FINES_STARTED with the reason', async () => {
+      const company = makeFinesCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateFines(
+        'company-1',
+        { finesStarted: true, reason: 'missed deadline' },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ finesStarted: true })
+      expect(emitFinesStarted).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        'missed deadline',
+      )
+      expect(emitFinesStopped).not.toHaveBeenCalled()
+      expect(result.finesStarted).toBe(true)
+    })
+
+    it('stops fines and emits FINES_STOPPED', async () => {
+      const company = makeFinesCompany(true)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateFines(
+        'company-1',
+        { finesStarted: false },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ finesStarted: false })
+      expect(emitFinesStopped).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        null,
+      )
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+    })
+
+    it('is a no-op when the flag is unchanged', async () => {
+      const company = makeFinesCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateFines('company-1', { finesStarted: false }, 'admin-1')
+
+      expect(company._update).not.toHaveBeenCalled()
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+      expect(emitFinesStopped).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateFines('missing', { finesStarted: true }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitFinesStarted).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateQuarantine', () => {
+    const makeQuarantineCompany = (quarantined: boolean) => {
+      let current = quarantined
+      const update = jest.fn().mockImplementation(async (values) => {
+        if ('quarantined' in values) current = values.quarantined
+      })
+      return {
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        get quarantined() {
+          return current
+        },
+        update,
+        fromModel: () => ({ id: 'company-1', quarantined: current }),
+        _update: update,
+      }
+    }
+
+    it('quarantines and emits QUARANTINED with the reason', async () => {
+      const company = makeQuarantineCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateQuarantine(
+        'company-1',
+        { quarantined: true, reason: 'special case' },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ quarantined: true })
+      expect(emitQuarantined).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        'special case',
+      )
+      expect(emitUnquarantined).not.toHaveBeenCalled()
+      expect(result.quarantined).toBe(true)
+    })
+
+    it('lifts quarantine and emits UNQUARANTINED', async () => {
+      const company = makeQuarantineCompany(true)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateQuarantine(
+        'company-1',
+        { quarantined: false },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ quarantined: false })
+      expect(emitUnquarantined).toHaveBeenCalledWith(
+        'company-1',
+        CompanyStatusEnum.ACTIVE,
+        'admin-1',
+        null,
+      )
+      expect(emitQuarantined).not.toHaveBeenCalled()
+    })
+
+    it('is a no-op when the flag is unchanged', async () => {
+      const company = makeQuarantineCompany(false)
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateQuarantine(
+        'company-1',
+        { quarantined: false },
+        'admin-1',
+      )
+
+      expect(company._update).not.toHaveBeenCalled()
+      expect(emitQuarantined).not.toHaveBeenCalled()
+      expect(emitUnquarantined).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateQuarantine('missing', { quarantined: true }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(emitQuarantined).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateIsat', () => {
+    it('sets a valid ÍSAT code after validating it exists', async () => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-1',
+          isatCategoryCode: null,
+          update,
+          fromModel: () => ({ id: 'company-1' }),
+        })
+        .mockResolvedValueOnce({
+          fromModel: () => ({ id: 'company-1', isatCategoryCode: '01110' }),
+        })
+      isatFindByPk.mockResolvedValue({ code: '01110' })
+
+      const result = await service.updateIsat(
+        'company-1',
+        { isatCategoryCode: '01110' },
+        'admin-1',
+      )
+
+      expect(isatFindByPk).toHaveBeenCalledWith('01110')
+      expect(update).toHaveBeenCalledWith({ isatCategoryCode: '01110' })
+      expect(result.isatCategoryCode).toBe('01110')
+    })
+
+    it('rejects an unknown ÍSAT code and does not update', async () => {
+      const update = jest.fn()
+      findOneOrThrow.mockResolvedValueOnce({
+        id: 'company-1',
+        isatCategoryCode: null,
+        update,
+        fromModel: () => ({ id: 'company-1' }),
+      })
+      isatFindByPk.mockResolvedValue(null)
+
+      await expect(
+        service.updateIsat(
+          'company-1',
+          { isatCategoryCode: 'nope' },
+          'admin-1',
+        ),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('clears the classification when passed null (no code lookup)', async () => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-1',
+          isatCategoryCode: '01110',
+          update,
+          fromModel: () => ({ id: 'company-1' }),
+        })
+        .mockResolvedValueOnce({
+          fromModel: () => ({ id: 'company-1', isatCategoryCode: null }),
+        })
+
+      const result = await service.updateIsat(
+        'company-1',
+        { isatCategoryCode: null },
+        'admin-1',
+      )
+
+      expect(isatFindByPk).not.toHaveBeenCalled()
+      expect(update).toHaveBeenCalledWith({ isatCategoryCode: null })
+      expect(result.isatCategoryCode).toBeNull()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateIsat('missing', { isatCategoryCode: '01110' }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
     })
   })
 

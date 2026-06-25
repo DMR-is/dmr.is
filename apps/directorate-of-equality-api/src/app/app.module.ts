@@ -17,6 +17,7 @@ import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
 import { CompanyEventModel } from '../modules/company/models/company-event.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
+import { IsatCategoryModel } from '../modules/company/models/isat-category.model'
 import { ConfigModel } from '../modules/config/models/config.model'
 import { PostcodeModel } from '../modules/location/models/postcode.model'
 import { RegionModel } from '../modules/location/models/region.model'
@@ -32,6 +33,7 @@ import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/re
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
+import { ReportOutlierGroupModel } from '../modules/report-employee/models/report-outlier-group.model'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
@@ -58,6 +60,7 @@ import { HealthController } from './health.controller'
             UserModel,
             RegionModel,
             PostcodeModel,
+            IsatCategoryModel,
             CompanyModel,
             ReportEmployeeRoleModel,
             ReportModel,
@@ -67,6 +70,7 @@ import { HealthController } from './health.controller'
             ReportSubCriterionStepModel,
             ReportEmployeeModel,
             ReportEmployeeOutlierModel,
+            ReportOutlierGroupModel,
             ReportEmployeeRoleCriterionStepModel,
             ReportEmployeePersonalCriterionStepModel,
             ReportResultModel,

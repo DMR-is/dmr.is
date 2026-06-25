@@ -11,6 +11,7 @@ import { ReportCoreModule } from '../report/report.core.module'
 import { ReportCommentCoreModule } from '../report-comment/report-comment.core.module'
 import { ReportCreateCoreModule } from '../report-create/report-create.core.module'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
+import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportEventCoreModule } from '../report-event/report-event.core.module'
 import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
@@ -31,6 +32,7 @@ import { IApplicationService } from './application.service.interface'
       ReportModel,
       CompanyReportModel,
       ReportEmployeeOutlierModel,
+      ReportOutlierGroupModel,
       ReportEventModel,
     ]),
   ],

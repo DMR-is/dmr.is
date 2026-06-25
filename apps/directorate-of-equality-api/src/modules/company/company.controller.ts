@@ -30,6 +30,11 @@ import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyDto } from './dto/create-company.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
+import { IsatCategoryDto } from './dto/isat-category.dto'
+import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
+import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
+import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
+import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { ICompanyService } from './company.service.interface'
 
@@ -54,6 +59,17 @@ export class CompanyController {
     @Query() query: GetCompaniesQueryDto,
   ): Promise<GetCompaniesResponseDto> {
     return this.companyService.getAll(query)
+  }
+
+  @Get('isat-categories')
+  @DoeResponse({
+    operationId: 'searchIsatCategories',
+    type: [IsatCategoryDto],
+  })
+  async searchIsatCategories(
+    @Query() query: SearchIsatCategoriesQueryDto,
+  ): Promise<IsatCategoryDto[]> {
+    return this.companyService.searchIsatCategories(query)
   }
 
   @Get('lookup/:nationalId')
@@ -89,6 +105,51 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateStatus(id, dto, admin.id)
+  }
+
+  @Patch(':id/isat')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyIsat',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateIsat(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyIsatDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateIsat(id, dto, admin.id)
+  }
+
+  @Patch(':id/fines')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyFines',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateFines(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyFinesDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateFines(id, dto, admin.id)
+  }
+
+  @Patch(':id/quarantine')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyQuarantine',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateQuarantine(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyQuarantineDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateQuarantine(id, dto, admin.id)
   }
 
   @Get(':id/timeline')

@@ -1,19 +1,28 @@
 import { Transform } from 'class-transformer'
-import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator'
+import { IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ApiOptionalEnum, ApiOptionalString } from '@dmr.is/decorators'
+import {
+  ApiOptionalArray,
+  ApiOptionalBoolean,
+  ApiOptionalEnum,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
-import { CompanySizeEnum } from '../models/company.enums'
-import { CompanyExpiryFilterEnum, CompanyStatusFilterEnum } from '../utils/filters'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+} from '../models/company.enums'
+import { CompanyExpiryFilterEnum } from '../utils/filters'
 
-export { CompanyExpiryFilterEnum, CompanyStatusFilterEnum }
+export { CompanyExpiryFilterEnum }
 
 export enum CompanySortByEnum {
   NAME = 'name',
   EMPLOYEE_COUNT = 'employeeCount',
+  NEXT_REPORT_DUE = 'nextReportDue',
 }
 
 export enum CompanySortDirectionEnum {
@@ -38,12 +47,12 @@ export class GetCompaniesQueryDto extends PagingQuery {
   employeeCountCategory?: CompanySizeEnum
 
   @ApiProperty({
-    enum: CompanyStatusFilterEnum,
-    enumName: 'CompanyStatusFilterEnum',
+    enum: CompanyReportStatusEnum,
+    enumName: 'CompanyReportStatusEnum',
     isArray: true,
     required: false,
     description:
-      'Return only companies that match at least one of the provided status values. Omit for no constraint.',
+      'Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.',
   })
   @Transform(({ value }) => {
     if (value == null) return undefined
@@ -51,8 +60,8 @@ export class GetCompaniesQueryDto extends PagingQuery {
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(CompanyStatusFilterEnum, { each: true })
-  companyStatus?: CompanyStatusFilterEnum[]
+  @IsEnum(CompanyReportStatusEnum, { each: true })
+  companyStatus?: CompanyReportStatusEnum[]
 
   @ApiProperty({
     enum: CompanyExpiryFilterEnum,
@@ -70,6 +79,72 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(CompanyExpiryFilterEnum, { each: true })
   expiresWithin?: CompanyExpiryFilterEnum[]
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies in the daily-fines process (finesStarted = true).',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  finesStarted?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only quarantined companies (quarantined = true).',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  quarantined?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, return only companies whose next equality or salary report due date has passed.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  overdue?: boolean
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. "01110").',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  isatCategoryCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies located in one of the given regions (landshluti), by region code (e.g. "CAPITAL"). Resolved via the company postcode.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  regionCode?: string[]
+
+  @ApiOptionalArray({
+    type: String,
+    isArray: true,
+    description:
+      'Return only companies with one of the given postcodes (póstnúmer, e.g. "101").',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsString({ each: true })
+  postcode?: string[]
 
   @ApiOptionalEnum(CompanySortByEnum, { enumName: 'CompanySortByEnum' })
   @IsOptional()

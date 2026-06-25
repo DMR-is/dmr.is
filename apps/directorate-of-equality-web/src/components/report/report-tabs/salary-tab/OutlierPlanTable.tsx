@@ -51,6 +51,12 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     enableSorting: true,
   },
   {
+    id: 'groupName',
+    header: o.groupHeader,
+    cell: ({ row }) => row.original.groupName ?? dash,
+    enableSorting: false,
+  },
+  {
     id: 'gender',
     header: o.genderHeader,
     accessorFn: (row) => (row.gender ? (genderMap[row.gender] ?? '') : ''),
@@ -81,6 +87,7 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
             ? `${formatSalary(row.predictedBaseSalary)} kr.`
             : null,
       },
+      { label: o.groupLabel, value: row.groupName },
       { label: o.reasonLabel, value: row.reason },
       { label: o.actionLabel, value: row.action },
       { label: o.signatureNameLabel, value: row.signatureName },
