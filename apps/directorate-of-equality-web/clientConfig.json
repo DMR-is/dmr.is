@@ -15,14 +15,8 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": { "type": "string", "format": "binary" }
-                },
-                "required": ["file"]
-              }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportKeyDto" }
             }
           }
         },
@@ -1149,14 +1143,8 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": { "type": "string", "format": "binary" }
-                },
-                "required": ["file"]
-              }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportKeyDto" }
             }
           }
         },
@@ -1216,14 +1204,8 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": { "type": "string", "format": "binary" }
-                },
-                "required": ["file"]
-              }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ImportKeyDto" }
             }
           }
         },
@@ -1274,6 +1256,59 @@
         "security": [{ "bearer": [] }],
         "summary": "",
         "tags": ["Company Import"]
+      }
+    },
+    "/api/v1/imports/presign": {
+      "post": {
+        "operationId": "presignAdminImportUpload",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignUploadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Import Upload"]
       }
     },
     "/api/v1/users/me": {
@@ -3322,6 +3357,17 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "ImportKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "S3 object key returned by the presign endpoint."
+          }
+        },
+        "required": ["key"]
+      },
       "ParsedSubCriterionStepDto": {
         "type": "object",
         "properties": {
@@ -4089,6 +4135,20 @@
           "reactivated",
           "invalid"
         ]
+      },
+      "PresignUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key the upload lands at. Pass this back to the import endpoint."
+          }
+        },
+        "required": ["url", "key"]
       },
       "UserDto": {
         "type": "object",

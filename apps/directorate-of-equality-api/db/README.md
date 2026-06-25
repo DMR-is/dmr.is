@@ -56,6 +56,8 @@ How we handle it:
 
 Company records are refreshed from an authoritative `.xlsx` register an admin uploads once a year (columns: kennitala, name, address, postcode, ÍSAT, size bucket). The file is the **source of truth**; the import reconciles `company` against it, matched on `national_id`. Endpoints run **preview → confirm**: `POST /companies/import/preview` returns the diff and writes nothing; `POST /companies/import/apply` commits in one transaction. Both return the same categorized summary so the admin UI can show exactly what happened.
 
+**Upload transport.** The `.xlsx` is **not** posted to the API. The admin first calls `POST /imports/presign` to get a short-lived presigned S3 PUT URL plus an object `key`, uploads the file straight to S3 from the browser, and then passes that `key` (not the bytes) to `preview`/`apply` — both take a JSON `{ key }` body. The API fetches the object from S3, parses it in-memory, and deletes the staged object after `apply` (preview leaves it so the same upload can be applied without re-uploading). Keys are namespaced and validated per guard boundary (`doe-imports/admin/<uuid>.xlsx`); the size cap (20 MB) is enforced after fetch. This keeps large workbooks off the API/Next request path entirely and is shared with the salary-report imports (see [Excel import transport](#excel-import-transport)).
+
 Per company:
 
 - **In file, not in DB** → created (status `ACTIVE`).
@@ -70,6 +72,26 @@ Size comes from the `LAUNAFLOKKUR` column (`50+`→`LARGE`, `25-49`→`MEDIUM`, 
 Only the status transitions the import performs (`ACTIVE→INACTIVE`, `INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
 
 > **Subject to change.** Interim design; in development. Same RSK-API caveat as above — the annual upload is expected to be replaced by a direct RSK feed eventually.
+
+## Excel import transport
+
+Every `.xlsx` import in DoE — the company register import and the salary-report imports — uses the **same presigned-S3 upload mechanism** instead of multipart POSTs through the API. The bytes never traverse the API (or the Next.js tRPC server); only an S3 object **key** does.
+
+Flow, for every importer:
+
+1. **Presign** — the client calls the boundary's presign endpoint, which returns `{ url, key }`. `url` is a presigned S3 PUT (1-hour expiry); `key` is `doe-imports/<boundary>/<uuid>.xlsx`.
+2. **Upload** — the client PUTs the file directly to `url`.
+3. **Import** — the client calls the import endpoint with a JSON `{ key }` body. The API validates the key against the caller's own boundary prefix, fetches the object from S3, enforces the 20 MB cap, and parses it in-memory.
+4. **Cleanup** — single-shot imports (and `apply`) delete the staged object after parsing; company-import `preview` keeps it so the same upload can be applied without re-uploading. A bucket lifecycle rule is the backstop for anything left behind.
+
+Two **guard boundaries**, two presign endpoints, keys namespaced so a request can only read objects staged for its own audience:
+
+- **`admin`** (`AdminGuard`) — `POST /imports/presign` feeds the admin importers: `POST /admin-report/companies/:companyId/reports/excel/import`, `POST /companies/import/preview`, `POST /companies/import/apply`, and `POST /reports/excel/import`.
+- **`application`** (`CompanyResourceGuard`) — `POST /application/reports/excel/presign` feeds the company-admin importer `POST /application/reports/excel/import`.
+
+The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; each controller only binds it to its guard. The bucket is resolved by `getDoeImportsBucket()` (env `AWS_SALARY_ANALYSIS_FILES_BUCKET`).
+
+> **Infra prerequisites.** The bucket needs (a) CORS allowing `PUT` from the web origins, or the browser upload fails, and (b) a lifecycle rule to expire `doe-imports/` objects. `AWS_SALARY_ANALYSIS_FILES_BUCKET` must be set per environment (the resolver throws if it's missing).
 
 ## Report lifecycle
 
