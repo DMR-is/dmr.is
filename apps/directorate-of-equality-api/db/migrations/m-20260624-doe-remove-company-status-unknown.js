@@ -56,15 +56,26 @@ module.exports = {
           -- (b) Repoint every column off the old type onto the rebuilt enum,
           --     then drop the old type. Runs whenever an _old type lingers —
           --     i.e. right after (a), or to finish an interrupted prior run.
+          --
           --     company.status carries a DEFAULT that must be dropped and
           --     restored around the swap.
+          --
+          --     The three company_event columns MUST be swapped in a single
+          --     ALTER TABLE. company_event_status_changed_chk compares
+          --     status = to_status; swapping them one statement at a time
+          --     leaves the columns on different enum types mid-way and Postgres
+          --     re-checks the constraint with no equality operator across the
+          --     two types ("operator does not exist: company_status_enum =
+          --     company_status_enum_old"). One statement re-checks the
+          --     constraint once, after all three are the new type.
           IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'company_status_enum_old') THEN
             ALTER TABLE company ALTER COLUMN status DROP DEFAULT;
             ALTER TABLE company ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;
             ALTER TABLE company ALTER COLUMN status SET DEFAULT 'ACTIVE';
-            ALTER TABLE company_event ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;
-            ALTER TABLE company_event ALTER COLUMN from_status TYPE company_status_enum USING from_status::text::company_status_enum;
-            ALTER TABLE company_event ALTER COLUMN to_status TYPE company_status_enum USING to_status::text::company_status_enum;
+            ALTER TABLE company_event
+              ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum,
+              ALTER COLUMN from_status TYPE company_status_enum USING from_status::text::company_status_enum,
+              ALTER COLUMN to_status TYPE company_status_enum USING to_status::text::company_status_enum;
             DROP TYPE company_status_enum_old;
           END IF;
         END $$;
