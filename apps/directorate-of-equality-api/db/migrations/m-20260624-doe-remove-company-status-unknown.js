@@ -13,46 +13,63 @@ module.exports = {
     // rename the old type, create the new one, repoint every dependent column
     // (company.status + company_event.status/from_status/to_status), then drop
     // the old type.
+    //
+    // The whole thing runs in ONE transaction and is IDEMPOTENT. None of these
+    // statements (unlike `ADD VALUE`) is restricted inside a transaction, so a
+    // failure rolls back cleanly and leaves nothing half-applied — the original
+    // unwrapped version could die mid-way, commit a partial rebuild, and then
+    // be unrunnable forever (the retry hit `invalid input value ... UNKNOWN`
+    // because the enum it needed had already been dropped). The pg_catalog
+    // guards below also let this converge from such a partial state.
+    await sql.transaction(async (transaction) => {
+      const run = (text) => sql.query(text, { transaction })
 
-    // 1. Collapse existing data while UNKNOWN is still a legal value.
-    await sql.query(
-      `UPDATE company SET status = 'INACTIVE' WHERE status = 'UNKNOWN';`,
-    )
-    await sql.query(
-      `UPDATE company_event SET status = 'INACTIVE' WHERE status = 'UNKNOWN';`,
-    )
-    await sql.query(
-      `UPDATE company_event SET from_status = 'INACTIVE' WHERE from_status = 'UNKNOWN';`,
-    )
-    await sql.query(
-      `UPDATE company_event SET to_status = 'INACTIVE' WHERE to_status = 'UNKNOWN';`,
-    )
+      // 1. Collapse any lingering UNKNOWN rows. The `::text` comparison never
+      //    coerces the literal into the enum, so it is safe whether or not
+      //    UNKNOWN is still a member (it just matches nothing once it's gone).
+      await run(`UPDATE company SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`)
+      await run(`UPDATE company_event SET status = 'INACTIVE' WHERE status::text = 'UNKNOWN';`)
+      await run(`UPDATE company_event SET from_status = 'INACTIVE' WHERE from_status::text = 'UNKNOWN';`)
+      await run(`UPDATE company_event SET to_status = 'INACTIVE' WHERE to_status::text = 'UNKNOWN';`)
 
-    // 2. Rebuild the enum without UNKNOWN.
-    await sql.query(
-      `ALTER TYPE company_status_enum RENAME TO company_status_enum_old;`,
-    )
-    await sql.query(`CREATE TYPE company_status_enum AS ENUM ('ACTIVE', 'INACTIVE');`)
+      // 2. Converge the enum to ('ACTIVE','INACTIVE') and repoint every
+      //    dependent column. Handles a fresh DB, an already-applied DB, and a
+      //    DB left half-rebuilt by an earlier interrupted run.
+      await run(`
+        DO $$
+        BEGIN
+          -- (a) If the live enum still has UNKNOWN, rename it aside and build a
+          --     clean one. A stray _old here means an earlier run left an
+          --     inconsistent state we shouldn't silently steamroll.
+          IF EXISTS (
+            SELECT 1 FROM pg_enum e
+              JOIN pg_type t ON t.oid = e.enumtypid
+            WHERE t.typname = 'company_status_enum' AND e.enumlabel = 'UNKNOWN'
+          ) THEN
+            IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'company_status_enum_old') THEN
+              RAISE EXCEPTION 'company_status_enum_old already exists alongside a live UNKNOWN enum; resolve partial migration state manually';
+            END IF;
+            ALTER TYPE company_status_enum RENAME TO company_status_enum_old;
+            CREATE TYPE company_status_enum AS ENUM ('ACTIVE', 'INACTIVE');
+          END IF;
 
-    // 3. Repoint every dependent column. company.status carries a DEFAULT that
-    //    must be dropped before the type swap and restored after.
-    await sql.query(`ALTER TABLE company ALTER COLUMN status DROP DEFAULT;`)
-    await sql.query(
-      `ALTER TABLE company ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;`,
-    )
-    await sql.query(`ALTER TABLE company ALTER COLUMN status SET DEFAULT 'ACTIVE';`)
-    await sql.query(
-      `ALTER TABLE company_event ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;`,
-    )
-    await sql.query(
-      `ALTER TABLE company_event ALTER COLUMN from_status TYPE company_status_enum USING from_status::text::company_status_enum;`,
-    )
-    await sql.query(
-      `ALTER TABLE company_event ALTER COLUMN to_status TYPE company_status_enum USING to_status::text::company_status_enum;`,
-    )
-
-    // 4. Drop the old type.
-    await sql.query(`DROP TYPE company_status_enum_old;`)
+          -- (b) Repoint every column off the old type onto the rebuilt enum,
+          --     then drop the old type. Runs whenever an _old type lingers —
+          --     i.e. right after (a), or to finish an interrupted prior run.
+          --     company.status carries a DEFAULT that must be dropped and
+          --     restored around the swap.
+          IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'company_status_enum_old') THEN
+            ALTER TABLE company ALTER COLUMN status DROP DEFAULT;
+            ALTER TABLE company ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;
+            ALTER TABLE company ALTER COLUMN status SET DEFAULT 'ACTIVE';
+            ALTER TABLE company_event ALTER COLUMN status TYPE company_status_enum USING status::text::company_status_enum;
+            ALTER TABLE company_event ALTER COLUMN from_status TYPE company_status_enum USING from_status::text::company_status_enum;
+            ALTER TABLE company_event ALTER COLUMN to_status TYPE company_status_enum USING to_status::text::company_status_enum;
+            DROP TYPE company_status_enum_old;
+          END IF;
+        END $$;
+      `)
+    })
   },
 
   async down(queryInterface) {
