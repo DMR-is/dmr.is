@@ -124,6 +124,24 @@ export function timelineEntryText(
     )
   }
 
+  // Company-specific event types are cast as `never` in the adapter but
+  // arrive as plain strings at runtime.
+  const eventTypeStr = eventType as unknown as string
+  const COMPANY_EVENT_LABELS: Record<string, string> = {
+    FINES_STARTED: reportText.timeline.finesStarted,
+    FINES_STOPPED: reportText.timeline.finesStopped,
+    QUARANTINED: reportText.timeline.companyQuarantined,
+    UNQUARANTINED: reportText.timeline.companyUnquarantined,
+  }
+  if (eventTypeStr in COMPANY_EVENT_LABELS) {
+    return (
+      <>
+        {actorName && <Bold>{actorName} </Bold>}
+        {COMPANY_EVENT_LABELS[eventTypeStr]}
+      </>
+    )
+  }
+
   const FALLBACK: Partial<Record<ReportEventTypeEnum, string>> = {
     [ReportEventTypeEnum.SUPERSEDED]: reportText.timeline.superseded,
   }

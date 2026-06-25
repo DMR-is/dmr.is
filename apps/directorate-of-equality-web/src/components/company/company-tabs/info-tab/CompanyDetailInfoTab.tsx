@@ -29,25 +29,17 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
             label: d.employeeCount,
             children: COMPANY_SIZE_LABEL[company.employeeCountCategory],
           },
-          {
-            label: d.companyAdminGender,
-            children: 'TODO', //company.adminGender,
-          },
+
           {
             label: d.address,
-            children: 'TODO', //company.address,
+            children: company.address,
           },
-          {
-            label: d.city,
-            children: 'TODO', //company.city,
-          },
-          {
-            label: d.province,
-            children: 'TODO', //company.province,
-          },
+
           {
             label: d.fines,
-            children: 'TODO', //company.fines,
+            children: company.finesStarted
+              ? sharedText.yesLabel
+              : sharedText.noLabel,
           },
         ]}
       />

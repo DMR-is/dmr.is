@@ -6,17 +6,21 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+
+import { AlertMessage } from '@island.is/island-ui/core'
 
 import {
   REPORT_STATUS_LABEL,
   REPORT_STATUS_TAG_VARIANT,
 } from '../../components/companies/companyStatus'
-import { CompanyTimeline } from '../../components/company/company-timeline/CompanyTimeline'
 import { CompanyDto } from '../../gen/fetch'
-import { useStartFines } from '../../hooks/useStartFines'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, headerText } from '../../lib/text'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { CompanyTabsContainer } from './CompanyTabsContainer'
+
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
 
@@ -25,7 +29,19 @@ type CompanyFormContainerProps = {
 }
 
 export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
-  const startFines = useStartFines()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+
+  const startFines = useMutation({
+    ...trpc.company.updateFines.mutationOptions(),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+      toast.success(
+        variables.finesStarted ? t.finesStartedToast : t.finesStoppedToast,
+      )
+    },
+    onError: () => toast.error(t.finesErrorToast),
+  })
 
   return (
     <Box
@@ -62,18 +78,47 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
               </Tag>
             </Box>
           </Box>
-          <Box marginBottom={4}>
-            <Button
-              size="small"
-              variant="text"
-              colorScheme="destructive"
-              icon="gavel"
-              iconType="outline"
-              onClick={() => startFines.mockSuccess()}
-            >
-              {t.finesButton}
-            </Button>
-          </Box>
+          {company.quarantined && (
+            <Box marginBottom={4}>
+              <AlertMessage type="warning" title={t.quarantinedAlert} />
+            </Box>
+          )}
+          {company.finesStarted && (
+            <Box marginBottom={4}>
+              <AlertMessage type="warning" title={t.finesAlert} />
+              <Box marginTop={1}>
+                <Button
+                  size="small"
+                  variant="text"
+                  colorScheme="destructive"
+                  icon="close"
+                  iconType="outline"
+                  loading={startFines.isPending}
+                  onClick={() =>
+                    startFines.mutate({ id: company.id, finesStarted: false })
+                  }
+                >
+                  {t.finesStopButton}
+                </Button>
+              </Box>
+            </Box>
+          )}
+          {!company.finesStarted && (
+            <Box marginBottom={4}>
+              <Button
+                size="small"
+                variant="text"
+                colorScheme="destructive"
+                icon="gavel"
+                iconType="outline"
+                onClick={() =>
+                  startFines.mutate({ id: company.id, finesStarted: true })
+                }
+              >
+                {t.finesButton}
+              </Button>
+            </Box>
+          )}
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />

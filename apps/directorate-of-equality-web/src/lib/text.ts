@@ -219,6 +219,10 @@ export const reportText = {
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
+    finesStarted: 'hefur hafið dagsektarferli',
+    finesStopped: 'hefur stöðvað dagsektarferli',
+    companyQuarantined: 'hefur sett fyrirtækið í sóttkví',
+    companyUnquarantined: 'hefur tekið fyrirtækið úr sóttkví',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
@@ -310,9 +314,20 @@ export const companiesText = {
     sidebarTitle: 'Staða fyrirtækis',
     statusLabel: 'Staða',
     finesButton: 'Hefja dagsektir',
+    finesStopButton: 'Stöðva dagsektarferli',
     noReports: 'Engar skýrslur skráðar',
     reportsLoadError: 'Villa við að hlaða skýrslur',
     noCompany: 'Fyrirtæki fannst ekki',
+    finesStartedToast: 'Dagsektarferli hafið',
+    finesStoppedToast: 'Dagsektarferli stöðvað',
+    finesErrorToast: 'Villa við að uppfæra dagsektir',
+    quarantinedAlert: 'Fyrirtækið er í sóttkví',
+    quarantinedReasonAlertMessage:
+      'Fyrirtækið hefur verið sett í sóttkví vegna: ',
+    finesAlert: 'Fyrirtækið er í dagsektarferli',
+    finesAlertReasonAlertMessage:
+      'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
     comments: {
       label: 'Athugasemdir',
       placeholder: 'Bættu við athugasemd',
