@@ -7,7 +7,10 @@ import {
   IReindexRunnerService,
   ReindexStatus,
 } from './reindex-runner.service.interface'
-import { UpdateAdvertInIndexRes } from './types'
+import {
+  UpdateAdvertInIndexRes,
+  UpdatePartyAdvertsInIndexRes,
+} from './types'
 
 @Injectable()
 export class MockRunnerService implements IReindexRunnerService {
@@ -24,6 +27,11 @@ export class MockRunnerService implements IReindexRunnerService {
     throw new Error('Method not implemented.')
   }
   updateItemInIndex(advertId?: string): Promise<UpdateAdvertInIndexRes> {
+    throw new Error('Method not implemented.')
+  }
+  updatePartyAdvertsInIndex(
+    involvedPartyId?: string,
+  ): Promise<UpdatePartyAdvertsInIndexRes> {
     throw new Error('Method not implemented.')
   }
   deleteItemFromIndex(advertId?: string): Promise<UpdateAdvertInIndexRes> {

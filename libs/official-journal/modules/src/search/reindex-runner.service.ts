@@ -1,5 +1,7 @@
 // reindex-runner.service.ts
 
+import { WhereOptions } from 'sequelize'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectModel } from '@nestjs/sequelize'
@@ -25,7 +27,11 @@ import {
   advertMappingTemplate,
   getAdvertSettingsTemplate,
 } from './search.template'
-import { SearchAdvertType, UpdateAdvertInIndexRes } from './types'
+import {
+  SearchAdvertType,
+  UpdateAdvertInIndexRes,
+  UpdatePartyAdvertsInIndexRes,
+} from './types'
 
 const LOGGING_CONTEXT = 'ReindexRunnerService'
 const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
@@ -158,6 +164,38 @@ export class ReindexRunnerService implements IReindexRunnerService {
     return { advertId, success: true }
   }
 
+  /**
+   * Re-indexes every advert belonging to an involved party. Used when the
+   * party's denormalized fields (e.g. title) change. Pages through the adverts
+   * and bulk-indexes them into the live alias, refreshing once at the end —
+   * far cheaper than a delete+index+refresh per advert when a party is tied to
+   * many adverts.
+   */
+  async updatePartyAdvertsInIndex(
+    involvedPartyId: string,
+  ): Promise<UpdatePartyAdvertsInIndexRes> {
+    try {
+      const total = await this.search.bulkIndex(
+        INDEX_ALIAS,
+        this.pagedAdverts(50, Infinity, { involvedPartyId }),
+        50,
+      )
+      await this.search.refreshIndex(INDEX_ALIAS)
+
+      this.logger.info(
+        `Reindexed ${total} adverts for involved party ${involvedPartyId}`,
+        { context: LOGGING_CONTEXT },
+      )
+      return { involvedPartyId, total, success: true }
+    } catch (e) {
+      this.logger.error(
+        `Failed to reindex adverts for involved party ${involvedPartyId}: ${e}`,
+        { context: LOGGING_CONTEXT },
+      )
+      return { involvedPartyId, total: 0, success: false }
+    }
+  }
+
   private advertToDoc(a: AdvertModel): SearchAdvertType {
     return {
       ...advertMigrateLean(a),
@@ -166,7 +204,11 @@ export class ReindexRunnerService implements IReindexRunnerService {
     }
   }
 
-  private async *pagedAdverts(pageSize = 50, maxDocs = Infinity) {
+  private async *pagedAdverts(
+    pageSize = 50,
+    maxDocs = Infinity,
+    where: WhereOptions = {},
+  ) {
     let offset = 0,
       emitted = 0
     while (emitted < maxDocs) {
@@ -174,6 +216,7 @@ export class ReindexRunnerService implements IReindexRunnerService {
       const rows = await this.advertModel.findAll({
         offset,
         include,
+        where,
         limit: Math.min(pageSize, maxDocs - emitted),
         order: [['id', 'ASC']],
         attributes: [
