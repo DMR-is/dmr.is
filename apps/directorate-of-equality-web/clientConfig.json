@@ -4973,6 +4973,14 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
           },
+          "companyFinesStarted": {
+            "type": "boolean",
+            "description": "Daily-fines flag. `true` means the company is currently in the daily-fines process."
+          },
+          "companyQuarantined": {
+            "type": "boolean",
+            "description": "Quarantine flag. `true` means the company is currently quarantined."
+          },
           "includesImprovementPlan": {
             "type": "boolean",
             "description": "True when the report has at least one employee outlier. The full list is fetched separately via `GET /reports/:id/outliers`."
@@ -4989,6 +4997,8 @@
           "equalityReport",
           "timeline",
           "roleResults",
+          "companyFinesStarted",
+          "companyQuarantined",
           "includesImprovementPlan"
         ]
       },

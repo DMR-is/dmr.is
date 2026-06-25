@@ -134,6 +134,7 @@ type ReportCreateAttributes = {
         as: 'companyReport',
         required: true,
         where: { parentCompanyId: null },
+        include: [{ model: CompanyModel, as: 'company', required: false }],
       },
       { model: UserModel, as: 'reviewer', required: false },
       {

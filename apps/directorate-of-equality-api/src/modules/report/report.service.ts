@@ -244,6 +244,9 @@ export class ReportService implements IReportService {
       timeline,
       result,
       roleResults,
+      companyFinesStarted:
+        report.companyReport.company?.finesStarted ?? false,
+      companyQuarantined: report.companyReport.company?.quarantined ?? false,
       includesImprovementPlan,
     }
   }
