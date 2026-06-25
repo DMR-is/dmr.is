@@ -6,6 +6,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 
@@ -15,7 +16,7 @@ import {
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
 import { NAV_PATHS } from '../../lib/constants'
-import { companiesText, sharedText } from '../../lib/text'
+import { companiesText, overviewText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
@@ -88,6 +89,29 @@ export const CompanyTable = ({
             })
           }
           return <TableCell items={items} />
+        },
+      },
+      {
+        id: 'companyStatus',
+        header: () => null,
+        size: 40,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const { quarantined, finesStarted } = row.original
+          if (!quarantined && !finesStarted) return null
+          const text = quarantined
+            ? overviewText.companyQuarantined
+            : overviewText.companyFinesStarted
+          return (
+            <Box display="flex" justifyContent="center" alignItems="center">
+              <Tooltip
+                text={text}
+                placement="left"
+                color="blue400"
+                iconSize="medium"
+              />
+            </Box>
+          )
         },
       },
     ],

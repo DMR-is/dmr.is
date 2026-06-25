@@ -55,7 +55,7 @@ export const overviewText = {
   resultsText: 'færslur fundust',
   noComments: 'Engar athugasemdir',
   waitingForAction: 'Beðið svara',
-  companyQuarantined: 'Fyrirtæki er í var',
+  companyQuarantined: 'Fyrirtæki er í vari',
   companyFinesStarted: 'Fyrirtæki er í dagsektarferli',
   openAdmin: 'Opna ritjstjórn',
   filter: {

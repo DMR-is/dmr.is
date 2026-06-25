@@ -47,7 +47,7 @@ export const OVERDUE_FILTER_OPTIONS = [
 ]
 
 export const QUARANTINE_FILTER_OPTIONS = [
-  { value: 'quarantined', label: 'Í sóttkví' },
+  { value: 'quarantined', label: 'Fyrirtæki er í var' },
 ]
 
 export const PAGE_SIZE = 10
