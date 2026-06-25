@@ -11,6 +11,7 @@ import {
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
+import { CompanyModel } from '../../company/models/company.model'
 import { CompanyReportModel } from '../../company/models/company-report.model'
 import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
 import { ReportResultModel } from '../../report-result/models/report-result.model'
@@ -119,6 +120,7 @@ type ReportCreateAttributes = {
         as: 'companyReport',
         required: false,
         where: { parentCompanyId: null },
+        include: [{ model: CompanyModel, as: 'company', required: false }],
       },
       { model: UserModel, as: 'reviewer', required: false },
     ],
@@ -395,6 +397,8 @@ export class ReportModel extends MutableModel<
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,
+      companyFinesStarted: model.companyReport?.company?.finesStarted ?? false,
+      companyQuarantined: model.companyReport?.company?.quarantined ?? false,
       waitingForAction,
       includesImprovementPlan,
       createdAt: model.createdAt,

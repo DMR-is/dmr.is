@@ -4399,6 +4399,14 @@
             "nullable": true,
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
+          "companyFinesStarted": {
+            "type": "boolean",
+            "description": "Daily-fines flag. `true` means the company is currently in the daily-fines process."
+          },
+          "companyQuarantined": {
+            "type": "boolean",
+            "description": "Quarantine flag. `true` means the company is currently quarantined."
+          },
           "waitingForAction": {
             "type": "boolean",
             "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
@@ -4430,6 +4438,8 @@
           "id",
           "type",
           "status",
+          "companyFinesStarted",
+          "companyQuarantined",
           "waitingForAction",
           "includesImprovementPlan"
         ]

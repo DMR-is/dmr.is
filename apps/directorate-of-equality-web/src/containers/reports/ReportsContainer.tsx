@@ -123,6 +123,8 @@ function mapReportToCase(report: ReportListItemDto): Case {
     isatCode: report.companyIsatCategory ?? unknown,
     employeeCount: report.companyEmployeeCountCategory ?? unknown,
     waitingForAction: report.waitingForAction ?? false,
+    companyFinesStarted: report.companyFinesStarted ?? false,
+    companyQuarantined: report.companyQuarantined ?? false,
   }
 }
 
@@ -137,7 +139,31 @@ const commentsColumn: ColumnDef<Case> = {
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip
           text={overviewText.waitingForAction}
-          placement="right"
+          placement="left"
+          color="blue400"
+          iconSize="medium"
+        />
+      </Box>
+    )
+  },
+}
+
+const companyStatusColumn: ColumnDef<Case> = {
+  id: 'companyStatus',
+  header: () => null,
+  size: 24,
+  enableSorting: false,
+  cell: ({ row }) => {
+    const { companyQuarantined, companyFinesStarted } = row.original
+    if (!companyQuarantined && !companyFinesStarted) return null
+    const text = companyQuarantined
+      ? overviewText.companyQuarantined
+      : overviewText.companyFinesStarted
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center">
+        <Tooltip
+          text={text}
+          placement="left"
           color="blue400"
           iconSize="medium"
         />
@@ -212,12 +238,15 @@ export const ReportsContainer = () => {
     setActiveTab(tab as TabId)
   }
 
-  const leadingColumns: ColumnDef<Case>[] =
-    activeTab === 'i-vinnslu' ? [commentsColumn] : []
+  const leadingColumns: ColumnDef<Case>[] = []
   const middleColumns: ColumnDef<Case>[] =
     activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
   const trailingColumns: ColumnDef<Case>[] =
-    activeTab !== 'innsendingar' ? [statusColumn] : []
+    activeTab === 'innsendingar'
+      ? [companyStatusColumn]
+      : activeTab === 'i-vinnslu'
+        ? [statusColumn, commentsColumn]
+        : [statusColumn]
   const allColumns = [
     ...leadingColumns,
     ...COLUMNS,

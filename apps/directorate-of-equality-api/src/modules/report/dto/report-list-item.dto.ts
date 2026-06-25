@@ -64,6 +64,18 @@ export class ReportListItemDto {
 
   @ApiBoolean({
     description:
+      'Daily-fines flag. `true` means the company is currently in the daily-fines process.',
+  })
+  companyFinesStarted!: boolean
+
+  @ApiBoolean({
+    description:
+      'Quarantine flag. `true` means the company is currently quarantined.',
+  })
+  companyQuarantined!: boolean
+
+  @ApiBoolean({
+    description:
       'True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it.',
   })
   waitingForAction!: boolean
