@@ -20,13 +20,17 @@ export interface IAWSService {
    * @param isOriginal Whether the file is the original file or additions/documents
    * @returns a presigned URL
    */
-  getPresignedUrl(key: string): Promise<ResultWrapper<PresignedUrlResponse>>
+  getPresignedUrl(
+    key: string,
+    s3Bucket?: string,
+  ): Promise<ResultWrapper<PresignedUrlResponse>>
 
   /**
    * Deletes object from S3 bucket
    * @param key The key of the object to delete
+   * @param s3Bucket Optional bucket override (defaults to the application files bucket)
    */
-  deleteObject(key: string): Promise<ResultWrapper>
+  deleteObject(key: string, s3Bucket?: string): Promise<ResultWrapper>
 
   getObject(key: string): Promise<ResultWrapper<string>>
 

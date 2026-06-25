@@ -1,35 +1,28 @@
 import {
+  Body,
   Controller,
   Get,
   Inject,
-  MaxFileSizeValidator,
-  ParseFilePipe,
   Post,
   StreamableFile,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { ParsedReportDto } from './dto/parsed-report.dto'
 import { IReportExcelService } from './report-excel.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-const ONE_MB = 1024 * 1024
-const MAX_UPLOAD_BYTES = ONE_MB * 20
 
 @Controller({
   path: 'reports/excel',
@@ -42,6 +35,8 @@ export class ReportExcelController {
   constructor(
     @Inject(IReportExcelService)
     private readonly reportExcelService: IReportExcelService,
+    @Inject(IImportUploadService)
+    private readonly importUploadService: IImportUploadService,
   ) {}
 
   @Get('template')
@@ -59,29 +54,21 @@ export class ReportExcelController {
   }
 
   @Post('import')
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: { type: 'string', format: 'binary' },
-      },
-      required: ['file'],
-    },
-  })
   @DoeResponse({
     operationId: 'importSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_BYTES })],
-      }),
-    )
-    file: Express.Multer.File,
+    @Body() body: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    return this.reportExcelService.importWorkbook(file.buffer)
+    const buffer = await this.importUploadService.fetchWorkbook(
+      body.key,
+      ImportUploadBoundary.ADMIN,
+    )
+    try {
+      return await this.reportExcelService.importWorkbook(buffer)
+    } finally {
+      await this.importUploadService.cleanup(body.key)
+    }
   }
 }

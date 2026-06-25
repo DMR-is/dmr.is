@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { ApplicationSystemCoreModule } from '../application-system/application-system.core.module'
+import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportModel } from '../report/models/report.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
@@ -15,6 +16,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
     SequelizeModule.forFeature([
       ReportModel,
       CompanyReportModel,
+      CompanyModel,
       UserModel,
       ReportOutlierGroupModel,
     ]),

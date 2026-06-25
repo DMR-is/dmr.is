@@ -18,6 +18,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 import { generatePaging } from '@dmr.is/utils-server/serverUtils'
 
+import { IReindexRunnerService } from '../search'
 import { institutionMigrate } from './migrations/institution.migrate'
 import { InstitutionModel } from './models/institution.model'
 import { IInstitutionService } from './institution.service.interface'
@@ -30,6 +31,8 @@ export class InstitutionService implements IInstitutionService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(InstitutionModel)
     private readonly institutionModel: typeof InstitutionModel,
+    @Inject(IReindexRunnerService)
+    private readonly runner: IReindexRunnerService,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -148,6 +151,14 @@ export class InstitutionService implements IInstitutionService {
         },
         { transaction: transcation },
       )
+
+      // The involved party title is denormalized into each advert's search
+      // document, so adverts referencing this institution must be re-indexed to
+      // reflect the new name. Fire-and-forget after commit: the bulk reindex
+      // must not delay the response, and the runner logs its own failures.
+      transcation.afterCommit(() => {
+        void this.runner.updatePartyAdvertsInIndex(id)
+      })
 
       await transcation.commit()
 

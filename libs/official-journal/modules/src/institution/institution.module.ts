@@ -3,6 +3,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { LoggingModule } from '@dmr.is/logging'
 
+import { OpsModule } from '../search'
 import { InstitutionModel } from './models/institution.model'
 import { InstitutionService } from './institution.service'
 import { IInstitutionService } from './institution.service.interface'
@@ -11,7 +12,11 @@ export { InstitutionController } from './controllers/institution.controller'
 export { InstitutionAdminController } from './controllers/institution-admin.controller'
 
 @Module({
-  imports: [SequelizeModule.forFeature([InstitutionModel]), LoggingModule],
+  imports: [
+    SequelizeModule.forFeature([InstitutionModel]),
+    LoggingModule,
+    OpsModule,
+  ],
   controllers: [],
   providers: [
     {

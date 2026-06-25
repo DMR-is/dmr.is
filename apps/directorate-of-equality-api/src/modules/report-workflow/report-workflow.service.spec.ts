@@ -45,6 +45,10 @@ describe('ReportWorkflowService', () => {
     findAll: jest.fn(),
   }
 
+  const companyModel = {
+    update: jest.fn(),
+  }
+
   const userModel = {
     findOne: jest.fn(),
   }
@@ -77,6 +81,7 @@ describe('ReportWorkflowService', () => {
       applicationSystemService as never,
       reportModel as never,
       companyReportModel as never,
+      companyModel as never,
       userModel as never,
       reportOutlierGroupModel as never,
     )
@@ -403,6 +408,38 @@ describe('ReportWorkflowService', () => {
       )
     })
 
+    it('advances the parent company next_salary_report_due_at to the new validUntil on a SALARY approval', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(companyModel.update).toHaveBeenCalledWith(
+        { nextSalaryReportDueAt: expect.any(Date) },
+        { where: { id: 'company-1' } },
+      )
+    })
+
+    it('advances next_equality_report_due_at (not salary) on an EQUALITY approval', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(companyModel.update).toHaveBeenCalledWith(
+        { nextEqualityReportDueAt: expect.any(Date) },
+        { where: { id: 'company-1' } },
+      )
+    })
+
     it('does not supersede approved reports of a different type (SALARY approval leaves APPROVED EQUALITY untouched)', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
@@ -451,6 +488,8 @@ describe('ReportWorkflowService', () => {
       reportOutlierGroupModel.findOne.mockResolvedValue(null)
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne
+        // advance-due-date type lookup
+        .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
         // supersede type lookup
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
         // notify provider lookup

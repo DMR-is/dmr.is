@@ -272,8 +272,9 @@ export class AWSService implements IAWSService {
   @LogAndHandle()
   async getPresignedUrl(
     key: string,
+    s3Bucket?: string,
   ): Promise<ResultWrapper<PresignedUrlResponse>> {
-    const bucket = getS3Bucket()
+    const bucket = s3Bucket || getS3Bucket()
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -292,9 +293,9 @@ export class AWSService implements IAWSService {
    * @param key The key of the object to delete.
    */
   @LogAndHandle()
-  async deleteObject(key: string): Promise<ResultWrapper> {
+  async deleteObject(key: string, s3Bucket?: string): Promise<ResultWrapper> {
     const command = new DeleteObjectCommand({
-      Bucket: getS3Bucket(),
+      Bucket: s3Bucket || getS3Bucket(),
       Key: key,
     })
 
