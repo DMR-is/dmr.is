@@ -46,6 +46,7 @@ import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
+import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
@@ -148,6 +149,19 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
     return this.applicationService.getActiveEqualityReport(company)
+  }
+
+  @Get('reports/salary/eligibility')
+  @DoeResponse({
+    operationId: 'getApplicationSalaryReportEligibility',
+    description:
+      "Pre-flight check of whether the resolved company may submit a salary report right now. Salary reports run on a 3-year cadence and may only be renewed once the current one is due in 6 months or less; this endpoint returns that verdict (with a machine-readable reason when blocked) so the application portal can gate entry into the flow. The same rule is enforced as a 409 on `POST reports/salary`.",
+    type: SalaryReportEligibilityDto,
+  })
+  async getSalaryReportEligibility(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<SalaryReportEligibilityDto> {
+    return this.applicationService.getSalaryReportEligibility(company)
   }
 
   @Post('reports/salary')
