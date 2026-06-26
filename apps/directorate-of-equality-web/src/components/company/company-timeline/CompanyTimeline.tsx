@@ -80,7 +80,10 @@ export const CompanyTimeline = ({ companyId }: Props) => {
 
   const createComment = useMutation(
     trpc.company.comments.create.mutationOptions({
-      onSuccess: invalidate,
+      onSuccess: () => {
+        invalidate()
+        setBody('')
+      },
     }),
   )
 
@@ -93,7 +96,6 @@ export const CompanyTimeline = ({ companyId }: Props) => {
   const handleSubmit = () => {
     if (!body.trim()) return
     createComment.mutate({ id: companyId, body: body.trim() })
-    setBody('')
   }
 
   const handleDelete = (commentId: string) => {

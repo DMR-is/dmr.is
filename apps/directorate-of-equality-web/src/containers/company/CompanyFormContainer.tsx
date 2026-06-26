@@ -36,6 +36,9 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
     ...trpc.company.updateFines.mutationOptions(),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
+      })
       toast.success(
         variables.finesStarted ? t.finesStartedToast : t.finesStoppedToast,
       )
@@ -111,6 +114,7 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                 colorScheme="destructive"
                 icon="gavel"
                 iconType="outline"
+                loading={startFines.isPending}
                 onClick={() =>
                   startFines.mutate({ id: company.id, finesStarted: true })
                 }
