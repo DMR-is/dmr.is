@@ -128,6 +128,19 @@ export const getS3Bucket = () =>
   process.env.AWS_APPLICATION_FILES_BUCKET ?? APPLICATION_FILES_BUCKET
 
 /**
+ * Bucket used for transient DOE Excel import uploads (presigned PUT staging).
+ * Throws if unset rather than silently falling back to the application-files
+ * bucket — these uploads must land in their own bucket.
+ */
+export const getDoeImportsBucket = () => {
+  const bucket = process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+  if (!bucket) {
+    throw new Error('AWS_SALARY_ANALYSIS_FILES_BUCKET is not set')
+  }
+  return bucket
+}
+
+/**
  * Creates the key for the application file
  * @param applicationId string
  * @param isOriginal boolean

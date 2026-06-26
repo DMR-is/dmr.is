@@ -10,6 +10,7 @@ import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
+import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
@@ -30,6 +31,7 @@ export interface IApplicationService {
   getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto>
+  getSalaryReportEligibility(company: CompanyDto): SalaryReportEligibilityDto
   getReport(
     providerId: string,
     company: CompanyDto,

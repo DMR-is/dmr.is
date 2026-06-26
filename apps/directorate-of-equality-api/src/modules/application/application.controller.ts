@@ -7,25 +7,14 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
   Post,
   Put,
   Query,
   StreamableFile,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger'
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
@@ -35,6 +24,12 @@ import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { CompanyDto } from '../company/dto/company.dto'
+import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
+import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
@@ -46,6 +41,7 @@ import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from './dto/salary-analysis.response.dto'
+import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
@@ -55,9 +51,6 @@ const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const DOCX_MIME =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-const ONE_MB = 1024 * 1024
-const MAX_UPLOAD_BYTES = ONE_MB * 20
 
 @Controller({
   path: 'application',
@@ -72,6 +65,8 @@ export class ApplicationController {
     private readonly applicationService: IApplicationService,
     @Inject(IReportExcelService)
     private readonly reportExcelService: IReportExcelService,
+    @Inject(IImportUploadService)
+    private readonly importUploadService: IImportUploadService,
   ) {}
 
   @Get('company')
@@ -95,31 +90,34 @@ export class ApplicationController {
     })
   }
 
-  @Post('reports/excel/import')
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: { type: 'string', format: 'binary' },
-      },
-      required: ['file'],
-    },
+  @Post('reports/excel/presign')
+  @DoeResponse({
+    operationId: 'presignApplicationImportUpload',
+    type: PresignUploadResponseDto,
   })
+  async presignImport(): Promise<PresignUploadResponseDto> {
+    return this.importUploadService.createUpload(
+      ImportUploadBoundary.APPLICATION,
+    )
+  }
+
+  @Post('reports/excel/import')
   @DoeResponse({
     operationId: 'importApplicationSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  @UseInterceptors(FileInterceptor('file'))
   async importWorkbook(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: MAX_UPLOAD_BYTES })],
-      }),
-    )
-    file: Express.Multer.File,
+    @Body() body: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    return this.reportExcelService.importWorkbook(file.buffer)
+    const buffer = await this.importUploadService.fetchWorkbook(
+      body.key,
+      ImportUploadBoundary.APPLICATION,
+    )
+    try {
+      return await this.reportExcelService.importWorkbook(buffer)
+    } finally {
+      await this.importUploadService.cleanup(body.key)
+    }
   }
 
   @Post('reports/salary-analysis')
@@ -148,6 +146,19 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
     return this.applicationService.getActiveEqualityReport(company)
+  }
+
+  @Get('reports/salary/eligibility')
+  @DoeResponse({
+    operationId: 'getApplicationSalaryReportEligibility',
+    description:
+      "Pre-flight check of whether the resolved company may submit a salary report right now. Salary reports run on a 3-year cadence and may only be renewed once the current one is due in 6 months or less; this endpoint returns that verdict (with a machine-readable reason when blocked) so the application portal can gate entry into the flow. The same rule is enforced as a 409 on `POST reports/salary`.",
+    type: SalaryReportEligibilityDto,
+  })
+  async getSalaryReportEligibility(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<SalaryReportEligibilityDto> {
+    return this.applicationService.getSalaryReportEligibility(company)
   }
 
   @Post('reports/salary')

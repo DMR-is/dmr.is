@@ -14,6 +14,7 @@ import type {
   CompanyImportResultDto,
   CompanyImportRowResultDto,
 } from '../../gen/fetch/types.gen'
+import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { companiesText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
@@ -69,8 +70,12 @@ export const CompanyImportModal = ({ isOpen, onClose }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [fileName, setFileName] = useState<string | null>(null)
-  const [fileBase64, setFileBase64] = useState<string | null>(null)
+  const [fileKey, setFileKey] = useState<string | null>(null)
   const [result, setResult] = useState<CompanyImportResultDto | null>(null)
+
+  const requestUploadMutation = useMutation(
+    trpc.company.requestImportUpload.mutationOptions(),
+  )
 
   const previewMutation = useMutation({
     ...trpc.company.importPreview.mutationOptions(),
@@ -90,7 +95,7 @@ export const CompanyImportModal = ({ isOpen, onClose }: Props) => {
 
   const reset = () => {
     setFileName(null)
-    setFileBase64(null)
+    setFileKey(null)
     setResult(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -100,22 +105,26 @@ export const CompanyImportModal = ({ isOpen, onClose }: Props) => {
     onClose()
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setFileName(file.name)
     setResult(null)
-    const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1]
-      setFileBase64(base64)
-      previewMutation.mutate({ file: base64 })
+    setFileKey(null)
+    try {
+      // Upload the workbook straight to S3, then preview/apply reference the
+      // same object by key (uploaded once).
+      const { url, key } = await requestUploadMutation.mutateAsync()
+      await putWorkbookToPresignedUrl(url, file)
+      setFileKey(key)
+      previewMutation.mutate({ key })
+    } catch {
+      toast.error(t.errorToast)
     }
-    reader.readAsDataURL(file)
   }
 
   const committed = !!result?.committed
-  const isLoading = previewMutation.isPending
+  const isLoading = requestUploadMutation.isPending || previewMutation.isPending
 
   return (
     <Modal
@@ -238,7 +247,7 @@ export const CompanyImportModal = ({ isOpen, onClose }: Props) => {
             <Button
               size="small"
               loading={applyMutation.isPending}
-              onClick={() => fileBase64 && applyMutation.mutate({ file: fileBase64 })}
+              onClick={() => fileKey && applyMutation.mutate({ key: fileKey })}
             >
               {t.confirm}
             </Button>

@@ -1,4 +1,4 @@
-import { UpdateAdvertInIndexRes } from './types'
+import { UpdateAdvertInIndexRes, UpdatePartyAdvertsInIndexRes } from './types'
 
 export type ReindexStatus = {
   state?: 'idle' | 'running' | 'succeeded' | 'failed'
@@ -17,6 +17,9 @@ export interface IReindexRunnerService {
 
   start(maxDocs?: number): Promise<{ jobId: number }>
   updateItemInIndex(advertId: string): Promise<UpdateAdvertInIndexRes>
+  updatePartyAdvertsInIndex(
+    involvedPartyId: string,
+  ): Promise<UpdatePartyAdvertsInIndexRes>
   deleteItemFromIndex(advertId: string): Promise<UpdateAdvertInIndexRes>
 }
 
