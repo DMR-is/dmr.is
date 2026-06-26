@@ -86,7 +86,7 @@ export const CompanyReportsTab = ({ nationalId }: Props) => {
             }
             text={
               report.createdAt
-                ? new Date(report.createdAt).toLocaleDateString()
+                ? new Date(report.createdAt).toLocaleDateString('is-IS')
                 : ''
             }
             tag={{

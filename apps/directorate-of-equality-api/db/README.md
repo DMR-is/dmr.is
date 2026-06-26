@@ -56,6 +56,8 @@ How we handle it:
 
 Company records are refreshed from an authoritative `.xlsx` register an admin uploads once a year (columns: kennitala, name, address, postcode, ÍSAT, size bucket). The file is the **source of truth**; the import reconciles `company` against it, matched on `national_id`. Endpoints run **preview → confirm**: `POST /companies/import/preview` returns the diff and writes nothing; `POST /companies/import/apply` commits in one transaction. Both return the same categorized summary so the admin UI can show exactly what happened.
 
+**Upload transport.** The `.xlsx` is **not** posted to the API. The admin first calls `POST /imports/presign` to get a short-lived presigned S3 PUT URL plus an object `key`, uploads the file straight to S3 from the browser, and then passes that `key` (not the bytes) to `preview`/`apply` — both take a JSON `{ key }` body. The API fetches the object from S3, parses it in-memory, and deletes the staged object after `apply` (preview leaves it so the same upload can be applied without re-uploading). Keys are namespaced and validated per guard boundary (`doe-imports/admin/<uuid>.xlsx`); the size cap (20 MB) is enforced after fetch. This keeps large workbooks off the API/Next request path entirely and is shared with the salary-report imports (see [Excel import transport](#excel-import-transport)).
+
 Per company:
 
 - **In file, not in DB** → created (status `ACTIVE`).
@@ -70,6 +72,26 @@ Size comes from the `LAUNAFLOKKUR` column (`50+`→`LARGE`, `25-49`→`MEDIUM`, 
 Only the status transitions the import performs (`ACTIVE→INACTIVE`, `INACTIVE→ACTIVE`) emit `company_event` rows; field edits are audited via the import summary and a structured log line, not per-company events. (A first-class import-audit table — `system_event` — is a possible future addition.)
 
 > **Subject to change.** Interim design; in development. Same RSK-API caveat as above — the annual upload is expected to be replaced by a direct RSK feed eventually.
+
+## Excel import transport
+
+Every `.xlsx` import in DoE — the company register import and the salary-report imports — uses the **same presigned-S3 upload mechanism** instead of multipart POSTs through the API. The bytes never traverse the API (or the Next.js tRPC server); only an S3 object **key** does.
+
+Flow, for every importer:
+
+1. **Presign** — the client calls the boundary's presign endpoint, which returns `{ url, key }`. `url` is a presigned S3 PUT (1-hour expiry); `key` is `doe-imports/<boundary>/<uuid>.xlsx`.
+2. **Upload** — the client PUTs the file directly to `url`.
+3. **Import** — the client calls the import endpoint with a JSON `{ key }` body. The API validates the key against the caller's own boundary prefix, fetches the object from S3, enforces the 20 MB cap, and parses it in-memory.
+4. **Cleanup** — single-shot imports (and `apply`) delete the staged object after parsing; company-import `preview` keeps it so the same upload can be applied without re-uploading. A bucket lifecycle rule is the backstop for anything left behind.
+
+Two **guard boundaries**, two presign endpoints, keys namespaced so a request can only read objects staged for its own audience:
+
+- **`admin`** (`AdminGuard`) — `POST /imports/presign` feeds the admin importers: `POST /admin-report/companies/:companyId/reports/excel/import`, `POST /companies/import/preview`, `POST /companies/import/apply`, and `POST /reports/excel/import`.
+- **`application`** (`CompanyResourceGuard`) — `POST /application/reports/excel/presign` feeds the company-admin importer `POST /application/reports/excel/import`.
+
+The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; each controller only binds it to its guard. The bucket is resolved by `getDoeImportsBucket()` (env `AWS_SALARY_ANALYSIS_FILES_BUCKET`).
+
+> **Infra prerequisites.** The bucket needs (a) CORS allowing `PUT` from the web origins, or the browser upload fails, and (b) a lifecycle rule to expire `doe-imports/` objects. `AWS_SALARY_ANALYSIS_FILES_BUCKET` must be set per environment (the resolver throws if it's missing).
 
 ## Report lifecycle
 
@@ -99,8 +121,8 @@ State-by-state:
 - **`POSTPONED`** — applies to `SALARY` reports only. The company submitted with all outliers deferred (`outliers[]` rows persisted with null explanation columns). The report is **not pickable** by reviewers — `assign()` rejects this status, `approve()` rejects this status. The applicant resolves the postponement via `PUT /api/v1/application/reports/:providerId/outliers`, which fills in the explanation fields and transitions the row to `SUBMITTED` (emitting a `STATUS_CHANGED` + an `EDITED` event). Reviewers can read the report and its content while it sits here, but cannot act on it.
 - **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.) In-place applicant edits are allowed in this state via the two PUT endpoints (equality body / outliers), each emitting an `EDITED` event; status is preserved so the reviewer keeps their pickup.
 - **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. **Terminal state.** This denied row stays as audit forever and is never mutated. The company submits afresh via the upstream application portal, which produces a new `provider_id` and a new `report` row.
-- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
-- **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
+- **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. The parent company's matching next-due column is advanced to the same `valid_until` (`next_salary_report_due_at` for a `SALARY` approval, `next_equality_report_due_at` for `EQUALITY`), keeping it the live source of truth for the renewal-window check. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
+- **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. This does **not** touch the company's `next_*_report_due_at` — that was already advanced to the new report's `valid_until` by the approval above; the superseded row is no longer the company's current obligation. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
 
 ## Outlier deadlines
 
@@ -139,6 +161,21 @@ Two resubmission triggers:
 
 1. **Denial** — reviewer denied the current submission. The denied row stays as audit forever and is never mutated. A redo always comes through as a fresh upstream application — new `provider_id` → new `report` row → fresh review queue entry. A future PUT-edit endpoint is planned to allow targeted in-place edits to a denied row after admin/applicant communication, but that is distinct from resubmission; resubmission is always a new row.
 2. **Three-year expiry** — approved report is aging out. Companies are notified ~3 months before `valid_until`. A new report is drafted and submitted. On approval, the old report transitions to `SUPERSEDED`.
+
+### Salary renewal window (the "not too early" gate)
+
+Salary reports run on a 3-year cadence, but a company may only submit a **new** salary report once its current one is **due in 6 months or less** — it cannot renew arbitrarily early. The window is measured against `company.next_salary_report_due_at`:
+
+- `next_salary_report_due_at IS NULL` (no obligation on record / first-timer) → **allowed**.
+- due date already in the past (overdue) → **allowed**.
+- due date strictly more than 6 months in the future → **blocked**.
+
+The rule is enforced two ways, both reading the same logic so they cannot drift:
+
+- **Pre-flight:** `GET /api/v1/application/reports/salary/eligibility` returns `{ eligible, reason, dueAt, earliestSubmissionDate }`. The application portal calls it to decide whether to let a company into the salary flow at all; `reason = RENEWAL_WINDOW_NOT_OPEN` when blocked.
+- **At submit:** `POST /api/v1/application/reports/salary` throws **409 Conflict** when the window isn't open. Only the company-facing portal path is gated — admin/system-created reports are not.
+
+The 6-month window is a hardcoded constant (`SALARY_RENEWAL_WINDOW_MONTHS`), matching the hardcoded 3-year validity rule.
 
 ## Provider correlation
 
@@ -212,7 +249,7 @@ No accrual table and no cron: the fines themselves live outside this system, so 
 
 ### Overdue reports (the prompt to act)
 
-So admins know **when** to consider starting the fines process, the company list surfaces overdue obligations. `company.next_equality_report_due_at` / `next_salary_report_due_at` hold each company's next due dates (seeded; nullable when there's no obligation). Two derived booleans, `equalityReportOverdue` / `salaryReportOverdue` (computed in SQL on read, not stored), are `true` when the matching due date is in the past. They drive an overdue indicator in the UI plus an `overdue` list filter and a `nextReportDue` sort, so an admin can spot a lapsed company and decide whether to flag it into the fines process.
+So admins know **when** to consider starting the fines process, the company list surfaces overdue obligations. `company.next_equality_report_due_at` / `next_salary_report_due_at` hold each company's next due dates — seeded for the launch cohort, then advanced by the approval flow (`approve()` sets them to the new report's `valid_until`); nullable when there's no obligation. Two derived booleans, `equalityReportOverdue` / `salaryReportOverdue` (computed in SQL on read, not stored), are `true` when the matching due date is in the past. They drive an overdue indicator in the UI plus an `overdue` list filter and a `nextReportDue` sort, so an admin can spot a lapsed company and decide whether to flag it into the fines process.
 
 ## Quarantine
 
@@ -231,6 +268,7 @@ The `application` module is the company-admin API surface. It reuses reviewer-si
 
 - `GET /api/v1/application/company` resolves the JWT national ID to a live `company` row.
 - `GET /api/v1/application/reports/equality/active` returns the company's active equality report: `type = EQUALITY`, `status = APPROVED`, `valid_until > now()`, joined through `company_report.company_id`. If multiple active rows exist, the service orders by `approved_at DESC` and returns the most recently approved row.
+- `GET /api/v1/application/reports/salary/eligibility` returns whether the company may submit a salary report right now (the renewal-window check — see "Salary renewal window"). Always 200; `eligible = false` with `reason = RENEWAL_WINDOW_NOT_OPEN` when the due date is more than 6 months out.
 - `POST /api/v1/application/reports/equality` and `POST /api/v1/application/reports/salary` accept application-facing bodies with one explicit `company` object for the authenticated parent and an optional `subsidiaries[]` array containing subsidiary names/national IDs. Missing or empty `subsidiaries` means no subsidiaries. The application service maps that to the internal `companies[]` snapshot shape before delegating to report-create.
 - `GET /api/v1/application/reports/:providerId` is company-facing detail, not the reviewer detail DTO. Lookup is by the upstream `(provider_type, provider_id)` tuple rather than internal `report.id` (the applicant never sees the DoE-side id). The optional `providerType` query parameter defaults to `ISLAND_IS` for the island.is application portal. The resolved company must own the parent `company_report` row (`parent_company_id IS NULL`). The response includes all participating company snapshots, external comments only, salary result/outlier data for salary reports, the linked equality summary for salary reports, equality narrative content for equality reports, and the latest denial reason when the report is `DENIED`. It does not expose the reviewer event timeline or internal comments.
 - `POST /api/v1/application/reports/:providerId/comments` posts an external comment on the applicant's own report.
@@ -380,8 +418,8 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `salary_report_required_override` | `boolean`                                           |
 | `fines_started`                   | `boolean` (default `false`)                         |
 | `quarantined`                     | `boolean` (default `false`)                         |
-| `next_equality_report_due_at`     | `timestamptz` (nullable)                            |
-| `next_salary_report_due_at`       | `timestamptz` (nullable)                            |
+| `next_equality_report_due_at`     | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each EQUALITY approval) |
+| `next_salary_report_due_at`       | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each SALARY approval; gates the salary renewal window) |
 | `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)        |
 
 `status` is `ACTIVE` while a company is in the authoritative register and `INACTIVE`

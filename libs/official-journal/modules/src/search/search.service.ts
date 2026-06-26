@@ -114,6 +114,10 @@ export class SearchService {
     }
   }
 
+  async refreshIndex(index: string) {
+    await this.os.indices.refresh({ index })
+  }
+
   async deleteItemFromIndex(id: string, index: string) {
     try {
       this.log.log(`deleting ${id} from index...`)

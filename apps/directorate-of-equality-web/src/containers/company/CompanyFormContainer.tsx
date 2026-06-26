@@ -32,13 +32,18 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const invalidateCompany = () =>
+  const invalidateCompany = () => {
     queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+    queryClient.invalidateQueries({
+      queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
+    })
+  }
 
   const updateFines = useMutation({
     ...trpc.company.updateFines.mutationOptions(),
     onSuccess: (_, variables) => {
       invalidateCompany()
+
       toast.success(
         variables.finesStarted ? t.finesStartedToast : t.finesStoppedToast,
       )

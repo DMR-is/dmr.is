@@ -31,17 +31,6 @@ export function CompanyContainer({ company }: CompanyContainerProps) {
               <CompanyFormContainer company={company} />
             </ErrorBoundary>
           </GridColumn>
-          {/* Hidden for now - decide later what should be in the sidebar */}
-          {/* <GridColumn
-            span={['12/12', '12/12', '12/12', '3/12', '3/12']}
-            order={[1, 1, 2]}
-            className="report-sidebar-column"
-          >
-            <CompanySidebarContainer
-              status={status}
-              onStatusChange={(s) => setStatus(s as typeof derivedStatus)}
-            />
-          </GridColumn> */}
         </GridRow>
       </GridContainer>
     </Box>

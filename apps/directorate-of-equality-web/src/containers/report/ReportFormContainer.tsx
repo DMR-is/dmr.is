@@ -38,6 +38,7 @@ export function ReportFormContainer({ report }: ReportFormContainerProps) {
           ]}
         />
         <Stack space={1}>
+          <Text variant="h2">{reportText.heroTitle}</Text>
           <Text variant="eyebrow" color="purple400">
             {formatDateIS(report.createdAt)}
           </Text>

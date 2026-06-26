@@ -16,6 +16,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { GenderEnum, type ParsedReportDto } from '../../gen/fetch/types.gen'
+import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
@@ -76,6 +77,10 @@ export const CreateSalaryReportDrawer = () => {
     value: c.id,
   }))
 
+  const requestUploadMutation = useMutation(
+    trpc.adminReport.requestImportUpload.mutationOptions(),
+  )
+
   const importMutation = useMutation({
     ...trpc.adminReport.importWorkbook.mutationOptions(),
     onSuccess: (data) => {
@@ -89,19 +94,21 @@ export const CreateSalaryReportDrawer = () => {
     trpc.adminReport.submitSalary.mutationOptions(),
   )
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !companyId) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1]
+    try {
+      // Upload the workbook straight to S3, then hand the object key to the API.
+      const { url, key } = await requestUploadMutation.mutateAsync()
+      await putWorkbookToPresignedUrl(url, file)
       importMutation.mutate({
         path: { companyId },
-        body: { file: base64 },
+        body: { key },
       })
+    } catch {
+      toast.error(t.excelErrorToast)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleReset = () => {
@@ -246,7 +253,7 @@ export const CreateSalaryReportDrawer = () => {
               <Button
                 variant="ghost"
                 size="small"
-                loading={importMutation.isPending}
+                loading={requestUploadMutation.isPending || importMutation.isPending}
                 disabled={!companyId}
                 onClick={() => fileInputRef.current?.click()}
               >

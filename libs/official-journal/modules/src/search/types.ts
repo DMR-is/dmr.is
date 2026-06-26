@@ -11,3 +11,9 @@ export type SearchAdvertType = AdvertLean & {
 }
 
 export type UpdateAdvertInIndexRes = { advertId: string; success: boolean }
+
+export type UpdatePartyAdvertsInIndexRes = {
+  involvedPartyId: string
+  total: number
+  success: boolean
+}
