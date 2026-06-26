@@ -33,7 +33,9 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const queryClient = useQueryClient()
 
   const invalidateCompany = () => {
-    queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+    queryClient.invalidateQueries({
+      queryKey: trpc.company.get.queryKey({ id: company.id }),
+    })
     queryClient.invalidateQueries({
       queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
     })

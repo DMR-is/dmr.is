@@ -1,24 +1,23 @@
 'use client'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { LinkV2 } from '@dmr.is/ui/components/island-is/LinkV2'
+import { SkeletonLoader } from '@dmr.is/ui/components/island-is/SkeletonLoader'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
-import {
-  type CompanyDto,
-  type ReportListItemDto,
-} from '../../gen/fetch/types.gen'
+import { type CompanyDto, ReportStatusEnum } from '../../gen/fetch/types.gen'
 import { companiesText, sharedText } from '../../lib/text'
+import { useTRPC } from '../../lib/trpc/client/trpc'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
 
 type Props = {
   company: CompanyDto
-  approvedReports: ReportListItemDto[]
 }
 
 const formatDate = (iso: string | null | undefined) => {
@@ -31,11 +30,7 @@ type FieldRow = { label: string; value: React.ReactNode }
 const FieldGrid = ({ fields }: { fields: FieldRow[] }) => (
   <div className={styles.grid}>
     {fields.map(({ label, value }) => (
-      <Box
-        key={label}
-        padding={1}
-        className={styles.item}
-      >
+      <Box key={label} padding={1} className={styles.item}>
         <Box display="flex">
           <div className={styles.label}>
             <Text variant="small" fontWeight="semiBold">
@@ -91,7 +86,20 @@ const ReportStatusTag = ({ status }: { status: string }) => {
   )
 }
 
-export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
+export const CompanyExpandedRow = ({ company }: Props) => {
+  const trpc = useTRPC()
+  const { data, isLoading } = useQuery(
+    trpc.reports.list.queryOptions(
+      {
+        q: company.nationalId,
+        status: [ReportStatusEnum.APPROVED],
+        pageSize: 100,
+      },
+      { staleTime: 30_000 },
+    ),
+  )
+
+  const approvedReports = data?.reports ?? []
   const equalityReports = approvedReports.filter((r) => r.type === 'EQUALITY')
   const salaryReports = approvedReports.filter((r) => r.type === 'SALARY')
   const contactReport = equalityReports[0] ?? salaryReports[0]
@@ -148,72 +156,73 @@ export const CompanyExpandedRow = ({ company, approvedReports }: Props) => {
     <Box background="blue100" padding={2}>
       <FieldGrid fields={companyFields} />
 
-      {(equalityReports.length > 0 || salaryReports.length > 0) && (
-        <>
-          <Box paddingY={2}>
-            <Divider />
-          </Box>
-          <Stack space={2}>
-            <Text variant="eyebrow">{sharedText.files}</Text>
-            {equalityReports.map((r) => (
-              <LinkV2
-                key={r.id}
-                href={`/yfirlit/${r.id}`}
-                aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.EQUALITY}`}
+      <Box paddingY={2}>
+        <Divider />
+      </Box>
+
+      {isLoading ? (
+        <SkeletonLoader repeat={2} height={56} space={2} />
+      ) : equalityReports.length > 0 || salaryReports.length > 0 ? (
+        <Stack space={2}>
+          <Text variant="eyebrow">{sharedText.files}</Text>
+          {equalityReports.map((r) => (
+            <LinkV2
+              key={r.id}
+              href={`/yfirlit/${r.id}`}
+              aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.EQUALITY}`}
+            >
+              <Box
+                background="white"
+                borderRadius="standard"
+                padding={2}
+                display="flex"
+                justifyContent="spaceBetween"
+                alignItems="center"
+                className={styles.reportCard}
               >
-                <Box
-                  background="white"
-                  borderRadius="standard"
-                  padding={2}
-                  display="flex"
-                  justifyContent="spaceBetween"
-                  alignItems="center"
-                  className={styles.reportCard}
-                >
-                  <Stack space={1}>
-                    <Text variant="small" fontWeight="semiBold">
-                      {sharedText.typeLabels.EQUALITY}
-                    </Text>
-                    <Text variant="small" color="dark300">
-                      {companiesText.expandedRow.validUntilPrefix}{' '}
-                      {formatDate(r.validUntil)}
-                    </Text>
-                  </Stack>
-                  <ReportStatusTag status={r.status} />
-                </Box>
-              </LinkV2>
-            ))}
-            {salaryReports.map((r) => (
-              <LinkV2
-                key={r.id}
-                href={`/yfirlit/${r.id}`}
-                aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.SALARY}`}
+                <Stack space={1}>
+                  <Text variant="small" fontWeight="semiBold">
+                    {sharedText.typeLabels.EQUALITY}
+                  </Text>
+                  <Text variant="small" color="dark300">
+                    {companiesText.expandedRow.validUntilPrefix}{' '}
+                    {formatDate(r.validUntil)}
+                  </Text>
+                </Stack>
+                <ReportStatusTag status={r.status} />
+              </Box>
+            </LinkV2>
+          ))}
+          {salaryReports.map((r) => (
+            <LinkV2
+              key={r.id}
+              href={`/yfirlit/${r.id}`}
+              aria-label={`${companiesText.expandedRow.viewReport}: ${sharedText.typeLabels.SALARY}`}
+            >
+              <Box
+                background="white"
+                borderRadius="standard"
+                padding={2}
+                display="flex"
+                justifyContent="spaceBetween"
+                alignItems="center"
+                className={styles.reportCard}
               >
-                <Box
-                  background="white"
-                  borderRadius="standard"
-                  padding={2}
-                  display="flex"
-                  justifyContent="spaceBetween"
-                  alignItems="center"
-                  className={styles.reportCard}
-                >
-                  <Stack space={1}>
-                    <Text variant="small" fontWeight="semiBold">
-                      {sharedText.typeLabels.SALARY}
-                    </Text>
-                    <Text variant="small" color="dark300">
-                      {companiesText.expandedRow.validUntilPrefix}{' '}
-                      {formatDate(r.validUntil)}
-                    </Text>
-                  </Stack>
-                  <ReportStatusTag status={r.status} />
-                </Box>
-              </LinkV2>
-            ))}
-          </Stack>
-        </>
-      )}
+                <Stack space={1}>
+                  <Text variant="small" fontWeight="semiBold">
+                    {sharedText.typeLabels.SALARY}
+                  </Text>
+                  <Text variant="small" color="dark300">
+                    {companiesText.expandedRow.validUntilPrefix}{' '}
+                    {formatDate(r.validUntil)}
+                  </Text>
+                </Stack>
+                <ReportStatusTag status={r.status} />
+              </Box>
+            </LinkV2>
+          ))}
+        </Stack>
+      ) : null}
     </Box>
   )
 }

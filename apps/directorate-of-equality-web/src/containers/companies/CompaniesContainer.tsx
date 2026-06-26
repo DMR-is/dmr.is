@@ -21,7 +21,6 @@ import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
   CompanySizeEnum,
-  ReportStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
@@ -52,13 +51,6 @@ export const CompaniesContainer = () => {
   })
 
   const trpc = useTRPC()
-  const { data: reportsData } = useQuery(
-    trpc.reports.list.queryOptions({
-      status: [ReportStatusEnum.APPROVED],
-      pageSize: 500,
-    }),
-  )
-  const approvedReports = reportsData?.reports ?? []
 
   const { data: regionsData } = useQuery(
     trpc.location.regions.queryOptions(undefined, {
@@ -218,7 +210,6 @@ export const CompaniesContainer = () => {
           {data?.paging && (
             <CompanyTable
               rows={rows}
-              approvedReports={approvedReports}
               paging={data.paging}
               onPageChange={(p) => setFilter({ page: p })}
               sorting={sorting}

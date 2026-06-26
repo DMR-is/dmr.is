@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
@@ -12,7 +13,7 @@ import {
 import { reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type CommentsContainerProps = {
   reportId: string

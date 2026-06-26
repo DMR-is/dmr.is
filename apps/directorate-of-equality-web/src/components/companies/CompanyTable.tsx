@@ -10,26 +10,17 @@ import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 
-import {
-  type CompanyDto,
-  type Paging,
-  type ReportListItemDto,
-} from '../../gen/fetch/types.gen'
+import { type CompanyDto, type Paging } from '../../gen/fetch/types.gen'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, overviewText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
-import {
-  normalizeId,
-  REPORT_STATUS_LABEL,
-  REPORT_STATUS_TAG_VARIANT,
-} from './companyStatus'
+import { REPORT_STATUS_LABEL, REPORT_STATUS_TAG_VARIANT } from './companyStatus'
 
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
 type Props = {
   rows: CompanyDto[]
-  approvedReports: ReportListItemDto[]
   paging: Paging
   onPageChange: (page: number) => void
   sorting?: SortingState
@@ -38,7 +29,6 @@ type Props = {
 
 export const CompanyTable = ({
   rows,
-  approvedReports,
   paging,
   onPageChange,
   sorting,
@@ -138,16 +128,7 @@ export const CompanyTable = ({
           showPageSizeSelect={false}
           noDataMessage={companiesText.noData}
           getRowHref={(row) => `${NAV_PATHS.fyrirtaeki.href}/${row.id}`}
-          getRowExpanded={(company) => (
-            <CompanyExpandedRow
-              company={company}
-              approvedReports={approvedReports.filter(
-                (r) =>
-                  normalizeId(r.companyNationalId) ===
-                  normalizeId(company.nationalId),
-              )}
-            />
-          )}
+          getRowExpanded={(company) => <CompanyExpandedRow company={company} />}
         />
       </Stack>
     </Box>

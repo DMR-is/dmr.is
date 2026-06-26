@@ -1,12 +1,13 @@
 'use client'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   reportId: string
