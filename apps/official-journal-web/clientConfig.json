@@ -2412,6 +2412,22 @@
         "summary": ""
       }
     },
+    "/api/v1/applications/{id}/reopen": {
+      "put": {
+        "operationId": "reopenApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
+        "summary": ""
+      }
+    },
     "/api/v1/advert-types/types": {
       "post": {
         "operationId": "createType",
