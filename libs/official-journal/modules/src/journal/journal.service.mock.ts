@@ -146,6 +146,13 @@ export class MockJournalService implements IJournalService {
   ): Promise<ResultWrapper<S3UploadFileResponse>> {
     throw new Error('Method not implemented.')
   }
+  uploadCorrectionPDF(
+    advertId: string,
+    correctionId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    throw new Error('Method not implemented.')
+  }
   handleLegacyPdfUrl(id: string): Promise<ResultWrapper<S3UploadFileResponse>> {
     throw new Error('Method not implemented.')
   }

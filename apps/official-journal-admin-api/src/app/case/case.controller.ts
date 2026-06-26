@@ -703,6 +703,54 @@ export class CaseController {
     )
   }
 
+  @Post('advert/:id/correction/:correctionId/pdf-replacement')
+  @ApiOperation({ operationId: 'correctionPDFReplacement' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Handles uploading a replacement PDF for an advert correction.',
+    required: true,
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'The PDF file to upload',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiNoContentResponse()
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCorrectionPdfReplacement(
+    @Param('id', new UUIDValidationPipe()) advertId: string,
+    @Param('correctionId', new UUIDValidationPipe()) correctionId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: ONE_MEGA_BYTE * 20,
+            message: `File size exceeds the limit of 20MB.`,
+          }),
+          new FileTypeValidationPipe({
+            mimetype: ALLOWED_PDF_MIME_TYPES,
+            maxNumberOfFiles: 1,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<S3UploadFileResponse> {
+    return ResultWrapper.unwrap(
+      await this.journalService.uploadCorrectionPDF(
+        advertId,
+        correctionId,
+        file,
+      ),
+    )
+  }
+
   @Post(':id/html/appendix')
   @ApiOperation({ operationId: 'createAdvertAppendix' })
   @ApiNoContentResponse()

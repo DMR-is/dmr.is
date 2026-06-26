@@ -119,6 +119,9 @@ export class JournalService implements IJournalService {
 
     @InjectModel(AdvertStatusModel)
     private advertStatusModel: typeof AdvertStatusModel,
+
+    @InjectModel(AdvertCorrectionModel)
+    private advertCorrectionModel: typeof AdvertCorrectionModel,
     private readonly sequelize: Sequelize,
   ) {
     this.logger.log({ level: 'info', message: 'JournalService' })
@@ -1360,6 +1363,51 @@ export class JournalService implements IJournalService {
     await this.updateAdvert(advertId, {
       documentPdfUrl: `${uploadedFile.url}/${filename}`,
     })
+
+    return ResultWrapper.ok({
+      ...uploadedFile,
+      url: uploadedFile.url,
+      file: uploadedFile,
+    })
+  }
+
+  @LogAndHandle()
+  async uploadCorrectionPDF(
+    advertId: string,
+    correctionId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>> {
+    await evictByTags(this.cacheManager, 'getAdvert', [advertId])
+
+    const correction = await this.advertCorrectionModel.findOne({
+      where: { id: correctionId, advertId },
+    })
+
+    if (!correction) {
+      return ResultWrapper.err({
+        code: 404,
+        message: 'Correction not found for this advert',
+      })
+    }
+
+    const advert = ResultWrapper.unwrap(await this.getAdvert(advertId)).advert
+
+    // Reuse the existing correction PDF filename so the new file overwrites it
+    // in S3. Fall back to a deterministic name if the correction has no url yet.
+    const existingFilename = correction.documentPdfUrl?.split('/').pop()
+    const filename =
+      existingFilename ??
+      `${advert.department?.title[0]}_nr_${advert.publicationNumber?.number}_${advert.publicationNumber?.year}_leidrett_${correctionId}.pdf`
+    const key = `adverts/${filename}`
+
+    const uploadedFile = (
+      await this.s3Service.replaceAdvertPdf(key, file)
+    ).unwrap()
+
+    await this.advertCorrectionModel.update(
+      { documentPdfUrl: `${uploadedFile.url}/${filename}` },
+      { where: { id: correctionId } },
+    )
 
     return ResultWrapper.ok({
       ...uploadedFile,
