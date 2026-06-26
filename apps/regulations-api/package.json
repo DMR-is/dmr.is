@@ -5,7 +5,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.744.0",
     "@aws-sdk/s3-presigned-post": "3.744.0",
-    "@dmr.is/regulations-tools": "0.10.2",
+    "@dmr.is/regulations-tools": "0.10.3",
     "@fastify/basic-auth": "5.1.1",
     "@fastify/compress": "7.0.3",
     "@fastify/multipart": "8.3.1",
