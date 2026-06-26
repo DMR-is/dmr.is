@@ -4,6 +4,7 @@ import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Filter } from '@dmr.is/ui/components/island-is/Filter'
 import { FilterInput } from '@dmr.is/ui/components/island-is/FilterInput'
@@ -39,6 +40,8 @@ type Props = {
   onDateFromChange: (date: Date | undefined) => void
   onDateToChange: (date: Date | undefined) => void
   onReset: () => void
+  showDelayed?: boolean
+  onShowDelayedChange?: (value: boolean) => void
 }
 
 export const ReportFilter = ({
@@ -59,6 +62,8 @@ export const ReportFilter = ({
   onDateFromChange,
   onDateToChange,
   onReset,
+  showDelayed,
+  onShowDelayedChange,
 }: Props) => {
   const { isMobile } = useIsMobile()
   const { isTablet } = useIsTablet()
@@ -66,6 +71,12 @@ export const ReportFilter = ({
   const handleReset = () => {
     onDateFromChange(undefined)
     onDateToChange(undefined)
+    onStatusChange(null)
+    onTypeChange(null)
+    onReviewerChange(null)
+    onHasImprovementPlanChange(null)
+    onQChange(null)
+    if (onShowDelayedChange) onShowDelayedChange(false)
     onReset()
   }
 
@@ -220,6 +231,23 @@ export const ReportFilter = ({
             </Accordion>
           </Box>
         </Box>
+        {onShowDelayedChange !== undefined && (
+          <Box
+            paddingX={3}
+            paddingY={2}
+            background="white"
+            className={styles.delayedSection}
+          >
+            <Box borderTopWidth="standard" borderColor="blue200" width="full" />
+            <Box paddingTop={2}>
+              <Checkbox
+                label={overviewText.filter.showDelayed}
+                checked={showDelayed ?? false}
+                onChange={(e) => onShowDelayedChange(e.target.checked)}
+              />
+            </Box>
+          </Box>
+        )}
       </Filter>
     </Box>
   )
