@@ -16,7 +16,11 @@ type ReportTabsContainerProps = {
 
 export function ReportTabsContainer({ report }: ReportTabsContainerProps) {
   const trpc = useTRPC()
-  const isSalary = report.type === ReportTypeEnum.SALARY
+  const { data } = useQuery({
+    ...trpc.reports.getById.queryOptions({ id: report.id }),
+    initialData: report,
+  })
+  const isSalary = data.type === ReportTypeEnum.SALARY
 
   const {
     data: salaryStats,
@@ -24,7 +28,7 @@ export function ReportTabsContainer({ report }: ReportTabsContainerProps) {
     isError: salaryError,
   } = useQuery({
     ...trpc.reportStatistics.baseSalaryByGenderAndScoreAll.queryOptions({
-      reportId: report.id,
+      reportId: data.id,
     }),
     enabled: isSalary,
   })
@@ -43,5 +47,5 @@ export function ReportTabsContainer({ report }: ReportTabsContainerProps) {
     )
   }
 
-  return <ReportTabs report={report} salaryStats={salaryStats} />
+  return <ReportTabs report={data} salaryStats={salaryStats} />
 }
