@@ -8,6 +8,7 @@ import {
   CompanyEventModel,
   CompanyEventTypeEnum,
 } from '../company/models/company-event.model'
+import { UserModel } from '../user/models/user.model'
 import { CompanyEventService } from './company-event.service'
 
 const mockLogger = {
@@ -81,6 +82,7 @@ describe('CompanyEventService', () => {
 
     expect(findAll).toHaveBeenCalledWith({
       where: { companyId: 'company-1' },
+      include: [{ model: UserModel, as: 'actor', required: false }],
       order: [['createdAt', 'ASC']],
     })
     expect(result).toEqual([{ id: 'e1' }, { id: 'e2' }])

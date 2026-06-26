@@ -6,7 +6,6 @@ import {
   ReportRoleEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
-  UserDto,
 } from '../../../../../gen/fetch'
 import {
   formatDateIS,
@@ -29,10 +28,6 @@ export function Bold({ children }: { children: React.ReactNode }) {
   return <strong style={{ fontWeight: 600 }}>{children}</strong>
 }
 
-export function userName(user: UserDto): string {
-  return `${user.firstName === 'Gervimaður' ? 'GM' : user.firstName} ${user.lastName}`
-}
-
 export type TimelineEntryKind = 'event' | 'outgoing' | 'incoming' | 'internal'
 
 export function timelineEntryKind(
@@ -47,18 +42,14 @@ export function timelineEntryKind(
 
 export function timelineEntryText(
   item: ReportTimelineItemDto,
-  usersById: Map<string, UserDto>,
   companyName?: string | null,
 ): React.ReactNode {
   if (item.kind === ReportTimelineItemKindEnum.COMMENT) {
     const comment = item.comment
-    const user = usersById.get(comment?.authorUserId ?? '')
     const isCompany = comment?.authorKind === ReportRoleEnum.COMPANY
     const authorName = isCompany
       ? (companyName ?? reportText.timeline.company)
-      : user
-        ? userName(user)
-        : reportText.timeline.employee
+      : (comment?.authorName ?? reportText.timeline.employee)
     return (
       <>
         <Bold>{authorName}</Bold> {reportText.timeline.registersMessage}
@@ -68,7 +59,7 @@ export function timelineEntryText(
 
   if (!item.event) return null
 
-  const { eventType, assignedUserId, actorUserId, toStatus } = item.event
+  const { eventType, actorName, assignedUserName, toStatus } = item.event
 
   if (eventType === ReportEventTypeEnum.SUBMITTED) {
     return companyName ? (
@@ -80,44 +71,35 @@ export function timelineEntryText(
     )
   }
 
-  if (eventType === ReportEventTypeEnum.ASSIGNED && assignedUserId) {
-    const assignedUser = usersById.get(assignedUserId)
-    const actor =
-      actorUserId && actorUserId !== assignedUserId
-        ? usersById.get(actorUserId)
-        : null
-
-    if (actor && assignedUser) {
+  if (eventType === ReportEventTypeEnum.ASSIGNED && assignedUserName) {
+    if (actorName && actorName !== assignedUserName) {
       return (
         <>
-          <Bold>{userName(actor)}</Bold> {reportText.timeline.assignedOther}{' '}
-          <Bold>{userName(assignedUser)}</Bold>{' '}
+          <Bold>{actorName}</Bold> {reportText.timeline.assignedOther}{' '}
+          <Bold>{assignedUserName}</Bold>{' '}
           {reportText.timeline.assignedOtherSuffix}
         </>
       )
     }
 
-    return assignedUser ? (
+    return (
       <>
-        <Bold>{userName(assignedUser)}</Bold> {reportText.timeline.claimsCase}
+        <Bold>{assignedUserName}</Bold> {reportText.timeline.claimsCase}
       </>
-    ) : (
-      <>{reportText.timeline.assigned}</>
     )
   }
 
   if (eventType === ReportEventTypeEnum.UNASSIGNED) {
-    const actor = actorUserId ? usersById.get(actorUserId) : null
-    const unassignedUser =
-      assignedUserId && assignedUserId !== actorUserId
-        ? usersById.get(assignedUserId)
+    const unassignedName =
+      assignedUserName && assignedUserName !== actorName
+        ? assignedUserName
         : null
 
-    if (actor && unassignedUser) {
+    if (actorName && unassignedName) {
       return (
         <>
-          <Bold>{userName(actor)}</Bold> {reportText.timeline.unassignedOther}{' '}
-          <Bold>{userName(unassignedUser)}</Bold>{' '}
+          <Bold>{actorName}</Bold> {reportText.timeline.unassignedOther}{' '}
+          <Bold>{unassignedName}</Bold>{' '}
           {reportText.timeline.unassignedOtherSuffix}
         </>
       )
@@ -125,7 +107,7 @@ export function timelineEntryText(
 
     return (
       <>
-        {actor && <Bold>{userName(actor)} </Bold>}
+        {actorName && <Bold>{actorName} </Bold>}
         {reportText.timeline.unassigned}
       </>
     )
@@ -133,12 +115,29 @@ export function timelineEntryText(
 
   if (eventType === ReportEventTypeEnum.STATUS_CHANGED) {
     const statusLabel = toStatus ? ReportStatusTranslatedEnum[toStatus] : null
-    const actor = actorUserId ? usersById.get(actorUserId) : null
     return (
       <>
-        {actor && <Bold>{userName(actor)} </Bold>}
+        {actorName && <Bold>{actorName} </Bold>}
         {reportText.timeline.movesToStatus}{' '}
         {statusLabel ? <Bold>{statusLabel}</Bold> : null}
+      </>
+    )
+  }
+
+  // Company-specific event types are cast as `never` in the adapter but
+  // arrive as plain strings at runtime.
+  const eventTypeStr = eventType as unknown as string
+  const COMPANY_EVENT_LABELS: Record<string, string> = {
+    FINES_STARTED: reportText.timeline.finesStarted,
+    FINES_STOPPED: reportText.timeline.finesStopped,
+    QUARANTINED: reportText.timeline.companyQuarantined,
+    UNQUARANTINED: reportText.timeline.companyUnquarantined,
+  }
+  if (eventTypeStr in COMPANY_EVENT_LABELS) {
+    return (
+      <>
+        {actorName && <Bold>{actorName} </Bold>}
+        {COMPANY_EVENT_LABELS[eventTypeStr]}
       </>
     )
   }

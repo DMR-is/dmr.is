@@ -110,6 +110,9 @@ export class CompanyEventModel extends ImmutableModel<
       companyId: model.companyId,
       eventType: model.eventType,
       actorUserId: model.actorUserId,
+      actorName: model.actor
+        ? `${model.actor.firstName} ${model.actor.lastName}`
+        : null,
       status: model.status,
       fromStatus: model.fromStatus,
       toStatus: model.toStatus,

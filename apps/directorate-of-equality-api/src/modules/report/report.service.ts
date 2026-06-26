@@ -551,6 +551,10 @@ export class ReportService implements IReportService {
   ): Promise<ReportTimelineItemDto[]> {
     const events = await this.reportEventModel.findAll({
       where: { reportId },
+      include: [
+        { model: UserModel, as: 'actor', required: false },
+        { model: UserModel, as: 'assignee', required: false },
+      ],
       order: [['createdAt', 'ASC']],
     })
 

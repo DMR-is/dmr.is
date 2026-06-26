@@ -14,6 +14,7 @@ import {
   type Paging,
   type ReportListItemDto,
 } from '../../gen/fetch/types.gen'
+import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
@@ -112,6 +113,7 @@ export const CompanyTable = ({
           onPageChange={onPageChange}
           showPageSizeSelect={false}
           noDataMessage={companiesText.noData}
+          getRowHref={(row) => `${NAV_PATHS.fyrirtaeki.href}/${row.id}`}
           getRowExpanded={(company) => (
             <CompanyExpandedRow
               company={company}

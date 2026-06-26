@@ -136,6 +136,8 @@ export const reportText = {
     employeeCount: 'Fjöldi starfsmanna',
     address: 'Heimilisfang',
     city: 'Sveitarfélag',
+    province: 'Landshluti',
+    fines: 'Dagsektir',
   },
   companyTab: {
     companyInfoHeading: 'Upplýsingar fyrirtækis',
@@ -217,6 +219,10 @@ export const reportText = {
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
+    finesStarted: 'hefur hafið dagsektarferli',
+    finesStopped: 'hefur stöðvað dagsektarferli',
+    companyQuarantined: 'hefur sett fyrirtækið í sóttkví',
+    companyUnquarantined: 'hefur tekið fyrirtækið úr sóttkví',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
@@ -251,11 +257,12 @@ export const companiesText = {
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
     salaryRequired: 'Skýrslugjöf skylda',
+    equalityRequired: 'Jafnréttisáætlun skylda',
     validUntilPrefix: 'Gildir til:',
     avgEmployees: 'Meðalfjöldi starfsmanna',
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
-    viewReport: 'Skoða skýrslu',
+    viewReport: 'Opna skýrslu',
     equalityDueAt: 'Næsti skiladagur jafnréttisáætlunar',
     salaryDueAt: 'Næsti skiladagur launagreiningar',
   },
@@ -297,6 +304,35 @@ export const companiesText = {
       invalid: 'Ógildar línur',
     },
     rowPrefix: 'Lína',
+  },
+  detailView: {
+    heading: 'Upplýsingar um fyrirtæki',
+    tabInfo: 'Upplýsingar',
+    tabReports: 'Skýrslur',
+    tabsLabel: 'Fyrirtækjaflippar',
+    timelineHeading: 'Saga fyrirtækis',
+    sidebarTitle: 'Staða fyrirtækis',
+    statusLabel: 'Staða',
+    finesButton: 'Hefja dagsektir',
+    finesStopButton: 'Stöðva dagsektarferli',
+    noReports: 'Engar skýrslur skráðar',
+    reportsLoadError: 'Villa við að hlaða skýrslur',
+    noCompany: 'Fyrirtæki fannst ekki',
+    finesStartedToast: 'Dagsektarferli hafið',
+    finesStoppedToast: 'Dagsektarferli stöðvað',
+    finesErrorToast: 'Villa við að uppfæra dagsektir',
+    quarantinedAlert: 'Fyrirtækið er í sóttkví',
+    quarantinedReasonAlertMessage:
+      'Fyrirtækið hefur verið sett í sóttkví vegna: ',
+    finesAlert: 'Fyrirtækið er í dagsektarferli',
+    finesAlertReasonAlertMessage:
+      'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
+    comments: {
+      label: 'Athugasemdir',
+      placeholder: 'Bættu við athugasemd',
+      submit: 'Vista athugasemd',
+    },
   },
 }
 

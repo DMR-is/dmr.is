@@ -152,6 +152,17 @@ export class CompanyController {
     return this.companyService.updateQuarantine(id, dto, admin.id)
   }
 
+  @Get(':id')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'getCompanyById',
+    type: CompanyDto,
+    include404: true,
+  })
+  async getCompanyById(@Param('id') id: string): Promise<CompanyDto> {
+    return this.companyService.getById(id)
+  }
+
   @Get(':id/timeline')
   @ApiParam({ name: 'id', type: String })
   @DoeResponse({

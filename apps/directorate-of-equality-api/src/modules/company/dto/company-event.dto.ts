@@ -23,6 +23,9 @@ export class CompanyEventDto {
   @ApiOptionalUuid({ nullable: true })
   actorUserId!: string | null
 
+  @ApiOptionalString({ nullable: true })
+  actorName!: string | null
+
   @ApiEnum(CompanyStatusEnum, { enumName: 'CompanyStatusEnum' })
   status!: CompanyStatusEnum
 

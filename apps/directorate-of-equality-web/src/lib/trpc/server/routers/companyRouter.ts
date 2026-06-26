@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 import {
   zCreateCompanyBody,
+  zCreateCompanyCommentBody,
+  zCreateCompanyCommentPath,
+  zDeleteCompanyCommentPath,
+  zGetCompanyCommentsPath,
+  zGetCompanyTimelinePath,
   zRskLookupCompanyPath,
   zUpdateCompanyFinesBody,
   zUpdateCompanyFinesPath,
@@ -48,6 +53,12 @@ export const companyRouter = router({
     .input(zGetCompaniesQuery.optional())
     .query(({ ctx, input }) => ctx.api.getCompanies({ query: input as never })),
 
+  get: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyById({ path: { id: input.id } }),
+    ),
+
   // Backs the searchable ÍSAT filter: free-text `q` for matches, or `codes` to
   // resolve the labels of an existing selection.
   isatCategories: protectedProcedure
@@ -66,6 +77,36 @@ export const companyRouter = router({
     .input(zCreateCompanyBody)
     .mutation(({ ctx, input }) => ctx.api.createCompany({ body: input })),
 
+  getTimeline: protectedProcedure
+    .input(zGetCompanyTimelinePath)
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyTimeline({ path: { id: input.id } }),
+    ),
+
+  comments: router({
+    list: protectedProcedure
+      .input(zGetCompanyCommentsPath)
+      .query(({ ctx, input }) =>
+        ctx.api.getCompanyComments({ path: { id: input.id } }),
+      ),
+
+    create: protectedProcedure
+      .input(zCreateCompanyCommentPath.extend(zCreateCompanyCommentBody.shape))
+      .mutation(({ ctx, input }) =>
+        ctx.api.createCompanyComment({
+          path: { id: input.id },
+          body: { body: input.body },
+        }),
+      ),
+
+    delete: protectedProcedure
+      .input(zDeleteCompanyCommentPath)
+      .mutation(async ({ ctx, input }) => {
+        await ctx.api.deleteCompanyComment({
+          path: { id: input.id, commentId: input.commentId },
+        })
+      }),
+  }),
   // Annual register import. The client uploads the .xlsx straight to S3 via a
   // presigned URL, then passes the resulting object `key` here. The same key is
   // previewed and then applied (uploaded once). `preview` writes nothing;

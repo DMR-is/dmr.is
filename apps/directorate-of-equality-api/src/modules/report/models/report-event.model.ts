@@ -124,10 +124,16 @@ export class ReportEventModel extends ImmutableModel<
       reportId: model.reportId,
       eventType: model.eventType,
       actorUserId: model.actorUserId,
+      actorName: model.actor
+        ? `${model.actor.firstName} ${model.actor.lastName}`
+        : null,
       reportStatus: model.reportStatus,
       fromStatus: model.fromStatus,
       toStatus: model.toStatus,
       assignedUserId: model.assignedUserId,
+      assignedUserName: model.assignee
+        ? `${model.assignee.firstName} ${model.assignee.lastName}`
+        : null,
       reason: model.reason,
       relatedReportId: model.relatedReportId,
       companyId: model.companyId,
