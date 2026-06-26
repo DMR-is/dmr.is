@@ -4,12 +4,14 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Divider } from '@dmr.is/ui/components/island-is/Divider'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
+import { AlertMessage } from '@island.is/island-ui/core'
+
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
 import { ReportFormStepper } from '../../components/report/report-sidebar/ReportFormStepper'
 import { ReportSidebar } from '../../components/report/report-sidebar/ReportSidebar'
 import { ReportStatusSelect } from '../../components/report/report-sidebar/ReportStatusSelect'
 import { ReportDetailDto } from '../../gen/fetch'
-import { reportText } from '../../lib/text'
+import { companiesText, reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
 import { useQuery } from '@tanstack/react-query'
@@ -34,6 +36,22 @@ export function ReportSidebarContainer({
   return (
     <ReportSidebar>
       <Text variant="h5">{reportText.sidebarTitle}</Text>
+      {data.companyQuarantined && (
+        <Box marginTop={2}>
+          <AlertMessage
+            type="warning"
+            title={companiesText.detailView.quarantinedAlert}
+          />
+        </Box>
+      )}
+      {data.companyFinesStarted && (
+        <Box marginTop={2}>
+          <AlertMessage
+            type="warning"
+            title={companiesText.detailView.finesAlert}
+          />
+        </Box>
+      )}
       <EmployeeSelect
         reportId={data.id}
         assignedUserId={data.reviewer?.id}

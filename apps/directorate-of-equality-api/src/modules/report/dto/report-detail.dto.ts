@@ -1,4 +1,9 @@
-import { ApiBoolean, ApiDto, ApiDtoArray, ApiOptionalDto } from '@dmr.is/decorators'
+import {
+  ApiBoolean,
+  ApiDto,
+  ApiDtoArray,
+  ApiOptionalDto,
+} from '@dmr.is/decorators'
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
@@ -61,6 +66,18 @@ export class ReportDetailDto extends ReportDto {
 
   @ApiDtoArray(ReportRoleResultDto)
   roleResults!: ReportRoleResultDto[]
+
+  @ApiBoolean({
+    description:
+      'Daily-fines flag. `true` means the company is currently in the daily-fines process.',
+  })
+  companyFinesStarted!: boolean
+
+  @ApiBoolean({
+    description:
+      'Quarantine flag. `true` means the company is currently quarantined.',
+  })
+  companyQuarantined!: boolean
 
   @ApiBoolean({
     description:

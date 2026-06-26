@@ -32,18 +32,34 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const startFines = useMutation({
+  const invalidateCompany = () => {
+    queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+    queryClient.invalidateQueries({
+      queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
+    })
+  }
+
+  const updateFines = useMutation({
     ...trpc.company.updateFines.mutationOptions(),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
-      queryClient.invalidateQueries({
-        queryKey: trpc.company.getTimeline.queryKey({ id: company.id }),
-      })
+      invalidateCompany()
+
       toast.success(
         variables.finesStarted ? t.finesStartedToast : t.finesStoppedToast,
       )
     },
     onError: () => toast.error(t.finesErrorToast),
+  })
+
+  const updateQuarantine = useMutation({
+    ...trpc.company.updateQuarantine.mutationOptions(),
+    onSuccess: (_, variables) => {
+      invalidateCompany()
+      toast.success(
+        variables.quarantined ? t.quarantinedToast : t.unquarantinedToast,
+      )
+    },
+    onError: () => toast.error(t.quarantineErrorToast),
   })
 
   return (
@@ -84,6 +100,24 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
           {company.quarantined && (
             <Box marginBottom={4}>
               <AlertMessage type="warning" title={t.quarantinedAlert} />
+              <Box marginTop={1}>
+                <Button
+                  size="small"
+                  variant="text"
+                  colorScheme="destructive"
+                  icon="close"
+                  iconType="outline"
+                  loading={updateQuarantine.isPending}
+                  onClick={() =>
+                    updateQuarantine.mutate({
+                      id: company.id,
+                      quarantined: false,
+                    })
+                  }
+                >
+                  {t.quarantineStopButton}
+                </Button>
+              </Box>
             </Box>
           )}
           {company.finesStarted && (
@@ -96,9 +130,9 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   colorScheme="destructive"
                   icon="close"
                   iconType="outline"
-                  loading={startFines.isPending}
+                  loading={updateFines.isPending}
                   onClick={() =>
-                    startFines.mutate({ id: company.id, finesStarted: false })
+                    updateFines.mutate({ id: company.id, finesStarted: false })
                   }
                 >
                   {t.finesStopButton}
@@ -106,21 +140,41 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
               </Box>
             </Box>
           )}
-          {!company.finesStarted && (
-            <Box marginBottom={4}>
-              <Button
-                size="small"
-                variant="text"
-                colorScheme="destructive"
-                icon="gavel"
-                iconType="outline"
-                loading={startFines.isPending}
-                onClick={() =>
-                  startFines.mutate({ id: company.id, finesStarted: true })
-                }
-              >
-                {t.finesButton}
-              </Button>
+          {(!company.finesStarted || !company.quarantined) && (
+            <Box marginBottom={4} display="flex" columnGap={2}>
+              {!company.finesStarted && (
+                <Button
+                  size="small"
+                  variant="text"
+                  colorScheme="destructive"
+                  icon="gavel"
+                  iconType="outline"
+                  loading={updateFines.isPending}
+                  onClick={() =>
+                    updateFines.mutate({ id: company.id, finesStarted: true })
+                  }
+                >
+                  {t.finesButton}
+                </Button>
+              )}
+              {!company.quarantined && (
+                <Button
+                  size="small"
+                  variant="text"
+                  colorScheme="destructive"
+                  icon="lockClosed"
+                  iconType="outline"
+                  loading={updateQuarantine.isPending}
+                  onClick={() =>
+                    updateQuarantine.mutate({
+                      id: company.id,
+                      quarantined: true,
+                    })
+                  }
+                >
+                  {t.quarantineButton}
+                </Button>
+              )}
             </Box>
           )}
         </Stack>

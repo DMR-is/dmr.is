@@ -54,6 +54,8 @@ export type Case = {
   reviewer: string
   employeeCount: string
   waitingForAction: boolean
+  companyFinesStarted: boolean
+  companyQuarantined: boolean
 }
 
 export const COLUMNS: ColumnDef<Case>[] = [
