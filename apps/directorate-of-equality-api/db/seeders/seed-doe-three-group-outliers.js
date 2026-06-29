@@ -1,12 +1,25 @@
 'use strict'
 
+// Test scenario: a single SALARY report whose detected outliers are split
+// across THREE explained outlier groups, to exercise the per-group tables in
+// the salary report tab (one table per group, group reason/action/signature
+// rendered below each table). Built from the same shared excel + analysis
+// fixtures as seed-doe-rich-scenario.js so the salary tab renders fully
+// (distribution chart, statistics, role results), then the outliers are
+// distributed round-robin across three groups.
+//
+// Additive + self-contained: uses its own company slot (N = 30) and id range
+// (uid 30000+), so `db:seed:all` runs it without touching other seeders. The
+// down() is scoped to this company only.
+
 const fs = require('fs')
 const path = require('path')
 
-// Reviewer from initial seed (matches seed-doe-scenarios.js)
+// Reviewer from initial seed (matches the other DoE seeders).
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
-// UUID helpers (same shape as seed-doe-scenarios.js so id ranges are distinct)
+// UUID helpers — valid v4 shape (version 4, variant 8) so they pass strict
+// UUID validation (zod `z.uuid()`) on the outliers `groupId` query param.
 const cid = (n) =>
   `c${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
 const eid = (n) =>
@@ -16,17 +29,18 @@ const sid = (n) =>
 const uid = (n) =>
   `f${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
 
-// New company slot — does not collide with seed-doe-scenarios.js (1–28).
-const RICH_N = 29
-const RICH_CID = cid(RICH_N)
-const RICH_EQ = eid(RICH_N)
-const RICH_SAL = sid(RICH_N)
-const RICH_NATIONAL_ID = '5001010029'
-const RICH_COMPANY_NAME = 'Stóra Prófarasamsteypan hf.'
+// Company slot 30 — distinct from seed-doe-scenarios.js (1–28) and
+// seed-doe-rich-scenario.js (29).
+const N = 30
+const COMPANY_ID = cid(N)
+const EQ_REPORT_ID = eid(N)
+const SAL_REPORT_ID = sid(N)
+const NATIONAL_ID = '5001010030'
+const COMPANY_NAME = 'Þríhópa Prófunarfélagið hf.'
 
-// Auxiliary id counter; all uid() values for this seeder live above 20000
-// so they don't intersect with seed-doe-scenarios.js.
-let nextUid = 20000
+// Auxiliary id counter; all uid() values for this seeder live above 30000 so
+// they don't intersect the other DoE seeders.
+let nextUid = 30000
 const newUid = () => uid(nextUid++)
 
 // SQL string literal helpers ------------------------------------------------
@@ -104,7 +118,7 @@ function companySql() {
   return `
 BEGIN;
 INSERT INTO company (id, name, national_id, employee_count_category, salary_report_required_override)
-VALUES (${escStr(RICH_CID)}, ${escStr(RICH_COMPANY_NAME)}, ${escStr(RICH_NATIONAL_ID)}, 'LARGE', FALSE);
+VALUES (${escStr(COMPANY_ID)}, ${escStr(COMPANY_NAME)}, ${escStr(NATIONAL_ID)}, 'LARGE', FALSE);
 COMMIT;
   `
 }
@@ -122,30 +136,30 @@ INSERT INTO report (id, type, status, company_national_id, company_admin_name, c
   company_admin_gender, contact_name, contact_email, contact_phone,
   provider_type, provider_id, identifier, equality_report_content,
   reviewer_user_id, approved_at, valid_until)
-VALUES (${escStr(RICH_EQ)}, 'EQUALITY', 'APPROVED', ${escStr(RICH_NATIONAL_ID)},
-  'Sigrún Sigrúnardóttir', 'sigrun@storaprofunin.is', 'FEMALE',
-  'Sigrún Sigrúnardóttir', 'sigrun@storaprofunin.is', '999-9999',
-  'ISLAND_IS', 'prov-eq-029', 'JR-2026-029',
-  'Jafnréttisáætlun Stóru Prófarasamsteypunnar 2026–2029. Heildstæð áætlun með gagnsæjum launum og hlutlægum ráðningarferlum.',
+VALUES (${escStr(EQ_REPORT_ID)}, 'EQUALITY', 'APPROVED', ${escStr(NATIONAL_ID)},
+  'Þóra Þórsdóttir', 'thora@thrihopa.is', 'FEMALE',
+  'Þóra Þórsdóttir', 'thora@thrihopa.is', '888-8888',
+  'ISLAND_IS', 'prov-eq-030', 'JR-2026-030',
+  'Jafnréttisáætlun Þríhópa Prófunarfélagsins 2026–2029.',
   ${escStr(REVIEWER_ID)},
   NOW() - INTERVAL '30 days',
   NOW() - INTERVAL '30 days' + INTERVAL '3 years');
 
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
-VALUES (${escStr(eqCompanyReportId)}, ${escStr(RICH_CID)}, ${escStr(RICH_EQ)}, NULL,
-  ${escStr(RICH_COMPANY_NAME)}, ${escStr(RICH_NATIONAL_ID)}, 'Borgartún 29', 'Reykjavík', '105', 'LARGE', 'M');
+VALUES (${escStr(eqCompanyReportId)}, ${escStr(COMPANY_ID)}, ${escStr(EQ_REPORT_ID)}, NULL,
+  ${escStr(COMPANY_NAME)}, ${escStr(NATIONAL_ID)}, 'Borgartún 30', 'Reykjavík', '105', 'LARGE', 'M');
 
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
-VALUES (${escStr(evSubmitted)}, ${escStr(RICH_EQ)}, 'SUBMITTED', NULL, 'SUBMITTED', ${escStr(RICH_CID)});
+VALUES (${escStr(evSubmitted)}, ${escStr(EQ_REPORT_ID)}, 'SUBMITTED', NULL, 'SUBMITTED', ${escStr(COMPANY_ID)});
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
   from_status, to_status, company_id)
-VALUES (${escStr(evInReview)}, ${escStr(RICH_EQ)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'IN_REVIEW',
-  'SUBMITTED', 'IN_REVIEW', ${escStr(RICH_CID)});
+VALUES (${escStr(evInReview)}, ${escStr(EQ_REPORT_ID)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', ${escStr(COMPANY_ID)});
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
   from_status, to_status, company_id)
-VALUES (${escStr(evApproved)}, ${escStr(RICH_EQ)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'APPROVED',
-  'IN_REVIEW', 'APPROVED', ${escStr(RICH_CID)});
+VALUES (${escStr(evApproved)}, ${escStr(EQ_REPORT_ID)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'APPROVED',
+  'IN_REVIEW', 'APPROVED', ${escStr(COMPANY_ID)});
 
 COMMIT;
   `
@@ -154,7 +168,6 @@ COMMIT;
 // 3. Salary report row + company_report snapshot ----------------------------
 function salaryReportSql() {
   const salCompanyReportId = newUid()
-  // Average employee counts by gender, derived from the 100-employee sheet.
   let male = 0
   let female = 0
   let neutral = 0
@@ -172,19 +185,19 @@ INSERT INTO report (id, type, status, company_national_id, company_admin_name, c
   provider_type, provider_id, identifier, equality_report_id,
   average_employee_male_count, average_employee_female_count, average_employee_neutral_count,
   imported_from_excel, reviewer_user_id)
-VALUES (${escStr(RICH_SAL)}, 'SALARY', 'IN_REVIEW', ${escStr(RICH_NATIONAL_ID)},
-  'Sigrún Sigrúnardóttir', 'sigrun@storaprofunin.is', 'FEMALE',
-  'Sigrún Sigrúnardóttir', 'sigrun@storaprofunin.is', '999-9999',
-  'ISLAND_IS', 'prov-sal-029', 'LS-2026-029',
-  ${escStr(RICH_EQ)},
+VALUES (${escStr(SAL_REPORT_ID)}, 'SALARY', 'IN_REVIEW', ${escStr(NATIONAL_ID)},
+  'Þóra Þórsdóttir', 'thora@thrihopa.is', 'FEMALE',
+  'Þóra Þórsdóttir', 'thora@thrihopa.is', '888-8888',
+  'ISLAND_IS', 'prov-sal-030', 'LS-2026-030',
+  ${escStr(EQ_REPORT_ID)},
   ${num(male)}, ${num(female)}, ${num(neutral)},
   TRUE,
   ${escStr(REVIEWER_ID)});
 
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
-VALUES (${escStr(salCompanyReportId)}, ${escStr(RICH_CID)}, ${escStr(RICH_SAL)}, NULL,
-  ${escStr(RICH_COMPANY_NAME)}, ${escStr(RICH_NATIONAL_ID)}, 'Borgartún 29', 'Reykjavík', '105', 'LARGE', 'M');
+VALUES (${escStr(salCompanyReportId)}, ${escStr(COMPANY_ID)}, ${escStr(SAL_REPORT_ID)}, NULL,
+  ${escStr(COMPANY_NAME)}, ${escStr(NATIONAL_ID)}, 'Borgartún 30', 'Reykjavík', '105', 'LARGE', 'M');
 
 COMMIT;
   `
@@ -195,7 +208,7 @@ function criteriaSql() {
   const critValues = excel.criteria
     .map(
       (c, i) =>
-        `  (${escStr(criterionIds[i])}, ${escStr(RICH_SAL)}, ${escStr(c.title)}, ${num(
+        `  (${escStr(criterionIds[i])}, ${escStr(SAL_REPORT_ID)}, ${escStr(c.title)}, ${num(
           c.weight,
         )}, ${escStr(c.description)}, ${escStr(c.type)})`,
     )
@@ -274,7 +287,6 @@ COMMIT;
 
 // 6. Employees + personal step assignments ----------------------------------
 function employeesSql() {
-  // Scores from analysis.dataPoints (ordered by employee ordinal).
   const scoreByOrdinal = new Map()
   analysis.baseSalaryByGenderAndScoreAll.dataPoints.forEach((dp, i) => {
     scoreByOrdinal.set(i + 1, dp.score)
@@ -293,7 +305,7 @@ function employeesSql() {
           ? 'NULL'
           : num(Number(value).toFixed(2))
       return (
-        `  (${escStr(empId)}, ${escStr(RICH_SAL)}, ${num(e.ordinal)}, ` +
+        `  (${escStr(empId)}, ${escStr(SAL_REPORT_ID)}, ${num(e.ordinal)}, ` +
         `${escStr(e.education)}, ${escStr(e.field)}, ${escStr(e.department)}, ` +
         `${escStr(e.startDate)}, ${num(e.workRatio)}, ` +
         `${num(Number(e.baseSalary).toFixed(2))}, ` +
@@ -362,7 +374,6 @@ function resultSql() {
     employees: analysis.outliers,
   }
 
-  // Per-role aggregates derived from the 100-employee sheet.
   const empsByRole = new Map()
   excel.employees.forEach((e) => {
     if (!empsByRole.has(e.roleTitle)) empsByRole.set(e.roleTitle, [])
@@ -419,7 +430,7 @@ BEGIN;
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
-VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 1.95, 'v1',
+VALUES (${escStr(resultId)}, ${escStr(SAL_REPORT_ID)}, 1.95, 'v1',
   ${escJson(baseSnapshot)}, ${escJson(fullSnapshot)}, ${escJson(outlierSnapshot)});
 
 INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
@@ -429,40 +440,54 @@ COMMIT;
   `
 }
 
-// 8. Outliers (~20 rows, |differencePercent| >= 32) ------------------------
-// The explanation (reason / action / signature) now lives on an outlier
-// group; each outlier is a thin join referencing its group_id. We create two
-// groups: one "explained" (all four fields populated) and one "unexplained"
-// (all four NULL) — both satisfy the group CHECK and exercise both UI branches.
+// 8. Outliers split across THREE explained groups ---------------------------
+// Each outlier is a thin join referencing its group_id. We create three
+// explained groups (all four explanation fields populated) and distribute the
+// flagged outliers round-robin so every group gets a spread of deviations.
 function outliersSql() {
   const filtered = analysis.outliers.filter(
     (o) => Math.abs(o.differencePercent) >= 32,
   )
 
-  // Roughly the first third go in the explained group; the rest unexplained.
-  const explainedCutoff = Math.ceil(filtered.length / 3)
-
-  const explainedGroupId = newUid()
-  const unexplainedGroupId = newUid()
-
-  const groupValues = [
-    `  (${escStr(explainedGroupId)}, ${escStr(RICH_SAL)}, ${escStr(
-      'Útskýrður hópur',
-    )}, ${escStr(
-      'Sérfræðiþekking og reynsla starfsmanns réttlætir frávikið.',
-    )}, ${escStr('Endurmat við næstu launaviðræður.')}, ${escStr(
-      'Sigrún Sigrúnardóttir',
-    )}, ${escStr('Framkvæmdastjóri')})`,
-    `  (${escStr(unexplainedGroupId)}, ${escStr(RICH_SAL)}, ${escStr(
-      'Óútskýrður hópur',
-    )}, NULL, NULL, NULL, NULL)`,
+  const groups = [
+    {
+      id: newUid(),
+      name: 'Stjórnendur',
+      reason: 'Stjórnunarábyrgð og umfang starfs réttlætir hærri grunnlaun.',
+      action: 'Yfirfarið við næstu launaviðræður stjórnenda.',
+      signatureName: 'Þóra Þórsdóttir',
+      signatureRole: 'Framkvæmdastjóri',
+    },
+    {
+      id: newUid(),
+      name: 'Sérfræðingar',
+      reason: 'Eftirsótt sérþekking og markaðsaðstæður á sérfræðisviði.',
+      action: 'Markaðsgreining launa gerð á næsta ársfjórðungi.',
+      signatureName: 'Jón Jónsson',
+      signatureRole: 'Mannauðsstjóri',
+    },
+    {
+      id: newUid(),
+      name: 'Reynslumiklir starfsmenn',
+      reason: 'Löng starfsreynsla og tryggð við fyrirtækið.',
+      action: 'Starfsþróunarsamtöl bókuð fyrir árslok.',
+      signatureName: 'Anna Annadóttir',
+      signatureRole: 'Deildarstjóri',
+    },
   ]
+
+  const groupValues = groups.map(
+    (g) =>
+      `  (${escStr(g.id)}, ${escStr(SAL_REPORT_ID)}, ${escStr(g.name)}, ${escStr(
+        g.reason,
+      )}, ${escStr(g.action)}, ${escStr(g.signatureName)}, ${escStr(g.signatureRole)})`,
+  )
 
   const outlierValues = filtered.map((o, i) => {
     const empId = empIdByOrdinal.get(o.employeeOrdinal)
     if (!empId)
       throw new Error(`Outlier references unknown ordinal ${o.employeeOrdinal}`)
-    const groupId = i < explainedCutoff ? explainedGroupId : unexplainedGroupId
+    const groupId = groups[i % groups.length].id
     return `  (${escStr(newUid())}, ${escStr(empId)}, ${escStr(groupId)})`
   })
 
@@ -483,64 +508,58 @@ COMMIT;
 function eventsSql() {
   const evSubmitted = newUid()
   const evInReview = newUid()
-  const commentId = newUid()
   return `
 BEGIN;
 
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
-VALUES (${escStr(evSubmitted)}, ${escStr(RICH_SAL)}, 'SUBMITTED', NULL, 'SUBMITTED', ${escStr(RICH_CID)});
+VALUES (${escStr(evSubmitted)}, ${escStr(SAL_REPORT_ID)}, 'SUBMITTED', NULL, 'SUBMITTED', ${escStr(COMPANY_ID)});
 
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status,
   from_status, to_status, company_id)
-VALUES (${escStr(evInReview)}, ${escStr(RICH_SAL)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'IN_REVIEW',
-  'SUBMITTED', 'IN_REVIEW', ${escStr(RICH_CID)});
-
-INSERT INTO report_comment (id, report_id, author_kind, author_user_id, visibility, body, report_status)
-VALUES (${escStr(commentId)}, ${escStr(RICH_SAL)}, 'REVIEWER', ${escStr(REVIEWER_ID)}, 'EXTERNAL',
-  'Fjöldi útlaga er hár — vinsamlegast yfirfarið skýringar á efstu launakeppendum og tryggið að rökstuðningur sé fullnægjandi.',
-  'IN_REVIEW');
+VALUES (${escStr(evInReview)}, ${escStr(SAL_REPORT_ID)}, 'STATUS_CHANGED', ${escStr(REVIEWER_ID)}, 'IN_REVIEW',
+  'SUBMITTED', 'IN_REVIEW', ${escStr(COMPANY_ID)});
 
 COMMIT;
   `
 }
 
-// 10. Down: scoped to the rich-scenario company only ------------------------
+// 10. Down: scoped to this scenario's company only --------------------------
 function downSql() {
   return `
 BEGIN;
 
-DELETE FROM report_comment      WHERE report_id IN (${escStr(RICH_SAL)}, ${escStr(RICH_EQ)});
-DELETE FROM report_event        WHERE company_id = ${escStr(RICH_CID)};
+DELETE FROM report_comment      WHERE report_id IN (${escStr(SAL_REPORT_ID)}, ${escStr(EQ_REPORT_ID)});
+DELETE FROM report_event        WHERE company_id = ${escStr(COMPANY_ID)};
 DELETE FROM report_employee_personal_criterion_step
-  WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(RICH_SAL)});
+  WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(SAL_REPORT_ID)});
 DELETE FROM report_employee_outlier
-  WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(RICH_SAL)});
-DELETE FROM report_outlier_group WHERE report_id = ${escStr(RICH_SAL)};
+  WHERE report_employee_id IN (SELECT id FROM report_employee WHERE report_id = ${escStr(SAL_REPORT_ID)});
+DELETE FROM report_outlier_group WHERE report_id = ${escStr(SAL_REPORT_ID)};
 DELETE FROM report_employee_role_criterion_step
   WHERE report_sub_criterion_step_id IN (
     SELECT rscs.id FROM report_sub_criterion_step rscs
     JOIN report_sub_criterion rsc ON rsc.id = rscs.report_sub_criterion_id
     JOIN report_criterion rc ON rc.id = rsc.report_criterion_id
-    WHERE rc.report_id = ${escStr(RICH_SAL)}
+    WHERE rc.report_id = ${escStr(SAL_REPORT_ID)}
   );
-DELETE FROM report_employee     WHERE report_id = ${escStr(RICH_SAL)};
+DELETE FROM report_employee     WHERE report_id = ${escStr(SAL_REPORT_ID)};
 DELETE FROM report_role_result
-  WHERE report_result_id IN (SELECT id FROM report_result WHERE report_id = ${escStr(RICH_SAL)});
+  WHERE report_result_id IN (SELECT id FROM report_result WHERE report_id = ${escStr(SAL_REPORT_ID)});
 DELETE FROM report_employee_role
   WHERE id IN (${[...roleIdByTitle.values()].map((id) => escStr(id)).join(', ')});
-DELETE FROM report_result       WHERE report_id = ${escStr(RICH_SAL)};
+DELETE FROM report_result       WHERE report_id = ${escStr(SAL_REPORT_ID)};
 DELETE FROM report_sub_criterion_step
   WHERE report_sub_criterion_id IN (
     SELECT rsc.id FROM report_sub_criterion rsc
     JOIN report_criterion rc ON rc.id = rsc.report_criterion_id
-    WHERE rc.report_id = ${escStr(RICH_SAL)}
+    WHERE rc.report_id = ${escStr(SAL_REPORT_ID)}
   );
 DELETE FROM report_sub_criterion
-  WHERE report_criterion_id IN (SELECT id FROM report_criterion WHERE report_id = ${escStr(RICH_SAL)});
-DELETE FROM report_criterion    WHERE report_id = ${escStr(RICH_SAL)};
-DELETE FROM company_report      WHERE company_id = ${escStr(RICH_CID)};
-DELETE FROM report              WHERE id IN (${escStr(RICH_SAL)}, ${escStr(RICH_EQ)});
-DELETE FROM company             WHERE id = ${escStr(RICH_CID)};
+  WHERE report_criterion_id IN (SELECT id FROM report_criterion WHERE report_id = ${escStr(SAL_REPORT_ID)});
+DELETE FROM report_criterion    WHERE report_id = ${escStr(SAL_REPORT_ID)};
+DELETE FROM company_report      WHERE company_id = ${escStr(COMPANY_ID)};
+DELETE FROM report              WHERE id IN (${escStr(SAL_REPORT_ID)}, ${escStr(EQ_REPORT_ID)});
+DELETE FROM company             WHERE id = ${escStr(COMPANY_ID)};
 
 COMMIT;
   `

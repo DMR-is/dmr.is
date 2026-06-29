@@ -2463,6 +2463,13 @@
             "schema": { "default": 10, "example": 10, "type": "number" }
           },
           {
+            "name": "groupId",
+            "required": false,
+            "in": "query",
+            "description": "Restrict the list to the outliers belonging to a single group.",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
             "name": "sortBy",
             "required": false,
             "in": "query",
@@ -2482,6 +2489,75 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetReportOutliersResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
+    "/api/v1/reports/{id}/outlier-groups": {
+      "get": {
+        "description": "A report's outlier groups (id, name, and the shared reason/action/signature explanation). A report with detected outliers always has at least one group; multiple groups drive the per-group Úrbótaáætlun tables.",
+        "operationId": "getReportOutlierGroups",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportOutlierGroupsResponseDto"
                 }
               }
             }
@@ -5140,6 +5216,36 @@
           "paging": { "$ref": "#/components/schemas/Paging" }
         },
         "required": ["outliers", "paging"]
+      },
+      "ReportOutlierGroupDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "name": {
+            "type": "string",
+            "description": "Applicant-supplied label for the group. Non-empty. The implicit single group created when no grouping is provided uses a default name."
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null only while the parent report is postponed (explanation not yet filled). Otherwise non-empty."
+          },
+          "action": { "type": "string", "nullable": true },
+          "signatureName": { "type": "string", "nullable": true },
+          "signatureRole": { "type": "string", "nullable": true }
+        },
+        "required": ["id", "reportId", "name"]
+      },
+      "GetReportOutlierGroupsResponseDto": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportOutlierGroupDto" }
+          }
+        },
+        "required": ["groups"]
       },
       "CreateReportCommentDto": {
         "type": "object",

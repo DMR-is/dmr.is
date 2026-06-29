@@ -38,6 +38,7 @@ import { ReportRoleResultModel } from '../report-result/models/report-role-resul
 import { UserModel } from '../user/models/user.model'
 import { EqualityReportDto } from './dto/equality-report.dto'
 import { EqualityReportSummaryDto } from './dto/equality-report-summary.dto'
+import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import {
   GetReportOutliersQueryDto,
   ReportOutlierSortByEnum,
@@ -95,6 +96,8 @@ export class ReportService implements IReportService {
     private readonly companyReportModel: typeof CompanyReportModel,
     @InjectModel(ReportCommentModel)
     private readonly reportCommentModel: typeof ReportCommentModel,
+    @InjectModel(ReportOutlierGroupModel)
+    private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
   ) {}
 
   async list(query: GetReportsQueryDto): Promise<GetReportsResponseDto> {
@@ -650,6 +653,10 @@ export class ReportService implements IReportService {
     const { limit, offset } = getLimitAndOffset(query)
 
     const { rows, count } = await this.reportEmployeeOutlierModel.findAndCountAll({
+      // `groupId` is a non-null FK on every outlier row, so this scopes the
+      // page (and `count`) to one group without ever excluding rows; omitted
+      // → all of the report's outliers, preserving the pre-grouping behavior.
+      where: query.groupId ? { groupId: query.groupId } : undefined,
       include: [
         {
           model: ReportEmployeeModel,
@@ -705,6 +712,25 @@ export class ReportService implements IReportService {
     const paging = generatePaging(outliers, query.page, query.pageSize, count)
 
     return { outliers, paging }
+  }
+
+  async getOutlierGroups(
+    reportId: string,
+  ): Promise<GetReportOutlierGroupsResponseDto> {
+    this.logger.debug('Listing report outlier groups', {
+      context: LOGGING_CONTEXT,
+      reportId,
+    })
+
+    // Verify the report exists (throws 404 otherwise) before listing groups.
+    const report = await this.reportModel.findByPkOrThrow(reportId)
+
+    const rows = await this.reportOutlierGroupModel.findAll({
+      where: { reportId: report.id },
+      order: [['name', 'ASC']],
+    })
+
+    return { groups: rows.map((row) => row.fromModel()) }
   }
 
   /**

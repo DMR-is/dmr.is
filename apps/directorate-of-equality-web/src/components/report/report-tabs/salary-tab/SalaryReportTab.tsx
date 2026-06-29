@@ -3,8 +3,7 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Stack } from '@island.is/island-ui/core'
 
 import {
-  Paging,
-  ReportEmployeeOutlierDto,
+  ReportOutlierGroupDto,
   SalaryByGenderAndScoreDto,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
@@ -14,29 +13,19 @@ import { OutlierPlanTable } from './OutlierPlanTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
 
-import { type SortingState } from '@tanstack/react-table'
-
 interface SalaryReportTabProps {
   data: SalaryByGenderAndScoreDto
-  outliers: ReportEmployeeOutlierDto[]
-  outliersPaging?: Paging
-  outliersLoading?: boolean
-  onOutliersPageChange: (page: number) => void
-  outliersSorting?: SortingState
-  onOutliersSortingChange?: (sorting: SortingState) => void
+  reportId: string
+  groups: ReportOutlierGroupDto[]
   outlierDate?: Date
   outliersPostponed?: boolean
 }
 
 export const SalaryReportTab = ({
   data,
-  outliers,
+  reportId,
+  groups,
   outliersPostponed,
-  outliersPaging,
-  outliersLoading,
-  onOutliersPageChange,
-  outliersSorting,
-  onOutliersSortingChange,
   outlierDate,
 }: SalaryReportTabProps) => {
   if (!data) {
@@ -56,17 +45,13 @@ export const SalaryReportTab = ({
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
       />
-      {outliers.length > 0 && (
+      {groups.length > 0 && (
         <Box marginBottom={4}>
           <OutlierPlanTable
-            outliers={outliers}
-            paging={outliersPaging}
-            loading={outliersLoading}
+            reportId={reportId}
+            groups={groups}
             outliersPostponed={outliersPostponed}
             outlierDate={outlierDate}
-            onPageChange={onOutliersPageChange}
-            sorting={outliersSorting}
-            onSortingChange={onOutliersSortingChange}
           />
         </Box>
       )}

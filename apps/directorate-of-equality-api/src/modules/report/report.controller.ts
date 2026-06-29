@@ -16,6 +16,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
+import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
@@ -83,5 +84,19 @@ export class ReportController {
     @Query() query: GetReportOutliersQueryDto,
   ): Promise<GetReportOutliersResponseDto> {
     return this.reportService.getOutliers(id, query)
+  }
+
+  @Get(':id/outlier-groups')
+  @DoeResponse({
+    operationId: 'getReportOutlierGroups',
+    type: GetReportOutlierGroupsResponseDto,
+    include404: true,
+    description:
+      "A report's outlier groups (id, name, and the shared reason/action/signature explanation). A report with detected outliers always has at least one group; multiple groups drive the per-group Úrbótaáætlun tables.",
+  })
+  async getOutlierGroups(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<GetReportOutlierGroupsResponseDto> {
+    return this.reportService.getOutlierGroups(id)
   }
 }

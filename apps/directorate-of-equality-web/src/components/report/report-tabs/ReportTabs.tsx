@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 
@@ -9,10 +9,8 @@ import { Tabs } from '@island.is/island-ui/core'
 import { CommentsContainer } from '../../../containers/report/CommentsContainer'
 import {
   ReportDetailDto,
-  ReportOutlierSortByEnum,
   ReportTypeEnum,
   SalaryByGenderAndScoreDto,
-  SortDirectionEnum,
 } from '../../../gen/fetch'
 import { reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
@@ -20,15 +18,10 @@ import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 
-import { keepPreviousData } from '@tanstack/react-query'
-import { type SortingState } from '@tanstack/react-table'
-
 type ReportTabsProps = {
   report: ReportDetailDto
   salaryStats?: SalaryByGenderAndScoreDto
 }
-
-const OUTLIERS_PAGE_SIZE = 10
 
 export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const trpc = useTRPC()
@@ -36,37 +29,10 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
   const [selectedTab, setSelectedTab] = useState(
     isSalary ? 'launagreining' : 'jafnrettisaetlun',
   )
-  const [outliersPage, setOutliersPage] = useState(1)
-  const [outliersSorting, setOutliersSorting] = useState<SortingState>([])
 
-  useEffect(() => {
-    setOutliersPage(1)
-  }, [report.id])
-
-  const outlierSortBy = outliersSorting[0]?.id as
-    | ReportOutlierSortByEnum
-    | undefined
-  const outlierDirection = outliersSorting[0]
-    ? outliersSorting[0].desc
-      ? SortDirectionEnum.DESC
-      : SortDirectionEnum.ASC
-    : undefined
-
-  const handleOutliersSortingChange = (next: SortingState) => {
-    setOutliersSorting(next)
-    setOutliersPage(1)
-  }
-
-  const { data: outliersData, isLoading: outliersLoading } = useQuery({
-    ...trpc.reports.getOutliers.queryOptions({
-      id: report.id,
-      page: outliersPage,
-      pageSize: OUTLIERS_PAGE_SIZE,
-      sortBy: outlierSortBy,
-      direction: outlierDirection,
-    }),
+  const { data: groupsData } = useQuery({
+    ...trpc.reports.getOutlierGroups.queryOptions({ id: report.id }),
     enabled: isSalary && report.includesImprovementPlan,
-    placeholderData: keepPreviousData,
   })
 
   const jafnrettisaetlun = {
@@ -118,15 +84,11 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
             content: (
               <SalaryReportTab
                 data={salaryStats}
-                outliers={outliersData?.outliers ?? []}
+                reportId={report.id}
+                groups={groupsData?.groups ?? []}
                 outliersPostponed={
                   report.status.match(/postponed/i) ? true : false
                 }
-                outliersPaging={outliersData?.paging}
-                outliersLoading={outliersLoading}
-                onOutliersPageChange={setOutliersPage}
-                outliersSorting={outliersSorting}
-                onOutliersSortingChange={handleOutliersSortingChange}
                 outlierDate={
                   report.correctionDeadline
                     ? new Date(report.correctionDeadline)
