@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
@@ -19,7 +20,7 @@ import { companiesText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { TimelineFeed } from '../../report/report-tabs/comments/timeline/TimelineFeed'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
 

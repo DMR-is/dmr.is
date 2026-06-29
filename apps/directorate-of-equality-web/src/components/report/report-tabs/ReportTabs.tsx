@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { useQuery } from '@dmr.is/trpc/client/trpc'
+
 import { Tabs } from '@island.is/island-ui/core'
 
 import { CommentsContainer } from '../../../containers/report/CommentsContainer'
@@ -18,7 +20,7 @@ import { CompanyInfoTab } from './company-tab/CompanyInfoTab'
 import { EqualityReportTab } from './equality-tab/EqualityReportTab'
 import { SalaryReportTab } from './salary-tab/SalaryReportTab'
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData } from '@tanstack/react-query'
 import { type SortingState } from '@tanstack/react-table'
 
 type ReportTabsProps = {
