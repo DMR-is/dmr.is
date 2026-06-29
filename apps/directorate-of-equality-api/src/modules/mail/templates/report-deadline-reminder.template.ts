@@ -1,9 +1,12 @@
+import { CompanyReminderTierEnum } from '../../company/models/company-event.model'
 import { ReportTypeEnum } from '../../report/models/report.enums'
 
 export type ReportDeadlineReminderInput = {
   companyName: string
   reportType: ReportTypeEnum
-  /** The deadline being reminded about (6 months out). */
+  /** Which milestone this reminder is for. */
+  tier: CompanyReminderTierEnum
+  /** The deadline being reminded about. */
   dueDate: Date
 }
 
@@ -25,10 +28,26 @@ const formatDate = (date: Date): string => {
   return `${day}.${month}.${date.getFullYear()}`
 }
 
+/**
+ * Lead sentence per tier. The phrasing tracks the tier's band (e.g. the
+ * TWO_WEEKS tier only fires when the deadline is genuinely within two weeks),
+ * so it stays accurate without hard-coding a single offset.
+ */
+const TIER_LEAD: Record<CompanyReminderTierEnum, string> = {
+  [CompanyReminderTierEnum.SIX_MONTHS]: 'Skilafrestur nálgast — innan sex mánaða.',
+  [CompanyReminderTierEnum.TWO_MONTHS]:
+    'Skilafrestur nálgast — innan tveggja mánaða.',
+  [CompanyReminderTierEnum.TWO_WEEKS]: 'Skilafrestur er innan tveggja vikna.',
+  [CompanyReminderTierEnum.DUE]: 'Skiladagur er runninn upp.',
+}
+
+const subjectPrefix = (tier: CompanyReminderTierEnum): string =>
+  tier === CompanyReminderTierEnum.DUE ? 'Skilafrestur á lokadegi' : 'Áminning'
+
 export const buildReportDeadlineReminderSubject = (
   input: ReportDeadlineReminderInput,
 ): string =>
-  `Áminning: skilafrestur ${reportLabel(input.reportType)} er eftir 6 mánuði`
+  `${subjectPrefix(input.tier)}: skilafrestur ${reportLabel(input.reportType)} — skiladagur ${formatDate(input.dueDate)}`
 
 export const buildReportDeadlineReminderHtml = (
   input: ReportDeadlineReminderInput,
@@ -39,8 +58,8 @@ export const buildReportDeadlineReminderHtml = (
 
   return [
     '<h2>Áminning frá Jafnréttisstofu</h2>',
-    `<p>Skilafrestur ${label} fyrir <strong>${company}</strong> er eftir 6 mánuði.</p>`,
-    `<p>Skiladagur er <strong>${due}</strong>.</p>`,
+    `<p>${escapeHtml(TIER_LEAD[input.tier])}</p>`,
+    `<p>Skiladagur ${label} fyrir <strong>${company}</strong> er <strong>${due}</strong>.</p>`,
     '<p>Vinsamlegast tryggðu að skýrslunni verði skilað tímanlega.</p>',
   ].join('')
 }
@@ -54,8 +73,8 @@ export const buildReportDeadlineReminderText = (
   return [
     'Áminning frá Jafnréttisstofu.',
     '',
-    `Skilafrestur ${label} fyrir ${input.companyName} er eftir 6 mánuði.`,
-    `Skiladagur er ${due}.`,
+    TIER_LEAD[input.tier],
+    `Skiladagur ${label} fyrir ${input.companyName} er ${due}.`,
     '',
     'Vinsamlegast tryggðu að skýrslunni verði skilað tímanlega.',
   ].join('\n')

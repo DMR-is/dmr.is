@@ -14,8 +14,5 @@ export const DOE_TASK_JOB_IDS = {
   reportDeadlineReminder: 1,
 } as const
 
-/** How far before a deadline the reminder is sent. */
-export const REPORT_DEADLINE_REMINDER_MONTHS = 6
-
 export const REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT =
   'ReportDeadlineReminderTask'

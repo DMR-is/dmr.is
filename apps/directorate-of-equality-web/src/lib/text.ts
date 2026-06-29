@@ -226,6 +226,17 @@ export const reportText = {
     finesStopped: 'hefur stöðvað dagsektarferli',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
+    reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
+    reminderSentSalary: 'Áminning send um skil jafnlaunaskýrslu',
+    reminderNoEmailEquality:
+      'Reyndi að senda áminningu um jafnréttisskýrslu en ekkert netfang fannst',
+    reminderNoEmailSalary:
+      'Reyndi að senda áminningu um jafnlaunaskýrslu en ekkert netfang fannst',
+    reminderTierSixMonths: 'Sex mánaða áminning',
+    reminderTierTwoMonths: 'Tveggja mánaða áminning',
+    reminderTierTwoWeeks: 'Tveggja vikna áminning',
+    reminderTierDue: 'Áminning á skiladegi',
+    reminderDueDatePrefix: 'skiladagur',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:

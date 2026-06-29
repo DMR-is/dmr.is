@@ -4072,6 +4072,10 @@
           "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL"
         ]
       },
+      "CompanyReminderTierEnum": {
+        "type": "string",
+        "enum": ["SIX_MONTHS", "TWO_MONTHS", "TWO_WEEKS", "DUE"]
+      },
       "CompanyEventDto": {
         "type": "object",
         "properties": {
@@ -4098,6 +4102,12 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
           },
           "reason": { "type": "string", "nullable": true },
+          "reminderTier": {
+            "nullable": true,
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyReminderTierEnum" }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",

@@ -9,6 +9,7 @@ import {
   CompanyDeadlineReminderEventType,
   CompanyEventModel,
   CompanyEventTypeEnum,
+  CompanyReminderTierEnum,
 } from '../company/models/company-event.model'
 import { UserModel } from '../user/models/user.model'
 import { ICompanyEventService } from './company-event.service.interface'
@@ -157,10 +158,11 @@ export class CompanyEventService implements ICompanyEventService {
   async hasDeadlineReminderEvent(
     companyId: string,
     eventType: CompanyDeadlineReminderEventType,
+    tier: CompanyReminderTierEnum,
     dueDateIso: string,
   ): Promise<boolean> {
     const existing = await this.companyEventModel.findOne({
-      where: { companyId, eventType, reason: dueDateIso },
+      where: { companyId, eventType, reminderTier: tier, reason: dueDateIso },
       attributes: ['id'],
     })
 
@@ -171,11 +173,12 @@ export class CompanyEventService implements ICompanyEventService {
     companyId: string,
     status: CompanyStatusEnum,
     eventType: CompanyDeadlineReminderEventType,
+    tier: CompanyReminderTierEnum,
     dueDateIso: string,
   ): Promise<void> {
     this.logger.info(
-      `Emitting ${eventType} event for company ${companyId} (due ${dueDateIso})`,
-      { context: LOGGING_CONTEXT, companyId, eventType, dueDateIso },
+      `Emitting ${eventType} (${tier}) event for company ${companyId} (due ${dueDateIso})`,
+      { context: LOGGING_CONTEXT, companyId, eventType, tier, dueDateIso },
     )
 
     await this.companyEventModel.create({
@@ -183,6 +186,7 @@ export class CompanyEventService implements ICompanyEventService {
       eventType,
       status,
       reason: dueDateIso,
+      reminderTier: tier,
     })
   }
 }

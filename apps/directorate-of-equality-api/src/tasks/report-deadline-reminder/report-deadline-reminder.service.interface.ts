@@ -1,8 +1,9 @@
 export interface IReportDeadlineReminderService {
   /**
-   * Sends a reminder to every company whose next equality- or salary-report
-   * deadline falls within the reminder window (6 months out) and that has not
-   * already been reminded for that exact due date. Idempotent across runs.
+   * Sends deadline reminders for every company's next equality- and salary-
+   * report deadline at four milestones — 6 months, 2 months, 2 weeks before,
+   * and on/after the due date — emitting one audit event per (report kind,
+   * tier, due date). Idempotent across runs and containers.
    */
   run(): Promise<void>
 }
