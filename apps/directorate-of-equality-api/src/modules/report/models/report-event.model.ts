@@ -16,6 +16,19 @@ export enum ReportEventTypeEnum {
   SUPERSEDED = 'SUPERSEDED',
   EDITED = 'EDITED',
   WITHDRAWN = 'WITHDRAWN',
+  SYSTEM_AUTO_REVIEW = 'SYSTEM_AUTO_REVIEW',
+}
+
+/**
+ * The verdict the system reaches on a freshly submitted report. Recorded on a
+ * SYSTEM_AUTO_REVIEW event for audit only — during the soft phase it never
+ * changes the report's status (see ReportAutoReviewService). `system_decision`
+ * is a first-class column so "how often would we have auto-approved?" is a
+ * direct query, not an inference from an overloaded status field.
+ */
+export enum AutoReviewDecisionEnum {
+  AUTO_APPROVE = 'AUTO_APPROVE',
+  NEEDS_REVIEW = 'NEEDS_REVIEW',
 }
 
 type ReportEventAttributes = {
@@ -29,6 +42,7 @@ type ReportEventAttributes = {
   reason: string | null
   relatedReportId: string | null
   companyId: string | null
+  systemDecision: AutoReviewDecisionEnum | null
 }
 
 type ReportEventCreateAttributes = {
@@ -42,6 +56,7 @@ type ReportEventCreateAttributes = {
   reason?: string | null
   relatedReportId?: string | null
   companyId?: string | null
+  systemDecision?: AutoReviewDecisionEnum | null
 }
 
 @ImmutableTable({ tableName: DoeModels.REPORT_EVENT })
@@ -100,6 +115,13 @@ export class ReportEventModel extends ImmutableModel<
   @Column({ type: DataType.UUID, allowNull: true, field: 'company_id' })
   companyId!: string | null
 
+  @Column({
+    type: DataType.ENUM(...Object.values(AutoReviewDecisionEnum)),
+    allowNull: true,
+    field: 'system_decision',
+  })
+  systemDecision!: AutoReviewDecisionEnum | null
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -137,6 +159,7 @@ export class ReportEventModel extends ImmutableModel<
       reason: model.reason,
       relatedReportId: model.relatedReportId,
       companyId: model.companyId,
+      systemDecision: model.systemDecision,
       createdAt: model.createdAt,
     }
   }

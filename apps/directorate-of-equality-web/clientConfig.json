@@ -4712,8 +4712,13 @@
           "STATUS_CHANGED",
           "SUPERSEDED",
           "EDITED",
-          "WITHDRAWN"
+          "WITHDRAWN",
+          "SYSTEM_AUTO_REVIEW"
         ]
+      },
+      "AutoReviewDecisionEnum": {
+        "type": "string",
+        "enum": ["AUTO_APPROVE", "NEEDS_REVIEW"]
       },
       "ReportEventDto": {
         "type": "object",
@@ -4753,6 +4758,10 @@
             "nullable": true
           },
           "companyId": { "type": "string", "format": "uuid", "nullable": true },
+          "systemDecision": {
+            "nullable": true,
+            "allOf": [{ "$ref": "#/components/schemas/AutoReviewDecisionEnum" }]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",

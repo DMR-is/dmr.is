@@ -6,6 +6,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
+import { ReportAutoReviewCoreModule } from '../report-auto-review/report-auto-review.core.module'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
@@ -37,6 +38,7 @@ import { IReportCreateService } from './report-create.service.interface'
       ReportSubCriterionStepModel,
     ]),
     ReportResultCoreModule,
+    ReportAutoReviewCoreModule,
     ConfigCoreModule,
   ],
   providers: [
