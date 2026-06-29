@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyEventDto } from '../company/dto/company-event.dto'
 import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
+  CompanyDeadlineReminderEventType,
   CompanyEventModel,
   CompanyEventTypeEnum,
 } from '../company/models/company-event.model'
@@ -151,5 +152,37 @@ export class CompanyEventService implements ICompanyEventService {
     })
 
     return events.map((event) => event.fromModel())
+  }
+
+  async hasDeadlineReminderBeenSent(
+    companyId: string,
+    eventType: CompanyDeadlineReminderEventType,
+    dueDateIso: string,
+  ): Promise<boolean> {
+    const existing = await this.companyEventModel.findOne({
+      where: { companyId, eventType, reason: dueDateIso },
+      attributes: ['id'],
+    })
+
+    return existing !== null
+  }
+
+  async emitDeadlineReminderSent(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyDeadlineReminderEventType,
+    dueDateIso: string,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting ${eventType} event for company ${companyId} (due ${dueDateIso})`,
+      { context: LOGGING_CONTEXT, companyId, eventType, dueDateIso },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType,
+      status,
+      reason: dueDateIso,
+    })
   }
 }

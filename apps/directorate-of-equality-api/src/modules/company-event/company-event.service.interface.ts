@@ -1,5 +1,6 @@
 import { CompanyEventDto } from '../company/dto/company-event.dto'
 import { CompanyStatusEnum } from '../company/models/company.enums'
+import { CompanyDeadlineReminderEventType } from '../company/models/company-event.model'
 
 export interface ICompanyEventService {
   /** Origin event for a freshly registered company. */
@@ -52,6 +53,28 @@ export interface ICompanyEventService {
 
   /** All events for a company, oldest first — used to build the timeline. */
   getByCompanyId(companyId: string): Promise<CompanyEventDto[]>
+
+  /**
+   * True if a deadline reminder of `eventType` was already recorded for this
+   * exact `dueDateIso`. Used by the reminder task to stay idempotent across
+   * daily runs and multiple containers.
+   */
+  hasDeadlineReminderBeenSent(
+    companyId: string,
+    eventType: CompanyDeadlineReminderEventType,
+    dueDateIso: string,
+  ): Promise<boolean>
+
+  /**
+   * Records that a 6-months-before deadline reminder was sent. `dueDateIso`
+   * (stored in `reason`) is the due date being reminded about.
+   */
+  emitDeadlineReminderSent(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyDeadlineReminderEventType,
+    dueDateIso: string,
+  ): Promise<void>
 }
 
 export const ICompanyEventService = Symbol('ICompanyEventService')

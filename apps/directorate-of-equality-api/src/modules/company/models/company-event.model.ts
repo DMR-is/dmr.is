@@ -25,6 +25,11 @@ import { CompanyModel } from './company.model'
  *                    suspended). No from/to status; carries an optional reason.
  *   UNQUARANTINED  → an admin lifted the quarantine. No from/to status;
  *                    carries an optional reason.
+ *   EQUALITY_REPORT_DEADLINE_REMINDER_SENT / SALARY_REPORT_DEADLINE_REMINDER_SENT
+ *                  → emitted by the report-deadline-reminder task when a
+ *                    6-months-before notification is sent. `reason` holds the
+ *                    ISO due date being reminded about, which makes the task
+ *                    idempotent per cycle (a new due date re-arms the reminder).
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -33,7 +38,14 @@ export enum CompanyEventTypeEnum {
   FINES_STOPPED = 'FINES_STOPPED',
   QUARANTINED = 'QUARANTINED',
   UNQUARANTINED = 'UNQUARANTINED',
+  EQUALITY_REPORT_DEADLINE_REMINDER_SENT = 'EQUALITY_REPORT_DEADLINE_REMINDER_SENT',
+  SALARY_REPORT_DEADLINE_REMINDER_SENT = 'SALARY_REPORT_DEADLINE_REMINDER_SENT',
 }
+
+/** The two deadline-reminder event types the reminder task may emit. */
+export type CompanyDeadlineReminderEventType =
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT
+  | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT
 
 type CompanyEventAttributes = {
   companyId: string
