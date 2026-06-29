@@ -72,6 +72,7 @@ export const overviewText = {
     dateTo: 'Til',
     dateToPlaceholder: 'Veldu dagsetningu',
     clearDates: 'Hreinsa dagsetningar',
+    showDelayed: 'Sýna frestaðar úrbótaráætlanir',
   },
   createEqualityReport: {
     drawerLabel: 'Skrá jafnréttisáætlun',

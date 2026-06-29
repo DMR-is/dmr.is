@@ -1,7 +1,7 @@
 'use client'
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
@@ -44,7 +44,11 @@ import { type ColumnDef } from '@tanstack/react-table'
 
 type TabId = 'innsendingar' | 'i-vinnslu' | 'afgreitt'
 
-const SUBMITTED = [ReportStatusEnum.SUBMITTED, ReportStatusEnum.POSTPONED]
+const SUBMITTED = [ReportStatusEnum.SUBMITTED]
+const SUBMITTED_WITH_DELAYED = [
+  ReportStatusEnum.SUBMITTED,
+  ReportStatusEnum.POSTPONED,
+]
 const IN_REVIEW = [ReportStatusEnum.IN_REVIEW]
 const PROCESSED = [
   ReportStatusEnum.APPROVED,
@@ -74,12 +78,7 @@ const ALL_STATUS_OPTIONS: FilterOption[] = (
 ).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
-  // tab 1 is locked to SUBMITTED + POSTPONED (see SUBMITTED above); let the
-  // admin narrow to either one, but exclude every other status so they can't
-  // escape the tab's domain
-  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value).filter(
-    (v) => v !== ReportStatusEnum.SUBMITTED && v !== ReportStatusEnum.POSTPONED,
-  ),
+  innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
   'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
   // tab 3 shows ONLY the three processed statuses — exclude everything else
   afgreitt: ['DRAFT', 'SUBMITTED', 'IN_REVIEW', 'POSTPONED'],
@@ -201,7 +200,15 @@ export const ReportsContainer = () => {
     ] as const).withDefault('innsendingar'),
   )
 
-  const fixedStatus = TAB_FIXED_STATUS[activeTab]
+  const [showDelayed, setShowDelayed] = useState(false)
+
+  const fixedStatus = useMemo(() => {
+    if (activeTab === 'innsendingar') {
+      return showDelayed ? SUBMITTED_WITH_DELAYED : SUBMITTED
+    }
+    return TAB_FIXED_STATUS[activeTab]
+  }, [activeTab, showDelayed])
+
   const fixedQuery = fixedStatus ? { status: fixedStatus } : undefined
 
   const { data, isLoading, isError, filter, setFilter, resetFilter } =
@@ -235,6 +242,7 @@ export const ReportsContainer = () => {
 
   const handleTabChange = (tab: string) => {
     resetFilter()
+    setShowDelayed(false)
     setActiveTab(tab as TabId)
   }
 
@@ -298,6 +306,12 @@ export const ReportsContainer = () => {
                 setFilter({ createdTo: d.toISOString() })
               }}
               onReset={resetFilter}
+              showDelayed={
+                activeTab === 'innsendingar' ? showDelayed : undefined
+              }
+              onShowDelayedChange={
+                activeTab === 'innsendingar' ? setShowDelayed : undefined
+              }
             />
             {!isMobile && (
               <Stack space={2}>

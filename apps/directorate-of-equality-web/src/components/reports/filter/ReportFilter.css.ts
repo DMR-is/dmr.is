@@ -6,3 +6,7 @@ export const dateSection = style({
   borderBottomLeftRadius: '8px',
   borderBottomRightRadius: '8px',
 })
+
+export const delayedSection = style({
+  marginTop: -32,
+})
