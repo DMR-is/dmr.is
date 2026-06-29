@@ -8,6 +8,8 @@ import {
   zGetCompanyCommentsPath,
   zGetCompanyTimelinePath,
   zRskLookupCompanyPath,
+  zUpdateCompanyEmailBody,
+  zUpdateCompanyEmailPath,
   zUpdateCompanyFinesBody,
   zUpdateCompanyFinesPath,
   zUpdateCompanyQuarantineBody,
@@ -124,6 +126,17 @@ export const companyRouter = router({
       ctx.api.updateCompanyFines({
         path: { id: input.id },
         body: { finesStarted: input.finesStarted, reason: input.reason },
+      }),
+    ),
+
+  // Admin-set contact email read by the deadline-reminder task. Empty/null
+  // clears it.
+  updateEmail: protectedProcedure
+    .input(zUpdateCompanyEmailPath.extend(zUpdateCompanyEmailBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateCompanyEmail({
+        path: { id: input.id },
+        body: { email: input.email },
       }),
     ),
 

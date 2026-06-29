@@ -8,6 +8,7 @@ import { IsatCategoryDto } from './dto/isat-category.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
 import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snapshot-source.dto'
+import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
@@ -42,6 +43,11 @@ export interface ICompanyService {
   updateIsat(
     id: string,
     dto: UpdateCompanyIsatDto,
+    actorUserId: string,
+  ): Promise<CompanyDto>
+  updateEmail(
+    id: string,
+    dto: UpdateCompanyEmailDto,
     actorUserId: string,
   ): Promise<CompanyDto>
   updateFines(

@@ -7,6 +7,7 @@ import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
   CompanyEventModel,
   CompanyEventTypeEnum,
+  CompanyReminderTierEnum,
 } from '../company/models/company-event.model'
 import { UserModel } from '../user/models/user.model'
 import { CompanyEventService } from './company-event.service'
@@ -22,10 +23,12 @@ describe('CompanyEventService', () => {
   let service: CompanyEventService
   let create: jest.Mock
   let findAll: jest.Mock
+  let findOne: jest.Mock
 
   beforeEach(async () => {
     create = jest.fn().mockResolvedValue({})
     findAll = jest.fn().mockResolvedValue([])
+    findOne = jest.fn().mockResolvedValue(null)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -33,7 +36,7 @@ describe('CompanyEventService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(CompanyEventModel),
-          useValue: { create, findAll },
+          useValue: { create, findAll, findOne },
         },
       ],
     }).compile()
@@ -86,5 +89,45 @@ describe('CompanyEventService', () => {
       order: [['createdAt', 'ASC']],
     })
     expect(result).toEqual([{ id: 'e1' }, { id: 'e2' }])
+  })
+
+  it('hasDeadlineReminderEvent keys the lookup on tier and due date', async () => {
+    findOne.mockResolvedValue({ id: 'e1' })
+
+    const result = await service.hasDeadlineReminderEvent(
+      'company-1',
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+      CompanyReminderTierEnum.TWO_WEEKS,
+      '2026-12-01T00:00:00.000Z',
+    )
+
+    expect(findOne).toHaveBeenCalledWith({
+      where: {
+        companyId: 'company-1',
+        eventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+        reminderTier: CompanyReminderTierEnum.TWO_WEEKS,
+        reason: '2026-12-01T00:00:00.000Z',
+      },
+      attributes: ['id'],
+    })
+    expect(result).toBe(true)
+  })
+
+  it('emitDeadlineReminderEvent stores the tier and due date', async () => {
+    await service.emitDeadlineReminderEvent(
+      'company-1',
+      CompanyStatusEnum.ACTIVE,
+      CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+      CompanyReminderTierEnum.DUE,
+      '2026-12-01T00:00:00.000Z',
+    )
+
+    expect(create).toHaveBeenCalledWith({
+      companyId: 'company-1',
+      eventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+      status: CompanyStatusEnum.ACTIVE,
+      reason: '2026-12-01T00:00:00.000Z',
+      reminderTier: CompanyReminderTierEnum.DUE,
+    })
   })
 })

@@ -141,6 +141,7 @@ export const reportText = {
     city: 'Sveitarfélag',
     province: 'Landshluti',
     fines: 'Dagsektir',
+    email: 'Netfang',
   },
   companyTab: {
     companyInfoHeading: 'Upplýsingar fyrirtækis',
@@ -226,6 +227,17 @@ export const reportText = {
     finesStopped: 'hefur stöðvað dagsektarferli',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
+    reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
+    reminderSentSalary: 'Áminning send um skil jafnlaunaskýrslu',
+    reminderNoEmailEquality:
+      'Reyndi að senda áminningu um jafnréttisskýrslu en ekkert netfang fannst',
+    reminderNoEmailSalary:
+      'Reyndi að senda áminningu um jafnlaunaskýrslu en ekkert netfang fannst',
+    reminderTierSixMonths: 'Sex mánaða áminning',
+    reminderTierTwoMonths: 'Tveggja mánaða áminning',
+    reminderTierTwoWeeks: 'Tveggja vikna áminning',
+    reminderTierDue: 'Áminning á skiladegi',
+    reminderDueDatePrefix: 'skiladagur',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
@@ -334,6 +346,14 @@ export const companiesText = {
     finesAlert: 'Fyrirtækið er í dagsektarferli',
     finesAlertReasonAlertMessage:
       'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
+    emailLabel: 'Netfang',
+    emailPlaceholder: 'netfang@fyrirtaeki.is',
+    emailEditButton: 'Breyta',
+    emailSaveButton: 'Vista',
+    emailCancelButton: 'Hætta við',
+    emailSavedToast: 'Netfang uppfært',
+    emailErrorToast: 'Villa við að uppfæra netfang',
 
     comments: {
       label: 'Athugasemdir',

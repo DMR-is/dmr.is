@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER } from '@nestjs/core'
+import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
@@ -38,10 +39,12 @@ import { ReportResultModel } from '../modules/report-result/models/report-result
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
+import { TasksModule } from '../tasks/tasks.module'
 import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
+    ScheduleModule.forRoot(),
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
@@ -90,6 +93,7 @@ import { HealthController } from './health.controller'
     }),
     ApplicationApiModule,
     DoeWebSwaggerModule,
+    TasksModule,
   ],
   controllers: [HealthController],
   providers: [

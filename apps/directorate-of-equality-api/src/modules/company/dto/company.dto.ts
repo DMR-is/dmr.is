@@ -33,6 +33,12 @@ export class CompanyDto {
   @ApiEnum(CompanyStatusEnum, { enumName: 'CompanyStatusEnum' })
   status!: CompanyStatusEnum
 
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Contact email for the company. Used by the deadline-reminder task.',
+  })
+  email!: string | null
+
   @ApiOptionalString({ nullable: true })
   address!: string | null
 

@@ -781,6 +781,80 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/email": {
+      "patch": {
+        "operationId": "updateCompanyEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCompanyEmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}/quarantine": {
       "patch": {
         "operationId": "updateCompanyQuarantine",
@@ -3786,6 +3860,11 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
           },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Contact email for the company. Used by the deadline-reminder task."
+          },
           "address": { "type": "string", "nullable": true },
           "postcodeId": {
             "type": "string",
@@ -3949,6 +4028,16 @@
         },
         "required": ["finesStarted"]
       },
+      "UpdateCompanyEmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Contact email for the company. Null (or empty) clears it. Read by the report-deadline-reminder task."
+          }
+        }
+      },
       "UpdateCompanyQuarantineDto": {
         "type": "object",
         "properties": {
@@ -3976,8 +4065,16 @@
           "FINES_STARTED",
           "FINES_STOPPED",
           "QUARANTINED",
-          "UNQUARANTINED"
+          "UNQUARANTINED",
+          "EQUALITY_REPORT_DEADLINE_REMINDER_SENT",
+          "SALARY_REPORT_DEADLINE_REMINDER_SENT",
+          "EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
+          "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL"
         ]
+      },
+      "CompanyReminderTierEnum": {
+        "type": "string",
+        "enum": ["SIX_MONTHS", "TWO_MONTHS", "TWO_WEEKS", "DUE"]
       },
       "CompanyEventDto": {
         "type": "object",
@@ -4005,6 +4102,12 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
           },
           "reason": { "type": "string", "nullable": true },
+          "reminderTier": {
+            "nullable": true,
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyReminderTierEnum" }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",

@@ -32,6 +32,7 @@ import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
+import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
@@ -135,6 +136,21 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateFines(id, dto, admin.id)
+  }
+
+  @Patch(':id/email')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanyEmail',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateEmail(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanyEmailDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateEmail(id, dto, admin.id)
   }
 
   @Patch(':id/quarantine')

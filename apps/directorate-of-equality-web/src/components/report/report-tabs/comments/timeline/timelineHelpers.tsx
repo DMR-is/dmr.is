@@ -132,6 +132,14 @@ export function timelineEntryText(
     FINES_STOPPED: reportText.timeline.finesStopped,
     QUARANTINED: reportText.timeline.companyQuarantined,
     UNQUARANTINED: reportText.timeline.companyUnquarantined,
+    EQUALITY_REPORT_DEADLINE_REMINDER_SENT:
+      reportText.timeline.reminderSentEquality,
+    SALARY_REPORT_DEADLINE_REMINDER_SENT:
+      reportText.timeline.reminderSentSalary,
+    EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL:
+      reportText.timeline.reminderNoEmailEquality,
+    SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL:
+      reportText.timeline.reminderNoEmailSalary,
   }
   if (eventTypeStr in COMPANY_EVENT_LABELS) {
     return (
