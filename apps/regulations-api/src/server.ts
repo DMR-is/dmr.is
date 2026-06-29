@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { fastify as fast } from 'fastify'
 
+import { cleanupPdfTempDir } from './db/RegulationPdf'
 import { cacheRoutes } from './routes/cacheRoutes'
 import { changeSuggestionRoutes } from './routes/changeSuggestionRoutes'
 import { fileUploadRoutes } from './routes/fileUploadRoutes'
@@ -116,6 +117,10 @@ serveRobotsTxt(fastify, 'static/robots-api.txt')
 
 const start = async () => {
   try {
+    // Reclaim disk from any PDF temp artifacts left behind by a previous
+    // process (e.g. Chromium profile dirs from timed-out/crashed renders).
+    await cleanupPdfTempDir()
+
     connectSequelize()
     const serverPort = PORT || 3000
 
