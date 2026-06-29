@@ -1,4 +1,4 @@
-import { json, urlencoded } from 'express'
+import { json, raw, urlencoded } from 'express'
 import { WinstonModule } from 'nest-winston'
 
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common'
@@ -21,6 +21,10 @@ async function bootstrap() {
     }),
   })
 
+  // Local-dev S3 bypass: the workbook is PUT straight to the API as raw bytes
+  // (see ImportUploadLocalController). Parse it as a Buffer and allow the full
+  // 20MB workbook cap, above the 6mb JSON limit below.
+  app.use('/api/v1/imports/local', raw({ type: () => true, limit: '25mb' }))
   app.use(json({ limit: '6mb' }))
   app.use(urlencoded({ extended: true, limit: '6mb' }))
 
