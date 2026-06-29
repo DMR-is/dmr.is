@@ -11,14 +11,9 @@ import {
   CompanyDeadlineReminderEventType,
   CompanyEventTypeEnum,
 } from '../../modules/company/models/company-event.model'
-import { CompanyReportModel } from '../../modules/company/models/company-report.model'
 import { ICompanyEventService } from '../../modules/company-event/company-event.service.interface'
 import { IDoeMailService } from '../../modules/mail/doe-mail.service.interface'
-import {
-  ReportStatusEnum,
-  ReportTypeEnum,
-} from '../../modules/report/models/report.enums'
-import { ReportModel } from '../../modules/report/models/report.model'
+import { ReportTypeEnum } from '../../modules/report/models/report.enums'
 import {
   REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT,
   REPORT_DEADLINE_REMINDER_MONTHS,
@@ -32,19 +27,26 @@ type DeadlineKind = {
   /** Company column holding the due date. */
   dueField: 'nextEqualityReportDueAt' | 'nextSalaryReportDueAt'
   reportType: ReportTypeEnum
-  eventType: CompanyDeadlineReminderEventType
+  /** Event recorded once the reminder is sent. */
+  sentEventType: CompanyDeadlineReminderEventType
+  /** Event recorded when the reminder is due but no email is on file. */
+  noEmailEventType: CompanyDeadlineReminderEventType
 }
 
 const DEADLINE_KINDS: DeadlineKind[] = [
   {
     dueField: 'nextEqualityReportDueAt',
     reportType: ReportTypeEnum.EQUALITY,
-    eventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+    sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
+    noEmailEventType:
+      CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
   },
   {
     dueField: 'nextSalaryReportDueAt',
     reportType: ReportTypeEnum.SALARY,
-    eventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+    sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
+    noEmailEventType:
+      CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
   },
 ]
 
@@ -62,8 +64,6 @@ export class ReportDeadlineReminderService
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @InjectModel(CompanyModel)
     private readonly companyModel: typeof CompanyModel,
-    @InjectModel(ReportModel)
-    private readonly reportModel: typeof ReportModel,
     @Inject(ICompanyEventService)
     private readonly companyEventService: ICompanyEventService,
     @Inject(IDoeMailService)
@@ -117,25 +117,16 @@ export class ReportDeadlineReminderService
     const dueDateIso = dueDate.toISOString()
 
     const alreadySent =
-      await this.companyEventService.hasDeadlineReminderBeenSent(
+      await this.companyEventService.hasDeadlineReminderEvent(
         company.id,
-        kind.eventType,
+        kind.sentEventType,
         dueDateIso,
       )
     if (alreadySent) return
 
-    const to = await this.resolveRecipientEmail(company.id)
+    const to = company.email
     if (!to) {
-      // No approved report with a contact email — nothing to notify. Logged so
-      // it surfaces in Datadog for follow-up.
-      this.logger.warn(
-        `Skipping ${kind.reportType} reminder for company ${company.id} — no approved report with a contact email`,
-        {
-          context: LOGGING_CONTEXT,
-          companyId: company.id,
-          reportType: kind.reportType,
-        },
-      )
+      await this.flagMissingEmail(company, kind, dueDateIso)
       return
     }
 
@@ -146,38 +137,46 @@ export class ReportDeadlineReminderService
     })
 
     // Only recorded after a successful send, so a failed send retries next run.
-    await this.companyEventService.emitDeadlineReminderSent(
+    await this.companyEventService.emitDeadlineReminderEvent(
       company.id,
       company.status,
-      kind.eventType,
+      kind.sentEventType,
       dueDateIso,
     )
   }
 
   /**
-   * Recipient = contact email of the company's most recently approved report.
-   * Reports link to a company via the parent `company_report` snapshot
-   * (`parentCompanyId IS NULL`). Returns null when no such report exists.
+   * Records a NO_EMAIL event on the company timeline so the gap is visible to
+   * admins. Deduped per due date (same key as the sent event), so a company
+   * with no email gets one event per cycle rather than one per daily run.
    */
-  private async resolveRecipientEmail(
-    companyId: string,
-  ): Promise<string | null> {
-    const report = await this.reportModel.findOne({
-      where: {
-        status: ReportStatusEnum.APPROVED,
-        contactEmail: { [Op.ne]: null },
-      },
-      include: [
-        {
-          model: CompanyReportModel,
-          as: 'companyReport',
-          required: true,
-          where: { companyId, parentCompanyId: null },
-        },
-      ],
-      order: [['approvedAt', 'DESC NULLS LAST']],
-    })
+  private async flagMissingEmail(
+    company: CompanyModel,
+    kind: DeadlineKind,
+    dueDateIso: string,
+  ): Promise<void> {
+    const alreadyFlagged =
+      await this.companyEventService.hasDeadlineReminderEvent(
+        company.id,
+        kind.noEmailEventType,
+        dueDateIso,
+      )
+    if (alreadyFlagged) return
 
-    return report?.contactEmail ?? null
+    this.logger.warn(
+      `Tried to send ${kind.reportType} 6-month reminder for company ${company.id} but no email is on file`,
+      {
+        context: LOGGING_CONTEXT,
+        companyId: company.id,
+        reportType: kind.reportType,
+      },
+    )
+
+    await this.companyEventService.emitDeadlineReminderEvent(
+      company.id,
+      company.status,
+      kind.noEmailEventType,
+      dueDateIso,
+    )
   }
 }

@@ -29,6 +29,7 @@ type CompanyAttributes = {
   employeeCountCategory: CompanySizeEnum
   nationalId: string
   status: CompanyStatusEnum
+  email: string | null
   address: string | null
   postcodeId: string | null
   salaryReportRequired: boolean
@@ -45,6 +46,7 @@ type CompanyCreateAttributes = {
   employeeCountCategory: CompanySizeEnum
   nationalId: string
   status?: CompanyStatusEnum
+  email?: string | null
   address?: string | null
   postcodeId?: string | null
   salaryReportRequired?: boolean
@@ -97,6 +99,11 @@ export class CompanyModel extends MutableModel<
     defaultValue: CompanyStatusEnum.ACTIVE,
   })
   status!: CompanyStatusEnum
+
+  // Contact email for the company (nullable). Admin-set; the
+  // report-deadline-reminder task reads it to address the reminder.
+  @Column({ type: DataType.TEXT, allowNull: true })
+  email!: string | null
 
   @Column({ type: DataType.TEXT, allowNull: true })
   address!: string | null
@@ -194,6 +201,7 @@ export class CompanyModel extends MutableModel<
       employeeCountCategory: model.employeeCountCategory,
       nationalId: model.nationalId,
       status: model.status,
+      email: model.email,
       address: model.address,
       postcodeId: model.postcodeId,
       salaryReportRequired: model.salaryReportRequired,

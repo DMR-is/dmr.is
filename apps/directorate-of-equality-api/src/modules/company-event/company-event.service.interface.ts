@@ -55,21 +55,23 @@ export interface ICompanyEventService {
   getByCompanyId(companyId: string): Promise<CompanyEventDto[]>
 
   /**
-   * True if a deadline reminder of `eventType` was already recorded for this
+   * True if a deadline event of `eventType` was already recorded for this
    * exact `dueDateIso`. Used by the reminder task to stay idempotent across
-   * daily runs and multiple containers.
+   * daily runs and multiple containers — covers both the reminder-sent and
+   * no-email outcomes.
    */
-  hasDeadlineReminderBeenSent(
+  hasDeadlineReminderEvent(
     companyId: string,
     eventType: CompanyDeadlineReminderEventType,
     dueDateIso: string,
   ): Promise<boolean>
 
   /**
-   * Records that a 6-months-before deadline reminder was sent. `dueDateIso`
+   * Records a 6-months-before deadline-reminder outcome — either the reminder
+   * being sent or there being no email on file (per `eventType`). `dueDateIso`
    * (stored in `reason`) is the due date being reminded about.
    */
-  emitDeadlineReminderSent(
+  emitDeadlineReminderEvent(
     companyId: string,
     status: CompanyStatusEnum,
     eventType: CompanyDeadlineReminderEventType,

@@ -154,7 +154,7 @@ export class CompanyEventService implements ICompanyEventService {
     return events.map((event) => event.fromModel())
   }
 
-  async hasDeadlineReminderBeenSent(
+  async hasDeadlineReminderEvent(
     companyId: string,
     eventType: CompanyDeadlineReminderEventType,
     dueDateIso: string,
@@ -167,7 +167,7 @@ export class CompanyEventService implements ICompanyEventService {
     return existing !== null
   }
 
-  async emitDeadlineReminderSent(
+  async emitDeadlineReminderEvent(
     companyId: string,
     status: CompanyStatusEnum,
     eventType: CompanyDeadlineReminderEventType,

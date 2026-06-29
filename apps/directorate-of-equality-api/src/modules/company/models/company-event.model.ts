@@ -30,6 +30,11 @@ import { CompanyModel } from './company.model'
  *                    6-months-before notification is sent. `reason` holds the
  *                    ISO due date being reminded about, which makes the task
  *                    idempotent per cycle (a new due date re-arms the reminder).
+ *   EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL / SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL
+ *                  → emitted by the same task when a reminder is due but the
+ *                    company has no email on file, so nothing could be sent.
+ *                    Same `reason`/idempotency rule as the SENT events: one row
+ *                    per company per due date, not one per run.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -40,12 +45,20 @@ export enum CompanyEventTypeEnum {
   UNQUARANTINED = 'UNQUARANTINED',
   EQUALITY_REPORT_DEADLINE_REMINDER_SENT = 'EQUALITY_REPORT_DEADLINE_REMINDER_SENT',
   SALARY_REPORT_DEADLINE_REMINDER_SENT = 'SALARY_REPORT_DEADLINE_REMINDER_SENT',
+  EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
+  SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
 }
 
-/** The two deadline-reminder event types the reminder task may emit. */
+/**
+ * Deadline-reminder event types the reminder task may emit — both the
+ * reminder-sent outcomes and the no-email-on-file outcomes. All four carry the
+ * ISO due date in `reason` and are deduped on (companyId, eventType, reason).
+ */
 export type CompanyDeadlineReminderEventType =
   | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT
   | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL
+  | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL
 
 type CompanyEventAttributes = {
   companyId: string
