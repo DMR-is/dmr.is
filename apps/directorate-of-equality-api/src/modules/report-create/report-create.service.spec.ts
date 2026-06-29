@@ -21,6 +21,8 @@ import {
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
+import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
+import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
@@ -71,6 +73,7 @@ describe('ReportCreateService', () => {
   let subCriterionCreate: jest.Mock
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
+  let autoReviewEvaluate: jest.Mock
   let configGetByKey: jest.Mock
 
   beforeEach(async () => {
@@ -128,6 +131,11 @@ describe('ReportCreateService', () => {
     reportResultCreateForReport = jest
       .fn()
       .mockResolvedValue({ id: 'result-1' })
+    autoReviewEvaluate = jest.fn().mockResolvedValue({
+      decision: AutoReviewDecisionEnum.AUTO_APPROVE,
+      reason: 'Engin frávik greind.',
+      signals: {},
+    })
     // Default to a generous threshold so existing fixtures (no salary
     // outliers in their parsed payload) don't accidentally flip into
     // outlier-detected territory and fail submit-side guard checks.
@@ -206,6 +214,10 @@ describe('ReportCreateService', () => {
           useValue: { createForReport: reportResultCreateForReport },
         },
         {
+          provide: IReportAutoReviewService,
+          useValue: { evaluate: autoReviewEvaluate },
+        },
+        {
           provide: IConfigService,
           useValue: { getByKey: configGetByKey },
         },
@@ -282,6 +294,19 @@ describe('ReportCreateService', () => {
         eventType: 'SUBMITTED',
         reportStatus: 'SUBMITTED',
         actorUserId: null,
+        companyId: PARENT_COMPANY_ID,
+      }),
+    )
+
+    // Soft auto-review verdict recorded as a system event (no human actor).
+    expect(autoReviewEvaluate).toHaveBeenCalledWith(REPORT_ID)
+    expect(reportEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reportId: REPORT_ID,
+        eventType: 'SYSTEM_AUTO_REVIEW',
+        actorUserId: null,
+        systemDecision: AutoReviewDecisionEnum.AUTO_APPROVE,
+        reason: 'Engin frávik greind.',
         companyId: PARENT_COMPANY_ID,
       }),
     )
@@ -618,6 +643,16 @@ describe('ReportCreateService', () => {
         reportStatus: 'SUBMITTED',
         actorUserId: null,
         companyId: PARENT_COMPANY_ID,
+      }),
+    )
+
+    // EQUALITY reports are still audited — the evaluator abstains internally.
+    expect(autoReviewEvaluate).toHaveBeenCalledWith(REPORT_ID)
+    expect(reportEventCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reportId: REPORT_ID,
+        eventType: 'SYSTEM_AUTO_REVIEW',
+        actorUserId: null,
       }),
     )
   })

@@ -25,6 +25,16 @@ import { CompanyModel } from './company.model'
  *                    suspended). No from/to status; carries an optional reason.
  *   UNQUARANTINED  → an admin lifted the quarantine. No from/to status;
  *                    carries an optional reason.
+ *   EQUALITY_REPORT_DEADLINE_REMINDER_SENT / SALARY_REPORT_DEADLINE_REMINDER_SENT
+ *                  → emitted by the report-deadline-reminder task when a
+ *                    6-months-before notification is sent. `reason` holds the
+ *                    ISO due date being reminded about, which makes the task
+ *                    idempotent per cycle (a new due date re-arms the reminder).
+ *   EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL / SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL
+ *                  → emitted by the same task when a reminder is due but the
+ *                    company has no email on file, so nothing could be sent.
+ *                    Same `reason`/idempotency rule as the SENT events: one row
+ *                    per company per due date, not one per run.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -33,6 +43,42 @@ export enum CompanyEventTypeEnum {
   FINES_STOPPED = 'FINES_STOPPED',
   QUARANTINED = 'QUARANTINED',
   UNQUARANTINED = 'UNQUARANTINED',
+  EQUALITY_REPORT_DEADLINE_REMINDER_SENT = 'EQUALITY_REPORT_DEADLINE_REMINDER_SENT',
+  SALARY_REPORT_DEADLINE_REMINDER_SENT = 'SALARY_REPORT_DEADLINE_REMINDER_SENT',
+  EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
+  SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
+}
+
+/**
+ * Deadline-reminder event types the reminder task may emit — both the
+ * reminder-sent outcomes and the no-email-on-file outcomes. The kind of report
+ * lives in the event type; which milestone fired lives in `reminderTier`. All
+ * carry the ISO due date in `reason` and are deduped on
+ * (companyId, eventType, reminderTier, reason).
+ */
+export type CompanyDeadlineReminderEventType =
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT
+  | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT
+  | CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL
+  | CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL
+
+/**
+ * Which deadline milestone a reminder event records. The reminder task walks
+ * these as contiguous bands (each owns the range down to the next), so a
+ * deadline sits in exactly one tier at a time:
+ *
+ *   SIX_MONTHS → due in (2 months, 6 months]
+ *   TWO_MONTHS → due in (2 weeks, 2 months]
+ *   TWO_WEEKS  → due in (now, 2 weeks]
+ *   DUE        → due today or overdue
+ *
+ * Null for every non-reminder event.
+ */
+export enum CompanyReminderTierEnum {
+  SIX_MONTHS = 'SIX_MONTHS',
+  TWO_MONTHS = 'TWO_MONTHS',
+  TWO_WEEKS = 'TWO_WEEKS',
+  DUE = 'DUE',
 }
 
 type CompanyEventAttributes = {
@@ -43,6 +89,7 @@ type CompanyEventAttributes = {
   fromStatus: CompanyStatusEnum | null
   toStatus: CompanyStatusEnum | null
   reason: string | null
+  reminderTier: CompanyReminderTierEnum | null
 }
 
 type CompanyEventCreateAttributes = {
@@ -53,6 +100,7 @@ type CompanyEventCreateAttributes = {
   fromStatus?: CompanyStatusEnum | null
   toStatus?: CompanyStatusEnum | null
   reason?: string | null
+  reminderTier?: CompanyReminderTierEnum | null
 }
 
 @ImmutableTable({ tableName: DoeModels.COMPANY_EVENT })
@@ -98,6 +146,13 @@ export class CompanyEventModel extends ImmutableModel<
   @Column({ type: DataType.TEXT, allowNull: true })
   reason!: string | null
 
+  @Column({
+    type: DataType.ENUM(...Object.values(CompanyReminderTierEnum)),
+    allowNull: true,
+    field: 'reminder_tier',
+  })
+  reminderTier!: CompanyReminderTierEnum | null
+
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
   company?: CompanyModel
 
@@ -117,6 +172,7 @@ export class CompanyEventModel extends ImmutableModel<
       fromStatus: model.fromStatus,
       toStatus: model.toStatus,
       reason: model.reason,
+      reminderTier: model.reminderTier,
       createdAt: model.createdAt,
     }
   }

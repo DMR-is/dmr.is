@@ -31,6 +31,7 @@ import {
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
+import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
@@ -508,6 +509,39 @@ export class CompanyService implements ICompanyService {
     })
 
     return updated.fromModel()
+  }
+
+  /**
+   * Admin-set contact email read by the report-deadline-reminder task. Empty
+   * string is normalized to null (clears it). No timeline event — the reminder
+   * task's NO_EMAIL event already records the gap this fills.
+   */
+  async updateEmail(
+    id: string,
+    dto: UpdateCompanyEmailDto,
+    actorUserId: string,
+  ): Promise<CompanyDto> {
+    const company = await this.companyWithReportStatus.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    const email = dto.email?.trim() || null
+
+    if (company.email === email) {
+      return company.fromModel()
+    }
+
+    this.logger.info(
+      `Updating company ${id} email: ${company.email ?? '∅'} → ${
+        email ?? '∅'
+      } (by ${actorUserId})`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    await company.update({ email })
+
+    return company.fromModel()
   }
 
   /**

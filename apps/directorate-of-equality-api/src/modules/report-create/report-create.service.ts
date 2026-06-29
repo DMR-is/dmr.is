@@ -29,9 +29,12 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import {
+  AutoReviewDecisionEnum,
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
+import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
@@ -85,6 +88,8 @@ export class ReportCreateService implements IReportCreateService {
     private readonly reportSubCriterionStepModel: typeof ReportSubCriterionStepModel,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
+    @Inject(IReportAutoReviewService)
+    private readonly autoReviewService: IReportAutoReviewService,
     @Inject(IConfigService)
     private readonly configService: IConfigService,
   ) {}
@@ -337,7 +342,14 @@ export class ReportCreateService implements IReportCreateService {
       companyId: submittingCompany.companyId,
     })
 
-    // 11. WITHDRAWN audit events — one per predecessor we just retired, each
+    // 11. Soft auto-review — record what the system would decide. Audit only.
+    await this.recordAutoReview(
+      report.id,
+      initialStatus,
+      submittingCompany.companyId,
+    )
+
+    // 12. WITHDRAWN audit events — one per predecessor we just retired, each
     //     linked to the new report that replaced it.
     await this.emitWithdrawnEvents(withdrawnReportIds, report.id)
 
@@ -400,9 +412,58 @@ export class ReportCreateService implements IReportCreateService {
       companyId: submittingCompany.companyId,
     })
 
+    await this.recordAutoReview(
+      report.id,
+      ReportStatusEnum.SUBMITTED,
+      submittingCompany.companyId,
+    )
+
     await this.emitWithdrawnEvents(withdrawnReportIds, report.id)
 
     return { reportId: report.id }
+  }
+
+  /**
+   * Soft auto-review: ask the system what it *would* decide and record the
+   * verdict as a SYSTEM_AUTO_REVIEW event (actorUserId null — no human actor).
+   * The report's status is never changed here. The `AUTO_REVIEW_ENFORCE` branch
+   * is the single seam to flip when the directorate moves from soft audit to
+   * real automation; until then it stays dark.
+   */
+  private async recordAutoReview(
+    reportId: string,
+    reportStatus: ReportStatusEnum,
+    companyId: string,
+  ): Promise<void> {
+    const verdict = await this.autoReviewService.evaluate(reportId)
+
+    await this.reportEventModel.create({
+      reportId,
+      eventType: ReportEventTypeEnum.SYSTEM_AUTO_REVIEW,
+      reportStatus,
+      actorUserId: null,
+      reason: verdict.reason,
+      systemDecision: verdict.decision,
+      companyId,
+    })
+
+    this.logger.info(
+      `Auto-review verdict ${verdict.decision} for report ${reportId}`,
+      { context: LOGGING_CONTEXT, reportId, decision: verdict.decision },
+    )
+
+    if (
+      AUTO_REVIEW_ENFORCE &&
+      verdict.decision === AutoReviewDecisionEnum.AUTO_APPROVE
+    ) {
+      // TODO: enforcement path — transition the report to APPROVED via a
+      // system actor (extract the side-effect core of
+      // ReportWorkflowService.approve so a null-actor path can call it).
+      this.logger.info(
+        `AUTO_REVIEW_ENFORCE on — would auto-approve report ${reportId}`,
+        { context: LOGGING_CONTEXT, reportId },
+      )
+    }
   }
 
   /**

@@ -8,7 +8,10 @@ import {
 } from '@dmr.is/decorators'
 
 import { CompanyStatusEnum } from '../models/company.enums'
-import { CompanyEventTypeEnum } from '../models/company-event.model'
+import {
+  CompanyEventTypeEnum,
+  CompanyReminderTierEnum,
+} from '../models/company-event.model'
 
 export class CompanyEventDto {
   @ApiUUId()
@@ -43,6 +46,12 @@ export class CompanyEventDto {
 
   @ApiOptionalString({ nullable: true })
   reason!: string | null
+
+  @ApiOptionalEnum(CompanyReminderTierEnum, {
+    enumName: 'CompanyReminderTierEnum',
+    nullable: true,
+  })
+  reminderTier!: CompanyReminderTierEnum | null
 
   @ApiDateTime()
   createdAt!: Date

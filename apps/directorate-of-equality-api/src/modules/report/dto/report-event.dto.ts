@@ -8,7 +8,10 @@ import {
 } from '@dmr.is/decorators'
 
 import { ReportStatusEnum } from '../models/report.model'
-import { ReportEventTypeEnum } from '../models/report-event.model'
+import {
+  AutoReviewDecisionEnum,
+  ReportEventTypeEnum,
+} from '../models/report-event.model'
 
 export class ReportEventDto {
   @ApiUUId()
@@ -55,6 +58,12 @@ export class ReportEventDto {
 
   @ApiOptionalUuid({ nullable: true })
   companyId!: string | null
+
+  @ApiOptionalEnum(AutoReviewDecisionEnum, {
+    enumName: 'AutoReviewDecisionEnum',
+    nullable: true,
+  })
+  systemDecision!: AutoReviewDecisionEnum | null
 
   @ApiDateTime()
   createdAt!: Date

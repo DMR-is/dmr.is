@@ -1,5 +1,7 @@
 'use client'
 
+import { isValidElement } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
@@ -14,7 +16,13 @@ const InfoItem = ({ label, children }: InfoItemProps) => {
   return (
     <div style={{ marginBottom: 16 }}>
       <Text fontWeight="medium">{label}</Text>
-      <Text>{children ? children : 'Óþekkt'}</Text>
+      {/* Element children (e.g. an inline editor) render as-is; primitives keep
+          the Text wrapper and the unknown-value fallback. */}
+      {isValidElement(children) ? (
+        children
+      ) : (
+        <Text>{children ? children : 'Óþekkt'}</Text>
+      )}
     </div>
   )
 }

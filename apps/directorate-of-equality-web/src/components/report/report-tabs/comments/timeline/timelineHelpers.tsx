@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  AutoReviewDecisionEnum,
   CommentVisibilityEnum,
   ReportEventTypeEnum,
   ReportRoleEnum,
@@ -59,7 +60,20 @@ export function timelineEntryText(
 
   if (!item.event) return null
 
-  const { eventType, actorName, assignedUserName, toStatus } = item.event
+  const { eventType, actorName, assignedUserName, toStatus, systemDecision } =
+    item.event
+
+  if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
+    // Soft auto-review verdict — system actor, no name. The `reason` renders as
+    // the entry body; this is just the headline. Status is never changed yet.
+    return (
+      <>
+        {systemDecision === AutoReviewDecisionEnum.AUTO_APPROVE
+          ? reportText.timeline.systemAutoReviewApprove
+          : reportText.timeline.systemAutoReviewNeedsReview}
+      </>
+    )
+  }
 
   if (eventType === ReportEventTypeEnum.SUBMITTED) {
     return companyName ? (
@@ -132,6 +146,14 @@ export function timelineEntryText(
     FINES_STOPPED: reportText.timeline.finesStopped,
     QUARANTINED: reportText.timeline.companyQuarantined,
     UNQUARANTINED: reportText.timeline.companyUnquarantined,
+    EQUALITY_REPORT_DEADLINE_REMINDER_SENT:
+      reportText.timeline.reminderSentEquality,
+    SALARY_REPORT_DEADLINE_REMINDER_SENT:
+      reportText.timeline.reminderSentSalary,
+    EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL:
+      reportText.timeline.reminderNoEmailEquality,
+    SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL:
+      reportText.timeline.reminderNoEmailSalary,
   }
   if (eventTypeStr in COMPANY_EVENT_LABELS) {
     return (

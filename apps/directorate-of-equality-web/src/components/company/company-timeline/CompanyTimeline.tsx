@@ -10,19 +10,42 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
   CommentVisibilityEnum,
+  CompanyReminderTierEnum,
   CompanyTimelineItemDto,
   ReportRoleEnum,
   ReportStatusEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../gen/fetch'
-import { companiesText } from '../../../lib/text'
+import { formatDateIS } from '../../../lib/constants'
+import { companiesText, reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { TimelineFeed } from '../../report/report-tabs/comments/timeline/TimelineFeed'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
+
+const REMINDER_TIER_LABELS: Record<CompanyReminderTierEnum, string> = {
+  [CompanyReminderTierEnum.SIX_MONTHS]: reportText.timeline.reminderTierSixMonths,
+  [CompanyReminderTierEnum.TWO_MONTHS]: reportText.timeline.reminderTierTwoMonths,
+  [CompanyReminderTierEnum.TWO_WEEKS]: reportText.timeline.reminderTierTwoWeeks,
+  [CompanyReminderTierEnum.DUE]: reportText.timeline.reminderTierDue,
+}
+
+// For reminder events the raw `reason` is the ISO due date. Turn it (plus the
+// tier) into a readable line for the timeline body; pass other reasons through.
+function eventBody(event: CompanyTimelineItemDto['event']): string | null {
+  if (!event) return null
+  const tierLabel = event.reminderTier
+    ? REMINDER_TIER_LABELS[event.reminderTier]
+    : null
+  if (!tierLabel) return event.reason ?? null
+  const date = event.reason ? formatDateIS(event.reason) : null
+  return date
+    ? `${tierLabel} · ${reportText.timeline.reminderDueDatePrefix} ${date}`
+    : tierLabel
+}
 
 type Props = {
   companyId: string
@@ -46,7 +69,7 @@ function adaptTimeline(
             (item.event.fromStatus as unknown as ReportStatusEnum) ?? null,
           toStatus:
             (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
-          reason: item.event.reason ?? null,
+          reason: eventBody(item.event),
           createdAt: item.event.createdAt,
         }
       : null,
