@@ -688,6 +688,74 @@ describe('CompanyService', () => {
     })
   })
 
+  describe('updateEmail', () => {
+    const makeEmailCompany = (email: string | null) => {
+      let current = email
+      const update = jest.fn().mockImplementation(async (values) => {
+        if ('email' in values) current = values.email
+      })
+      return {
+        id: 'company-1',
+        status: CompanyStatusEnum.ACTIVE,
+        get email() {
+          return current
+        },
+        update,
+        fromModel: () => ({ id: 'company-1', email: current }),
+        _update: update,
+      }
+    }
+
+    it('sets a trimmed email', async () => {
+      const company = makeEmailCompany(null)
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateEmail(
+        'company-1',
+        { email: '  acme@acme.is  ' },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ email: 'acme@acme.is' })
+      expect(result.email).toBe('acme@acme.is')
+    })
+
+    it('clears the email when passed null', async () => {
+      const company = makeEmailCompany('acme@acme.is')
+      findOneOrThrow.mockResolvedValue(company)
+
+      const result = await service.updateEmail(
+        'company-1',
+        { email: null },
+        'admin-1',
+      )
+
+      expect(company._update).toHaveBeenCalledWith({ email: null })
+      expect(result.email).toBeNull()
+    })
+
+    it('is a no-op when the email is unchanged', async () => {
+      const company = makeEmailCompany('acme@acme.is')
+      findOneOrThrow.mockResolvedValue(company)
+
+      await service.updateEmail(
+        'company-1',
+        { email: 'acme@acme.is' },
+        'admin-1',
+      )
+
+      expect(company._update).not.toHaveBeenCalled()
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(
+        service.updateEmail('missing', { email: 'acme@acme.is' }, 'admin-1'),
+      ).rejects.toThrow(NotFoundException)
+    })
+  })
+
   describe('getTimeline', () => {
     it('merges events and comments sorted ascending by createdAt', async () => {
       findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-1' }))

@@ -140,6 +140,7 @@ export const reportText = {
     city: 'Sveitarfélag',
     province: 'Landshluti',
     fines: 'Dagsektir',
+    email: 'Netfang',
   },
   companyTab: {
     companyInfoHeading: 'Upplýsingar fyrirtækis',
@@ -333,6 +334,14 @@ export const companiesText = {
     finesAlert: 'Fyrirtækið er í dagsektarferli',
     finesAlertReasonAlertMessage:
       'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
+    emailLabel: 'Netfang',
+    emailPlaceholder: 'netfang@fyrirtaeki.is',
+    emailEditButton: 'Breyta',
+    emailSaveButton: 'Vista',
+    emailCancelButton: 'Hætta við',
+    emailSavedToast: 'Netfang uppfært',
+    emailErrorToast: 'Villa við að uppfæra netfang',
 
     comments: {
       label: 'Athugasemdir',
