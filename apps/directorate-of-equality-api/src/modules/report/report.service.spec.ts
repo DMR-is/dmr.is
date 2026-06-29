@@ -145,6 +145,11 @@ const makeService = () => {
     findAll: jest.fn().mockResolvedValue([]),
   } as unknown as typeof import('../report-comment/models/report-comment.model').ReportCommentModel
 
+  const outlierGroupFindAll = jest.fn().mockResolvedValue([])
+  const reportOutlierGroupModel = {
+    findAll: outlierGroupFindAll,
+  } as unknown as typeof import('../report-employee/models/report-outlier-group.model').ReportOutlierGroupModel
+
   const service = new ReportService(
     logger,
     reportModel,
@@ -153,6 +158,7 @@ const makeService = () => {
     reportEmployeeOutlierModel,
     companyReportModel,
     reportCommentModel,
+    reportOutlierGroupModel,
   )
   return {
     service,
@@ -164,6 +170,7 @@ const makeService = () => {
     outlierFindAndCountAll,
     outlierCount,
     companyReportFindAll,
+    outlierGroupFindAll,
     logger,
   }
 }
@@ -1046,6 +1053,38 @@ describe('ReportService.getOutliers', () => {
     expect(order[0][1]).toBe('gender')
     expect(order[0][2]).toBe('ASC')
   })
+
+  const captureWhere = async (
+    query: Parameters<ReportService['getOutliers']>[1],
+  ) => {
+    const { service, findByPkOrThrow, outlierFindAndCountAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce(
+      makeDetailedSalaryReportRow() as unknown as ReportModel,
+    )
+    outlierFindAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.getOutliers(REPORT_ID, query)
+
+    return outlierFindAndCountAll.mock.calls[0][0].where as
+      | Record<string, unknown>
+      | undefined
+  }
+
+  it('scopes the query to a single group when groupId is given', async () => {
+    const where = await captureWhere({
+      page: 1,
+      pageSize: 10,
+      groupId: 'group-1',
+    })
+
+    expect(where).toEqual({ groupId: 'group-1' })
+  })
+
+  it('omits the group filter when no groupId is given', async () => {
+    const where = await captureWhere({ page: 1, pageSize: 10 })
+
+    expect(where).toBeUndefined()
+  })
 })
 
 describe('ReportService.getActiveEqualityForCompany', () => {
@@ -1128,5 +1167,61 @@ describe('ReportService.getActiveEqualityForCompany', () => {
 
     const callArg = findOne.mock.calls[0][0]
     expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
+  })
+})
+
+describe('ReportService.getOutlierGroups', () => {
+  const REPORT_ID = '00000000-0000-0000-0000-000000000001'
+
+  const makeGroupRow = (overrides: Partial<Record<string, unknown>> = {}) => ({
+    id: 'group-1',
+    reportId: REPORT_ID,
+    name: 'Tenure',
+    reason: 'Tenure premium',
+    action: 'Reviewed',
+    signatureName: 'Reviewer',
+    signatureRole: 'HR',
+    fromModel() {
+      const r = this as unknown as Record<string, unknown>
+      return {
+        id: r.id,
+        reportId: r.reportId,
+        name: r.name,
+        reason: r.reason,
+        action: r.action,
+        signatureName: r.signatureName,
+        signatureRole: r.signatureRole,
+      }
+    },
+    ...overrides,
+  })
+
+  it('returns the report groups ordered by name', async () => {
+    const { service, findByPkOrThrow, outlierGroupFindAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce({ id: REPORT_ID } as unknown as ReportModel)
+    outlierGroupFindAll.mockResolvedValueOnce([makeGroupRow()])
+
+    const result = await service.getOutlierGroups(REPORT_ID)
+
+    expect(findByPkOrThrow).toHaveBeenCalledWith(REPORT_ID)
+    expect(outlierGroupFindAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { reportId: REPORT_ID },
+        order: [['name', 'ASC']],
+      }),
+    )
+    expect(result.groups).toEqual([
+      expect.objectContaining({ id: 'group-1', name: 'Tenure', reason: 'Tenure premium' }),
+    ])
+  })
+
+  it('returns an empty list when the report has no groups', async () => {
+    const { service, findByPkOrThrow, outlierGroupFindAll } = makeService()
+    findByPkOrThrow.mockResolvedValueOnce({ id: REPORT_ID } as unknown as ReportModel)
+    outlierGroupFindAll.mockResolvedValueOnce([])
+
+    const result = await service.getOutlierGroups(REPORT_ID)
+
+    expect(result.groups).toEqual([])
   })
 })

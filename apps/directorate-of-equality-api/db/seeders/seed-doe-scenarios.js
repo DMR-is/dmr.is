@@ -4,19 +4,19 @@
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
 // Global role UUIDs (shared across all salary reports)
-const ROLE_VERKEFNASTJORI = 'aa000001-0000-0000-0000-000000000001'
-const ROLE_SERFRAEDINGUR = 'aa000002-0000-0000-0000-000000000002'
-const ROLE_ADSTODARMADUR = 'aa000003-0000-0000-0000-000000000003'
+const ROLE_VERKEFNASTJORI = 'aa000001-0000-4000-8000-000000000001'
+const ROLE_SERFRAEDINGUR = 'aa000002-0000-4000-8000-000000000002'
+const ROLE_ADSTODARMADUR = 'aa000003-0000-4000-8000-000000000003'
 
 // Helper: pad a number into a UUID-shaped constant
 const cid = (n) =>
-  `c${String(n).padStart(7, '0')}-0000-0000-0000-${String(n).padStart(12, '0')}`
+  `c${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
 const eid = (n) =>
-  `e${String(n).padStart(7, '0')}-0000-0000-0000-${String(n).padStart(12, '0')}` // equality report
+  `e${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}` // equality report
 const sid = (n) =>
-  `b${String(n).padStart(7, '0')}-0000-0000-0000-${String(n).padStart(12, '0')}` // salary report (b = besold)
+  `b${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}` // salary report (b = besold)
 const uid = (n) =>
-  `f${String(n).padStart(7, '0')}-0000-0000-0000-${String(n).padStart(12, '0')}` // generic (f = fill-in)
+  `f${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}` // generic (f = fill-in)
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {

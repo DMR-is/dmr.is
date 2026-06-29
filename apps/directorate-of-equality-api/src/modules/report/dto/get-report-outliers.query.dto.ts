@@ -1,4 +1,4 @@
-import { ApiOptionalEnum } from '@dmr.is/decorators'
+import { ApiOptionalEnum, ApiOptionalUuid } from '@dmr.is/decorators'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { SortDirectionEnum } from './get-reports.query.dto'
@@ -24,6 +24,12 @@ export enum ReportOutlierSortByEnum {
  * ascending order (matching the FE improvement-plan numbering).
  */
 export class GetReportOutliersQueryDto extends PagingQuery {
+  @ApiOptionalUuid({
+    description:
+      'Restrict the list to the outliers belonging to a single group.',
+  })
+  groupId?: string
+
   @ApiOptionalEnum(ReportOutlierSortByEnum, {
     enumName: 'ReportOutlierSortByEnum',
   })
