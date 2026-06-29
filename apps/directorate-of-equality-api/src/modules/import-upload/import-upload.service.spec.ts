@@ -181,4 +181,58 @@ describe('ImportUploadService', () => {
       expect(mockLogger.warn).toHaveBeenCalled()
     })
   })
+
+  // With no bucket configured the service bypasses S3 and stages uploads on
+  // disk. These tests round-trip through a real temp dir.
+  describe('local mode (no bucket configured)', () => {
+    beforeEach(() => {
+      delete process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+    })
+
+    afterEach(() => {
+      process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET = BUCKET
+    })
+
+    it('createUpload returns a local API url and never touches S3', async () => {
+      const res = await service.createUpload(ImportUploadBoundary.ADMIN)
+
+      expect(res.url).toContain('/api/v1/imports/local?key=')
+      expect(res.url).toContain(encodeURIComponent(res.key))
+      expect(aws.getPresignedUrl).not.toHaveBeenCalled()
+    })
+
+    it('round-trips a stored workbook through fetchWorkbook without S3', async () => {
+      const { key } = await service.createUpload(ImportUploadBoundary.ADMIN)
+      const data = Buffer.from('workbook-bytes')
+
+      await service.storeLocalUpload(key, data)
+      const fetched = await service.fetchWorkbook(key, ImportUploadBoundary.ADMIN)
+
+      expect(fetched.equals(data)).toBe(true)
+      expect(aws.getObjectBuffer).not.toHaveBeenCalled()
+
+      await service.cleanup(key)
+      await expect(
+        service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+
+    it('storeLocalUpload rejects a malformed key', async () => {
+      await expect(
+        service.storeLocalUpload('not-a-valid-key', Buffer.from('x')),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+
+    it('storeLocalUpload rejects a workbook over the 20MB cap', async () => {
+      await expect(
+        service.storeLocalUpload(ADMIN_KEY, bufferOfSize(MAX_UPLOAD_BYTES + 1)),
+      ).rejects.toBeInstanceOf(PayloadTooLargeException)
+    })
+  })
+
+  it('storeLocalUpload is disabled when a bucket is configured', async () => {
+    await expect(
+      service.storeLocalUpload(ADMIN_KEY, Buffer.from('x')),
+    ).rejects.toBeInstanceOf(BadRequestException)
+  })
 })

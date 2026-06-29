@@ -22,6 +22,13 @@ export interface IImportUploadService {
 
   /** Best-effort delete of a staged object once it has been consumed. */
   cleanup(key: string): Promise<void>
+
+  /**
+   * Local-development only: accept raw workbook bytes and stage them on disk
+   * under `key`, standing in for the S3 PUT. Throws when a bucket is configured
+   * (i.e. in any deployed environment) so the path is inert outside local dev.
+   */
+  storeLocalUpload(key: string, data: Buffer): Promise<void>
 }
 
 export const IImportUploadService = Symbol('IImportUploadService')
