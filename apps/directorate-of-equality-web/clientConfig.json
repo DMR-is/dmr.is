@@ -5464,7 +5464,8 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
           },
-          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" }
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" },
+          "allowedDifferencePercent": { "type": "number", "nullable": true }
         },
         "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
       },

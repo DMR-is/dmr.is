@@ -313,13 +313,25 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 `report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns — see `report_employee`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. The same row also snapshots the salary-outlier regression analysis: the fitted base-salary regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's adjusted base salary vs predicted base salary at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
 
+### Gender bundling: NEUTRAL counts as FEMALE (M vs F+N)
+
+The current product goal is to measure the pay gap between men and women, expressed as **MALE vs FEMALE+NEUTRAL**. So for every aggregation, count, gender-split regression and chart series, `NEUTRAL` employees are **bundled into the `FEMALE` group**. Concretely:
+
+- `totals.female` / bucket `female` averages, medians and counts **include** neutral employees; `maleFemale` is therefore the gap of male vs (female + neutral).
+- The standalone `neutral` cohort (metrics, counts, `regressions.neutral`) is consequently **always empty** in computed output — `null` metrics, `0` counts.
+- The gender-blind `regressions.overall` and the outlier flag are unaffected: they already include every employee regardless of gender, and neutral employees are still flagged like anyone else.
+- On the chart (admin web + PDF) neutral scatter points render in the purple "Kona" (female) series.
+
+This is a **reclassification at computation/display time only** — raw `report_employee.gender` keeps the real `NEUTRAL` value, so the data is preserved for a future standalone neutral category. The rule is centralised in `bundleNeutralIntoFemale()` (`report/lib/compensation-aggregates.ts`) so it is easy to reverse. Decision date: 2026-06.
+
 ### Reconstructing the gender-vs-score chart from a stored result
 
 The same chart shape that `buildChartFromEmployeePoints` produces for the application-side preview can be rebuilt from a persisted `report_result` row:
 
 - **Scatter points** — `outlier_analysis_snapshot.employees[*]` carries `score`, `gender`, and `adjustedBaseSalary` per employee.
-- **Regression line(s)** — `outlier_analysis_snapshot.regressions.overall` is the gender-blind line that drives the outlier flag. `regressions.male/female/neutral` are per-cohort lines available for visualisation only.
+- **Regression line(s)** — `outlier_analysis_snapshot.regressions.overall` is the gender-blind line that drives the outlier flag. `regressions.male/female` are per-cohort lines available for visualisation only; `female` includes neutral and `regressions.neutral` is empty (see "Gender bundling" above).
 - **Score-bucket overlay** — the per-employee `scoreBucketRangeFrom/To` is preserved on each row, but the bucket-level aggregates (median, average, gender breakdowns, counts) live in `base_snapshot.scoreBuckets`. Render the chart by joining on the bucket range when an overlay is needed.
+- **Tolerance band** — the chart shades a wedge of `predicted × (1 ± allowedDifferencePercent / 100)` around the regression line; a point outside it is an outlier. The live base-salary chart endpoint returns `allowedDifferencePercent` directly on `SalaryByGenderAndScoreDto`; from a stored result it is `outlier_analysis_snapshot.allowedDifferencePercent` (half the threshold). Outlier dots are highlighted on the chart (computed from the same rule), so the scatter matches the outlier table.
 
 Bucket placement is informational only: the outlier flag is decided against the regression prediction at the employee's exact score, not the bucket median.
 
@@ -622,12 +634,12 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 `base_snapshot` and `full_snapshot` share the same shape:
 
 - `totals`
-  - `overall`, `male`, `female`, `neutral` — each contains `average`, `median`, `minimum`, `maximum`.
-  - `salaryDifferences` — contains `maleFemale`, `maleNeutral`, `femaleMale`, `femaleNeutral`, `neutralMale`, `neutralFemale`.
+  - `overall`, `male`, `female`, `neutral` — each contains `average`, `median`, `minimum`, `maximum`. Note: `neutral` is bundled into `female` and is therefore always empty — see "Gender bundling" under Results aggregation.
+  - `salaryDifferences` — contains `maleFemale`, `maleNeutral`, `femaleMale`, `femaleNeutral`, `neutralMale`, `neutralFemale`. Only the male/female pairs are populated; the neutral pairs are always `null`.
 - `scoreBuckets[]`
   - `rangeFrom`, `rangeTo`
   - `totals` with the same aggregate shape as above
-  - `counts` for `overall`, `male`, `female`, `neutral`
+  - `counts` for `overall`, `male`, `female`, `neutral` (`neutral` always `0`)
 
 `outlier_analysis_snapshot` stores:
 

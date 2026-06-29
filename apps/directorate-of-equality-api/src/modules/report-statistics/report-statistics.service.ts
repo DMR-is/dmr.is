@@ -1,15 +1,23 @@
 import { Op } from 'sequelize'
 
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ConfigModel } from '../config/models/config.model'
 import {
+  bundleNeutralIntoFemale,
   computeSalaryAggregateSnapshot,
   computeWageGapPercent,
   getAdjustedBaseSalary,
   getAdjustedFullSalary,
+  resolveAllowedDifferencePercent,
   roundNullable,
 } from '../report/lib/compensation-aggregates'
 import { GenderEnum } from '../report/models/report.model'
@@ -52,6 +60,8 @@ export class ReportStatisticsService implements IReportStatisticsService {
     private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
     @InjectModel(ReportEmployeePersonalCriterionStepModel)
     private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
+    @InjectModel(ConfigModel)
+    private readonly configModel: typeof ConfigModel,
   ) {}
 
   async getBaseSalaryByGenderAndScoreAll(
@@ -70,7 +80,14 @@ export class ReportStatisticsService implements IReportStatisticsService {
       gender: e.gender,
     }))
 
-    return buildChartFromEmployeePoints(points)
+    // Base salary by total score is the chart the outlier rule applies to, so
+    // it carries the allowed +/- band (half the configured threshold) for the
+    // tolerance overlay on the chart.
+    const allowedDifferencePercent = resolveAllowedDifferencePercent(
+      await this.getSalaryDifferenceThresholdPercent(),
+    )
+
+    return buildChartFromEmployeePoints(points, allowedDifferencePercent)
   }
 
   async getBaseSalaryByGenderAndScoreWork(
@@ -180,8 +197,13 @@ export class ReportStatisticsService implements IReportStatisticsService {
       gender: e.gender,
     }))
 
-    const males = rows.filter((r) => r.gender === GenderEnum.MALE)
-    const females = rows.filter((r) => r.gender === GenderEnum.FEMALE)
+    const males = rows.filter(
+      (r) => bundleNeutralIntoFemale(r.gender) === GenderEnum.MALE,
+    )
+    // NEUTRAL is bundled with FEMALE (M vs F+N).
+    const females = rows.filter(
+      (r) => bundleNeutralIntoFemale(r.gender) === GenderEnum.FEMALE,
+    )
 
     const build = (group: typeof rows): GenderBenefitsDto => {
       const bonuses = group.map((r) => r.bonus)
@@ -224,13 +246,31 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
   // ── Private helpers ─────────────────────────────────────────────
 
+  private async getSalaryDifferenceThresholdPercent(): Promise<number> {
+    const config = await this.configModel.findOne({
+      where: { key: 'salary_difference_threshold_percent', supersededAt: null },
+    })
+
+    const parsed = config ? parseFloat(config.value) : NaN
+
+    if (!Number.isFinite(parsed)) {
+      throw new InternalServerErrorException(
+        'Config entry "salary_difference_threshold_percent" must be numeric',
+      )
+    }
+
+    return parsed
+  }
+
   private async fetchEmployees(
     reportId: string,
   ): Promise<ReportEmployeeModel[]> {
     const employees = await this.reportEmployeeModel.findAll({
       where: {
         reportId,
-        gender: { [Op.in]: [GenderEnum.MALE, GenderEnum.FEMALE] },
+        gender: {
+          [Op.in]: [GenderEnum.MALE, GenderEnum.FEMALE, GenderEnum.NEUTRAL],
+        },
       },
     })
 
@@ -344,8 +384,13 @@ export class ReportStatisticsService implements IReportStatisticsService {
 // ── Pure computation helpers ────────────────────────────────────────
 
 function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
-  const males = points.filter((point) => point.gender === GenderEnum.MALE)
-  const females = points.filter((point) => point.gender === GenderEnum.FEMALE)
+  const males = points.filter(
+    (point) => bundleNeutralIntoFemale(point.gender) === GenderEnum.MALE,
+  )
+  // NEUTRAL is bundled with FEMALE (M vs F+N).
+  const females = points.filter(
+    (point) => bundleNeutralIntoFemale(point.gender) === GenderEnum.FEMALE,
+  )
   const snapshot = computeSalaryAggregateSnapshot(
     points.map((point) => ({
       gender: point.gender,

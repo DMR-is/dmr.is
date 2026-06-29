@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { ConfigModel } from '../config/models/config.model'
 import { GenderEnum } from '../report/models/report.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
@@ -87,6 +88,7 @@ describe('ReportStatisticsService', () => {
   let stepFindAll: jest.Mock
   let roleStepFindAll: jest.Mock
   let personalStepFindAll: jest.Mock
+  let configFindOne: jest.Mock
 
   beforeEach(async () => {
     employeeFindAll = jest.fn()
@@ -95,6 +97,7 @@ describe('ReportStatisticsService', () => {
     stepFindAll = jest.fn().mockResolvedValue([])
     roleStepFindAll = jest.fn().mockResolvedValue([])
     personalStepFindAll = jest.fn().mockResolvedValue([])
+    configFindOne = jest.fn().mockResolvedValue({ value: '3.9' })
 
     const module = await Test.createTestingModule({
       providers: [
@@ -124,6 +127,10 @@ describe('ReportStatisticsService', () => {
           provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
           useValue: { findAll: personalStepFindAll },
         },
+        {
+          provide: getModelToken(ConfigModel),
+          useValue: { findOne: configFindOne },
+        },
       ],
     }).compile()
 
@@ -139,6 +146,17 @@ describe('ReportStatisticsService', () => {
       await expect(
         service.getBaseSalaryByGenderAndScoreAll(REPORT_ID),
       ).rejects.toThrow(NotFoundException)
+    })
+
+    it('carries the allowed +/- band as half the configured threshold', async () => {
+      // config threshold 3.9% → allowed band 1.95%
+      employeeFindAll.mockResolvedValue([
+        makeEmployee(300, 1000000, 1, GenderEnum.MALE),
+      ])
+
+      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+
+      expect(result.allowedDifferencePercent).toBe(1.95)
     })
 
     it('computes adjusted base salary as baseSalary / workRatio', async () => {
@@ -476,6 +494,8 @@ describe('ReportStatisticsService', () => {
 
       expect(result.dataPoints).toHaveLength(1)
       expect(result.dataPoints[0].adjustedSalary).toBe(1250000)
+      // The outlier band only applies to the base-salary-by-total-score chart.
+      expect(result.allowedDifferencePercent).toBeNull()
     })
 
     it('treats null bonusSalary as zero', async () => {
