@@ -236,6 +236,11 @@ export const messages = {
           defaultMessage: 'Yfirskrifa PDF',
           description: 'Title column',
         },
+        changeCorrection: {
+          id: 'web.components.tables:advert.columns.changeCorrection',
+          defaultMessage: 'Yfirskrifa leiðrétt PDF',
+          description: 'Replace correction PDF button',
+        },
         migrate: {
           id: 'web.components.tables:advert.columns.migrate',
           defaultMessage: 'Flytja í ritstjórn',

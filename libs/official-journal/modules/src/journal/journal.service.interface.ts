@@ -112,6 +112,11 @@ export interface IJournalService {
     advertId: string,
     file: Express.Multer.File,
   ): Promise<ResultWrapper<S3UploadFileResponse>>
+  uploadCorrectionPDF(
+    advertId: string,
+    correctionId: string,
+    file: Express.Multer.File,
+  ): Promise<ResultWrapper<S3UploadFileResponse>>
   handleLegacyPdfUrl(id?: string): Promise<ResultWrapper<{ url: string }>>
   updateAdvertCategories(
     advertId: string,

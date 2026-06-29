@@ -42,6 +42,7 @@ export enum Routes {
   SearchDashboard = '/leitaryfirlit',
   ReplacePdf = '/yfirskrifa-pdf',
   ReplacePdfAdvert = '/yfirskrifa-pdf/:advertId',
+  ReplaceCorrectionPdfAdvert = '/yfirskrifa-leidrett-pdf/:advertId',
   AdvertMigration = '/auglysing-til-ritstjornar',
 }
 

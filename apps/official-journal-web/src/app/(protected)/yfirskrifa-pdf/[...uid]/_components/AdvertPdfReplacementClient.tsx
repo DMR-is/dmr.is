@@ -74,6 +74,9 @@ export function AdvertPdfReplacementClient({ advert }: Props) {
               offset={['0', '0', '0', '1/12']}
             >
               <Box marginBottom={2}>
+                <Text variant="h3" marginBottom={2}>
+                  Yfirskrifa PDF auglýsingar
+                </Text>
                 <Text variant="h4">{advert.publicationNumber?.full ?? ''}</Text>
                 <Text variant="h5">{advert.title}</Text>
               </Box>

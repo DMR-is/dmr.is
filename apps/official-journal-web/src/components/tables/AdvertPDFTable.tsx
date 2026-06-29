@@ -42,6 +42,11 @@ export const AdvertPDFTable = ({ adverts, isLoading, paging }: Props) => {
       sortable: false,
       size: 'default',
     },
+    {
+      name: 'advertCorrectionFile',
+      sortable: false,
+      size: 'default',
+    },
   ]
 
   const advertTableColumns =
@@ -99,6 +104,30 @@ export const AdvertPDFTable = ({ adverts, isLoading, paging }: Props) => {
               >
                 <Text variant="eyebrow" color={'blue400'}>
                   {formatMessage(messages.tables.advert.columns.change)}{' '}
+                  <Icon
+                    icon="arrowForward"
+                    color="blue400"
+                    className={styles.seeMoreTableCellLinkIcon}
+                  />
+                </Text>
+              </Box>
+            ),
+          },
+          {
+            sortingKey: 'advertcorrectionpdf',
+            sortingValue: advert.subject,
+            children: (
+              <Box
+                component={'a'}
+                href={Routes.ReplaceCorrectionPdfAdvert.replace(
+                  ':advertId',
+                  advert.id,
+                )}
+              >
+                <Text variant="eyebrow" color={'blue400'}>
+                  {formatMessage(
+                    messages.tables.advert.columns.changeCorrection,
+                  )}{' '}
                   <Icon
                     icon="arrowForward"
                     color="blue400"
