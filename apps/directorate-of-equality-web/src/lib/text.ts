@@ -238,6 +238,8 @@ export const reportText = {
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
     reminderTierDue: 'Áminning á skiladegi',
     reminderDueDatePrefix: 'skiladagur',
+    systemAutoReviewApprove: 'Kerfið myndi samþykkja skýrsluna sjálfvirkt',
+    systemAutoReviewNeedsReview: 'Kerfið myndi senda skýrsluna í yfirferð',
   },
   salaryStatsLoadError: 'Villa við að hlaða tölfræðigögn fyrir skýrslu',
   salaryStatsLoadErrorMessage:
