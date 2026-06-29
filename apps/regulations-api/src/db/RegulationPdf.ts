@@ -2,8 +2,9 @@
 import S3 from 'aws-sdk/clients/s3'
 import { exec } from 'child_process'
 import fs from 'fs'
-import { readFile, unlink, writeFile } from 'fs/promises'
+import { mkdir, readFile, rm, unlink, writeFile } from 'fs/promises'
 import fetch from 'node-fetch'
+import os from 'os'
 import path from 'path'
 
 import { cleanTitle } from '@dmr.is/regulations-tools/cleanTitle'
@@ -287,6 +288,31 @@ const pdfTmplate = (
 let guid = 1
 const guid_prefix = 'temp_' + Date.now() + '_'
 
+// All transient PDF artifacts (HTML input, PDF output, and the per-render
+// Chromium user-data dir) live under a single dedicated directory so they can
+// be reliably cleaned up — both per render and via a startup sweep.
+const PDF_TMP_DIR = path.join(os.tmpdir(), 'regulations-pdf')
+
+try {
+  fs.mkdirSync(PDF_TMP_DIR, { recursive: true })
+} catch (err) {
+  console.error('Unable to create PDF temp dir', err)
+}
+
+/**
+ * Removes any leftover PDF temp artifacts (e.g. Chromium profile dirs orphaned
+ * by timed-out/OOM-killed renders, or temp files from a previous process that
+ * crashed). Safe to call on startup; recreates an empty temp dir afterwards.
+ */
+export const cleanupPdfTempDir = async () => {
+  try {
+    await rm(PDF_TMP_DIR, { recursive: true, force: true })
+    await mkdir(PDF_TMP_DIR, { recursive: true })
+  } catch (err) {
+    console.error('Unable to clean PDF temp dir', err)
+  }
+}
+
 const makeRegulationPdf = (
   regulation?:
     | InputRegulation
@@ -301,7 +327,23 @@ const makeRegulationPdf = (
 
   const tmpFileName = guid_prefix + guid++
 
-  const htmlFile = tmpFileName + '.html'
+  const outFile = path.join(PDF_TMP_DIR, tmpFileName)
+  const htmlFile = outFile + '.html'
+  // Give Chromium a user-data dir we own, so we can delete it ourselves.
+  // Puppeteer only auto-cleans a profile dir it created itself, so on a
+  // timed-out or OOM-killed render the default dir leaks. Owning it lets us
+  // guarantee cleanup below.
+  const userDataDir = outFile + '-chrome'
+
+  // Ignore cleanup errors — the file/dir may not have been created.
+  const tryUnlink = (file: string) =>
+    unlink(file).catch(() => {
+      /* best-effort cleanup. */
+    })
+  const tryRmDir = (dir: string) =>
+    rm(dir, { recursive: true, force: true }).catch(() => {
+      /* best-effort cleanup. */
+    })
 
   return writeFile(htmlFile, pdfTmplate(regulation, draft))
     .then(
@@ -311,25 +353,23 @@ const makeRegulationPdf = (
             // Increasing context to 5 lines (effectively: words) seems reasonable
             // since each line is so short (contains so little actual context)
             `pagedjs-cli ${htmlFile}` +
-              `  --browserArgs --no-sandbox,--font-render-hinting=none` +
+              `  --browserArgs --no-sandbox,--font-render-hinting=none,--user-data-dir=${userDataDir}` +
               `  --timeout ${90 * SECOND}` +
-              `  --output ${tmpFileName}`,
+              `  --output ${outFile}`,
             (err) => {
-              // Ignore unlink errors — the file may not have been created.
-              const tryUnlink = (file: string) =>
-                unlink(file).catch(() => {
-                  /* best-effort cleanup. */
-                })
+              // Always clean up the HTML input and the Chromium profile dir,
+              // regardless of success/failure.
               tryUnlink(htmlFile)
+              tryRmDir(userDataDir)
               if (err) {
                 // pagedjs-cli may have written a partial/complete output file
                 // before failing; clean it up so it doesn't leak to disk.
-                tryUnlink(tmpFileName)
+                tryUnlink(outFile)
                 reject(err)
               } else {
                 resolve(
-                  readFile(tmpFileName).then((file) => {
-                    tryUnlink(tmpFileName)
+                  readFile(outFile).then((file) => {
+                    tryUnlink(outFile)
                     return file
                   }),
                 )
