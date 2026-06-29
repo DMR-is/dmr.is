@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  Area,
   CartesianGrid,
   ComposedChart,
   Legend,
@@ -46,9 +47,15 @@ export function SalaryDistributionChart({ data }: Props) {
     )
   }
 
+  const { slope, intercept } = data.regressionLine
+  const allowed = data.allowedDifferencePercent
+  const predict = (score: number) => slope * score + intercept
+
+  // NEUTRAL is bundled into the female series (M vs F+N). Outliers are not
+  // marked on the chart — the tolerance band shows the pattern and the outlier
+  // table carries the exact list.
   const malePoints = data.dataPoints.filter((p) => p.gender === 'MALE')
-  const femalePoints = data.dataPoints.filter((p) => p.gender === 'FEMALE')
-  const neutralPoints = data.dataPoints.filter((p) => p.gender === 'NEUTRAL')
+  const femalePoints = data.dataPoints.filter((p) => p.gender !== 'MALE')
 
   const allY = data.dataPoints.map((p) => p.adjustedSalary)
   const yMax = Math.ceil(Math.max(...allY, 1) / 100000) * 100000
@@ -59,12 +66,27 @@ export function SalaryDistributionChart({ data }: Props) {
       (Math.max(...data.scoreBuckets.map((b) => b.rangeTo)) + 100) / 250,
     ) * 250
 
-  const { slope, intercept } = data.regressionLine
   const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
   const regressionData = [
-    { score: xStart, salary: slope * xStart + intercept },
-    { score: xAxisMax, salary: slope * xAxisMax + intercept },
+    { score: xStart, salary: predict(xStart) },
+    { score: xAxisMax, salary: predict(xAxisMax) },
   ]
+
+  // Tolerance wedge: predicted +/- allowed%, drawn as a shaded band between
+  // the lower and upper bound lines. Only the base-salary chart carries a band.
+  const bandData =
+    allowed != null
+      ? [xStart, xAxisMax].map((score) => {
+          const predicted = predict(score)
+          return {
+            score,
+            band: [
+              predicted * (1 - allowed / 100),
+              predicted * (1 + allowed / 100),
+            ] as [number, number],
+          }
+        })
+      : []
 
   return (
     <Box display="flex" flexDirection="column" rowGap={2} marginY={4}>
@@ -74,7 +96,10 @@ export function SalaryDistributionChart({ data }: Props) {
       </Text>
 
       <ResponsiveContainer width="100%" height={420}>
-        <ComposedChart margin={{ top: 24, right: 0, left: 0, bottom: 24 }}>
+        <ComposedChart
+          margin={{ top: 24, right: 0, left: 0, bottom: 24 }}
+          style={{ outline: 'none' }}
+        >
           <CartesianGrid vertical={false} stroke={theme.color.blue200} />
           <XAxis
             type="number"
@@ -142,6 +167,22 @@ export function SalaryDistributionChart({ data }: Props) {
             }}
           />
 
+          {bandData.length > 0 && (
+            <Area
+              data={bandData}
+              dataKey="band"
+              type="linear"
+              name={`Vikmörk (±${allowed}%)`}
+              stroke="none"
+              fill={theme.color.blue300}
+              fillOpacity={0.32}
+              legendType="rect"
+              tooltipType="none"
+              isAnimationActive={false}
+              activeDot={false}
+            />
+          )}
+
           {malePoints.length > 0 && (
             <Scatter
               name="Karl"
@@ -162,21 +203,11 @@ export function SalaryDistributionChart({ data }: Props) {
             />
           )}
 
-          {neutralPoints.length > 0 && (
-            <Scatter
-              name="Hlutlaust"
-              data={neutralPoints}
-              fill={theme.color.yellow400}
-              legendType="circle"
-              opacity={0.8}
-            />
-          )}
-
           <Line
             data={regressionData}
             type="linear"
             dataKey="salary"
-            name="Meðallaun"
+            name="Áætluð laun eftir stigum"
             stroke={theme.color.roseTinted400}
             strokeWidth={2.5}
             dot={false}

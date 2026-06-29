@@ -103,4 +103,13 @@ export class SalaryByGenderAndScoreDto {
 
   @ApiDto(SalaryTotalsDto)
   totals!: SalaryTotalsDto
+
+  /**
+   * Half the configured salary-difference threshold (e.g. 1.95 for a 3.9%
+   * threshold) — the allowed +/- band around the regression prediction that
+   * defines an outlier. Only populated for the base-salary-by-total-score
+   * chart, where the outlier rule applies; `null` for the other charts.
+   */
+  @ApiOptionalNumber({ nullable: true })
+  allowedDifferencePercent!: number | null
 }

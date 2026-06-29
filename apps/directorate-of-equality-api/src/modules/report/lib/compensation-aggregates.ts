@@ -157,6 +157,18 @@ export function getAdjustedFullSalary(
   )
 }
 
+/**
+ * Current product rule: the gender salary gap is measured as MALE vs
+ * FEMALE+NEUTRAL, so NEUTRAL is bundled into the FEMALE group for every
+ * grouping, count and gender-split regression. Raw NEUTRAL data is preserved
+ * untouched in `report_employee` — this only reclassifies at computation time.
+ * Centralised here so the rule is reversible when NEUTRAL gets its own
+ * category later.
+ */
+export function bundleNeutralIntoFemale(gender: GenderEnum): GenderEnum {
+  return gender === GenderEnum.NEUTRAL ? GenderEnum.FEMALE : gender
+}
+
 export function computeCompensationAggregates(input: {
   employees: CompensationEmployeeInput[]
   bucketWidth?: number
@@ -523,13 +535,22 @@ function computeRegressionsByGender(
   return {
     overall: computeSalaryRegression(samples),
     male: computeSalaryRegression(
-      samples.filter((sample) => sample.gender === GenderEnum.MALE),
+      samples.filter(
+        (sample) => bundleNeutralIntoFemale(sample.gender) === GenderEnum.MALE,
+      ),
     ),
+    // FEMALE line is fit on FEMALE+NEUTRAL; the standalone neutral line is
+    // therefore empty (the outlier rule uses `overall`, not these).
     female: computeSalaryRegression(
-      samples.filter((sample) => sample.gender === GenderEnum.FEMALE),
+      samples.filter(
+        (sample) => bundleNeutralIntoFemale(sample.gender) === GenderEnum.FEMALE,
+      ),
     ),
     neutral: computeSalaryRegression(
-      samples.filter((sample) => sample.gender === GenderEnum.NEUTRAL),
+      samples.filter(
+        (sample) =>
+          bundleNeutralIntoFemale(sample.gender) === GenderEnum.NEUTRAL,
+      ),
     ),
   }
 }
@@ -710,18 +731,12 @@ function groupSalaries(samples: GenderSalarySample[]): AggregateGroup {
   for (const sample of samples) {
     grouped.overall.push(sample.salary)
 
-    if (sample.gender === GenderEnum.MALE) {
+    // NEUTRAL is bundled into the FEMALE group (see bundleNeutralIntoFemale);
+    // the standalone `neutral` group is therefore always empty here.
+    if (bundleNeutralIntoFemale(sample.gender) === GenderEnum.MALE) {
       grouped.male.push(sample.salary)
-      continue
-    }
-
-    if (sample.gender === GenderEnum.FEMALE) {
+    } else {
       grouped.female.push(sample.salary)
-      continue
-    }
-
-    if (sample.gender === GenderEnum.NEUTRAL) {
-      grouped.neutral.push(sample.salary)
     }
   }
 
@@ -733,11 +748,15 @@ function countSamplesByCohort(
 ): SalaryCohortCounts {
   return {
     overall: samples.length,
-    male: samples.filter((sample) => sample.gender === GenderEnum.MALE).length,
-    female: samples.filter((sample) => sample.gender === GenderEnum.FEMALE)
-      .length,
-    neutral: samples.filter((sample) => sample.gender === GenderEnum.NEUTRAL)
-      .length,
+    male: samples.filter(
+      (sample) => bundleNeutralIntoFemale(sample.gender) === GenderEnum.MALE,
+    ).length,
+    // FEMALE count includes NEUTRAL; the standalone neutral count is therefore
+    // 0 (raw neutral data remains in report_employee).
+    female: samples.filter(
+      (sample) => bundleNeutralIntoFemale(sample.gender) === GenderEnum.FEMALE,
+    ).length,
+    neutral: 0,
   }
 }
 

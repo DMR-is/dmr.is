@@ -1,4 +1,5 @@
 import {
+  bundleNeutralIntoFemale,
   computeSalaryAggregateSnapshot,
   computeSalaryRegression,
   computeSalaryScoreBucketSnapshots,
@@ -30,6 +31,7 @@ export interface EmployeeDataPoint {
  */
 export function buildChartFromEmployeePoints(
   points: EmployeeDataPoint[],
+  allowedDifferencePercent: number | null = null,
 ): SalaryByGenderAndScoreDto {
   const dataPoints: ScatterDataPointDto[] = points.map((p) => ({
     score: p.score,
@@ -42,6 +44,7 @@ export function buildChartFromEmployeePoints(
     regressionLine: computeLinearRegression(points),
     scoreBuckets: computeScoreBuckets(points),
     totals: computeTotals(points),
+    allowedDifferencePercent,
   }
 }
 
@@ -102,8 +105,13 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
 }
 
 function computeTotals(points: EmployeeDataPoint[]): SalaryTotalsDto {
-  const males = points.filter((point) => point.gender === GenderEnum.MALE)
-  const females = points.filter((point) => point.gender === GenderEnum.FEMALE)
+  const males = points.filter(
+    (point) => bundleNeutralIntoFemale(point.gender) === GenderEnum.MALE,
+  )
+  // NEUTRAL is bundled with FEMALE (M vs F+N).
+  const females = points.filter(
+    (point) => bundleNeutralIntoFemale(point.gender) === GenderEnum.FEMALE,
+  )
   const snapshot = computeSalaryAggregateSnapshot(
     points.map((point) => ({
       gender: point.gender,

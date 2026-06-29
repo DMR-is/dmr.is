@@ -6,13 +6,12 @@ import {
 
 /**
  * Colors mirror the admin `SalaryDistributionChart` (island-ui theme):
- * blue400 male points, purple400 female points, yellow400 neutral points and
- * the roseTinted400 regression ("Meðallaun") line.
+ * blue400 male points, purple400 female points (NEUTRAL is bundled into the
+ * female series, M vs F+N) and the roseTinted400 regression line.
  */
 const COLORS = {
   male: '#0061ff',
   female: '#6a2ea0',
-  neutral: '#fff066',
   regression: '#9a0074',
   grid: '#ccdfff',
   axis: '#00003c',
@@ -33,9 +32,8 @@ function formatSalary(value: number): string {
 }
 
 function pointColor(gender: GenderEnum): string {
-  if (gender === GenderEnum.MALE) return COLORS.male
-  if (gender === GenderEnum.FEMALE) return COLORS.female
-  return COLORS.neutral
+  // NEUTRAL is bundled into the female series (M vs F+N).
+  return gender === GenderEnum.MALE ? COLORS.male : COLORS.female
 }
 
 /**
@@ -108,7 +106,7 @@ export function buildSalaryChartSvg(
       <circle cx="${MARGIN.left + 90}" cy="${legendY - 4}" r="5" fill="${COLORS.female}" />
       <text x="${MARGIN.left + 102}" y="${legendY}">Kona</text>
       <line x1="${MARGIN.left + 180}" y1="${legendY - 4}" x2="${MARGIN.left + 210}" y2="${legendY - 4}" stroke="${COLORS.regression}" stroke-width="2.5" />
-      <text x="${MARGIN.left + 218}" y="${legendY}">Meðallaun</text>
+      <text x="${MARGIN.left + 218}" y="${legendY}">Áætluð laun eftir stigum</text>
     </g>`
 
   return `

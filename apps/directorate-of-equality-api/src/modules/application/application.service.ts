@@ -27,6 +27,7 @@ import {
   type DetectedOutlier,
   detectOutliers,
   type OutlierDetectionEmployee,
+  resolveAllowedDifferencePercent,
 } from '../report/lib/compensation-aggregates'
 import {
   assertParsedPayloadIntegrity,
@@ -178,8 +179,10 @@ export class ApplicationService implements IApplicationService {
         gender: employee.gender,
       }),
     )
-    const baseSalaryByGenderAndScoreAll =
-      buildChartFromEmployeePoints(chartPoints)
+    const baseSalaryByGenderAndScoreAll = buildChartFromEmployeePoints(
+      chartPoints,
+      resolveAllowedDifferencePercent(thresholdPercent),
+    )
 
     return {
       outliers: detected.map(toOutlierDto),

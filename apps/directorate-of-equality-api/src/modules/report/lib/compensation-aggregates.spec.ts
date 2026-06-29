@@ -11,7 +11,7 @@ import {
 } from './compensation-aggregates'
 
 describe('compensation-aggregates', () => {
-  it('computes aggregate metrics and directional wage gaps across genders', () => {
+  it('bundles NEUTRAL into FEMALE for cohort metrics and wage gaps', () => {
     const snapshot = computeSalaryAggregateSnapshot([
       { gender: GenderEnum.MALE, salary: 100 },
       { gender: GenderEnum.MALE, salary: 300 },
@@ -32,27 +32,27 @@ describe('compensation-aggregates', () => {
       minimum: 100,
       maximum: 300,
     })
+    // FEMALE absorbs the NEUTRAL salary (50): avg of 150/250/50 = 150.
     expect(snapshot.female).toEqual({
-      average: 200,
-      median: 200,
-      minimum: 150,
+      average: 150,
+      median: 150,
+      minimum: 50,
       maximum: 250,
     })
+    // Standalone NEUTRAL cohort is empty once bundled.
     expect(snapshot.neutral).toEqual({
-      average: 50,
-      median: 50,
-      minimum: 50,
-      maximum: 50,
+      average: null,
+      median: null,
+      minimum: null,
+      maximum: null,
     })
 
-    expect(snapshot.salaryDifferences).toEqual({
-      maleFemale: 0,
-      maleNeutral: 75,
-      femaleMale: 0,
-      femaleNeutral: 75,
-      neutralMale: -300,
-      neutralFemale: -300,
-    })
+    expect(snapshot.salaryDifferences.maleFemale).toBe(25)
+    expect(snapshot.salaryDifferences.femaleMale).toBeCloseTo(-33.3333, 3)
+    expect(snapshot.salaryDifferences.maleNeutral).toBeNull()
+    expect(snapshot.salaryDifferences.femaleNeutral).toBeNull()
+    expect(snapshot.salaryDifferences.neutralMale).toBeNull()
+    expect(snapshot.salaryDifferences.neutralFemale).toBeNull()
   })
 
   it('returns null for missing cohort metrics and wage gaps', () => {
