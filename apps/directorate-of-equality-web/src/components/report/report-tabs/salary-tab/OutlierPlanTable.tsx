@@ -83,8 +83,8 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
       {
         label: o.salary,
         value:
-          row.predictedBaseSalary != null
-            ? `${formatSalary(row.predictedBaseSalary)} kr.`
+          row.adjustedBaseSalary != null
+            ? `${formatSalary(row.adjustedBaseSalary)} kr.`
             : null,
       },
       { label: o.groupLabel, value: row.groupName },
