@@ -13,7 +13,11 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { ApplicationEvent, AttachmentTypeParam } from '@dmr.is/constants'
+import {
+  ApplicationEvent,
+  ApplicationStates,
+  AttachmentTypeParam,
+} from '@dmr.is/constants'
 import { LogAndHandle, Transactional } from '@dmr.is/decorators'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
@@ -197,6 +201,19 @@ export class ApplicationService implements IApplicationService {
     }
 
     return ResultWrapper.ok()
+  }
+
+  @LogAndHandle()
+  async reopenApplication(id: string): Promise<ResultWrapper> {
+    const { application } = (await this.getApplication(id)).unwrap()
+
+    if (application.state !== ApplicationStates.SUBMITTED) {
+      throw new BadRequestException(
+        `Application<${id}> cannot be re-opened from state<${application.state}>, only submitted applications can be re-opened`,
+      )
+    }
+
+    return this.submitApplication(id, ApplicationEvent.Edit)
   }
 
   @LogAndHandle()

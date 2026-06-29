@@ -5,6 +5,7 @@ import {
   AdvertTypeAdminController,
   AdvertTypeController,
   AdvertTypeModule,
+  ApplicationModule,
   CommentModuleV2,
   InstitutionAdminController,
   InstitutionController,
@@ -18,6 +19,7 @@ import {
   UserModule,
 } from '@dmr.is/ojoi-modules'
 
+import { ApplicationController } from '../application/application.controller'
 import { CaseController } from './case.controller'
 
 @Module({
@@ -31,9 +33,11 @@ import { CaseController } from './case.controller'
     AdvertTypeModule,
     UserModule,
     PriceModule,
+    ApplicationModule,
   ],
   controllers: [
     CaseController,
+    ApplicationController,
     AdvertTypeAdminController,
     SignatureController,
     AdvertTypeController,

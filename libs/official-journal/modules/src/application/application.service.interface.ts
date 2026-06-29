@@ -33,6 +33,15 @@ export interface IApplicationService {
 
   submitApplication(id: string, event: ApplicationEvent): Promise<ResultWrapper>
 
+  /**
+   * Re-opens a submitted application by moving it back to the draft_retry state.
+   * Intended to recover applications that ended up stuck in the submitted state
+   * (e.g. island.is errored before a case was created on our side).
+   * Only applications currently in the submitted state can be re-opened.
+   * @param id Application id
+   */
+  reopenApplication(id: string): Promise<ResultWrapper>
+
   postApplication(id: string): Promise<ResultWrapper>
 
   getComments(applicationId: string): Promise<ResultWrapper<GetComments>>

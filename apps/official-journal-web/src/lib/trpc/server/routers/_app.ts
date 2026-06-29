@@ -1,4 +1,5 @@
 import { mergeRouters } from '../trpc'
+import { applicationsRouter } from './applicationsRouter'
 import { attachmentsRouter } from './attachmentsRouter'
 import { casesRouter } from './casesRouter'
 import { categoriesRouter } from './categoriesRouter'
@@ -17,6 +18,7 @@ export const appRouter = mergeRouters(
   casesRouter,
   commentsRouter,
   publishRouter,
+  applicationsRouter,
   categoriesRouter,
   mainCategoriesRouter,
   typesRouter,
