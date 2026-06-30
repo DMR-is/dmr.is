@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
@@ -10,6 +11,8 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportDraftAnalysisService } from './analysis/report-draft-analysis.service'
+import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
 import { ReportDraftAssignmentService } from './assignment/report-draft-assignment.service'
 import { IReportDraftAssignmentService } from './assignment/report-draft-assignment.service.interface'
 import { ReportDraftCriterionService } from './criterion/report-draft-criterion.service'
@@ -38,11 +41,16 @@ import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-su
       ReportEmployeePersonalCriterionStepModel,
       ReportOutlierGroupModel,
     ]),
+    ConfigCoreModule,
   ],
   providers: [
     {
       provide: IReportDraftService,
       useClass: ReportDraftService,
+    },
+    {
+      provide: IReportDraftAnalysisService,
+      useClass: ReportDraftAnalysisService,
     },
     {
       provide: IReportDraftRoleService,
@@ -71,6 +79,7 @@ import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-su
   ],
   exports: [
     IReportDraftService,
+    IReportDraftAnalysisService,
     IReportDraftRoleService,
     IReportDraftEmployeeService,
     IReportDraftCriterionService,

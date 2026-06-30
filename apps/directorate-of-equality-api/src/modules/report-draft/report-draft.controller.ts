@@ -22,6 +22,7 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { SalaryAnalysisResponseDto } from '../application/dto/salary-analysis.response.dto'
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
@@ -30,6 +31,7 @@ import { ReportSubCriterionDto } from '../report-criterion/dto/report-sub-criter
 import { ReportSubCriterionStepDto } from '../report-criterion/dto/report-sub-criterion-step.dto'
 import { ReportEmployeeDto } from '../report-employee/dto/report-employee.dto'
 import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
+import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
 import { DraftAssignmentDto } from './assignment/dto/draft-assignment.dto'
 import { SetStepsDto } from './assignment/dto/set-steps.dto'
 import { IReportDraftAssignmentService } from './assignment/report-draft-assignment.service.interface'
@@ -89,6 +91,8 @@ export class ReportDraftController {
     private readonly reportDraftStepService: IReportDraftStepService,
     @Inject(IReportDraftAssignmentService)
     private readonly reportDraftAssignmentService: IReportDraftAssignmentService,
+    @Inject(IReportDraftAnalysisService)
+    private readonly reportDraftAnalysisService: IReportDraftAnalysisService,
   ) {}
 
   @Post('reports/draft')
@@ -154,6 +158,22 @@ export class ReportDraftController {
     @Body() input: UpdateDraftDto,
   ): Promise<DraftDetailDto> {
     return this.reportDraftService.updateDraft(providerId, company, input)
+  }
+
+  @Get('reports/:providerId/draft/analysis')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'getApplicationDraftAnalysis',
+    include404: true,
+    type: SalaryAnalysisResponseDto,
+    description:
+      'Derived salary-analysis preview for a SALARY draft: outliers + the gender/score chart, computed on the fly from the draft\'s current scoring graph (employee scores are not yet persisted). 400 on an equality draft.',
+  })
+  async getDraftAnalysis(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<SalaryAnalysisResponseDto> {
+    return this.reportDraftAnalysisService.analyzeDraft(providerId, company)
   }
 
   // ── Roles ──────────────────────────────────────────────────────────────
