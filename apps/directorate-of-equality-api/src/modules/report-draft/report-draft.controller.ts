@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
@@ -35,12 +36,14 @@ import { CreateDraftReportDto } from './dto/create-draft-report.dto'
 import { CreateRoleDto } from './dto/create-role.dto'
 import { CreateStepDto } from './dto/create-step.dto'
 import { CreateSubCriterionDto } from './dto/create-sub-criterion.dto'
+import { DraftAssignmentDto } from './dto/draft-assignment.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
 import { GetDraftCriteriaResponseDto } from './dto/get-draft-criteria-response.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
 import { GetDraftRolesResponseDto } from './dto/get-draft-roles-response.dto'
 import { GetDraftStepsResponseDto } from './dto/get-draft-steps-response.dto'
 import { GetDraftSubCriteriaResponseDto } from './dto/get-draft-sub-criteria-response.dto'
+import { SetStepsDto } from './dto/set-steps.dto'
 import { UpdateCriterionDto } from './dto/update-criterion.dto'
 import { UpdateDraftDto } from './dto/update-draft.dto'
 import { UpdateDraftEmployeeDto } from './dto/update-draft-employee.dto'
@@ -48,6 +51,7 @@ import { UpdateRoleDto } from './dto/update-role.dto'
 import { UpdateStepDto } from './dto/update-step.dto'
 import { UpdateSubCriterionDto } from './dto/update-sub-criterion.dto'
 import { IReportDraftService } from './report-draft.service.interface'
+import { IReportDraftAssignmentService } from './report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
@@ -83,6 +87,8 @@ export class ReportDraftController {
     private readonly reportDraftSubCriterionService: IReportDraftSubCriterionService,
     @Inject(IReportDraftStepService)
     private readonly reportDraftStepService: IReportDraftStepService,
+    @Inject(IReportDraftAssignmentService)
+    private readonly reportDraftAssignmentService: IReportDraftAssignmentService,
   ) {}
 
   @Post('reports/draft')
@@ -619,6 +625,99 @@ export class ReportDraftController {
       company,
       subCriterionId,
       stepId,
+    )
+  }
+
+  // ── Step assignments (replace-per-owner) ───────────────────────────────
+
+  @Get('reports/:providerId/draft/roles/:roleId/steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'roleId', type: String })
+  @DoeResponse({
+    operationId: 'getApplicationDraftRoleSteps',
+    include404: true,
+    type: DraftAssignmentDto,
+    description: 'Lists the step ids assigned to a role on a draft.',
+  })
+  async getRoleSteps(
+    @Param('providerId') providerId: string,
+    @Param('roleId') roleId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<DraftAssignmentDto> {
+    return this.reportDraftAssignmentService.getRoleSteps(
+      providerId,
+      company,
+      roleId,
+    )
+  }
+
+  @Put('reports/:providerId/draft/roles/:roleId/steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'roleId', type: String })
+  @DoeResponse({
+    operationId: 'setApplicationDraftRoleSteps',
+    include404: true,
+    type: DraftAssignmentDto,
+    description:
+      'Replaces the full set of steps assigned to a role on a draft. Every step id must belong to the same draft (400 otherwise).',
+  })
+  async setRoleSteps(
+    @Param('providerId') providerId: string,
+    @Param('roleId') roleId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: SetStepsDto,
+  ): Promise<DraftAssignmentDto> {
+    return this.reportDraftAssignmentService.setRoleSteps(
+      providerId,
+      company,
+      roleId,
+      input,
+    )
+  }
+
+  @Get('reports/:providerId/draft/employees/:employeeId/steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'getApplicationDraftEmployeeSteps',
+    include404: true,
+    type: DraftAssignmentDto,
+    description:
+      'Lists the personal step ids assigned to an employee on a draft.',
+  })
+  async getEmployeeSteps(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<DraftAssignmentDto> {
+    return this.reportDraftAssignmentService.getEmployeeSteps(
+      providerId,
+      company,
+      employeeId,
+    )
+  }
+
+  @Put('reports/:providerId/draft/employees/:employeeId/steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'setApplicationDraftEmployeeSteps',
+    include404: true,
+    type: DraftAssignmentDto,
+    description:
+      'Replaces the full set of personal steps assigned to an employee on a draft. Every step id must belong to the same draft (400 otherwise).',
+  })
+  async setEmployeeSteps(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: SetStepsDto,
+  ): Promise<DraftAssignmentDto> {
+    return this.reportDraftAssignmentService.setEmployeeSteps(
+      providerId,
+      company,
+      employeeId,
+      input,
     )
   }
 }

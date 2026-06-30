@@ -12,6 +12,8 @@ import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportDraftService } from './report-draft.service'
 import { IReportDraftService } from './report-draft.service.interface'
+import { ReportDraftAssignmentService } from './report-draft-assignment.service'
+import { IReportDraftAssignmentService } from './report-draft-assignment.service.interface'
 import { ReportDraftCriterionService } from './report-draft-criterion.service'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 import { ReportDraftEmployeeService } from './report-draft-employee.service'
@@ -62,6 +64,10 @@ import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.se
       provide: IReportDraftStepService,
       useClass: ReportDraftStepService,
     },
+    {
+      provide: IReportDraftAssignmentService,
+      useClass: ReportDraftAssignmentService,
+    },
   ],
   exports: [
     IReportDraftService,
@@ -70,6 +76,7 @@ import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.se
     IReportDraftCriterionService,
     IReportDraftSubCriterionService,
     IReportDraftStepService,
+    IReportDraftAssignmentService,
   ],
 })
 export class ReportDraftCoreModule {}
