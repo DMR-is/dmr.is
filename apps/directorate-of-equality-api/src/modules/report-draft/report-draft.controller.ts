@@ -25,24 +25,29 @@ import { CompanyDto } from '../company/dto/company.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ReportCriterionDto } from '../report-criterion/dto/report-criterion.dto'
+import { ReportSubCriterionDto } from '../report-criterion/dto/report-sub-criterion.dto'
 import { ReportEmployeeDto } from '../report-employee/dto/report-employee.dto'
 import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
 import { CreateCriterionDto } from './dto/create-criterion.dto'
 import { CreateDraftEmployeeDto } from './dto/create-draft-employee.dto'
 import { CreateDraftReportDto } from './dto/create-draft-report.dto'
 import { CreateRoleDto } from './dto/create-role.dto'
+import { CreateSubCriterionDto } from './dto/create-sub-criterion.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
 import { GetDraftCriteriaResponseDto } from './dto/get-draft-criteria-response.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
 import { GetDraftRolesResponseDto } from './dto/get-draft-roles-response.dto'
+import { GetDraftSubCriteriaResponseDto } from './dto/get-draft-sub-criteria-response.dto'
 import { UpdateCriterionDto } from './dto/update-criterion.dto'
 import { UpdateDraftDto } from './dto/update-draft.dto'
 import { UpdateDraftEmployeeDto } from './dto/update-draft-employee.dto'
 import { UpdateRoleDto } from './dto/update-role.dto'
+import { UpdateSubCriterionDto } from './dto/update-sub-criterion.dto'
 import { IReportDraftService } from './report-draft.service.interface'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
+import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.service.interface'
 
 /**
  * Applicant-facing draft surface bound to the island.is application portal.
@@ -69,6 +74,8 @@ export class ReportDraftController {
     private readonly reportDraftEmployeeService: IReportDraftEmployeeService,
     @Inject(IReportDraftCriterionService)
     private readonly reportDraftCriterionService: IReportDraftCriterionService,
+    @Inject(IReportDraftSubCriterionService)
+    private readonly reportDraftSubCriterionService: IReportDraftSubCriterionService,
   ) {}
 
   @Post('reports/draft')
@@ -396,6 +403,112 @@ export class ReportDraftController {
       providerId,
       company,
       criterionId,
+    )
+  }
+
+  // ── Sub-criteria ───────────────────────────────────────────────────────
+
+  @Get('reports/:providerId/draft/criteria/:criterionId/sub-criteria')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'criterionId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftSubCriteria',
+    include404: true,
+    type: GetDraftSubCriteriaResponseDto,
+    description: 'Lists the sub-criteria of one criterion on a draft.',
+  })
+  async listSubCriteria(
+    @Param('providerId') providerId: string,
+    @Param('criterionId') criterionId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftSubCriteriaResponseDto> {
+    const subCriteria =
+      await this.reportDraftSubCriterionService.listSubCriteria(
+        providerId,
+        company,
+        criterionId,
+      )
+    return { subCriteria }
+  }
+
+  @Post('reports/:providerId/draft/criteria/:criterionId/sub-criteria')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'criterionId', type: String })
+  @DoeResponse({
+    operationId: 'createApplicationDraftSubCriterion',
+    status: 201,
+    include404: true,
+    type: ReportSubCriterionDto,
+    description: 'Creates a sub-criterion under a criterion on a draft.',
+  })
+  async createSubCriterion(
+    @Param('providerId') providerId: string,
+    @Param('criterionId') criterionId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: CreateSubCriterionDto,
+  ): Promise<ReportSubCriterionDto> {
+    return this.reportDraftSubCriterionService.createSubCriterion(
+      providerId,
+      company,
+      criterionId,
+      input,
+    )
+  }
+
+  @Patch(
+    'reports/:providerId/draft/criteria/:criterionId/sub-criteria/:subCriterionId',
+  )
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'criterionId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @DoeResponse({
+    operationId: 'updateApplicationDraftSubCriterion',
+    include404: true,
+    type: ReportSubCriterionDto,
+    description: 'Patches a sub-criterion on a draft (PATCH semantics).',
+  })
+  async updateSubCriterion(
+    @Param('providerId') providerId: string,
+    @Param('criterionId') criterionId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: UpdateSubCriterionDto,
+  ): Promise<ReportSubCriterionDto> {
+    return this.reportDraftSubCriterionService.updateSubCriterion(
+      providerId,
+      company,
+      criterionId,
+      subCriterionId,
+      input,
+    )
+  }
+
+  @Delete(
+    'reports/:providerId/draft/criteria/:criterionId/sub-criteria/:subCriterionId',
+  )
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'criterionId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @DoeResponse({
+    operationId: 'deleteApplicationDraftSubCriterion',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Deletes a sub-criterion and its steps (and the role/employee assignments pointing at those steps).',
+  })
+  async deleteSubCriterion(
+    @Param('providerId') providerId: string,
+    @Param('criterionId') criterionId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftSubCriterionService.deleteSubCriterion(
+      providerId,
+      company,
+      criterionId,
+      subCriterionId,
     )
   }
 }
