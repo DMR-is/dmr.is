@@ -26,27 +26,32 @@ import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ReportCriterionDto } from '../report-criterion/dto/report-criterion.dto'
 import { ReportSubCriterionDto } from '../report-criterion/dto/report-sub-criterion.dto'
+import { ReportSubCriterionStepDto } from '../report-criterion/dto/report-sub-criterion-step.dto'
 import { ReportEmployeeDto } from '../report-employee/dto/report-employee.dto'
 import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
 import { CreateCriterionDto } from './dto/create-criterion.dto'
 import { CreateDraftEmployeeDto } from './dto/create-draft-employee.dto'
 import { CreateDraftReportDto } from './dto/create-draft-report.dto'
 import { CreateRoleDto } from './dto/create-role.dto'
+import { CreateStepDto } from './dto/create-step.dto'
 import { CreateSubCriterionDto } from './dto/create-sub-criterion.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
 import { GetDraftCriteriaResponseDto } from './dto/get-draft-criteria-response.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
 import { GetDraftRolesResponseDto } from './dto/get-draft-roles-response.dto'
+import { GetDraftStepsResponseDto } from './dto/get-draft-steps-response.dto'
 import { GetDraftSubCriteriaResponseDto } from './dto/get-draft-sub-criteria-response.dto'
 import { UpdateCriterionDto } from './dto/update-criterion.dto'
 import { UpdateDraftDto } from './dto/update-draft.dto'
 import { UpdateDraftEmployeeDto } from './dto/update-draft-employee.dto'
 import { UpdateRoleDto } from './dto/update-role.dto'
+import { UpdateStepDto } from './dto/update-step.dto'
 import { UpdateSubCriterionDto } from './dto/update-sub-criterion.dto'
 import { IReportDraftService } from './report-draft.service.interface'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
+import { IReportDraftStepService } from './report-draft-step.service.interface'
 import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.service.interface'
 
 /**
@@ -76,6 +81,8 @@ export class ReportDraftController {
     private readonly reportDraftCriterionService: IReportDraftCriterionService,
     @Inject(IReportDraftSubCriterionService)
     private readonly reportDraftSubCriterionService: IReportDraftSubCriterionService,
+    @Inject(IReportDraftStepService)
+    private readonly reportDraftStepService: IReportDraftStepService,
   ) {}
 
   @Post('reports/draft')
@@ -509,6 +516,109 @@ export class ReportDraftController {
       company,
       criterionId,
       subCriterionId,
+    )
+  }
+
+  // ── Steps ──────────────────────────────────────────────────────────────
+
+  @Get('reports/:providerId/draft/sub-criteria/:subCriterionId/steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftSteps',
+    include404: true,
+    type: GetDraftStepsResponseDto,
+    description: 'Lists the scoring steps of one sub-criterion on a draft.',
+  })
+  async listSteps(
+    @Param('providerId') providerId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftStepsResponseDto> {
+    const steps = await this.reportDraftStepService.listSteps(
+      providerId,
+      company,
+      subCriterionId,
+    )
+    return { steps }
+  }
+
+  @Post('reports/:providerId/draft/sub-criteria/:subCriterionId/steps')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @DoeResponse({
+    operationId: 'createApplicationDraftStep',
+    status: 201,
+    include404: true,
+    type: ReportSubCriterionStepDto,
+    description: 'Creates a scoring step under a sub-criterion on a draft.',
+  })
+  async createStep(
+    @Param('providerId') providerId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: CreateStepDto,
+  ): Promise<ReportSubCriterionStepDto> {
+    return this.reportDraftStepService.createStep(
+      providerId,
+      company,
+      subCriterionId,
+      input,
+    )
+  }
+
+  @Patch('reports/:providerId/draft/sub-criteria/:subCriterionId/steps/:stepId')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @ApiParam({ name: 'stepId', type: String })
+  @DoeResponse({
+    operationId: 'updateApplicationDraftStep',
+    include404: true,
+    type: ReportSubCriterionStepDto,
+    description: 'Patches a scoring step on a draft (PATCH semantics).',
+  })
+  async updateStep(
+    @Param('providerId') providerId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @Param('stepId') stepId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: UpdateStepDto,
+  ): Promise<ReportSubCriterionStepDto> {
+    return this.reportDraftStepService.updateStep(
+      providerId,
+      company,
+      subCriterionId,
+      stepId,
+      input,
+    )
+  }
+
+  @Delete(
+    'reports/:providerId/draft/sub-criteria/:subCriterionId/steps/:stepId',
+  )
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'subCriterionId', type: String })
+  @ApiParam({ name: 'stepId', type: String })
+  @DoeResponse({
+    operationId: 'deleteApplicationDraftStep',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Deletes a scoring step and the role/employee assignments pointing at it.',
+  })
+  async deleteStep(
+    @Param('providerId') providerId: string,
+    @Param('subCriterionId') subCriterionId: string,
+    @Param('stepId') stepId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftStepService.deleteStep(
+      providerId,
+      company,
+      subCriterionId,
+      stepId,
     )
   }
 }

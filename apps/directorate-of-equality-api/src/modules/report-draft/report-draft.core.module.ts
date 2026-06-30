@@ -18,6 +18,8 @@ import { ReportDraftEmployeeService } from './report-draft-employee.service'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { ReportDraftRoleService } from './report-draft-role.service'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
+import { ReportDraftStepService } from './report-draft-step.service'
+import { IReportDraftStepService } from './report-draft-step.service.interface'
 import { ReportDraftSubCriterionService } from './report-draft-sub-criterion.service'
 import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.service.interface'
 
@@ -56,6 +58,10 @@ import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.se
       provide: IReportDraftSubCriterionService,
       useClass: ReportDraftSubCriterionService,
     },
+    {
+      provide: IReportDraftStepService,
+      useClass: ReportDraftStepService,
+    },
   ],
   exports: [
     IReportDraftService,
@@ -63,6 +69,7 @@ import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.se
     IReportDraftEmployeeService,
     IReportDraftCriterionService,
     IReportDraftSubCriterionService,
+    IReportDraftStepService,
   ],
 })
 export class ReportDraftCoreModule {}
