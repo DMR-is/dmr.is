@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -21,10 +22,15 @@ import { CompanyResourceGuard } from '../../core/guards/company-resource/company
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
+import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
 import { CreateDraftReportDto } from './dto/create-draft-report.dto'
+import { CreateRoleDto } from './dto/create-role.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
+import { GetDraftRolesResponseDto } from './dto/get-draft-roles-response.dto'
 import { UpdateDraftDto } from './dto/update-draft.dto'
+import { UpdateRoleDto } from './dto/update-role.dto'
 import { IReportDraftService } from './report-draft.service.interface'
+import { IReportDraftRoleService } from './report-draft-role.service.interface'
 
 /**
  * Applicant-facing draft surface bound to the island.is application portal.
@@ -45,6 +51,8 @@ export class ReportDraftController {
   constructor(
     @Inject(IReportDraftService)
     private readonly reportDraftService: IReportDraftService,
+    @Inject(IReportDraftRoleService)
+    private readonly reportDraftRoleService: IReportDraftRoleService,
   ) {}
 
   @Post('reports/draft')
@@ -110,5 +118,86 @@ export class ReportDraftController {
     @Body() input: UpdateDraftDto,
   ): Promise<DraftDetailDto> {
     return this.reportDraftService.updateDraft(providerId, company, input)
+  }
+
+  // ── Roles ──────────────────────────────────────────────────────────────
+
+  @Get('reports/:providerId/draft/roles')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftRoles',
+    include404: true,
+    type: GetDraftRolesResponseDto,
+    description: 'Lists the employee roles defined on a draft (by title).',
+  })
+  async listRoles(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftRolesResponseDto> {
+    const roles = await this.reportDraftRoleService.listRoles(
+      providerId,
+      company,
+    )
+    return { roles }
+  }
+
+  @Post('reports/:providerId/draft/roles')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'createApplicationDraftRole',
+    status: 201,
+    include404: true,
+    type: ReportEmployeeRoleDto,
+    description: 'Creates an employee role on a draft.',
+  })
+  async createRole(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: CreateRoleDto,
+  ): Promise<ReportEmployeeRoleDto> {
+    return this.reportDraftRoleService.createRole(providerId, company, input)
+  }
+
+  @Patch('reports/:providerId/draft/roles/:roleId')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'roleId', type: String })
+  @DoeResponse({
+    operationId: 'updateApplicationDraftRole',
+    include404: true,
+    type: ReportEmployeeRoleDto,
+    description: 'Renames an employee role on a draft.',
+  })
+  async updateRole(
+    @Param('providerId') providerId: string,
+    @Param('roleId') roleId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: UpdateRoleDto,
+  ): Promise<ReportEmployeeRoleDto> {
+    return this.reportDraftRoleService.updateRole(
+      providerId,
+      company,
+      roleId,
+      input,
+    )
+  }
+
+  @Delete('reports/:providerId/draft/roles/:roleId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'roleId', type: String })
+  @DoeResponse({
+    operationId: 'deleteApplicationDraftRole',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Deletes an employee role from a draft. 409 if any employee is still assigned to it.',
+  })
+  async deleteRole(
+    @Param('providerId') providerId: string,
+    @Param('roleId') roleId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftRoleService.deleteRole(providerId, company, roleId)
   }
 }

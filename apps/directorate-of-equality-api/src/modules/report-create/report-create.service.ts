@@ -177,7 +177,10 @@ export class ReportCreateService implements IReportCreateService {
 
     // 3. roles — one row per parsed role. Map by title for FK resolution.
     const roleRows = await this.reportEmployeeRoleModel.bulkCreate(
-      input.parsed.roles.map((role) => ({ title: role.title })),
+      input.parsed.roles.map((role) => ({
+        title: role.title,
+        reportId: report.id,
+      })),
     )
     const roleTitleToId = new Map<string, string>()
     input.parsed.roles.forEach((role, index) => {

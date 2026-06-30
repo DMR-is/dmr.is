@@ -1,4 +1,5 @@
 import { CompanyDto } from '../company/dto/company.dto'
+import { ReportModel } from '../report/models/report.model'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { CreateDraftDto } from './dto/create-draft.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
@@ -23,6 +24,13 @@ export interface IReportDraftService {
     company: CompanyDto,
     input: UpdateDraftDto,
   ): Promise<DraftDetailDto>
+
+  /**
+   * Resolves a DRAFT report owned by the company by its provider tuple, or
+   * throws NotFound. The canonical ownership gate the per-entity draft CRUD
+   * services (roles, employees, …) share.
+   */
+  findOwnedDraft(providerId: string, company: CompanyDto): Promise<ReportModel>
 }
 
 export const IReportDraftService = Symbol('IReportDraftService')
