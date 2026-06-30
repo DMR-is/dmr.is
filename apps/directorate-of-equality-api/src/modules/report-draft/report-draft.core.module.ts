@@ -8,6 +8,8 @@ import { ReportEmployeeRoleModel } from '../report-employee/models/report-employ
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportDraftService } from './report-draft.service'
 import { IReportDraftService } from './report-draft.service.interface'
+import { ReportDraftEmployeeService } from './report-draft-employee.service'
+import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { ReportDraftRoleService } from './report-draft-role.service'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
 
@@ -30,7 +32,15 @@ import { IReportDraftRoleService } from './report-draft-role.service.interface'
       provide: IReportDraftRoleService,
       useClass: ReportDraftRoleService,
     },
+    {
+      provide: IReportDraftEmployeeService,
+      useClass: ReportDraftEmployeeService,
+    },
   ],
-  exports: [IReportDraftService, IReportDraftRoleService],
+  exports: [
+    IReportDraftService,
+    IReportDraftRoleService,
+    IReportDraftEmployeeService,
+  ],
 })
 export class ReportDraftCoreModule {}

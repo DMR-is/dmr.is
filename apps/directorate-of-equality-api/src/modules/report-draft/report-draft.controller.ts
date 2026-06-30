@@ -9,10 +9,12 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { AutoProvisionCompany } from '../../core/decorators/auto-provision-company.decorator'
@@ -22,14 +24,19 @@ import { CompanyResourceGuard } from '../../core/guards/company-resource/company
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
+import { ReportEmployeeDto } from '../report-employee/dto/report-employee.dto'
 import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
+import { CreateDraftEmployeeDto } from './dto/create-draft-employee.dto'
 import { CreateDraftReportDto } from './dto/create-draft-report.dto'
 import { CreateRoleDto } from './dto/create-role.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
+import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
 import { GetDraftRolesResponseDto } from './dto/get-draft-roles-response.dto'
 import { UpdateDraftDto } from './dto/update-draft.dto'
+import { UpdateDraftEmployeeDto } from './dto/update-draft-employee.dto'
 import { UpdateRoleDto } from './dto/update-role.dto'
 import { IReportDraftService } from './report-draft.service.interface'
+import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
 
 /**
@@ -53,6 +60,8 @@ export class ReportDraftController {
     private readonly reportDraftService: IReportDraftService,
     @Inject(IReportDraftRoleService)
     private readonly reportDraftRoleService: IReportDraftRoleService,
+    @Inject(IReportDraftEmployeeService)
+    private readonly reportDraftEmployeeService: IReportDraftEmployeeService,
   ) {}
 
   @Post('reports/draft')
@@ -199,5 +208,97 @@ export class ReportDraftController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<void> {
     return this.reportDraftRoleService.deleteRole(providerId, company, roleId)
+  }
+
+  // ── Employees ──────────────────────────────────────────────────────────
+
+  @Get('reports/:providerId/draft/employees')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftEmployees',
+    include404: true,
+    type: GetDraftEmployeesResponseDto,
+    description:
+      'Paginated list of the draft\'s employees, ordered by ordinal. Scores are NULL until the report is submitted.',
+  })
+  async listEmployees(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Query() query: PagingQuery,
+  ): Promise<GetDraftEmployeesResponseDto> {
+    return this.reportDraftEmployeeService.listEmployees(
+      providerId,
+      company,
+      query,
+    )
+  }
+
+  @Post('reports/:providerId/draft/employees')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'createApplicationDraftEmployee',
+    status: 201,
+    include404: true,
+    type: ReportEmployeeDto,
+    description:
+      'Adds one employee to a draft. Ordinal is assigned server-side; score stays NULL until submit. The role must already exist on the draft (400 otherwise).',
+  })
+  async createEmployee(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: CreateDraftEmployeeDto,
+  ): Promise<ReportEmployeeDto> {
+    return this.reportDraftEmployeeService.createEmployee(
+      providerId,
+      company,
+      input,
+    )
+  }
+
+  @Patch('reports/:providerId/draft/employees/:employeeId')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'updateApplicationDraftEmployee',
+    include404: true,
+    type: ReportEmployeeDto,
+    description:
+      'Patches one draft employee (PATCH semantics). A supplied reportEmployeeRoleId must belong to the same draft (400 otherwise).',
+  })
+  async updateEmployee(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: UpdateDraftEmployeeDto,
+  ): Promise<ReportEmployeeDto> {
+    return this.reportDraftEmployeeService.updateEmployee(
+      providerId,
+      company,
+      employeeId,
+      input,
+    )
+  }
+
+  @Delete('reports/:providerId/draft/employees/:employeeId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'deleteApplicationDraftEmployee',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description: 'Removes one employee from a draft.',
+  })
+  async deleteEmployee(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftEmployeeService.deleteEmployee(
+      providerId,
+      company,
+      employeeId,
+    )
   }
 }
