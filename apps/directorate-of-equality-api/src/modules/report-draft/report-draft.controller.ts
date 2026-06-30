@@ -31,6 +31,7 @@ import { ReportSubCriterionDto } from '../report-criterion/dto/report-sub-criter
 import { ReportSubCriterionStepDto } from '../report-criterion/dto/report-sub-criterion-step.dto'
 import { ReportEmployeeDto } from '../report-employee/dto/report-employee.dto'
 import { ReportEmployeeRoleDto } from '../report-employee/dto/report-employee-role.dto'
+import { ReportOutlierGroupDto } from '../report-employee/dto/report-outlier-group.dto'
 import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
 import { DraftAssignmentDto } from './assignment/dto/draft-assignment.dto'
 import { SetStepsDto } from './assignment/dto/set-steps.dto'
@@ -47,6 +48,12 @@ import { CreateDraftEmployeeDto } from './employee/dto/create-draft-employee.dto
 import { GetDraftEmployeesResponseDto } from './employee/dto/get-draft-employees-response.dto'
 import { UpdateDraftEmployeeDto } from './employee/dto/update-draft-employee.dto'
 import { IReportDraftEmployeeService } from './employee/report-draft-employee.service.interface'
+import { CreateOutlierGroupDto } from './outlier-group/dto/create-outlier-group.dto'
+import { EmployeeOutlierGroupDto } from './outlier-group/dto/employee-outlier-group.dto'
+import { GetDraftOutlierGroupsResponseDto } from './outlier-group/dto/get-draft-outlier-groups-response.dto'
+import { SetEmployeeOutlierGroupDto } from './outlier-group/dto/set-employee-outlier-group.dto'
+import { UpdateOutlierGroupDto } from './outlier-group/dto/update-outlier-group.dto'
+import { IReportDraftOutlierGroupService } from './outlier-group/report-draft-outlier-group.service.interface'
 import { CreateRoleDto } from './role/dto/create-role.dto'
 import { GetDraftRolesResponseDto } from './role/dto/get-draft-roles-response.dto'
 import { UpdateRoleDto } from './role/dto/update-role.dto'
@@ -93,6 +100,8 @@ export class ReportDraftController {
     private readonly reportDraftAssignmentService: IReportDraftAssignmentService,
     @Inject(IReportDraftAnalysisService)
     private readonly reportDraftAnalysisService: IReportDraftAnalysisService,
+    @Inject(IReportDraftOutlierGroupService)
+    private readonly reportDraftOutlierGroupService: IReportDraftOutlierGroupService,
   ) {}
 
   @Post('reports/draft')
@@ -738,6 +747,168 @@ export class ReportDraftController {
       company,
       employeeId,
       input,
+    )
+  }
+
+  // ── Outlier groups ─────────────────────────────────────────────────────
+
+  @Get('reports/:providerId/draft/outlier-groups')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftOutlierGroups',
+    include404: true,
+    type: GetDraftOutlierGroupsResponseDto,
+    description:
+      'Lists the outlier groups on a draft, each with the ids of its member employees.',
+  })
+  async listOutlierGroups(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftOutlierGroupsResponseDto> {
+    const groups = await this.reportDraftOutlierGroupService.listGroups(
+      providerId,
+      company,
+    )
+    return { groups }
+  }
+
+  @Post('reports/:providerId/draft/outlier-groups')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'createApplicationDraftOutlierGroup',
+    status: 201,
+    include404: true,
+    type: ReportOutlierGroupDto,
+    description:
+      'Creates an outlier group on a draft. The four explanation fields are all-or-none (400 if partially provided).',
+  })
+  async createOutlierGroup(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: CreateOutlierGroupDto,
+  ): Promise<ReportOutlierGroupDto> {
+    return this.reportDraftOutlierGroupService.createGroup(
+      providerId,
+      company,
+      input,
+    )
+  }
+
+  @Patch('reports/:providerId/draft/outlier-groups/:groupId')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'groupId', type: String })
+  @DoeResponse({
+    operationId: 'updateApplicationDraftOutlierGroup',
+    include404: true,
+    type: ReportOutlierGroupDto,
+    description:
+      'Patches an outlier group on a draft (PATCH semantics; explanation fields are all-or-none when touched).',
+  })
+  async updateOutlierGroup(
+    @Param('providerId') providerId: string,
+    @Param('groupId') groupId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: UpdateOutlierGroupDto,
+  ): Promise<ReportOutlierGroupDto> {
+    return this.reportDraftOutlierGroupService.updateGroup(
+      providerId,
+      company,
+      groupId,
+      input,
+    )
+  }
+
+  @Delete('reports/:providerId/draft/outlier-groups/:groupId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'groupId', type: String })
+  @DoeResponse({
+    operationId: 'deleteApplicationDraftOutlierGroup',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Deletes an outlier group. 409 if any employee is still assigned to it.',
+  })
+  async deleteOutlierGroup(
+    @Param('providerId') providerId: string,
+    @Param('groupId') groupId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftOutlierGroupService.deleteGroup(
+      providerId,
+      company,
+      groupId,
+    )
+  }
+
+  // ── Outlier-group membership (per employee) ────────────────────────────
+
+  @Get('reports/:providerId/draft/employees/:employeeId/outlier-group')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'getApplicationDraftEmployeeOutlierGroup',
+    include404: true,
+    type: EmployeeOutlierGroupDto,
+    description:
+      "Returns the employee's current outlier-group membership (groupId null if unassigned).",
+  })
+  async getEmployeeOutlierGroup(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<EmployeeOutlierGroupDto> {
+    return this.reportDraftOutlierGroupService.getEmployeeGroup(
+      providerId,
+      company,
+      employeeId,
+    )
+  }
+
+  @Put('reports/:providerId/draft/employees/:employeeId/outlier-group')
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'setApplicationDraftEmployeeOutlierGroup',
+    include404: true,
+    type: EmployeeOutlierGroupDto,
+    description:
+      'Assigns a detected-outlier employee to an outlier group on the same draft. 400 if the employee is not currently a detected outlier.',
+  })
+  async setEmployeeOutlierGroup(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: SetEmployeeOutlierGroupDto,
+  ): Promise<EmployeeOutlierGroupDto> {
+    return this.reportDraftOutlierGroupService.setEmployeeGroup(
+      providerId,
+      company,
+      employeeId,
+      input,
+    )
+  }
+
+  @Delete('reports/:providerId/draft/employees/:employeeId/outlier-group')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: 'providerId', type: String })
+  @ApiParam({ name: 'employeeId', type: String })
+  @DoeResponse({
+    operationId: 'clearApplicationDraftEmployeeOutlierGroup',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description: "Removes the employee's outlier-group membership.",
+  })
+  async clearEmployeeOutlierGroup(
+    @Param('providerId') providerId: string,
+    @Param('employeeId') employeeId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftOutlierGroupService.clearEmployeeGroup(
+      providerId,
+      company,
+      employeeId,
     )
   }
 }
