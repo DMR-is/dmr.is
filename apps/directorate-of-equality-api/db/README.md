@@ -123,6 +123,9 @@ State-by-state:
 - **`DENIED`** — reviewer rejected the submission. `reviewer_user_id` set on the report. Denial reason is stored on the `STATUS_CHANGED` event (`reason` column) rather than the report row — keeps the audit trail self-contained. **Terminal state.** This denied row stays as audit forever and is never mutated. The company submits afresh via the upstream application portal, which produces a new `provider_id` and a new `report` row.
 - **`APPROVED`** — reviewer accepted. `approved_at` set, `valid_until = approved_at + 3 years`. The parent company's matching next-due column is advanced to the same `valid_until` (`next_salary_report_due_at` for a `SALARY` approval, `next_equality_report_due_at` for `EQUALITY`), keeping it the live source of truth for the renewal-window check. A `public_report` row is inserted as part of this transition. `approve()` additionally gates on every outlier row having all four explanation fields filled — a belt-and-suspenders check on top of the `POSTPONED → SUBMITTED` resolution flow.
 - **`SUPERSEDED`** — a newer report **of the same `type`** from the same company has been approved. Old `valid_until` gets stamped to `now()`. This does **not** touch the company's `next_*_report_due_at` — that was already advanced to the new report's `valid_until` by the approval above; the superseded row is no longer the company's current obligation. Only one `APPROVED` report per `(company, type)` pair is "current" at any time — an approved `SALARY` does **not** supersede an approved `EQUALITY` and vice versa, since every company needs both kinds active simultaneously (equality universally, salary for ≥50-employee companies).
+- **`WITHDRAWN`** — a report retired before any reviewer acted on it. **Terminal state.** Reached two ways, both before the report became live work:
+  - **Auto-withdrawn on sibling resubmission.** When a company submits a new report of a given `type`, `report-create.service.ts` silently withdraws any still-`SUBMITTED` predecessor of the same type for that company (`withdrawOrRejectInflightSibling()`): the old row flips to `WITHDRAWN` and a `WITHDRAWN` `report_event` is emitted on it with `related_report_id` pointing at the new replacing report (mirroring `SUPERSEDED`). A prior report in `IN_REVIEW` or `POSTPONED` is **not** auto-withdrawn — those flows are active, so the new submission is rejected with 409 instead.
+  - **Applicant-withdrawn.** `application.withdraw()` (`POST` on the application surface) sets a report to `WITHDRAWN` when the applicant deleted the originating island.is application upstream, emitting a `STATUS_CHANGED` event. Allowed only before a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report.
 
 ## Outlier deadlines
 
@@ -192,7 +195,7 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
 
-- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment / unassignment, status transitions, applicant in-place edits (`EDITED`), and supersession (future: retraction). Daily fines are tracked on the **company**, not the report, so they emit a `company_event` (`FINES_STARTED` / `FINES_STOPPED`) rather than a `report_event`. Never edited, never deleted.
+- **`report_event`** — immutable, system-generated audit rows. Emitted on state-changing actions: submission, reviewer assignment / unassignment, status transitions, applicant in-place edits (`EDITED`), supersession, withdrawal (`WITHDRAWN` on auto-withdrawal; `STATUS_CHANGED` on applicant withdrawal), and the system auto-review verdict (`SYSTEM_AUTO_REVIEW`; audit-only, see "System auto-review"). Daily fines are tracked on the **company**, not the report, so they emit a `company_event` (`FINES_STARTED` / `FINES_STOPPED`) rather than a `report_event`. Never edited, never deleted.
 - **`report_comment`** — human-written messages. Either **internal** (reviewer-to-reviewer, hidden from the company) or **external** (reviewer ↔ company admin, visible to both sides). Company admins can post on external comments only.
 
 ### Mutability
@@ -224,6 +227,12 @@ Both tables carry a `report_status` snapshot stamped at insert time. The admin U
 - For `STATUS_CHANGED` events, `report_status = to_status` — the transition row opens the bucket for the new status rather than closing the old one, so each bucket reads top-down starting with "moved to X".
 
 The snapshot never mutates; buckets remain stable as the report moves through later states.
+
+### System auto-review (soft verdict)
+
+On submission a freshly created report is run through the `report-auto-review` module (`ReportAutoReviewService`), which reaches a soft verdict and records it as a `SYSTEM_AUTO_REVIEW` `report_event`. The verdict lives on the event's `system_decision` column (`AutoReviewDecisionEnum`: `AUTO_APPROVE` | `NEEDS_REVIEW`); the human-readable reasoning is stored in the event's `reason` text.
+
+This is **audit-only**: during the soft phase the verdict **never changes the report's status** — the report still waits in the reviewer queue regardless. `system_decision` is a first-class column rather than an overloaded status so "how often would we have auto-approved?" is a direct query. `EQUALITY` reports are narrative and abstain.
 
 ## Public snapshot flow
 
@@ -305,7 +314,7 @@ Each report is evaluated against a set of weighted criteria:
 - `report_sub_criterion_step` — ordered scoring steps within a sub-criterion. Each step has a `score`.
 - Which steps apply to which role is captured in `report_employee_role_criterion_step`.
 - Which steps apply to a specific employee personally is captured in `report_employee_personal_criterion_step`.
-- Salary outlier justifications (special circumstances for a specific employee) are recorded in `report_employee_outlier` with `reason`, `action`, and signatures.
+- Salary outlier justifications (special circumstances) are grouped in `report_outlier_group` — each group owns the shared `reason`, `action`, and signature fields — with `report_employee_outlier` joining each detected outlier employee to its group.
 
 The final `score` on `report_employee` is derived from the steps that apply to that employee — the sum of `report_sub_criterion_step.score` across the steps reachable via the employee's role (`report_employee_role_criterion_step`) and via their personal assignments (`report_employee_personal_criterion_step`), with steps assigned through both sources counted once. The total is computed at submission and persisted on the row; reviewers read it as-is.
 
@@ -343,9 +352,14 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
 | `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`                |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`   |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`                   |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW` |
+| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                   |
+| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                             |
+| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                            |
+| `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL` |
+| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                   |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
 
@@ -426,6 +440,9 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 | `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`) |
 | `national_id`                     | `text` (unique)                                     |
 | `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)         |
+| `email`                           | `text` (nullable — admin-set contact email; read by the report-deadline-reminder task) |
+| `address`                         | `text` (nullable)                                   |
+| `postcode_id`                     | `fk → postcode` (nullable)                          |
 | `salary_report_required`          | `boolean`                                           |
 | `salary_report_required_override` | `boolean`                                           |
 | `fines_started`                   | `boolean` (default `false`)                         |
@@ -445,6 +462,38 @@ outside this system (see [Fines accrual](#fines-accrual)). `quarantined` is an a
 halt switch (see [Quarantine](#quarantine)). `next_*_report_due_at` are the company's
 next due dates; admins act on them via the derived `equalityReportOverdue` /
 `salaryReportOverdue` read-only flags.
+
+### `company_event`
+
+Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), and the four deadline-reminder outcomes emitted by the report-deadline-reminder task. For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
+
+| Column           | Type                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| `id`             | `uuid` PK                                                                                  |
+| `company_id`     | `fk → company`                                                                             |
+| `event_type`     | `CompanyEventTypeEnum`                                                                      |
+| `actor_user_id`  | `fk → doe_user` (nullable — null for cron/system; set for admin actions)                   |
+| `status`         | `company_status_enum` (snapshot of the company status at insert)                           |
+| `from_status`    | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                 |
+| `to_status`      | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                 |
+| `reason`         | `text` (nullable — optional reason; for reminder events holds the ISO due date)            |
+| `reminder_tier`  | `company_reminder_tier_enum` (`CompanyReminderTierEnum`; nullable — set only on deadline-reminder events) |
+
+Invariant (enforced via CHECK):
+
+- `event_type = 'STATUS_CHANGED'` ⇒ `from_status IS NOT NULL AND to_status IS NOT NULL AND status = to_status`.
+
+### `company_comment`
+
+Internal, admin-authored note attached to a company. Unlike `report_comment` there is **no** visibility/author-kind dimension — company comments are reviewer-internal only (companies never see them); the author is always an admin `doe_user`. Soft-deletable so the timeline stays auditable; deleted rows are hidden from the rendered thread.
+
+| Column           | Type                                                |
+| ---------------- | --------------------------------------------------- |
+| `id`             | `uuid` PK                                           |
+| `company_id`     | `fk → company`                                      |
+| `author_user_id` | `fk → doe_user` (nullable)                          |
+| `body`           | `text`                                              |
+| `deleted_at`     | `timestamp` (nullable — soft delete by author)      |
 
 ### `isat_category`
 
@@ -575,27 +624,37 @@ never do.
 | `id`    | `uuid` PK |
 | `title` | `text`    |
 
-### `report_employee_outlier`
+### `report_outlier_group`
 
-One row per outlier the company has acknowledged at submission. Two shapes share the table, distinguished by the parent report's `status`:
+Owns the improvement-plan explanation (`reason` / `action` / `signature_name` / `signature_role`) shared by the detected outliers assigned to it. A salary report can have multiple groups; each detected outlier belongs to exactly one group, and the explanation is written once per group. The four explanation columns moved here from `report_employee_outlier` (migration `m-20260616-outlier-groups.js`).
 
-- **Filled** (parent `status != POSTPONED`) — `reason`, `action`, `signature_name`, `signature_role` are all required and non-empty. The standard explanation path.
-- **Postponed** (parent `status = POSTPONED`) — company acknowledges the outliers but defers the explanations. Explanation columns are written as NULL on every row. Used when a salary report is submitted with outstanding outlier explanations the company will provide later via `PUT /api/v1/application/reports/:providerId/outliers`. The applicant has a postponement window to provide the explanations before fines may start (see "Outlier deadlines"); the reviewer cannot pick up a `POSTPONED` report (the resolve happens applicant-side).
+Every report with detected outliers always has at least one group. When a salary report is submitted with outliers postponed (parent `status = POSTPONED`), a single default group is created covering every detected outlier with its explanation columns left NULL; the applicant fills them in (or replaces the grouping) on resolve via `PUT /api/v1/application/reports/:providerId/outliers`. The reviewer cannot pick up a `POSTPONED` report (the resolve happens applicant-side); see "Outlier deadlines". `name` is always set.
 
-Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ every outlier row has NULL explanations). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills every row and flips status to `SUBMITTED`.
-
-| Column               | Type                                                                  |
-| -------------------- | --------------------------------------------------------------------- |
-| `id`                 | `uuid` PK                                                             |
-| `report_employee_id` | `fk → report_employee`                                                |
-| `reason`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `action`             | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `signature_name`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
-| `signature_role`     | `text` (nullable — null only when parent `status = POSTPONED`)        |
+| Column           | Type                                                                  |
+| ---------------- | --------------------------------------------------------------------- |
+| `id`             | `uuid` PK                                                             |
+| `report_id`      | `fk → report`                                                         |
+| `name`           | `text`                                                                |
+| `reason`         | `text` (nullable — null while postponed / not yet filled)             |
+| `action`         | `text` (nullable — null while postponed / not yet filled)            |
+| `signature_name` | `text` (nullable — null while postponed / not yet filled)            |
+| `signature_role` | `text` (nullable — null while postponed / not yet filled)            |
 
 Invariant (enforced via CHECK):
 
-- A row's explanation columns are either ALL non-null and non-empty, or ALL NULL — no half-filled rows.
+- The four explanation columns are either ALL NULL (postponed / not yet filled) or ALL non-null and non-empty (explained) — no half-filled groups. `name` is always non-null.
+
+### `report_employee_outlier`
+
+A thin join row pairing a detected outlier employee with its outlier group — one row per outlier the company has acknowledged at submission. The explanation/signature fields no longer live here (they moved up to `report_outlier_group`); this table is now just `report_employee_id` + `group_id`. `group_id` is `NOT NULL` — every outlier always belongs to a group.
+
+Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ the default group's explanation columns are NULL). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills the group explanations and flips status `POSTPONED → SUBMITTED`.
+
+| Column               | Type                            |
+| -------------------- | ------------------------------- |
+| `id`                 | `uuid` PK                       |
+| `report_employee_id` | `fk → report_employee`          |
+| `group_id`           | `fk → report_outlier_group`     |
 
 ### `report_employee_role_criterion_step`
 
@@ -697,6 +756,7 @@ Immutable audit row emitted on state-changing actions. Insert-only. See "Audit t
 | `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                               |
 | `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession) |
 | `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)            |
+| `system_decision`   | `report_event_system_decision_enum` (`AutoReviewDecisionEnum`; nullable — set only on `SYSTEM_AUTO_REVIEW`; see "System auto-review") |
 
 Invariants (enforce via CHECK):
 
@@ -704,6 +764,8 @@ Invariants (enforce via CHECK):
 - `event_type = 'ASSIGNED'` ⇒ `assigned_user_id IS NOT NULL`.
 - `event_type = 'SUPERSEDED'` ⇒ `related_report_id IS NOT NULL`.
 - `event_type = 'SUBMITTED'` ⇒ `company_id IS NOT NULL`.
+
+A `WITHDRAWN` event (auto-withdrawal on sibling resubmission) carries `related_report_id` pointing at the replacing report, mirroring `SUPERSEDED`; applicant-initiated withdrawal is recorded as a `STATUS_CHANGED` event instead (see "Report lifecycle"). `system_decision` is set only on `SYSTEM_AUTO_REVIEW` events. These are application-layer conventions, not DB CHECK constraints.
 
 ### `report_comment`
 
@@ -747,12 +809,24 @@ Current entries:
 
 No FKs, no relationships. Standalone lookup table.
 
+### `job_runs`
+
+Distributed-lock bookkeeping for cron tasks. Backs `AdvisoryLockService` (`@dmr.is/shared-modules`), which uses it to prevent duplicate task runs across multiple API containers within a cooldown window — currently the report-deadline-reminder task (migration `m-20260623-report-deadline-reminder-task.js`). One row per job type.
+
+| Column         | Type                                                            |
+| -------------- | --------------------------------------------------------------- |
+| `job_key`      | `integer` PK (job-type id from `DOE_TASK_JOB_IDS`)              |
+| `last_run_at`  | `timestamptz` (when the job last ran)                           |
+| `container_id` | `text` (nullable — container/pod that ran the job, for debug)   |
+
+No FKs, no relationships. Standalone bookkeeping table.
+
 ## Relationships (summary)
 
 - `company` ⟷ `report` via `company_report` (per-submission snapshot, with optional parent company).
 - `report` 1:N `report_criterion` 1:N `report_sub_criterion` 1:N `report_sub_criterion_step`.
 - `report` 1:N `report_employee` N:1 `report_employee_role`.
-- `report_employee` 1:N `report_employee_outlier`.
+- `report_employee` 1:N `report_employee_outlier` N:1 `report_outlier_group`; `report` 1:N `report_outlier_group` (the group owns the shared explanation/signature fields).
 - `report_employee_role` ⟷ `report_sub_criterion_step` via `report_employee_role_criterion_step`.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
 - `report` 1:1 `report_result`; optional future role snapshots are `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
@@ -761,6 +835,10 @@ No FKs, no relationships. Standalone lookup table.
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).
 - `report` 1:N `report_event`; `doe_user` 1:N `report_event` via `actor_user_id` (nullable) and `assigned_user_id` (nullable, set on `ASSIGNED`); `company` 1:N `report_event` via `company_id` (nullable, set on `SUBMITTED`).
 - `report` 1:N `report_comment`; `doe_user` 1:N `report_comment` via `author_user_id` (nullable, set when `author_kind = REVIEWER`).
+- `company` 1:N `company_event`; `doe_user` 1:N `company_event` via `actor_user_id` (nullable).
+- `company` 1:N `company_comment`; `doe_user` 1:N `company_comment` via `author_user_id` (nullable).
+- `company` N:1 `postcode` N:1 `region`; `company` N:1 `isat_category` via `isat_category_code`.
+- `job_runs` standalone (no FKs).
 
 ## Notes / open questions
 

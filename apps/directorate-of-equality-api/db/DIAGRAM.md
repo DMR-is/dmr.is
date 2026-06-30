@@ -19,9 +19,12 @@ erDiagram
         uuid id PK
         text name
         text national_id
-        int average_employee_count_from_rsk
+        text email "nullable"
+        company_size_enum employee_count_category
         boolean salary_report_required
         boolean salary_report_required_override
+        boolean fines_started
+        boolean quarantined
     }
     company_report {
         uuid id PK
@@ -35,7 +38,7 @@ erDiagram
         uuid id PK
         ReportTypeEnum type
         ReportStatusEnum status
-        text contact_national_id
+        text company_national_id "nullable"
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"
         timestamp approved_at
@@ -73,13 +76,19 @@ erDiagram
         uuid id PK
         text title
     }
+    report_outlier_group {
+        uuid id PK
+        uuid report_id FK
+        text name
+        text reason "nullable"
+        text action "nullable"
+        text signature_name "nullable"
+        text signature_role "nullable"
+    }
     report_employee_outlier {
         uuid id PK
         uuid report_employee_id FK
-        text reason
-        text action
-        text signature_name
-        text signature_role
+        uuid group_id FK
     }
     report_employee_role_criterion_step {
         uuid id PK
@@ -125,8 +134,9 @@ erDiagram
         ReportStatusEnum from_status "nullable, on STATUS_CHANGED"
         ReportStatusEnum to_status "nullable, on STATUS_CHANGED"
         text reason "nullable, on STATUS_CHANGED→DENIED"
-        uuid related_report_id FK "nullable, on SUPERSEDED"
+        uuid related_report_id FK "nullable, on SUPERSEDED/WITHDRAWN"
         uuid company_id FK "nullable, on SUBMITTED"
+        AutoReviewDecisionEnum system_decision "nullable, on SYSTEM_AUTO_REVIEW"
     }
     report_comment {
         uuid id PK
@@ -138,6 +148,29 @@ erDiagram
         text body
         timestamp updated_at "unused; present for ParanoidModel fit"
         timestamp deleted_at "nullable, soft delete"
+    }
+    company_event {
+        uuid id PK
+        uuid company_id FK
+        CompanyEventTypeEnum event_type
+        uuid actor_user_id FK "nullable"
+        CompanyStatusEnum status "snapshot"
+        CompanyStatusEnum from_status "nullable, on STATUS_CHANGED"
+        CompanyStatusEnum to_status "nullable, on STATUS_CHANGED"
+        text reason "nullable; ISO due date on reminder events"
+        CompanyReminderTierEnum reminder_tier "nullable, on reminder events"
+    }
+    company_comment {
+        uuid id PK
+        uuid company_id FK
+        uuid author_user_id FK "nullable"
+        text body
+        timestamp deleted_at "nullable, soft delete"
+    }
+    job_runs {
+        int job_key PK
+        timestamp last_run_at
+        text container_id "nullable"
     }
 
     company ||--o{ company_report : "company_id"
@@ -154,6 +187,8 @@ erDiagram
     report ||--o{ report_employee : "report_id"
     report_employee_role ||--o{ report_employee : "report_employee_role_id"
     report_employee ||--o{ report_employee_outlier : "report_employee_id"
+    report ||--o{ report_outlier_group : "report_id"
+    report_outlier_group ||--o{ report_employee_outlier : "group_id"
 
     report_employee_role ||--o{ report_employee_role_criterion_step : "report_employee_role_id"
     report_sub_criterion_step ||--o{ report_employee_role_criterion_step : "report_sub_criterion_step_id"
@@ -175,4 +210,9 @@ erDiagram
 
     report ||--o{ report_comment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"
+
+    company ||--o{ company_event : "company_id"
+    doe_user |o--o{ company_event : "actor_user_id"
+    company ||--o{ company_comment : "company_id"
+    doe_user |o--o{ company_comment : "author_user_id"
 ```
