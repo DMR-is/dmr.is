@@ -7,6 +7,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
   CommentVisibilityEnum,
+  ReportEventTypeEnum,
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../../../gen/fetch'
@@ -14,6 +15,7 @@ import { reportText, sharedText } from '../../../../../lib/text'
 import { TimelineEntryIcon } from './TimelineEntryIcon'
 import {
   formatRelativeDate,
+  renderSystemReason,
   timelineEntryKind,
   timelineEntryText,
 } from './timelineHelpers'
@@ -49,6 +51,12 @@ export function TimelineEntry({
     ? (comment?.body ?? null)
     : (item.event?.reason ?? null)
   const hasBody = !!bodyText
+  // System auto-review reasons get their percentages bolded; everything else
+  // renders verbatim.
+  const isSystemAutoReview =
+    item.event?.eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW
+  const bodyContent =
+    bodyText && isSystemAutoReview ? renderSystemReason(bodyText) : bodyText
 
   return (
     <Box
@@ -59,7 +67,7 @@ export function TimelineEntry({
       paddingY={3}
       paddingX={2}
     >
-      <TimelineEntryIcon kind={kind} />
+      <TimelineEntryIcon kind={kind} item={item} />
       <Box style={{ flex: 1, minWidth: 0 }}>
         <Box
           display="flex"
@@ -77,7 +85,7 @@ export function TimelineEntry({
 
         {bodyText && (
           <Box paddingRight={6}>
-            <Text marginTop={1}>{bodyText}</Text>
+            <Text marginTop={1}>{bodyContent}</Text>
           </Box>
         )}
 
