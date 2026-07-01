@@ -67,6 +67,7 @@ describe('ReportDraftService', () => {
   let service: ReportDraftService
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
+  let reportFindAll: jest.Mock
   let reportUpdate: jest.Mock
   let reportDestroy: jest.Mock
   let employeeCount: jest.Mock
@@ -84,6 +85,7 @@ describe('ReportDraftService', () => {
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue(null)
+    reportFindAll = jest.fn().mockResolvedValue([])
     reportUpdate = jest.fn().mockResolvedValue([1])
     reportDestroy = jest.fn().mockResolvedValue(1)
     employeeCount = jest.fn().mockResolvedValue(0)
@@ -105,6 +107,7 @@ describe('ReportDraftService', () => {
           useValue: {
             create: reportCreate,
             findOne: reportFindOne,
+            findAll: reportFindAll,
             update: reportUpdate,
             destroy: reportDestroy,
           },
@@ -361,6 +364,35 @@ describe('ReportDraftService', () => {
       await expect(
         service.deleteDraft(PROVIDER_ID, COMPANY),
       ).rejects.toThrow(NotFoundException)
+      expect(reportDestroy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('pruneStaleDrafts', () => {
+    it('hard-deletes every stale draft and returns the count', async () => {
+      const cutoff = new Date('2026-01-01T00:00:00Z')
+      reportFindAll.mockResolvedValueOnce([{ id: 'draft-a' }, { id: 'draft-b' }])
+
+      const pruned = await service.pruneStaleDrafts(cutoff)
+
+      expect(pruned).toBe(2)
+      // The stale query is scoped to DRAFT rows older than the cutoff.
+      expect(reportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: ReportStatusEnum.DRAFT }),
+        }),
+      )
+      // Each stale draft's report row is destroyed by the cascade.
+      expect(reportDestroy).toHaveBeenCalledWith({ where: { id: 'draft-a' } })
+      expect(reportDestroy).toHaveBeenCalledWith({ where: { id: 'draft-b' } })
+    })
+
+    it('returns 0 and deletes nothing when there are no stale drafts', async () => {
+      reportFindAll.mockResolvedValueOnce([])
+
+      const pruned = await service.pruneStaleDrafts(new Date())
+
+      expect(pruned).toBe(0)
       expect(reportDestroy).not.toHaveBeenCalled()
     })
   })

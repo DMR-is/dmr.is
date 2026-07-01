@@ -29,6 +29,12 @@ export interface IReportDraftService {
   deleteDraft(providerId: string, company: CompanyDto): Promise<void>
 
   /**
+   * Hard-deletes every DRAFT untouched since `cutoff` (abandoned-draft reaper,
+   * run by the prune cron). Not company-scoped. Returns the count pruned.
+   */
+  pruneStaleDrafts(cutoff: Date): Promise<number>
+
+  /**
    * Resolves a DRAFT report owned by the company by its provider tuple, or
    * throws NotFound. The canonical ownership gate the per-entity draft CRUD
    * services (roles, employees, …) share.

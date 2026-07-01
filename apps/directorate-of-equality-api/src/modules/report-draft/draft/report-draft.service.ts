@@ -1,4 +1,4 @@
-import { UniqueConstraintError } from 'sequelize'
+import { Op, UniqueConstraintError } from 'sequelize'
 
 import {
   ConflictException,
@@ -156,22 +156,70 @@ export class ReportDraftService implements IReportDraftService {
    */
   async deleteDraft(providerId: string, company: CompanyDto): Promise<void> {
     const report = await this.findOwnedDraft(providerId, company)
+    await this.hardDeleteDraftTree(report.id)
 
+    this.logger.info(`Hard-deleted draft report "${report.id}"`, {
+      context: LOGGING_CONTEXT,
+      reportId: report.id,
+    })
+  }
+
+  /**
+   * Reaps abandoned drafts — every report still in `DRAFT` whose row has not
+   * been touched since `cutoff` — hard-deleting each. System maintenance, not
+   * company-scoped. Returns how many were pruned.
+   *
+   * `updated_at` here is the report ROW's last change (create, header edit,
+   * submit attempt). If finer-grained "any child edit" activity should reset
+   * the clock, child-CRUD writes would need to touch the report row too.
+   */
+  async pruneStaleDrafts(cutoff: Date): Promise<number> {
+    const stale = await this.reportModel.findAll({
+      where: {
+        status: ReportStatusEnum.DRAFT,
+        updatedAt: { [Op.lt]: cutoff },
+      },
+      attributes: ['id'],
+    })
+
+    for (const row of stale) {
+      await this.hardDeleteDraftTree(row.id)
+    }
+
+    if (stale.length > 0) {
+      this.logger.info(`Pruned ${stale.length} stale draft report(s)`, {
+        context: LOGGING_CONTEXT,
+        cutoff: cutoff.toISOString(),
+      })
+    }
+
+    return stale.length
+  }
+
+  /**
+   * Hard-deletes a report's entire child tree then the report row itself, by
+   * id. A draft has no DB-level cascade, so the tree is removed by hand in
+   * FK-safe order (leaves first): outlier + step-assignment join rows → the
+   * entities they reference → the report row. A DRAFT is audit-free and has no
+   * company_report / report_result snapshot, so those are not involved. Runs in
+   * the caller's transaction, so the whole delete is atomic.
+   */
+  private async hardDeleteDraftTree(reportId: string): Promise<void> {
     const employeeIds = (
       await this.reportEmployeeModel.findAll({
-        where: { reportId: report.id },
+        where: { reportId },
         attributes: ['id'],
       })
     ).map((row) => row.id)
     const roleIds = (
       await this.reportEmployeeRoleModel.findAll({
-        where: { reportId: report.id },
+        where: { reportId },
         attributes: ['id'],
       })
     ).map((row) => row.id)
     const criterionIds = (
       await this.reportCriterionModel.findAll({
-        where: { reportId: report.id },
+        where: { reportId },
         attributes: ['id'],
       })
     ).map((row) => row.id)
@@ -192,8 +240,6 @@ export class ReportDraftService implements IReportDraftService {
         ).map((row) => row.id)
       : []
 
-    // Leaves first: outlier + step-assignment join rows, then the entities they
-    // reference, then the report row.
     if (employeeIds.length > 0) {
       await this.reportEmployeeOutlierModel.destroy({
         where: { reportEmployeeId: employeeIds },
@@ -207,26 +253,17 @@ export class ReportDraftService implements IReportDraftService {
         where: { reportEmployeeRoleId: roleIds },
       })
     }
-    await this.reportOutlierGroupModel.destroy({
-      where: { reportId: report.id },
-    })
+    await this.reportOutlierGroupModel.destroy({ where: { reportId } })
     if (stepIds.length > 0) {
       await this.reportStepModel.destroy({ where: { id: stepIds } })
     }
     if (subIds.length > 0) {
       await this.reportSubCriterionModel.destroy({ where: { id: subIds } })
     }
-    await this.reportCriterionModel.destroy({ where: { reportId: report.id } })
-    await this.reportEmployeeModel.destroy({ where: { reportId: report.id } })
-    await this.reportEmployeeRoleModel.destroy({
-      where: { reportId: report.id },
-    })
-    await this.reportModel.destroy({ where: { id: report.id } })
-
-    this.logger.info(`Hard-deleted draft report "${report.id}"`, {
-      context: LOGGING_CONTEXT,
-      reportId: report.id,
-    })
+    await this.reportCriterionModel.destroy({ where: { reportId } })
+    await this.reportEmployeeModel.destroy({ where: { reportId } })
+    await this.reportEmployeeRoleModel.destroy({ where: { reportId } })
+    await this.reportModel.destroy({ where: { id: reportId } })
   }
 
   /**
