@@ -35,6 +35,12 @@ export interface IReportDraftService {
   pruneStaleDrafts(cutoff: Date): Promise<number>
 
   /**
+   * Deletes a draft's entire child tree (leaving the report row) — used by the
+   * Excel-seed to replace existing content before re-populating.
+   */
+  clearDraftChildren(reportId: string): Promise<void>
+
+  /**
    * Resolves a DRAFT report owned by the company by its provider tuple, or
    * throws NotFound. The canonical ownership gate the per-entity draft CRUD
    * services (roles, employees, …) share.

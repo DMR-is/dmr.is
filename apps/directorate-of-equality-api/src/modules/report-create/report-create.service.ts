@@ -16,7 +16,6 @@ import { detectOutliers } from '../report/lib/compensation-aggregates'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
-  stepKey,
 } from '../report/lib/employee-scores'
 import {
   ReportModel,
@@ -24,16 +23,9 @@ import {
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../report/models/report.model'
-import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
-import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
-import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
-import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import { IReportContentService } from '../report-content/report-content.service.interface'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
-import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
-import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
-import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
-import { ParsedStepAssignmentDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
@@ -51,24 +43,12 @@ export class ReportCreateService implements IReportCreateService {
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
-    @InjectModel(ReportEmployeeRoleModel)
-    private readonly reportEmployeeRoleModel: typeof ReportEmployeeRoleModel,
-    @InjectModel(ReportEmployeeModel)
-    private readonly reportEmployeeModel: typeof ReportEmployeeModel,
-    @InjectModel(ReportEmployeeRoleCriterionStepModel)
-    private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
-    @InjectModel(ReportEmployeePersonalCriterionStepModel)
-    private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
     @InjectModel(ReportEmployeeOutlierModel)
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
     @InjectModel(ReportOutlierGroupModel)
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
-    @InjectModel(ReportCriterionModel)
-    private readonly reportCriterionModel: typeof ReportCriterionModel,
-    @InjectModel(ReportSubCriterionModel)
-    private readonly reportSubCriterionModel: typeof ReportSubCriterionModel,
-    @InjectModel(ReportSubCriterionStepModel)
-    private readonly reportSubCriterionStepModel: typeof ReportSubCriterionStepModel,
+    @Inject(IReportContentService)
+    private readonly contentService: IReportContentService,
     @Inject(IReportResultService)
     private readonly reportResultService: IReportResultService,
     @Inject(IReportFinalizeService)
@@ -163,105 +143,15 @@ export class ReportCreateService implements IReportCreateService {
       input.companies,
     )
 
-    // 3. roles — one row per parsed role. Map by title for FK resolution.
-    const roleRows = await this.reportEmployeeRoleModel.bulkCreate(
-      input.parsed.roles.map((role) => ({
-        title: role.title,
-        reportId: report.id,
-      })),
-    )
-    const roleTitleToId = new Map<string, string>()
-    input.parsed.roles.forEach((role, index) => {
-      roleTitleToId.set(role.title, roleRows[index].id)
-    })
-
-    // 4. criteria → sub_criteria → steps. Capture step ids by composite key.
-    const stepKeyToId = new Map<string, string>()
-    for (const criterion of input.parsed.criteria) {
-      const criterionRow = await this.reportCriterionModel.create({
-        title: criterion.title,
-        weight: criterion.weight,
-        description: criterion.description,
-        type: criterion.type,
-        reportId: report.id,
-      })
-
-      for (const subCriterion of criterion.subCriteria) {
-        const subCriterionRow = await this.reportSubCriterionModel.create({
-          title: subCriterion.title,
-          description: subCriterion.description,
-          weight: subCriterion.weight,
-          reportCriterionId: criterionRow.id,
-        })
-
-        const stepRows = await this.reportSubCriterionStepModel.bulkCreate(
-          subCriterion.steps.map((step) => ({
-            order: step.order,
-            description: step.description,
-            score: step.score,
-            reportSubCriterionId: subCriterionRow.id,
-          })),
-        )
-
-        subCriterion.steps.forEach((step, index) => {
-          stepKeyToId.set(
-            stepKey(criterion.title, subCriterion.title, step.order),
-            stepRows[index].id,
-          )
-        })
-      }
-    }
-
-    // 5. role ↔ step joins.
-    const roleStepRows = input.parsed.roles.flatMap((role) =>
-      role.stepAssignments.map((assignment) => ({
-        reportEmployeeRoleId: this.requireRoleId(roleTitleToId, role.title),
-        reportSubCriterionStepId: this.requireStepId(stepKeyToId, assignment),
-      })),
-    )
-    if (roleStepRows.length > 0) {
-      await this.roleStepModel.bulkCreate(roleStepRows)
-    }
-
-    // 6. employees — score is the precomputed total (sum of step scores from
-    //    the role's assignments + the employee's personal assignments, with
-    //    duplicates collapsed). Reviewers read this value as-is; the snapshot
-    //    pipeline below also reads it.
-    const employeeRows = await this.reportEmployeeModel.bulkCreate(
-      input.parsed.employees.map((employee, index) => ({
-        ordinal: employee.ordinal,
-        education: employee.education,
-        field: employee.field,
-        department: employee.department,
-        startDate: employee.startDate,
-        workRatio: employee.workRatio,
-        baseSalary: employee.baseSalary,
-        additionalFixedOvertime: employee.additionalFixedOvertime,
-        additionalFixedCarAllowance: employee.additionalFixedCarAllowance,
-        bonusOccasionalCarAllowance: employee.bonusOccasionalCarAllowance,
-        bonusOccasionalOvertime: employee.bonusOccasionalOvertime,
-        bonusPayments: employee.bonusPayments,
-        bonusOther: employee.bonusOther,
-        gender: employee.gender,
-        reportEmployeeRoleId: this.requireRoleId(
-          roleTitleToId,
-          employee.roleTitle,
-        ),
-        reportId: report.id,
-        score: employeeScores[index],
-      })),
-    )
-
-    // 7. employee ↔ step personal joins.
-    const personalStepRows = input.parsed.employees.flatMap((employee, index) =>
-      employee.personalStepAssignments.map((assignment) => ({
-        reportEmployeeId: employeeRows[index].id,
-        reportSubCriterionStepId: this.requireStepId(stepKeyToId, assignment),
-      })),
-    )
-    if (personalStepRows.length > 0) {
-      await this.personalStepModel.bulkCreate(personalStepRows)
-    }
+    // 3–7. Child insertion (roles, criteria → sub-criteria → steps, role↔step
+    //       joins, employees, employee↔personal-step joins). Shared with the
+    //       report-draft Excel-seed path via the report-content module.
+    const { employeeOrdinalToId } =
+      await this.contentService.persistParsedChildren(
+        report.id,
+        input.parsed,
+        employeeScores,
+      )
 
     // 8. Outlier groups + outlier rows. Every detected outlier belongs to
     //    exactly one group (group_id NOT NULL):
@@ -271,11 +161,6 @@ export class ReportCreateService implements IReportCreateService {
     //      - not postponed → the groups the company defined; the union of
     //        their ordinals covers the detected set exactly (validated above).
     if (detectedOrdinals.length > 0) {
-      const employeeOrdinalToId = new Map<number, string>()
-      input.parsed.employees.forEach((employee, index) => {
-        employeeOrdinalToId.set(employee.ordinal, employeeRows[index].id)
-      })
-
       const groupsToCreate = outliersPostponed
         ? [
             {
@@ -590,29 +475,5 @@ export class ReportCreateService implements IReportCreateService {
     }
 
     return parsed
-  }
-
-  private requireRoleId(map: Map<string, string>, title: string): string {
-    const id = map.get(title)
-    if (!id) {
-      throw new BadRequestException(`Role "${title}" was not created`)
-    }
-    return id
-  }
-
-  private requireStepId(
-    map: Map<string, string>,
-    assignment: ParsedStepAssignmentDto,
-  ): string {
-    const key = stepKey(
-      assignment.criterionTitle,
-      assignment.subTitle,
-      assignment.stepOrder,
-    )
-    const id = map.get(key)
-    if (!id) {
-      throw new BadRequestException(`Step "${key}" was not created`)
-    }
-    return id
   }
 }

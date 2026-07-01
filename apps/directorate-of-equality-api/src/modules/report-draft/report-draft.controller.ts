@@ -24,6 +24,7 @@ import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { SalaryAnalysisResponseDto } from '../application/dto/salary-analysis.response.dto'
 import { CompanyDto } from '../company/dto/company.dto'
+import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ReportCriterionDto } from '../report-criterion/dto/report-criterion.dto'
@@ -58,6 +59,7 @@ import { CreateRoleDto } from './role/dto/create-role.dto'
 import { GetDraftRolesResponseDto } from './role/dto/get-draft-roles-response.dto'
 import { UpdateRoleDto } from './role/dto/update-role.dto'
 import { IReportDraftRoleService } from './role/report-draft-role.service.interface'
+import { IReportDraftSeedService } from './seed/report-draft-seed.service.interface'
 import { CreateStepDto } from './step/dto/create-step.dto'
 import { GetDraftStepsResponseDto } from './step/dto/get-draft-steps-response.dto'
 import { UpdateStepDto } from './step/dto/update-step.dto'
@@ -106,6 +108,8 @@ export class ReportDraftController {
     private readonly reportDraftOutlierGroupService: IReportDraftOutlierGroupService,
     @Inject(IReportDraftSubmitService)
     private readonly reportDraftSubmitService: IReportDraftSubmitService,
+    @Inject(IReportDraftSeedService)
+    private readonly reportDraftSeedService: IReportDraftSeedService,
   ) {}
 
   @Post('reports/draft')
@@ -217,6 +221,33 @@ export class ReportDraftController {
     @Body() input: SubmitDraftDto,
   ): Promise<CreateReportResponseDto> {
     return this.reportDraftSubmitService.submitDraft(providerId, company, input)
+  }
+
+  @Post('reports/:providerId/draft/import')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream island.is application UUID (provider_id) of the draft.',
+  })
+  @DoeResponse({
+    operationId: 'importApplicationReportDraftWorkbook',
+    include404: true,
+    type: DraftDetailDto,
+    description:
+      'Bulk-populates a SALARY draft from an uploaded workbook. Presign + upload via POST /application/reports/excel/presign, then pass the object { key } here. REPLACE semantics — the draft\'s existing scoring content is cleared and replaced by the workbook (scores stay NULL until submit). Returns the refreshed draft detail. 400 on an equality draft or a malformed workbook.',
+  })
+  async importDraftWorkbook(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() body: ImportKeyDto,
+  ): Promise<DraftDetailDto> {
+    return this.reportDraftSeedService.seedFromWorkbook(
+      providerId,
+      company,
+      body.key,
+    )
   }
 
   @Get('reports/:providerId/draft/analysis')

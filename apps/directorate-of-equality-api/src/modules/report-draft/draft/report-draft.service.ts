@@ -205,6 +205,16 @@ export class ReportDraftService implements IReportDraftService {
    * the caller's transaction, so the whole delete is atomic.
    */
   private async hardDeleteDraftTree(reportId: string): Promise<void> {
+    await this.clearDraftChildren(reportId)
+    await this.reportModel.destroy({ where: { id: reportId } })
+  }
+
+  /**
+   * Deletes a draft's entire child tree (everything under the report row) in
+   * FK-safe order, leaving the report row itself. Shared by hard-delete (which
+   * then drops the row) and the Excel-seed replace (which then re-populates).
+   */
+  async clearDraftChildren(reportId: string): Promise<void> {
     const employeeIds = (
       await this.reportEmployeeModel.findAll({
         where: { reportId },
@@ -263,7 +273,6 @@ export class ReportDraftService implements IReportDraftService {
     await this.reportCriterionModel.destroy({ where: { reportId } })
     await this.reportEmployeeModel.destroy({ where: { reportId } })
     await this.reportEmployeeRoleModel.destroy({ where: { reportId } })
-    await this.reportModel.destroy({ where: { id: reportId } })
   }
 
   /**

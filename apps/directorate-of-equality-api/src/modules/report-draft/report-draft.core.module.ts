@@ -3,7 +3,9 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CompanyCoreModule } from '../company/company.core.module'
 import { ConfigCoreModule } from '../config/config.core.module'
+import { ImportUploadCoreModule } from '../import-upload/import-upload.core.module'
 import { ReportModel } from '../report/models/report.model'
+import { ReportContentCoreModule } from '../report-content/report-content.core.module'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
@@ -13,6 +15,7 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import { ReportFinalizeCoreModule } from '../report-finalize/report-finalize.core.module'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportDraftAnalysisService } from './analysis/report-draft-analysis.service'
@@ -29,6 +32,8 @@ import { ReportDraftOutlierGroupService } from './outlier-group/report-draft-out
 import { IReportDraftOutlierGroupService } from './outlier-group/report-draft-outlier-group.service.interface'
 import { ReportDraftRoleService } from './role/report-draft-role.service'
 import { IReportDraftRoleService } from './role/report-draft-role.service.interface'
+import { ReportDraftSeedService } from './seed/report-draft-seed.service'
+import { IReportDraftSeedService } from './seed/report-draft-seed.service.interface'
 import { ReportDraftStepService } from './step/report-draft-step.service'
 import { IReportDraftStepService } from './step/report-draft-step.service.interface'
 import { ReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service'
@@ -54,6 +59,9 @@ import { IReportDraftSubmitService } from './submit/report-draft-submit.service.
     CompanyCoreModule,
     ReportFinalizeCoreModule,
     ReportResultCoreModule,
+    ReportContentCoreModule,
+    ReportExcelCoreModule,
+    ImportUploadCoreModule,
   ],
   providers: [
     {
@@ -96,6 +104,10 @@ import { IReportDraftSubmitService } from './submit/report-draft-submit.service.
       provide: IReportDraftSubmitService,
       useClass: ReportDraftSubmitService,
     },
+    {
+      provide: IReportDraftSeedService,
+      useClass: ReportDraftSeedService,
+    },
   ],
   exports: [
     IReportDraftService,
@@ -108,6 +120,7 @@ import { IReportDraftSubmitService } from './submit/report-draft-submit.service.
     IReportDraftAssignmentService,
     IReportDraftOutlierGroupService,
     IReportDraftSubmitService,
+    IReportDraftSeedService,
   ],
 })
 export class ReportDraftCoreModule {}

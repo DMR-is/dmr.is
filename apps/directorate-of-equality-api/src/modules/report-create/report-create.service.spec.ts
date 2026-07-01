@@ -23,6 +23,8 @@ import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
+import { ReportContentService } from '../report-content/report-content.service'
+import { IReportContentService } from '../report-content/report-content.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
@@ -210,6 +212,10 @@ describe('ReportCreateService', () => {
         {
           provide: getModelToken(ReportSubCriterionStepModel),
           useValue: { bulkCreate: subCriterionStepBulkCreate },
+        },
+        {
+          provide: IReportContentService,
+          useClass: ReportContentService,
         },
         {
           provide: IReportResultService,
