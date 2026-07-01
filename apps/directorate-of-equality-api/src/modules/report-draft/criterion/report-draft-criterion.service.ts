@@ -1,9 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionDto } from '../../report-criterion/dto/report-criterion.dto'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
@@ -11,14 +17,10 @@ import { ReportSubCriterionStepModel } from '../../report-criterion/models/repor
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateCriterionDto } from './dto/create-criterion.dto'
-import { UpdateCriterionDto } from './dto/update-criterion.dto'
+import { CriterionChangeDataDto } from '../sync/dto/change-criterion.dto'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftCriterionService'
-
-/** Editable criterion columns — `reportId` is never patched. */
-const CRITERION_PATCH_KEYS = ['title', 'weight', 'description', 'type'] as const
 
 @Injectable()
 export class ReportDraftCriterionService
@@ -57,77 +59,93 @@ export class ReportDraftCriterionService
     return rows.map((row) => ReportCriterionModel.fromModel(row))
   }
 
+  /** Upserts a top-level criterion from a sync CREATE command. */
   async createCriterion(
-    providerId: string,
-    company: CompanyDto,
-    input: CreateCriterionDto,
-  ): Promise<ReportCriterionDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    report: ReportModel,
+    id: string,
+    data: CriterionChangeDataDto,
+  ): Promise<void> {
+    const title = data.title?.trim()
+    if (
+      !title ||
+      data.weight === undefined ||
+      data.description === undefined ||
+      data.type === undefined
+    ) {
+      throw new BadRequestException(
+        'Criterion CREATE requires title, weight, description and type',
+      )
+    }
 
-    const row = await this.criterionModel.create({
+    const existing = await this.criterionModel.findByPk(id)
+    if (existing) {
+      if (existing.reportId !== report.id) {
+        throw new BadRequestException(
+          `Criterion "${id}" belongs to a different report`,
+        )
+      }
+      await existing.update({
+        title,
+        weight: data.weight,
+        description: data.description,
+        type: data.type,
+      })
+      return
+    }
+
+    const row = this.criterionModel.build({
+      title,
+      weight: data.weight,
+      description: data.description,
+      type: data.type,
       reportId: report.id,
-      title: input.title.trim(),
-      weight: input.weight,
-      description: input.description,
-      type: input.type,
     })
+    row.id = id
+    await row.save()
 
-    this.logger.info(`Created draft criterion "${row.id}"`, {
+    this.logger.info(`Synced draft criterion "${id}" (create)`, {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
-
-    return ReportCriterionModel.fromModel(row)
   }
 
+  /** Patches a criterion from a sync UPDATE command (PATCH semantics). */
   async updateCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-    input: UpdateCriterionDto,
-  ): Promise<ReportCriterionDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    report: ReportModel,
+    id: string,
+    data: CriterionChangeDataDto,
+  ): Promise<void> {
+    const row = await this.findOwnedCriterion(report.id, id)
 
-    const row = await this.findOwnedCriterion(report.id, criterionId)
-
-    const patch: UpdateCriterionDto = {}
-    for (const key of CRITERION_PATCH_KEYS) {
-      if (input[key] !== undefined) {
-        // The key list is the source of truth; each value matches its column.
-        ;(patch as Record<string, unknown>)[key] = input[key]
-      }
+    const patch: Record<string, unknown> = {}
+    if (data.title !== undefined) {
+      patch.title = data.title.trim()
+    }
+    if (data.weight !== undefined) {
+      patch.weight = data.weight
+    }
+    if (data.description !== undefined) {
+      patch.description = data.description
+    }
+    if (data.type !== undefined) {
+      patch.type = data.type
     }
 
     if (Object.keys(patch).length > 0) {
       await row.update(patch)
     }
-
-    return ReportCriterionModel.fromModel(row)
   }
 
-  async deleteCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-  ): Promise<void> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+  /**
+   * Removes a criterion and its entire subtree by hand (no DB cascade):
+   * sub-criteria → steps → the role/employee assignments pointing at those
+   * steps. Atomic under the sync request transaction.
+   */
+  async removeCriterion(report: ReportModel, id: string): Promise<void> {
+    const row = await this.findOwnedCriterion(report.id, id)
 
-    const row = await this.findOwnedCriterion(report.id, criterionId)
-
-    // Cascade the subtree by hand (no DB cascade): sub-criteria → steps → the
-    // role/employee step-assignments pointing at those steps. The request runs
-    // in a CLS-managed transaction, so this is atomic.
     const subs = await this.subCriterionModel.findAll({
-      where: { reportCriterionId: criterionId },
+      where: { reportCriterionId: id },
       attributes: ['id'],
     })
     const subIds = subs.map((sub) => sub.id)

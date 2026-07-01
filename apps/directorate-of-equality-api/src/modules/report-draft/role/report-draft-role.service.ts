@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -9,12 +10,12 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeRoleDto } from '../../report-employee/dto/report-employee-role.dto'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateRoleDto } from './dto/create-role.dto'
-import { UpdateRoleDto } from './dto/update-role.dto'
+import { RoleChangeDataDto } from '../sync/dto/change-role.dto'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftRoleService'
@@ -48,65 +49,67 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
     return rows.map((row) => ReportEmployeeRoleModel.fromModel(row))
   }
 
+  /**
+   * Upserts a role from a sync CREATE command. The id is the client-minted PK,
+   * so a repeated CREATE (retry) updates in place rather than duplicating. A
+   * client id that already belongs to a different report is rejected.
+   */
   async createRole(
-    providerId: string,
-    company: CompanyDto,
-    input: CreateRoleDto,
-  ): Promise<ReportEmployeeRoleDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    report: ReportModel,
+    id: string,
+    data: RoleChangeDataDto,
+  ): Promise<void> {
+    const title = data.title?.trim()
+    if (!title) {
+      throw new BadRequestException('Role CREATE requires a title')
+    }
 
-    const row = await this.roleModel.create({
-      title: input.title.trim(),
-      reportId: report.id,
-    })
+    const existing = await this.roleModel.findByPk(id)
+    if (existing) {
+      this.assertOwned(existing.reportId, report.id, id)
+      await existing.update({ title })
+      return
+    }
 
-    this.logger.info(`Created draft role "${row.id}"`, {
+    const row = this.roleModel.build({ title, reportId: report.id })
+    row.id = id
+    await row.save()
+
+    this.logger.info(`Synced draft role "${id}" (create)`, {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
-
-    return ReportEmployeeRoleModel.fromModel(row)
   }
 
+  /** Patches a role from a sync UPDATE command (404 if it is not on the draft). */
   async updateRole(
-    providerId: string,
-    company: CompanyDto,
-    roleId: string,
-    input: UpdateRoleDto,
-  ): Promise<ReportEmployeeRoleDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
-
-    const row = await this.findOwnedRole(report.id, roleId)
-    await row.update({ title: input.title.trim() })
-
-    return ReportEmployeeRoleModel.fromModel(row)
+    report: ReportModel,
+    id: string,
+    data: RoleChangeDataDto,
+  ): Promise<void> {
+    const row = await this.findOwnedRole(report.id, id)
+    if (data.title !== undefined) {
+      const title = data.title.trim()
+      if (!title) {
+        throw new BadRequestException('Role title must not be empty')
+      }
+      await row.update({ title })
+    }
   }
 
-  async deleteRole(
-    providerId: string,
-    company: CompanyDto,
-    roleId: string,
-  ): Promise<void> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+  /** Removes a role. Refuses to orphan employees that still reference it. */
+  async removeRole(report: ReportModel, id: string): Promise<void> {
+    const row = await this.findOwnedRole(report.id, id)
 
-    const row = await this.findOwnedRole(report.id, roleId)
-
-    // Employees reference a role by NOT NULL FK — refuse to orphan them.
+    // Employees reference a role by NOT NULL FK — refuse to orphan them. In a
+    // sync batch, employee reassignments/removals run first, so this reflects
+    // the batch's final state.
     const referencing = await this.employeeModel.count({
-      where: { reportEmployeeRoleId: roleId },
+      where: { reportEmployeeRoleId: id },
     })
     if (referencing > 0) {
       throw new ConflictException(
-        `Role "${roleId}" is still assigned to ${referencing} employee(s); reassign or remove them first`,
+        `Role "${id}" is still assigned to ${referencing} employee(s); reassign or remove them first`,
       )
     }
 
@@ -125,5 +128,18 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
       throw new NotFoundException(`Role "${roleId}" not found`)
     }
     return row
+  }
+
+  /** A client-minted id must not collide with a row on another report. */
+  private assertOwned(
+    rowReportId: string,
+    reportId: string,
+    id: string,
+  ): void {
+    if (rowReportId !== reportId) {
+      throw new BadRequestException(
+        `Role "${id}" belongs to a different report`,
+      )
+    }
   }
 }

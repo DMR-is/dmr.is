@@ -1,15 +1,16 @@
 import { CompanyDto } from '../../company/dto/company.dto'
-import { ReportOutlierGroupDto } from '../../report-employee/dto/report-outlier-group.dto'
-import { CreateOutlierGroupDto } from './dto/create-outlier-group.dto'
+import { ReportModel } from '../../report/models/report.model'
+import { OutlierGroupChangeDataDto } from '../sync/dto/change-outlier-group.dto'
 import { DraftOutlierGroupDto } from './dto/draft-outlier-group.dto'
 import { EmployeeOutlierGroupDto } from './dto/employee-outlier-group.dto'
-import { SetEmployeeOutlierGroupDto } from './dto/set-employee-outlier-group.dto'
-import { UpdateOutlierGroupDto } from './dto/update-outlier-group.dto'
 
 /**
- * CRUD for a DRAFT report's outlier groups (the improvement-plan explanation
- * buckets) and per-employee group membership. Outliers themselves are derived
- * (see the analysis service); a member must be a currently-detected outlier.
+ * Outlier groups (the improvement-plan explanation buckets) of a DRAFT report
+ * and per-employee group membership. Reads go through the draft ownership
+ * resolver; writes are sync appliers that take an already-resolved draft
+ * (`report`) so the whole batch shares one ownership check and one transaction.
+ * Outliers themselves are derived (see the analysis service); a member must be a
+ * currently-detected outlier.
  */
 export interface IReportDraftOutlierGroupService {
   listGroups(
@@ -17,24 +18,22 @@ export interface IReportDraftOutlierGroupService {
     company: CompanyDto,
   ): Promise<DraftOutlierGroupDto[]>
 
+  /** Upsert an outlier group from a sync CREATE command (client-minted id). */
   createGroup(
-    providerId: string,
-    company: CompanyDto,
-    input: CreateOutlierGroupDto,
-  ): Promise<ReportOutlierGroupDto>
-
-  updateGroup(
-    providerId: string,
-    company: CompanyDto,
-    groupId: string,
-    input: UpdateOutlierGroupDto,
-  ): Promise<ReportOutlierGroupDto>
-
-  deleteGroup(
-    providerId: string,
-    company: CompanyDto,
-    groupId: string,
+    report: ReportModel,
+    id: string,
+    data: OutlierGroupChangeDataDto,
   ): Promise<void>
+
+  /** Patch an outlier group from a sync UPDATE command. */
+  updateGroup(
+    report: ReportModel,
+    id: string,
+    data: OutlierGroupChangeDataDto,
+  ): Promise<void>
+
+  /** Remove an outlier group from a sync REMOVE command. */
+  removeGroup(report: ReportModel, id: string): Promise<void>
 
   getEmployeeGroup(
     providerId: string,
@@ -42,18 +41,16 @@ export interface IReportDraftOutlierGroupService {
     employeeId: string,
   ): Promise<EmployeeOutlierGroupDto>
 
+  /** Set an employee's outlier-group membership from a sync command. */
   setEmployeeGroup(
-    providerId: string,
-    company: CompanyDto,
+    report: ReportModel,
     employeeId: string,
-    input: SetEmployeeOutlierGroupDto,
-  ): Promise<EmployeeOutlierGroupDto>
-
-  clearEmployeeGroup(
-    providerId: string,
-    company: CompanyDto,
-    employeeId: string,
+    groupId: string,
+    detectedIds: Set<string>,
   ): Promise<void>
+
+  /** Clear an employee's outlier-group membership from a sync command. */
+  clearEmployeeGroup(report: ReportModel, employeeId: string): Promise<void>
 }
 
 export const IReportDraftOutlierGroupService = Symbol(

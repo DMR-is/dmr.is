@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -10,6 +10,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
@@ -23,6 +24,8 @@ const CRITERION_ID = 'criterion-id-1'
 const SUB_ID = 'sub-id-1'
 const STEP_ID = 'step-id-1'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
+
+const report = { id: REPORT_ID } as ReportModel
 
 const COMPANY = {
   id: 'company-1',
@@ -43,22 +46,22 @@ describe('ReportDraftStepService', () => {
   let service: ReportDraftStepService
   let findOwnedDraft: jest.Mock
   let criterionFindOne: jest.Mock
-  let subFindOne: jest.Mock
+  let subFindByPk: jest.Mock
   let stepFindAll: jest.Mock
-  let stepFindOne: jest.Mock
-  let stepCreate: jest.Mock
+  let stepFindByPk: jest.Mock
+  let stepBuild: jest.Mock
   let roleStepDestroy: jest.Mock
   let personalStepDestroy: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
     criterionFindOne = jest.fn().mockResolvedValue({ id: CRITERION_ID })
-    subFindOne = jest
+    subFindByPk = jest
       .fn()
       .mockResolvedValue({ id: SUB_ID, reportCriterionId: CRITERION_ID })
     stepFindAll = jest.fn().mockResolvedValue([])
-    stepFindOne = jest.fn().mockResolvedValue(null)
-    stepCreate = jest.fn()
+    stepFindByPk = jest.fn().mockResolvedValue(null)
+    stepBuild = jest.fn()
     roleStepDestroy = jest.fn()
     personalStepDestroy = jest.fn()
 
@@ -73,14 +76,14 @@ describe('ReportDraftStepService', () => {
         },
         {
           provide: getModelToken(ReportSubCriterionModel),
-          useValue: { findOne: subFindOne },
+          useValue: { findByPk: subFindByPk },
         },
         {
           provide: getModelToken(ReportSubCriterionStepModel),
           useValue: {
             findAll: stepFindAll,
-            findOne: stepFindOne,
-            create: stepCreate,
+            findByPk: stepFindByPk,
+            build: stepBuild,
           },
         },
         {
@@ -97,59 +100,131 @@ describe('ReportDraftStepService', () => {
     service = module.get(ReportDraftStepService)
   })
 
-  it('creates a step under a sub-criterion in the draft', async () => {
-    stepCreate.mockResolvedValueOnce({
-      id: STEP_ID,
-      order: 1,
-      description: 'd',
-      score: 3,
-      reportSubCriterionId: SUB_ID,
+  describe('listSteps', () => {
+    it('400s when the sub-criterion does not exist', async () => {
+      subFindByPk.mockResolvedValueOnce(null)
+
+      await expect(
+        service.listSteps(PROVIDER_ID, COMPANY, SUB_ID),
+      ).rejects.toThrow(BadRequestException)
     })
 
-    const result = await service.createStep(PROVIDER_ID, COMPANY, SUB_ID, {
-      order: 1,
-      description: 'd',
-      score: 3,
-    })
+    it('400s when the sub-criterion belongs to another draft', async () => {
+      subFindByPk.mockResolvedValueOnce({
+        id: SUB_ID,
+        reportCriterionId: CRITERION_ID,
+      })
+      criterionFindOne.mockResolvedValueOnce(null)
 
-    expect(stepCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ reportSubCriterionId: SUB_ID, order: 1 }),
-    )
-    expect(result.id).toBe(STEP_ID)
+      await expect(
+        service.listSteps(PROVIDER_ID, COMPANY, SUB_ID),
+      ).rejects.toThrow(BadRequestException)
+    })
   })
 
-  it('404s when the sub-criterion does not exist', async () => {
-    subFindOne.mockResolvedValueOnce(null)
+  describe('createStep', () => {
+    it('builds and saves a step with the client-minted id under its parent', async () => {
+      const save = jest.fn()
+      const built: Record<string, unknown> = { save }
+      stepBuild.mockReturnValueOnce(built)
 
-    await expect(
-      service.listSteps(PROVIDER_ID, COMPANY, SUB_ID),
-    ).rejects.toThrow(NotFoundException)
+      await service.createStep(report, STEP_ID, {
+        subCriterionId: SUB_ID,
+        order: 1,
+        description: 'd',
+        score: 3,
+      })
+
+      expect(stepBuild).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportSubCriterionId: SUB_ID,
+          order: 1,
+          description: 'd',
+          score: 3,
+        }),
+      )
+      expect(built.id).toBe(STEP_ID)
+      expect(save).toHaveBeenCalled()
+    })
+
+    it('updates in place when the id already exists (upsert)', async () => {
+      const update = jest.fn()
+      stepFindByPk.mockResolvedValueOnce({
+        id: STEP_ID,
+        reportSubCriterionId: SUB_ID,
+        update,
+      })
+
+      await service.createStep(report, STEP_ID, {
+        subCriterionId: SUB_ID,
+        order: 2,
+        description: 'd2',
+        score: 4,
+      })
+
+      expect(update).toHaveBeenCalledWith({
+        order: 2,
+        description: 'd2',
+        score: 4,
+      })
+      expect(stepBuild).not.toHaveBeenCalled()
+    })
+
+    it('400s when the parent sub-criterion is not in the draft', async () => {
+      subFindByPk.mockResolvedValueOnce(null)
+
+      await expect(
+        service.createStep(report, STEP_ID, {
+          subCriterionId: SUB_ID,
+          order: 1,
+          description: 'd',
+          score: 3,
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
   })
 
-  it('404s when the sub-criterion belongs to another draft', async () => {
-    subFindOne.mockResolvedValueOnce({
-      id: SUB_ID,
-      reportCriterionId: CRITERION_ID,
-    })
-    criterionFindOne.mockResolvedValueOnce(null)
+  describe('updateStep', () => {
+    it('patches the step', async () => {
+      const update = jest.fn()
+      stepFindByPk.mockResolvedValueOnce({
+        id: STEP_ID,
+        reportSubCriterionId: SUB_ID,
+        update,
+      })
 
-    await expect(
-      service.listSteps(PROVIDER_ID, COMPANY, SUB_ID),
-    ).rejects.toThrow(NotFoundException)
+      await service.updateStep(report, STEP_ID, { score: 5 })
+
+      expect(update).toHaveBeenCalledWith({ score: 5 })
+    })
+
+    it('404s updating a step not in the draft', async () => {
+      stepFindByPk.mockResolvedValueOnce(null)
+
+      await expect(
+        service.updateStep(report, STEP_ID, { score: 5 }),
+      ).rejects.toThrow(NotFoundException)
+    })
   })
 
-  it('removes assignments then the step on delete', async () => {
-    const destroy = jest.fn()
-    stepFindOne.mockResolvedValueOnce({ id: STEP_ID, destroy })
+  describe('removeStep', () => {
+    it('removes assignments then the step on remove', async () => {
+      const destroy = jest.fn()
+      stepFindByPk.mockResolvedValueOnce({
+        id: STEP_ID,
+        reportSubCriterionId: SUB_ID,
+        destroy,
+      })
 
-    await service.deleteStep(PROVIDER_ID, COMPANY, SUB_ID, STEP_ID)
+      await service.removeStep(report, STEP_ID)
 
-    expect(roleStepDestroy).toHaveBeenCalledWith({
-      where: { reportSubCriterionStepId: STEP_ID },
+      expect(roleStepDestroy).toHaveBeenCalledWith({
+        where: { reportSubCriterionStepId: STEP_ID },
+      })
+      expect(personalStepDestroy).toHaveBeenCalledWith({
+        where: { reportSubCriterionStepId: STEP_ID },
+      })
+      expect(destroy).toHaveBeenCalled()
     })
-    expect(personalStepDestroy).toHaveBeenCalledWith({
-      where: { reportSubCriterionStepId: STEP_ID },
-    })
-    expect(destroy).toHaveBeenCalled()
   })
 })

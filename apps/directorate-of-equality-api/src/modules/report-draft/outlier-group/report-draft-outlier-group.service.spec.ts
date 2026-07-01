@@ -8,31 +8,19 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanyDto } from '../../company/dto/company.dto'
-import {
-  CompanyReportStatusEnum,
-  CompanySizeEnum,
-  CompanyStatusEnum,
-} from '../../company/models/company.enums'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
-import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { ReportDraftOutlierGroupService } from './report-draft-outlier-group.service'
 
 const REPORT_ID = 'report-id-1'
 const GROUP_ID = 'group-id-1'
 const EMPLOYEE_ID = 'emp-1'
-const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = {
-  id: 'company-1',
-  nationalId: '5500000000',
-  employeeCountCategory: CompanySizeEnum.LARGE,
-  status: CompanyStatusEnum.ACTIVE,
-  reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown as CompanyDto
+// Appliers take an already-resolved draft (no findOwnedDraft).
+const report = { id: REPORT_ID } as ReportModel
 
 const mockLogger = {
   debug: jest.fn(),
@@ -44,9 +32,10 @@ const mockLogger = {
 describe('ReportDraftOutlierGroupService', () => {
   let service: ReportDraftOutlierGroupService
   let findOwnedDraft: jest.Mock
-  let getDetectedOutlierEmployeeIds: jest.Mock
   let groupFindOne: jest.Mock
-  let groupCreate: jest.Mock
+  let groupFindByPk: jest.Mock
+  let groupBuild: jest.Mock
+  let groupSave: jest.Mock
   let outlierFindOne: jest.Mock
   let outlierCreate: jest.Mock
   let outlierCount: jest.Mock
@@ -54,11 +43,14 @@ describe('ReportDraftOutlierGroupService', () => {
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
-    getDetectedOutlierEmployeeIds = jest
-      .fn()
-      .mockResolvedValue(new Set<string>())
     groupFindOne = jest.fn().mockResolvedValue({ id: GROUP_ID })
-    groupCreate = jest.fn()
+    groupFindByPk = jest.fn().mockResolvedValue(null)
+    groupSave = jest.fn()
+    // build() returns a fresh row; the service sets `.id` then saves.
+    groupBuild = jest.fn().mockImplementation((attrs) => ({
+      ...attrs,
+      save: groupSave,
+    }))
     outlierFindOne = jest.fn().mockResolvedValue(null)
     outlierCreate = jest.fn()
     outlierCount = jest.fn().mockResolvedValue(0)
@@ -70,15 +62,12 @@ describe('ReportDraftOutlierGroupService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         { provide: IReportDraftService, useValue: { findOwnedDraft } },
         {
-          provide: IReportDraftAnalysisService,
-          useValue: { getDetectedOutlierEmployeeIds },
-        },
-        {
           provide: getModelToken(ReportOutlierGroupModel),
           useValue: {
             findAll: jest.fn().mockResolvedValue([]),
             findOne: groupFindOne,
-            create: groupCreate,
+            findByPk: groupFindByPk,
+            build: groupBuild,
           },
         },
         {
@@ -102,11 +91,9 @@ describe('ReportDraftOutlierGroupService', () => {
 
   describe('createGroup', () => {
     it('creates a name-only group (explanation all-null)', async () => {
-      groupCreate.mockResolvedValueOnce({ id: GROUP_ID, reportId: REPORT_ID })
+      await service.createGroup(report, GROUP_ID, { name: 'A' })
 
-      await service.createGroup(PROVIDER_ID, COMPANY, { name: 'A' })
-
-      expect(groupCreate).toHaveBeenCalledWith(
+      expect(groupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'A',
           reportId: REPORT_ID,
@@ -116,21 +103,26 @@ describe('ReportDraftOutlierGroupService', () => {
           signatureRole: null,
         }),
       )
+      expect(groupSave).toHaveBeenCalled()
     })
 
     it('400s on a partially-filled explanation', async () => {
       await expect(
-        service.createGroup(PROVIDER_ID, COMPANY, {
+        service.createGroup(report, GROUP_ID, {
           name: 'A',
           reason: 'because',
         }),
       ).rejects.toThrow(BadRequestException)
     })
 
-    it('creates a fully-explained group', async () => {
-      groupCreate.mockResolvedValueOnce({ id: GROUP_ID })
+    it('400s when name is missing', async () => {
+      await expect(
+        service.createGroup(report, GROUP_ID, {}),
+      ).rejects.toThrow(BadRequestException)
+    })
 
-      await service.createGroup(PROVIDER_ID, COMPANY, {
+    it('creates a fully-explained group', async () => {
+      await service.createGroup(report, GROUP_ID, {
         name: 'A',
         reason: 'r',
         action: 'a',
@@ -138,68 +130,76 @@ describe('ReportDraftOutlierGroupService', () => {
         signatureRole: 'role',
       })
 
-      expect(groupCreate).toHaveBeenCalledWith(
+      expect(groupBuild).toHaveBeenCalledWith(
         expect.objectContaining({ reason: 'r', signatureRole: 'role' }),
       )
+      expect(groupSave).toHaveBeenCalled()
     })
   })
 
-  describe('deleteGroup', () => {
+  describe('removeGroup', () => {
     it('409s when the group still has members', async () => {
       const destroy = jest.fn()
       groupFindOne.mockResolvedValueOnce({ id: GROUP_ID, destroy })
       outlierCount.mockResolvedValueOnce(2)
 
-      await expect(
-        service.deleteGroup(PROVIDER_ID, COMPANY, GROUP_ID),
-      ).rejects.toThrow(ConflictException)
+      await expect(service.removeGroup(report, GROUP_ID)).rejects.toThrow(
+        ConflictException,
+      )
       expect(destroy).not.toHaveBeenCalled()
+    })
+
+    it('destroys an empty group', async () => {
+      const destroy = jest.fn()
+      groupFindOne.mockResolvedValueOnce({ id: GROUP_ID, destroy })
+      outlierCount.mockResolvedValueOnce(0)
+
+      await service.removeGroup(report, GROUP_ID)
+
+      expect(destroy).toHaveBeenCalled()
     })
   })
 
   describe('setEmployeeGroup', () => {
     it('assigns a detected outlier to a group (creates the join row)', async () => {
-      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
-        new Set([EMPLOYEE_ID]),
-      )
       outlierFindOne.mockResolvedValueOnce(null)
 
-      const result = await service.setEmployeeGroup(
-        PROVIDER_ID,
-        COMPANY,
+      await service.setEmployeeGroup(
+        report,
         EMPLOYEE_ID,
-        { groupId: GROUP_ID },
+        GROUP_ID,
+        new Set([EMPLOYEE_ID]),
       )
 
       expect(outlierCreate).toHaveBeenCalledWith({
         reportEmployeeId: EMPLOYEE_ID,
         groupId: GROUP_ID,
       })
-      expect(result.groupId).toBe(GROUP_ID)
     })
 
     it('re-points an existing membership row', async () => {
-      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
-        new Set([EMPLOYEE_ID]),
-      )
       const update = jest.fn()
       outlierFindOne.mockResolvedValueOnce({ id: 'o-1', update })
 
-      await service.setEmployeeGroup(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-        groupId: GROUP_ID,
-      })
+      await service.setEmployeeGroup(
+        report,
+        EMPLOYEE_ID,
+        GROUP_ID,
+        new Set([EMPLOYEE_ID]),
+      )
 
       expect(update).toHaveBeenCalledWith({ groupId: GROUP_ID })
       expect(outlierCreate).not.toHaveBeenCalled()
     })
 
     it('400s when the employee is not a detected outlier', async () => {
-      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set<string>())
-
       await expect(
-        service.setEmployeeGroup(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-          groupId: GROUP_ID,
-        }),
+        service.setEmployeeGroup(
+          report,
+          EMPLOYEE_ID,
+          GROUP_ID,
+          new Set<string>(),
+        ),
       ).rejects.toThrow(BadRequestException)
       expect(outlierCreate).not.toHaveBeenCalled()
     })
@@ -208,9 +208,12 @@ describe('ReportDraftOutlierGroupService', () => {
       groupFindOne.mockResolvedValueOnce(null)
 
       await expect(
-        service.setEmployeeGroup(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-          groupId: GROUP_ID,
-        }),
+        service.setEmployeeGroup(
+          report,
+          EMPLOYEE_ID,
+          GROUP_ID,
+          new Set([EMPLOYEE_ID]),
+        ),
       ).rejects.toThrow(NotFoundException)
     })
   })

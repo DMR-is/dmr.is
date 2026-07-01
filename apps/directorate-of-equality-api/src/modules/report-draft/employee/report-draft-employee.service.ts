@@ -14,13 +14,18 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { CompanyDto } from '../../company/dto/company.dto'
-import { ReportEmployeeDto } from '../../report-employee/dto/report-employee.dto'
-import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
+import { GenderEnum } from '../../report/models/report.enums'
+import { ReportModel } from '../../report/models/report.model'
+import {
+  EducationEnum,
+  ReportEmployeeModel,
+} from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateDraftEmployeeDto } from './dto/create-draft-employee.dto'
+import { EmployeeChangeDataDto } from '../sync/dto/change-employee.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
-import { UpdateDraftEmployeeDto } from './dto/update-draft-employee.dto'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftEmployeeService'
@@ -43,6 +48,18 @@ const EMPLOYEE_PATCH_KEYS = [
   'bonusOther',
 ] as const
 
+/** Fields an employee CREATE must supply (the non-nullable columns). */
+const EMPLOYEE_REQUIRED_KEYS = [
+  'reportEmployeeRoleId',
+  'education',
+  'gender',
+  'field',
+  'department',
+  'startDate',
+  'workRatio',
+  'baseSalary',
+] as const
+
 @Injectable()
 export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
   constructor(
@@ -53,6 +70,10 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     private readonly employeeModel: typeof ReportEmployeeModel,
     @InjectModel(ReportEmployeeRoleModel)
     private readonly roleModel: typeof ReportEmployeeRoleModel,
+    @InjectModel(ReportEmployeePersonalCriterionStepModel)
+    private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
+    @InjectModel(ReportEmployeeOutlierModel)
+    private readonly outlierModel: typeof ReportEmployeeOutlierModel,
   ) {}
 
   async listEmployees(
@@ -80,100 +101,120 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     return { employees, paging }
   }
 
-  async createEmployee(
-    providerId: string,
-    company: CompanyDto,
-    input: CreateDraftEmployeeDto,
-  ): Promise<ReportEmployeeDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
-
-    await this.assertRoleInReport(report.id, input.reportEmployeeRoleId)
-
-    // Sequential ordinal within the report; gaps from deletes are fine — the
-    // ordinal is an identifier, not a dense index.
-    const maxOrdinal = (await this.employeeModel.max('ordinal', {
+  /**
+   * Highest ordinal currently in the report (0 if empty). The sync service
+   * reads this once and hands out incrementing ordinals across the batch, so
+   * bulk-created employees don't each run their own `max()` query.
+   */
+  async getMaxOrdinal(report: ReportModel): Promise<number> {
+    const max = (await this.employeeModel.max('ordinal', {
       where: { reportId: report.id },
     })) as number | null
+    return max ?? 0
+  }
 
-    const row = await this.employeeModel.create({
+  /**
+   * Upserts an employee from a sync CREATE command. `id` is the client-minted
+   * PK (a repeated CREATE updates in place rather than duplicating) and
+   * `ordinal` is assigned by the caller. `score` stays NULL — derived at submit.
+   */
+  async createEmployee(
+    report: ReportModel,
+    id: string,
+    data: EmployeeChangeDataDto,
+    ordinal: number,
+  ): Promise<void> {
+    for (const key of EMPLOYEE_REQUIRED_KEYS) {
+      if (data[key] === undefined || data[key] === null) {
+        throw new BadRequestException(
+          `Employee CREATE requires "${key}"`,
+        )
+      }
+    }
+    await this.assertRoleInReport(report.id, data.reportEmployeeRoleId as string)
+
+    const existing = await this.employeeModel.findByPk(id)
+    if (existing) {
+      if (existing.reportId !== report.id) {
+        throw new BadRequestException(
+          `Employee "${id}" belongs to a different report`,
+        )
+      }
+      // Idempotent retry: update the row's columns in place (keep its ordinal).
+      await existing.update(this.buildColumnPatch(data))
+      return
+    }
+
+    // The required columns are guaranteed present by the guard above; the casts
+    // narrow away the `undefined` the optional change-data DTO carries.
+    const row = this.employeeModel.build({
       reportId: report.id,
-      ordinal: (maxOrdinal ?? 0) + 1,
-      // Derived at submit — never computed while drafting.
+      ordinal,
       score: null,
-      reportEmployeeRoleId: input.reportEmployeeRoleId,
-      education: input.education,
-      gender: input.gender,
-      field: input.field,
-      department: input.department,
-      startDate: input.startDate,
-      workRatio: input.workRatio,
-      baseSalary: input.baseSalary,
-      additionalFixedOvertime: input.additionalFixedOvertime ?? null,
-      additionalFixedCarAllowance: input.additionalFixedCarAllowance ?? null,
-      bonusOccasionalCarAllowance: input.bonusOccasionalCarAllowance ?? null,
-      bonusOccasionalOvertime: input.bonusOccasionalOvertime ?? null,
-      bonusPayments: input.bonusPayments ?? null,
-      bonusOther: input.bonusOther ?? null,
+      reportEmployeeRoleId: data.reportEmployeeRoleId as string,
+      education: data.education as EducationEnum,
+      gender: data.gender as GenderEnum,
+      field: data.field as string,
+      department: data.department as string,
+      startDate: data.startDate as string,
+      workRatio: data.workRatio as number,
+      baseSalary: data.baseSalary as number,
+      additionalFixedOvertime: data.additionalFixedOvertime ?? null,
+      additionalFixedCarAllowance: data.additionalFixedCarAllowance ?? null,
+      bonusOccasionalCarAllowance: data.bonusOccasionalCarAllowance ?? null,
+      bonusOccasionalOvertime: data.bonusOccasionalOvertime ?? null,
+      bonusPayments: data.bonusPayments ?? null,
+      bonusOther: data.bonusOther ?? null,
     })
+    row.id = id
+    await row.save()
 
-    this.logger.info(`Created draft employee "${row.id}"`, {
+    this.logger.info(`Synced draft employee "${id}" (create)`, {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
-
-    return ReportEmployeeModel.fromModel(row)
   }
 
+  /** Patches an employee from a sync UPDATE command (PATCH semantics). */
   async updateEmployee(
-    providerId: string,
-    company: CompanyDto,
-    employeeId: string,
-    input: UpdateDraftEmployeeDto,
-  ): Promise<ReportEmployeeDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    report: ReportModel,
+    id: string,
+    data: EmployeeChangeDataDto,
+  ): Promise<void> {
+    const row = await this.findOwnedEmployee(report.id, id)
 
-    const row = await this.findOwnedEmployee(report.id, employeeId)
-
-    if (input.reportEmployeeRoleId !== undefined) {
-      await this.assertRoleInReport(report.id, input.reportEmployeeRoleId)
+    if (data.reportEmployeeRoleId !== undefined) {
+      await this.assertRoleInReport(report.id, data.reportEmployeeRoleId)
     }
 
-    const patch: UpdateDraftEmployeeDto = {}
-    for (const key of EMPLOYEE_PATCH_KEYS) {
-      if (input[key] !== undefined) {
-        // The key list is the source of truth; each value matches its column.
-        ;(patch as Record<string, unknown>)[key] = input[key]
-      }
-    }
-
+    const patch = this.buildColumnPatch(data)
     if (Object.keys(patch).length > 0) {
       await row.update(patch)
     }
-
-    return ReportEmployeeModel.fromModel(row)
   }
 
-  async deleteEmployee(
-    providerId: string,
-    company: CompanyDto,
-    employeeId: string,
-  ): Promise<void> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+  /**
+   * Removes an employee and the rows that reference it (personal step
+   * assignments, outlier-group membership) — no DB cascade. Atomic under the
+   * sync request transaction.
+   */
+  async removeEmployee(report: ReportModel, id: string): Promise<void> {
+    const row = await this.findOwnedEmployee(report.id, id)
 
-    const row = await this.findOwnedEmployee(report.id, employeeId)
-    // NOTE: once personal step-assignment and outlier-group CRUD land, their
-    // rows reference this employee and must be removed first (no DB cascade).
-    // A draft built via employee CRUD alone has no such dependents yet.
+    await this.personalStepModel.destroy({ where: { reportEmployeeId: id } })
+    await this.outlierModel.destroy({ where: { reportEmployeeId: id } })
     await row.destroy()
+  }
+
+  /** Builds a Sequelize patch of the editable columns present in `data`. */
+  private buildColumnPatch(data: EmployeeChangeDataDto): Record<string, unknown> {
+    const patch: Record<string, unknown> = {}
+    for (const key of EMPLOYEE_PATCH_KEYS) {
+      if (data[key] !== undefined) {
+        patch[key] = data[key]
+      }
+    }
+    return patch
   }
 
   /** Loads an employee and asserts it belongs to the given (owned) draft. */
@@ -197,6 +238,7 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
   ): Promise<void> {
     const role = await this.roleModel.findOne({
       where: { id: roleId, reportId },
+      attributes: ['id'],
     })
     if (!role) {
       throw new BadRequestException(

@@ -1,9 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportSubCriterionStepDto } from '../../report-criterion/dto/report-sub-criterion-step.dto'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
@@ -11,14 +17,10 @@ import { ReportSubCriterionStepModel } from '../../report-criterion/models/repor
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateStepDto } from './dto/create-step.dto'
-import { UpdateStepDto } from './dto/update-step.dto'
+import { StepChangeDataDto } from '../sync/dto/change-step.dto'
 import { IReportDraftStepService } from './report-draft-step.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftStepService'
-
-/** Editable step columns — `reportSubCriterionId` is never patched. */
-const STEP_PATCH_KEYS = ['order', 'description', 'score'] as const
 
 @Injectable()
 export class ReportDraftStepService implements IReportDraftStepService {
@@ -43,7 +45,11 @@ export class ReportDraftStepService implements IReportDraftStepService {
     company: CompanyDto,
     subCriterionId: string,
   ): Promise<ReportSubCriterionStepDto[]> {
-    await this.assertSubCriterionInDraft(providerId, company, subCriterionId)
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+    await this.assertSubCriterionInReport(report.id, subCriterionId)
 
     const rows = await this.stepModel.findAll({
       where: { reportSubCriterionId: subCriterionId },
@@ -53,119 +59,129 @@ export class ReportDraftStepService implements IReportDraftStepService {
     return rows.map((row) => ReportSubCriterionStepModel.fromModel(row))
   }
 
+  /** Upserts a scoring step from a sync CREATE command under its parent. */
   async createStep(
-    providerId: string,
-    company: CompanyDto,
-    subCriterionId: string,
-    input: CreateStepDto,
-  ): Promise<ReportSubCriterionStepDto> {
-    await this.assertSubCriterionInDraft(providerId, company, subCriterionId)
+    report: ReportModel,
+    id: string,
+    data: StepChangeDataDto,
+  ): Promise<void> {
+    if (
+      !data.subCriterionId ||
+      data.order === undefined ||
+      data.description === undefined ||
+      data.score === undefined
+    ) {
+      throw new BadRequestException(
+        'Step CREATE requires subCriterionId, order, description and score',
+      )
+    }
+    await this.assertSubCriterionInReport(report.id, data.subCriterionId)
 
-    const row = await this.stepModel.create({
-      reportSubCriterionId: subCriterionId,
-      order: input.order,
-      description: input.description,
-      score: input.score,
+    const existing = await this.stepModel.findByPk(id)
+    if (existing) {
+      if (existing.reportSubCriterionId !== data.subCriterionId) {
+        throw new BadRequestException(
+          `Step "${id}" belongs to a different sub-criterion`,
+        )
+      }
+      await existing.update({
+        order: data.order,
+        description: data.description,
+        score: data.score,
+      })
+      return
+    }
+
+    const row = this.stepModel.build({
+      reportSubCriterionId: data.subCriterionId,
+      order: data.order,
+      description: data.description,
+      score: data.score,
     })
+    row.id = id
+    await row.save()
 
-    this.logger.info(`Created draft step "${row.id}"`, {
+    this.logger.info(`Synced draft step "${id}" (create)`, {
       context: LOGGING_CONTEXT,
-      subCriterionId,
+      reportId: report.id,
     })
-
-    return ReportSubCriterionStepModel.fromModel(row)
   }
 
+  /** Patches a scoring step from a sync UPDATE command (PATCH semantics). */
   async updateStep(
-    providerId: string,
-    company: CompanyDto,
-    subCriterionId: string,
-    stepId: string,
-    input: UpdateStepDto,
-  ): Promise<ReportSubCriterionStepDto> {
-    await this.assertSubCriterionInDraft(providerId, company, subCriterionId)
+    report: ReportModel,
+    id: string,
+    data: StepChangeDataDto,
+  ): Promise<void> {
+    const row = await this.findOwnedStep(report.id, id)
 
-    const row = await this.findOwnedStep(subCriterionId, stepId)
-
-    const patch: UpdateStepDto = {}
-    for (const key of STEP_PATCH_KEYS) {
-      if (input[key] !== undefined) {
-        // The key list is the source of truth; each value matches its column.
-        ;(patch as Record<string, unknown>)[key] = input[key]
-      }
+    const patch: Record<string, unknown> = {}
+    if (data.order !== undefined) {
+      patch.order = data.order
+    }
+    if (data.description !== undefined) {
+      patch.description = data.description
+    }
+    if (data.score !== undefined) {
+      patch.score = data.score
     }
 
     if (Object.keys(patch).length > 0) {
       await row.update(patch)
     }
-
-    return ReportSubCriterionStepModel.fromModel(row)
   }
 
-  async deleteStep(
-    providerId: string,
-    company: CompanyDto,
-    subCriterionId: string,
-    stepId: string,
-  ): Promise<void> {
-    await this.assertSubCriterionInDraft(providerId, company, subCriterionId)
+  /**
+   * Removes a scoring step and the role/employee assignments pointing at it.
+   * Atomic under the sync request transaction.
+   */
+  async removeStep(report: ReportModel, id: string): Promise<void> {
+    const row = await this.findOwnedStep(report.id, id)
 
-    const row = await this.findOwnedStep(subCriterionId, stepId)
-
-    // Remove the role/employee assignments pointing at this step before the
-    // step itself (no DB cascade). Atomic under the CLS request transaction.
     await this.roleStepModel.destroy({
-      where: { reportSubCriterionStepId: stepId },
+      where: { reportSubCriterionStepId: id },
     })
     await this.personalStepModel.destroy({
-      where: { reportSubCriterionStepId: stepId },
+      where: { reportSubCriterionStepId: id },
     })
 
     await row.destroy()
   }
 
-  /**
-   * Resolves the owned draft and asserts the sub-criterion belongs to it,
-   * walking sub-criterion → criterion → report.
-   */
-  private async assertSubCriterionInDraft(
-    providerId: string,
-    company: CompanyDto,
+  /** Asserts the sub-criterion resolves, via its criterion, to the draft. */
+  private async assertSubCriterionInReport(
+    reportId: string,
     subCriterionId: string,
   ): Promise<void> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
-
-    const sub = await this.subCriterionModel.findOne({
-      where: { id: subCriterionId },
+    const sub = await this.subCriterionModel.findByPk(subCriterionId, {
       attributes: ['id', 'reportCriterionId'],
     })
     if (!sub) {
-      throw new NotFoundException(`Sub-criterion "${subCriterionId}" not found`)
+      throw new BadRequestException(
+        `Sub-criterion "${subCriterionId}" does not belong to this report`,
+      )
     }
-
     const criterion = await this.criterionModel.findOne({
-      where: { id: sub.reportCriterionId, reportId: report.id },
+      where: { id: sub.reportCriterionId, reportId },
       attributes: ['id'],
     })
     if (!criterion) {
-      throw new NotFoundException(`Sub-criterion "${subCriterionId}" not found`)
+      throw new BadRequestException(
+        `Sub-criterion "${subCriterionId}" does not belong to this report`,
+      )
     }
   }
 
-  /** Loads a step and asserts it belongs to the given sub-criterion. */
+  /** Loads a step and asserts it resolves, via its parents, to the draft. */
   private async findOwnedStep(
-    subCriterionId: string,
+    reportId: string,
     stepId: string,
   ): Promise<ReportSubCriterionStepModel> {
-    const row = await this.stepModel.findOne({
-      where: { id: stepId, reportSubCriterionId: subCriterionId },
-    })
+    const row = await this.stepModel.findByPk(stepId)
     if (!row) {
       throw new NotFoundException(`Step "${stepId}" not found`)
     }
+    await this.assertSubCriterionInReport(reportId, row.reportSubCriterionId)
     return row
   }
 }

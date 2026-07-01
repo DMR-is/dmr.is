@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
@@ -18,7 +19,6 @@ import { ReportEmployeeRoleModel } from '../../report-employee/models/report-emp
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { DraftAssignmentDto } from './dto/draft-assignment.dto'
-import { SetStepsDto } from './dto/set-steps.dto'
 import { IReportDraftAssignmentService } from './report-draft-assignment.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftAssignmentService'
@@ -67,38 +67,34 @@ export class ReportDraftAssignmentService
   }
 
   async setRoleSteps(
-    providerId: string,
-    company: CompanyDto,
+    report: ReportModel,
     roleId: string,
-    input: SetStepsDto,
-  ): Promise<DraftAssignmentDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    stepIds: string[],
+  ): Promise<void> {
     await this.assertRoleInReport(report.id, roleId)
-    const stepIds = await this.assertStepsInReport(report.id, input.stepIds)
+    const resolvedStepIds = await this.assertStepsInReport(report.id, stepIds)
 
     // Replace-all: the join rows are immutable, so clear then recreate. Atomic
     // under the CLS request transaction.
     await this.roleStepModel.destroy({
       where: { reportEmployeeRoleId: roleId },
     })
-    if (stepIds.length > 0) {
+    if (resolvedStepIds.length > 0) {
       await this.roleStepModel.bulkCreate(
-        stepIds.map((stepId) => ({
+        resolvedStepIds.map((stepId) => ({
           reportEmployeeRoleId: roleId,
           reportSubCriterionStepId: stepId,
         })),
       )
     }
 
-    this.logger.info(`Set ${stepIds.length} step(s) on role "${roleId}"`, {
-      context: LOGGING_CONTEXT,
-      reportId: report.id,
-    })
-
-    return { stepIds }
+    this.logger.info(
+      `Set ${resolvedStepIds.length} step(s) on role "${roleId}"`,
+      {
+        context: LOGGING_CONTEXT,
+        reportId: report.id,
+      },
+    )
   }
 
   async getEmployeeSteps(
@@ -121,24 +117,19 @@ export class ReportDraftAssignmentService
   }
 
   async setEmployeeSteps(
-    providerId: string,
-    company: CompanyDto,
+    report: ReportModel,
     employeeId: string,
-    input: SetStepsDto,
-  ): Promise<DraftAssignmentDto> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
+    stepIds: string[],
+  ): Promise<void> {
     await this.assertEmployeeInReport(report.id, employeeId)
-    const stepIds = await this.assertStepsInReport(report.id, input.stepIds)
+    const resolvedStepIds = await this.assertStepsInReport(report.id, stepIds)
 
     await this.personalStepModel.destroy({
       where: { reportEmployeeId: employeeId },
     })
-    if (stepIds.length > 0) {
+    if (resolvedStepIds.length > 0) {
       await this.personalStepModel.bulkCreate(
-        stepIds.map((stepId) => ({
+        resolvedStepIds.map((stepId) => ({
           reportEmployeeId: employeeId,
           reportSubCriterionStepId: stepId,
         })),
@@ -146,11 +137,9 @@ export class ReportDraftAssignmentService
     }
 
     this.logger.info(
-      `Set ${stepIds.length} personal step(s) on employee "${employeeId}"`,
+      `Set ${resolvedStepIds.length} personal step(s) on employee "${employeeId}"`,
       { context: LOGGING_CONTEXT, reportId: report.id },
     )
-
-    return { stepIds }
   }
 
   private async assertRoleInReport(

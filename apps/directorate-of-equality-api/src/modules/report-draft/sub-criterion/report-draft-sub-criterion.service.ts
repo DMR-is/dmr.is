@@ -1,9 +1,15 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportSubCriterionDto } from '../../report-criterion/dto/report-sub-criterion.dto'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
@@ -11,14 +17,10 @@ import { ReportSubCriterionStepModel } from '../../report-criterion/models/repor
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateSubCriterionDto } from './dto/create-sub-criterion.dto'
-import { UpdateSubCriterionDto } from './dto/update-sub-criterion.dto'
+import { SubCriterionChangeDataDto } from '../sync/dto/change-sub-criterion.dto'
 import { IReportDraftSubCriterionService } from './report-draft-sub-criterion.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftSubCriterionService'
-
-/** Editable sub-criterion columns — `reportCriterionId` is never patched. */
-const SUB_CRITERION_PATCH_KEYS = ['title', 'description', 'weight'] as const
 
 @Injectable()
 export class ReportDraftSubCriterionService
@@ -45,7 +47,11 @@ export class ReportDraftSubCriterionService
     company: CompanyDto,
     criterionId: string,
   ): Promise<ReportSubCriterionDto[]> {
-    await this.assertCriterionInDraft(providerId, company, criterionId)
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+    await this.assertCriterionInReport(report.id, criterionId)
 
     const rows = await this.subCriterionModel.findAll({
       where: { reportCriterionId: criterionId },
@@ -55,69 +61,88 @@ export class ReportDraftSubCriterionService
     return rows.map((row) => ReportSubCriterionModel.fromModel(row))
   }
 
+  /** Upserts a sub-criterion from a sync CREATE command under its parent. */
   async createSubCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-    input: CreateSubCriterionDto,
-  ): Promise<ReportSubCriterionDto> {
-    await this.assertCriterionInDraft(providerId, company, criterionId)
+    report: ReportModel,
+    id: string,
+    data: SubCriterionChangeDataDto,
+  ): Promise<void> {
+    const title = data.title?.trim()
+    if (
+      !data.criterionId ||
+      !title ||
+      data.description === undefined ||
+      data.weight === undefined
+    ) {
+      throw new BadRequestException(
+        'Sub-criterion CREATE requires criterionId, title, description and weight',
+      )
+    }
+    await this.assertCriterionInReport(report.id, data.criterionId)
 
-    const row = await this.subCriterionModel.create({
-      reportCriterionId: criterionId,
-      title: input.title.trim(),
-      description: input.description,
-      weight: input.weight,
+    const existing = await this.subCriterionModel.findByPk(id)
+    if (existing) {
+      if (existing.reportCriterionId !== data.criterionId) {
+        throw new BadRequestException(
+          `Sub-criterion "${id}" belongs to a different criterion`,
+        )
+      }
+      await existing.update({
+        title,
+        description: data.description,
+        weight: data.weight,
+      })
+      return
+    }
+
+    const row = this.subCriterionModel.build({
+      reportCriterionId: data.criterionId,
+      title,
+      description: data.description,
+      weight: data.weight,
     })
+    row.id = id
+    await row.save()
 
-    this.logger.info(`Created draft sub-criterion "${row.id}"`, {
+    this.logger.info(`Synced draft sub-criterion "${id}" (create)`, {
       context: LOGGING_CONTEXT,
-      criterionId,
+      reportId: report.id,
     })
-
-    return ReportSubCriterionModel.fromModel(row)
   }
 
+  /** Patches a sub-criterion from a sync UPDATE command (PATCH semantics). */
   async updateSubCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-    subCriterionId: string,
-    input: UpdateSubCriterionDto,
-  ): Promise<ReportSubCriterionDto> {
-    await this.assertCriterionInDraft(providerId, company, criterionId)
+    report: ReportModel,
+    id: string,
+    data: SubCriterionChangeDataDto,
+  ): Promise<void> {
+    const row = await this.findOwnedSubCriterion(report.id, id)
 
-    const row = await this.findOwnedSubCriterion(criterionId, subCriterionId)
-
-    const patch: UpdateSubCriterionDto = {}
-    for (const key of SUB_CRITERION_PATCH_KEYS) {
-      if (input[key] !== undefined) {
-        // The key list is the source of truth; each value matches its column.
-        ;(patch as Record<string, unknown>)[key] = input[key]
-      }
+    const patch: Record<string, unknown> = {}
+    if (data.title !== undefined) {
+      patch.title = data.title.trim()
+    }
+    if (data.description !== undefined) {
+      patch.description = data.description
+    }
+    if (data.weight !== undefined) {
+      patch.weight = data.weight
     }
 
     if (Object.keys(patch).length > 0) {
       await row.update(patch)
     }
-
-    return ReportSubCriterionModel.fromModel(row)
   }
 
-  async deleteSubCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-    subCriterionId: string,
-  ): Promise<void> {
-    await this.assertCriterionInDraft(providerId, company, criterionId)
+  /**
+   * Removes a sub-criterion and its steps (and the role/employee assignments
+   * pointing at them) by hand. Atomic under the sync request transaction.
+   */
+  async removeSubCriterion(report: ReportModel, id: string): Promise<void> {
+    const row = await this.findOwnedSubCriterion(report.id, id)
 
-    const row = await this.findOwnedSubCriterion(criterionId, subCriterionId)
-
-    // Cascade by hand (no DB cascade): steps → the role/employee step
-    // assignments pointing at them. Atomic under the CLS request transaction.
     const steps = await this.stepModel.findAll({
-      where: { reportSubCriterionId: subCriterionId },
+      where: { reportSubCriterionId: id },
       attributes: ['id'],
     })
     const stepIds = steps.map((step) => step.id)
@@ -135,33 +160,39 @@ export class ReportDraftSubCriterionService
     await row.destroy()
   }
 
-  /** Resolves the owned draft and asserts the criterion belongs to it. */
-  private async assertCriterionInDraft(
-    providerId: string,
-    company: CompanyDto,
+  /** Asserts the criterion exists on the given (owned) draft. */
+  private async assertCriterionInReport(
+    reportId: string,
     criterionId: string,
   ): Promise<void> {
-    const report = await this.reportDraftService.findOwnedDraft(
-      providerId,
-      company,
-    )
     const criterion = await this.criterionModel.findOne({
-      where: { id: criterionId, reportId: report.id },
+      where: { id: criterionId, reportId },
+      attributes: ['id'],
     })
     if (!criterion) {
-      throw new NotFoundException(`Criterion "${criterionId}" not found`)
+      throw new BadRequestException(
+        `Criterion "${criterionId}" does not belong to this report`,
+      )
     }
   }
 
-  /** Loads a sub-criterion and asserts it belongs to the given criterion. */
+  /**
+   * Loads a sub-criterion and asserts it belongs to the given draft, walking
+   * sub-criterion → criterion → report.
+   */
   private async findOwnedSubCriterion(
-    criterionId: string,
+    reportId: string,
     subCriterionId: string,
   ): Promise<ReportSubCriterionModel> {
-    const row = await this.subCriterionModel.findOne({
-      where: { id: subCriterionId, reportCriterionId: criterionId },
-    })
+    const row = await this.subCriterionModel.findByPk(subCriterionId)
     if (!row) {
+      throw new NotFoundException(`Sub-criterion "${subCriterionId}" not found`)
+    }
+    const criterion = await this.criterionModel.findOne({
+      where: { id: row.reportCriterionId, reportId },
+      attributes: ['id'],
+    })
+    if (!criterion) {
       throw new NotFoundException(`Sub-criterion "${subCriterionId}" not found`)
     }
     return row

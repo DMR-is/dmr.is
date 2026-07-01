@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -10,6 +10,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { ReportModel } from '../../report/models/report.model'
 import {
   ReportCriterionModel,
   ReportCriterionTypeEnum,
@@ -33,6 +34,15 @@ const COMPANY = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
 
+const report = { id: REPORT_ID } as ReportModel
+
+const VALID_CREATE = {
+  title: '  Ábyrgð  ',
+  weight: 0.25,
+  description: 'd',
+  type: ReportCriterionTypeEnum.RESPONSIBILITY,
+}
+
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -45,7 +55,8 @@ describe('ReportDraftCriterionService', () => {
   let findOwnedDraft: jest.Mock
   let criterionFindAll: jest.Mock
   let criterionFindOne: jest.Mock
-  let criterionCreate: jest.Mock
+  let criterionFindByPk: jest.Mock
+  let criterionBuild: jest.Mock
   let subFindAll: jest.Mock
   let subDestroy: jest.Mock
   let stepFindAll: jest.Mock
@@ -57,7 +68,8 @@ describe('ReportDraftCriterionService', () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
     criterionFindAll = jest.fn().mockResolvedValue([])
     criterionFindOne = jest.fn().mockResolvedValue(null)
-    criterionCreate = jest.fn()
+    criterionFindByPk = jest.fn().mockResolvedValue(null)
+    criterionBuild = jest.fn()
     subFindAll = jest.fn().mockResolvedValue([])
     subDestroy = jest.fn()
     stepFindAll = jest.fn().mockResolvedValue([])
@@ -75,7 +87,8 @@ describe('ReportDraftCriterionService', () => {
           useValue: {
             findAll: criterionFindAll,
             findOne: criterionFindOne,
-            create: criterionCreate,
+            findByPk: criterionFindByPk,
+            build: criterionBuild,
           },
         },
         {
@@ -100,36 +113,89 @@ describe('ReportDraftCriterionService', () => {
     service = module.get(ReportDraftCriterionService)
   })
 
-  it('creates a criterion scoped to the draft', async () => {
-    criterionCreate.mockResolvedValueOnce({
+  it('lists criteria for the owned draft', async () => {
+    criterionFindAll.mockResolvedValueOnce([
+      { id: CRITERION_ID, title: 'Ábyrgð', reportId: REPORT_ID },
+    ])
+
+    const result = await service.listCriteria(PROVIDER_ID, COMPANY)
+
+    expect(findOwnedDraft).toHaveBeenCalledWith(PROVIDER_ID, COMPANY)
+    expect(result).toEqual([
+      { id: CRITERION_ID, title: 'Ábyrgð', reportId: REPORT_ID },
+    ])
+  })
+
+  it('creates a criterion with the client-minted id, trimming the title', async () => {
+    criterionFindByPk.mockResolvedValueOnce(null)
+    const row: Record<string, unknown> = { save: jest.fn() }
+    criterionBuild.mockReturnValueOnce(row)
+
+    await service.createCriterion(report, CRITERION_ID, VALID_CREATE)
+
+    expect(criterionBuild).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Ábyrgð', reportId: REPORT_ID }),
+    )
+    expect(row.id).toBe(CRITERION_ID)
+    expect(row.save).toHaveBeenCalled()
+  })
+
+  it('upserts in place when the criterion id already exists on this draft', async () => {
+    const existing = {
       id: CRITERION_ID,
+      reportId: REPORT_ID,
+      update: jest.fn(),
+    }
+    criterionFindByPk.mockResolvedValueOnce(existing)
+
+    await service.createCriterion(report, CRITERION_ID, VALID_CREATE)
+
+    expect(existing.update).toHaveBeenCalledWith({
       title: 'Ábyrgð',
       weight: 0.25,
       description: 'd',
       type: ReportCriterionTypeEnum.RESPONSIBILITY,
-      reportId: REPORT_ID,
     })
+    expect(criterionBuild).not.toHaveBeenCalled()
+  })
 
-    const result = await service.createCriterion(PROVIDER_ID, COMPANY, {
-      title: '  Ábyrgð  ',
-      weight: 0.25,
-      description: 'd',
-      type: ReportCriterionTypeEnum.RESPONSIBILITY,
+  it('rejects a create whose id belongs to a different report', async () => {
+    const existing = {
+      id: CRITERION_ID,
+      reportId: 'other-report',
+      update: jest.fn(),
+    }
+    criterionFindByPk.mockResolvedValueOnce(existing)
+
+    await expect(
+      service.createCriterion(report, CRITERION_ID, VALID_CREATE),
+    ).rejects.toThrow(BadRequestException)
+    expect(existing.update).not.toHaveBeenCalled()
+  })
+
+  it('requires all fields on create', async () => {
+    await expect(
+      service.createCriterion(report, CRITERION_ID, { title: 'x' }),
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  it('patches a criterion it owns', async () => {
+    const row = { id: CRITERION_ID, update: jest.fn() }
+    criterionFindOne.mockResolvedValueOnce(row)
+
+    await service.updateCriterion(report, CRITERION_ID, { title: '  New  ' })
+
+    expect(criterionFindOne).toHaveBeenCalledWith({
+      where: { id: CRITERION_ID, reportId: REPORT_ID },
     })
-
-    expect(criterionCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Ábyrgð', reportId: REPORT_ID }),
-    )
-    expect(result.id).toBe(CRITERION_ID)
+    expect(row.update).toHaveBeenCalledWith({ title: 'New' })
   })
 
   it('404s updating a criterion not in the draft', async () => {
     criterionFindOne.mockResolvedValueOnce(null)
 
     await expect(
-      service.updateCriterion(PROVIDER_ID, COMPANY, CRITERION_ID, {
-        title: 'x',
-      }),
+      service.updateCriterion(report, CRITERION_ID, { title: 'x' }),
     ).rejects.toThrow(NotFoundException)
   })
 
@@ -139,7 +205,7 @@ describe('ReportDraftCriterionService', () => {
     subFindAll.mockResolvedValueOnce([{ id: 'sub-1' }, { id: 'sub-2' }])
     stepFindAll.mockResolvedValueOnce([{ id: 'step-1' }, { id: 'step-2' }])
 
-    await service.deleteCriterion(PROVIDER_ID, COMPANY, CRITERION_ID)
+    await service.removeCriterion(report, CRITERION_ID)
 
     expect(roleStepDestroy).toHaveBeenCalledWith({
       where: { reportSubCriterionStepId: ['step-1', 'step-2'] },
@@ -161,7 +227,7 @@ describe('ReportDraftCriterionService', () => {
     criterionFindOne.mockResolvedValueOnce({ id: CRITERION_ID, destroy })
     subFindAll.mockResolvedValueOnce([])
 
-    await service.deleteCriterion(PROVIDER_ID, COMPANY, CRITERION_ID)
+    await service.removeCriterion(report, CRITERION_ID)
 
     expect(stepDestroy).not.toHaveBeenCalled()
     expect(roleStepDestroy).not.toHaveBeenCalled()

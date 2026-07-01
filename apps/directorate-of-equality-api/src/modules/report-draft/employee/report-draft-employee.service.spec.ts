@@ -4,34 +4,24 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { CompanyDto } from '../../company/dto/company.dto'
-import {
-  CompanyReportStatusEnum,
-  CompanySizeEnum,
-  CompanyStatusEnum,
-} from '../../company/models/company.enums'
 import { GenderEnum } from '../../report/models/report.enums'
+import { ReportModel } from '../../report/models/report.model'
 import {
   EducationEnum,
   ReportEmployeeModel,
 } from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
-import { CreateDraftEmployeeDto } from './dto/create-draft-employee.dto'
+import { EmployeeChangeDataDto } from '../sync/dto/change-employee.dto'
 import { ReportDraftEmployeeService } from './report-draft-employee.service'
 
 const REPORT_ID = 'report-id-1'
 const ROLE_ID = 'role-id-1'
 const EMPLOYEE_ID = 'employee-id-1'
-const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = {
-  id: 'company-1',
-  nationalId: '5500000000',
-  employeeCountCategory: CompanySizeEnum.LARGE,
-  status: CompanyStatusEnum.ACTIVE,
-  reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown as CompanyDto
+const report = { id: REPORT_ID } as ReportModel
 
 const mockLogger = {
   debug: jest.fn(),
@@ -40,27 +30,31 @@ const mockLogger = {
   error: jest.fn(),
 }
 
-const createInput = (overrides: Partial<CreateDraftEmployeeDto> = {}) =>
-  ({
-    reportEmployeeRoleId: ROLE_ID,
-    education: EducationEnum.BACHELOR,
-    gender: GenderEnum.FEMALE,
-    field: 'Engineering',
-    department: 'R&D',
-    startDate: '2020-01-01',
-    workRatio: 1,
-    baseSalary: 800000,
-    ...overrides,
-  }) as CreateDraftEmployeeDto
+const changeData = (
+  overrides: Partial<EmployeeChangeDataDto> = {},
+): EmployeeChangeDataDto => ({
+  reportEmployeeRoleId: ROLE_ID,
+  education: EducationEnum.BACHELOR,
+  gender: GenderEnum.FEMALE,
+  field: 'Engineering',
+  department: 'R&D',
+  startDate: '2020-01-01',
+  workRatio: 1,
+  baseSalary: 800000,
+  ...overrides,
+})
 
 describe('ReportDraftEmployeeService', () => {
   let service: ReportDraftEmployeeService
   let findOwnedDraft: jest.Mock
   let employeeFindAndCountAll: jest.Mock
   let employeeFindOne: jest.Mock
-  let employeeCreate: jest.Mock
+  let employeeFindByPk: jest.Mock
+  let employeeBuild: jest.Mock
   let employeeMax: jest.Mock
   let roleFindOne: jest.Mock
+  let personalStepDestroy: jest.Mock
+  let outlierDestroy: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
@@ -68,14 +62,12 @@ describe('ReportDraftEmployeeService', () => {
       .fn()
       .mockResolvedValue({ rows: [], count: 0 })
     employeeFindOne = jest.fn().mockResolvedValue(null)
-    employeeCreate = jest.fn(async (values) => ({
-      id: EMPLOYEE_ID,
-      additionalSalary: 0,
-      bonusSalary: 0,
-      ...values,
-    }))
+    employeeFindByPk = jest.fn().mockResolvedValue(null)
+    employeeBuild = jest.fn()
     employeeMax = jest.fn().mockResolvedValue(null)
     roleFindOne = jest.fn().mockResolvedValue({ id: ROLE_ID })
+    personalStepDestroy = jest.fn().mockResolvedValue(0)
+    outlierDestroy = jest.fn().mockResolvedValue(0)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -87,7 +79,8 @@ describe('ReportDraftEmployeeService', () => {
           useValue: {
             findAndCountAll: employeeFindAndCountAll,
             findOne: employeeFindOne,
-            create: employeeCreate,
+            findByPk: employeeFindByPk,
+            build: employeeBuild,
             max: employeeMax,
           },
         },
@@ -95,100 +88,188 @@ describe('ReportDraftEmployeeService', () => {
           provide: getModelToken(ReportEmployeeRoleModel),
           useValue: { findOne: roleFindOne },
         },
+        {
+          provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
+          useValue: { destroy: personalStepDestroy },
+        },
+        {
+          provide: getModelToken(ReportEmployeeOutlierModel),
+          useValue: { destroy: outlierDestroy },
+        },
       ],
     }).compile()
 
     service = module.get(ReportDraftEmployeeService)
   })
 
-  it('creates an employee with the next ordinal and a NULL score', async () => {
-    employeeMax.mockResolvedValueOnce(4)
+  describe('getMaxOrdinal', () => {
+    it('returns the highest ordinal in the report', async () => {
+      employeeMax.mockResolvedValueOnce(4)
 
-    const result = await service.createEmployee(
-      PROVIDER_ID,
-      COMPANY,
-      createInput(),
-    )
+      const result = await service.getMaxOrdinal(report)
 
-    expect(roleFindOne).toHaveBeenCalledWith({
-      where: { id: ROLE_ID, reportId: REPORT_ID },
+      expect(employeeMax).toHaveBeenCalledWith('ordinal', {
+        where: { reportId: REPORT_ID },
+      })
+      expect(result).toBe(4)
     })
-    expect(employeeCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
+
+    it('returns 0 when the report has no employees', async () => {
+      employeeMax.mockResolvedValueOnce(null)
+
+      const result = await service.getMaxOrdinal(report)
+
+      expect(result).toBe(0)
+    })
+  })
+
+  describe('createEmployee', () => {
+    it('rejects a create missing a required field (400)', async () => {
+      const data = changeData({ baseSalary: undefined })
+
+      await expect(
+        service.createEmployee(report, EMPLOYEE_ID, data, 1),
+      ).rejects.toThrow(BadRequestException)
+      expect(roleFindOne).not.toHaveBeenCalled()
+      expect(employeeBuild).not.toHaveBeenCalled()
+    })
+
+    it('rejects a role that does not belong to the report (400)', async () => {
+      roleFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.createEmployee(report, EMPLOYEE_ID, changeData(), 1),
+      ).rejects.toThrow(BadRequestException)
+      expect(employeeBuild).not.toHaveBeenCalled()
+    })
+
+    it('builds and saves a new employee with the client id, ordinal and NULL score', async () => {
+      employeeFindByPk.mockResolvedValueOnce(null)
+      const row: Record<string, unknown> = { save: jest.fn() }
+      employeeBuild.mockReturnValueOnce(row)
+
+      await service.createEmployee(report, EMPLOYEE_ID, changeData(), 5)
+
+      expect(roleFindOne).toHaveBeenCalledWith({
+        where: { id: ROLE_ID, reportId: REPORT_ID },
+        attributes: ['id'],
+      })
+      expect(employeeBuild).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reportId: REPORT_ID,
+          ordinal: 5,
+          score: null,
+          reportEmployeeRoleId: ROLE_ID,
+        }),
+      )
+      expect(row.id).toBe(EMPLOYEE_ID)
+      expect(row.save).toHaveBeenCalled()
+    })
+
+    it('upserts in place when the id already exists on this report', async () => {
+      const existing = {
+        id: EMPLOYEE_ID,
         reportId: REPORT_ID,
-        ordinal: 5,
-        score: null,
-        reportEmployeeRoleId: ROLE_ID,
-      }),
-    )
-    expect(result.id).toBe(EMPLOYEE_ID)
-  })
+        update: jest.fn(),
+      }
+      employeeFindByPk.mockResolvedValueOnce(existing)
 
-  it('assigns ordinal 1 to the first employee', async () => {
-    employeeMax.mockResolvedValueOnce(null)
+      await service.createEmployee(
+        report,
+        EMPLOYEE_ID,
+        changeData({ baseSalary: 900000 }),
+        5,
+      )
 
-    await service.createEmployee(PROVIDER_ID, COMPANY, createInput())
-
-    expect(employeeCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ ordinal: 1 }),
-    )
-  })
-
-  it('rejects a role that does not belong to the report (400)', async () => {
-    roleFindOne.mockResolvedValueOnce(null)
-
-    await expect(
-      service.createEmployee(PROVIDER_ID, COMPANY, createInput()),
-    ).rejects.toThrow(BadRequestException)
-    expect(employeeCreate).not.toHaveBeenCalled()
-  })
-
-  it('patches only the provided employee fields', async () => {
-    const row = {
-      id: EMPLOYEE_ID,
-      reportId: REPORT_ID,
-      additionalSalary: 0,
-      bonusSalary: 0,
-      update: jest.fn(async function (this: Record<string, unknown>, vals) {
-        Object.assign(row, vals)
-      }),
-    }
-    employeeFindOne.mockResolvedValueOnce(row)
-
-    await service.updateEmployee(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-      baseSalary: 900000,
+      expect(existing.update).toHaveBeenCalledWith(
+        expect.objectContaining({ baseSalary: 900000 }),
+      )
+      expect(employeeBuild).not.toHaveBeenCalled()
     })
 
-    expect(row.update).toHaveBeenCalledWith({ baseSalary: 900000 })
+    it('rejects a create whose id belongs to a different report (400)', async () => {
+      const existing = {
+        id: EMPLOYEE_ID,
+        reportId: 'other-report',
+        update: jest.fn(),
+      }
+      employeeFindByPk.mockResolvedValueOnce(existing)
+
+      await expect(
+        service.createEmployee(report, EMPLOYEE_ID, changeData(), 5),
+      ).rejects.toThrow(BadRequestException)
+      expect(existing.update).not.toHaveBeenCalled()
+      expect(employeeBuild).not.toHaveBeenCalled()
+    })
   })
 
-  it('validates a re-assigned role on update', async () => {
-    employeeFindOne.mockResolvedValueOnce({ id: EMPLOYEE_ID })
-    roleFindOne.mockResolvedValueOnce(null)
+  describe('updateEmployee', () => {
+    it('patches only the provided employee fields', async () => {
+      const row = {
+        id: EMPLOYEE_ID,
+        reportId: REPORT_ID,
+        update: jest.fn(),
+      }
+      employeeFindOne.mockResolvedValueOnce(row)
 
-    await expect(
-      service.updateEmployee(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-        reportEmployeeRoleId: 'other-role',
-      }),
-    ).rejects.toThrow(BadRequestException)
+      await service.updateEmployee(report, EMPLOYEE_ID, {
+        baseSalary: 900000,
+      })
+
+      expect(employeeFindOne).toHaveBeenCalledWith({
+        where: { id: EMPLOYEE_ID, reportId: REPORT_ID },
+      })
+      expect(row.update).toHaveBeenCalledWith({ baseSalary: 900000 })
+    })
+
+    it('validates a re-assigned role on update (400)', async () => {
+      employeeFindOne.mockResolvedValueOnce({
+        id: EMPLOYEE_ID,
+        reportId: REPORT_ID,
+        update: jest.fn(),
+      })
+      roleFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.updateEmployee(report, EMPLOYEE_ID, {
+          reportEmployeeRoleId: 'other-role',
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('404s updating an employee not in the draft', async () => {
+      employeeFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.updateEmployee(report, EMPLOYEE_ID, { field: 'x' }),
+      ).rejects.toThrow(NotFoundException)
+    })
   })
 
-  it('404s updating an employee not in the draft', async () => {
-    employeeFindOne.mockResolvedValueOnce(null)
+  describe('removeEmployee', () => {
+    it('destroys the personal-step and outlier rows, then the employee', async () => {
+      const destroy = jest.fn()
+      employeeFindOne.mockResolvedValueOnce({ id: EMPLOYEE_ID, destroy })
 
-    await expect(
-      service.updateEmployee(PROVIDER_ID, COMPANY, EMPLOYEE_ID, {
-        field: 'x',
-      }),
-    ).rejects.toThrow(NotFoundException)
-  })
+      await service.removeEmployee(report, EMPLOYEE_ID)
 
-  it('deletes an employee it owns', async () => {
-    const destroy = jest.fn()
-    employeeFindOne.mockResolvedValueOnce({ id: EMPLOYEE_ID, destroy })
+      expect(personalStepDestroy).toHaveBeenCalledWith({
+        where: { reportEmployeeId: EMPLOYEE_ID },
+      })
+      expect(outlierDestroy).toHaveBeenCalledWith({
+        where: { reportEmployeeId: EMPLOYEE_ID },
+      })
+      expect(destroy).toHaveBeenCalled()
+    })
 
-    await service.deleteEmployee(PROVIDER_ID, COMPANY, EMPLOYEE_ID)
+    it('404s removing an employee not in the draft', async () => {
+      employeeFindOne.mockResolvedValueOnce(null)
 
-    expect(destroy).toHaveBeenCalled()
+      await expect(
+        service.removeEmployee(report, EMPLOYEE_ID),
+      ).rejects.toThrow(NotFoundException)
+      expect(personalStepDestroy).not.toHaveBeenCalled()
+      expect(outlierDestroy).not.toHaveBeenCalled()
+    })
   })
 })

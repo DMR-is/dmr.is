@@ -1,6 +1,6 @@
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { DraftAssignmentDto } from './dto/draft-assignment.dto'
-import { SetStepsDto } from './dto/set-steps.dto'
 
 /**
  * Read/replace the scoring-step assignments of a DRAFT report's roles and
@@ -16,11 +16,10 @@ export interface IReportDraftAssignmentService {
   ): Promise<DraftAssignmentDto>
 
   setRoleSteps(
-    providerId: string,
-    company: CompanyDto,
+    report: ReportModel,
     roleId: string,
-    input: SetStepsDto,
-  ): Promise<DraftAssignmentDto>
+    stepIds: string[],
+  ): Promise<void>
 
   getEmployeeSteps(
     providerId: string,
@@ -29,11 +28,10 @@ export interface IReportDraftAssignmentService {
   ): Promise<DraftAssignmentDto>
 
   setEmployeeSteps(
-    providerId: string,
-    company: CompanyDto,
+    report: ReportModel,
     employeeId: string,
-    input: SetStepsDto,
-  ): Promise<DraftAssignmentDto>
+    stepIds: string[],
+  ): Promise<void>
 }
 
 export const IReportDraftAssignmentService = Symbol(

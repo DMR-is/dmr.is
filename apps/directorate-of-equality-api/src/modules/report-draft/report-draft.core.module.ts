@@ -40,6 +40,8 @@ import { ReportDraftSubCriterionService } from './sub-criterion/report-draft-sub
 import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service.interface'
 import { ReportDraftSubmitService } from './submit/report-draft-submit.service'
 import { IReportDraftSubmitService } from './submit/report-draft-submit.service.interface'
+import { ReportDraftSyncService } from './sync/report-draft-sync.service'
+import { IReportDraftSyncService } from './sync/report-draft-sync.service.interface'
 
 @Module({
   imports: [
@@ -108,6 +110,10 @@ import { IReportDraftSubmitService } from './submit/report-draft-submit.service.
       provide: IReportDraftSeedService,
       useClass: ReportDraftSeedService,
     },
+    {
+      provide: IReportDraftSyncService,
+      useClass: ReportDraftSyncService,
+    },
   ],
   exports: [
     IReportDraftService,
@@ -121,6 +127,7 @@ import { IReportDraftSubmitService } from './submit/report-draft-submit.service.
     IReportDraftOutlierGroupService,
     IReportDraftSubmitService,
     IReportDraftSeedService,
+    IReportDraftSyncService,
   ],
 })
 export class ReportDraftCoreModule {}

@@ -10,6 +10,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
@@ -31,6 +32,9 @@ const COMPANY = {
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
+
+// Appliers take an already-resolved draft (no findOwnedDraft).
+const report = { id: REPORT_ID } as ReportModel
 
 const mockLogger = {
   debug: jest.fn(),
@@ -116,9 +120,7 @@ describe('ReportDraftAssignmentService', () => {
     ])
     criterionCount.mockResolvedValueOnce(1)
 
-    const result = await service.setRoleSteps(PROVIDER_ID, COMPANY, ROLE_ID, {
-      stepIds: ['step-1', 'step-2', 'step-1'],
-    })
+    await service.setRoleSteps(report, ROLE_ID, ['step-1', 'step-2', 'step-1'])
 
     expect(roleStepDestroy).toHaveBeenCalledWith({
       where: { reportEmployeeRoleId: ROLE_ID },
@@ -128,17 +130,13 @@ describe('ReportDraftAssignmentService', () => {
       { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-1' },
       { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-2' },
     ])
-    expect(result.stepIds).toEqual(['step-1', 'step-2'])
   })
 
   it('clears assignments when given an empty set (no bulkCreate)', async () => {
-    const result = await service.setRoleSteps(PROVIDER_ID, COMPANY, ROLE_ID, {
-      stepIds: [],
-    })
+    await service.setRoleSteps(report, ROLE_ID, [])
 
     expect(roleStepDestroy).toHaveBeenCalled()
     expect(roleStepBulkCreate).not.toHaveBeenCalled()
-    expect(result.stepIds).toEqual([])
   })
 
   it('400s when a step does not exist', async () => {
@@ -147,9 +145,7 @@ describe('ReportDraftAssignmentService', () => {
     ])
 
     await expect(
-      service.setRoleSteps(PROVIDER_ID, COMPANY, ROLE_ID, {
-        stepIds: ['step-1', 'missing'],
-      }),
+      service.setRoleSteps(report, ROLE_ID, ['step-1', 'missing']),
     ).rejects.toThrow(BadRequestException)
     expect(roleStepDestroy).not.toHaveBeenCalled()
   })
@@ -164,9 +160,7 @@ describe('ReportDraftAssignmentService', () => {
     criterionCount.mockResolvedValueOnce(0) // criterion not in this report
 
     await expect(
-      service.setRoleSteps(PROVIDER_ID, COMPANY, ROLE_ID, {
-        stepIds: ['step-1'],
-      }),
+      service.setRoleSteps(report, ROLE_ID, ['step-1']),
     ).rejects.toThrow(BadRequestException)
     expect(roleStepDestroy).not.toHaveBeenCalled()
   })

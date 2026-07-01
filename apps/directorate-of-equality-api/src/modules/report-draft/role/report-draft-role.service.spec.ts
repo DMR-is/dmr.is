@@ -1,4 +1,8 @@
-import { ConflictException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -10,6 +14,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -27,6 +32,8 @@ const COMPANY = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
 
+const report = { id: REPORT_ID } as ReportModel
+
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -39,14 +46,16 @@ describe('ReportDraftRoleService', () => {
   let findOwnedDraft: jest.Mock
   let roleFindAll: jest.Mock
   let roleFindOne: jest.Mock
-  let roleCreate: jest.Mock
+  let roleFindByPk: jest.Mock
+  let roleBuild: jest.Mock
   let employeeCount: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
     roleFindAll = jest.fn().mockResolvedValue([])
     roleFindOne = jest.fn().mockResolvedValue(null)
-    roleCreate = jest.fn()
+    roleFindByPk = jest.fn().mockResolvedValue(null)
+    roleBuild = jest.fn()
     employeeCount = jest.fn().mockResolvedValue(0)
 
     const module = await Test.createTestingModule({
@@ -59,7 +68,8 @@ describe('ReportDraftRoleService', () => {
           useValue: {
             findAll: roleFindAll,
             findOne: roleFindOne,
-            create: roleCreate,
+            findByPk: roleFindByPk,
+            build: roleBuild,
           },
         },
         {
@@ -85,22 +95,53 @@ describe('ReportDraftRoleService', () => {
     ])
   })
 
-  it('creates a role scoped to the draft, trimming the title', async () => {
-    roleCreate.mockResolvedValueOnce({
+  it('creates a role with the client-minted id, trimming the title', async () => {
+    roleFindByPk.mockResolvedValueOnce(null)
+    const row: Record<string, unknown> = { save: jest.fn() }
+    roleBuild.mockReturnValueOnce(row)
+
+    await service.createRole(report, ROLE_ID, { title: '  Stjórnandi  ' })
+
+    expect(roleBuild).toHaveBeenCalledWith({
+      title: 'Stjórnandi',
+      reportId: REPORT_ID,
+    })
+    expect(row.id).toBe(ROLE_ID)
+    expect(row.save).toHaveBeenCalled()
+  })
+
+  it('upserts in place when the role id already exists on this draft', async () => {
+    const existing = {
       id: ROLE_ID,
-      title: 'Stjórnandi',
       reportId: REPORT_ID,
-    })
+      update: jest.fn(),
+    }
+    roleFindByPk.mockResolvedValueOnce(existing)
 
-    const result = await service.createRole(PROVIDER_ID, COMPANY, {
-      title: '  Stjórnandi  ',
-    })
+    await service.createRole(report, ROLE_ID, { title: 'Stjórnandi' })
 
-    expect(roleCreate).toHaveBeenCalledWith({
-      title: 'Stjórnandi',
-      reportId: REPORT_ID,
-    })
-    expect(result.id).toBe(ROLE_ID)
+    expect(existing.update).toHaveBeenCalledWith({ title: 'Stjórnandi' })
+    expect(roleBuild).not.toHaveBeenCalled()
+  })
+
+  it('rejects a create whose id belongs to a different report', async () => {
+    const existing = {
+      id: ROLE_ID,
+      reportId: 'other-report',
+      update: jest.fn(),
+    }
+    roleFindByPk.mockResolvedValueOnce(existing)
+
+    await expect(
+      service.createRole(report, ROLE_ID, { title: 'Stjórnandi' }),
+    ).rejects.toThrow(BadRequestException)
+    expect(existing.update).not.toHaveBeenCalled()
+  })
+
+  it('requires a title on create', async () => {
+    await expect(
+      service.createRole(report, ROLE_ID, { title: '   ' }),
+    ).rejects.toThrow(BadRequestException)
   })
 
   it('renames a role it owns', async () => {
@@ -108,25 +149,23 @@ describe('ReportDraftRoleService', () => {
       id: ROLE_ID,
       title: 'Old',
       reportId: REPORT_ID,
-      update: jest.fn(async function (this: Record<string, unknown>, vals) {
-        Object.assign(row, vals)
-      }),
+      update: jest.fn(),
     }
     roleFindOne.mockResolvedValueOnce(row)
 
-    const result = await service.updateRole(PROVIDER_ID, COMPANY, ROLE_ID, {
-      title: 'New',
-    })
+    await service.updateRole(report, ROLE_ID, { title: 'New' })
 
+    expect(roleFindOne).toHaveBeenCalledWith({
+      where: { id: ROLE_ID, reportId: REPORT_ID },
+    })
     expect(row.update).toHaveBeenCalledWith({ title: 'New' })
-    expect(result.title).toBe('New')
   })
 
   it('404s renaming a role not in the draft', async () => {
     roleFindOne.mockResolvedValueOnce(null)
 
     await expect(
-      service.updateRole(PROVIDER_ID, COMPANY, ROLE_ID, { title: 'x' }),
+      service.updateRole(report, ROLE_ID, { title: 'x' }),
     ).rejects.toThrow(NotFoundException)
   })
 
@@ -135,7 +174,7 @@ describe('ReportDraftRoleService', () => {
     roleFindOne.mockResolvedValueOnce({ id: ROLE_ID, destroy })
     employeeCount.mockResolvedValueOnce(0)
 
-    await service.deleteRole(PROVIDER_ID, COMPANY, ROLE_ID)
+    await service.removeRole(report, ROLE_ID)
 
     expect(destroy).toHaveBeenCalled()
   })
@@ -145,9 +184,9 @@ describe('ReportDraftRoleService', () => {
     roleFindOne.mockResolvedValueOnce({ id: ROLE_ID, destroy })
     employeeCount.mockResolvedValueOnce(2)
 
-    await expect(
-      service.deleteRole(PROVIDER_ID, COMPANY, ROLE_ID),
-    ).rejects.toThrow(ConflictException)
+    await expect(service.removeRole(report, ROLE_ID)).rejects.toThrow(
+      ConflictException,
+    )
     expect(destroy).not.toHaveBeenCalled()
   })
 })

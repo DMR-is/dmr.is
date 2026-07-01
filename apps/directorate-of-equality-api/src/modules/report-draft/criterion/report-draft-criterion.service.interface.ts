@@ -1,12 +1,13 @@
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionDto } from '../../report-criterion/dto/report-criterion.dto'
-import { CreateCriterionDto } from './dto/create-criterion.dto'
-import { UpdateCriterionDto } from './dto/update-criterion.dto'
+import { CriterionChangeDataDto } from '../sync/dto/change-criterion.dto'
 
 /**
- * CRUD for the top-level criteria of a DRAFT report. Deleting a criterion
- * cascades its sub-criteria, their steps, and any role/employee step
- * assignments pointing at those steps (there is no DB-level cascade).
+ * Top-level criteria of a DRAFT report. Reads go through the draft ownership
+ * resolver; writes are sync appliers taking an already-resolved draft. Removing
+ * a criterion cascades its sub-criteria, their steps, and any role/employee
+ * step assignments pointing at those steps (there is no DB-level cascade).
  */
 export interface IReportDraftCriterionService {
   listCriteria(
@@ -15,23 +16,18 @@ export interface IReportDraftCriterionService {
   ): Promise<ReportCriterionDto[]>
 
   createCriterion(
-    providerId: string,
-    company: CompanyDto,
-    input: CreateCriterionDto,
-  ): Promise<ReportCriterionDto>
+    report: ReportModel,
+    id: string,
+    data: CriterionChangeDataDto,
+  ): Promise<void>
 
   updateCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
-    input: UpdateCriterionDto,
-  ): Promise<ReportCriterionDto>
-
-  deleteCriterion(
-    providerId: string,
-    company: CompanyDto,
-    criterionId: string,
+    report: ReportModel,
+    id: string,
+    data: CriterionChangeDataDto,
   ): Promise<void>
+
+  removeCriterion(report: ReportModel, id: string): Promise<void>
 }
 
 export const IReportDraftCriterionService = Symbol(
