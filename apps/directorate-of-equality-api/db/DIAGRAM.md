@@ -70,10 +70,11 @@ erDiagram
         uuid report_employee_role_id FK
         GenderEnum gender
         EducationEnum education
-        decimal score
+        decimal score "nullable, NULL until submit"
     }
     report_employee_role {
         uuid id PK
+        uuid report_id FK
         text title
     }
     report_outlier_group {
@@ -185,6 +186,7 @@ erDiagram
     report_sub_criterion ||--o{ report_sub_criterion_step : "report_sub_criterion_id"
 
     report ||--o{ report_employee : "report_id"
+    report ||--o{ report_employee_role : "report_id"
     report_employee_role ||--o{ report_employee : "report_employee_role_id"
     report_employee ||--o{ report_employee_outlier : "report_employee_id"
     report ||--o{ report_outlier_group : "report_id"

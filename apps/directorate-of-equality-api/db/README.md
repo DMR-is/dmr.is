@@ -116,7 +116,7 @@ The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; e
 
 State-by-state:
 
-- **`DRAFT`** — company admin is still editing. Not visible to reviewers. Most columns may be null. Can transition to `SUBMITTED`.
+- **`DRAFT`** — company admin is still editing. Not visible to reviewers. Most columns may be null. Created at "initial contact" from the application portal and built up incrementally through the report-draft CRUD endpoints (or bulk-seeded from a workbook); employee scores and the `report_result` snapshot are not persisted yet (derived on read). Emits no `report_event` rows and has no `company_report` snapshot until submit. The applicant may hard-delete it (permanent — all child data removed); abandoned drafts are pruned after 6 months. Transitions to `SUBMITTED` (or `POSTPONED` for a salary report whose outliers are acknowledged but not yet explained) on submit, which freezes scores + the result snapshot and creates the `company_report` snapshot.
 - **`SUBMITTED`** — company finalized the submission. `created_at` is the submission timestamp for the row. Waits in reviewer queue.
 - **`POSTPONED`** — applies to `SALARY` reports only. The company submitted with all outliers deferred (`outliers[]` rows persisted with null explanation columns). The report is **not pickable** by reviewers — `assign()` rejects this status, `approve()` rejects this status. The applicant resolves the postponement via `PUT /api/v1/application/reports/:providerId/outliers`, which fills in the explanation fields and transitions the row to `SUBMITTED` (emitting a `STATUS_CHANGED` + an `EDITED` event). Reviewers can read the report and its content while it sits here, but cannot act on it.
 - **`IN_REVIEW`** — a reviewer has picked up the report. (If you want reviewer-assignment tracking, stamp `reviewer_user_id` on pickup; currently it's stamped on the final decision.) In-place applicant edits are allowed in this state via the two PUT endpoints (equality body / outliers), each emitting an `EDITED` event; status is preserved so the reviewer keeps their pickup.
@@ -316,7 +316,7 @@ Each report is evaluated against a set of weighted criteria:
 - Which steps apply to a specific employee personally is captured in `report_employee_personal_criterion_step`.
 - Salary outlier justifications (special circumstances) are grouped in `report_outlier_group` — each group owns the shared `reason`, `action`, and signature fields — with `report_employee_outlier` joining each detected outlier employee to its group.
 
-The final `score` on `report_employee` is derived from the steps that apply to that employee — the sum of `report_sub_criterion_step.score` across the steps reachable via the employee's role (`report_employee_role_criterion_step`) and via their personal assignments (`report_employee_personal_criterion_step`), with steps assigned through both sources counted once. The total is computed at submission and persisted on the row; reviewers read it as-is.
+The final `score` on `report_employee` is derived from the steps that apply to that employee — the sum of `report_sub_criterion_step.score` across the steps reachable via the employee's role (`report_employee_role_criterion_step`) and via their personal assignments (`report_employee_personal_criterion_step`), with steps assigned through both sources counted once. The total is computed at submission and persisted on the row; reviewers read it as-is. While a report is still a `DRAFT` the score is **not** persisted (`report_employee.score` is `NULL`) — it is derived on read for the applicant's preview and only frozen onto the row at submit.
 
 ## Results aggregation
 
@@ -604,7 +604,12 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `gender`                  | `GenderEnum`                |
 | `report_employee_role_id` | `fk → report_employee_role` |
 | `report_id`               | `fk → report`               |
-| `score`                   | `decimal(6, 2)`             |
+| `score`                   | `decimal(6, 2)` (nullable — see below) |
+
+`score` is **nullable**. It is derived from step assignments and is only
+computed and frozen when the report is submitted, so it is `NULL` while the
+report is a `DRAFT` (the applicant is still building it up); submitted reports
+always carry a score. (Migration `m-20260630-report-employee-score-nullable`.)
 
 The two parent salary concepts are **derived, not stored**. Each is the sum of its
 sub-component columns, with a `NULL` child treated as `0`:
@@ -619,10 +624,16 @@ never do.
 
 ### `report_employee_role`
 
-| Column  | Type      |
-| ------- | --------- |
-| `id`    | `uuid` PK |
-| `title` | `text`    |
+Report-scoped: each role belongs to exactly one report (`report_id`), so a
+report's roles can be listed, CRUD-ed, and cascade-deleted directly. (The FK was
+added by migration `m-20260630-report-employee-role-report-id`, backfilled from
+the report each role's employees belonged to.)
+
+| Column      | Type          |
+| ----------- | ------------- |
+| `id`        | `uuid` PK     |
+| `title`     | `text`        |
+| `report_id` | `fk → report` |
 
 ### `report_outlier_group`
 
