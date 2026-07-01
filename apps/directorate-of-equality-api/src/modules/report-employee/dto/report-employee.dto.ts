@@ -70,6 +70,8 @@ export class ReportEmployeeDto {
   @ApiUUId()
   reportId!: string
 
-  @ApiNumber()
-  score!: number
+  // Null while the report is a DRAFT (score not yet computed); populated on
+  // submit.
+  @ApiOptionalNumber({ nullable: true })
+  score!: number | null
 }

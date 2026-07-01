@@ -782,12 +782,21 @@ export class ReportService implements IReportService {
       Object.assign(where, { type: { [Op.in]: query.type } })
     }
     if (query.status?.length) {
-      Object.assign(where, { status: { [Op.in]: query.status } })
+      // Drafts belong to the applicant and are never surfaced to reviewers,
+      // even when a status filter explicitly asks for them — so they are
+      // filtered out of the requested set rather than honoured.
+      const requested = query.status.filter(
+        (status) => status !== ReportStatusEnum.DRAFT,
+      )
+      Object.assign(where, { status: { [Op.in]: requested } })
     } else {
-      // Withdrawn reports are not surfaced in admin list views by default.
-      // Callers can still request them explicitly via `query.status`.
+      // Drafts (applicant still editing) and withdrawn reports are not surfaced
+      // in admin list views by default. Withdrawn can still be requested
+      // explicitly via `query.status`; drafts cannot.
       Object.assign(where, {
-        status: { [Op.ne]: ReportStatusEnum.WITHDRAWN },
+        status: {
+          [Op.notIn]: [ReportStatusEnum.DRAFT, ReportStatusEnum.WITHDRAWN],
+        },
       })
     }
 

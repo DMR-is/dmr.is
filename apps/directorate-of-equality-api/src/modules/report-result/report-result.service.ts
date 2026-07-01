@@ -18,7 +18,10 @@ import {
   roundSalaryResultSnapshot,
 } from '../report/lib/compensation-aggregates'
 import { ReportModel, ReportTypeEnum } from '../report/models/report.model'
-import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import {
+  ReportEmployeeModel,
+  requireComputedScore,
+} from '../report-employee/models/report-employee.model'
 import { ReportResultDto } from './dto/report-result.dto'
 import {
   type ReportResultCreateAttributes,
@@ -119,7 +122,7 @@ export class ReportResultService implements IReportResultService {
     const aggregates = computeCompensationAggregates({
       employees: employees.map((employee) => ({
         reportEmployeeRoleId: employee.reportEmployeeRoleId,
-        score: employee.score,
+        score: requireComputedScore(employee),
         gender: employee.gender,
         workRatio: employee.workRatio,
         baseSalary: employee.baseSalary,
@@ -130,7 +133,7 @@ export class ReportResultService implements IReportResultService {
     const outlierAnalysis = computeSalaryOutlierAnalysis({
       employees: employees.map((employee) => ({
         ordinal: employee.ordinal,
-        score: employee.score,
+        score: requireComputedScore(employee),
         gender: employee.gender,
         workRatio: employee.workRatio,
         baseSalary: employee.baseSalary,
