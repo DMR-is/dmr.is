@@ -19,7 +19,13 @@ import {
 } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
+import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
+import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
+import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
+import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
 import { ReportDraftService } from './report-draft.service'
 
@@ -62,6 +68,7 @@ describe('ReportDraftService', () => {
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
   let reportUpdate: jest.Mock
+  let reportDestroy: jest.Mock
   let employeeCount: jest.Mock
   let criterionCount: jest.Mock
   let outlierGroupCount: jest.Mock
@@ -78,9 +85,16 @@ describe('ReportDraftService', () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue(null)
     reportUpdate = jest.fn().mockResolvedValue([1])
+    reportDestroy = jest.fn().mockResolvedValue(1)
     employeeCount = jest.fn().mockResolvedValue(0)
     criterionCount = jest.fn().mockResolvedValue(0)
     outlierGroupCount = jest.fn().mockResolvedValue(0)
+
+    // Child models used by the hard-cascade delete — default to no children.
+    const childModel = () => ({
+      findAll: jest.fn().mockResolvedValue([]),
+      destroy: jest.fn().mockResolvedValue(0),
+    })
 
     const module = await Test.createTestingModule({
       providers: [
@@ -92,19 +106,44 @@ describe('ReportDraftService', () => {
             create: reportCreate,
             findOne: reportFindOne,
             update: reportUpdate,
+            destroy: reportDestroy,
           },
         },
         {
           provide: getModelToken(ReportEmployeeModel),
-          useValue: { count: employeeCount },
+          useValue: { count: employeeCount, ...childModel() },
         },
         {
           provide: getModelToken(ReportCriterionModel),
-          useValue: { count: criterionCount },
+          useValue: { count: criterionCount, ...childModel() },
         },
         {
           provide: getModelToken(ReportOutlierGroupModel),
-          useValue: { count: outlierGroupCount },
+          useValue: { count: outlierGroupCount, ...childModel() },
+        },
+        {
+          provide: getModelToken(ReportEmployeeRoleModel),
+          useValue: childModel(),
+        },
+        {
+          provide: getModelToken(ReportSubCriterionModel),
+          useValue: childModel(),
+        },
+        {
+          provide: getModelToken(ReportSubCriterionStepModel),
+          useValue: childModel(),
+        },
+        {
+          provide: getModelToken(ReportEmployeeRoleCriterionStepModel),
+          useValue: childModel(),
+        },
+        {
+          provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
+          useValue: childModel(),
+        },
+        {
+          provide: getModelToken(ReportEmployeeOutlierModel),
+          useValue: childModel(),
         },
       ],
     }).compile()
@@ -295,6 +334,34 @@ describe('ReportDraftService', () => {
         service.updateDraft(PROVIDER_ID, COMPANY, { contactName: 'x' }),
       ).rejects.toThrow(NotFoundException)
       expect(reportUpdate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteDraft', () => {
+    const ownedDraft = {
+      id: REPORT_ID,
+      status: ReportStatusEnum.DRAFT,
+      companyNationalId: COMPANY_NATIONAL_ID,
+    }
+
+    it('hard-deletes the report row after clearing its (empty) child tree', async () => {
+      reportFindOne.mockResolvedValueOnce(ownedDraft)
+
+      await service.deleteDraft(PROVIDER_ID, COMPANY)
+
+      expect(reportDestroy).toHaveBeenCalledWith({ where: { id: REPORT_ID } })
+    })
+
+    it('404s (and deletes nothing) when the report is not a draft', async () => {
+      reportFindOne.mockResolvedValueOnce({
+        ...ownedDraft,
+        status: ReportStatusEnum.SUBMITTED,
+      })
+
+      await expect(
+        service.deleteDraft(PROVIDER_ID, COMPANY),
+      ).rejects.toThrow(NotFoundException)
+      expect(reportDestroy).not.toHaveBeenCalled()
     })
   })
 })

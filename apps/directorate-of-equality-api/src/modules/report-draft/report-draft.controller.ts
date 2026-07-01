@@ -169,6 +169,28 @@ export class ReportDraftController {
     return this.reportDraftService.updateDraft(providerId, company, input)
   }
 
+  @Delete('reports/:providerId/draft')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream island.is application UUID (provider_id) of the draft.',
+  })
+  @DoeResponse({
+    operationId: 'deleteApplicationReportDraft',
+    status: HttpStatus.NO_CONTENT,
+    include404: true,
+    description:
+      'Permanently deletes a DRAFT report and all data under it (employees, criteria tree, assignments, outlier groups). Hard delete — nothing is retained. 404 if the draft is not owned by the company or has already been submitted (submitted reports are withdrawn via DELETE /application/reports/:providerId instead).',
+  })
+  async deleteDraft(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<void> {
+    return this.reportDraftService.deleteDraft(providerId, company)
+  }
+
   @Get('reports/:providerId/draft/analysis')
   @ApiParam({ name: 'providerId', type: String })
   @DoeResponse({

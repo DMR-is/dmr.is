@@ -25,6 +25,9 @@ export interface IReportDraftService {
     input: UpdateDraftDto,
   ): Promise<DraftDetailDto>
 
+  /** Permanently deletes a draft and its entire child tree (hard cascade). */
+  deleteDraft(providerId: string, company: CompanyDto): Promise<void>
+
   /**
    * Resolves a DRAFT report owned by the company by its provider tuple, or
    * throws NotFound. The canonical ownership gate the per-entity draft CRUD

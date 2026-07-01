@@ -18,7 +18,13 @@ import {
 } from '../../report/models/report.model'
 import { CreateReportResponseDto } from '../../report-create/dto/create-report-response.dto'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
+import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
+import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
+import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
+import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
+import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
 import { CreateDraftDto } from './dto/create-draft.dto'
 import { DraftDetailDto } from './dto/draft-detail.dto'
@@ -60,6 +66,18 @@ export class ReportDraftService implements IReportDraftService {
     private readonly reportCriterionModel: typeof ReportCriterionModel,
     @InjectModel(ReportOutlierGroupModel)
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
+    @InjectModel(ReportEmployeeRoleModel)
+    private readonly reportEmployeeRoleModel: typeof ReportEmployeeRoleModel,
+    @InjectModel(ReportSubCriterionModel)
+    private readonly reportSubCriterionModel: typeof ReportSubCriterionModel,
+    @InjectModel(ReportSubCriterionStepModel)
+    private readonly reportStepModel: typeof ReportSubCriterionStepModel,
+    @InjectModel(ReportEmployeeRoleCriterionStepModel)
+    private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
+    @InjectModel(ReportEmployeePersonalCriterionStepModel)
+    private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
+    @InjectModel(ReportEmployeeOutlierModel)
+    private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
   ) {}
 
   /**
@@ -127,6 +145,88 @@ export class ReportDraftService implements IReportDraftService {
     }
 
     return this.getDraftDetail(providerId, company)
+  }
+
+  /**
+   * Permanently deletes a draft and everything under it. A draft has no DB-level
+   * cascade, so the child tree is removed by hand in FK-safe order (leaves
+   * first). A DRAFT is audit-free (no events) and has no company_report /
+   * report_result snapshot yet, so those are not involved. Runs in the CLS
+   * request transaction, so the whole delete is atomic.
+   */
+  async deleteDraft(providerId: string, company: CompanyDto): Promise<void> {
+    const report = await this.findOwnedDraft(providerId, company)
+
+    const employeeIds = (
+      await this.reportEmployeeModel.findAll({
+        where: { reportId: report.id },
+        attributes: ['id'],
+      })
+    ).map((row) => row.id)
+    const roleIds = (
+      await this.reportEmployeeRoleModel.findAll({
+        where: { reportId: report.id },
+        attributes: ['id'],
+      })
+    ).map((row) => row.id)
+    const criterionIds = (
+      await this.reportCriterionModel.findAll({
+        where: { reportId: report.id },
+        attributes: ['id'],
+      })
+    ).map((row) => row.id)
+    const subIds = criterionIds.length
+      ? (
+          await this.reportSubCriterionModel.findAll({
+            where: { reportCriterionId: criterionIds },
+            attributes: ['id'],
+          })
+        ).map((row) => row.id)
+      : []
+    const stepIds = subIds.length
+      ? (
+          await this.reportStepModel.findAll({
+            where: { reportSubCriterionId: subIds },
+            attributes: ['id'],
+          })
+        ).map((row) => row.id)
+      : []
+
+    // Leaves first: outlier + step-assignment join rows, then the entities they
+    // reference, then the report row.
+    if (employeeIds.length > 0) {
+      await this.reportEmployeeOutlierModel.destroy({
+        where: { reportEmployeeId: employeeIds },
+      })
+      await this.personalStepModel.destroy({
+        where: { reportEmployeeId: employeeIds },
+      })
+    }
+    if (roleIds.length > 0) {
+      await this.roleStepModel.destroy({
+        where: { reportEmployeeRoleId: roleIds },
+      })
+    }
+    await this.reportOutlierGroupModel.destroy({
+      where: { reportId: report.id },
+    })
+    if (stepIds.length > 0) {
+      await this.reportStepModel.destroy({ where: { id: stepIds } })
+    }
+    if (subIds.length > 0) {
+      await this.reportSubCriterionModel.destroy({ where: { id: subIds } })
+    }
+    await this.reportCriterionModel.destroy({ where: { reportId: report.id } })
+    await this.reportEmployeeModel.destroy({ where: { reportId: report.id } })
+    await this.reportEmployeeRoleModel.destroy({
+      where: { reportId: report.id },
+    })
+    await this.reportModel.destroy({ where: { id: report.id } })
+
+    this.logger.info(`Hard-deleted draft report "${report.id}"`, {
+      context: LOGGING_CONTEXT,
+      reportId: report.id,
+    })
   }
 
   /**
