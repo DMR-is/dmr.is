@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
+import { CompanyCoreModule } from '../company/company.core.module'
 import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
@@ -12,6 +13,8 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportFinalizeCoreModule } from '../report-finalize/report-finalize.core.module'
+import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportDraftAnalysisService } from './analysis/report-draft-analysis.service'
 import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
 import { ReportDraftAssignmentService } from './assignment/report-draft-assignment.service'
@@ -30,6 +33,8 @@ import { ReportDraftStepService } from './step/report-draft-step.service'
 import { IReportDraftStepService } from './step/report-draft-step.service.interface'
 import { ReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service'
 import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service.interface'
+import { ReportDraftSubmitService } from './submit/report-draft-submit.service'
+import { IReportDraftSubmitService } from './submit/report-draft-submit.service.interface'
 
 @Module({
   imports: [
@@ -46,6 +51,9 @@ import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-su
       ReportEmployeeOutlierModel,
     ]),
     ConfigCoreModule,
+    CompanyCoreModule,
+    ReportFinalizeCoreModule,
+    ReportResultCoreModule,
   ],
   providers: [
     {
@@ -84,6 +92,10 @@ import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-su
       provide: IReportDraftOutlierGroupService,
       useClass: ReportDraftOutlierGroupService,
     },
+    {
+      provide: IReportDraftSubmitService,
+      useClass: ReportDraftSubmitService,
+    },
   ],
   exports: [
     IReportDraftService,
@@ -95,6 +107,7 @@ import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-su
     IReportDraftStepService,
     IReportDraftAssignmentService,
     IReportDraftOutlierGroupService,
+    IReportDraftSubmitService,
   ],
 })
 export class ReportDraftCoreModule {}

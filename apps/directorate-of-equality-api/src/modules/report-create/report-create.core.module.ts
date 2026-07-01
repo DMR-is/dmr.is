@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ConfigCoreModule } from '../config/config.core.module'
 import { ReportModel } from '../report/models/report.model'
-import { ReportEventModel } from '../report/models/report-event.model'
-import { ReportAutoReviewCoreModule } from '../report-auto-review/report-auto-review.core.module'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
@@ -16,6 +13,7 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportFinalizeCoreModule } from '../report-finalize/report-finalize.core.module'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportCreateService } from './report-create.service'
 import { IReportCreateService } from './report-create.service.interface'
@@ -24,8 +22,6 @@ import { IReportCreateService } from './report-create.service.interface'
   imports: [
     SequelizeModule.forFeature([
       ReportModel,
-      ReportEventModel,
-      CompanyModel,
       CompanyReportModel,
       ReportEmployeeRoleModel,
       ReportEmployeeModel,
@@ -38,7 +34,7 @@ import { IReportCreateService } from './report-create.service.interface'
       ReportSubCriterionStepModel,
     ]),
     ReportResultCoreModule,
-    ReportAutoReviewCoreModule,
+    ReportFinalizeCoreModule,
     ConfigCoreModule,
   ],
   providers: [

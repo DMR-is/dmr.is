@@ -21,6 +21,13 @@ export interface IReportDraftAnalysisService {
    * resolved `reportId`.
    */
   getDetectedOutlierEmployeeIds(reportId: string): Promise<Set<string>>
+
+  /**
+   * Computes each employee's score from the persisted scoring graph and writes
+   * it to `report_employee.score`. Called at submit to freeze the scores the
+   * report_result snapshot then reads. Intra-module helper (resolved reportId).
+   */
+  persistScores(reportId: string): Promise<void>
 }
 
 export const IReportDraftAnalysisService = Symbol(

@@ -189,6 +189,24 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
     )
   }
 
+  async persistScores(reportId: string): Promise<void> {
+    const scored = await this.deriveScoredEmployees(reportId)
+
+    // Freeze each derived score onto the employee row. Bounded by employee
+    // count and only runs once, at submit; runs in the CLS request transaction.
+    for (const employee of scored) {
+      await this.employeeModel.update(
+        { score: employee.score },
+        { where: { id: employee.employeeId } },
+      )
+    }
+
+    this.logger.info(`Persisted ${scored.length} employee score(s)`, {
+      context: LOGGING_CONTEXT,
+      reportId,
+    })
+  }
+
   /**
    * Derives each employee's total score from the persisted scoring graph: the
    * union of the steps assigned to the employee's role and the steps assigned

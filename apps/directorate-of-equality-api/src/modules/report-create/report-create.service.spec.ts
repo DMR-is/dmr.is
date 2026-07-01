@@ -34,6 +34,8 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportFinalizeService } from '../report-finalize/report-finalize.service'
+import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -216,6 +218,10 @@ describe('ReportCreateService', () => {
         {
           provide: IReportAutoReviewService,
           useValue: { evaluate: autoReviewEvaluate },
+        },
+        {
+          provide: IReportFinalizeService,
+          useClass: ReportFinalizeService,
         },
         {
           provide: IConfigService,

@@ -66,6 +66,8 @@ import { CreateSubCriterionDto } from './sub-criterion/dto/create-sub-criterion.
 import { GetDraftSubCriteriaResponseDto } from './sub-criterion/dto/get-draft-sub-criteria-response.dto'
 import { UpdateSubCriterionDto } from './sub-criterion/dto/update-sub-criterion.dto'
 import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service.interface'
+import { SubmitDraftDto } from './submit/dto/submit-draft.dto'
+import { IReportDraftSubmitService } from './submit/report-draft-submit.service.interface'
 
 /**
  * Applicant-facing draft surface bound to the island.is application portal.
@@ -102,6 +104,8 @@ export class ReportDraftController {
     private readonly reportDraftAnalysisService: IReportDraftAnalysisService,
     @Inject(IReportDraftOutlierGroupService)
     private readonly reportDraftOutlierGroupService: IReportDraftOutlierGroupService,
+    @Inject(IReportDraftSubmitService)
+    private readonly reportDraftSubmitService: IReportDraftSubmitService,
   ) {}
 
   @Post('reports/draft')
@@ -189,6 +193,30 @@ export class ReportDraftController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<void> {
     return this.reportDraftService.deleteDraft(providerId, company)
+  }
+
+  @Post('reports/:providerId/draft/submit')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream island.is application UUID (provider_id) of the draft.',
+  })
+  @DoeResponse({
+    operationId: 'submitApplicationReportDraft',
+    status: 201,
+    include404: true,
+    type: CreateReportResponseDto,
+    description:
+      'Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report\'s outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, equalityReportId is required and must reference an APPROVED equality report.',
+  })
+  async submitDraft(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Body() input: SubmitDraftDto,
+  ): Promise<CreateReportResponseDto> {
+    return this.reportDraftSubmitService.submitDraft(providerId, company, input)
   }
 
   @Get('reports/:providerId/draft/analysis')
