@@ -100,7 +100,7 @@ const parseCriteriaSheet = (
     if (!title || !description || weight == null) {
       errors.add(
         SHEETS.CRITERIA,
-        'Row is missing title, description, or weight',
+        'Röð vantar heiti, lýsingu eða vægi',
         {
           row: r,
         },
@@ -142,7 +142,7 @@ const resolveCriterionType = (
     if (!mapped) {
       errors.add(
         SHEETS.CRITERIA,
-        `Unknown job-based criterion "${title}" — expected one of: ${Object.keys(JOB_BASED_TITLE_TO_TYPE).join(', ')}`,
+        `Óþekkt starfsbundið viðmið „${title}“ — reiknað var með einu af eftirfarandi: ${Object.keys(JOB_BASED_TITLE_TO_TYPE).join(', ')}`,
         { row, column: CRITERIA_COLS.title },
       )
       return null
@@ -154,7 +154,7 @@ const resolveCriterionType = (
   }
   errors.add(
     SHEETS.CRITERIA,
-    `Unknown Tegund "${tegund}" — expected "${CRITERION_TEGUND.JOB_BASED}" or "${CRITERION_TEGUND.PERSONAL}"`,
+    `Óþekkt tegund „${tegund}“ — reiknað var með „${CRITERION_TEGUND.JOB_BASED}“ eða „${CRITERION_TEGUND.PERSONAL}“`,
     { row, column: CRITERIA_COLS.tegund },
   )
   return null
@@ -200,7 +200,7 @@ const parseSubCriteriaSheet = (
     ) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        'Row is missing parent, title, description, weight, or step count',
+        'Röð vantar foreldri, heiti, lýsingu, vægi eða fjölda þrepa',
         {
           row: r,
         },
@@ -211,7 +211,7 @@ const parseSubCriteriaSheet = (
     if (numSteps < MIN_STEPS || numSteps > MAX_STEPS) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Step count ${numSteps} out of range ${MIN_STEPS}–${MAX_STEPS}`,
+        `Fjöldi þrepa ${numSteps} er utan leyfilegs bils ${MIN_STEPS}–${MAX_STEPS}`,
         { row: r, column: SUB_CRITERIA_COLS.numSteps },
       )
       continue
@@ -221,7 +221,7 @@ const parseSubCriteriaSheet = (
     if (!parent) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Parent criterion "${parentTitle}" not found on ${SHEETS.CRITERIA}`,
+        `Foreldraviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
         { row: r, column: SUB_CRITERIA_COLS.parent },
       )
       continue
@@ -232,7 +232,7 @@ const parseSubCriteriaSheet = (
       const descCell = sheet.getCell(r, SUB_CRITERIA_COLS.firstStepCol + i - 1)
       const stepDesc = readString(descCell)
       if (!stepDesc) {
-        errors.add(SHEETS.SUB_CRITERIA, `Missing description for step ${i}`, {
+        errors.add(SHEETS.SUB_CRITERIA, `Lýsingu vantar fyrir þrep ${i}`, {
           row: r,
           column: descCell.address.replace(/\d+$/, ''),
         })
@@ -264,14 +264,14 @@ export const parseCriteriaTree = (
   if (!viðmiðSheet) {
     errors.add(
       SHEETS.CRITERIA,
-      `Required sheet "${SHEETS.CRITERIA}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`,
     )
     return []
   }
   if (!undirviðmiðSheet) {
     errors.add(
       SHEETS.SUB_CRITERIA,
-      `Required sheet "${SHEETS.SUB_CRITERIA}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.SUB_CRITERIA}“ vantar`,
     )
     return []
   }

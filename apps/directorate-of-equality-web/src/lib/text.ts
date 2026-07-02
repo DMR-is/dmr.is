@@ -94,6 +94,8 @@ export const overviewText = {
     employeeCountHeading: 'Starfsmannafjöldi',
     excelSuccessToast: 'Excel skrá flutt inn',
     excelErrorToast: 'Villa við innflutning á Excel skrá',
+    excelErrorTitle: 'Ekki tókst að lesa Excel skrána',
+    excelErrorIntro: 'Lagfærðu eftirfarandi atriði og reyndu aftur:',
     successToast: 'Skýrslugjöf send inn',
   },
 }

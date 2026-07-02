@@ -59,16 +59,23 @@ On success you'll get a `ParsedReportDto` tree. On failure, `400` with:
 ```json
 {
   "statusCode": 400,
-  "message": "Workbook failed validation",
+  "message": [
+    "Starfsmenn (röð 7, dálkur D): Óþekkt kyn „Other“",
+    "Viðmið: Vægi viðmiða leggst saman í 95%, á að vera 100%"
+  ],
   "errors": [
-    { "sheet": "Starfsmenn", "row": 7, "column": "D", "message": "Unknown gender \"Other\"" },
-    { "sheet": "Viðmið", "row": null, "column": null, "message": "Criterion weights sum to 95%, expected 100%" }
+    { "sheet": "Starfsmenn", "row": 7, "column": "D", "message": "Óþekkt kyn „Other“" },
+    { "sheet": "Viðmið", "row": null, "column": null, "message": "Vægi viðmiða leggst saman í 95%, á að vera 100%" }
   ]
 }
 ```
 
 All problems are returned in one response — parser and semantic errors
 accumulate into the same list, so there's no whack-a-mole.
+
+`message` is the flat list of human-readable lines (sheet/row/column baked
+in) that the web client surfaces to the user; `errors` keeps the structured
+form for logging. User-facing messages are in Icelandic.
 
 ## Editing the template
 

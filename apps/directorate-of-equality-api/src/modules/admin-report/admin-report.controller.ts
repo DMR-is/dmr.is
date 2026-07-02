@@ -57,7 +57,10 @@ export class AdminReportController {
       ImportUploadBoundary.ADMIN,
     )
     try {
-      return await this.reportExcelService.importWorkbook(buffer)
+      return await this.reportExcelService.importWorkbook(
+        buffer,
+        ImportUploadBoundary.ADMIN,
+      )
     } finally {
       await this.importUploadService.cleanup(body.key)
     }
