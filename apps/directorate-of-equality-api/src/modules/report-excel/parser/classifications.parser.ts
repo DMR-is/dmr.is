@@ -110,7 +110,7 @@ const buildAssignment = (
   ) {
     errors.add(
       sheetName,
-      `Step ${stepOrder} out of range 1–${ref.numSteps} for sub-criterion "${ref.subTitle}"`,
+      `Þrep ${stepOrder} er utan leyfilegs bils 1–${ref.numSteps} fyrir undirviðmið „${ref.subTitle}“`,
       { column: cellAddress.replace(/\d+$/, '') },
     )
     return null
@@ -132,7 +132,7 @@ export const parseRoleClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Required sheet "${SHEETS.ROLE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.ROLE_CLASSIFICATION}“ vantar`,
     )
     return
   }
@@ -142,7 +142,7 @@ export const parseRoleClassifications = (
   if (roles.length > ROLE_STEP_COLS.length) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Up to ${ROLE_STEP_COLS.length} distinct roles supported; got ${roles.length}`,
+      `Að hámarki ${ROLE_STEP_COLS.length} ólík störf eru studd; fjöldi var ${roles.length}`,
     )
     return
   }
@@ -176,7 +176,7 @@ export const parseEmployeeClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Required sheet "${SHEETS.EMPLOYEE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.EMPLOYEE_CLASSIFICATION}“ vantar`,
     )
     return
   }
@@ -186,7 +186,7 @@ export const parseEmployeeClassifications = (
   if (personal.length > EMPLOYEE_STEP_COLS.length) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Up to ${EMPLOYEE_STEP_COLS.length} personal sub-criteria supported; got ${personal.length}`,
+      `Að hámarki ${EMPLOYEE_STEP_COLS.length} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
     )
     return
   }
