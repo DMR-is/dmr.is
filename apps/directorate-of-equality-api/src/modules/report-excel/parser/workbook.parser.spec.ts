@@ -232,10 +232,10 @@ describe('parseWorkbook', () => {
       const messages = errors.map((e) => e.message)
       expect(messages).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Criterion weights sum to 90%'),
-          expect.stringContaining('Sub-criterion weights sum to 90%'),
-          'At least one role is required',
-          'At least one employee is required',
+          expect.stringContaining('Vægi viðmiða leggst saman í 90%'),
+          expect.stringContaining('Vægi undirviðmiða leggst saman í 90%'),
+          'Að minnsta kosti eitt starf er nauðsynlegt',
+          'Að minnsta kosti einn starfsmaður er nauðsynlegur',
         ]),
       )
     })
@@ -355,7 +355,7 @@ describe('parseWorkbook', () => {
         parseWorkbook(await serialize(wb)),
       )
       expect(
-        errors.some((e) => e.message.includes('Unknown gender "Other"')),
+        errors.some((e) => e.message.includes('Óþekkt kyn „Other“')),
       ).toBe(true)
     })
 
@@ -386,7 +386,7 @@ describe('parseWorkbook', () => {
       )
       expect(
         errors.some((e) =>
-          e.message.includes('Unknown education level "Made-up degree"'),
+          e.message.includes('Óþekkt menntunarstig „Made-up degree“'),
         ),
       ).toBe(true)
     })
@@ -418,7 +418,7 @@ describe('parseWorkbook', () => {
       )
       expect(
         errors.some((e) =>
-          e.message.includes('Starfshlutfall 150 out of range'),
+          e.message.includes('Starfshlutfall 150 er utan leyfilegs bils'),
         ),
       ).toBe(true)
     })
@@ -452,7 +452,7 @@ describe('parseWorkbook', () => {
       expect(
         errors.some(
           (e) =>
-            e.message.includes('Missing required field') &&
+            e.message.includes('Nauðsynlegan reit vantar') &&
             e.message.includes('Menntun'),
         ),
       ).toBe(true)
@@ -484,7 +484,7 @@ describe('parseWorkbook', () => {
         parseWorkbook(await serialize(wb)),
       )
       expect(
-        errors.some((e) => e.message.includes('Step 99 out of range')),
+        errors.some((e) => e.message.includes('Þrep 99 er utan leyfilegs bils')),
       ).toBe(true)
     })
   })
@@ -545,6 +545,6 @@ describe('parseWorkbook', () => {
     const { message } = await expectBadRequest(
       parseWorkbook(Buffer.from('not a workbook')),
     )
-    expect(message).toMatch(/Could not read workbook/)
+    expect(message).toMatch(/Ekki tókst að lesa vinnubókina/)
   })
 })

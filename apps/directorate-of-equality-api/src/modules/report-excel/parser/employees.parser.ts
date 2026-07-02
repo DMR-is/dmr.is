@@ -203,7 +203,7 @@ const buildEmployee = (
   } = row
 
   if (ordinal == null) {
-    errors.add(SHEETS.EMPLOYEES, 'Missing ordinal (col A) on non-empty row', {
+    errors.add(SHEETS.EMPLOYEES, 'Raðnúmer vantar (dálkur A) í röð sem er ekki tóm', {
       row: r,
       column: COLS.ordinal,
     })
@@ -212,7 +212,7 @@ const buildEmployee = (
 
   let ok = true
   const missingField = (col: string, icelandic: string): void => {
-    errors.add(SHEETS.EMPLOYEES, `Missing required field: ${icelandic}`, {
+    errors.add(SHEETS.EMPLOYEES, `Nauðsynlegan reit vantar: ${icelandic}`, {
       row: r,
       column: col,
     })
@@ -246,7 +246,7 @@ const buildEmployee = (
 
   const gender = GENDER_DISPLAY_TO_ENUM[genderDisplay]
   if (!gender) {
-    errors.add(SHEETS.EMPLOYEES, `Unknown gender "${genderDisplay}"`, {
+    errors.add(SHEETS.EMPLOYEES, `Óþekkt kyn „${genderDisplay}“`, {
       row: r,
       column: COLS.gender,
     })
@@ -257,7 +257,7 @@ const buildEmployee = (
   if (!education) {
     errors.add(
       SHEETS.EMPLOYEES,
-      `Unknown education level "${educationDisplay}"`,
+      `Óþekkt menntunarstig „${educationDisplay}“`,
       {
         row: r,
         column: COLS.education,
@@ -269,7 +269,7 @@ const buildEmployee = (
   if (workRatioPct < 0 || workRatioPct > 100) {
     errors.add(
       SHEETS.EMPLOYEES,
-      `Starfshlutfall ${workRatioPct} out of range 0–100`,
+      `Starfshlutfall ${workRatioPct} er utan leyfilegs bils 0–100`,
       { row: r, column: COLS.workRatio },
     )
     return null
@@ -311,7 +311,7 @@ export const parseEmployees = (
   if (!sheet) {
     errors.add(
       SHEETS.EMPLOYEES,
-      `Required sheet "${SHEETS.EMPLOYEES}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.EMPLOYEES}“ vantar`,
     )
     return { employees: [], roles: [] }
   }

@@ -136,7 +136,7 @@ const buildAssignment = (
   ) {
     errors.add(
       sheetName,
-      `Step ${stepOrder} out of range 1–${ref.numSteps} for sub-criterion "${ref.subTitle}"`,
+      `Þrep ${stepOrder} er utan leyfilegs bils 1–${ref.numSteps} fyrir undirviðmið „${ref.subTitle}“`,
       { column: cellAddress.replace(/\d+$/, '') },
     )
     return null
@@ -158,7 +158,7 @@ export const parseRoleClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Required sheet "${SHEETS.ROLE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.ROLE_CLASSIFICATION}“ vantar`,
     )
     return
   }
@@ -169,7 +169,7 @@ export const parseRoleClassifications = (
   if (!band) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Named range "${NAMED_RANGES.ROLE_STEP_INPUTS}" is missing or malformed`,
+      `Nafngreint svæði „${NAMED_RANGES.ROLE_STEP_INPUTS}“ vantar eða er gallað`,
     )
     return
   }
@@ -177,7 +177,7 @@ export const parseRoleClassifications = (
   if (roles.length > band.capacity) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Up to ${band.capacity} distinct roles supported; got ${roles.length}`,
+      `Að hámarki ${band.capacity} ólík störf eru studd; fjöldi var ${roles.length}`,
     )
     return
   }
@@ -211,7 +211,7 @@ export const parseEmployeeClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Required sheet "${SHEETS.EMPLOYEE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.EMPLOYEE_CLASSIFICATION}“ vantar`,
     )
     return
   }
@@ -222,7 +222,7 @@ export const parseEmployeeClassifications = (
   if (!band) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Named range "${NAMED_RANGES.EMP_STEP_INPUTS}" is missing or malformed`,
+      `Nafngreint svæði „${NAMED_RANGES.EMP_STEP_INPUTS}“ vantar eða er gallað`,
     )
     return
   }
@@ -230,7 +230,7 @@ export const parseEmployeeClassifications = (
   if (personal.length > band.capacity) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Up to ${band.capacity} personal sub-criteria supported; got ${personal.length}`,
+      `Að hámarki ${band.capacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
     )
     return
   }

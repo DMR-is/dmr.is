@@ -17,7 +17,9 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Duplicate employee ordinal in parsed payload: 1/)
+      expect(run).toThrow(
+        /Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/,
+      )
     })
 
     it.each([1, 9])(
@@ -33,7 +35,7 @@ describe('employee-scores', () => {
 
         expect(run).toThrow(BadRequestException)
         expect(run).toThrow(
-          new RegExp(`has ${stepCount} step\\(s\\); expected 2–8`),
+          new RegExp(`er með ${stepCount} þrep; leyfilegt bil er 2–8`),
         )
       },
     )
@@ -48,7 +50,7 @@ describe('employee-scores', () => {
 
         expect(run).toThrow(BadRequestException)
         expect(run).toThrow(
-          /Employee ordinal 1 has invalid work ratio .* expected a value greater than 0/,
+          /Starfsmaður með raðnúmer 1 er með ógilt starfshlutfall .* gildið verður að vera stærra en 0/,
         )
       },
     )
@@ -63,7 +65,7 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Report has 25 criteria; the maximum is 24/)
+      expect(run).toThrow(/Að hámarki 24 viðmið eru leyfð; fjöldi var 25/)
     })
 
     it('rejects more than 100 roles', () => {
@@ -76,7 +78,7 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Report has 101 roles; the maximum is 100/)
+      expect(run).toThrow(/Að hámarki 100 störf eru leyfð; fjöldi var 101/)
     })
 
     it('rejects more than 10000 employees', () => {
@@ -88,7 +90,9 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Report has 10001 employees; the maximum is 10000/)
+      expect(run).toThrow(
+        /Að hámarki 10000 starfsmenn eru leyfðir; fjöldi var 10001/,
+      )
     })
 
     it('rejects more than 25 sub-criteria under a single criterion', () => {
@@ -98,7 +102,7 @@ describe('employee-scores', () => {
 
       expect(run).toThrow(BadRequestException)
       expect(run).toThrow(
-        /Criterion "C" has 26 sub-criteria; the maximum is 25 per criterion/,
+        /Viðmið „C“ er með 26 undirviðmið; að hámarki 25 eru leyfð á hvert viðmið/,
       )
     })
 
@@ -117,7 +121,9 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Report has 225 sub-criteria; the maximum is 200/)
+      expect(run).toThrow(
+        /Að hámarki 200 undirviðmið eru leyfð samtals; fjöldi var 225/,
+      )
     })
 
     it('rejects more than 100 personal sub-criteria', () => {
@@ -132,7 +138,7 @@ describe('employee-scores', () => {
 
       expect(run).toThrow(BadRequestException)
       expect(run).toThrow(
-        /Report has 125 personal sub-criteria; the maximum is 100/,
+        /Að hámarki 100 persónubundin undirviðmið eru leyfð; fjöldi var 125/,
       )
     })
   })
