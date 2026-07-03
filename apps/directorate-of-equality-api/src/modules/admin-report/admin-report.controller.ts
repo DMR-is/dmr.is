@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   Param,
   ParseUUIDPipe,
   Post,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
@@ -25,6 +27,9 @@ import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
 import { IAdminReportService } from './admin-report.service.interface'
 
+const XLSX_MIME =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
 @Controller({
   path: 'admin-report',
   version: '1',
@@ -41,6 +46,21 @@ export class AdminReportController {
     @Inject(IImportUploadService)
     private readonly importUploadService: IImportUploadService,
   ) {}
+
+  @Get('reports/excel/template')
+  @DoeResponse({
+    operationId: 'getAdminBlankExcelTemplate',
+    successDescription: 'Blank salary report template',
+    produces: XLSX_MIME,
+  })
+  async getTemplate(): Promise<StreamableFile> {
+    const buf = await this.reportExcelService.generateBlankTemplate()
+
+    return new StreamableFile(buf, {
+      type: XLSX_MIME,
+      disposition: 'attachment; filename="salary-report-template.xlsx"',
+    })
+  }
 
   @Post('companies/:companyId/reports/excel/import')
   @ApiParam({ name: 'companyId', type: String })

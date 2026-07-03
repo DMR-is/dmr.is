@@ -88,6 +88,7 @@ export const overviewText = {
     excelPlaceholder: 'Veldu Excel skrá til að flytja inn launagreiningargögn',
     switchFile: 'Skipta um skrá',
     chooseFile: 'Velja skrá',
+    downloadTemplate: 'Sækja sniðmát',
     deviationsHeading: 'Frávik',
     deferLabel: 'Fresta skilum frávika',
     deferReasonLabel: 'Ástæða frestunar',
@@ -95,6 +96,11 @@ export const overviewText = {
     excelSuccessToast: 'Excel skrá flutt inn',
     excelErrorToast: 'Villa við innflutning á Excel skrá',
     successToast: 'Skýrslugjöf send inn',
+    missingEqualityTitle: 'Samþykkta jafnréttisáætlun vantar',
+    missingEqualityMessage:
+      'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
+    missingEqualityToast:
+      'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en launagreining er send inn.',
   },
 }
 

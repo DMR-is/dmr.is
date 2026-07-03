@@ -152,7 +152,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'getApplicationSalaryReportEligibility',
     description:
-      "Pre-flight check of whether the resolved company may submit a salary report right now. Salary reports run on a 3-year cadence and may only be renewed once the current one is due in 6 months or less; this endpoint returns that verdict (with a machine-readable reason when blocked) so the application portal can gate entry into the flow. The same rule is enforced as a 409 on `POST reports/salary`.",
+      "Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.",
     type: SalaryReportEligibilityDto,
   })
   async getSalaryReportEligibility(

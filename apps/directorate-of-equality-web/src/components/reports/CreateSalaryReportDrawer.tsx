@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
@@ -15,7 +16,11 @@ import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { GenderEnum, type ParsedReportDto } from '../../gen/fetch/types.gen'
+import {
+  CompanyReportStatusEnum,
+  GenderEnum,
+  type ParsedReportDto,
+} from '../../gen/fetch/types.gen'
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -77,6 +82,16 @@ export const CreateSalaryReportDrawer = () => {
     value: c.id,
   }))
 
+  // A salary report must reference an approved, in-force equality report. The
+  // company's server-computed report status already tells us when one is
+  // missing, so we can warn the admin up front rather than let them fill in the
+  // whole form and hit a 404 on submit.
+  const selectedCompany =
+    companiesQuery.data?.companies.find((c) => c.id === companyId) ?? null
+  const missingEqualityReport =
+    selectedCompany?.reportStatus ===
+    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+
   const requestUploadMutation = useMutation(
     trpc.adminReport.requestImportUpload.mutationOptions(),
   )
@@ -109,6 +124,19 @@ export const CreateSalaryReportDrawer = () => {
     } catch {
       toast.error(t.excelErrorToast)
     }
+  }
+
+  // Downloads the blank Excel template. The API endpoint is bearer-guarded, so
+  // we hit a same-origin route that injects the token server-side; the response
+  // carries an attachment disposition, so the click triggers a download without
+  // navigating away.
+  const handleDownloadTemplate = () => {
+    const link = document.createElement('a')
+    link.href = '/api/salary-template'
+    link.download = 'salary-report-template.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   const handleReset = () => {
@@ -165,12 +193,22 @@ export const CreateSalaryReportDrawer = () => {
         return
       }
 
+      // Safety net: the proactive gate above normally catches this, but the
+      // company's report status may be stale (e.g. an equality report expired
+      // since the list was loaded). Surface the API's "no approved equality
+      // report" error as a clear message instead of the generic fallback.
+      if (/equality report/i.test(message)) {
+        toast.error(t.missingEqualityToast)
+        return
+      }
+
       toast.error(s.form.errorToast)
     }
   }
 
   const canSubmit =
     !!companyId &&
+    !missingEqualityReport &&
     !!parsedReport &&
     !!form.companyAdminName &&
     !!form.companyAdminEmail &&
@@ -219,12 +257,35 @@ export const CreateSalaryReportDrawer = () => {
               backgroundColor="blue"
             />
           </GridColumn>
+          {missingEqualityReport && (
+            <GridColumn span="12/12">
+              <AlertMessage
+                type="warning"
+                title={t.missingEqualityTitle}
+                message={t.missingEqualityMessage}
+              />
+            </GridColumn>
+          )}
         </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
-            <Text variant="h4" marginBottom={1}>
-              {t.excelHeading}
-            </Text>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="spaceBetween"
+              marginBottom={1}
+            >
+              <Text variant="h4">{t.excelHeading}</Text>
+              <Button
+                variant="text"
+                size="small"
+                icon="download"
+                iconType="outline"
+                onClick={handleDownloadTemplate}
+              >
+                {t.downloadTemplate}
+              </Button>
+            </Box>
           </GridColumn>
           <GridColumn span="12/12">
             <Box
