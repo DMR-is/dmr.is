@@ -1,10 +1,20 @@
 import { BadRequestException } from '@nestjs/common'
 
+import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import {
   ParsedReportDto,
   ParsedRoleDto,
 } from '../../report-excel/dto/parsed-report.dto'
-import { MAX_STEPS, MIN_STEPS } from '../../report-excel/workbook.schema'
+import {
+  MAX_CRITERIA,
+  MAX_EMPLOYEES,
+  MAX_PERSONAL_SUB_CRITERIA,
+  MAX_ROLES,
+  MAX_STEPS,
+  MAX_SUB_CRITERIA_PER_CRITERION,
+  MAX_TOTAL_SUB_CRITERIA,
+  MIN_STEPS,
+} from '../../report-excel/workbook.schema'
 
 export const stepKey = (
   criterionTitle: string,
@@ -18,7 +28,10 @@ export const stepKey = (
  * ordinals, invalid work ratios, sub-criteria whose step count falls outside
  * the allowed MIN_STEPS–MAX_STEPS range, unknown role references in
  * employees, and step assignments that don't resolve to a node in the parsed
- * criteria tree.
+ * criteria tree. Also enforces the report capacity ceilings (criteria, roles,
+ * employees, per-criterion / total / personal sub-criteria) — see the MAX_*
+ * constants in workbook.schema — so oversized payloads are rejected with a
+ * clear message on both the import and application submit paths.
  *
  * Returns a `(criterionTitle|subTitle|stepOrder) → step score` map so the
  * caller can compute employee total scores in memory without re-walking
@@ -27,6 +40,25 @@ export const stepKey = (
 export function assertParsedPayloadIntegrity(
   parsed: ParsedReportDto,
 ): Map<string, number> {
+  // Report-level capacity ceilings. Generous sanity limits, not domain rules —
+  // they reject nonsensical / adversarial payloads with a clear error rather
+  // than letting them through (or silently truncating during parse).
+  if (parsed.criteria.length > MAX_CRITERIA) {
+    throw new BadRequestException(
+      `Report has ${parsed.criteria.length} criteria; the maximum is ${MAX_CRITERIA}`,
+    )
+  }
+  if (parsed.roles.length > MAX_ROLES) {
+    throw new BadRequestException(
+      `Report has ${parsed.roles.length} roles; the maximum is ${MAX_ROLES}`,
+    )
+  }
+  if (parsed.employees.length > MAX_EMPLOYEES) {
+    throw new BadRequestException(
+      `Report has ${parsed.employees.length} employees; the maximum is ${MAX_EMPLOYEES}`,
+    )
+  }
+
   const roleTitles = new Set<string>()
   for (const role of parsed.roles) {
     if (roleTitles.has(role.title)) {
@@ -39,6 +71,8 @@ export function assertParsedPayloadIntegrity(
 
   const stepScoreByKey = new Map<string, number>()
   const criterionTitles = new Set<string>()
+  let totalSubCriteria = 0
+  let personalSubCriteria = 0
   for (const criterion of parsed.criteria) {
     if (criterionTitles.has(criterion.title)) {
       throw new BadRequestException(
@@ -46,6 +80,16 @@ export function assertParsedPayloadIntegrity(
       )
     }
     criterionTitles.add(criterion.title)
+
+    if (criterion.subCriteria.length > MAX_SUB_CRITERIA_PER_CRITERION) {
+      throw new BadRequestException(
+        `Criterion "${criterion.title}" has ${criterion.subCriteria.length} sub-criteria; the maximum is ${MAX_SUB_CRITERIA_PER_CRITERION} per criterion`,
+      )
+    }
+    totalSubCriteria += criterion.subCriteria.length
+    if (criterion.type === ReportCriterionTypeEnum.PERSONAL) {
+      personalSubCriteria += criterion.subCriteria.length
+    }
 
     const subTitlesInCriterion = new Set<string>()
     for (const sub of criterion.subCriteria) {
@@ -76,6 +120,17 @@ export function assertParsedPayloadIntegrity(
         )
       }
     }
+  }
+
+  if (totalSubCriteria > MAX_TOTAL_SUB_CRITERIA) {
+    throw new BadRequestException(
+      `Report has ${totalSubCriteria} sub-criteria; the maximum is ${MAX_TOTAL_SUB_CRITERIA}`,
+    )
+  }
+  if (personalSubCriteria > MAX_PERSONAL_SUB_CRITERIA) {
+    throw new BadRequestException(
+      `Report has ${personalSubCriteria} personal sub-criteria; the maximum is ${MAX_PERSONAL_SUB_CRITERIA}`,
+    )
   }
 
   for (const role of parsed.roles) {

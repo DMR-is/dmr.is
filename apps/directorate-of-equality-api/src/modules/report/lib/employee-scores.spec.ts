@@ -53,7 +53,119 @@ describe('employee-scores', () => {
       },
     )
   })
+
+  describe('capacity limits', () => {
+    it('rejects more than 24 criteria', () => {
+      const parsed = onlyCriteria(
+        Array.from({ length: 25 }, (_, i) => makeCriterion(`C${i}`, 0)),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Report has 25 criteria; the maximum is 24/)
+    })
+
+    it('rejects more than 100 roles', () => {
+      const parsed = makeParsedReport()
+      parsed.roles = Array.from({ length: 101 }, (_, i) => ({
+        title: `Role ${i}`,
+        stepAssignments: [],
+      }))
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Report has 101 roles; the maximum is 100/)
+    })
+
+    it('rejects more than 10000 employees', () => {
+      const parsed = makeParsedReport()
+      parsed.employees = Array.from({ length: 10001 }, (_, i) =>
+        makeEmployee({ ordinal: i + 1 }),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Report has 10001 employees; the maximum is 10000/)
+    })
+
+    it('rejects more than 25 sub-criteria under a single criterion', () => {
+      const parsed = onlyCriteria([makeCriterion('C', 26)])
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Criterion "C" has 26 sub-criteria; the maximum is 25 per criterion/,
+      )
+    })
+
+    it('allows exactly 25 sub-criteria under a criterion', () => {
+      const parsed = onlyCriteria([makeCriterion('C', 25)])
+
+      expect(() => assertParsedPayloadIntegrity(parsed)).not.toThrow()
+    })
+
+    it('rejects more than 200 sub-criteria in total', () => {
+      // 9 job-based criteria × 25 subs = 225 (each criterion within its cap).
+      const parsed = onlyCriteria(
+        Array.from({ length: 9 }, (_, i) => makeCriterion(`C${i}`, 25)),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Report has 225 sub-criteria; the maximum is 200/)
+    })
+
+    it('rejects more than 100 personal sub-criteria', () => {
+      // 5 personal criteria × 25 subs = 125 personal (total 125 stays ≤ 200).
+      const parsed = onlyCriteria(
+        Array.from({ length: 5 }, (_, i) =>
+          makeCriterion(`P${i}`, 25, ReportCriterionTypeEnum.PERSONAL),
+        ),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Report has 125 personal sub-criteria; the maximum is 100/,
+      )
+    })
+  })
 })
+
+/** A report with only criteria — no roles/employees — to isolate criteria caps. */
+function onlyCriteria(
+  criteria: ParsedReportDto['criteria'],
+): ParsedReportDto {
+  return { criteria, roles: [], employees: [] }
+}
+
+function makeCriterion(
+  title: string,
+  subCount: number,
+  type: ReportCriterionTypeEnum = ReportCriterionTypeEnum.RESPONSIBILITY,
+): ParsedReportDto['criteria'][number] {
+  return {
+    type,
+    title,
+    description: title,
+    weight: 10,
+    subCriteria: Array.from({ length: subCount }, (_, i) => ({
+      title: `${title}-sub-${i}`,
+      description: `${title}-sub-${i}`,
+      weight: 1,
+      steps: [
+        { order: 1, description: 'low', score: 10 },
+        { order: 2, description: 'high', score: 20 },
+      ],
+    })),
+  }
+}
 
 function makeParsedReport(): ParsedReportDto {
   return {

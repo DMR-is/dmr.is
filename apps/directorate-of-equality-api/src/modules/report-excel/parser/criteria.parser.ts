@@ -58,7 +58,15 @@ const SUB_CRITERIA_COLS = {
   firstStepCol: 10,
 } as const
 
-const MAX_DATA_ROWS = 40
+/**
+ * Absolute ceiling on rows scanned per table sheet — a defensive guard against
+ * malformed files reporting a huge `rowCount`, NOT a domain limit. Real
+ * criteria / sub-criteria counts are capped far lower (and with explicit
+ * errors) in `assertParsedPayloadIntegrity`; everything within this bound is
+ * read in full — empty and non-data rows are skipped — so no data is ever
+ * silently truncated the way the old fixed 40-row window did.
+ */
+const ABSOLUTE_MAX_TABLE_ROWS = 5000
 
 /**
  * Read Viðmið sheet → list of top-level criteria (no sub-criteria attached
@@ -72,11 +80,11 @@ const parseCriteriaSheet = (
 ): ParsedCriterionDto[] => {
   const criteria: ParsedCriterionDto[] = []
 
-  for (
-    let r = TABLE_FIRST_DATA_ROW;
-    r < TABLE_FIRST_DATA_ROW + MAX_DATA_ROWS;
-    r++
-  ) {
+  const lastRow = Math.min(
+    sheet.rowCount,
+    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+  )
+  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const tegund = readString(sheet.getCell(`${CRITERIA_COLS.tegund}${r}`))
     const title = readString(sheet.getCell(`${CRITERIA_COLS.title}${r}`))
     const description = readString(
@@ -172,11 +180,11 @@ const parseSubCriteriaSheet = (
 ): void => {
   const criterionByTitle = new Map(criteria.map((c) => [c.title, c]))
 
-  for (
-    let r = TABLE_FIRST_DATA_ROW;
-    r < TABLE_FIRST_DATA_ROW + MAX_DATA_ROWS;
-    r++
-  ) {
+  const lastRow = Math.min(
+    sheet.rowCount,
+    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+  )
+  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const parentTitle = readString(
       sheet.getCell(`${SUB_CRITERIA_COLS.parent}${r}`),
     )

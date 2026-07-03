@@ -62,15 +62,18 @@ const writeEmployeeRow = (
   s.getCell(`P${r}`).value = values.bonusOther
 }
 
+// Step-order inputs sit on every SECOND column (score column interleaved
+// after each): roles start at G (col 7), personal subs at D (col 4), both
+// from row 7. Written by numeric coordinate so the helpers scale past the
+// template's legacy 8-role / 15-personal-sub layout.
 const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
 ) => {
   const sheet = wb.getWorksheet('Flokkun starfa')!
-  const cols = ['G', 'I', 'K', 'M', 'O', 'Q', 'S', 'U']
   rolesInOrder.forEach((roleSteps, roleIdx) => {
     roleSteps.forEach((stepOrder, subIdx) => {
-      sheet.getCell(`${cols[roleIdx]}${7 + subIdx}`).value = stepOrder
+      sheet.getCell(7 + subIdx, 7 + 2 * roleIdx).value = stepOrder
     })
   })
 }
@@ -80,26 +83,9 @@ const fillEmployeeClassification = (
   empsInOrder: number[][],
 ) => {
   const sheet = wb.getWorksheet('Flokkun starfsmanna')!
-  const cols = [
-    'D',
-    'F',
-    'H',
-    'J',
-    'L',
-    'N',
-    'P',
-    'R',
-    'T',
-    'V',
-    'X',
-    'Z',
-    'AB',
-    'AD',
-    'AF',
-  ]
   empsInOrder.forEach((empSteps, empIdx) => {
     empSteps.forEach((stepOrder, subIdx) => {
-      sheet.getCell(`${cols[subIdx]}${7 + empIdx}`).value = stepOrder
+      sheet.getCell(7 + empIdx, 4 + 2 * subIdx).value = stepOrder
     })
   })
 }
@@ -500,6 +486,58 @@ describe('parseWorkbook', () => {
       expect(
         errors.some((e) => e.message.includes('Step 99 out of range')),
       ).toBe(true)
+    })
+  })
+
+  describe('capacity beyond the legacy layout', () => {
+    it('parses roles past the old 8-column limit (named-range driven)', async () => {
+      const wb = await loadTemplate()
+      const roleTitles = Array.from({ length: 9 }, (_, i) => `Hlutverk ${i + 1}`)
+      roleTitles.forEach((role, i) =>
+        writeEmployeeRow(wb, i + 1, {
+          name: `Nafn ${i + 1}`,
+          role,
+          gender: i % 2 === 0 ? 'Kona' : 'Karl',
+          workRatioPct: 100,
+          education: 'Háskólapróf (BA/BS)',
+          baseSalary: 500000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'Svið',
+          department: 'Deild',
+          startDate: new Date('2023-01-01'),
+        }),
+      )
+      // Personal criterion for the remaining 10% so weight sums hit 100.
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
+        'Engin sérstök',
+        'Grunnkunnátta',
+        'Góð kunnátta',
+        'Mjög góð kunnátta',
+        'Sérfræðikunnátta',
+      ])
+      // 9 roles × 7 job-based subs, and 9 employees × 1 personal sub — the 9th
+      // role lands in a column the old 8-entry ROLE_STEP_COLS array could not
+      // address.
+      fillRoleClassification(
+        wb,
+        roleTitles.map(() => [1, 1, 1, 1, 1, 1, 1]),
+      )
+      fillEmployeeClassification(
+        wb,
+        roleTitles.map(() => [1]),
+      )
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      expect(report.roles).toHaveLength(9)
+      expect(report.roles[8].title).toBe('Hlutverk 9')
+      expect(report.roles[8].stepAssignments).toHaveLength(7)
     })
   })
 
