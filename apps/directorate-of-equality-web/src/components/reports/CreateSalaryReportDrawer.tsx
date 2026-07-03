@@ -64,6 +64,7 @@ export const CreateSalaryReportDrawer = () => {
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
   const [postpone, setPostpone] = useState(false)
   const [postponeReason, setPostponeReason] = useState('')
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
 
   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -145,6 +146,7 @@ export const CreateSalaryReportDrawer = () => {
       toast.success(t.successToast)
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
+      setIsOpen(false)
     }
 
     try {
@@ -186,6 +188,8 @@ export const CreateSalaryReportDrawer = () => {
     <Drawer
       ariaLabel={t.drawerLabel}
       baseId="create-salary-report-drawer"
+      isVisible={isOpen}
+      onVisibilityChange={setIsOpen}
       disclosure={
         <UtilityButton fluid icon="add">
           {t.buttonLabel}
