@@ -54,7 +54,10 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
     )
     let parsed
     try {
-      parsed = await this.reportExcelService.importWorkbook(buffer)
+      parsed = await this.reportExcelService.importWorkbook(
+        buffer,
+        ImportUploadBoundary.APPLICATION,
+      )
     } finally {
       await this.importUploadService.cleanup(key)
     }
