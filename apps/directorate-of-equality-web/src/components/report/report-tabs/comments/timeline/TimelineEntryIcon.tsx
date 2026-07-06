@@ -4,16 +4,28 @@ import { theme } from '@dmr.is/island-ui-theme'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 
+import {
+  AutoReviewDecisionEnum,
+  ReportEventTypeEnum,
+  ReportTimelineItemDto,
+} from '../../../../../gen/fetch'
 import { TimelineEntryKind } from './timelineHelpers'
 
 type Props = {
   kind: TimelineEntryKind
+  item: ReportTimelineItemDto
 }
 
-export function TimelineEntryIcon({ kind }: Props) {
+export function TimelineEntryIcon({ kind, item }: Props) {
   const isEvent = kind === 'event'
   const isIncoming = kind === 'incoming'
   const isInternal = kind === 'internal'
+
+  // A soft auto-review verdict routing the report to manual review gets a
+  // warning icon instead of the generic event checkmark.
+  const isSystemNeedsReview =
+    item.event?.eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW &&
+    item.event?.systemDecision === AutoReviewDecisionEnum.NEEDS_REVIEW
 
   return (
     <Box
@@ -31,7 +43,9 @@ export function TimelineEntryIcon({ kind }: Props) {
           isEvent || isInternal ? `1px solid ${theme.color.blue400}` : 'none',
       }}
     >
-      {isEvent ? (
+      {isSystemNeedsReview ? (
+        <Icon icon="warning" type="outline" color="blue400" />
+      ) : isEvent ? (
         <Icon icon="checkmark" color="blue400" />
       ) : isIncoming ? (
         <Icon icon="arrowBack" color="white" />

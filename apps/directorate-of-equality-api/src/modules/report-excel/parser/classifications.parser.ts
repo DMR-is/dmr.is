@@ -9,17 +9,22 @@
  * formulas we don't evaluate):
  *
  * - **Flokkun starfa**
- *   - Rows 7+ map 1:1 to job-based sub-criteria in the order they appear on
+ *   - Rows map 1:1 to job-based sub-criteria in the order they appear on
  *     Undirviðmið (filtered to `type != PERSONAL`).
- *   - Columns G, I, K, M, O, Q, S, U hold step orders — one per role, in
- *     the order roles are first seen on Starfsmenn. (H/J/L/… are computed
- *     scores to the right of each step cell.)
+ *   - Step-order columns hold one value per role, in the order roles are
+ *     first seen on Starfsmenn. A computed score column is interleaved after
+ *     each, so inputs sit on every second column.
  *
  * - **Flokkun starfsmanna**
- *   - Rows 7–56 map 1:1 to employees in ordinal order.
- *   - Columns D, F, H, J, L, N, P, R, T, V, X, Z, AB, AD, AF hold step
- *     orders — one per personal sub-criterion, in the order personal subs
- *     appear on Undirviðmið.
+ *   - Rows map 1:1 to employees in ordinal order.
+ *   - Step-order columns hold one value per personal sub-criterion, in the
+ *     order personal subs appear on Undirviðmið (same every-second-column
+ *     interleaving).
+ *
+ * The first row/column and the column count of each step-input region are read
+ * from the `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
+ * {@link readStepInputBand}) rather than hard-coded — capacity is bounded by
+ * what the template provisions and grows with it.
  *
  * Blank cells mean "no assignment" and are skipped. The semantic validator
  * (separate pass) enforces completeness — wrong place to do it here.
@@ -34,34 +39,55 @@ import {
   ParsedRoleDto,
   ParsedStepAssignmentDto,
 } from '../dto/parsed-report.dto'
-import { SHEETS } from '../workbook.schema'
+import { NAMED_RANGES, SHEETS } from '../workbook.schema'
 import { readInteger } from './cell'
 import { ErrorBag } from './errors'
 
-const ROLE_STEP_FIRST_DATA_ROW = 7
-const EMPLOYEE_STEP_FIRST_DATA_ROW = 7
+/**
+ * Geometry of a classification matrix's step-input region, derived from a
+ * template named range rather than hard-coded column letters.
+ *
+ * Step-order inputs occupy every SECOND column (a computed score column is
+ * interleaved after each), starting at `firstCol` on `firstRow`. So input
+ * slot N lives at column `firstCol + 2·N`, and the template can hold up to
+ * `capacity` of them. Reading the geometry from the named range means the
+ * supported role / personal-sub count is bounded by what the template
+ * physically provisions, and grows if the template does — no code change.
+ */
+type StepInputBand = {
+  firstRow: number
+  firstCol: number
+  capacity: number
+}
 
-/** Columns in Flokkun starfa that hold role step-order inputs. */
-const ROLE_STEP_COLS = ['G', 'I', 'K', 'M', 'O', 'Q', 'S', 'U'] as const
+/** `'AB'` → 28. */
+const colToNum = (letters: string): number =>
+  letters
+    .split('')
+    .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
-/** Columns in Flokkun starfsmanna that hold employee step-order inputs. */
-const EMPLOYEE_STEP_COLS = [
-  'D',
-  'F',
-  'H',
-  'J',
-  'L',
-  'N',
-  'P',
-  'R',
-  'T',
-  'V',
-  'X',
-  'Z',
-  'AB',
-  'AD',
-  'AF',
-] as const
+/**
+ * Parse a single rectangular named range (e.g. `'Flokkun starfa'!$G$7:$GW$106`)
+ * into the step-input band it describes. Returns null if the name is absent or
+ * not a single `$COL$ROW:$COL$ROW` range — callers surface that as an error.
+ */
+const readStepInputBand = (
+  workbook: ExcelJS.Workbook,
+  definedName: string,
+): StepInputBand | null => {
+  const ranges = workbook.definedNames.getRanges(definedName)?.ranges
+  if (!ranges || ranges.length !== 1) return null
+  const m = ranges[0].match(/\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$/)
+  if (!m) return null
+  const firstCol = colToNum(m[1])
+  const firstRow = Number(m[2])
+  const lastCol = colToNum(m[3])
+  return {
+    firstRow,
+    firstCol,
+    capacity: Math.floor((lastCol - firstCol) / 2) + 1,
+  }
+}
 
 type FlatSubRef = {
   criterionTitle: string
@@ -110,7 +136,7 @@ const buildAssignment = (
   ) {
     errors.add(
       sheetName,
-      `Step ${stepOrder} out of range 1–${ref.numSteps} for sub-criterion "${ref.subTitle}"`,
+      `Þrep ${stepOrder} er utan leyfilegs bils 1–${ref.numSteps} fyrir undirviðmið „${ref.subTitle}“`,
       { column: cellAddress.replace(/\d+$/, '') },
     )
     return null
@@ -132,26 +158,35 @@ export const parseRoleClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Required sheet "${SHEETS.ROLE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.ROLE_CLASSIFICATION}“ vantar`,
     )
     return
   }
 
   const { jobBased } = flattenSubRefs(criteria)
 
-  if (roles.length > ROLE_STEP_COLS.length) {
+  const band = readStepInputBand(workbook, NAMED_RANGES.ROLE_STEP_INPUTS)
+  if (!band) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Up to ${ROLE_STEP_COLS.length} distinct roles supported; got ${roles.length}`,
+      `Nafngreint svæði „${NAMED_RANGES.ROLE_STEP_INPUTS}“ vantar eða er gallað`,
+    )
+    return
+  }
+
+  if (roles.length > band.capacity) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Að hámarki ${band.capacity} ólík störf eru studd; fjöldi var ${roles.length}`,
     )
     return
   }
 
   roles.forEach((role, roleIdx) => {
-    const col = ROLE_STEP_COLS[roleIdx]
+    const col = band.firstCol + 2 * roleIdx
     jobBased.forEach((ref, subIdx) => {
-      const row = ROLE_STEP_FIRST_DATA_ROW + subIdx
-      const cell = sheet.getCell(`${col}${row}`)
+      const row = band.firstRow + subIdx
+      const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
       if (stepOrder == null) return
       const assignment = buildAssignment(
@@ -176,26 +211,35 @@ export const parseEmployeeClassifications = (
   if (!sheet) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Required sheet "${SHEETS.EMPLOYEE_CLASSIFICATION}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.EMPLOYEE_CLASSIFICATION}“ vantar`,
     )
     return
   }
 
   const { personal } = flattenSubRefs(criteria)
 
-  if (personal.length > EMPLOYEE_STEP_COLS.length) {
+  const band = readStepInputBand(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
+  if (!band) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Up to ${EMPLOYEE_STEP_COLS.length} personal sub-criteria supported; got ${personal.length}`,
+      `Nafngreint svæði „${NAMED_RANGES.EMP_STEP_INPUTS}“ vantar eða er gallað`,
+    )
+    return
+  }
+
+  if (personal.length > band.capacity) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Að hámarki ${band.capacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
     )
     return
   }
 
   employees.forEach((employee, empIdx) => {
-    const row = EMPLOYEE_STEP_FIRST_DATA_ROW + empIdx
+    const row = band.firstRow + empIdx
     personal.forEach((ref, subIdx) => {
-      const col = EMPLOYEE_STEP_COLS[subIdx]
-      const cell = sheet.getCell(`${col}${row}`)
+      const col = band.firstCol + 2 * subIdx
+      const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
       if (stepOrder == null) return
       const assignment = buildAssignment(

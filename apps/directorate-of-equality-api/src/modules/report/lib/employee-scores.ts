@@ -1,10 +1,20 @@
 import { BadRequestException } from '@nestjs/common'
 
+import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import {
   ParsedReportDto,
   ParsedRoleDto,
 } from '../../report-excel/dto/parsed-report.dto'
-import { MAX_STEPS, MIN_STEPS } from '../../report-excel/workbook.schema'
+import {
+  MAX_CRITERIA,
+  MAX_EMPLOYEES,
+  MAX_PERSONAL_SUB_CRITERIA,
+  MAX_ROLES,
+  MAX_STEPS,
+  MAX_SUB_CRITERIA_PER_CRITERION,
+  MAX_TOTAL_SUB_CRITERIA,
+  MIN_STEPS,
+} from '../../report-excel/workbook.schema'
 
 export const stepKey = (
   criterionTitle: string,
@@ -18,7 +28,10 @@ export const stepKey = (
  * ordinals, invalid work ratios, sub-criteria whose step count falls outside
  * the allowed MIN_STEPS–MAX_STEPS range, unknown role references in
  * employees, and step assignments that don't resolve to a node in the parsed
- * criteria tree.
+ * criteria tree. Also enforces the report capacity ceilings (criteria, roles,
+ * employees, per-criterion / total / personal sub-criteria) — see the MAX_*
+ * constants in workbook.schema — so oversized payloads are rejected with a
+ * clear message on both the import and application submit paths.
  *
  * Returns a `(criterionTitle|subTitle|stepOrder) → step score` map so the
  * caller can compute employee total scores in memory without re-walking
@@ -27,11 +40,30 @@ export const stepKey = (
 export function assertParsedPayloadIntegrity(
   parsed: ParsedReportDto,
 ): Map<string, number> {
+  // Report-level capacity ceilings. Generous sanity limits, not domain rules —
+  // they reject nonsensical / adversarial payloads with a clear error rather
+  // than letting them through (or silently truncating during parse).
+  if (parsed.criteria.length > MAX_CRITERIA) {
+    throw new BadRequestException(
+      `Að hámarki ${MAX_CRITERIA} viðmið eru leyfð; fjöldi var ${parsed.criteria.length}`,
+    )
+  }
+  if (parsed.roles.length > MAX_ROLES) {
+    throw new BadRequestException(
+      `Að hámarki ${MAX_ROLES} störf eru leyfð; fjöldi var ${parsed.roles.length}`,
+    )
+  }
+  if (parsed.employees.length > MAX_EMPLOYEES) {
+    throw new BadRequestException(
+      `Að hámarki ${MAX_EMPLOYEES} starfsmenn eru leyfðir; fjöldi var ${parsed.employees.length}`,
+    )
+  }
+
   const roleTitles = new Set<string>()
   for (const role of parsed.roles) {
     if (roleTitles.has(role.title)) {
       throw new BadRequestException(
-        `Duplicate role title in parsed payload: "${role.title}"`,
+        `Tvítekið heiti starfs í innsendum gögnum: „${role.title}“`,
       )
     }
     roleTitles.add(role.title)
@@ -39,26 +71,38 @@ export function assertParsedPayloadIntegrity(
 
   const stepScoreByKey = new Map<string, number>()
   const criterionTitles = new Set<string>()
+  let totalSubCriteria = 0
+  let personalSubCriteria = 0
   for (const criterion of parsed.criteria) {
     if (criterionTitles.has(criterion.title)) {
       throw new BadRequestException(
-        `Duplicate criterion title in parsed payload: "${criterion.title}"`,
+        `Tvítekið heiti viðmiðs í innsendum gögnum: „${criterion.title}“`,
       )
     }
     criterionTitles.add(criterion.title)
+
+    if (criterion.subCriteria.length > MAX_SUB_CRITERIA_PER_CRITERION) {
+      throw new BadRequestException(
+        `Viðmið „${criterion.title}“ er með ${criterion.subCriteria.length} undirviðmið; að hámarki ${MAX_SUB_CRITERIA_PER_CRITERION} eru leyfð á hvert viðmið`,
+      )
+    }
+    totalSubCriteria += criterion.subCriteria.length
+    if (criterion.type === ReportCriterionTypeEnum.PERSONAL) {
+      personalSubCriteria += criterion.subCriteria.length
+    }
 
     const subTitlesInCriterion = new Set<string>()
     for (const sub of criterion.subCriteria) {
       if (subTitlesInCriterion.has(sub.title)) {
         throw new BadRequestException(
-          `Duplicate sub-criterion title under "${criterion.title}": "${sub.title}"`,
+          `Tvítekið heiti undirviðmiðs undir „${criterion.title}“: „${sub.title}“`,
         )
       }
       subTitlesInCriterion.add(sub.title)
 
       if (sub.steps.length < MIN_STEPS || sub.steps.length > MAX_STEPS) {
         throw new BadRequestException(
-          `Sub-criterion "${criterion.title} / ${sub.title}" has ${sub.steps.length} step(s); expected ${MIN_STEPS}–${MAX_STEPS}`,
+          `Undirviðmið „${criterion.title} / ${sub.title}“ er með ${sub.steps.length} þrep; leyfilegt bil er ${MIN_STEPS}–${MAX_STEPS}`,
         )
       }
 
@@ -66,7 +110,7 @@ export function assertParsedPayloadIntegrity(
       for (const step of sub.steps) {
         if (stepOrders.has(step.order)) {
           throw new BadRequestException(
-            `Duplicate step order under "${criterion.title} / ${sub.title}": ${step.order}`,
+            `Tvítekið þrepanúmer undir „${criterion.title} / ${sub.title}“: ${step.order}`,
           )
         }
         stepOrders.add(step.order)
@@ -78,6 +122,17 @@ export function assertParsedPayloadIntegrity(
     }
   }
 
+  if (totalSubCriteria > MAX_TOTAL_SUB_CRITERIA) {
+    throw new BadRequestException(
+      `Að hámarki ${MAX_TOTAL_SUB_CRITERIA} undirviðmið eru leyfð samtals; fjöldi var ${totalSubCriteria}`,
+    )
+  }
+  if (personalSubCriteria > MAX_PERSONAL_SUB_CRITERIA) {
+    throw new BadRequestException(
+      `Að hámarki ${MAX_PERSONAL_SUB_CRITERIA} persónubundin undirviðmið eru leyfð; fjöldi var ${personalSubCriteria}`,
+    )
+  }
+
   for (const role of parsed.roles) {
     for (const assignment of role.stepAssignments) {
       const key = stepKey(
@@ -87,7 +142,7 @@ export function assertParsedPayloadIntegrity(
       )
       if (!stepScoreByKey.has(key)) {
         throw new BadRequestException(
-          `Role "${role.title}" references unknown step ${key}`,
+          `Starf „${role.title}“ vísar í óþekkt þrep ${key}`,
         )
       }
     }
@@ -97,20 +152,20 @@ export function assertParsedPayloadIntegrity(
   for (const employee of parsed.employees) {
     if (employeeOrdinals.has(employee.ordinal)) {
       throw new BadRequestException(
-        `Duplicate employee ordinal in parsed payload: ${employee.ordinal}`,
+        `Tvítekið raðnúmer starfsmanns í innsendum gögnum: ${employee.ordinal}`,
       )
     }
     employeeOrdinals.add(employee.ordinal)
 
     if (!Number.isFinite(employee.workRatio) || employee.workRatio <= 0) {
       throw new BadRequestException(
-        `Employee ordinal ${employee.ordinal} has invalid work ratio ${employee.workRatio}; expected a value greater than 0`,
+        `Starfsmaður með raðnúmer ${employee.ordinal} er með ógilt starfshlutfall ${employee.workRatio}; gildið verður að vera stærra en 0`,
       )
     }
 
     if (!roleTitles.has(employee.roleTitle)) {
       throw new BadRequestException(
-        `Employee ordinal ${employee.ordinal} references unknown role "${employee.roleTitle}"`,
+        `Starfsmaður með raðnúmer ${employee.ordinal} vísar í óþekkt starf „${employee.roleTitle}“`,
       )
     }
     for (const assignment of employee.personalStepAssignments) {
@@ -121,7 +176,7 @@ export function assertParsedPayloadIntegrity(
       )
       if (!stepScoreByKey.has(key)) {
         throw new BadRequestException(
-          `Employee ordinal ${employee.ordinal} references unknown step ${key}`,
+          `Starfsmaður með raðnúmer ${employee.ordinal} vísar í óþekkt þrep ${key}`,
         )
       }
     }

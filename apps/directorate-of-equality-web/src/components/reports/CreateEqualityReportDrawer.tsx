@@ -48,6 +48,7 @@ export const CreateEqualityReportDrawer = () => {
 
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
   const editorKey = useRef(0)
 
   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
@@ -68,6 +69,7 @@ export const CreateEqualityReportDrawer = () => {
       toast.success(t.successToast)
       queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       handleReset()
+      setIsOpen(false)
     },
     onError: () => toast.error(s.form.errorToast),
   })
@@ -109,6 +111,8 @@ export const CreateEqualityReportDrawer = () => {
     <Drawer
       ariaLabel={t.drawerLabel}
       baseId="create-equality-report-drawer"
+      isVisible={isOpen}
+      onVisibilityChange={setIsOpen}
       disclosure={
         <UtilityButton icon="add" fluid>
           {t.buttonLabel}

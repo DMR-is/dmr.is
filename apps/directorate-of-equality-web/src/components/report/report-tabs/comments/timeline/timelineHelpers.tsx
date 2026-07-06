@@ -29,6 +29,34 @@ export function Bold({ children }: { children: React.ReactNode }) {
   return <strong style={{ fontWeight: 600 }}>{children}</strong>
 }
 
+/**
+ * Renders an auto-review reason with the headline percentages bolded. The
+ * threshold figures live inside parentheses (e.g. "12% yfir mörkum (10%)") and
+ * are left un-bolded so only the report's own numbers stand out.
+ */
+export function renderSystemReason(reason: string): React.ReactNode {
+  const out: React.ReactNode[] = []
+  // Split into parenthetical (threshold) groups and the text between them.
+  const segments = reason.split(/(\([^)]*\))/g)
+  segments.forEach((seg, segIdx) => {
+    if (seg.startsWith('(')) {
+      out.push(seg)
+      return
+    }
+    const percent = /\d+(?:[.,]\d+)?%/g
+    let last = 0
+    let k = 0
+    let m: RegExpExecArray | null
+    while ((m = percent.exec(seg))) {
+      if (m.index > last) out.push(seg.slice(last, m.index))
+      out.push(<Bold key={`p-${segIdx}-${k++}`}>{m[0]}</Bold>)
+      last = m.index + m[0].length
+    }
+    if (last < seg.length) out.push(seg.slice(last))
+  })
+  return out
+}
+
 export type TimelineEntryKind = 'event' | 'outgoing' | 'incoming' | 'internal'
 
 export function timelineEntryKind(
@@ -66,11 +94,19 @@ export function timelineEntryText(
   if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
     // Soft auto-review verdict — system actor, no name. The `reason` renders as
     // the entry body; this is just the headline. Status is never changed yet.
+    const headline =
+      systemDecision === AutoReviewDecisionEnum.AUTO_APPROVE
+        ? reportText.timeline.systemAutoReviewApprove
+        : reportText.timeline.systemAutoReviewNeedsReview
+    // Bold the system actor name ("Kerfið") that opens the headline and the
+    // trailing status word (e.g. "yfirferð").
+    const words = headline.split(' ')
+    const actor = words[0]
+    const status = words[words.length - 1]
+    const middle = words.slice(1, -1).join(' ')
     return (
       <>
-        {systemDecision === AutoReviewDecisionEnum.AUTO_APPROVE
-          ? reportText.timeline.systemAutoReviewApprove
-          : reportText.timeline.systemAutoReviewNeedsReview}
+        <Bold>{actor}</Bold> {middle} <Bold>{status}</Bold>
       </>
     )
   }

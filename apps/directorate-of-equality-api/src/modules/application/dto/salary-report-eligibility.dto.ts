@@ -21,7 +21,7 @@ export class SalaryReportEligibilityDto {
   @ApiOptionalEnum(SalaryReportEligibilityReasonEnum, {
     nullable: true,
     description:
-      'Machine-readable reason when `eligible` is false; null when eligible.',
+      'Machine-readable reason when `eligible` is false; null when eligible. `MISSING_EQUALITY_REPORT` (no approved, in-force equality report — takes priority) or `RENEWAL_WINDOW_NOT_OPEN` (current report due more than 6 months out).',
   })
   reason!: SalaryReportEligibilityReasonEnum | null
 
