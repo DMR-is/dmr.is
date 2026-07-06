@@ -3,11 +3,6 @@
 // Existing reviewer (from initial seed)
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
-// Global role UUIDs (shared across all salary reports)
-const ROLE_VERKEFNASTJORI = 'aa000001-0000-4000-8000-000000000001'
-const ROLE_SERFRAEDINGUR = 'aa000002-0000-4000-8000-000000000002'
-const ROLE_ADSTODARMADUR = 'aa000003-0000-4000-8000-000000000003'
-
 // Helper: pad a number into a UUID-shaped constant
 const cid = (n) =>
   `c${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
@@ -24,7 +19,6 @@ module.exports = {
     await queryInterface.sequelize.query(companiesSql())
     await queryInterface.sequelize.query(equalityReportsSql())
     await queryInterface.sequelize.query(approvedEqualityReportsSql())
-    await queryInterface.sequelize.query(globalRolesSql())
     await queryInterface.sequelize.query(simpleSalaryScenariosSql())
     await queryInterface.sequelize.query(postponedSalarySql())
     await queryInterface.sequelize.query(inReviewSalarySql())
@@ -425,17 +419,6 @@ VALUES ('${uid(evCounter++)}', '${eid(160)}', 'SUPERSEDED', '${REVIEWER_ID}', 'S
   return `BEGIN;\n${companies.map(approvedEqBlock).join('')}${oldEqCompany16}\nCOMMIT;`
 }
 
-function globalRolesSql() {
-  return `
-BEGIN;
-INSERT INTO report_employee_role (id, title) VALUES
-  ('${ROLE_VERKEFNASTJORI}', 'Verkefnastjóri'),
-  ('${ROLE_SERFRAEDINGUR}',  'Sérfræðingur'),
-  ('${ROLE_ADSTODARMADUR}',  'Aðstoðarmaður');
-COMMIT;
-  `
-}
-
 function seedStepScore(stepOrder, numSteps, subWeightPct) {
   return (stepOrder / numSteps) * subWeightPct * 10
 }
@@ -499,6 +482,9 @@ function salaryScaffoldSql(
   const empIds = Array.from({ length: 6 }, (_, i) => uid(base + 40 + i))
   const resultId = uid(base + 50)
   const roleResultIds = [uid(base + 51), uid(base + 52), uid(base + 53)]
+  // Roles are report-scoped children (see m-20260630 migration), so each
+  // report gets its own role rows rather than sharing global ones.
+  const roleIds = [uid(base + 76), uid(base + 77), uid(base + 78)]
 
   const needsReviewer = [
     'APPROVED',
@@ -563,34 +549,39 @@ INSERT INTO report_sub_criterion_step (id, report_sub_criterion_id, "order", des
   ('${stepIds[5]}', '${scrtIds[1]}', 3, 'Bakkalárgráða',                ${seedStepScore(3, EDUCATION_STEPS, EDUCATION_WEIGHT)}.00),
   ('${stepIds[6]}', '${scrtIds[1]}', 4, 'Meistaragráða eða hærra',      ${EDUCATION_HIGH_SCORE}.00);
 
+INSERT INTO report_employee_role (id, report_id, title) VALUES
+  ('${roleIds[0]}', '${reportId}', 'Verkefnastjóri'),
+  ('${roleIds[1]}', '${reportId}', 'Sérfræðingur'),
+  ('${roleIds[2]}', '${reportId}', 'Aðstoðarmaður');
+
 INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, report_sub_criterion_step_id) VALUES
-  ('${uid(base + 70)}', '${ROLE_VERKEFNASTJORI}', '${stepIds[2]}'),
-  ('${uid(base + 71)}', '${ROLE_VERKEFNASTJORI}', '${stepIds[6]}'),
-  ('${uid(base + 72)}', '${ROLE_SERFRAEDINGUR}',  '${stepIds[0]}'),
-  ('${uid(base + 73)}', '${ROLE_SERFRAEDINGUR}',  '${stepIds[6]}'),
-  ('${uid(base + 74)}', '${ROLE_ADSTODARMADUR}',  '${stepIds[0]}'),
-  ('${uid(base + 75)}', '${ROLE_ADSTODARMADUR}',  '${stepIds[3]}');
+  ('${uid(base + 70)}', '${roleIds[0]}', '${stepIds[2]}'),
+  ('${uid(base + 71)}', '${roleIds[0]}', '${stepIds[6]}'),
+  ('${uid(base + 72)}', '${roleIds[1]}',  '${stepIds[0]}'),
+  ('${uid(base + 73)}', '${roleIds[1]}',  '${stepIds[6]}'),
+  ('${uid(base + 74)}', '${roleIds[2]}',  '${stepIds[0]}'),
+  ('${uid(base + 75)}', '${roleIds[2]}',  '${stepIds[3]}');
 
 INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
   start_date, work_ratio, base_salary,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
-  ('${empIds[0]}','${reportId}',1,'MASTER',         'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[1]}','${reportId}',2,'MASTER',         'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${ROLE_VERKEFNASTJORI}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[2]}','${reportId}',3,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[3]}','${reportId}',4,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${ROLE_SERFRAEDINGUR}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[4]}','${reportId}',5,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00),
-  ('${empIds[5]}','${reportId}',6,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${ROLE_ADSTODARMADUR}', ${ASSISTANT_TOTAL_SCORE}.00);
+  ('${empIds[0]}','${reportId}',1,'MASTER',         'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[1]}','${reportId}',2,'MASTER',         'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[2]}','${reportId}',3,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[3]}','${reportId}',4,'BACHELOR',       'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[4]}','${reportId}',5,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00),
+  ('${empIds[5]}','${reportId}',6,'UPPER_SECONDARY','Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00);
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
 VALUES ('${resultId}', '${reportId}', 3.90, 'v1', '${baseSnap}', '${fullSnap}', '${outlierSnap}');
 
 INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
-  ('${roleResultIds[0]}','${resultId}','${ROLE_VERKEFNASTJORI}','Verkefnastjóri','{"genderPayGap":${hasOutliers ? 9.1 : 0.6}}','{"employees":2}'),
-  ('${roleResultIds[1]}','${resultId}','${ROLE_SERFRAEDINGUR}', 'Sérfræðingur', '{"genderPayGap":0.7}',                        '{"employees":2}'),
-  ('${roleResultIds[2]}','${resultId}','${ROLE_ADSTODARMADUR}', 'Aðstoðarmaður','{"genderPayGap":0.4}',                        '{"employees":2}');
+  ('${roleResultIds[0]}','${resultId}','${roleIds[0]}','Verkefnastjóri','{"genderPayGap":${hasOutliers ? 9.1 : 0.6}}','{"employees":2}'),
+  ('${roleResultIds[1]}','${resultId}','${roleIds[1]}', 'Sérfræðingur', '{"genderPayGap":0.7}',                        '{"employees":2}'),
+  ('${roleResultIds[2]}','${resultId}','${roleIds[2]}', 'Aðstoðarmaður','{"genderPayGap":0.4}',                        '{"employees":2}');
 `
 
   if (hasOutliers) {
@@ -909,9 +900,8 @@ DELETE FROM report_role_result
     JOIN report r ON r.id = rr.report_id
     WHERE r.company_national_id LIKE '500101%'
   );
-DELETE FROM report_employee_role WHERE id IN (
-  '${ROLE_VERKEFNASTJORI}', '${ROLE_SERFRAEDINGUR}', '${ROLE_ADSTODARMADUR}'
-);
+DELETE FROM report_employee_role
+  WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_result       WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_sub_criterion_step
   WHERE report_sub_criterion_id IN (
