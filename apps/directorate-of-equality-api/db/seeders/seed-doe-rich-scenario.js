@@ -238,7 +238,10 @@ COMMIT;
 // 5. Roles + role→step assignments ------------------------------------------
 function rolesSql() {
   const roleValues = excel.roles
-    .map((r) => `  (${escStr(roleIdByTitle.get(r.title))}, ${escStr(r.title)})`)
+    .map(
+      (r) =>
+        `  (${escStr(roleIdByTitle.get(r.title))}, ${escStr(RICH_SAL)}, ${escStr(r.title)})`,
+    )
     .join(',\n')
 
   const assignmentValues = []
@@ -262,7 +265,7 @@ function rolesSql() {
   return `
 BEGIN;
 
-INSERT INTO report_employee_role (id, title) VALUES
+INSERT INTO report_employee_role (id, report_id, title) VALUES
 ${roleValues};
 
 INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, report_sub_criterion_step_id) VALUES
