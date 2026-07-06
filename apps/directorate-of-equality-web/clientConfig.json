@@ -1,6 +1,57 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/admin-report/reports/excel/template": {
+      "get": {
+        "operationId": "getAdminBlankExcelTemplate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Blank salary report template",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
     "/api/v1/admin-report/companies/{companyId}/reports/excel/import": {
       "post": {
         "operationId": "importAdminSalaryReportWorkbook",
@@ -3643,6 +3694,49 @@
       "bearer": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" }
     },
     "schemas": {
+      "ApiErrorDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "number" },
+          "timestamp": { "type": "string" },
+          "name": {
+            "type": "string",
+            "enum": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ],
+            "example": [
+              "NotFound",
+              "ValidationError",
+              "ForeignKeyConstraintError",
+              "UniqueConstraintError",
+              "TimeoutError",
+              "Unauthorized",
+              "Forbidden",
+              "BadRequest",
+              "InternalServerError",
+              "ConnectionAcquireTimeoutError",
+              "UnknownError"
+            ]
+          },
+          "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["statusCode", "timestamp"]
+      },
       "ImportKeyDto": {
         "type": "object",
         "properties": {
@@ -3787,49 +3881,6 @@
           }
         },
         "required": ["criteria", "roles", "employees"]
-      },
-      "ApiErrorDto": {
-        "type": "object",
-        "properties": {
-          "statusCode": { "type": "number" },
-          "timestamp": { "type": "string" },
-          "name": {
-            "type": "string",
-            "enum": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "ConnectionAcquireTimeoutError",
-              "UnknownError"
-            ],
-            "example": [
-              "NotFound",
-              "ValidationError",
-              "ForeignKeyConstraintError",
-              "UniqueConstraintError",
-              "TimeoutError",
-              "Unauthorized",
-              "Forbidden",
-              "BadRequest",
-              "InternalServerError",
-              "ConnectionAcquireTimeoutError",
-              "UnknownError"
-            ]
-          },
-          "message": { "type": "string" },
-          "translatedMessage": {
-            "type": "string",
-            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
-          },
-          "details": { "type": "array", "items": { "type": "string" } }
-        },
-        "required": ["statusCode", "timestamp"]
       },
       "SalaryAnalysisRequestDto": {
         "type": "object",

@@ -218,7 +218,7 @@ describe('ReportService.list — filter & query building', () => {
     })
   })
 
-  it('default-excludes WITHDRAWN reports when no status filter is supplied', async () => {
+  it('default-excludes DRAFT and WITHDRAWN reports when no status filter is supplied', async () => {
     const { service, findAndCountAll } = makeService()
     findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
 
@@ -228,7 +228,9 @@ describe('ReportService.list — filter & query building', () => {
       string,
       unknown
     >
-    expect(where.status).toEqual({ [Op.ne]: ReportStatusEnum.WITHDRAWN })
+    expect(where.status).toEqual({
+      [Op.notIn]: [ReportStatusEnum.DRAFT, ReportStatusEnum.WITHDRAWN],
+    })
   })
 
   it('allows callers to explicitly request WITHDRAWN via the status filter', async () => {
@@ -242,6 +244,24 @@ describe('ReportService.list — filter & query building', () => {
       unknown
     >
     expect(where.status).toEqual({ [Op.in]: [ReportStatusEnum.WITHDRAWN] })
+  })
+
+  it('never surfaces DRAFT reports even when explicitly requested', async () => {
+    const { service, findAndCountAll } = makeService()
+    findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.list(
+      baseQuery({
+        status: [ReportStatusEnum.DRAFT, ReportStatusEnum.SUBMITTED],
+      }),
+    )
+
+    const where = findAndCountAll.mock.calls[0][0].where as Record<
+      string,
+      unknown
+    >
+    // DRAFT is filtered out of the requested set; only SUBMITTED remains.
+    expect(where.status).toEqual({ [Op.in]: [ReportStatusEnum.SUBMITTED] })
   })
 
   it('prefers unassignedReviewer over reviewerUserId when both are given', async () => {

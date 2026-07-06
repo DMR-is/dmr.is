@@ -31,7 +31,9 @@ export interface IApplicationService {
   getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto>
-  getSalaryReportEligibility(company: CompanyDto): SalaryReportEligibilityDto
+  getSalaryReportEligibility(
+    company: CompanyDto,
+  ): Promise<SalaryReportEligibilityDto>
   getReport(
     providerId: string,
     company: CompanyDto,

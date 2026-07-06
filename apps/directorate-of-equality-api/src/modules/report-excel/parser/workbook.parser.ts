@@ -24,6 +24,7 @@ import ExcelJS from 'exceljs'
 
 import { BadRequestException } from '@nestjs/common'
 
+import { ImportErrorDto } from '../dto/import-error.dto'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { validateSemantics } from '../validators/semantic.validator'
 import {
@@ -33,6 +34,24 @@ import {
 import { parseCriteriaTree } from './criteria.parser'
 import { parseEmployees } from './employees.parser'
 import { ErrorBag } from './errors'
+
+/**
+ * Render a structured import error into a single human-readable line with its
+ * sheet/row/column location baked in. These strings are thrown as the
+ * `message` array so the shared HttpExceptionFilter forwards them as
+ * `details`, which the web client surfaces to the user (the structured
+ * `errors` array only survives in server logs).
+ */
+const formatImportError = (e: ImportErrorDto): string => {
+  const location = [
+    e.row != null ? `röð ${e.row}` : null,
+    e.column != null ? `dálkur ${e.column}` : null,
+  ]
+    .filter(Boolean)
+    .join(', ')
+
+  return location ? `${e.sheet} (${location}): ${e.message}` : `${e.sheet}: ${e.message}`
+}
 
 export const parseWorkbook = async (
   fileBuffer: Buffer,
@@ -49,13 +68,14 @@ export const parseWorkbook = async (
     await workbook.xlsx.load(arrayBuffer)
   } catch (e) {
     throw new BadRequestException({
-      message: 'Could not read workbook — is this a valid xlsx file?',
+      message: 'Ekki tókst að lesa vinnubókina — er þetta gild xlsx skrá?',
       errors: [
         {
           sheet: '(workbook)',
           row: null,
           column: null,
-          message: e instanceof Error ? e.message : 'unknown xlsx load error',
+          message:
+            e instanceof Error ? e.message : 'Óþekkt villa við lestur xlsx',
         },
       ],
     })
@@ -77,9 +97,13 @@ export const parseWorkbook = async (
   validateSemantics(report, errors)
 
   if (errors.hasErrors) {
+    const list = [...errors.list]
     throw new BadRequestException({
-      message: 'Workbook failed validation',
-      errors: [...errors.list],
+      // Array `message` → the shared HttpExceptionFilter forwards it verbatim
+      // as `details`, so the web client can list every problem for the user.
+      message: list.map(formatImportError),
+      // Structured form retained for server-side logging / debugging.
+      errors: list,
     })
   }
 

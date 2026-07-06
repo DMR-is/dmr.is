@@ -29,6 +29,7 @@ import { ReportCommentModel } from '../modules/report-comment/models/report-comm
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
+import { ReportDraftApiModule } from '../modules/report-draft/report-draft.api.module'
 import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
@@ -92,6 +93,7 @@ import { HealthController } from './health.controller'
       inject: [DMRSequelizeConfigService],
     }),
     ApplicationApiModule,
+    ReportDraftApiModule,
     DoeWebSwaggerModule,
     TasksModule,
   ],

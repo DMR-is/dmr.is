@@ -58,7 +58,15 @@ const SUB_CRITERIA_COLS = {
   firstStepCol: 10,
 } as const
 
-const MAX_DATA_ROWS = 40
+/**
+ * Absolute ceiling on rows scanned per table sheet — a defensive guard against
+ * malformed files reporting a huge `rowCount`, NOT a domain limit. Real
+ * criteria / sub-criteria counts are capped far lower (and with explicit
+ * errors) in `assertParsedPayloadIntegrity`; everything within this bound is
+ * read in full — empty and non-data rows are skipped — so no data is ever
+ * silently truncated the way the old fixed 40-row window did.
+ */
+const ABSOLUTE_MAX_TABLE_ROWS = 5000
 
 /**
  * Read Viðmið sheet → list of top-level criteria (no sub-criteria attached
@@ -72,11 +80,11 @@ const parseCriteriaSheet = (
 ): ParsedCriterionDto[] => {
   const criteria: ParsedCriterionDto[] = []
 
-  for (
-    let r = TABLE_FIRST_DATA_ROW;
-    r < TABLE_FIRST_DATA_ROW + MAX_DATA_ROWS;
-    r++
-  ) {
+  const lastRow = Math.min(
+    sheet.rowCount,
+    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+  )
+  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const tegund = readString(sheet.getCell(`${CRITERIA_COLS.tegund}${r}`))
     const title = readString(sheet.getCell(`${CRITERIA_COLS.title}${r}`))
     const description = readString(
@@ -100,7 +108,7 @@ const parseCriteriaSheet = (
     if (!title || !description || weight == null) {
       errors.add(
         SHEETS.CRITERIA,
-        'Row is missing title, description, or weight',
+        'Röð vantar heiti, lýsingu eða vægi',
         {
           row: r,
         },
@@ -142,7 +150,7 @@ const resolveCriterionType = (
     if (!mapped) {
       errors.add(
         SHEETS.CRITERIA,
-        `Unknown job-based criterion "${title}" — expected one of: ${Object.keys(JOB_BASED_TITLE_TO_TYPE).join(', ')}`,
+        `Óþekkt starfsbundið viðmið „${title}“ — reiknað var með einu af eftirfarandi: ${Object.keys(JOB_BASED_TITLE_TO_TYPE).join(', ')}`,
         { row, column: CRITERIA_COLS.title },
       )
       return null
@@ -154,7 +162,7 @@ const resolveCriterionType = (
   }
   errors.add(
     SHEETS.CRITERIA,
-    `Unknown Tegund "${tegund}" — expected "${CRITERION_TEGUND.JOB_BASED}" or "${CRITERION_TEGUND.PERSONAL}"`,
+    `Óþekkt tegund „${tegund}“ — reiknað var með „${CRITERION_TEGUND.JOB_BASED}“ eða „${CRITERION_TEGUND.PERSONAL}“`,
     { row, column: CRITERIA_COLS.tegund },
   )
   return null
@@ -172,11 +180,11 @@ const parseSubCriteriaSheet = (
 ): void => {
   const criterionByTitle = new Map(criteria.map((c) => [c.title, c]))
 
-  for (
-    let r = TABLE_FIRST_DATA_ROW;
-    r < TABLE_FIRST_DATA_ROW + MAX_DATA_ROWS;
-    r++
-  ) {
+  const lastRow = Math.min(
+    sheet.rowCount,
+    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+  )
+  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const parentTitle = readString(
       sheet.getCell(`${SUB_CRITERIA_COLS.parent}${r}`),
     )
@@ -200,7 +208,7 @@ const parseSubCriteriaSheet = (
     ) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        'Row is missing parent, title, description, weight, or step count',
+        'Röð vantar foreldri, heiti, lýsingu, vægi eða fjölda þrepa',
         {
           row: r,
         },
@@ -211,7 +219,7 @@ const parseSubCriteriaSheet = (
     if (numSteps < MIN_STEPS || numSteps > MAX_STEPS) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Step count ${numSteps} out of range ${MIN_STEPS}–${MAX_STEPS}`,
+        `Fjöldi þrepa ${numSteps} er utan leyfilegs bils ${MIN_STEPS}–${MAX_STEPS}`,
         { row: r, column: SUB_CRITERIA_COLS.numSteps },
       )
       continue
@@ -221,7 +229,7 @@ const parseSubCriteriaSheet = (
     if (!parent) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Parent criterion "${parentTitle}" not found on ${SHEETS.CRITERIA}`,
+        `Foreldraviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
         { row: r, column: SUB_CRITERIA_COLS.parent },
       )
       continue
@@ -232,7 +240,7 @@ const parseSubCriteriaSheet = (
       const descCell = sheet.getCell(r, SUB_CRITERIA_COLS.firstStepCol + i - 1)
       const stepDesc = readString(descCell)
       if (!stepDesc) {
-        errors.add(SHEETS.SUB_CRITERIA, `Missing description for step ${i}`, {
+        errors.add(SHEETS.SUB_CRITERIA, `Lýsingu vantar fyrir þrep ${i}`, {
           row: r,
           column: descCell.address.replace(/\d+$/, ''),
         })
@@ -264,14 +272,14 @@ export const parseCriteriaTree = (
   if (!viðmiðSheet) {
     errors.add(
       SHEETS.CRITERIA,
-      `Required sheet "${SHEETS.CRITERIA}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`,
     )
     return []
   }
   if (!undirviðmiðSheet) {
     errors.add(
       SHEETS.SUB_CRITERIA,
-      `Required sheet "${SHEETS.SUB_CRITERIA}" is missing`,
+      `Nauðsynlegt blað „${SHEETS.SUB_CRITERIA}“ vantar`,
     )
     return []
   }

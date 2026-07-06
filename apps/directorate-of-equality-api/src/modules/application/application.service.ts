@@ -75,7 +75,10 @@ import type {
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
-import { evaluateSalaryRenewalEligibility } from './lib/salary-renewal-eligibility'
+import {
+  evaluateSalaryRenewalEligibility,
+  SalaryReportEligibilityReasonEnum,
+} from './lib/salary-renewal-eligibility'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
@@ -143,13 +146,19 @@ export class ApplicationService implements IApplicationService {
     })
 
     // Renewal-window gate: a company may only submit a salary report once its
-    // current one is due in 6 months or less. Same verdict the eligibility
-    // endpoint returns, so the pre-check and this block cannot drift. Only the
-    // company-facing portal path is gated — admin/system creation is not.
-    const eligibility = this.getSalaryReportEligibility(company)
-    if (!eligibility.eligible) {
+    // current one is due in 6 months or less. Shares the pure renewal decision
+    // with the eligibility endpoint, so the pre-check and this block cannot
+    // drift on the window rule. The equality-report precondition is enforced
+    // separately (as a 404) by `createSalary` below, so it is not re-checked
+    // here. Only the company-facing portal path is gated — admin/system
+    // creation is not.
+    const renewal = evaluateSalaryRenewalEligibility(
+      company.nextSalaryReportDueAt ?? null,
+      new Date(),
+    )
+    if (!renewal.eligible) {
       throw new ConflictException(
-        `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${eligibility.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
+        `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
       )
     }
 
@@ -157,12 +166,30 @@ export class ApplicationService implements IApplicationService {
     return this.reportCreateService.createSalary(createInput)
   }
 
-  getSalaryReportEligibility(company: CompanyDto): SalaryReportEligibilityDto {
+  async getSalaryReportEligibility(
+    company: CompanyDto,
+  ): Promise<SalaryReportEligibilityDto> {
     const { eligible, reason, dueAt, earliestSubmissionDate } =
       evaluateSalaryRenewalEligibility(
         company.nextSalaryReportDueAt ?? null,
         new Date(),
       )
+
+    // A salary report must reference an approved, in-force equality report.
+    // This blocks the flow regardless of the renewal window, so it takes
+    // priority — but we still surface the (informational) due dates from the
+    // renewal decision so the portal can render them either way.
+    const activeEquality = await this.reportService.getActiveEqualityForCompany(
+      company.id,
+    )
+    if (!activeEquality) {
+      return {
+        eligible: false,
+        reason: SalaryReportEligibilityReasonEnum.MISSING_EQUALITY_REPORT,
+        dueAt,
+        earliestSubmissionDate,
+      }
+    }
 
     return { eligible, reason, dueAt, earliestSubmissionDate }
   }
