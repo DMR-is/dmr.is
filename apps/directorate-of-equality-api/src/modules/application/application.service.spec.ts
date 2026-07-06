@@ -421,24 +421,50 @@ describe('ApplicationService', () => {
   })
 
   describe('getSalaryReportEligibility', () => {
-    it('is eligible when there is no due date', () => {
-      const result = service.getSalaryReportEligibility(COMPANY)
+    const activeEquality = {
+      id: 'eq-1',
+      identifier: 'EQ-2025-001',
+      approvedAt: new Date('2025-01-01T00:00:00Z'),
+      validUntil: new Date('2028-01-01T00:00:00Z'),
+    }
+
+    it('is eligible when there is no due date and an equality report exists', async () => {
+      getActiveEqualityForCompany.mockResolvedValue(activeEquality)
+
+      const result = await service.getSalaryReportEligibility(COMPANY)
 
       expect(result.eligible).toBe(true)
       expect(result.reason).toBeNull()
       expect(result.dueAt).toBeNull()
     })
 
-    it('is ineligible with a reason when the due date is more than 6 months out', () => {
+    it('is ineligible with a reason when the due date is more than 6 months out', async () => {
+      getActiveEqualityForCompany.mockResolvedValue(activeEquality)
       const farFuture = new Date()
       farFuture.setFullYear(farFuture.getFullYear() + 2)
       const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
 
-      const result = service.getSalaryReportEligibility(company)
+      const result = await service.getSalaryReportEligibility(company)
 
       expect(result.eligible).toBe(false)
       expect(result.reason).toBe('RENEWAL_WINDOW_NOT_OPEN')
       expect(result.dueAt).toEqual(farFuture)
+      expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
+    })
+
+    it('is ineligible with MISSING_EQUALITY_REPORT when no active equality report exists, taking priority over the renewal window', async () => {
+      getActiveEqualityForCompany.mockResolvedValue(null)
+      // Due date within the window would otherwise be eligible; the missing
+      // equality report must still block and win the reason.
+      const soon = new Date()
+      soon.setMonth(soon.getMonth() + 3)
+      const company = { ...COMPANY, nextSalaryReportDueAt: soon }
+
+      const result = await service.getSalaryReportEligibility(company)
+
+      expect(result.eligible).toBe(false)
+      expect(result.reason).toBe('MISSING_EQUALITY_REPORT')
+      expect(result.dueAt).toEqual(soon)
       expect(result.earliestSubmissionDate).toBeInstanceOf(Date)
     })
   })
