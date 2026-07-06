@@ -6,4 +6,7 @@ export class ReportEmployeeRoleDto {
 
   @ApiString()
   title!: string
+
+  @ApiUUId()
+  reportId!: string
 }

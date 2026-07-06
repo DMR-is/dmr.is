@@ -12,7 +12,13 @@ export const DOE_TASK_NAMESPACE = 3010
 /** Per-task lock keys. Each must be unique within the namespace. */
 export const DOE_TASK_JOB_IDS = {
   reportDeadlineReminder: 1,
+  reportDraftPrune: 2,
 } as const
 
 export const REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT =
   'ReportDeadlineReminderTask'
+
+export const REPORT_DRAFT_PRUNE_LOGGING_CONTEXT = 'ReportDraftPruneTask'
+
+/** Abandoned drafts untouched for this long are reaped by the prune task. */
+export const DRAFT_PRUNE_AGE_MONTHS = 6

@@ -18,6 +18,13 @@ export const SALARY_RENEWAL_WINDOW_MONTHS = 6
 export enum SalaryReportEligibilityReasonEnum {
   /** Due date is more than `SALARY_RENEWAL_WINDOW_MONTHS` months away. */
   RENEWAL_WINDOW_NOT_OPEN = 'RENEWAL_WINDOW_NOT_OPEN',
+  /**
+   * The company has no APPROVED, in-force equality report. A salary report must
+   * reference one, so the flow is blocked until an equality report exists. This
+   * is decided in the service (it needs a DB lookup), not in the pure
+   * renewal-window function below, and takes priority over the renewal window.
+   */
+  MISSING_EQUALITY_REPORT = 'MISSING_EQUALITY_REPORT',
 }
 
 export interface SalaryRenewalEligibility {
