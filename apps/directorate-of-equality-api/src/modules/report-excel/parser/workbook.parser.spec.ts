@@ -328,6 +328,69 @@ describe('parseWorkbook', () => {
     })
   })
 
+  describe('ordinal derivation (column A is a formula in the real template)', () => {
+    it('derives ordinal from row position, ignoring the =ROW()-5 formula in column A', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        workRatioPct: 100,
+        education: 'Háskólapróf (BA/BS)',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      writeEmployeeRow(wb, 2, {
+        name: 'B',
+        role: 'R',
+        gender: 'Karl',
+        workRatioPct: 100,
+        education: 'Háskólapróf (BA/BS)',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+
+      // Mirror the shipped template: column A holds the auto-numbering formula,
+      // NOT a literal. Before the row-position fix this made every non-empty
+      // row fail with "Raðnúmer vantar".
+      const s = wb.getWorksheet('Starfsmenn')!
+      s.getCell('A6').value = { formula: 'ROW()-5', result: 1 }
+      s.getCell('A7').value = { formula: 'ROW()-5', result: 2 }
+
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
+        'Engin sérstök',
+        'Grunnkunnátta',
+        'Góð kunnátta',
+        'Mjög góð kunnátta',
+        'Sérfræðikunnátta',
+      ])
+      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1], [1]])
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      // Row 6 → ordinal 1, row 7 → ordinal 2 (matches the sheet's "#" column).
+      expect(report.employees.map((e) => e.ordinal)).toEqual([1, 2])
+    })
+  })
+
   describe('parse-layer errors', () => {
     it('rejects unknown gender value', async () => {
       const wb = await loadTemplate()

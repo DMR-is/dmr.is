@@ -33,18 +33,17 @@ import {
   SHEETS,
   TABLE_FIRST_DATA_ROW,
 } from '../workbook.schema'
-import {
-  readDate,
-  readInteger,
-  readNumber,
-  readString,
-  toIsoDate,
-} from './cell'
+import { readDate, readNumber, readString, toIsoDate } from './cell'
 import { ErrorBag } from './errors'
 
 /**
  * Column letters in the Starfsmenn sheet. These MUST match the hand-authored
  * `template.xlsx` layout — the parser reads cells positionally, not by header.
+ *
+ * Column A ("#" / Raðnúmer) is deliberately absent: the template auto-numbers
+ * it with `=ROW()-5`, and the parser never trusts formula results (see
+ * `readInteger`). The ordinal is therefore derived from row position instead
+ * (see {@link parseEmployees}), which reproduces `=ROW()-5` exactly.
  *
  * The salary breakdown lives in K–P (6 sub-components). The template also has
  * two trailing computed columns — Q "Viðbótarlaun" (`=SUM(K:L)`) and R
@@ -53,7 +52,6 @@ import { ErrorBag } from './errors'
  * formulas are display-only.
  */
 const COLS = {
-  ordinal: 'A',
   name: 'B',
   role: 'C',
   gender: 'D',
@@ -113,7 +111,6 @@ export type EmployeesParseResult = {
 }
 
 type RawRow = {
-  ordinal: number | null
   role: string | null
   genderDisplay: string | null
   workRatioPct: number | null
@@ -131,7 +128,6 @@ type RawRow = {
 }
 
 const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
-  ordinal: readInteger(sheet.getCell(`${COLS.ordinal}${r}`)),
   role: readString(sheet.getCell(`${COLS.role}${r}`)),
   genderDisplay: readString(sheet.getCell(`${COLS.gender}${r}`)),
   workRatioPct: readNumber(sheet.getCell(`${COLS.workRatio}${r}`)),
@@ -182,10 +178,10 @@ const isEmptyRow = (row: RawRow): boolean =>
 const buildEmployee = (
   row: RawRow,
   r: number,
+  ordinal: number,
   errors: ErrorBag,
 ): ParsedEmployeeDto | null => {
   const {
-    ordinal,
     role,
     genderDisplay,
     workRatioPct,
@@ -201,14 +197,6 @@ const buildEmployee = (
     department,
     startDate,
   } = row
-
-  if (ordinal == null) {
-    errors.add(SHEETS.EMPLOYEES, 'Raðnúmer vantar (dálkur A) í röð sem er ekki tóm', {
-      row: r,
-      column: COLS.ordinal,
-    })
-    return null
-  }
 
   let ok = true
   const missingField = (col: string, icelandic: string): void => {
@@ -334,7 +322,14 @@ export const parseEmployees = (
     const row = readRow(sheet, r)
     if (isEmptyRow(row)) continue
 
-    const employee = buildEmployee(row, r, errors)
+    // Ordinal is derived from row position, not read from column A. The
+    // template auto-numbers column A with `=ROW()-5` (a formula the parser
+    // never trusts), so `r - (TABLE_FIRST_DATA_ROW - 1)` reproduces exactly
+    // the "#" the user sees on that row — keeping the imported ordinal aligned
+    // with the sheet even across blank rows.
+    const ordinal = r - (TABLE_FIRST_DATA_ROW - 1)
+
+    const employee = buildEmployee(row, r, ordinal, errors)
     if (!employee) continue
 
     if (!rolesByTitle.has(employee.roleTitle)) {
