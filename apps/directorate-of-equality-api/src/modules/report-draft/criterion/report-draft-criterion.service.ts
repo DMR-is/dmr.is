@@ -119,7 +119,11 @@ export class ReportDraftCriterionService
 
     const patch: Record<string, unknown> = {}
     if (data.title !== undefined) {
-      patch.title = data.title.trim()
+      const title = data.title.trim()
+      if (!title) {
+        throw new BadRequestException('Criterion title must not be empty')
+      }
+      patch.title = title
     }
     if (data.weight !== undefined) {
       patch.weight = data.weight

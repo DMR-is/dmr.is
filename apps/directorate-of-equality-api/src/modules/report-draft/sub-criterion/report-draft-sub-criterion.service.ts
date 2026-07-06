@@ -120,7 +120,11 @@ export class ReportDraftSubCriterionService
 
     const patch: Record<string, unknown> = {}
     if (data.title !== undefined) {
-      patch.title = data.title.trim()
+      const title = data.title.trim()
+      if (!title) {
+        throw new BadRequestException('Sub-criterion title must not be empty')
+      }
+      patch.title = title
     }
     if (data.description !== undefined) {
       patch.description = data.description
