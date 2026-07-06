@@ -17,7 +17,9 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Duplicate employee ordinal in parsed payload: 1/)
+      expect(run).toThrow(
+        /Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/,
+      )
     })
 
     it.each([1, 9])(
@@ -33,7 +35,7 @@ describe('employee-scores', () => {
 
         expect(run).toThrow(BadRequestException)
         expect(run).toThrow(
-          new RegExp(`has ${stepCount} step\\(s\\); expected 2–8`),
+          new RegExp(`er með ${stepCount} þrep; leyfilegt bil er 2–8`),
         )
       },
     )
@@ -48,12 +50,128 @@ describe('employee-scores', () => {
 
         expect(run).toThrow(BadRequestException)
         expect(run).toThrow(
-          /Employee ordinal 1 has invalid work ratio .* expected a value greater than 0/,
+          /Starfsmaður með raðnúmer 1 er með ógilt starfshlutfall .* gildið verður að vera stærra en 0/,
         )
       },
     )
   })
+
+  describe('capacity limits', () => {
+    it('rejects more than 24 criteria', () => {
+      const parsed = onlyCriteria(
+        Array.from({ length: 25 }, (_, i) => makeCriterion(`C${i}`, 0)),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Að hámarki 24 viðmið eru leyfð; fjöldi var 25/)
+    })
+
+    it('rejects more than 100 roles', () => {
+      const parsed = makeParsedReport()
+      parsed.roles = Array.from({ length: 101 }, (_, i) => ({
+        title: `Role ${i}`,
+        stepAssignments: [],
+      }))
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(/Að hámarki 100 störf eru leyfð; fjöldi var 101/)
+    })
+
+    it('rejects more than 10000 employees', () => {
+      const parsed = makeParsedReport()
+      parsed.employees = Array.from({ length: 10001 }, (_, i) =>
+        makeEmployee({ ordinal: i + 1 }),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Að hámarki 10000 starfsmenn eru leyfðir; fjöldi var 10001/,
+      )
+    })
+
+    it('rejects more than 25 sub-criteria under a single criterion', () => {
+      const parsed = onlyCriteria([makeCriterion('C', 26)])
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Viðmið „C“ er með 26 undirviðmið; að hámarki 25 eru leyfð á hvert viðmið/,
+      )
+    })
+
+    it('allows exactly 25 sub-criteria under a criterion', () => {
+      const parsed = onlyCriteria([makeCriterion('C', 25)])
+
+      expect(() => assertParsedPayloadIntegrity(parsed)).not.toThrow()
+    })
+
+    it('rejects more than 200 sub-criteria in total', () => {
+      // 9 job-based criteria × 25 subs = 225 (each criterion within its cap).
+      const parsed = onlyCriteria(
+        Array.from({ length: 9 }, (_, i) => makeCriterion(`C${i}`, 25)),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Að hámarki 200 undirviðmið eru leyfð samtals; fjöldi var 225/,
+      )
+    })
+
+    it('rejects more than 100 personal sub-criteria', () => {
+      // 5 personal criteria × 25 subs = 125 personal (total 125 stays ≤ 200).
+      const parsed = onlyCriteria(
+        Array.from({ length: 5 }, (_, i) =>
+          makeCriterion(`P${i}`, 25, ReportCriterionTypeEnum.PERSONAL),
+        ),
+      )
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Að hámarki 100 persónubundin undirviðmið eru leyfð; fjöldi var 125/,
+      )
+    })
+  })
 })
+
+/** A report with only criteria — no roles/employees — to isolate criteria caps. */
+function onlyCriteria(
+  criteria: ParsedReportDto['criteria'],
+): ParsedReportDto {
+  return { criteria, roles: [], employees: [] }
+}
+
+function makeCriterion(
+  title: string,
+  subCount: number,
+  type: ReportCriterionTypeEnum = ReportCriterionTypeEnum.RESPONSIBILITY,
+): ParsedReportDto['criteria'][number] {
+  return {
+    type,
+    title,
+    description: title,
+    weight: 10,
+    subCriteria: Array.from({ length: subCount }, (_, i) => ({
+      title: `${title}-sub-${i}`,
+      description: `${title}-sub-${i}`,
+      weight: 1,
+      steps: [
+        { order: 1, description: 'low', score: 10 },
+        { order: 2, description: 'high', score: 20 },
+      ],
+    })),
+  }
+}
 
 function makeParsedReport(): ParsedReportDto {
   return {

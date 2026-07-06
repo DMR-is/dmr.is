@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
@@ -62,6 +63,7 @@ export const CreateSalaryReportDrawer = () => {
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
+  const [importErrors, setImportErrors] = useState<string[] | null>(null)
   const [postpone, setPostpone] = useState(false)
   const [postponeReason, setPostponeReason] = useState('')
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
@@ -86,9 +88,19 @@ export const CreateSalaryReportDrawer = () => {
     ...trpc.adminReport.importWorkbook.mutationOptions(),
     onSuccess: (data) => {
       setParsedReport(data)
+      setImportErrors(null)
       toast.success(t.excelSuccessToast)
     },
-    onError: () => toast.error(t.excelErrorToast),
+    onError: (error) => {
+      // The API sends one formatted line per problem (sheet/row/column +
+      // reason) through the tRPC error's `validationErrors`. Surface the full
+      // list so the admin can fix the workbook without digging through logs.
+      const details = error.data?.validationErrors
+      setImportErrors(
+        Array.isArray(details) && details.length > 0 ? details : null,
+      )
+      toast.error(t.excelErrorToast)
+    },
   })
 
   const submitMutation = useMutation(
@@ -98,6 +110,8 @@ export const CreateSalaryReportDrawer = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !companyId) return
+
+    setImportErrors(null)
 
     try {
       // Upload the workbook straight to S3, then hand the object key to the API.
@@ -116,6 +130,7 @@ export const CreateSalaryReportDrawer = () => {
     setForm(EMPTY_FORM)
     setCompanyId(null)
     setParsedReport(null)
+    setImportErrors(null)
     setPostpone(false)
     setPostponeReason('')
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -216,6 +231,7 @@ export const CreateSalaryReportDrawer = () => {
               onChange={(opt) => {
                 setCompanyId(opt?.value ?? null)
                 setParsedReport(null)
+                setImportErrors(null)
                 if (fileInputRef.current) fileInputRef.current.value = ''
               }}
               isLoading={companiesQuery.isLoading}
@@ -265,6 +281,28 @@ export const CreateSalaryReportDrawer = () => {
               </Button>
             </Box>
           </GridColumn>
+          {importErrors && (
+            <GridColumn span="12/12">
+              <AlertMessage
+                type="error"
+                title={t.excelErrorTitle}
+                message={
+                  <Box>
+                    <Text variant="small" marginBottom={1}>
+                      {t.excelErrorIntro}
+                    </Text>
+                    <ul style={{ margin: 0, paddingInlineStart: '1.25rem' }}>
+                      {importErrors.map((err, i) => (
+                        <li key={i}>
+                          <Text variant="small">{err}</Text>
+                        </li>
+                      ))}
+                    </ul>
+                  </Box>
+                }
+              />
+            </GridColumn>
+          )}
         </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">

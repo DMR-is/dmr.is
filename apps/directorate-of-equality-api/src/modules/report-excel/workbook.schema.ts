@@ -54,6 +54,30 @@ export const MIN_STEPS = 2
 export const MAX_STEPS = 8
 
 /**
+ * Capacity ceilings on a single report. These are deliberately generous
+ * "sanity" limits, not domain rules — a report should never come close in
+ * practice. Their job is to (a) reject nonsensical / adversarial uploads with
+ * a clear error instead of silently truncating, and (b) stay consistent with
+ * how many rows/columns the Excel template physically provisions:
+ *
+ * - Roles → columns on Flokkun starfa (100 provisioned).
+ * - Personal sub-criteria → columns on Flokkun starfsmanna (100 provisioned).
+ * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows).
+ * - Criteria → Viðmið rows (4 mandatory job-based + 20 personal).
+ * - Employees → Flokkun starfsmanna rows (10 000, auto-extending table).
+ *
+ * Enforced centrally in `assertParsedPayloadIntegrity` so both the Excel
+ * import path and the application submit path share one source of truth. The
+ * DB itself stays unconstrained (see MIN_STEPS/MAX_STEPS note above).
+ */
+export const MAX_SUB_CRITERIA_PER_CRITERION = 25
+export const MAX_CRITERIA = 24
+export const MAX_TOTAL_SUB_CRITERIA = 200
+export const MAX_ROLES = 100
+export const MAX_PERSONAL_SUB_CRITERIA = 100
+export const MAX_EMPLOYEES = 10000
+
+/**
  * Sheet names the template ships with. Keyed in English for code, valued in
  * Icelandic to match the file. `IGNORE` sheets are not parsed.
  */
@@ -92,6 +116,11 @@ export const NAMED_RANGES = {
   EMPLOYEE_GENDER: 'EMP_KYN',
   JOB_TITLES: 'JOB_TITLES',
   JOB_TOTALS: 'JOB_TOTALS',
+  // Step-input regions of the two classification matrices. The parser reads
+  // these instead of hard-coded column letters so role / personal-sub
+  // capacity is driven by the template's geometry, not code constants.
+  ROLE_STEP_INPUTS: 'ROLE_STEP_INPUTS',
+  EMP_STEP_INPUTS: 'EMP_STEP_INPUTS',
 } as const
 
 /**

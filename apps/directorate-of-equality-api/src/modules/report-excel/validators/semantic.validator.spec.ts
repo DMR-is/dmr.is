@@ -138,7 +138,7 @@ describe('validateSemantics', () => {
       )
       const errors = runValidator(report)
       const missing = errors
-        .filter((e) => e.message.includes('Mandatory'))
+        .filter((e) => e.message.includes('Skyldubundið'))
         .map((e) => e.message)
       expect(missing).toHaveLength(3) // STRAIN, CONDITION, COMPETENCE
     })
@@ -150,7 +150,7 @@ describe('validateSemantics', () => {
       report.criteria[0].weight = 25 // now sums to 95
       const errors = runValidator(report)
       expect(
-        errors.some((e) => e.message.includes('Criterion weights sum to 95')),
+        errors.some((e) => e.message.includes('Vægi viðmiða leggst saman í 95')),
       ).toBe(true)
     })
 
@@ -160,7 +160,7 @@ describe('validateSemantics', () => {
       const errors = runValidator(report)
       expect(
         errors.some((e) =>
-          e.message.includes('Sub-criterion weights sum to 95'),
+          e.message.includes('Vægi undirviðmiða leggst saman í 95'),
         ),
       ).toBe(true)
     })
@@ -171,7 +171,7 @@ describe('validateSemantics', () => {
       report.criteria[0].weight = 30.001
       report.criteria[0].subCriteria[0].weight = 30.001
       const errors = runValidator(report)
-      expect(errors.some((e) => e.message.includes('weights sum to'))).toBe(
+      expect(errors.some((e) => e.message.includes('leggst saman í'))).toBe(
         false,
       )
     })
@@ -183,7 +183,9 @@ describe('validateSemantics', () => {
       report.roles = []
       const errors = runValidator(report)
       expect(
-        errors.some((e) => e.message === 'At least one role is required'),
+        errors.some(
+          (e) => e.message === 'Að minnsta kosti eitt starf er nauðsynlegt',
+        ),
       ).toBe(true)
     })
 
@@ -192,7 +194,10 @@ describe('validateSemantics', () => {
       report.employees = []
       const errors = runValidator(report)
       expect(
-        errors.some((e) => e.message === 'At least one employee is required'),
+        errors.some(
+          (e) =>
+            e.message === 'Að minnsta kosti einn starfsmaður er nauðsynlegur',
+        ),
       ).toBe(true)
     })
   })
@@ -204,7 +209,7 @@ describe('validateSemantics', () => {
       const errors = runValidator(report)
       expect(
         errors.some((e) =>
-          e.message.includes('references unknown role "Ghost"'),
+          e.message.includes('vísar í óþekkt starf „Ghost“'),
         ),
       ).toBe(true)
     })
@@ -215,7 +220,7 @@ describe('validateSemantics', () => {
       const report = validReport()
       report.roles[0].stepAssignments.pop() // drop Hæfni
       const errors = runValidator(report)
-      expect(errors.some((e) => e.message.includes('missing assignment'))).toBe(
+      expect(errors.some((e) => e.message.includes('vantar úthlutun'))).toBe(
         true,
       )
     })
@@ -229,7 +234,7 @@ describe('validateSemantics', () => {
       })
       const errors = runValidator(report)
       expect(
-        errors.some((e) => e.message.includes('has 2 assignments for')),
+        errors.some((e) => e.message.includes('er með 2 úthlutanir fyrir')),
       ).toBe(true)
     })
   })
@@ -242,7 +247,7 @@ describe('validateSemantics', () => {
       expect(
         errors.some(
           (e) =>
-            e.message.includes('missing assignment') &&
+            e.message.includes('vantar úthlutun') &&
             e.message.includes('#1'),
         ),
       ).toBe(true)
@@ -270,8 +275,8 @@ describe('validateSemantics', () => {
       expect(
         errors.some(
           (e) =>
-            e.message.includes('missing assignment') &&
-            e.message.includes('Employee'),
+            e.message.includes('vantar úthlutun') &&
+            e.message.includes('Starfsmaður'),
         ),
       ).toBe(false)
     })

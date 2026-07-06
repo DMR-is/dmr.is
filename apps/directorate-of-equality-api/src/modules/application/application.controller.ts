@@ -114,7 +114,10 @@ export class ApplicationController {
       ImportUploadBoundary.APPLICATION,
     )
     try {
-      return await this.reportExcelService.importWorkbook(buffer)
+      return await this.reportExcelService.importWorkbook(
+        buffer,
+        ImportUploadBoundary.APPLICATION,
+      )
     } finally {
       await this.importUploadService.cleanup(body.key)
     }
