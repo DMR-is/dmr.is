@@ -1,5 +1,6 @@
 'use client'
 
+// eslint-disable-next-line simple-import-sort/imports
 import cn from 'classnames'
 import React, { PropsWithChildren } from 'react'
 
@@ -8,8 +9,8 @@ import { Button } from '@island.is/island-ui/core/Button/Button'
 // Must load after ModalBase: its unconditional `.modal { width: 100% }`
 // would otherwise be emitted after (and override) this file's media-query
 // width overrides, since CSS module evaluation order follows import order.
-import * as styles from '@island.is/island-ui/core/Drawer/Drawer.css'
 import { ModalBase } from '@island.is/island-ui/core/ModalBase/ModalBase'
+import * as styles from '@island.is/island-ui/core/Drawer/Drawer.css'
 
 interface DrawerProps {
   /**
