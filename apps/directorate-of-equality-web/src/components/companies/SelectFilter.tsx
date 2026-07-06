@@ -17,11 +17,15 @@ type Props = {
   options: SelectFilterOption[]
   selected: string[]
   isLoading?: boolean
+  /** Multi-select by default; pass false for single-value filters. */
+  isMulti?: boolean
   onChange: (values: string[]) => void
 }
 
-// Searchable multi-select filter — same control as the ÍSAT picker, but for
-// option sets the parent already has in memory (regions, postcodes).
+// Searchable select filter — same control as the ÍSAT picker, but for option
+// sets the parent already has in memory (regions, postcodes). Multi-select by
+// default; single-select mode still reports its value as a 0/1-length array so
+// the parent handler stays uniform.
 export const SelectFilter = ({
   name,
   label,
@@ -30,15 +34,17 @@ export const SelectFilter = ({
   options,
   selected,
   isLoading,
+  isMulti = true,
   onChange,
 }: Props) => {
-  const value = useMemo(
-    () =>
-      selected.map(
-        (v) => options.find((o) => o.value === v) ?? { value: v, label: v },
-      ),
-    [selected, options],
-  )
+  const value = useMemo(() => {
+    const resolve = (v: string) =>
+      options.find((o) => o.value === v) ?? { value: v, label: v }
+    if (isMulti) {
+      return selected.map(resolve)
+    }
+    return selected.length ? resolve(selected[0]) : null
+  }, [selected, options, isMulti])
 
   return (
     <Box>
@@ -50,7 +56,7 @@ export const SelectFilter = ({
       <Select
         name={name}
         size="sm"
-        isMulti
+        isMulti={isMulti}
         isSearchable
         isClearable
         isLoading={isLoading}
@@ -58,11 +64,16 @@ export const SelectFilter = ({
         value={value}
         placeholder={placeholder}
         noOptionsMessage={noOptionsMessage}
-        onChange={(opts: unknown) =>
-          onChange(
-            ((opts as SelectFilterOption[] | null) ?? []).map((o) => o.value),
-          )
-        }
+        onChange={(opts: unknown) => {
+          if (isMulti) {
+            onChange(
+              ((opts as SelectFilterOption[] | null) ?? []).map((o) => o.value),
+            )
+          } else {
+            const opt = opts as SelectFilterOption | null
+            onChange(opt ? [opt.value] : [])
+          }
+        }}
       />
     </Box>
   )

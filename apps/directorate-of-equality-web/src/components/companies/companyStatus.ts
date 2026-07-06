@@ -38,15 +38,12 @@ export const EXPIRES_FILTER_OPTIONS = [
   { value: 'soon', label: 'Rennur út innan 6 mánaða' },
 ]
 
-export const DAILY_FINES_FILTER_OPTIONS = [
-  { value: 'active', label: 'Dagsektir í gangi' },
-]
-
-export const OVERDUE_FILTER_OPTIONS = [
+// Combined boolean flags — each selected value maps to its own boolean server
+// param (see CompaniesContainer). Grouped into a single multi-select so the
+// filter panel stays compact.
+export const FLAG_FILTER_OPTIONS = [
+  { value: 'fines', label: 'Dagsektir í gangi' },
   { value: 'overdue', label: 'Skiladagur liðinn' },
-]
-
-export const QUARANTINE_FILTER_OPTIONS = [
   { value: 'quarantined', label: 'Fyrirtæki er í var' },
 ]
 
