@@ -3,6 +3,8 @@
 import { useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
+import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
@@ -14,17 +16,26 @@ import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { Table } from '@dmr.is/ui/components/Tables/Table'
 
-import { GenderEnum, type ParsedReportDto } from '../../gen/fetch/types.gen'
+import {
+  GenderEnum,
+  type ParsedReportDto,
+  type SalaryAnalysisOutlierDto,
+} from '../../gen/fetch/types.gen'
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatNationalId } from '../../lib/utils'
+import { formatNationalId, formatSalary } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type ColumnDef } from '@tanstack/react-table'
+
+const OUTLIERS_PAGE_SIZE = 10
 
 const t = overviewText.createSalaryReport
+const d = t.deviations
 const s = sharedText
 
 const GENDER_OPTIONS = [
@@ -45,6 +56,27 @@ const EMPTY_FORM = {
   averageEmployeeNeutralCount: '',
 }
 
+// Local editing shape for an outlier group. `ordinals` holds the detected
+// outlier ordinals assigned to this group; every detected outlier must end up
+// in exactly one group before the report can be submitted with explanations.
+type OutlierGroupForm = {
+  id: string
+  reason: string
+  action: string
+  signatureName: string
+  signatureRole: string
+  ordinals: number[]
+}
+
+const makeGroup = (id: string): OutlierGroupForm => ({
+  id,
+  reason: '',
+  action: '',
+  signatureName: '',
+  signatureRole: '',
+  ordinals: [],
+})
+
 function parseOutlierOrdinals(message: string): number[] | null {
   const match = message.match(/employee ordinal\(s\): ([\d,\s]+)/)
   if (!match) return null
@@ -58,16 +90,21 @@ export const CreateSalaryReportDrawer = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const groupIdCounter = useRef(0)
 
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
+  const [outliers, setOutliers] = useState<SalaryAnalysisOutlierDto[]>([])
   const [postpone, setPostpone] = useState(false)
   const [postponeReason, setPostponeReason] = useState('')
+  const [groups, setGroups] = useState<OutlierGroupForm[]>([])
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
 
   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  const nextGroup = () => makeGroup(`g${(groupIdCounter.current += 1)}`)
 
   const companiesQuery = useQuery(
     trpc.company.list.queryOptions({ pageSize: 1000 }),
@@ -82,11 +119,26 @@ export const CreateSalaryReportDrawer = () => {
     trpc.adminReport.requestImportUpload.mutationOptions(),
   )
 
+  const analyzeMutation = useMutation({
+    ...trpc.adminReport.analyzeSalary.mutationOptions(),
+    onSuccess: (data) => {
+      setOutliers(data.outliers)
+      // Groups start empty; the admin builds them by selecting rows in the
+      // outlier table and clicking "create group".
+      setGroups([])
+    },
+    onError: () => toast.error(d.analyzeError),
+  })
+
   const importMutation = useMutation({
     ...trpc.adminReport.importWorkbook.mutationOptions(),
     onSuccess: (data) => {
       setParsedReport(data)
       toast.success(t.excelSuccessToast)
+      resetDeviations()
+      if (companyId) {
+        analyzeMutation.mutate({ path: { companyId }, body: { parsed: data } })
+      }
     },
     onError: () => toast.error(t.excelErrorToast),
   })
@@ -94,6 +146,14 @@ export const CreateSalaryReportDrawer = () => {
   const submitMutation = useMutation(
     trpc.adminReport.submitSalary.mutationOptions(),
   )
+
+  const resetDeviations = () => {
+    setOutliers([])
+    setGroups([])
+    setPostpone(false)
+    setPostponeReason('')
+    analyzeMutation.reset()
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -116,10 +176,48 @@ export const CreateSalaryReportDrawer = () => {
     setForm(EMPTY_FORM)
     setCompanyId(null)
     setParsedReport(null)
-    setPostpone(false)
-    setPostponeReason('')
+    resetDeviations()
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
+
+  const updateGroup = (id: string, patch: Partial<OutlierGroupForm>) =>
+    setGroups((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, ...patch } : g)),
+    )
+
+  const removeGroup = (id: string) =>
+    setGroups((prev) => prev.filter((g) => g.id !== id))
+
+  // Turns the currently-selected outlier rows into a new group. Selection only
+  // ever holds unassigned ordinals, so every outlier ends up in one group.
+  const createGroup = (ordinals: number[]) => {
+    if (ordinals.length === 0) return
+    setGroups((prev) => [...prev, { ...nextGroup(), ordinals }])
+  }
+
+  const identifierForOrdinal = (ordinal: number) =>
+    parsedReport?.employees.find((e) => e.ordinal === ordinal)?.identifier ??
+    `#${ordinal}`
+
+  // --- Outlier resolution state --------------------------------------------
+  const hasOutliers = outliers.length > 0
+  const activeGroups = groups.filter((g) => g.ordinals.length > 0)
+  const assignedOrdinals = new Set(activeGroups.flatMap((g) => g.ordinals))
+  const allOutliersAssigned = outliers.every((o) =>
+    assignedOrdinals.has(o.employeeOrdinal),
+  )
+  const groupsComplete = activeGroups.every(
+    (g) =>
+      g.reason.trim() &&
+      g.action.trim() &&
+      g.signatureName.trim() &&
+      g.signatureRole.trim(),
+  )
+  const explanationsValid =
+    activeGroups.length > 0 && allOutliersAssigned && groupsComplete
+
+  const outliersResolved =
+    !hasOutliers || (postpone ? !!postponeReason.trim() : explanationsValid)
 
   const handleSubmit = async () => {
     if (!companyId || !parsedReport) return
@@ -138,8 +236,18 @@ export const CreateSalaryReportDrawer = () => {
       averageEmployeeFemaleCount: Number(form.averageEmployeeFemaleCount),
       averageEmployeeNeutralCount: Number(form.averageEmployeeNeutralCount),
       parsed: parsedReport,
-      postponed: postpone,
-      postponeReason: postpone ? postponeReason : undefined,
+      postponed: hasOutliers ? postpone : false,
+      postponeReason: hasOutliers && postpone ? postponeReason : undefined,
+      outlierGroups:
+        hasOutliers && !postpone
+          ? activeGroups.map((g) => ({
+              reason: g.reason,
+              action: g.action,
+              signatureName: g.signatureName,
+              signatureRole: g.signatureRole,
+              employeeOrdinals: g.ordinals,
+            }))
+          : undefined,
     }
 
     const onSuccess = () => {
@@ -150,19 +258,18 @@ export const CreateSalaryReportDrawer = () => {
     }
 
     try {
-      // A postponed submit needs no outlier payload — the API recomputes the
-      // detected set server-side and creates a single default outlier group
-      // (explanation deferred). The admin tool has no per-outlier explanation
-      // UI, so when outliers are detected the report must be postponed.
       await submitMutation.mutateAsync({ path: { companyId }, body })
       onSuccess()
     } catch (firstError) {
+      // With the preview in place this path is a safety net for a threshold
+      // drift between preview and submit — surface the ordinals if the server
+      // still rejects the outlier coverage.
       const message = firstError instanceof Error ? firstError.message : ''
       const ordinals = parseOutlierOrdinals(message)
 
       if (ordinals && !postpone) {
         toast.error(
-          `Frávik fundust fyrir ${ordinals.length} starfsmenn. Merktu "Fresta skilum frávika" og gefðu ástæðu til að senda inn.`,
+          `Frávik fundust fyrir ${ordinals.length} starfsmenn. Yfirfarðu frávikahópana og reyndu aftur.`,
         )
         return
       }
@@ -174,6 +281,7 @@ export const CreateSalaryReportDrawer = () => {
   const canSubmit =
     !!companyId &&
     !!parsedReport &&
+    analyzeMutation.isSuccess &&
     !!form.companyAdminName &&
     !!form.companyAdminEmail &&
     !!form.contactName &&
@@ -182,7 +290,7 @@ export const CreateSalaryReportDrawer = () => {
     !!form.averageEmployeeMaleCount &&
     !!form.averageEmployeeFemaleCount &&
     !!form.averageEmployeeNeutralCount &&
-    (!postpone || !!postponeReason)
+    outliersResolved
 
   return (
     <Drawer
@@ -216,6 +324,7 @@ export const CreateSalaryReportDrawer = () => {
               onChange={(opt) => {
                 setCompanyId(opt?.value ?? null)
                 setParsedReport(null)
+                resetDeviations()
                 if (fileInputRef.current) fileInputRef.current.value = ''
               }}
               isLoading={companiesQuery.isLoading}
@@ -257,7 +366,9 @@ export const CreateSalaryReportDrawer = () => {
               <Button
                 variant="ghost"
                 size="small"
-                loading={requestUploadMutation.isPending || importMutation.isPending}
+                loading={
+                  requestUploadMutation.isPending || importMutation.isPending
+                }
                 disabled={!companyId}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -266,34 +377,68 @@ export const CreateSalaryReportDrawer = () => {
             </Box>
           </GridColumn>
         </GridRow>
-        <GridRow rowGap={1} marginBottom={4}>
-          <GridColumn span="12/12">
-            <Text variant="h4" marginBottom={1}>
-              {t.deviationsHeading}
-            </Text>
-          </GridColumn>
-          <GridColumn span="12/12">
-            <Checkbox
-              label={t.deferLabel}
-              checked={postpone}
-              onChange={(e) => setPostpone(e.target.checked)}
-              disabled={!companyId}
-            />
-          </GridColumn>
-          {postpone && (
+
+        {parsedReport && (
+          <GridRow rowGap={1} marginBottom={4}>
             <GridColumn span="12/12">
-              <TextInput
-                name="postponeReason"
-                label={t.deferReasonLabel}
-                textarea
-                rows={3}
-                size="xs"
-                value={postponeReason}
-                onChange={(e) => setPostponeReason(e.target.value)}
-              />
+              <Text variant="h4" marginBottom={1}>
+                {t.deviationsHeading}
+              </Text>
             </GridColumn>
-          )}
-        </GridRow>
+            <GridColumn span="12/12">
+              {analyzeMutation.isPending ? (
+                <Text variant="small">{d.analyzing}</Text>
+              ) : analyzeMutation.isError ? (
+                <Box
+                  background="red100"
+                  borderRadius="large"
+                  padding={2}
+                  display="flex"
+                  alignItems="center"
+                  columnGap={2}
+                >
+                  <Box flexGrow={1}>
+                    <Text variant="small">{d.analyzeError}</Text>
+                  </Box>
+                  <Button
+                    variant="ghost"
+                    size="small"
+                    onClick={() =>
+                      companyId &&
+                      analyzeMutation.mutate({
+                        path: { companyId },
+                        body: { parsed: parsedReport },
+                      })
+                    }
+                  >
+                    {t.switchFile}
+                  </Button>
+                </Box>
+              ) : !hasOutliers ? (
+                <Box background="mint100" borderRadius="large" padding={2}>
+                  <Text variant="small">{d.none}</Text>
+                </Box>
+              ) : (
+                <OutlierEditor
+                  outliers={outliers}
+                  identifierForOrdinal={identifierForOrdinal}
+                  postpone={postpone}
+                  setPostpone={setPostpone}
+                  postponeReason={postponeReason}
+                  setPostponeReason={setPostponeReason}
+                  groups={groups}
+                  createGroup={createGroup}
+                  removeGroup={removeGroup}
+                  updateGroup={updateGroup}
+                  assignedOrdinals={assignedOrdinals}
+                  allOutliersAssigned={allOutliersAssigned}
+                  groupsComplete={groupsComplete}
+                />
+              )}
+            </GridColumn>
+          </GridRow>
+        )}
+
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
@@ -437,5 +582,286 @@ export const CreateSalaryReportDrawer = () => {
         </GridRow>
       </GridContainer>
     </Drawer>
+  )
+}
+
+type OutlierEditorProps = {
+  outliers: SalaryAnalysisOutlierDto[]
+  identifierForOrdinal: (ordinal: number) => string
+  postpone: boolean
+  setPostpone: (v: boolean) => void
+  postponeReason: string
+  setPostponeReason: (v: string) => void
+  groups: OutlierGroupForm[]
+  createGroup: (ordinals: number[]) => void
+  removeGroup: (id: string) => void
+  updateGroup: (id: string, patch: Partial<OutlierGroupForm>) => void
+  assignedOrdinals: Set<number>
+  allOutliersAssigned: boolean
+  groupsComplete: boolean
+}
+
+const OutlierEditor = ({
+  outliers,
+  identifierForOrdinal,
+  postpone,
+  setPostpone,
+  postponeReason,
+  setPostponeReason,
+  groups,
+  createGroup,
+  removeGroup,
+  updateGroup,
+  assignedOrdinals,
+  allOutliersAssigned,
+  groupsComplete,
+}: OutlierEditorProps) => {
+  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [page, setPage] = useState(1)
+
+  // Once an outlier is put into a group it leaves the table — the group card
+  // below owns it from then on. Removing a group frees its members back here.
+  const unassignedOutliers = outliers.filter(
+    (o) => !assignedOrdinals.has(o.employeeOrdinal),
+  )
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(unassignedOutliers.length / OUTLIERS_PAGE_SIZE),
+  )
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = unassignedOutliers.slice(
+    (currentPage - 1) * OUTLIERS_PAGE_SIZE,
+    currentPage * OUTLIERS_PAGE_SIZE,
+  )
+
+  const toggleSelect = (ordinal: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(ordinal)) next.delete(ordinal)
+      else next.add(ordinal)
+      return next
+    })
+
+  const handleCreateGroup = () => {
+    createGroup([...selected])
+    setSelected(new Set())
+    // The current page may no longer exist once its rows leave the table.
+    setPage(1)
+  }
+
+  const columns: ColumnDef<SalaryAnalysisOutlierDto>[] = [
+    {
+      id: 'select',
+      size: 48,
+      header: () => {
+        const allSelected =
+          pageRows.length > 0 &&
+          pageRows.every((o) => selected.has(o.employeeOrdinal))
+        return (
+          <Checkbox
+            label=""
+            checked={allSelected}
+            disabled={pageRows.length === 0}
+            onChange={() =>
+              setSelected((prev) => {
+                const next = new Set(prev)
+                pageRows.forEach((o) =>
+                  allSelected
+                    ? next.delete(o.employeeOrdinal)
+                    : next.add(o.employeeOrdinal),
+                )
+                return next
+              })
+            }
+          />
+        )
+      },
+      cell: ({ row }) => {
+        const ordinal = row.original.employeeOrdinal
+        return (
+          <Checkbox
+            label=""
+            checked={selected.has(ordinal)}
+            onChange={() => toggleSelect(ordinal)}
+          />
+        )
+      },
+    },
+    {
+      id: 'employee',
+      header: d.tableEmployee,
+      cell: ({ row }) => identifierForOrdinal(row.original.employeeOrdinal),
+    },
+    {
+      id: 'salary',
+      header: d.tableSalary,
+      cell: ({ row }) => `${formatSalary(row.original.adjustedBaseSalary)} kr.`,
+    },
+    {
+      id: 'difference',
+      header: d.tableDifference,
+      cell: ({ row }) => {
+        const o = row.original
+        const below = o.differencePercent < 0
+        return `${Math.abs(o.differencePercent).toFixed(1)}% ${
+          below ? d.directionBelow : d.directionAbove
+        }`
+      },
+    },
+  ]
+
+  return (
+    <Box>
+      <Box marginBottom={2}>
+        <Text variant="small">{d.intro}</Text>
+      </Box>
+
+      <Checkbox
+        label={d.postponeOption}
+        checked={postpone}
+        onChange={(e) => setPostpone(e.target.checked)}
+      />
+
+      {postpone ? (
+        <Box marginTop={2}>
+          <TextInput
+            name="postponeReason"
+            label={t.deferReasonLabel}
+            textarea
+            rows={3}
+            size="xs"
+            value={postponeReason}
+            onChange={(e) => setPostponeReason(e.target.value)}
+          />
+        </Box>
+      ) : (
+        <Box marginTop={2}>
+          {unassignedOutliers.length > 0 && (
+            <>
+              <Table
+                columns={columns}
+                data={pageRows}
+                paging={{
+                  page: currentPage,
+                  pageSize: OUTLIERS_PAGE_SIZE,
+                  totalItems: unassignedOutliers.length,
+                  totalPages,
+                }}
+                onPageChange={setPage}
+                showPageSizeSelect={false}
+                layout="auto"
+              />
+
+              <Box marginTop={2} marginBottom={2}>
+                <Button
+                  variant="ghost"
+                  size="small"
+                  icon="add"
+                  disabled={selected.size === 0}
+                  onClick={handleCreateGroup}
+                >
+                  {d.createGroup}
+                </Button>
+              </Box>
+            </>
+          )}
+
+          <Accordion singleExpand={false} dividerOnTop={false} space={2}>
+            {groups.map((group, index) => (
+              <AccordionItem
+                key={group.id}
+                id={group.id}
+                label={`${d.groupHeading} ${index + 1}`}
+                labelVariant="h5"
+                startExpanded
+                visibleContent={
+                  <Text variant="small">
+                    {`${d.groupMembers}: ${group.ordinals
+                      .map(identifierForOrdinal)
+                      .join(', ')}`}
+                  </Text>
+                }
+              >
+                <Box marginBottom={1} display="flex" justifyContent="flexEnd">
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => removeGroup(group.id)}
+                  >
+                    {d.removeGroup}
+                  </Button>
+                </Box>
+                <GridRow rowGap={1}>
+                  <GridColumn span="12/12">
+                    <TextInput
+                      name={`reason-${group.id}`}
+                      label={d.reasonLabel}
+                      textarea
+                      rows={2}
+                      size="xs"
+                      value={group.reason}
+                      onChange={(e) =>
+                        updateGroup(group.id, { reason: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                  <GridColumn span="12/12">
+                    <TextInput
+                      name={`action-${group.id}`}
+                      label={d.actionLabel}
+                      textarea
+                      rows={2}
+                      size="xs"
+                      value={group.action}
+                      onChange={(e) =>
+                        updateGroup(group.id, { action: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                  <GridColumn span={['12/12', '6/12']}>
+                    <TextInput
+                      name={`sigName-${group.id}`}
+                      label={d.signatureNameLabel}
+                      size="xs"
+                      value={group.signatureName}
+                      onChange={(e) =>
+                        updateGroup(group.id, { signatureName: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                  <GridColumn span={['12/12', '6/12']}>
+                    <TextInput
+                      name={`sigRole-${group.id}`}
+                      label={d.signatureRoleLabel}
+                      size="xs"
+                      value={group.signatureRole}
+                      onChange={(e) =>
+                        updateGroup(group.id, { signatureRole: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                </GridRow>
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          {!allOutliersAssigned && (
+            <Box marginTop={2}>
+              <Text variant="small" color="red600">
+                {d.unassignedWarning}
+              </Text>
+            </Box>
+          )}
+          {allOutliersAssigned && !groupsComplete && (
+            <Box marginTop={2}>
+              <Text variant="small" color="red600">
+                {d.incompleteGroupWarning}
+              </Text>
+            </Box>
+          )}
+        </Box>
+      )}
+    </Box>
   )
 }

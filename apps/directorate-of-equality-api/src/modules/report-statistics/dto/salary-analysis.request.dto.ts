@@ -4,8 +4,7 @@ import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
 export class SalaryAnalysisRequestDto {
   @ApiDto(ParsedReportDto, {
-    description:
-      'Parsed workbook payload from `POST /application/reports/excel/import`.',
+    description: 'Parsed workbook payload from an excel import endpoint.',
   })
   parsed!: ParsedReportDto
 }

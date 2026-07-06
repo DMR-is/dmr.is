@@ -21,6 +21,8 @@ import {
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../report-excel/report-excel.service.interface'
+import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
+import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
 import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
 import { IAdminReportService } from './admin-report.service.interface'
@@ -61,6 +63,19 @@ export class AdminReportController {
     } finally {
       await this.importUploadService.cleanup(body.key)
     }
+  }
+
+  @Post('companies/:companyId/reports/salary/analyze')
+  @ApiParam({ name: 'companyId', type: String })
+  @DoeResponse({
+    operationId: 'analyzeAdminSalaryReport',
+    type: SalaryAnalysisResponseDto,
+  })
+  async analyzeSalary(
+    @Param('companyId', ParseUUIDPipe) companyId: string,
+    @Body() input: SalaryAnalysisRequestDto,
+  ): Promise<SalaryAnalysisResponseDto> {
+    return this.adminReportService.analyzeSalary(companyId, input)
   }
 
   @Post('companies/:companyId/reports/salary')
