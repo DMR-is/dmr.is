@@ -140,15 +140,23 @@ type AggregateGroup = {
   neutral: number[]
 }
 
-export function getAdjustedBaseSalary(
-  employee: CompensationEmployeeInput,
-): number {
+/**
+ * The salary fields the adjusted-salary helpers actually read — deliberately
+ * score-independent so they accept a `report_employee` row whose `score` may be
+ * NULL (a draft) as well as a fully-formed `CompensationEmployeeInput`.
+ */
+export type AdjustedSalaryInput = {
+  workRatio: number
+  baseSalary: number
+  additionalSalary: number
+  bonusSalary: number | null
+}
+
+export function getAdjustedBaseSalary(employee: AdjustedSalaryInput): number {
   return employee.baseSalary / employee.workRatio
 }
 
-export function getAdjustedFullSalary(
-  employee: CompensationEmployeeInput,
-): number {
+export function getAdjustedFullSalary(employee: AdjustedSalaryInput): number {
   return (
     (employee.baseSalary +
       employee.additionalSalary +

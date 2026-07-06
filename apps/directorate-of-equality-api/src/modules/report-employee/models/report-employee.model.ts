@@ -40,6 +40,24 @@ export const computeBonusSalary = (children: {
   (children.bonusPayments ?? 0) +
   (children.bonusOther ?? 0)
 
+/**
+ * Asserts an employee's score has been computed. A draft's employee scores are
+ * NULL until the report is submitted; the submit-time snapshot and the
+ * reviewer-facing chart/aggregate paths only ever run on submitted reports, so
+ * a NULL here is an invariant violation (a bug), not an expected state.
+ */
+export function requireComputedScore(employee: {
+  id: string
+  score: number | null
+}): number {
+  if (employee.score === null || employee.score === undefined) {
+    throw new Error(
+      `Employee ${employee.id} has no computed score — scores must be computed before this path runs`,
+    )
+  }
+  return employee.score
+}
+
 export enum EducationEnum {
   COMPULSORY = 'COMPULSORY',
   UPPER_SECONDARY = 'UPPER_SECONDARY',
@@ -67,7 +85,9 @@ type ReportEmployeeAttributes = {
   gender: GenderEnum
   reportEmployeeRoleId: string
   reportId: string
-  score: number
+  // Derived from step assignments; NULL while the report is a DRAFT (not yet
+  // computed), populated when the report is submitted. See db/README.md.
+  score: number | null
 }
 
 type ReportEmployeeCreateAttributes = {
@@ -87,7 +107,7 @@ type ReportEmployeeCreateAttributes = {
   gender: GenderEnum
   reportEmployeeRoleId: string
   reportId: string
-  score: number
+  score?: number | null
 }
 
 @MutableTable({ tableName: DoeModels.REPORT_EMPLOYEE })
@@ -239,7 +259,7 @@ export class ReportEmployeeModel extends MutableModel<
 
   @Column({
     type: DataType.DECIMAL(6, 2),
-    allowNull: false,
+    allowNull: true,
     get() {
       const value = this.getDataValue('score')
       return value !== null && value !== undefined
@@ -247,7 +267,7 @@ export class ReportEmployeeModel extends MutableModel<
         : null
     },
   })
-  score!: number
+  score!: number | null
 
   @BelongsTo(() => ReportEmployeeRoleModel, {
     foreignKey: 'reportEmployeeRoleId',

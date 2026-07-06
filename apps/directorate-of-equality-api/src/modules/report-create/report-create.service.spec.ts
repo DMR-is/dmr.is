@@ -23,6 +23,8 @@ import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
+import { ReportContentService } from '../report-content/report-content.service'
+import { IReportContentService } from '../report-content/report-content.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
@@ -34,6 +36,8 @@ import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/mod
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
+import { ReportFinalizeService } from '../report-finalize/report-finalize.service'
+import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -210,12 +214,20 @@ describe('ReportCreateService', () => {
           useValue: { bulkCreate: subCriterionStepBulkCreate },
         },
         {
+          provide: IReportContentService,
+          useClass: ReportContentService,
+        },
+        {
           provide: IReportResultService,
           useValue: { createForReport: reportResultCreateForReport },
         },
         {
           provide: IReportAutoReviewService,
           useValue: { evaluate: autoReviewEvaluate },
+        },
+        {
+          provide: IReportFinalizeService,
+          useClass: ReportFinalizeService,
         },
         {
           provide: IConfigService,

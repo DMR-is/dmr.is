@@ -27,7 +27,10 @@ import {
 } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
-import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
+import {
+  ReportEmployeeModel,
+  requireComputedScore,
+} from '../report-employee/models/report-employee.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/report-employee-role-criterion-step.model'
 import {
@@ -75,7 +78,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     const employees = await this.fetchEmployees(reportId)
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: e.score,
+      score: requireComputedScore(e),
       adjustedSalary: getAdjustedBaseSalary(e),
       gender: e.gender,
     }))
@@ -137,7 +140,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     const employees = await this.fetchEmployees(reportId)
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: e.score,
+      score: requireComputedScore(e),
       adjustedSalary: getAdjustedFullSalary(e),
       gender: e.gender,
     }))
