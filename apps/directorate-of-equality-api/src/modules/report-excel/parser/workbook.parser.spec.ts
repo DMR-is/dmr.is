@@ -12,14 +12,42 @@ import { parseWorkbook } from './workbook.parser'
 
 const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
 
+/**
+ * A Node `Buffer` may be a view into a larger shared pool, so `.buffer` alone
+ * can hand exceljs bytes beyond this buffer's own region. Slice to the exact
+ * range — same guard the parser applies (see `parseWorkbook`). Passing the raw
+ * `.buffer` intermittently corrupts the load under full-suite memory pressure.
+ */
+const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
+  buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+
 const loadTemplate = async (): Promise<ExcelJS.Workbook> => {
   const wb = new ExcelJS.Workbook()
-  await wb.xlsx.load(templateBuffer().buffer as ArrayBuffer)
+  await wb.xlsx.load(toArrayBuffer(templateBuffer()))
   return wb
 }
 
-const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> =>
-  Buffer.from((await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer)
+/** xlsx is a zip; every valid file starts with the local-file-header magic `PK\x03\x04`. */
+const isValidXlsx = (buf: Buffer): boolean =>
+  buf.length > 4 &&
+  buf[0] === 0x50 &&
+  buf[1] === 0x4b &&
+  buf[2] === 0x03 &&
+  buf[3] === 0x04
+
+/**
+ * exceljs's `writeBuffer()` occasionally emits a truncated/empty zip under the
+ * parallelised full-suite run (surfaces as "Corrupted zip: expected N records,
+ * got 0" on the subsequent load). It's non-deterministic and re-serialising
+ * fixes it, so validate the output and retry a couple of times before giving up.
+ */
+const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const buf = Buffer.from((await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer)
+    if (isValidXlsx(buf)) return buf
+  }
+  throw new Error('exceljs writeBuffer produced an invalid xlsx after 3 attempts')
+}
 
 const writeEmployeeRow = (
   wb: ExcelJS.Workbook,
