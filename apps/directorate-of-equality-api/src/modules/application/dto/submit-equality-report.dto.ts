@@ -1,3 +1,6 @@
+import { Transform } from 'class-transformer'
+import { isBase64 } from 'validator'
+
 import {
   ApiDto,
   ApiEnum,
@@ -40,6 +43,12 @@ export class SubmitEqualityReportDto {
     minLength: 1,
     description:
       'Narrative gender-equality plan. Persisted as `report.equality_report_content`.',
+  })
+  @Transform(({ value }) => {
+    if (isBase64(value)) {
+      return Buffer.from(value, 'base64').toString('utf-8')
+    }
+    return value
   })
   equalityReportContent!: string
 
