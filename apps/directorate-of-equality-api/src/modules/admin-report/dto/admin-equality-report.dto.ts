@@ -1,4 +1,9 @@
-import { ApiEnum, ApiOptionalString, ApiString } from '@dmr.is/decorators'
+import {
+  ApiEnum,
+  ApiHTML,
+  ApiOptionalString,
+  ApiString,
+} from '@dmr.is/decorators'
 
 import {
   GenderEnum,
@@ -30,10 +35,9 @@ export class AdminEqualityReportDto {
   @ApiString()
   contactPhone!: string
 
-  @ApiString({
-    minLength: 1,
+  @ApiHTML({
     description:
-      'Narrative gender-equality plan. Persisted as `report.equality_report_content`.',
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
   })
   equalityReportContent!: string
 }
