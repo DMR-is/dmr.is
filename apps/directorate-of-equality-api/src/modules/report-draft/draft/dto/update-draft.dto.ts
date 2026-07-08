@@ -1,5 +1,6 @@
 import {
   ApiOptionalEnum,
+  ApiOptionalHTML,
   ApiOptionalNumber,
   ApiOptionalString,
 } from '@dmr.is/decorators'
@@ -41,6 +42,10 @@ export class UpdateDraftDto {
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeNeutralCount?: number | null
 
-  @ApiOptionalString({ nullable: true })
+  @ApiOptionalHTML({
+    nullable: true,
+    description:
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
+  })
   equalityReportContent?: string | null
 }

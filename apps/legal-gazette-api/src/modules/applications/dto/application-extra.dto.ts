@@ -1,4 +1,4 @@
-import { Transform, Type } from 'class-transformer'
+import { Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -9,7 +9,6 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator'
-import { isBase64 } from 'validator'
 
 import { ApiProperty, PickType } from '@nestjs/swagger'
 
@@ -106,13 +105,7 @@ export class IslandIsSubmitApplicationDto extends PickType(
   @ApiString()
   caption!: string
 
-  @ApiString()
-  @Transform(({ value }) => {
-    if (isBase64(value)) {
-      return Buffer.from(value, 'base64').toString('utf-8')
-    }
-    return value
-  })
+  @ApiHTML()
   html!: string
 
   @ApiProperty({ type: [String] })
