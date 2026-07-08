@@ -427,6 +427,53 @@ describe('parseWorkbook', () => {
     })
   })
 
+  describe('inflated rowCount (whole-column formatting)', () => {
+    it('stays bounded and parses correctly when a stray far-down cell inflates sheet.rowCount', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        workRatioPct: 100,
+        education: 'Háskólapróf (BA/BS)',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+
+      // Simulate what whole-column formatting does to a hand-edited file: a
+      // stray value far below the data pushes sheet.rowCount into the tens of
+      // thousands. The scan must break on the long blank run rather than
+      // materialise a cell object for every row down to here (the OOM cause).
+      const s = wb.getWorksheet('Starfsmenn')!
+      s.getCell('B40000').value = 'stray'
+      expect(s.rowCount).toBeGreaterThan(30000)
+
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
+        'Engin sérstök',
+        'Grunnkunnátta',
+        'Góð kunnátta',
+        'Mjög góð kunnátta',
+        'Sérfræðikunnátta',
+      ])
+      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      // Only the real row is parsed; the stray far-down cell is never reached.
+      expect(report.employees.map((e) => e.ordinal)).toEqual([1])
+    })
+  })
+
   describe('parse-layer errors', () => {
     it('rejects unknown gender value', async () => {
       const wb = await loadTemplate()

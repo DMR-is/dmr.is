@@ -81,6 +81,21 @@ const COLS = {
  */
 const ABSOLUTE_MAX_EMPLOYEE_ROWS = 50000
 
+/**
+ * Stop scanning after this many consecutive empty rows. `sheet.rowCount` is
+ * unreliable as a scan bound: whole-column formatting (borders/styles applied
+ * to an entire column — very common in hand-edited files) pushes the stored
+ * dimension out to Excel's ~1 048 576-row maximum. Because `readRow` calls
+ * `sheet.getCell(...)` ~14× per row and exceljs *lazily materialises* a cell
+ * object on every call, blindly scanning to `rowCount` can instantiate
+ * hundreds of thousands of junk cells and exhaust the heap — even on an empty
+ * upload. Real employee tables never contain a 200-row internal gap, so
+ * breaking after this run bounds cell materialisation to the real data (plus a
+ * small margin) while still tolerating the stray blank rows that made the
+ * original code prefer `rowCount` over the under-reporting `actualRowCount`.
+ */
+const EMPTY_ROW_RUN_LIMIT = 200
+
 /** Minimum padding for the ordinal portion of the identifier — always ≥3 digits so small imports read as "ABC-001", large ones naturally grow ("ABC-2000"). */
 const IDENTIFIER_MIN_ORDINAL_DIGITS = 3
 
@@ -318,9 +333,16 @@ export const parseEmployees = (
     TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_EMPLOYEE_ROWS - 1,
   )
 
+  let consecutiveEmpty = 0
   for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
     const row = readRow(sheet, r)
-    if (isEmptyRow(row)) continue
+    if (isEmptyRow(row)) {
+      // Bail out of a runaway scan once we've seen a long unbroken blank run —
+      // guards against an inflated `sheet.rowCount` (see EMPTY_ROW_RUN_LIMIT).
+      if (++consecutiveEmpty >= EMPTY_ROW_RUN_LIMIT) break
+      continue
+    }
+    consecutiveEmpty = 0
 
     // Ordinal is derived from row position, not read from column A. The
     // template auto-numbers column A with `=ROW()-5` (a formula the parser
