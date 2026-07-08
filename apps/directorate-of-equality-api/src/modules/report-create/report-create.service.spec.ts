@@ -669,6 +669,32 @@ describe('ReportCreateService', () => {
     )
   })
 
+  it('persists average employee counts on an EQUALITY report when provided', async () => {
+    const input = makeEqualityInput()
+    input.averageEmployeeMaleCount = 12
+    input.averageEmployeeFemaleCount = 18
+    input.averageEmployeeNeutralCount = 2
+
+    await service.createEquality(input)
+
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        averageEmployeeMaleCount: 12,
+        averageEmployeeFemaleCount: 18,
+        averageEmployeeNeutralCount: 2,
+      }),
+    )
+  })
+
+  it('leaves average employee counts undefined on an EQUALITY report when omitted', async () => {
+    await service.createEquality(makeEqualityInput())
+
+    const createArgs = reportCreate.mock.calls[0][0]
+    expect(createArgs.averageEmployeeMaleCount).toBeUndefined()
+    expect(createArgs.averageEmployeeFemaleCount).toBeUndefined()
+    expect(createArgs.averageEmployeeNeutralCount).toBeUndefined()
+  })
+
   it('writes one company_report row per participating company on EQUALITY too', async () => {
     const input = makeEqualityInput()
     input.companies = [
