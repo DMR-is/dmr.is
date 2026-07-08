@@ -40,6 +40,9 @@ const EMPTY_FORM = {
   contactEmail: '',
   contactPhone: '',
   equalityReportContent: '',
+  averageEmployeeMaleCount: '',
+  averageEmployeeFemaleCount: '',
+  averageEmployeeNeutralCount: '',
 }
 
 export const CreateEqualityReportDrawer = () => {
@@ -94,6 +97,15 @@ export const CreateEqualityReportDrawer = () => {
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
         equalityReportContent: form.equalityReportContent,
+        averageEmployeeMaleCount: form.averageEmployeeMaleCount
+          ? Number(form.averageEmployeeMaleCount)
+          : undefined,
+        averageEmployeeFemaleCount: form.averageEmployeeFemaleCount
+          ? Number(form.averageEmployeeFemaleCount)
+          : undefined,
+        averageEmployeeNeutralCount: form.averageEmployeeNeutralCount
+          ? Number(form.averageEmployeeNeutralCount)
+          : undefined,
       },
     })
   }
@@ -250,6 +262,50 @@ export const CreateEqualityReportDrawer = () => {
                 }}
               />
             </Box>
+          </GridColumn>
+        </GridRow>
+        <GridRow rowGap={1} marginBottom={4}>
+          <GridColumn span="12/12">
+            <Text variant="h4" marginBottom={1}>
+              {t.employeeCountHeading}
+            </Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeMaleCount"
+              label={s.genders.maleCount}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeMaleCount}
+              onChange={(e) => set('averageEmployeeMaleCount')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeFemaleCount"
+              label={s.genders.femaleCount}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeFemaleCount}
+              onChange={(e) =>
+                set('averageEmployeeFemaleCount')(e.target.value)
+              }
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '4/12']}>
+            <TextInput
+              name="averageEmployeeNeutralCount"
+              label={s.genders.neutral}
+              type="number"
+              size="xs"
+              value={form.averageEmployeeNeutralCount}
+              onChange={(e) =>
+                set('averageEmployeeNeutralCount')(e.target.value)
+              }
+              disabled={!companyId}
+            />
           </GridColumn>
         </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
