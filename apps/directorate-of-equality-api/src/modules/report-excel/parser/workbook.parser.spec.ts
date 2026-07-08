@@ -10,6 +10,14 @@ import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
 import { parseWorkbook } from './workbook.parser'
 
+// CI runs this project's tests concurrently with several other Nx projects on
+// shared CPU, and exceljs's xlsx generation/parsing is heavy enough to
+// occasionally exceed Jest's 5000ms default under that contention (surfaces
+// as "Exceeded timeout... for a hook/test" even though nothing is actually
+// hanging). Same underlying full-suite-load sensitivity as the corrupted-zip
+// issue `serialize()` retries below, different symptom.
+jest.setTimeout(20000)
+
 const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
 
 /**
