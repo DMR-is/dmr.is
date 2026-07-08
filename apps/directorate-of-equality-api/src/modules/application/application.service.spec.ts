@@ -487,9 +487,29 @@ describe('ApplicationService', () => {
         contactEmail: input.contactEmail,
         contactPhone: input.contactPhone,
         equalityReportContent: input.equalityReportContent,
+        averageEmployeeMaleCount: undefined,
+        averageEmployeeFemaleCount: undefined,
+        averageEmployeeNeutralCount: undefined,
         companies: [makeCompanySnapshot()],
       })
       expect(result).toEqual({ reportId: 'report-1' })
+    })
+
+    it('forwards average employee counts when the applicant provides them', async () => {
+      const input = makeSubmitEqualityInput()
+      input.averageEmployeeMaleCount = 12
+      input.averageEmployeeFemaleCount = 18
+      input.averageEmployeeNeutralCount = 2
+
+      await service.submitEquality(input, COMPANY)
+
+      expect(createEquality).toHaveBeenCalledWith(
+        expect.objectContaining({
+          averageEmployeeMaleCount: 12,
+          averageEmployeeFemaleCount: 18,
+          averageEmployeeNeutralCount: 2,
+        }),
+      )
     })
 
     it('resolves subsidiary snapshot details through the company service', async () => {
