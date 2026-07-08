@@ -1,4 +1,9 @@
-import { ApiEnum, ApiOptionalString, ApiString } from '@dmr.is/decorators'
+import {
+  ApiEnum,
+  ApiOptionalNumber,
+  ApiOptionalString,
+  ApiString,
+} from '@dmr.is/decorators'
 
 import {
   GenderEnum,
@@ -36,4 +41,13 @@ export class AdminEqualityReportDto {
       'Narrative gender-equality plan. Persisted as `report.equality_report_content`.',
   })
   equalityReportContent!: string
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeMaleCount?: number
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeFemaleCount?: number
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeNeutralCount?: number
 }
