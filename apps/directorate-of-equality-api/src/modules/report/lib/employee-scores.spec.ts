@@ -57,15 +57,15 @@ describe('employee-scores', () => {
   })
 
   describe('capacity limits', () => {
-    it('rejects more than 24 criteria', () => {
+    it('rejects more than 5 criteria', () => {
       const parsed = onlyCriteria(
-        Array.from({ length: 25 }, (_, i) => makeCriterion(`C${i}`, 0)),
+        Array.from({ length: 6 }, (_, i) => makeCriterion(`C${i}`, 0)),
       )
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Að hámarki 24 viðmið eru leyfð; fjöldi var 25/)
+      expect(run).toThrow(/Að hámarki 5 viðmið eru leyfð; fjöldi var 6/)
     })
 
     it('rejects more than 100 roles', () => {
@@ -110,20 +110,6 @@ describe('employee-scores', () => {
       const parsed = onlyCriteria([makeCriterion('C', 25)])
 
       expect(() => assertParsedPayloadIntegrity(parsed)).not.toThrow()
-    })
-
-    it('rejects more than 200 sub-criteria in total', () => {
-      // 9 job-based criteria × 25 subs = 225 (each criterion within its cap).
-      const parsed = onlyCriteria(
-        Array.from({ length: 9 }, (_, i) => makeCriterion(`C${i}`, 25)),
-      )
-
-      const run = () => assertParsedPayloadIntegrity(parsed)
-
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
-        /Að hámarki 200 undirviðmið eru leyfð samtals; fjöldi var 225/,
-      )
     })
 
     it('rejects more than 100 personal sub-criteria', () => {

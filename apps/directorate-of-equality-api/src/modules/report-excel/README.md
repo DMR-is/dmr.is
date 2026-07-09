@@ -44,7 +44,8 @@ curl -o /tmp/doe-template.xlsx \
 
 Open in Excel or Numbers, fill out **Viðmið**, **Undirviðmið**,
 **Starfsmenn**, **Flokkun starfa**, **Flokkun starfsmanna**, save.
-`Leiðbeiningar` and `Yfirlit` are ignored on parse.
+`Leiðbeiningar`, `Yfirlit`, and `Undirviðmiðalisti (Lýsigögn)` are ignored
+on parse.
 
 ### Import a filled workbook
 

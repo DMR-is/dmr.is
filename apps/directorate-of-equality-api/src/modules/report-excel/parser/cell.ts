@@ -14,17 +14,29 @@
  *
  * ## Formulas
  *
- * A formula cell stores `{ formula, result }`. We NEVER use `result` — the
- * parser's strategy is to avoid formula evaluation entirely (it's unreliable
- * across tools; exceljs does not evaluate, only caches what the originating
- * writer decided to save). Formula cells in user-input positions are treated
- * as empty, and we pull canonical data from the raw-data sheets instead.
+ * A formula cell stores `{ formula, result }`. ExcelJS does not evaluate the
+ * formula; it only exposes the cached result saved by the originating tool.
+ * The template now deliberately uses formula-or-literal cells on
+ * `Undirviðmið`, so scalar readers use `result` when present and otherwise
+ * treat the cell as empty.
  */
 
 import ExcelJS from 'exceljs'
 
-export const readString = (cell: ExcelJS.Cell): string | null => {
+const scalarValue = (value: ExcelJS.CellValue): ExcelJS.CellValue => {
+  if (value && typeof value === 'object' && 'formula' in value) {
+    return value.result ?? null
+  }
+  return value
+}
+
+export const hasFormulaWithoutCachedResult = (cell: ExcelJS.Cell): boolean => {
   const v = cell.value
+  return !!v && typeof v === 'object' && 'formula' in v && v.result == null
+}
+
+export const readString = (cell: ExcelJS.Cell): string | null => {
+  const v = scalarValue(cell.value)
   if (v == null) return null
   if (typeof v === 'string') return v.trim() || null
   if (typeof v === 'number' || typeof v === 'boolean') return String(v)
@@ -37,7 +49,6 @@ export const readString = (cell: ExcelJS.Cell): string | null => {
         .trim() || null
     )
   }
-  if (typeof v === 'object' && 'formula' in v) return null
   if (typeof v === 'object' && 'hyperlink' in v) {
     return typeof v.text === 'string' ? v.text.trim() || null : null
   }
@@ -45,7 +56,7 @@ export const readString = (cell: ExcelJS.Cell): string | null => {
 }
 
 export const readNumber = (cell: ExcelJS.Cell): number | null => {
-  const v = cell.value
+  const v = scalarValue(cell.value)
   if (v == null) return null
   if (typeof v === 'number') return v
   if (typeof v === 'string') {
@@ -54,7 +65,6 @@ export const readNumber = (cell: ExcelJS.Cell): number | null => {
     const n = Number(trimmed)
     return Number.isFinite(n) ? n : null
   }
-  if (typeof v === 'object' && 'formula' in v) return null
   return null
 }
 
@@ -78,14 +88,13 @@ const MIN_DATE_SERIAL = 1
 const MAX_DATE_SERIAL = 2_958_465 // 9999-12-31
 
 export const readDate = (cell: ExcelJS.Cell): Date | null => {
-  const v = cell.value
+  const v = scalarValue(cell.value)
   if (v == null) return null
   if (v instanceof Date) return v
   if (typeof v === 'number') {
     if (v < MIN_DATE_SERIAL || v > MAX_DATE_SERIAL) return null
     return new Date(EXCEL_EPOCH_UTC + Math.round(v) * MS_PER_DAY)
   }
-  if (typeof v === 'object' && 'formula' in v) return null
   return null
 }
 

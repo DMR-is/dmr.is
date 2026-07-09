@@ -4091,6 +4091,7 @@ __metadata:
     deepmerge: "npm:4.3.1"
     exceljs: "npm:4.4.0"
     express: "npm:4.21.2"
+    jszip: "npm:^3.10.1"
     kennitala: "npm:^2.0.6"
     lodash: "npm:4.17.23"
     nest-winston: "npm:^1.9.4"

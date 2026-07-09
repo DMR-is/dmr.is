@@ -10,8 +10,8 @@
  *   employer-named.
  *
  * - **Undirviðmið** (sub-level + steps): one row per sub-criterion.
- *   `Foreldra viðmið` references a parent criterion title; `Fjöldi þrepa`
- *   fixes the number of steps (2–8), and columns `Þrep 1` … `Þrep 10`
+ *   `Yfirviðmið` references a parent criterion title; `Fjöldi þrepa`
+ *   fixes the number of steps (2–8), and columns `Þrep 1` … `Þrep 8`
  *   carry the step descriptions (only the first `numSteps` are read).
  *
  * Step scores are not stored in the workbook — they are computed here via
@@ -34,18 +34,16 @@ import {
   JOB_BASED_TITLE_TO_TYPE,
   MAX_STEPS,
   MIN_STEPS,
+  NAMED_RANGES,
   SHEETS,
-  TABLE_FIRST_DATA_ROW,
 } from '../workbook.schema'
-import { readInteger, readNumber, readString } from './cell'
+import {
+  hasFormulaWithoutCachedResult,
+  readInteger,
+  readNumber,
+  readString,
+} from './cell'
 import { ErrorBag } from './errors'
-
-const CRITERIA_COLS = {
-  tegund: 'B',
-  title: 'C',
-  description: 'D',
-  weight: 'E',
-} as const
 
 const SUB_CRITERIA_COLS = {
   parent: 'B',
@@ -68,6 +66,60 @@ const SUB_CRITERIA_COLS = {
  */
 const ABSOLUTE_MAX_TABLE_ROWS = 5000
 
+type RectangularRange = {
+  firstRow: number
+  lastRow: number
+  firstCol: number
+  lastCol: number
+}
+
+/** `'AB'` → 28. */
+const colToNum = (letters: string): number =>
+  letters
+    .split('')
+    .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
+
+/** 28 → `'AB'`. */
+const numToCol = (n: number): string => {
+  let col = ''
+  for (let x = n; x > 0; x = Math.floor((x - 1) / 26)) {
+    col = String.fromCharCode(((x - 1) % 26) + 65) + col
+  }
+  return col
+}
+
+const readNamedRange = (
+  workbook: ExcelJS.Workbook,
+  definedName: string,
+): RectangularRange | null => {
+  const ranges = workbook.definedNames.getRanges(definedName)?.ranges
+  if (!ranges || ranges.length !== 1) return null
+  const m = ranges[0].match(/\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$/)
+  if (!m) return null
+  return {
+    firstCol: colToNum(m[1]),
+    firstRow: Number(m[2]),
+    lastCol: colToNum(m[3]),
+    lastRow: Number(m[4]),
+  }
+}
+
+const addFormulaCacheError = (
+  cell: ExcelJS.Cell,
+  fieldLabel: string,
+  errors: ErrorBag,
+): void => {
+  const row = Number(cell.address.match(/\d+$/)?.[0])
+  errors.add(
+    SHEETS.SUB_CRITERIA,
+    `Reiturinn inniheldur formúlu án reiknaðs gildis fyrir „${fieldLabel}“ — opnaðu og vistaðu vinnubókina í Excel eða fylltu reitinn út handvirkt`,
+    {
+      row: Number.isFinite(row) ? row : undefined,
+      column: cell.address.replace(/\d+$/, ''),
+    },
+  )
+}
+
 /**
  * Read Viðmið sheet → list of top-level criteria (no sub-criteria attached
  * yet — those come from Undirviðmið in a second pass). Empty rows (no title
@@ -75,22 +127,37 @@ const ABSOLUTE_MAX_TABLE_ROWS = 5000
  * slots for employer-added personal criteria.
  */
 const parseCriteriaSheet = (
+  workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
   errors: ErrorBag,
 ): ParsedCriterionDto[] => {
   const criteria: ParsedCriterionDto[] = []
+  const range = readNamedRange(workbook, NAMED_RANGES.CRITERIA_TABLE)
+  if (!range || range.lastCol - range.firstCol < 2 || range.firstCol <= 1) {
+    errors.add(
+      SHEETS.CRITERIA,
+      `Nafngreint svæði „${NAMED_RANGES.CRITERIA_TABLE}“ vantar eða er gallað`,
+    )
+    return criteria
+  }
 
   const lastRow = Math.min(
-    sheet.rowCount,
-    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+    range.lastRow,
+    range.firstRow + ABSOLUTE_MAX_TABLE_ROWS - 1,
   )
-  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
-    const tegund = readString(sheet.getCell(`${CRITERIA_COLS.tegund}${r}`))
-    const title = readString(sheet.getCell(`${CRITERIA_COLS.title}${r}`))
-    const description = readString(
-      sheet.getCell(`${CRITERIA_COLS.description}${r}`),
-    )
-    const weight = readNumber(sheet.getCell(`${CRITERIA_COLS.weight}${r}`))
+  const tegundCol = range.firstCol - 1
+  const titleCol = range.firstCol
+  const descriptionCol = range.firstCol + 1
+  const weightCol = range.firstCol + 2
+  for (let r = range.firstRow; r <= lastRow; r++) {
+    const tegundCell = sheet.getCell(r, tegundCol)
+    const titleCell = sheet.getCell(r, titleCol)
+    const descriptionCell = sheet.getCell(r, descriptionCol)
+    const weightCell = sheet.getCell(r, weightCol)
+    const tegund = readString(tegundCell)
+    const title = readString(titleCell)
+    const description = readString(descriptionCell)
+    const weight = readNumber(weightCell) ?? 0
 
     // Only Tegund values matching the two known buckets are treated as data
     // rows. Anything else (bullet-point help text below the table, blank
@@ -101,14 +168,14 @@ const parseCriteriaSheet = (
       tegund === CRITERION_TEGUND.PERSONAL
     if (!isDataRow) continue
 
-    // Empty Persónubundinn slots are expected — the template ships with
+    // Empty Einstaklingsbundið slots are expected — the template ships with
     // blank rows employers may fill in later. Skip silently.
     if (tegund === CRITERION_TEGUND.PERSONAL && !title) continue
 
-    if (!title || !description || weight == null) {
+    if (!title || !description) {
       errors.add(
         SHEETS.CRITERIA,
-        'Röð vantar heiti, lýsingu eða vægi',
+        'Röð vantar heiti eða lýsingu',
         {
           row: r,
         },
@@ -116,7 +183,14 @@ const parseCriteriaSheet = (
       continue
     }
 
-    const type = resolveCriterionType(tegund, title, r, errors)
+    const type = resolveCriterionType(
+      tegund,
+      title,
+      r,
+      numToCol(titleCol),
+      numToCol(tegundCol),
+      errors,
+    )
     if (!type) continue
 
     criteria.push({
@@ -134,15 +208,17 @@ const parseCriteriaSheet = (
 /**
  * Map a `(tegund, title)` pair to the internal `ReportCriterionTypeEnum`.
  *
- * - Starfsbundinn rows MUST have a title from the closed set Ábyrgð / Álag /
+ * - Starfsbundið rows MUST have a title from the closed set Ábyrgð / Álag /
  *   Vinnuaðstæður / Hæfni. Anything else is an error — Jafnréttisstofa
  *   controls these titles.
- * - Persónubundinn rows always resolve to `PERSONAL`, regardless of title.
+ * - Einstaklingsbundið rows always resolve to `PERSONAL`, regardless of title.
  */
 const resolveCriterionType = (
   tegund: string,
   title: string,
   row: number,
+  titleColumn: string,
+  tegundColumn: string,
   errors: ErrorBag,
 ): ReportCriterionTypeEnum | null => {
   if (tegund === CRITERION_TEGUND.JOB_BASED) {
@@ -151,7 +227,7 @@ const resolveCriterionType = (
       errors.add(
         SHEETS.CRITERIA,
         `Óþekkt starfsbundið viðmið „${title}“ — reiknað var með einu af eftirfarandi: ${Object.keys(JOB_BASED_TITLE_TO_TYPE).join(', ')}`,
-        { row, column: CRITERIA_COLS.title },
+        { row, column: titleColumn },
       )
       return null
     }
@@ -163,7 +239,7 @@ const resolveCriterionType = (
   errors.add(
     SHEETS.CRITERIA,
     `Óþekkt tegund „${tegund}“ — reiknað var með „${CRITERION_TEGUND.JOB_BASED}“ eða „${CRITERION_TEGUND.PERSONAL}“`,
-    { row, column: CRITERIA_COLS.tegund },
+    { row, column: tegundColumn },
   )
   return null
 }
@@ -174,45 +250,86 @@ const resolveCriterionType = (
  * `numSteps` columns; any extras are ignored. Step scores computed here.
  */
 const parseSubCriteriaSheet = (
+  workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
   criteria: ParsedCriterionDto[],
   errors: ErrorBag,
 ): void => {
   const criterionByTitle = new Map(criteria.map((c) => [c.title, c]))
+  const range = readNamedRange(workbook, NAMED_RANGES.SUB_PARENT)
+  if (!range) {
+    errors.add(
+      SHEETS.SUB_CRITERIA,
+      `Nafngreint svæði „${NAMED_RANGES.SUB_PARENT}“ vantar eða er gallað`,
+    )
+    return
+  }
 
   const lastRow = Math.min(
-    sheet.rowCount,
-    TABLE_FIRST_DATA_ROW + ABSOLUTE_MAX_TABLE_ROWS - 1,
+    range.lastRow,
+    range.firstRow + ABSOLUTE_MAX_TABLE_ROWS - 1,
   )
-  for (let r = TABLE_FIRST_DATA_ROW; r <= lastRow; r++) {
-    const parentTitle = readString(
-      sheet.getCell(`${SUB_CRITERIA_COLS.parent}${r}`),
+  for (let r = range.firstRow; r <= lastRow; r++) {
+    const parentCell = sheet.getCell(`${SUB_CRITERIA_COLS.parent}${r}`)
+    const titleCell = sheet.getCell(`${SUB_CRITERIA_COLS.title}${r}`)
+    const descriptionCell = sheet.getCell(
+      `${SUB_CRITERIA_COLS.description}${r}`,
     )
-    const title = readString(sheet.getCell(`${SUB_CRITERIA_COLS.title}${r}`))
-    const description = readString(
-      sheet.getCell(`${SUB_CRITERIA_COLS.description}${r}`),
-    )
-    const weight = readNumber(sheet.getCell(`${SUB_CRITERIA_COLS.weight}${r}`))
-    const numSteps = readInteger(
-      sheet.getCell(`${SUB_CRITERIA_COLS.numSteps}${r}`),
-    )
+    const weightCell = sheet.getCell(`${SUB_CRITERIA_COLS.weight}${r}`)
+    const numStepsCell = sheet.getCell(`${SUB_CRITERIA_COLS.numSteps}${r}`)
+    const parentTitle = readString(parentCell)
+    const title = readString(titleCell)
+    const description = readString(descriptionCell)
+    const rawWeight = readNumber(weightCell)
+    const weight = rawWeight ?? 0
+    const numSteps = readInteger(numStepsCell)
 
-    if (!parentTitle && !title && !weight && !numSteps) continue
+    if (!parentTitle && !title && rawWeight == null && !numSteps) continue
 
-    if (
-      !parentTitle ||
-      !title ||
-      !description ||
-      weight == null ||
-      numSteps == null
-    ) {
+    const missingRequiredFields = [
+      { value: parentTitle, cell: parentCell, label: 'Yfirviðmið' },
+      { value: title, cell: titleCell, label: 'Undirviðmið' },
+      { value: description, cell: descriptionCell, label: 'Skilgreining' },
+      { value: numSteps, cell: numStepsCell, label: 'Fjöldi þrepa' },
+    ].filter((field) => field.value == null)
+
+    if (missingRequiredFields.length > 0) {
+      let hasPlainMissingFields = false
+      for (const field of missingRequiredFields) {
+        if (hasFormulaWithoutCachedResult(field.cell)) {
+          addFormulaCacheError(field.cell, field.label, errors)
+          continue
+        }
+        hasPlainMissingFields = true
+      }
+
+      if (hasPlainMissingFields) {
+        errors.add(
+          SHEETS.SUB_CRITERIA,
+          'Röð vantar yfirviðmið, heiti, lýsingu eða fjölda þrepa',
+          {
+            row: r,
+          },
+        )
+      }
+      continue
+    }
+
+    if (!parentTitle || !title || !description || numSteps == null) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        'Röð vantar foreldri, heiti, lýsingu, vægi eða fjölda þrepa',
+        'Röð vantar yfirviðmið, heiti, lýsingu eða fjölda þrepa',
         {
           row: r,
         },
       )
+      continue
+    }
+
+    const formulaWeightHasNoCachedResult =
+      hasFormulaWithoutCachedResult(weightCell)
+    if (formulaWeightHasNoCachedResult) {
+      addFormulaCacheError(weightCell, 'Vægi', errors)
       continue
     }
 
@@ -229,7 +346,7 @@ const parseSubCriteriaSheet = (
     if (!parent) {
       errors.add(
         SHEETS.SUB_CRITERIA,
-        `Foreldraviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
+        `Yfirviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
         { row: r, column: SUB_CRITERIA_COLS.parent },
       )
       continue
@@ -240,10 +357,14 @@ const parseSubCriteriaSheet = (
       const descCell = sheet.getCell(r, SUB_CRITERIA_COLS.firstStepCol + i - 1)
       const stepDesc = readString(descCell)
       if (!stepDesc) {
-        errors.add(SHEETS.SUB_CRITERIA, `Lýsingu vantar fyrir þrep ${i}`, {
-          row: r,
-          column: descCell.address.replace(/\d+$/, ''),
-        })
+        if (hasFormulaWithoutCachedResult(descCell)) {
+          addFormulaCacheError(descCell, `Þrep ${i}`, errors)
+        } else {
+          errors.add(SHEETS.SUB_CRITERIA, `Lýsingu vantar fyrir þrep ${i}`, {
+            row: r,
+            column: descCell.address.replace(/\d+$/, ''),
+          })
+        }
         continue
       }
       steps.push({
@@ -284,7 +405,7 @@ export const parseCriteriaTree = (
     return []
   }
 
-  const criteria = parseCriteriaSheet(viðmiðSheet, errors)
-  parseSubCriteriaSheet(undirviðmiðSheet, criteria, errors)
+  const criteria = parseCriteriaSheet(workbook, viðmiðSheet, errors)
+  parseSubCriteriaSheet(workbook, undirviðmiðSheet, criteria, errors)
   return criteria
 }
