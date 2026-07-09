@@ -236,34 +236,6 @@ export const CreateEqualityReportDrawer = () => {
             />
           </GridColumn>
         </GridRow>
-
-        <GridRow rowGap={1} marginBottom={4}>
-          <GridColumn span="12/12">
-            <Text variant="h4" marginBottom={1}>
-              {reportText.tabsLabel}
-            </Text>
-          </GridColumn>
-          <GridColumn span="12/12">
-            <Box
-              border="standard"
-              position="relative"
-              zIndex={10}
-              borderRadius="large"
-            >
-              <HTMLEditor
-                key={editorKey.current}
-                disabled={!companyId}
-                defaultValue={form.equalityReportContent}
-                handleUpload={() => new Error('File upload not supported')}
-                onChange={(value) => set('equalityReportContent')(value)}
-                config={{
-                  toolbar:
-                    'bold italic underline | align numlist bullist | link',
-                }}
-              />
-            </Box>
-          </GridColumn>
-        </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Text variant="h4" marginBottom={1}>
@@ -308,6 +280,34 @@ export const CreateEqualityReportDrawer = () => {
             />
           </GridColumn>
         </GridRow>
+        <GridRow rowGap={1} marginBottom={4}>
+          <GridColumn span="12/12">
+            <Text variant="h4" marginBottom={1}>
+              {reportText.tabsLabel}
+            </Text>
+          </GridColumn>
+          <GridColumn span="12/12">
+            <Box
+              border="standard"
+              position="relative"
+              zIndex={10}
+              borderRadius="large"
+            >
+              <HTMLEditor
+                key={editorKey.current}
+                disabled={!companyId}
+                defaultValue={form.equalityReportContent}
+                handleUpload={() => new Error('File upload not supported')}
+                onChange={(value) => set('equalityReportContent')(value)}
+                config={{
+                  toolbar:
+                    'bold italic underline | align numlist bullist | link',
+                }}
+              />
+            </Box>
+          </GridColumn>
+        </GridRow>
+
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">
             <Inline justifyContent="flexEnd" space={2}>
