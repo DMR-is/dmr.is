@@ -4,6 +4,7 @@ import { isBase64 } from 'validator'
 import {
   ApiDto,
   ApiEnum,
+  ApiHTML,
   ApiOptionalDtoArray,
   ApiOptionalNumber,
   ApiString,
@@ -40,10 +41,9 @@ export class SubmitEqualityReportDto {
   @ApiString()
   contactPhone!: string
 
-  @ApiString({
-    minLength: 1,
+  @ApiHTML({
     description:
-      'Narrative gender-equality plan. Persisted as `report.equality_report_content`.',
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
   })
   @Transform(({ value }) => {
     if (isBase64(value)) {

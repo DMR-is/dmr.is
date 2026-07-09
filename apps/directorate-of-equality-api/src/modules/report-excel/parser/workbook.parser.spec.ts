@@ -10,6 +10,14 @@ import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
 import { parseWorkbook } from './workbook.parser'
 
+// CI runs this project's tests concurrently with several other Nx projects on
+// shared CPU, and exceljs's xlsx generation/parsing is heavy enough to
+// occasionally exceed Jest's 5000ms default under that contention (surfaces
+// as "Exceeded timeout... for a hook/test" even though nothing is actually
+// hanging). Same underlying full-suite-load sensitivity as the corrupted-zip
+// issue `serialize()` retries below, different symptom.
+jest.setTimeout(20000)
+
 const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
 
 /**
@@ -416,6 +424,53 @@ describe('parseWorkbook', () => {
 
       // Row 6 → ordinal 1, row 7 → ordinal 2 (matches the sheet's "#" column).
       expect(report.employees.map((e) => e.ordinal)).toEqual([1, 2])
+    })
+  })
+
+  describe('inflated rowCount (whole-column formatting)', () => {
+    it('stays bounded and parses correctly when a stray far-down cell inflates sheet.rowCount', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        workRatioPct: 100,
+        education: 'Háskólapróf (BA/BS)',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+
+      // Simulate what whole-column formatting does to a hand-edited file: a
+      // stray value far below the data pushes sheet.rowCount into the tens of
+      // thousands. The scan must break on the long blank run rather than
+      // materialise a cell object for every row down to here (the OOM cause).
+      const s = wb.getWorksheet('Starfsmenn')!
+      s.getCell('B40000').value = 'stray'
+      expect(s.rowCount).toBeGreaterThan(30000)
+
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
+        'Engin sérstök',
+        'Grunnkunnátta',
+        'Góð kunnátta',
+        'Mjög góð kunnátta',
+        'Sérfræðikunnátta',
+      ])
+      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      // Only the real row is parsed; the stray far-down cell is never reached.
+      expect(report.employees.map((e) => e.ordinal)).toEqual([1])
     })
   })
 
