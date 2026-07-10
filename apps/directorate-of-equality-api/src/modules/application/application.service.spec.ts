@@ -20,6 +20,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
 import {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -102,6 +103,7 @@ describe('ApplicationService', () => {
   let getResultByReportId: jest.Mock
   let emitEdited: jest.Mock
   let emitStatusChanged: jest.Mock
+  let emitCommunicationClosed: jest.Mock
 
   beforeEach(async () => {
     configGetByKey = jest.fn().mockResolvedValue({
@@ -134,6 +136,7 @@ describe('ApplicationService', () => {
     getResultByReportId = jest.fn()
     emitEdited = jest.fn().mockResolvedValue(undefined)
     emitStatusChanged = jest.fn().mockResolvedValue(undefined)
+    emitCommunicationClosed = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -170,6 +173,7 @@ describe('ApplicationService', () => {
           useValue: {
             emitEdited,
             emitStatusChanged,
+            emitCommunicationClosed,
           },
         },
         {
@@ -1051,6 +1055,33 @@ describe('ApplicationService', () => {
       )
     })
 
+    it('force-closes an open communication thread on withdraw', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          type: ReportTypeEnum.SALARY,
+          status: ReportStatusEnum.IN_REVIEW,
+          communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await service.withdraw(PROVIDER_ID, COMPANY)
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.CLOSED },
+        { where: { id: REPORT_ID } },
+      )
+      expect(emitCommunicationClosed).toHaveBeenCalledWith(
+        REPORT_ID,
+        ReportStatusEnum.WITHDRAWN,
+        null,
+      )
+    })
+
     it('is an idempotent no-op when the report is already WITHDRAWN', async () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
@@ -1567,6 +1598,7 @@ function makeReportRow(
     providerId: null,
     type: ReportTypeEnum.EQUALITY,
     status: ReportStatusEnum.SUBMITTED,
+    communicationStatus: CommunicationStatusEnum.NOT_STARTED,
     identifier: 'REPORT-001',
     equalityReportId: null,
     equalityReportContent: null,

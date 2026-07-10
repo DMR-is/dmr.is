@@ -174,6 +174,33 @@ export function timelineEntryText(
     )
   }
 
+  if (eventType === ReportEventTypeEnum.EDITED) {
+    return (
+      <>
+        {actorName && <Bold>{actorName} </Bold>}
+        {reportText.timeline.edited}
+      </>
+    )
+  }
+
+  if (eventType === ReportEventTypeEnum.COMMUNICATION_OPENED) {
+    return (
+      <>
+        {actorName && <Bold>{actorName} </Bold>}
+        {reportText.timeline.communicationOpened}
+      </>
+    )
+  }
+
+  if (eventType === ReportEventTypeEnum.COMMUNICATION_CLOSED) {
+    return (
+      <>
+        {actorName && <Bold>{actorName} </Bold>}
+        {reportText.timeline.communicationClosed}
+      </>
+    )
+  }
+
   // Company-specific event types are cast as `never` in the adapter but
   // arrive as plain strings at runtime.
   const eventTypeStr = eventType as unknown as string

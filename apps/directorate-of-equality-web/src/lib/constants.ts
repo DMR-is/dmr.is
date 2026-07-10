@@ -36,6 +36,14 @@ export enum ReportStatusTranslatedEnum {
   SUPERSEDED = 'Úrelt',
   WITHDRAWN = 'Dregin til baka',
 }
+
+export enum CommunicationStatusTranslatedEnum {
+  NOT_STARTED = 'Ekki hafin',
+  OPEN = 'Opin',
+  AWAITING_RESPONSE = 'Beðið eftir svörum',
+  RESPONSE_RECEIVED = 'Svör hafa borist',
+  CLOSED = 'Lokað',
+}
 import { overviewText, reportText, sharedText } from './text'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -53,7 +61,7 @@ export type Case = {
   isatCode: string
   reviewer: string
   employeeCount: string
-  waitingForAction: boolean
+  communicationStatus: string
   companyFinesStarted: boolean
   companyQuarantined: boolean
 }

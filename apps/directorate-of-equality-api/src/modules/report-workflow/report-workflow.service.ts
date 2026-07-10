@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -12,6 +13,7 @@ import { IApplicationSystemService } from '../application-system/application-sys
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import {
+  CommunicationStatusEnum,
   ReportModel,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -21,11 +23,14 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { CommentVisibilityEnum } from '../report-comment/models/report-comment.model'
+import { IReportCommentService } from '../report-comment/report-comment.service.interface'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
+import { SendToEditDto } from './dto/send-to-edit.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
 
 const LOGGING_CONTEXT = 'ReportWorkflowService'
@@ -38,6 +43,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportEventService: IReportEventService,
     @Inject(IApplicationSystemService)
     private readonly applicationSystemService: IApplicationSystemService,
+    @Inject(IReportCommentService)
+    private readonly reportCommentService: IReportCommentService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -195,6 +202,12 @@ export class ReportWorkflowService implements IReportWorkflowService {
       denialReason,
     )
 
+    await this.forceCloseCommunication(
+      context.reportId,
+      ReportStatusEnum.DENIED,
+      actorUserId,
+    )
+
     await this.notifyApplicationSystem(context.reportId, ReportStatusEnum.DENIED)
   }
 
@@ -245,12 +258,256 @@ export class ReportWorkflowService implements IReportWorkflowService {
       actorUserId,
     )
 
+    await this.forceCloseCommunication(
+      context.reportId,
+      ReportStatusEnum.APPROVED,
+      actorUserId,
+    )
+
     await this.notifyApplicationSystem(
       context.reportId,
       ReportStatusEnum.APPROVED,
     )
 
     // TODO: insert public_report row as part of approval pipeline
+  }
+
+  /**
+   * Concluding a review (approve/deny) closes the applicant conversation: a
+   * finalized report accepts no further replies, so communication moves to
+   * CLOSED from ANY state. The audit event is only emitted when a thread was
+   * actually open — a report that was never in conversation flips
+   * NOT_STARTED -> CLOSED silently.
+   */
+  private async forceCloseCommunication(
+    reportId: string,
+    reportStatus: ReportStatusEnum,
+    actorUserId: string,
+  ): Promise<void> {
+    const report = await this.reportModel.findByPk(reportId, {
+      attributes: ['id', 'communicationStatus'],
+    })
+
+    if (
+      !report ||
+      report.communicationStatus === CommunicationStatusEnum.CLOSED
+    ) {
+      return
+    }
+
+    const wasOpen = this.isCommunicationOpen(report.communicationStatus)
+
+    await report.update({
+      communicationStatus: CommunicationStatusEnum.CLOSED,
+    })
+
+    if (wasOpen) {
+      await this.reportEventService.emitCommunicationClosed(
+        reportId,
+        reportStatus,
+        actorUserId,
+      )
+    }
+  }
+
+  /**
+   * Reviewer sends a report back to the applicant for changes. One atomic
+   * action:
+   *   1. the reason is posted as an EXTERNAL comment (so the applicant sees why),
+   *   2. the communication thread is opened (AWAITING_RESPONSE) so they can reply,
+   *   3. an EDITED event is logged, and
+   *   4. the island.is application is driven into edit state.
+   *
+   * The DoE report status is deliberately unchanged — "edited" is an island.is
+   * application-state + audit signal, not a report status. Requiring the reason
+   * up front is what makes this distinct from a bare external comment (which no
+   * longer moves the application on its own).
+   */
+  async sendToEdit(
+    context: ReportResourceContext,
+    dto: SendToEditDto,
+  ): Promise<void> {
+    this.logger.info(`Sending report ${context.reportId} to edit`, {
+      context: LOGGING_CONTEXT,
+    })
+
+    if (context.actor.kind !== ReportRoleEnum.REVIEWER) {
+      throw new ForbiddenException('Only reviewers may send a report to edit')
+    }
+
+    const reason = dto.reason.trim()
+    if (!reason) {
+      throw new BadRequestException('Reason cannot be empty')
+    }
+
+    if (context.reportStatus !== ReportStatusEnum.IN_REVIEW) {
+      throw new BadRequestException(
+        `Cannot send report with status ${context.reportStatus} to edit`,
+      )
+    }
+
+    const report = await this.reportModel.findByPk(context.reportId)
+    if (!report) {
+      throw new NotFoundException(`Report "${context.reportId}" not found`)
+    }
+
+    const actorUserId = context.actor.userId
+    const wasOpen = this.isCommunicationOpen(report.communicationStatus)
+
+    // 1. Open the thread (and mark the reviewer's ball-in-applicant's-court
+    //    state) BEFORE posting — an external comment requires an open thread.
+    //    Only a genuine (closed/never-started -> open) transition is audited.
+    await report.update({
+      communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+    })
+    if (!wasOpen) {
+      await this.reportEventService.emitCommunicationOpened(
+        context.reportId,
+        context.reportStatus,
+        actorUserId,
+      )
+    }
+
+    // 2. Post the reason as an external comment the applicant can read.
+    await this.reportCommentService.create(context, {
+      body: reason,
+      visibility: CommentVisibilityEnum.EXTERNAL,
+    })
+
+    // 3. Audit the edit request.
+    const companyId = await this.getParentCompanyId(context.reportId)
+    if (companyId) {
+      await this.reportEventService.emitEdited(
+        context.reportId,
+        context.reportStatus,
+        companyId,
+      )
+    }
+
+    // 4. Drive the island.is application into edit state (island.is reports only).
+    await this.notifyApplicationSystemEdited(context.reportId)
+  }
+
+  async openCommunication(context: ReportResourceContext): Promise<void> {
+    this.logger.info(`Opening communication for report ${context.reportId}`, {
+      context: LOGGING_CONTEXT,
+    })
+
+    if (context.actor.kind !== ReportRoleEnum.REVIEWER) {
+      throw new ForbiddenException('Only reviewers may open communication')
+    }
+
+    if (context.reportStatus !== ReportStatusEnum.IN_REVIEW) {
+      throw new BadRequestException(
+        `Cannot change communication on a report with status ${context.reportStatus}`,
+      )
+    }
+
+    const report = await this.reportModel.findByPk(context.reportId)
+    if (!report) {
+      throw new NotFoundException(`Report "${context.reportId}" not found`)
+    }
+
+    // Already open — no-op (keep the existing OPEN / AWAITING_RESPONSE /
+    // RESPONSE_RECEIVED sub-state rather than resetting the direction).
+    if (this.isCommunicationOpen(report.communicationStatus)) {
+      return
+    }
+
+    // Opening exchanges no message yet — lands on OPEN. A reviewer message moves
+    // it to AWAITING_RESPONSE; an applicant reply to RESPONSE_RECEIVED.
+    await report.update({
+      communicationStatus: CommunicationStatusEnum.OPEN,
+    })
+    await this.reportEventService.emitCommunicationOpened(
+      context.reportId,
+      context.reportStatus,
+      context.actor.userId,
+    )
+  }
+
+  async closeCommunication(context: ReportResourceContext): Promise<void> {
+    this.logger.info(`Closing communication for report ${context.reportId}`, {
+      context: LOGGING_CONTEXT,
+    })
+
+    if (context.actor.kind !== ReportRoleEnum.REVIEWER) {
+      throw new ForbiddenException('Only reviewers may close communication')
+    }
+
+    if (context.reportStatus !== ReportStatusEnum.IN_REVIEW) {
+      throw new BadRequestException(
+        `Cannot change communication on a report with status ${context.reportStatus}`,
+      )
+    }
+
+    const report = await this.reportModel.findByPk(context.reportId)
+    if (!report) {
+      throw new NotFoundException(`Report "${context.reportId}" not found`)
+    }
+
+    // Nothing open to close (NOT_STARTED or already CLOSED) — no-op.
+    if (!this.isCommunicationOpen(report.communicationStatus)) {
+      return
+    }
+
+    await report.update({
+      communicationStatus: CommunicationStatusEnum.CLOSED,
+    })
+    await this.reportEventService.emitCommunicationClosed(
+      context.reportId,
+      context.reportStatus,
+      context.actor.userId,
+    )
+  }
+
+  private isCommunicationOpen(status: CommunicationStatusEnum): boolean {
+    return (
+      status === CommunicationStatusEnum.OPEN ||
+      status === CommunicationStatusEnum.AWAITING_RESPONSE ||
+      status === CommunicationStatusEnum.RESPONSE_RECEIVED
+    )
+  }
+
+  private async getParentCompanyId(reportId: string): Promise<string | null> {
+    const snapshot = await this.companyReportModel.findOne({
+      where: { reportId, parentCompanyId: null },
+      attributes: ['companyId'],
+    })
+    return snapshot?.companyId ?? null
+  }
+
+  /**
+   * Best-effort outbound notification that the applicant should edit and
+   * resubmit. Mirrors `notifyApplicationSystem` (approve/deny): only
+   * island.is-sourced reports have an application to update, and a failed
+   * outbound call must not fail the reviewer's action.
+   */
+  private async notifyApplicationSystemEdited(reportId: string): Promise<void> {
+    const report = await this.reportModel.findOne({
+      where: { id: reportId },
+      attributes: ['providerType', 'providerId'],
+    })
+
+    if (
+      report?.providerType !== ReportProviderEnum.ISLAND_IS ||
+      !report.providerId
+    ) {
+      return
+    }
+
+    try {
+      await this.applicationSystemService.notifyEdited(report.providerId)
+    } catch (error) {
+      this.logger.error(
+        `Failed to notify application system (edit) for report ${reportId}`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: report.providerId,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
   }
 
   /**

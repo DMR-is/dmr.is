@@ -24,6 +24,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
+  CommunicationStatusEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -437,6 +438,31 @@ export class ApplicationService implements IApplicationService {
       report.status,
       ReportStatusEnum.WITHDRAWN,
     )
+
+    // A withdrawn report accepts no further messages — force the conversation
+    // closed from any state. The audit event only fires when it was open (a
+    // never-opened thread flips NOT_STARTED -> CLOSED silently).
+    if (report.communicationStatus !== CommunicationStatusEnum.CLOSED) {
+      const wasOpen =
+        report.communicationStatus === CommunicationStatusEnum.OPEN ||
+        report.communicationStatus ===
+          CommunicationStatusEnum.AWAITING_RESPONSE ||
+        report.communicationStatus ===
+          CommunicationStatusEnum.RESPONSE_RECEIVED
+
+      await this.reportModel.update(
+        { communicationStatus: CommunicationStatusEnum.CLOSED },
+        { where: { id: report.id } },
+      )
+
+      if (wasOpen) {
+        await this.reportEventService.emitCommunicationClosed(
+          report.id,
+          ReportStatusEnum.WITHDRAWN,
+          null,
+        )
+      }
+    }
   }
 
   /**

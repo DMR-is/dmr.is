@@ -3277,6 +3277,191 @@
         "tags": ["Report Workflow"]
       }
     },
+    "/api/v1/reports/{reportId}/send-to-edit": {
+      "post": {
+        "operationId": "sendReportToEdit",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendToEditDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/communication/open": {
+      "post": {
+        "operationId": "openReportCommunication",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/communication/close": {
+      "post": {
+        "operationId": "closeReportCommunication",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
     "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
       "get": {
         "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
@@ -4935,6 +5120,16 @@
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "CommunicationStatusEnum": {
+        "type": "string",
+        "enum": [
+          "NOT_STARTED",
+          "OPEN",
+          "AWAITING_RESPONSE",
+          "RESPONSE_RECEIVED",
+          "CLOSED"
+        ]
+      },
       "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportListItemDto": {
         "type": "object",
@@ -4946,6 +5141,11 @@
           },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
+          },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
           },
           "companyName": { "type": "string", "nullable": true },
           "companyNationalId": { "type": "string", "nullable": true },
@@ -4971,10 +5171,6 @@
           "companyQuarantined": {
             "type": "boolean",
             "description": "Quarantine flag. `true` means the company is currently quarantined."
-          },
-          "waitingForAction": {
-            "type": "boolean",
-            "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
           },
           "includesImprovementPlan": {
             "type": "boolean",
@@ -5003,9 +5199,9 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "companyFinesStarted",
           "companyQuarantined",
-          "waitingForAction",
           "includesImprovementPlan"
         ]
       },
@@ -5126,7 +5322,9 @@
           "SUPERSEDED",
           "EDITED",
           "WITHDRAWN",
-          "SYSTEM_AUTO_REVIEW"
+          "SYSTEM_AUTO_REVIEW",
+          "COMMUNICATION_OPENED",
+          "COMMUNICATION_CLOSED"
         ]
       },
       "AutoReviewDecisionEnum": {
@@ -5475,6 +5673,11 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
+          },
           "companyAdminName": { "type": "string", "nullable": true },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
@@ -5575,6 +5778,7 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "importedFromExcel",
           "createdAt",
           "company",
@@ -5721,6 +5925,11 @@
         "type": "object",
         "properties": { "denialReason": { "type": "string" } },
         "required": ["denialReason"]
+      },
+      "SendToEditDto": {
+        "type": "object",
+        "properties": { "reason": { "type": "string" } },
+        "required": ["reason"]
       },
       "GenderWageGapDto": {
         "type": "object",

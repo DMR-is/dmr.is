@@ -8,6 +8,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
 import {
   CommentVisibilityEnum,
+  CommunicationStatusEnum,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
 import { reportText } from '../../lib/text'
@@ -54,14 +55,26 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     onError: () => toast.error(reportText.comments.deleteError),
   })
 
+  // Internal notes are allowed on any report a reviewer can open (everything
+  // but a draft). Messaging the applicant (external) is only possible while the
+  // communication thread is open — opening/closing is an explicit action in the
+  // sidebar, no longer a side effect of commenting.
+  const isDraft = report?.status === ReportStatusEnum.DRAFT
+  const canSendExternal =
+    report?.communicationStatus === CommunicationStatusEnum.OPEN ||
+    report?.communicationStatus ===
+      CommunicationStatusEnum.AWAITING_RESPONSE ||
+    report?.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
+
   const handleSubmit = () => {
     if (!body.trim()) return
     createComment({
       reportId,
       body,
-      visibility: isExternal
-        ? CommentVisibilityEnum.EXTERNAL
-        : CommentVisibilityEnum.INTERNAL,
+      visibility:
+        isExternal && canSendExternal
+          ? CommentVisibilityEnum.EXTERNAL
+          : CommentVisibilityEnum.INTERNAL,
     })
   }
 
@@ -74,12 +87,10 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       timeline={report?.timeline ?? []}
       companyName={report?.company?.name}
       currentUserId={me?.id}
-      readonly={
-        report?.status === ReportStatusEnum.APPROVED ||
-        report?.status === ReportStatusEnum.DENIED
-      }
+      readonly={isDraft}
+      canSendExternal={canSendExternal}
       body={body}
-      isExternal={isExternal}
+      isExternal={isExternal && canSendExternal}
       isPending={isPending}
       onBodyChange={setBody}
       onExternalChange={setIsExternal}

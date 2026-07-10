@@ -17,6 +17,7 @@ import { ReportResourceGuard } from '../../core/guards/report-resource/report-re
 import { type ReportResourceContext } from '../report/types/report-resource-context'
 import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
+import { SendToEditDto } from './dto/send-to-edit.dto'
 import { IReportWorkflowService } from './report-workflow.service.interface'
 
 @Controller({
@@ -60,5 +61,33 @@ export class ReportWorkflowController {
     @CurrentReportResourceContext() context: ReportResourceContext,
   ): Promise<void> {
     return this.reportWorkflowService.approve(context)
+  }
+
+  @Post('send-to-edit')
+  @HttpCode(204)
+  @DoeResponse({ operationId: 'sendReportToEdit', include404: true })
+  async sendToEdit(
+    @CurrentReportResourceContext() context: ReportResourceContext,
+    @Body() dto: SendToEditDto,
+  ): Promise<void> {
+    return this.reportWorkflowService.sendToEdit(context, dto)
+  }
+
+  @Post('communication/open')
+  @HttpCode(204)
+  @DoeResponse({ operationId: 'openReportCommunication', include404: true })
+  async openCommunication(
+    @CurrentReportResourceContext() context: ReportResourceContext,
+  ): Promise<void> {
+    return this.reportWorkflowService.openCommunication(context)
+  }
+
+  @Post('communication/close')
+  @HttpCode(204)
+  @DoeResponse({ operationId: 'closeReportCommunication', include404: true })
+  async closeCommunication(
+    @CurrentReportResourceContext() context: ReportResourceContext,
+  ): Promise<void> {
+    return this.reportWorkflowService.closeCommunication(context)
   }
 }
