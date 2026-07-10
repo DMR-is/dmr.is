@@ -256,6 +256,7 @@ export const reportText = {
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
+    companyCreated: 'Fyrirtæki skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
     companyQuarantined: 'hefur sett fyrirtækið í var',

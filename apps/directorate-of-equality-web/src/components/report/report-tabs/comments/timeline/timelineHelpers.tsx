@@ -178,6 +178,7 @@ export function timelineEntryText(
   // arrive as plain strings at runtime.
   const eventTypeStr = eventType as unknown as string
   const COMPANY_EVENT_LABELS: Record<string, string> = {
+    CREATED: reportText.timeline.companyCreated,
     FINES_STARTED: reportText.timeline.finesStarted,
     FINES_STOPPED: reportText.timeline.finesStopped,
     QUARANTINED: reportText.timeline.companyQuarantined,
