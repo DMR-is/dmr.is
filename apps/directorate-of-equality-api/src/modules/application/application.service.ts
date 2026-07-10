@@ -693,6 +693,9 @@ export class ApplicationService implements IApplicationService {
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
       equalityReportContent: input.equalityReportContent,
+      averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+      averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+      averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
       companies,
     }
   }

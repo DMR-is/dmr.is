@@ -269,6 +269,9 @@ export class ReportCreateService implements IReportCreateService {
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
       equalityReportContent: input.equalityReportContent,
+      averageEmployeeMaleCount: input.averageEmployeeMaleCount,
+      averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
+      averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
     })
 
     this.logger.info(`Created EQUALITY report row "${report.id}"`, {

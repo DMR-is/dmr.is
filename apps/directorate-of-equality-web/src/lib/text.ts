@@ -78,6 +78,7 @@ export const overviewText = {
     drawerLabel: 'Skrá jafnréttisáætlun',
     buttonLabel: 'Jafnréttisáætlun',
     heading: 'Ný jafnréttisáætlun',
+    employeeCountHeading: 'Starfsmannafjöldi',
     successToast: 'Skýrsla send inn',
   },
   createSalaryReport: {
