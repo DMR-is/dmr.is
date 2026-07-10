@@ -18,7 +18,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { GenderEnum } from '../../gen/fetch/types.gen'
 import { overviewText, reportText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatNationalId } from '../../lib/utils'
+import { formatNationalId, parseInflightConflictStatus } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -71,7 +71,17 @@ export const CreateEqualityReportDrawer = () => {
       handleReset()
       setIsOpen(false)
     },
-    onError: () => toast.error(s.form.errorToast),
+    onError: (error) => {
+      // The API blocks a new submit while a sibling report is IN_REVIEW or
+      // POSTPONED (409). Tell the admin which status is blocking instead of
+      // the generic fallback so they know to resolve the in-flight report.
+      const conflictStatus = parseInflightConflictStatus(error.message)
+      if (conflictStatus) {
+        toast.error(t.inflightConflictToast.replace('{status}', conflictStatus))
+        return
+      }
+      toast.error(s.form.errorToast)
+    },
   })
 
   const handleReset = () => {

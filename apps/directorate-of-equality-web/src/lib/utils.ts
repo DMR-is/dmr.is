@@ -1,4 +1,5 @@
 import { CompanySizeEnum } from '../gen/fetch'
+import { sharedText } from './text'
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export const getBaseUrlFromServerSide = (includePrefix = false): string => {
@@ -42,6 +43,22 @@ export const EMPLOYEE_RANGES = [
 
 export const formatSalary = (v: number) =>
   new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
+
+/**
+ * Matches the API's 409 message "Company already has a <TYPE> report in
+ * status <STATUS> (providerId: ...). Resolve it before submitting another."
+ * and returns the localized status label, or null for any other message.
+ */
+export const parseInflightConflictStatus = (message: string): string | null => {
+  const match = message.match(/already has a \w+ report in status (\w+)/i)
+  if (!match) return null
+  const status = match[1].toUpperCase()
+  return (
+    sharedText.statusLabels[
+      status as keyof typeof sharedText.statusLabels
+    ] ?? status
+  )
+}
 
 export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
   [CompanySizeEnum.UNKNOWN]: 'Óþekkt',

@@ -76,6 +76,7 @@ const COMPANY: CompanyDto = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
+  email: null,
 }
 
 describe('ApplicationService', () => {

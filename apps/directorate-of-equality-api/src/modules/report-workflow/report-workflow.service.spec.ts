@@ -283,6 +283,30 @@ describe('ReportWorkflowService', () => {
       )
     })
 
+    it('transitions POSTPONED → DENIED and emits STATUS_CHANGED with POSTPONED as from-status', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+
+      await service.deny(reviewerContext(ReportStatusEnum.POSTPONED), {
+        denialReason: 'Outliers never resolved',
+      })
+
+      expect(reportModel.update).toHaveBeenCalledWith(
+        {
+          status: ReportStatusEnum.DENIED,
+          reviewerUserId: 'reviewer-1',
+        },
+        { where: { id: 'report-1' } },
+      )
+      expect(reportEventService.emitStatusChanged).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatusEnum.POSTPONED,
+        ReportStatusEnum.DENIED,
+        'reviewer-1',
+        'Outliers never resolved',
+      )
+    })
+
     it('notifies the application system when the report is island.is-sourced', async () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -333,12 +357,19 @@ describe('ReportWorkflowService', () => {
       ).resolves.toBeUndefined()
     })
 
-    it('rejects non-IN_REVIEW reports', async () => {
-      await expect(
-        service.deny(reviewerContext(ReportStatusEnum.SUBMITTED), {
-          denialReason: 'reason',
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException)
+    it('rejects reports outside IN_REVIEW / POSTPONED', async () => {
+      for (const status of [
+        ReportStatusEnum.SUBMITTED,
+        ReportStatusEnum.DRAFT,
+        ReportStatusEnum.APPROVED,
+        ReportStatusEnum.DENIED,
+      ]) {
+        await expect(
+          service.deny(reviewerContext(status), {
+            denialReason: 'reason',
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException)
+      }
 
       expect(reportModel.update).not.toHaveBeenCalled()
     })

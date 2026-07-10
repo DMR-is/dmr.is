@@ -158,7 +158,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
       throw new ForbiddenException('Only reviewers may deny reports')
     }
 
-    if (context.reportStatus !== ReportStatusEnum.IN_REVIEW) {
+    // POSTPONED is deniable alongside IN_REVIEW: a report parked on postponed
+    // outliers blocks the company from submitting a replacement, so reviewers
+    // need a way to close it out when the applicant never resolves them.
+    const deniableStatuses: ReportStatusEnum[] = [
+      ReportStatusEnum.IN_REVIEW,
+      ReportStatusEnum.POSTPONED,
+    ]
+    if (!deniableStatuses.includes(context.reportStatus)) {
       throw new BadRequestException(
         `Cannot deny report with status ${context.reportStatus}`,
       )
@@ -182,7 +189,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.reportEventService.emitStatusChanged(
       context.reportId,
-      ReportStatusEnum.IN_REVIEW,
+      context.reportStatus,
       ReportStatusEnum.DENIED,
       actorUserId,
       denialReason,
