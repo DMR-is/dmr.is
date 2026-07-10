@@ -18,6 +18,12 @@ import { ReportModel } from '../models/report.model'
  * - `company.name`, `company.nationalId` — looked up via the nested-include
  *   column-ref syntax `$relation.column$` so Sequelize builds the JOIN
  *
+ * This matches the PARENT company snapshot only — the `companyReport` include
+ * is pinned to `parentCompanyId: null` (see the report.model scopes) so the
+ * admin list doesn't multiply one report into a row per company. Listing a
+ * report by one of its subsidiaries is a separate, company-scoped path (see
+ * `ReportService.listForCompany`), not this free-text search.
+ *
  * Person fields are intentionally excluded: contacts (`contactName`,
  * `contactEmail`) and the company admin / CEO (`companyAdminName`,
  * `companyAdminEmail`) are not matched — admins search by report or company,

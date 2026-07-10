@@ -27,7 +27,7 @@ export function CompanyTabsContainer({ company }: CompanyTabsContainerProps) {
     {
       id: 'skyrslur',
       label: t.tabReports,
-      content: <CompanyReportsTab nationalId={company.nationalId} />,
+      content: <CompanyReportsTab companyId={company.id} />,
     },
   ]
 

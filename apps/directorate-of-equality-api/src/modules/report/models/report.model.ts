@@ -107,6 +107,8 @@ type ReportCreateAttributes = {
  *   snapshot (drives the name/kennitala columns) and reviewer.
  * - `detailed`: everything the detail screen needs — same includes as
  *   listview plus comments, newest-first, not paranoid-deleted.
+ * - `forCompany(companyId)`: the company-detail reports tab — reports that
+ *   include this specific company, joined on its OWN snapshot row.
  */
 @Scopes(() => ({
   listview: {
@@ -153,6 +155,28 @@ type ReportCreateAttributes = {
       { model: ReportResultModel, as: 'result', required: false },
     ],
   },
+  // Company-scoped list for the company-detail reports tab. Joins the
+  // company's OWN `company_report` row — the parent submission when the
+  // company filed on its own behalf (`parentCompanyId` null), or the
+  // subsidiary row when it was included on a parent's group submission
+  // (`parentCompanyId` set). Filtering the join to one company means at most
+  // one snapshot matches per report, so each report appears once WITHOUT the
+  // parent-only pinning `listview` needs — that pin exists only because the
+  // unfiltered list join would otherwise multiply a group report into one row
+  // per company. `fromModelToListItem` reads `companyReport.name` etc, so the
+  // `company` include is kept for the fines/quarantine flags.
+  forCompany: (companyId: string) => ({
+    include: [
+      {
+        model: CompanyReportModel,
+        as: 'companyReport',
+        required: true,
+        where: { companyId },
+        include: [{ model: CompanyModel, as: 'company', required: false }],
+      },
+      { model: UserModel, as: 'reviewer', required: false },
+    ],
+  }),
 }))
 @MutableTable({ tableName: DoeModels.REPORT })
 export class ReportModel extends MutableModel<

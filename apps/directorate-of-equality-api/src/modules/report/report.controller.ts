@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
+import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
@@ -19,6 +20,7 @@ import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-
 import { GetReportOutlierGroupsResponseDto } from './dto/get-report-outlier-groups-response.dto'
 import { GetReportOutliersQueryDto } from './dto/get-report-outliers.query.dto'
 import { GetReportsQueryDto } from './dto/get-reports.query.dto'
+import { GetReportsForCompanyResponseDto } from './dto/get-reports-for-company-response.dto'
 import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
 import { ReportOverviewDto } from './dto/report-overview.dto'
@@ -57,6 +59,20 @@ export class ReportController {
     @Query() query: GetReportsQueryDto,
   ): Promise<GetReportsResponseDto> {
     return this.reportService.list(query)
+  }
+
+  @Get('company/:companyId')
+  @DoeResponse({
+    operationId: 'listReportsForCompany',
+    type: GetReportsForCompanyResponseDto,
+    description:
+      "Reports that include the given company — whether it filed on its own behalf or was included as a subsidiary on a parent company's group submission. Powers the company-detail reports tab. Newest first.",
+  })
+  async listForCompany(
+    @Param('companyId', ParseUUIDPipe) companyId: string,
+    @Query() query: PagingQuery,
+  ): Promise<GetReportsForCompanyResponseDto> {
+    return this.reportService.listForCompany(companyId, query)
   }
 
   @Get(':id')
