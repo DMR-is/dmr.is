@@ -24,16 +24,6 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
-  type DetectedOutlier,
-  detectOutliers,
-  type OutlierDetectionEmployee,
-  resolveAllowedDifferencePercent,
-} from '../report/lib/compensation-aggregates'
-import {
-  assertParsedPayloadIntegrity,
-  computeEmployeeScores,
-} from '../report/lib/employee-scores'
-import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -65,20 +55,16 @@ import { ReportOutlierGroupModel } from '../report-employee/models/report-outlie
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
+import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
+import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
 import {
-  buildChartFromEmployeePoints,
-  type EmployeeDataPoint,
-} from '../report-statistics/lib/build-chart'
+  analyzeSalaryPayload,
+  SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+} from '../report-statistics/lib/salary-analysis'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
-import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
-import {
-  SalaryAnalysisOutlierDirectionEnum,
-  SalaryAnalysisOutlierDto,
-  SalaryAnalysisResponseDto,
-} from './dto/salary-analysis.response.dto'
 import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
@@ -96,8 +82,6 @@ import {
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
-const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
 
 /**
  * This module is bound to the island.is application portal. Other upstream
@@ -143,54 +127,12 @@ export class ApplicationService implements IApplicationService {
       employeeCount: input.parsed.employees.length,
     })
 
-    // 1. Integrity-check the parsed payload (rejects malformed input as 400)
-    //    and capture the step-score lookup map.
-    const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
-
-    // 2. Compute per-employee total scores using the same dedup'd Set logic
-    //    the submit endpoint uses, so preview and submit agree on score.
-    const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
-
-    // 3. Build the detection input — pairs each parsed employee with its
-    //    computed score and ordinal so detectOutliers can return outlier
-    //    rows referenced by ordinal.
-    const detectionEmployees: OutlierDetectionEmployee[] =
-      input.parsed.employees.map((employee, index) => ({
-        ordinal: employee.ordinal,
-        score: employeeScores[index],
-        gender: employee.gender,
-        workRatio: employee.workRatio,
-        baseSalary: employee.baseSalary,
-      }))
-
-    // 4. Pull the active threshold from config (re-read at submit too — small
-    //    drift between preview and submit is acceptable per plan).
+    // Pull the active threshold from config (re-read at submit too — small
+    // drift between preview and submit is acceptable per plan) and run the
+    // shared detection + chart compute over the parsed payload.
     const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
 
-    // 5. Detect outliers using the canonical helper.
-    const detected = detectOutliers({
-      employees: detectionEmployees,
-      thresholdPercent,
-    })
-
-    // 6. Build the chart half of the response from the same employee/score
-    //    mapping the reviewer-side getBaseSalaryByGenderAndScoreAll uses.
-    const chartPoints: EmployeeDataPoint[] = detectionEmployees.map(
-      (employee) => ({
-        score: employee.score,
-        adjustedSalary: employee.baseSalary / employee.workRatio,
-        gender: employee.gender,
-      }),
-    )
-    const baseSalaryByGenderAndScoreAll = buildChartFromEmployeePoints(
-      chartPoints,
-      resolveAllowedDifferencePercent(thresholdPercent),
-    )
-
-    return {
-      outliers: detected.map(toOutlierDto),
-      baseSalaryByGenderAndScoreAll,
-    }
+    return analyzeSalaryPayload(input.parsed, thresholdPercent)
   }
 
   async submitSalary(
@@ -1025,25 +967,5 @@ export class ApplicationService implements IApplicationService {
     })
 
     return deniedEvent?.reason ?? null
-  }
-}
-
-function toOutlierDto(detected: DetectedOutlier): SalaryAnalysisOutlierDto {
-  // detectOutliers only emits rows where isOutlier=true, which guarantees
-  // a non-null direction and non-null differencePercent (see the assessment
-  // in compensation-aggregates.ts).
-  const { assessment } = detected
-
-  return {
-    employeeOrdinal: detected.ordinal,
-    adjustedBaseSalary: Math.round(detected.adjustedBaseSalary),
-    predictedBaseSalary: Math.round(detected.predictedBaseSalary),
-    scoreBucketRangeFrom: detected.scoreBucketRangeFrom,
-    scoreBucketRangeTo: detected.scoreBucketRangeTo,
-    direction:
-      (assessment.direction as SalaryAnalysisOutlierDirectionEnum | null) ??
-      SalaryAnalysisOutlierDirectionEnum.EQUAL,
-    differencePercent: assessment.differencePercent ?? 0,
-    allowedDifferencePercent: assessment.allowedDifferencePercent,
   }
 }

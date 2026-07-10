@@ -8,11 +8,6 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import {
-  SalaryAnalysisOutlierDirectionEnum,
-  SalaryAnalysisOutlierDto,
-  SalaryAnalysisResponseDto,
-} from '../../application/dto/salary-analysis.response.dto'
 import { CompanyDto } from '../../company/dto/company.dto'
 import { IConfigService } from '../../config/config.service.interface'
 import {
@@ -28,6 +23,11 @@ import { ReportSubCriterionStepModel } from '../../report-criterion/models/repor
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
+import {
+  SalaryAnalysisOutlierDirectionEnum,
+  SalaryAnalysisOutlierDto,
+  SalaryAnalysisResponseDto,
+} from '../../report-statistics/dto/salary-analysis.response.dto'
 import {
   buildChartFromEmployeePoints,
   type EmployeeDataPoint,

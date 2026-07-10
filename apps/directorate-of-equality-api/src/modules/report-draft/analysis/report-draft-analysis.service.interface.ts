@@ -1,5 +1,5 @@
-import { SalaryAnalysisResponseDto } from '../../application/dto/salary-analysis.response.dto'
 import { CompanyDto } from '../../company/dto/company.dto'
+import { SalaryAnalysisResponseDto } from '../../report-statistics/dto/salary-analysis.response.dto'
 
 /**
  * Read-time derivation for a DRAFT salary report. Employee scores are NULL

@@ -118,6 +118,76 @@
         "tags": ["Admin Report"]
       }
     },
+    "/api/v1/admin-report/companies/{companyId}/reports/salary/analyze": {
+      "post": {
+        "operationId": "analyzeAdminSalaryReport",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryAnalysisRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryAnalysisResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Admin Report"]
+      }
+    },
     "/api/v1/admin-report/companies/{companyId}/reports/salary": {
       "post": {
         "operationId": "submitAdminSalaryReport",
@@ -3812,6 +3882,139 @@
         },
         "required": ["criteria", "roles", "employees"]
       },
+      "SalaryAnalysisRequestDto": {
+        "type": "object",
+        "properties": {
+          "parsed": {
+            "description": "Parsed workbook payload from an excel import endpoint.",
+            "allOf": [{ "$ref": "#/components/schemas/ParsedReportDto" }]
+          }
+        },
+        "required": ["parsed"]
+      },
+      "SalaryAnalysisOutlierDto": {
+        "type": "object",
+        "properties": {
+          "employeeOrdinal": { "type": "number" },
+          "adjustedBaseSalary": { "type": "number" },
+          "direction": {
+            "type": "string",
+            "enum": ["ABOVE", "BELOW", "EQUAL"]
+          },
+          "differencePercent": { "type": "number" },
+          "allowedDifferencePercent": { "type": "number" },
+          "predictedBaseSalary": { "type": "number" },
+          "scoreBucketRangeFrom": { "type": "number" },
+          "scoreBucketRangeTo": { "type": "number" }
+        },
+        "required": [
+          "employeeOrdinal",
+          "adjustedBaseSalary",
+          "direction",
+          "differencePercent",
+          "allowedDifferencePercent",
+          "predictedBaseSalary",
+          "scoreBucketRangeFrom",
+          "scoreBucketRangeTo"
+        ]
+      },
+      "ScatterDataPointDto": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "number" },
+          "adjustedSalary": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
+        },
+        "required": ["score", "adjustedSalary", "gender"]
+      },
+      "RegressionLineDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number" },
+          "intercept": { "type": "number" }
+        },
+        "required": ["slope", "intercept"]
+      },
+      "ScoreBucketDto": {
+        "type": "object",
+        "properties": {
+          "rangeFrom": { "type": "number" },
+          "rangeTo": { "type": "number" },
+          "maleAverageSalary": { "type": "number", "nullable": true },
+          "femaleAverageSalary": { "type": "number", "nullable": true },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number", "nullable": true },
+          "femaleMedianSalary": { "type": "number", "nullable": true },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "rangeFrom",
+          "rangeTo",
+          "overallAverageSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryTotalsDto": {
+        "type": "object",
+        "properties": {
+          "maleAverageSalary": { "type": "number" },
+          "femaleAverageSalary": { "type": "number" },
+          "overallAverageSalary": { "type": "number" },
+          "maleMedianSalary": { "type": "number" },
+          "femaleMedianSalary": { "type": "number" },
+          "overallMedianSalary": { "type": "number" },
+          "wageGapPercent": { "type": "number", "nullable": true },
+          "maleCount": { "type": "number" },
+          "femaleCount": { "type": "number" }
+        },
+        "required": [
+          "maleAverageSalary",
+          "femaleAverageSalary",
+          "overallAverageSalary",
+          "maleMedianSalary",
+          "femaleMedianSalary",
+          "overallMedianSalary",
+          "maleCount",
+          "femaleCount"
+        ]
+      },
+      "SalaryByGenderAndScoreDto": {
+        "type": "object",
+        "properties": {
+          "dataPoints": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
+          },
+          "regressionLine": {
+            "$ref": "#/components/schemas/RegressionLineDto"
+          },
+          "scoreBuckets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
+          },
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" },
+          "allowedDifferencePercent": { "type": "number", "nullable": true }
+        },
+        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
+      },
+      "SalaryAnalysisResponseDto": {
+        "type": "object",
+        "properties": {
+          "outliers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SalaryAnalysisOutlierDto" }
+          },
+          "baseSalaryByGenderAndScoreAll": {
+            "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+          }
+        },
+        "required": ["outliers", "baseSalaryByGenderAndScoreAll"]
+      },
       "CreateReportOutlierGroupDto": {
         "type": "object",
         "properties": {
@@ -5438,90 +5641,6 @@
         "type": "object",
         "properties": { "denialReason": { "type": "string" } },
         "required": ["denialReason"]
-      },
-      "ScatterDataPointDto": {
-        "type": "object",
-        "properties": {
-          "score": { "type": "number" },
-          "adjustedSalary": { "type": "number" },
-          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
-        },
-        "required": ["score", "adjustedSalary", "gender"]
-      },
-      "RegressionLineDto": {
-        "type": "object",
-        "properties": {
-          "slope": { "type": "number" },
-          "intercept": { "type": "number" }
-        },
-        "required": ["slope", "intercept"]
-      },
-      "ScoreBucketDto": {
-        "type": "object",
-        "properties": {
-          "rangeFrom": { "type": "number" },
-          "rangeTo": { "type": "number" },
-          "maleAverageSalary": { "type": "number", "nullable": true },
-          "femaleAverageSalary": { "type": "number", "nullable": true },
-          "overallAverageSalary": { "type": "number" },
-          "maleMedianSalary": { "type": "number", "nullable": true },
-          "femaleMedianSalary": { "type": "number", "nullable": true },
-          "overallMedianSalary": { "type": "number" },
-          "wageGapPercent": { "type": "number", "nullable": true },
-          "maleCount": { "type": "number" },
-          "femaleCount": { "type": "number" }
-        },
-        "required": [
-          "rangeFrom",
-          "rangeTo",
-          "overallAverageSalary",
-          "overallMedianSalary",
-          "maleCount",
-          "femaleCount"
-        ]
-      },
-      "SalaryTotalsDto": {
-        "type": "object",
-        "properties": {
-          "maleAverageSalary": { "type": "number" },
-          "femaleAverageSalary": { "type": "number" },
-          "overallAverageSalary": { "type": "number" },
-          "maleMedianSalary": { "type": "number" },
-          "femaleMedianSalary": { "type": "number" },
-          "overallMedianSalary": { "type": "number" },
-          "wageGapPercent": { "type": "number", "nullable": true },
-          "maleCount": { "type": "number" },
-          "femaleCount": { "type": "number" }
-        },
-        "required": [
-          "maleAverageSalary",
-          "femaleAverageSalary",
-          "overallAverageSalary",
-          "maleMedianSalary",
-          "femaleMedianSalary",
-          "overallMedianSalary",
-          "maleCount",
-          "femaleCount"
-        ]
-      },
-      "SalaryByGenderAndScoreDto": {
-        "type": "object",
-        "properties": {
-          "dataPoints": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ScatterDataPointDto" }
-          },
-          "regressionLine": {
-            "$ref": "#/components/schemas/RegressionLineDto"
-          },
-          "scoreBuckets": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
-          },
-          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" },
-          "allowedDifferencePercent": { "type": "number", "nullable": true }
-        },
-        "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
       },
       "GenderWageGapDto": {
         "type": "object",

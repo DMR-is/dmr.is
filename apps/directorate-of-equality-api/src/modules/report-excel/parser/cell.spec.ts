@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 
-import { readDate, toIsoDate } from './cell'
+import { readDate, readNumber, readString, toIsoDate } from './cell'
 
 // The readers only touch `cell.value`, so a minimal stub is sufficient.
 const cell = (value: ExcelJS.CellValue): ExcelJS.Cell =>
@@ -26,10 +26,22 @@ describe('readDate', () => {
     expect(readDate(cell(3_000_000))).toBeNull()
   })
 
-  it('returns null for formula cells (never trusts cached results)', () => {
+  it('reads cached formula results when present', () => {
     expect(
       readDate(cell({ formula: 'TODAY()', result: 45000 } as ExcelJS.CellValue)),
-    ).toBeNull()
+    ).not.toBeNull()
+    expect(
+      readNumber(cell({ formula: '1+1', result: 2 } as ExcelJS.CellValue)),
+    ).toBe(2)
+    expect(
+      readString(
+        cell({ formula: 'CONCAT("A","B")', result: 'AB' } as ExcelJS.CellValue),
+      ),
+    ).toBe('AB')
+  })
+
+  it('returns null for formula cells without cached results', () => {
+    expect(readDate(cell({ formula: 'TODAY()' } as ExcelJS.CellValue))).toBeNull()
   })
 
   it('returns null for empty cells', () => {

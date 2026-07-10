@@ -99,6 +99,31 @@ export const overviewText = {
     excelErrorTitle: 'Ekki tókst að lesa Excel skrána',
     excelErrorIntro: 'Lagfærðu eftirfarandi atriði og reyndu aftur:',
     successToast: 'Skýrslugjöf send inn',
+    deviations: {
+      analyzing: 'Greini frávik…',
+      analyzeError: 'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
+      none: 'Engin frávik fundust í gögnunum. Hægt er að senda skýrsluna beint inn.',
+      intro:
+        'Frávik fundust í launagreiningunni. Skráðu skýringar á þeim í frávikahópa eða frestaðu skilum þeirra.',
+      postponeOption: 'Fresta skilum frávika',
+      tableEmployee: 'Starfsmaður',
+      tableSalary: 'Grunnlaun',
+      tableDifference: 'Frávik',
+      directionAbove: 'yfir viðmiði',
+      directionBelow: 'undir viðmiði',
+      createGroup: 'Búa til frávikahóp úr völdum',
+      groupHeading: 'Frávikahópur',
+      groupMembers: 'Starfsmenn',
+      removeGroup: 'Fjarlægja hóp',
+      reasonLabel: 'Ástæða fráviks',
+      actionLabel: 'Aðgerðir til úrbóta',
+      signatureNameLabel: 'Nafn ábyrgðaraðila',
+      signatureRoleLabel: 'Starfsheiti ábyrgðaraðila',
+      unassignedWarning:
+        'Öll frávik verða að tilheyra frávikahópi áður en hægt er að senda inn.',
+      incompleteGroupWarning:
+        'Fylltu út allar upplýsingar fyrir hvern frávikahóp.',
+    },
     missingEqualityTitle: 'Samþykkta jafnréttisáætlun vantar',
     missingEqualityMessage:
       'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',

@@ -21,11 +21,11 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
-import { SalaryAnalysisResponseDto } from '../application/dto/salary-analysis.response.dto'
 import { CompanyDto } from '../company/dto/company.dto'
 import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
 import { ReportProviderEnum } from '../report/models/report.enums'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
+import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
 import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
 import { DraftAssignmentDto } from './assignment/dto/draft-assignment.dto'
 import { IReportDraftAssignmentService } from './assignment/report-draft-assignment.service.interface'
@@ -199,7 +199,7 @@ export class ReportDraftController {
     include404: true,
     type: CreateReportResponseDto,
     description:
-      'Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report\'s outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, equalityReportId is required and must reference an APPROVED equality report.',
+      "Finalises a DRAFT (DRAFT → SUBMITTED, or POSTPONED when a salary report's outliers are acknowledged but not yet explained). Freezes derived scores + the result snapshot, creates the company_report snapshot from the payload (parent + subsidiaries), and makes the report visible to reviewers. For salary reports, equalityReportId is required and must reference an APPROVED equality report.",
   })
   async submitDraft(
     @Param('providerId') providerId: string,
@@ -222,7 +222,7 @@ export class ReportDraftController {
     include404: true,
     type: DraftDetailDto,
     description:
-      'Bulk-populates a SALARY draft from an uploaded workbook. Presign + upload via POST /application/reports/excel/presign, then pass the object { key } here. REPLACE semantics — the draft\'s existing scoring content is cleared and replaced by the workbook (scores stay NULL until submit). Returns the refreshed draft detail. 400 on an equality draft or a malformed workbook.',
+      "Bulk-populates a SALARY draft from an uploaded workbook. Presign + upload via POST /application/reports/excel/presign, then pass the object { key } here. REPLACE semantics — the draft's existing scoring content is cleared and replaced by the workbook (scores stay NULL until submit). Returns the refreshed draft detail. 400 on an equality draft or a malformed workbook.",
   })
   async importDraftWorkbook(
     @Param('providerId') providerId: string,
@@ -251,7 +251,7 @@ export class ReportDraftController {
     status: HttpStatus.NO_CONTENT,
     include404: true,
     description:
-      'Applies a batch of create/update/remove commands to the draft\'s content (criteria tree, roles, employees, outlier groups) in one atomic transaction — the single write path for the portal, flushed once per screen navigate. Ids are client-minted UUIDs, so a command may reference a sibling created in the same batch; a repeated CREATE is an idempotent upsert. Omitted collections are untouched; an empty array is a no-op. At most 1000 employee commands per call. 204 on success (the portal refetches the affected reads); 404 if the draft is not owned or already submitted; 400/409 on a malformed or referentially-inconsistent batch (the whole batch rolls back).',
+      "Applies a batch of create/update/remove commands to the draft's content (criteria tree, roles, employees, outlier groups) in one atomic transaction — the single write path for the portal, flushed once per screen navigate. Ids are client-minted UUIDs, so a command may reference a sibling created in the same batch; a repeated CREATE is an idempotent upsert. Omitted collections are untouched; an empty array is a no-op. At most 1000 employee commands per call. 204 on success (the portal refetches the affected reads); 404 if the draft is not owned or already submitted; 400/409 on a malformed or referentially-inconsistent batch (the whole batch rolls back).",
   })
   async syncDraft(
     @Param('providerId') providerId: string,
@@ -268,7 +268,7 @@ export class ReportDraftController {
     include404: true,
     type: SalaryAnalysisResponseDto,
     description:
-      'Derived salary-analysis preview for a SALARY draft: outliers + the gender/score chart, computed on the fly from the draft\'s current scoring graph (employee scores are not yet persisted). 400 on an equality draft.',
+      "Derived salary-analysis preview for a SALARY draft: outliers + the gender/score chart, computed on the fly from the draft's current scoring graph (employee scores are not yet persisted). 400 on an equality draft.",
   })
   async getDraftAnalysis(
     @Param('providerId') providerId: string,
@@ -307,7 +307,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftEmployeesResponseDto,
     description:
-      'Paginated list of the draft\'s employees, ordered by ordinal. Scores are NULL until the report is submitted.',
+      "Paginated list of the draft's employees, ordered by ordinal. Scores are NULL until the report is submitted.",
   })
   async listEmployees(
     @Param('providerId') providerId: string,

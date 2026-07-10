@@ -60,10 +60,10 @@ export const MAX_STEPS = 8
  * a clear error instead of silently truncating, and (b) stay consistent with
  * how many rows/columns the Excel template physically provisions:
  *
- * - Roles → columns on Flokkun starfa (100 provisioned).
+ * - Roles → rows on Flokkun starfa (100 provisioned).
  * - Personal sub-criteria → columns on Flokkun starfsmanna (100 provisioned).
  * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows).
- * - Criteria → Viðmið rows (4 mandatory job-based + 20 personal).
+ * - Criteria → Viðmið rows (4 mandatory job-based + 1 personal).
  * - Employees → Flokkun starfsmanna rows (10 000, auto-extending table).
  *
  * Enforced centrally in `assertParsedPayloadIntegrity` so both the Excel
@@ -71,7 +71,8 @@ export const MAX_STEPS = 8
  * DB itself stays unconstrained (see MIN_STEPS/MAX_STEPS note above).
  */
 export const MAX_SUB_CRITERIA_PER_CRITERION = 25
-export const MAX_CRITERIA = 24
+export const MAX_CRITERIA = 5
+export const MAX_PERSONAL_CRITERIA = 1
 export const MAX_TOTAL_SUB_CRITERIA = 200
 export const MAX_ROLES = 100
 export const MAX_PERSONAL_SUB_CRITERIA = 100
@@ -89,11 +90,13 @@ export const SHEETS = {
   ROLE_CLASSIFICATION: 'Flokkun starfa',
   EMPLOYEE_CLASSIFICATION: 'Flokkun starfsmanna',
   OVERVIEW: 'Yfirlit',
+  SUB_CRITERIA_CATALOG: 'Undirviðmiðalisti (Lýsigögn)',
 } as const
 
 export const IGNORED_SHEETS: ReadonlySet<string> = new Set([
   SHEETS.INSTRUCTIONS,
   SHEETS.OVERVIEW,
+  SHEETS.SUB_CRITERIA_CATALOG,
 ])
 
 /**
@@ -149,14 +152,15 @@ export const MANDATORY_JOB_BASED_CRITERIA: readonly ReportCriterionTypeEnum[] =
   ]
 
 /**
- * Top-level criterion "Tegund" column values (`Starfsbundinn` / `Persónubundinn`)
+ * Top-level criterion "Tegund" column values (`Starfsbundið` /
+ * `Einstaklingsbundið`)
  * split criteria into two buckets. Job-based rows also carry a specific title
  * that maps to one of the four mandatory enum types; personal rows carry free
  * text titles and always resolve to `PERSONAL`.
  */
 export const CRITERION_TEGUND = {
-  JOB_BASED: 'Starfsbundinn',
-  PERSONAL: 'Persónubundinn',
+  JOB_BASED: 'Starfsbundið',
+  PERSONAL: 'Einstaklingsbundið',
 } as const
 
 /**
@@ -202,13 +206,23 @@ export const GENDER_ENUM_TO_DISPLAY: Readonly<Record<GenderEnum, string>> = {
 export const EDUCATION_DISPLAY_TO_ENUM: Readonly<
   Record<string, EducationEnum>
 > = {
-  Grunnskólapróf: EducationEnum.COMPULSORY,
+  // Legacy template values kept so older, already-downloaded workbooks can
+  // still be imported. New labels below intentionally win in the reverse map.
   'Framhaldsskóla-/stúdentspróf': EducationEnum.UPPER_SECONDARY,
   'Iðn-/starfsmenntun': EducationEnum.VOCATIONAL,
   'Háskólapróf (BA/BS)': EducationEnum.BACHELOR,
   'Meistarapróf (MA/MS)': EducationEnum.MASTER,
-  Doktorspróf: EducationEnum.DOCTORATE,
   Sérfræðinám: EducationEnum.PROFESSIONAL,
+  Grunnskólapróf: EducationEnum.COMPULSORY,
+  'Styttri námskeið': EducationEnum.PROFESSIONAL,
+  'Styttra framhaldsnám (t.d. leikskóla-/félagsliði)':
+    EducationEnum.VOCATIONAL,
+  'Framhaldsnám (t.d. stúdentspróf/sveinspróf)':
+    EducationEnum.UPPER_SECONDARY,
+  'Meistarapróf/Diploma á háskólastigi': EducationEnum.PROFESSIONAL,
+  'BA/BS eða sambærilegt háskólanám': EducationEnum.BACHELOR,
+  'Háskólapróf á framhaldsstigi (MA/MS)': EducationEnum.MASTER,
+  Doktorspróf: EducationEnum.DOCTORATE,
 }
 
 export const EDUCATION_ENUM_TO_DISPLAY: Readonly<

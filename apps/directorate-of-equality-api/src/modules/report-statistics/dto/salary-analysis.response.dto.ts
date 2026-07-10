@@ -1,6 +1,6 @@
 import { ApiDto, ApiDtoArray, ApiEnum, ApiNumber } from '@dmr.is/decorators'
 
-import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
+import { SalaryByGenderAndScoreDto } from './salary-by-gender-and-score.dto'
 
 export enum SalaryAnalysisOutlierDirectionEnum {
   ABOVE = 'ABOVE',
