@@ -22,6 +22,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared-dto'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -47,6 +48,7 @@ import {
   GetReportsQueryDto,
   SortDirectionEnum,
 } from './dto/get-reports.query.dto'
+import { GetReportsForCompanyResponseDto } from './dto/get-reports-for-company-response.dto'
 import {
   GetReportsResponseDto,
   ReportStatusCountsDto,
@@ -189,6 +191,49 @@ export class ReportService implements IReportService {
     }
 
     return { reports, paging, statusCounts }
+  }
+
+  /**
+   * Reports that include a given company — the company-detail reports tab.
+   * Unlike `list` (the admin `/yfirlit` free-text search, which only ever
+   * matches the PARENT company snapshot), this joins the company's OWN
+   * `company_report` row via the `forCompany` scope, so a subsidiary sees the
+   * group reports it was filed on. No status tab counts here — this is a flat,
+   * newest-first list of one company's reports.
+   */
+  async listForCompany(
+    companyId: string,
+    query: PagingQuery,
+  ): Promise<GetReportsForCompanyResponseDto> {
+    this.logger.debug('Listing reports for company', {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const { rows, count } = await this.reportModel
+      .scope({ method: ['forCompany', companyId] })
+      .findAndCountAll({
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset,
+      })
+
+    const pageIds = rows.map((r) => r.id)
+    const [waitingMap, improvementPlanMap] = await Promise.all([
+      this.computeWaitingForAction(pageIds),
+      this.computeIncludesImprovementPlan(pageIds),
+    ])
+    const reports = rows.map((r) =>
+      r.fromModelToListItem(
+        waitingMap.get(r.id) ?? false,
+        improvementPlanMap.get(r.id) ?? false,
+      ),
+    )
+    const paging = generatePaging(reports, query.page, query.pageSize, count)
+
+    return { reports, paging }
   }
 
   async getById(id: string): Promise<ReportDetailDto> {
