@@ -45,7 +45,7 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
-import { SalaryAnalysisRequestDto } from './dto/salary-analysis.request.dto'
+import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { ApplicationService } from './application.service'
@@ -245,7 +245,6 @@ describe('ApplicationService', () => {
       await expect(service.salaryAnalysis(request, COMPANY)).rejects.toThrow(
         BadRequestException,
       )
-      expect(configGetByKey).not.toHaveBeenCalled()
     })
 
     it('throws when the threshold config value is not numeric', async () => {

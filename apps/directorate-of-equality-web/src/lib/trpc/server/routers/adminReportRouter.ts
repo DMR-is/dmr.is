@@ -3,6 +3,8 @@ import { z } from 'zod'
 import {
   zAdminEqualityReportDto,
   zAdminSalaryReportDto,
+  zAnalyzeAdminSalaryReportBody,
+  zAnalyzeAdminSalaryReportPath,
   zSubmitAdminEqualityReportPath,
   zSubmitAdminSalaryReportPath,
 } from '../../../../gen/fetch/zod.gen'
@@ -18,6 +20,19 @@ export const adminReportRouter = router({
     )
     .mutation(({ ctx, input }) =>
       ctx.api.submitAdminEqualityReport({ path: input.path, body: input.body }),
+    ),
+
+  // Detects outliers on a parsed workbook without creating a report, so the
+  // create drawer can surface them and collect explanations before submit.
+  analyzeSalary: protectedProcedure
+    .input(
+      z.object({
+        path: zAnalyzeAdminSalaryReportPath,
+        body: zAnalyzeAdminSalaryReportBody,
+      }),
+    )
+    .mutation(({ ctx, input }) =>
+      ctx.api.analyzeAdminSalaryReport({ path: input.path, body: input.body }),
     ),
 
   submitSalary: protectedProcedure
