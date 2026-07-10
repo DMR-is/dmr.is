@@ -15,25 +15,37 @@ import { ReportModel } from '../models/report.model'
  * search by:
  *
  * - `report.identifier` — the `ABC-001` code admins refer to in Slack/tickets
- * - `company.name`, `company.nationalId` — looked up via the nested-include
- *   column-ref syntax `$relation.column$` so Sequelize builds the JOIN
+ * - company name / kennitala — matched against EVERY `company_report` snapshot
+ *   on the report (parent AND subsidiaries) via an EXISTS subquery
+ *
+ * Why EXISTS and not the nested `$companyReport.column$` include: the
+ * `companyReport` join is pinned to the parent snapshot (`parentCompanyId:
+ * null`, see the report.model scopes) so the admin list doesn't multiply one
+ * report into a row per company. That means a nested `$companyReport.*$`
+ * filter can only ever match the PARENT company's name/kennitala — searching
+ * by a daughter company's kennitala would match zero reports. The EXISTS below
+ * looks at every `company_report` row for the report regardless of
+ * `parentCompanyId`, so a subsidiary's reports surface on its detail screen.
  *
  * Person fields are intentionally excluded: contacts (`contactName`,
  * `contactEmail`) and the company admin / CEO (`companyAdminName`,
  * `companyAdminEmail`) are not matched — admins search by report or company,
  * not by the individuals on a report.
- *
- * If you add columns here, make sure the corresponding include is still
- * present in the service's `findAndCountAll` call — Sequelize needs the
- * join to exist before it can filter on it.
  */
 export const buildFreeTextWhere = (term: string): WhereOptions => {
   const pattern = `%${term.trim()}%`
+  // Postgres string literal for the raw EXISTS below. `standard_conforming_strings`
+  // is on (Sequelize's default), so doubling single quotes is a complete escape;
+  // no other character is special inside a standard-conforming string literal.
+  const sqlPattern = `'${pattern.replace(/'/g, "''")}'`
   return {
     [Op.or]: [
       { identifier: { [Op.iLike]: pattern } },
-      { '$companyReport.name$': { [Op.iLike]: pattern } },
-      { '$companyReport.national_id$': { [Op.iLike]: pattern } },
+      literal(
+        `EXISTS (SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" "cr" ` +
+          `WHERE "cr"."report_id" = "${ReportModel.name}"."id" ` +
+          `AND ("cr"."name" ILIKE ${sqlPattern} OR "cr"."national_id" ILIKE ${sqlPattern}))`,
+      ),
     ],
   }
 }

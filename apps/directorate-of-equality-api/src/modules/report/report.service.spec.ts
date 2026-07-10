@@ -337,7 +337,7 @@ describe('ReportService.list — filter & query building', () => {
   })
 
   describe('free-text search', () => {
-    it('adds an Op.or across identifier, company name, kennitala (no person fields)', async () => {
+    it('matches identifier plus any company snapshot (parent or subsidiary) via EXISTS', async () => {
       const { service, findAndCountAll } = makeService()
       findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
 
@@ -347,18 +347,24 @@ describe('ReportService.list — filter & query building', () => {
         unknown
       >
 
-      const orBranches = where[Op.or] as Array<Record<string, unknown>>
-      expect(orBranches).toHaveLength(3)
-      const keys = orBranches.map((b) => Object.keys(b)[0])
-      expect(keys).toEqual(
-        expect.arrayContaining([
-          'identifier',
-          '$companyReport.name$',
-          '$companyReport.national_id$',
-        ]),
-      )
-      expect(keys).not.toContain('contactName')
-      expect(keys).not.toContain('contactEmail')
+      const orBranches = where[Op.or] as unknown[]
+      expect(orBranches).toHaveLength(2)
+
+      const identifierBranch = orBranches[0] as Record<string, unknown>
+      expect(Object.keys(identifierBranch)).toEqual(['identifier'])
+
+      // Second branch is a raw EXISTS over company_report so subsidiary
+      // snapshots (parent_company_id IS NOT NULL) match too — not just the
+      // parent-only `companyReport` join. This is what lets a daughter
+      // company's reports show on its detail screen.
+      const companyBranch = orBranches[1] as { val: string }
+      expect(companyBranch.val).toContain('EXISTS')
+      expect(companyBranch.val).toContain('company_report')
+      expect(companyBranch.val).toContain('national_id')
+      expect(companyBranch.val).toContain("'%Blámi%'")
+      // person fields still excluded
+      expect(companyBranch.val).not.toContain('contact_name')
+      expect(companyBranch.val).not.toContain('company_admin')
     })
 
     it('pattern wraps the term in % on both sides', async () => {
