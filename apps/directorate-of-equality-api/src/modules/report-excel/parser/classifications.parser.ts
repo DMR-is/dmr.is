@@ -9,11 +9,12 @@
  * formulas we don't evaluate):
  *
  * - **Flokkun starfa**
- *   - Rows map 1:1 to job-based sub-criteria in the order they appear on
- *     Undirviðmið (filtered to `type != PERSONAL`).
- *   - Step-order columns hold one value per role, in the order roles are
- *     first seen on Starfsmenn. A computed score column is interleaved after
- *     each, so inputs sit on every second column.
+ *   - Rows map 1:1 to distinct roles in the order they first appear on
+ *     Starfsmenn.
+ *   - Step-order columns hold one value per job-based sub-criterion in the
+ *     order they appear on Undirviðmið (filtered to `type != PERSONAL`). A
+ *     computed score column is interleaved after each, so inputs sit on every
+ *     second column.
  *
  * - **Flokkun starfsmanna**
  *   - Rows map 1:1 to employees in ordinal order.
@@ -21,9 +22,9 @@
  *     order personal subs appear on Undirviðmið (same every-second-column
  *     interleaving).
  *
- * The first row/column and the column count of each step-input region are read
- * from the `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
- * {@link readStepInputBand}) rather than hard-coded — capacity is bounded by
+ * The row/column geometry of each step-input region is read from the
+ * `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
+ * {@link readStepInputGrid}) rather than hard-coded — capacity is bounded by
  * what the template provisions and grows with it.
  *
  * Blank cells mean "no assignment" and are skipped. The semantic validator
@@ -49,15 +50,18 @@ import { ErrorBag } from './errors'
  *
  * Step-order inputs occupy every SECOND column (a computed score column is
  * interleaved after each), starting at `firstCol` on `firstRow`. So input
- * slot N lives at column `firstCol + 2·N`, and the template can hold up to
- * `capacity` of them. Reading the geometry from the named range means the
- * supported role / personal-sub count is bounded by what the template
- * physically provisions, and grows if the template does — no code change.
+ * column slot N lives at column `firstCol + 2·N`. Reading the geometry from
+ * the named range means the supported role / employee / subcriterion counts
+ * are bounded by what the template physically provisions, and grow if the
+ * template does — no code change.
  */
-type StepInputBand = {
+type StepInputGrid = {
   firstRow: number
+  lastRow: number
   firstCol: number
-  capacity: number
+  lastCol: number
+  rowCapacity: number
+  columnPairCapacity: number
 }
 
 /** `'AB'` → 28. */
@@ -67,14 +71,14 @@ const colToNum = (letters: string): number =>
     .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
 /**
- * Parse a single rectangular named range (e.g. `'Flokkun starfa'!$G$7:$GW$106`)
- * into the step-input band it describes. Returns null if the name is absent or
+ * Parse a single rectangular named range (e.g. `'Flokkun starfa'!$G$11:$GX$110`)
+ * into the step-input grid it describes. Returns null if the name is absent or
  * not a single `$COL$ROW:$COL$ROW` range — callers surface that as an error.
  */
-const readStepInputBand = (
+const readStepInputGrid = (
   workbook: ExcelJS.Workbook,
   definedName: string,
-): StepInputBand | null => {
+): StepInputGrid | null => {
   const ranges = workbook.definedNames.getRanges(definedName)?.ranges
   if (!ranges || ranges.length !== 1) return null
   const m = ranges[0].match(/\$([A-Z]+)\$(\d+):\$([A-Z]+)\$(\d+)$/)
@@ -82,10 +86,14 @@ const readStepInputBand = (
   const firstCol = colToNum(m[1])
   const firstRow = Number(m[2])
   const lastCol = colToNum(m[3])
+  const lastRow = Number(m[4])
   return {
     firstRow,
+    lastRow,
     firstCol,
-    capacity: Math.floor((lastCol - firstCol) / 2) + 1,
+    lastCol,
+    rowCapacity: lastRow - firstRow + 1,
+    columnPairCapacity: Math.floor((lastCol - firstCol) / 2) + 1,
   }
 }
 
@@ -165,8 +173,8 @@ export const parseRoleClassifications = (
 
   const { jobBased } = flattenSubRefs(criteria)
 
-  const band = readStepInputBand(workbook, NAMED_RANGES.ROLE_STEP_INPUTS)
-  if (!band) {
+  const grid = readStepInputGrid(workbook, NAMED_RANGES.ROLE_STEP_INPUTS)
+  if (!grid) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
       `Nafngreint svæði „${NAMED_RANGES.ROLE_STEP_INPUTS}“ vantar eða er gallað`,
@@ -174,18 +182,26 @@ export const parseRoleClassifications = (
     return
   }
 
-  if (roles.length > band.capacity) {
+  if (roles.length > grid.rowCapacity) {
     errors.add(
       SHEETS.ROLE_CLASSIFICATION,
-      `Að hámarki ${band.capacity} ólík störf eru studd; fjöldi var ${roles.length}`,
+      `Að hámarki ${grid.rowCapacity} ólík störf eru studd; fjöldi var ${roles.length}`,
+    )
+    return
+  }
+
+  if (jobBased.length > grid.columnPairCapacity) {
+    errors.add(
+      SHEETS.ROLE_CLASSIFICATION,
+      `Að hámarki ${grid.columnPairCapacity} starfsbundin undirviðmið eru studd; fjöldi var ${jobBased.length}`,
     )
     return
   }
 
   roles.forEach((role, roleIdx) => {
-    const col = band.firstCol + 2 * roleIdx
+    const row = grid.firstRow + roleIdx
     jobBased.forEach((ref, subIdx) => {
-      const row = band.firstRow + subIdx
+      const col = grid.firstCol + 2 * subIdx
       const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
       if (stepOrder == null) return
@@ -218,8 +234,8 @@ export const parseEmployeeClassifications = (
 
   const { personal } = flattenSubRefs(criteria)
 
-  const band = readStepInputBand(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
-  if (!band) {
+  const grid = readStepInputGrid(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
+  if (!grid) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
       `Nafngreint svæði „${NAMED_RANGES.EMP_STEP_INPUTS}“ vantar eða er gallað`,
@@ -227,18 +243,26 @@ export const parseEmployeeClassifications = (
     return
   }
 
-  if (personal.length > band.capacity) {
+  if (employees.length > grid.rowCapacity) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Að hámarki ${band.capacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
+      `Að hámarki ${grid.rowCapacity} starfsmenn eru studdir; fjöldi var ${employees.length}`,
+    )
+    return
+  }
+
+  if (personal.length > grid.columnPairCapacity) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Að hámarki ${grid.columnPairCapacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
     )
     return
   }
 
   employees.forEach((employee, empIdx) => {
-    const row = band.firstRow + empIdx
+    const row = grid.firstRow + empIdx
     personal.forEach((ref, subIdx) => {
-      const col = band.firstCol + 2 * subIdx
+      const col = grid.firstCol + 2 * subIdx
       const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
       if (stepOrder == null) return

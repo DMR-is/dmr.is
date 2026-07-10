@@ -144,6 +144,23 @@ describe('validateSemantics', () => {
     })
   })
 
+  describe('personal criteria', () => {
+    it('rejects more than one personal criterion', () => {
+      const report = validReport()
+      report.criteria.push(
+        crit(ReportCriterionTypeEnum.PERSONAL, 'Annað einstaklingsbundið', 0),
+      )
+
+      const errors = runValidator(report)
+
+      expect(
+        errors.some((e) =>
+          e.message.includes('Að hámarki 1 einstaklingsbundið viðmið'),
+        ),
+      ).toBe(true)
+    })
+  })
+
   describe('weight sums', () => {
     it('rejects top-level weights not summing to 100', () => {
       const report = validReport()
@@ -161,6 +178,23 @@ describe('validateSemantics', () => {
       expect(
         errors.some((e) =>
           e.message.includes('Vægi undirviðmiða leggst saman í 95'),
+        ),
+      ).toBe(true)
+    })
+
+    it('rejects criteria with no sub-criteria as a 0% sub-weight sum', () => {
+      const report = validReport()
+      report.criteria.forEach((criterion) => {
+        criterion.subCriteria = []
+      })
+      report.roles[0].stepAssignments = []
+      report.employees[0].personalStepAssignments = []
+
+      const errors = runValidator(report)
+
+      expect(
+        errors.some((e) =>
+          e.message.includes('Vægi undirviðmiða leggst saman í 0'),
         ),
       ).toBe(true)
     })

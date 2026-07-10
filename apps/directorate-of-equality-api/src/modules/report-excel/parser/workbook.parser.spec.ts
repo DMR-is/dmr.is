@@ -27,7 +27,10 @@ const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
  * `.buffer` intermittently corrupts the load under full-suite memory pressure.
  */
 const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
-  buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+  buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength,
+  ) as ArrayBuffer
 
 const loadTemplate = async (): Promise<ExcelJS.Workbook> => {
   const wb = new ExcelJS.Workbook()
@@ -43,6 +46,27 @@ const isValidXlsx = (buf: Buffer): boolean =>
   buf[2] === 0x03 &&
   buf[3] === 0x04
 
+type WorksheetModelWithTables = ExcelJS.Worksheet['model'] & {
+  tables?: Array<{ style?: ExcelJS.TableStyleProperties | null }>
+}
+
+const normaliseTableStylesForExcelJsWrite = (wb: ExcelJS.Workbook): void => {
+  for (const ws of wb.worksheets) {
+    // exceljs can load table XML with `style: null`, but its writer assumes a
+    // style object and crashes when tests re-serialize the template. The
+    // nullable table list is an internal model detail, so keep the cast narrow.
+    const tables = (ws.model as WorksheetModelWithTables).tables ?? []
+    for (const table of tables) {
+      table.style ??= {
+        showFirstColumn: false,
+        showLastColumn: false,
+        showRowStripes: false,
+        showColumnStripes: false,
+      }
+    }
+  }
+}
+
 /**
  * exceljs's `writeBuffer()` occasionally emits a truncated/empty zip under the
  * parallelised full-suite run (surfaces as "Corrupted zip: expected N records,
@@ -50,11 +74,16 @@ const isValidXlsx = (buf: Buffer): boolean =>
  * fixes it, so validate the output and retry a couple of times before giving up.
  */
 const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
+  normaliseTableStylesForExcelJsWrite(wb)
   for (let attempt = 0; attempt < 3; attempt++) {
-    const buf = Buffer.from((await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer)
+    const buf = Buffer.from(
+      (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
+    )
     if (isValidXlsx(buf)) return buf
   }
-  throw new Error('exceljs writeBuffer produced an invalid xlsx after 3 attempts')
+  throw new Error(
+    'exceljs writeBuffer produced an invalid xlsx after 3 attempts',
+  )
 }
 
 const writeEmployeeRow = (
@@ -64,7 +93,7 @@ const writeEmployeeRow = (
     name: string
     role: string
     gender: string
-    workRatioPct: number
+    workRatio: number
     education: string
     baseSalary: number
     additionalFixedOvertime: number | null
@@ -84,7 +113,7 @@ const writeEmployeeRow = (
   s.getCell(`B${r}`).value = values.name
   s.getCell(`C${r}`).value = values.role
   s.getCell(`D${r}`).value = values.gender
-  s.getCell(`E${r}`).value = values.workRatioPct
+  s.getCell(`E${r}`).value = values.workRatio
   s.getCell(`F${r}`).value = values.education
   s.getCell(`G${r}`).value = values.field
   s.getCell(`H${r}`).value = values.department
@@ -98,10 +127,10 @@ const writeEmployeeRow = (
   s.getCell(`P${r}`).value = values.bonusOther
 }
 
-// Step-order inputs sit on every SECOND column (score column interleaved
-// after each): roles start at G (col 7), personal subs at D (col 4), both
-// from row 7. Written by numeric coordinate so the helpers scale past the
-// template's legacy 8-role / 15-personal-sub layout.
+// Step-order inputs sit on every SECOND column (score column interleaved after
+// each): role rows start at row 11 and job-sub columns start at G (col 7);
+// employee rows start at row 7 and personal-sub columns start at D (col 4).
+// Written by numeric coordinate so helpers follow the named-range geometry.
 const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
@@ -109,7 +138,7 @@ const fillRoleClassification = (
   const sheet = wb.getWorksheet('Flokkun starfa')!
   rolesInOrder.forEach((roleSteps, roleIdx) => {
     roleSteps.forEach((stepOrder, subIdx) => {
-      sheet.getCell(7 + subIdx, 7 + 2 * roleIdx).value = stepOrder
+      sheet.getCell(11 + roleIdx, 7 + 2 * subIdx).value = stepOrder
     })
   })
 }
@@ -127,10 +156,18 @@ const fillEmployeeClassification = (
 }
 
 /**
- * The bundled template ships with 4 job-based criteria (90% total weight)
- * and empty personal slots. Tests that need a submission that clears the
- * weight-sum validator add a personal criterion + sub via these helpers.
+ * The bundled template ships with empty weights and no selected subcriteria.
+ * Tests fill the required rows explicitly so they do not depend on catalog
+ * lookup formula caches.
  */
+const setCriterionWeight = (
+  wb: ExcelJS.Workbook,
+  viðmiðRow: number,
+  weightPct: number,
+) => {
+  wb.getWorksheet('Viðmið')!.getCell(`E${viðmiðRow}`).value = weightPct
+}
+
 const addPersonalCriterion = (
   wb: ExcelJS.Workbook,
   viðmiðRow: number,
@@ -143,7 +180,7 @@ const addPersonalCriterion = (
   s.getCell(`E${viðmiðRow}`).value = weightPct
 }
 
-const addPersonalSub = (
+const addSubCriterion = (
   wb: ExcelJS.Workbook,
   undirviðmiðRow: number,
   parentTitle: string,
@@ -157,17 +194,39 @@ const addPersonalSub = (
   s.getCell(`D${undirviðmiðRow}`).value = `${subTitle} description`
   s.getCell(`E${undirviðmiðRow}`).value = weightPct
   s.getCell(`F${undirviðmiðRow}`).value = stepDescriptions.length
-  // Step descriptions live in columns J…S (Þrep 1…10). Col index 10 = J.
+  // Step descriptions live in columns J…Q (Þrep 1…8). Col index 10 = J.
   stepDescriptions.forEach((desc, i) => {
     s.getCell(undirviðmiðRow, 10 + i).value = desc
   })
+}
+
+const FIVE_STEPS = ['Lágt', 'Frekar lágt', 'Miðlungs', 'Hátt', 'Mjög hátt']
+const JOB_SUB_COUNT = 4
+
+const fillCriteriaAndSubCriteria = (wb: ExcelJS.Workbook) => {
+  setCriterionWeight(wb, 6, 30)
+  setCriterionWeight(wb, 7, 20)
+  setCriterionWeight(wb, 8, 20)
+  setCriterionWeight(wb, 9, 20)
+  addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+  addSubCriterion(wb, 6, 'Ábyrgð', 'Ábyrgð á gæðum', 30, FIVE_STEPS)
+  addSubCriterion(wb, 7, 'Álag', 'Álag í starfi', 20, FIVE_STEPS)
+  addSubCriterion(wb, 8, 'Vinnuaðstæður', 'Vinnuumhverfi', 20, FIVE_STEPS)
+  addSubCriterion(wb, 9, 'Hæfni', 'Formleg menntun', 20, FIVE_STEPS)
+  addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
 }
 
 const expectBadRequest = async (
   promise: Promise<unknown>,
 ): Promise<{
   message: string
-  errors: { message: string; sheet: string }[]
+  errors: {
+    message: string
+    sheet: string
+    row: number | null
+    column: string | null
+  }[]
 }> => {
   await expect(promise).rejects.toBeInstanceOf(BadRequestException)
   try {
@@ -175,7 +234,12 @@ const expectBadRequest = async (
   } catch (e) {
     return (e as BadRequestException).getResponse() as {
       message: string
-      errors: { message: string; sheet: string }[]
+      errors: {
+        message: string
+        sheet: string
+        row: number | null
+        column: string | null
+      }[]
     }
   }
   throw new Error('unreachable')
@@ -187,8 +251,8 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 1',
     role: 'Forstöðumaður',
     gender: 'Kona',
-    workRatioPct: 100,
-    education: 'Háskólapróf (BA/BS)',
+    workRatio: 1,
+    education: 'BA/BS eða sambærilegt háskólanám',
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -204,8 +268,8 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 2',
     role: 'Sérfræðingur',
     gender: 'Karl',
-    workRatioPct: 100,
-    education: 'Meistarapróf (MA/MS)',
+    workRatio: 1,
+    education: 'Háskólapróf á framhaldsstigi (MA/MS)',
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -221,8 +285,8 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 3',
     role: 'Verkstjóri',
     gender: 'Kona',
-    workRatioPct: 80,
-    education: 'Iðn-/starfsmenntun',
+    workRatio: 0.8,
+    education: 'Styttra framhaldsnám (t.d. leikskóla-/félagsliði)',
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -235,22 +299,13 @@ const buildValidFilled = async (): Promise<Buffer> => {
     startDate: new Date('2022-03-15'),
   })
 
-  // Template ships without default personal criteria; add one totalling
-  // the missing 10% so weight sums hit 100.
-  addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
-  addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
-    'Engin sérstök',
-    'Grunnkunnátta',
-    'Góð kunnátta',
-    'Mjög góð kunnátta',
-    'Sérfræðikunnátta',
-  ])
+  fillCriteriaAndSubCriteria(wb)
 
-  // Template has 7 job-based sub-criteria; 3 distinct roles.
+  // Template fixture has 4 job-based sub-criteria; 3 distinct roles.
   fillRoleClassification(wb, [
-    [3, 3, 3, 3, 3, 3, 3], // Forstöðumaður
-    [2, 2, 2, 2, 2, 2, 2], // Sérfræðingur
-    [1, 1, 1, 1, 1, 1, 1], // Verkstjóri
+    [3, 3, 3, 3], // Forstöðumaður
+    [2, 2, 2, 2], // Sérfræðingur
+    [1, 1, 1, 1], // Verkstjóri
   ])
   // 1 personal sub-criterion, 3 employees.
   fillEmployeeClassification(wb, [[1], [3], [5]])
@@ -261,15 +316,14 @@ const buildValidFilled = async (): Promise<Buffer> => {
 describe('parseWorkbook', () => {
   describe('empty template', () => {
     it('rejects with weight-sum + minimum-population errors', async () => {
-      // Empty template ships with 4 job-based criteria (90% total weight)
-      // and 7 job-based sub-criteria (also 90% total) — employer is
-      // expected to fill a personal criterion for the remaining 10%.
+      // Empty template ships with 4 job-based criteria, empty weights, and no
+      // selected subcriteria. Weight validation catches the incomplete state.
       const { errors } = await expectBadRequest(parseWorkbook(templateBuffer()))
       const messages = errors.map((e) => e.message)
       expect(messages).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Vægi viðmiða leggst saman í 90%'),
-          expect.stringContaining('Vægi undirviðmiða leggst saman í 90%'),
+          expect.stringContaining('Vægi viðmiða leggst saman í 0%'),
+          expect.stringContaining('Vægi undirviðmiða leggst saman í 0%'),
           'Að minnsta kosti eitt starf er nauðsynlegt',
           'Að minnsta kosti einn starfsmaður er nauðsynlegur',
         ]),
@@ -300,13 +354,13 @@ describe('parseWorkbook', () => {
     })
 
     it('computes step scores linearly: stepOrder/numSteps × weight × 10', () => {
-      // Ábyrgð á gæðum: 10% weight, 5 steps → step 1 = 20, step 5 = 100
+      // Ábyrgð á gæðum: 30% weight, 5 steps → step 1 = 60, step 5 = 300
       const resp = report.criteria.find(
         (c) => c.type === ReportCriterionTypeEnum.RESPONSIBILITY,
       )
       const sub = resp?.subCriteria.find((s) => s.title === 'Ábyrgð á gæðum')
       expect(sub?.steps.map((s) => Math.round(s.score))).toEqual([
-        20, 40, 60, 80, 100,
+        60, 120, 180, 240, 300,
       ])
     })
 
@@ -321,10 +375,10 @@ describe('parseWorkbook', () => {
     it('attaches a job-based step assignment per role per job-based sub', () => {
       const role = report.roles.find((r) => r.title === 'Forstöðumaður')
       expect(role?.stepAssignments.every((a) => a.stepOrder === 3)).toBe(true)
-      expect(role?.stepAssignments).toHaveLength(7)
+      expect(role?.stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
 
-    it('parses employees with Icelandic → enum translation + workRatio normalised to 0…1', () => {
+    it('parses employees with Icelandic → enum translation + workRatio preserved as 0…1', () => {
       const emp = report.employees.find((e) => e.ordinal === 3)
       expect(emp).toEqual(
         expect.objectContaining({
@@ -362,6 +416,106 @@ describe('parseWorkbook', () => {
         )
       })
     })
+
+    it('reads cached formula results from Undirviðmið autofill cells', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+
+      const s = wb.getWorksheet('Undirviðmið')!
+      s.getCell('D6').value = {
+        formula: 'CATALOG_DESC()',
+        result: 'Cached description',
+      } as ExcelJS.CellValue
+      s.getCell('F6').value = {
+        formula: 'CATALOG_STEPS()',
+        result: 2,
+      } as ExcelJS.CellValue
+      s.getCell('J6').value = {
+        formula: 'CATALOG_STEP_1()',
+        result: 'Cached step 1',
+      } as ExcelJS.CellValue
+      s.getCell('K6').value = {
+        formula: 'CATALOG_STEP_2()',
+        result: 'Cached step 2',
+      } as ExcelJS.CellValue
+
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const formulaReport = await parseWorkbook(await serialize(wb))
+      const resp = formulaReport.criteria.find(
+        (c) => c.type === ReportCriterionTypeEnum.RESPONSIBILITY,
+      )
+      const sub = resp?.subCriteria.find((s) => s.title === 'Ábyrgð á gæðum')
+
+      expect(sub?.description).toBe('Cached description')
+      expect(sub?.steps.map((step) => step.description)).toEqual([
+        'Cached step 1',
+        'Cached step 2',
+      ])
+    })
+
+    it('rejects Undirviðmið formulas without cached results with an exact cell location', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'A',
+        role: 'R',
+        gender: 'Kona',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+
+      const s = wb.getWorksheet('Undirviðmið')!
+      s.getCell('F6').value = {
+        formula: 'CATALOG_STEPS()',
+      } as ExcelJS.CellValue
+
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Undirviðmið',
+            row: 6,
+            column: 'F',
+            message: expect.stringContaining('formúlu án reiknaðs gildis'),
+          }),
+        ]),
+      )
+    })
   })
 
   describe('ordinal derivation (column A is a formula in the real template)', () => {
@@ -371,8 +525,8 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 100,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -388,8 +542,8 @@ describe('parseWorkbook', () => {
         name: 'B',
         role: 'R',
         gender: 'Karl',
-        workRatioPct: 100,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -409,15 +563,8 @@ describe('parseWorkbook', () => {
       s.getCell('A6').value = { formula: 'ROW()-5', result: 1 }
       s.getCell('A7').value = { formula: 'ROW()-5', result: 2 }
 
-      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
-      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
-        'Engin sérstök',
-        'Grunnkunnátta',
-        'Góð kunnátta',
-        'Mjög góð kunnátta',
-        'Sérfræðikunnátta',
-      ])
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1], [1]])
 
       const report = await parseWorkbook(await serialize(wb))
@@ -434,8 +581,8 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 100,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -456,15 +603,8 @@ describe('parseWorkbook', () => {
       s.getCell('B40000').value = 'stray'
       expect(s.rowCount).toBeGreaterThan(30000)
 
-      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
-      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
-        'Engin sérstök',
-        'Grunnkunnátta',
-        'Góð kunnátta',
-        'Mjög góð kunnátta',
-        'Sérfræðikunnátta',
-      ])
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
       const report = await parseWorkbook(await serialize(wb))
@@ -481,8 +621,8 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Other',
-        workRatioPct: 100,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -494,15 +634,16 @@ describe('parseWorkbook', () => {
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
         parseWorkbook(await serialize(wb)),
       )
-      expect(
-        errors.some((e) => e.message.includes('Óþekkt kyn „Other“')),
-      ).toBe(true)
+      expect(errors.some((e) => e.message.includes('Óþekkt kyn „Other“'))).toBe(
+        true,
+      )
     })
 
     it('rejects unknown education value', async () => {
@@ -511,7 +652,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 100,
+        workRatio: 1,
         education: 'Made-up degree',
         baseSalary: 1,
         additionalFixedOvertime: 0,
@@ -524,8 +665,9 @@ describe('parseWorkbook', () => {
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
         parseWorkbook(await serialize(wb)),
@@ -543,8 +685,8 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 150,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1.5,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -556,15 +698,16 @@ describe('parseWorkbook', () => {
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
         parseWorkbook(await serialize(wb)),
       )
       expect(
         errors.some((e) =>
-          e.message.includes('Starfshlutfall 150 er utan leyfilegs bils'),
+          e.message.includes('Starfshlutfall 1.5 er utan leyfilegs bils'),
         ),
       ).toBe(true)
     })
@@ -576,7 +719,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 100,
+        workRatio: 1,
         education: '',
         baseSalary: 1,
         additionalFixedOvertime: 0,
@@ -589,8 +732,9 @@ describe('parseWorkbook', () => {
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
-      fillRoleClassification(wb, [[1, 1, 1, 1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
         parseWorkbook(await serialize(wb)),
@@ -610,8 +754,8 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatioPct: 100,
-        education: 'Háskólapróf (BA/BS)',
+        workRatio: 1,
+        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -623,14 +767,17 @@ describe('parseWorkbook', () => {
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
-      fillRoleClassification(wb, [[99, 1, 1, 1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1, 1, 1, 1]])
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[99, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
         parseWorkbook(await serialize(wb)),
       )
       expect(
-        errors.some((e) => e.message.includes('Þrep 99 er utan leyfilegs bils')),
+        errors.some((e) =>
+          e.message.includes('Þrep 99 er utan leyfilegs bils'),
+        ),
       ).toBe(true)
     })
   })
@@ -638,14 +785,17 @@ describe('parseWorkbook', () => {
   describe('capacity beyond the legacy layout', () => {
     it('parses roles past the old 8-column limit (named-range driven)', async () => {
       const wb = await loadTemplate()
-      const roleTitles = Array.from({ length: 9 }, (_, i) => `Hlutverk ${i + 1}`)
+      const roleTitles = Array.from(
+        { length: 9 },
+        (_, i) => `Hlutverk ${i + 1}`,
+      )
       roleTitles.forEach((role, i) =>
         writeEmployeeRow(wb, i + 1, {
           name: `Nafn ${i + 1}`,
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          workRatioPct: 100,
-          education: 'Háskólapróf (BA/BS)',
+          workRatio: 1,
+          education: 'BA/BS eða sambærilegt háskólanám',
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
@@ -658,21 +808,12 @@ describe('parseWorkbook', () => {
           startDate: new Date('2023-01-01'),
         }),
       )
-      // Personal criterion for the remaining 10% so weight sums hit 100.
-      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
-      addPersonalSub(wb, 13, 'Sérhæfing', 'Tungumál', 10, [
-        'Engin sérstök',
-        'Grunnkunnátta',
-        'Góð kunnátta',
-        'Mjög góð kunnátta',
-        'Sérfræðikunnátta',
-      ])
-      // 9 roles × 7 job-based subs, and 9 employees × 1 personal sub — the 9th
-      // role lands in a column the old 8-entry ROLE_STEP_COLS array could not
-      // address.
+      fillCriteriaAndSubCriteria(wb)
+      // 9 roles × 4 job-based subs, and 9 employees × 1 personal sub. The
+      // 9th role lands in a row the old role-column layout could not address.
       fillRoleClassification(
         wb,
-        roleTitles.map(() => [1, 1, 1, 1, 1, 1, 1]),
+        roleTitles.map(() => [1, 1, 1, 1]),
       )
       fillEmployeeClassification(
         wb,
@@ -683,7 +824,7 @@ describe('parseWorkbook', () => {
 
       expect(report.roles).toHaveLength(9)
       expect(report.roles[8].title).toBe('Hlutverk 9')
-      expect(report.roles[8].stepAssignments).toHaveLength(7)
+      expect(report.roles[8].stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
   })
 

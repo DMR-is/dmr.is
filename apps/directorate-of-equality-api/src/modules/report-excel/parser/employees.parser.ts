@@ -12,9 +12,8 @@
  *
  * ## Starfshlutfall (work ratio)
  *
- * Stored as percent in the workbook (`85` → 85%) but normalised to the
- * `0…1` decimal the DB model uses (`0.85`). Reject anything outside that
- * range post-normalisation.
+ * Stored as the `0…1` decimal the DB model uses (`1` → 100%, `0.85` → 85%).
+ * Reject anything outside that range.
  *
  * ## Role auto-discovery
  *
@@ -47,9 +46,9 @@ import { ErrorBag } from './errors'
  *
  * The salary breakdown lives in K–P (6 sub-components). The template also has
  * two trailing computed columns — Q "Viðbótarlaun" (`=SUM(K:L)`) and R
- * "Hlunnindi" (`=SUM(M:P)`) — which the parser deliberately does NOT read: the
- * parents are derived server-side from the children, so the spreadsheet
- * formulas are display-only.
+ * "Aukagreiðslur" (`=SUM(M:P)`) — which the parser deliberately does NOT
+ * read: the parents are derived server-side from the children, so the
+ * spreadsheet formulas are display-only.
  */
 const COLS = {
   name: 'B',
@@ -64,7 +63,7 @@ const COLS = {
   // Viðbótarlaun (additional salary) sub-components
   additionalFixedOvertime: 'K',
   additionalFixedCarAllowance: 'L',
-  // Hlunnindi / aukagreiðslur (bonus salary) sub-components
+  // Aukagreiðslur (bonus salary) sub-components
   bonusOccasionalCarAllowance: 'M',
   bonusOccasionalOvertime: 'N',
   bonusPayments: 'O',
@@ -128,7 +127,7 @@ export type EmployeesParseResult = {
 type RawRow = {
   role: string | null
   genderDisplay: string | null
-  workRatioPct: number | null
+  workRatio: number | null
   educationDisplay: string | null
   baseSalary: number | null
   additionalFixedOvertime: number | null
@@ -145,7 +144,7 @@ type RawRow = {
 const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
   role: readString(sheet.getCell(`${COLS.role}${r}`)),
   genderDisplay: readString(sheet.getCell(`${COLS.gender}${r}`)),
-  workRatioPct: readNumber(sheet.getCell(`${COLS.workRatio}${r}`)),
+  workRatio: readNumber(sheet.getCell(`${COLS.workRatio}${r}`)),
   educationDisplay: readString(sheet.getCell(`${COLS.education}${r}`)),
   baseSalary: readNumber(sheet.getCell(`${COLS.baseSalary}${r}`)),
   additionalFixedOvertime: readNumber(
@@ -170,7 +169,7 @@ const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
 const isEmptyRow = (row: RawRow): boolean =>
   !row.role &&
   !row.genderDisplay &&
-  row.workRatioPct == null &&
+  row.workRatio == null &&
   !row.educationDisplay &&
   row.baseSalary == null &&
   row.additionalFixedOvertime == null &&
@@ -199,7 +198,7 @@ const buildEmployee = (
   const {
     role,
     genderDisplay,
-    workRatioPct,
+    workRatio,
     educationDisplay,
     baseSalary,
     additionalFixedOvertime,
@@ -226,7 +225,7 @@ const buildEmployee = (
   // An absent value stays null in storage; parents derive it as 0.
   if (!role) missingField(COLS.role, 'Starf')
   if (!genderDisplay) missingField(COLS.gender, 'Kyn')
-  if (workRatioPct == null) missingField(COLS.workRatio, 'Starfshlutfall')
+  if (workRatio == null) missingField(COLS.workRatio, 'Starfshlutfall')
   if (!educationDisplay) missingField(COLS.education, 'Menntun')
   if (baseSalary == null) missingField(COLS.baseSalary, 'Grunnlaun')
   if (!field) missingField(COLS.field, 'Svið')
@@ -237,7 +236,7 @@ const buildEmployee = (
     !ok ||
     role == null ||
     genderDisplay == null ||
-    workRatioPct == null ||
+    workRatio == null ||
     educationDisplay == null ||
     baseSalary == null ||
     field == null ||
@@ -269,10 +268,10 @@ const buildEmployee = (
     return null
   }
 
-  if (workRatioPct < 0 || workRatioPct > 100) {
+  if (workRatio < 0 || workRatio > 1) {
     errors.add(
       SHEETS.EMPLOYEES,
-      `Starfshlutfall ${workRatioPct} er utan leyfilegs bils 0–100`,
+      `Starfshlutfall ${workRatio} er utan leyfilegs bils 0–1`,
       { row: r, column: COLS.workRatio },
     )
     return null
@@ -288,7 +287,7 @@ const buildEmployee = (
     field,
     department,
     startDate: toIsoDate(startDate),
-    workRatio: workRatioPct / 100,
+    workRatio,
     baseSalary,
     additionalFixedOvertime,
     additionalFixedCarAllowance,
