@@ -4902,12 +4902,14 @@ __metadata:
     "@dmr.is/shared-dto": "npm:*"
     "@dmr.is/utils-shared": "npm:*"
     "@tanstack/react-table": "npm:8.21.3"
+    "@tanstack/react-virtual": "npm:3.14.5"
     "@types/react-is": "npm:^19"
     classnames: "npm:^2.5.1"
     next-usequerystate: "npm:1.20.0"
     react-animate-height: "npm:^3.1.2"
     react-hook-form: "npm:7.62.0"
     react-is: "npm:19"
+    react-select: "npm:5.8.0"
     react-top-loading-bar: "npm:^2.3.1"
     react-use: "npm:^15.3.3"
   peerDependencies:
@@ -11247,10 +11249,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-virtual@npm:3.14.5":
+  version: 3.14.5
+  resolution: "@tanstack/react-virtual@npm:3.14.5"
+  dependencies:
+    "@tanstack/virtual-core": "npm:3.17.3"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/f3dd2da5e5e0a94756e47f11fa76bfe0485e845da72b8022a4a593e2906aa60b827a5f0d7b6063092c76874fed8ddc69bcbf759298733ced24a66a82e8d58f21
+  languageName: node
+  linkType: hard
+
 "@tanstack/table-core@npm:8.21.3":
   version: 8.21.3
   resolution: "@tanstack/table-core@npm:8.21.3"
   checksum: 10c0/40e3560e6d55e07cc047024aa7f83bd47a9323d21920d4adabba8071fd2d21230c48460b26cedf392588f8265b9edc133abb1b0d6d0adf4dae0970032900a8c9
+  languageName: node
+  linkType: hard
+
+"@tanstack/virtual-core@npm:3.17.3":
+  version: 3.17.3
+  resolution: "@tanstack/virtual-core@npm:3.17.3"
+  checksum: 10c0/e6199a0c25d1780e62f57c9f72432342e2cabd5b1197cf66b0f2250c9c0bbecbd0c53e7bb639804c4c7931f9cfa57efa80f6a64fefe6614bf14871f682c17aa3
   languageName: node
   linkType: hard
 
