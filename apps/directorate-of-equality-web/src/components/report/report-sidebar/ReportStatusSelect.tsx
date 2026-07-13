@@ -71,6 +71,10 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
   const isLoading = assign.isPending || approve.isPending || deny.isPending
   const isInReview = status === ReportStatusEnum.IN_REVIEW
   const isSubmitted = status === ReportStatusEnum.SUBMITTED
+  // A POSTPONED report can be denied (to unblock the company when postponed
+  // outliers are never resolved) but not approved — approval requires the
+  // outlier explanations to be complete, which POSTPONED by definition lacks.
+  const canDeny = isInReview || status === ReportStatusEnum.POSTPONED
 
   return (
     <>
@@ -106,7 +110,7 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
               fluid
               size="small"
               colorScheme="destructive"
-              disabled={disabled || isLoading || !isInReview}
+              disabled={disabled || isLoading || !canDeny}
               loading={deny.isPending}
               onClick={() => setIsModalOpen(true)}
             >

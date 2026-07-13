@@ -79,6 +79,8 @@ export const overviewText = {
     buttonLabel: 'Jafnréttisáætlun',
     heading: 'Ný jafnréttisáætlun',
     successToast: 'Skýrsla send inn',
+    inflightConflictToast:
+      'Fyrirtækið er nú þegar með jafnréttisáætlun í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný jafnréttisáætlun er send inn.',
   },
   createSalaryReport: {
     drawerLabel: 'Skrá launagreiningu',
@@ -128,6 +130,8 @@ export const overviewText = {
       'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
     missingEqualityToast:
       'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en launagreining er send inn.',
+    inflightConflictToast:
+      'Fyrirtækið er nú þegar með launagreiningu í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný launagreining er send inn.',
   },
 }
 

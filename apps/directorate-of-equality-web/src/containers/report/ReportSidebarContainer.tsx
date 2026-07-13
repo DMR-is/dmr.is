@@ -28,10 +28,12 @@ export function ReportSidebarContainer({
     ...trpc.reports.getById.queryOptions({ id: report.id }),
     initialData: report,
   })
-  const isDisabled =
-    data.status === 'POSTPONED' ||
-    data.status === 'DENIED' ||
-    data.status === 'APPROVED'
+  // Terminal statuses lock the sidebar entirely. POSTPONED only locks reviewer
+  // assignment (the API rejects assigning postponed reports) — the status
+  // actions stay live so a reviewer can deny a report whose postponed outliers
+  // are never resolved.
+  const isTerminal = data.status === 'DENIED' || data.status === 'APPROVED'
+  const isDisabled = isTerminal || data.status === 'POSTPONED'
 
   return (
     <ReportSidebar>
@@ -60,7 +62,7 @@ export function ReportSidebarContainer({
       <ReportStatusSelect
         reportId={data.id}
         status={data.status}
-        disabled={isDisabled}
+        disabled={isTerminal}
       />
       <Box paddingTop={1}>
         <Divider />
