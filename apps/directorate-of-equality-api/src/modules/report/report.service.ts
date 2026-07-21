@@ -213,15 +213,10 @@ export class ReportService implements IReportService {
       })
 
     const pageIds = rows.map((r) => r.id)
-    const [waitingMap, improvementPlanMap] = await Promise.all([
-      this.computeWaitingForAction(pageIds),
-      this.computeIncludesImprovementPlan(pageIds),
-    ])
+    const improvementPlanMap =
+      await this.computeIncludesImprovementPlan(pageIds)
     const reports = rows.map((r) =>
-      r.fromModelToListItem(
-        waitingMap.get(r.id) ?? false,
-        improvementPlanMap.get(r.id) ?? false,
-      ),
+      r.fromModelToListItem(improvementPlanMap.get(r.id) ?? false),
     )
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
