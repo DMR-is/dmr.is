@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@dmr.is/logging": "*",
-    "zod": "*"
+    "zod": "4.1.11"
   }
 }
