@@ -4,11 +4,11 @@ import { useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
-import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
@@ -32,7 +32,7 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
   const [employeeCount, setEmployeeCount] = useState('')
 
   const lookupQuery = useQuery({
-    ...trpc.company.rskLookup.queryOptions({
+    ...trpc.company.rskPreview.queryOptions({
       nationalId: lookupNationalId ?? '',
     }),
     enabled: !!lookupNationalId,
@@ -76,7 +76,11 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
   }
 
   const lookedUp = !!lookupQuery.data
-  const canCreate = lookedUp && !!employeeCount && Number(employeeCount) > 0
+  const isActive = lookupQuery.data?.status === 'ACTIVE'
+  const isInactive = lookedUp && !isActive
+  const notFound = lookupQuery.error?.data?.code === 'NOT_FOUND'
+  const canCreate =
+    lookedUp && isActive && !!employeeCount && Number(employeeCount) > 0
 
   return (
     <Modal
@@ -121,32 +125,94 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
               </Button>
             </Box>
           </Inline>
-          {lookupQuery.isError && (
-            <Text color="red600" variant="small">
-              {companiesText.createModal.notFoundError}
-            </Text>
+          {lookupQuery.isError &&
+            (notFound ? (
+              <AlertMessage
+                type="warning"
+                title={companiesText.createModal.notFoundTitle}
+                message={companiesText.createModal.notFoundError}
+              />
+            ) : (
+              <AlertMessage
+                type="error"
+                title={companiesText.createModal.lookupErrorTitle}
+                message={companiesText.createModal.lookupError}
+              />
+            ))}
+          {lookedUp && (
+            <Box marginTop={1}>
+              <AlertMessage
+                type={isActive ? 'success' : 'error'}
+                title={
+                  isActive
+                    ? companiesText.createModal.activeTitle
+                    : companiesText.createModal.inactiveTitle
+                }
+                message={
+                  isActive
+                    ? companiesText.createModal.activeMessage
+                    : lookupQuery.data?.statusReason ??
+                      companiesText.createModal.inactiveFallbackReason
+                }
+              />
+            </Box>
           )}
         </Stack>
 
-        <TextInput
-          name="name"
-          label={companiesText.createModal.nameLabel}
-          size="xs"
-          value={lookupQuery.data?.name ?? ''}
-          readOnly
-          isLoading={lookupQuery.isFetching}
-          disabled={!lookedUp}
-        />
+        {lookedUp && (
+          <>
+            <TextInput
+              name="name"
+              label={companiesText.createModal.nameLabel}
+              size="xs"
+              value={lookupQuery.data?.name ?? ''}
+              readOnly
+            />
 
-        <TextInput
-          name="employeeCount"
-          label={companiesText.createModal.employeeCountLabel}
-          type="number"
-          size="xs"
-          value={employeeCount}
-          onChange={(e) => setEmployeeCount(e.target.value)}
-          disabled={!lookedUp}
-        />
+            <TextInput
+              name="address"
+              label={companiesText.createModal.addressLabel}
+              size="xs"
+              value={
+                lookupQuery.data?.address ??
+                companiesText.createModal.emptyValue
+              }
+              readOnly
+            />
+
+            <TextInput
+              name="postcode"
+              label={companiesText.createModal.postcodeLabel}
+              size="xs"
+              value={
+                lookupQuery.data?.postcode ??
+                companiesText.createModal.emptyValue
+              }
+              readOnly
+            />
+
+            <TextInput
+              name="isatCategory"
+              label={companiesText.createModal.isatCategoryLabel}
+              size="xs"
+              value={
+                lookupQuery.data?.isatCategory ??
+                companiesText.createModal.emptyValue
+              }
+              readOnly
+            />
+
+            <TextInput
+              name="employeeCount"
+              label={companiesText.createModal.employeeCountLabel}
+              type="number"
+              size="xs"
+              value={employeeCount}
+              onChange={(e) => setEmployeeCount(e.target.value)}
+              disabled={isInactive}
+            />
+          </>
+        )}
 
         <Inline justifyContent="flexEnd" space={2}>
           <Button variant="ghost" size="small" onClick={handleClose}>

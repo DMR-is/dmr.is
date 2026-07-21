@@ -6,6 +6,14 @@ export {
   type RskLanguage,
 } from './lib/rsk-company-registry.service.interface'
 
+// Domain-facing DTOs (mapped from the raw PascalCase RSK response)
+export type {
+  ActivityCodeDto,
+  AddressDto,
+  DeregistrationDto,
+  LegalEntityDto,
+} from './lib/dto/legal-entity.dto'
+
 // Configured client instance + config helper
 export {
   configureRskCompanyRegistryClient,
