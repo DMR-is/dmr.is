@@ -3,13 +3,18 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IDoeMailService } from '../mail/doe-mail.service.interface'
-import { ReportModel } from '../report/models/report.model'
+import {
+  CommunicationStatusEnum,
+  ReportModel,
+  ReportStatusEnum,
+} from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -82,17 +87,46 @@ export class ReportCommentService implements IReportCommentService {
       )
     }
 
-    const visibility =
-      context.actor.kind !== ReportRoleEnum.REVIEWER
-        ? CommentVisibilityEnum.EXTERNAL
-        : dto.visibility
+    const isReviewer = context.actor.kind === ReportRoleEnum.REVIEWER
+
+    const visibility = isReviewer
+      ? dto.visibility
+      : CommentVisibilityEnum.EXTERNAL
+
+    const report = await this.reportModel.findByPk(context.reportId)
+    if (!report) {
+      throw new NotFoundException(`Report "${context.reportId}" not found`)
+    }
+
+    // Reviewers may leave internal notes on any report they can see, but never
+    // on a DRAFT — a draft has not been submitted, so there is nothing to
+    // review yet. (Drafts are not surfaced to reviewers today; this is a guard.)
+    if (
+      isReviewer &&
+      visibility === CommentVisibilityEnum.INTERNAL &&
+      context.reportStatus === ReportStatusEnum.DRAFT
+    ) {
+      throw new ForbiddenException(
+        'Internal comments are not allowed on a draft report',
+      )
+    }
+
+    const isOpen =
+      report.communicationStatus === CommunicationStatusEnum.OPEN ||
+      report.communicationStatus ===
+        CommunicationStatusEnum.AWAITING_RESPONSE ||
+      report.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
+
+    // External comments (from either side) require an open thread. Opening is an
+    // explicit reviewer action — an external comment never opens a NOT_STARTED /
+    // CLOSED thread. Reviewer INTERNAL notes are exempt (see DRAFT guard above).
+    if (visibility === CommentVisibilityEnum.EXTERNAL && !isOpen) {
+      throw new ForbiddenException('Communication is not open on this report')
+    }
 
     const comment = await this.reportCommentModel.create({
       reportId: context.reportId,
-      authorKind:
-        context.actor.kind === ReportRoleEnum.REVIEWER
-          ? ReportRoleEnum.REVIEWER
-          : ReportRoleEnum.COMPANY,
+      authorKind: isReviewer ? ReportRoleEnum.REVIEWER : ReportRoleEnum.COMPANY,
       authorUserId:
         context.actor.kind === ReportRoleEnum.REVIEWER
           ? context.actor.userId
@@ -102,14 +136,29 @@ export class ReportCommentService implements IReportCommentService {
       reportStatus: context.reportStatus,
     })
 
-    if (
-      context.actor.kind === ReportRoleEnum.REVIEWER &&
-      visibility === CommentVisibilityEnum.EXTERNAL
-    ) {
-      const report = await this.reportModel.findByPk(context.reportId)
-      if (report) {
-        await this.mailService.sendExternalCommentNotification(report, comment)
+    // Move the directional sub-state. The applicant answering flips the thread
+    // to RESPONSE_RECEIVED (surfaces the overview "Beðið svara" icon); a reviewer
+    // reply on an already-open thread flips it back to AWAITING_RESPONSE. A
+    // reviewer comment does NOT open a NOT_STARTED / CLOSED thread — opening is
+    // an explicit action (see ReportWorkflowService.openCommunication).
+    if (!isReviewer) {
+      if (report.communicationStatus !== CommunicationStatusEnum.RESPONSE_RECEIVED) {
+        await report.update({
+          communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
+        })
       }
+    } else if (
+      visibility === CommentVisibilityEnum.EXTERNAL &&
+      isOpen &&
+      report.communicationStatus !== CommunicationStatusEnum.AWAITING_RESPONSE
+    ) {
+      await report.update({
+        communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+      })
+    }
+
+    if (isReviewer && visibility === CommentVisibilityEnum.EXTERNAL) {
+      await this.mailService.sendExternalCommentNotification(report, comment)
     }
 
     // Reload with the author so the response carries authorName (the freshly

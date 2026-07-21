@@ -20,6 +20,7 @@ import type { EqualityReportDto } from '../dto/equality-report.dto'
 import type { ReportDto } from '../dto/report.dto'
 import { ReportListItemDto } from '../dto/report-list-item.dto'
 import {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -29,6 +30,7 @@ import {
 // Re-export for backwards compatibility — many callers import these enums
 // from `report.model.ts` directly. New code should prefer `report.enums.ts`.
 export {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -38,6 +40,7 @@ export {
 type ReportAttributes = {
   type: ReportTypeEnum
   status: ReportStatusEnum
+  communicationStatus: CommunicationStatusEnum
 
   companyAdminName: string | null
   companyAdminEmail: string | null
@@ -69,6 +72,7 @@ type ReportAttributes = {
 type ReportCreateAttributes = {
   type: ReportTypeEnum
   status?: ReportStatusEnum
+  communicationStatus?: CommunicationStatusEnum
 
   companyAdminName?: string | null
   companyAdminEmail?: string | null
@@ -195,6 +199,14 @@ export class ReportModel extends MutableModel<
     defaultValue: ReportStatusEnum.DRAFT,
   })
   status!: ReportStatusEnum
+
+  @Column({
+    type: DataType.ENUM(...Object.values(CommunicationStatusEnum)),
+    allowNull: false,
+    defaultValue: CommunicationStatusEnum.NOT_STARTED,
+    field: 'communication_status',
+  })
+  communicationStatus!: CommunicationStatusEnum
 
   @Column({ type: DataType.TEXT, allowNull: true, field: 'company_admin_name' })
   companyAdminName!: string | null
@@ -345,6 +357,7 @@ export class ReportModel extends MutableModel<
       id: model.id,
       type: model.type,
       status: model.status,
+      communicationStatus: model.communicationStatus,
       companyAdminName: model.companyAdminName,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
@@ -405,7 +418,6 @@ export class ReportModel extends MutableModel<
 
   static fromModelToListItem(
     model: ReportModel,
-    waitingForAction = false,
     includesImprovementPlan = false,
   ): ReportListItemDto {
     return {
@@ -413,6 +425,7 @@ export class ReportModel extends MutableModel<
       identifier: model.identifier,
       type: model.type,
       status: model.status,
+      communicationStatus: model.communicationStatus,
       companyName: model.companyReport?.name ?? null,
       companyNationalId: model.companyReport?.nationalId ?? null,
       companyIsatCategory: model.companyReport?.isatCategory ?? null,
@@ -424,7 +437,6 @@ export class ReportModel extends MutableModel<
       reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,
       companyFinesStarted: model.companyReport?.company?.finesStarted ?? false,
       companyQuarantined: model.companyReport?.company?.quarantined ?? false,
-      waitingForAction,
       includesImprovementPlan,
       createdAt: model.createdAt,
       correctionDeadline: model.correctionDeadline,
@@ -436,15 +448,8 @@ export class ReportModel extends MutableModel<
     return ReportModel.fromModelToEqualityReport(this)
   }
 
-  fromModelToListItem(
-    waitingForAction = false,
-    includesImprovementPlan = false,
-  ): ReportListItemDto {
-    return ReportModel.fromModelToListItem(
-      this,
-      waitingForAction,
-      includesImprovementPlan,
-    )
+  fromModelToListItem(includesImprovementPlan = false): ReportListItemDto {
+    return ReportModel.fromModelToListItem(this, includesImprovementPlan)
   }
 
   fromModel(): ReportDto {

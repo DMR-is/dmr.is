@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
 import {
+  CommunicationStatusEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -26,6 +27,9 @@ describe('ReportWorkflowService', () => {
     emitUnassigned: jest.fn(),
     emitStatusChanged: jest.fn(),
     emitSuperseded: jest.fn(),
+    emitEdited: jest.fn(),
+    emitCommunicationOpened: jest.fn(),
+    emitCommunicationClosed: jest.fn(),
   }
 
   const applicationSystemService = {
@@ -34,10 +38,17 @@ describe('ReportWorkflowService', () => {
     notifyEdited: jest.fn(),
   }
 
+  const reportCommentService = {
+    getByReportId: jest.fn(),
+    create: jest.fn(),
+    delete: jest.fn(),
+  }
+
   const reportModel = {
     update: jest.fn(),
     findOne: jest.fn(),
     findAll: jest.fn(),
+    findByPk: jest.fn(),
   }
 
   const companyReportModel = {
@@ -79,6 +90,7 @@ describe('ReportWorkflowService', () => {
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
+      reportCommentService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -322,6 +334,70 @@ describe('ReportWorkflowService', () => {
       expect(applicationSystemService.notifyDenied).toHaveBeenCalledWith(
         'app-uuid-1',
       )
+    })
+
+    it('closes an open communication thread and emits COMMUNICATION_CLOSED', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
+        update,
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(update).toHaveBeenCalledWith({
+        communicationStatus: CommunicationStatusEnum.CLOSED,
+      })
+      expect(
+        reportEventService.emitCommunicationClosed,
+      ).toHaveBeenCalledWith('report-1', ReportStatusEnum.DENIED, 'reviewer-1')
+    })
+
+    it('forces a never-opened thread to CLOSED without an audit event', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.NOT_STARTED,
+        update,
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(update).toHaveBeenCalledWith({
+        communicationStatus: CommunicationStatusEnum.CLOSED,
+      })
+      expect(
+        reportEventService.emitCommunicationClosed,
+      ).not.toHaveBeenCalled()
+    })
+
+    it('leaves an already-CLOSED thread untouched', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.CLOSED,
+        update,
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(update).not.toHaveBeenCalled()
+      expect(
+        reportEventService.emitCommunicationClosed,
+      ).not.toHaveBeenCalled()
     })
 
     it('does not notify the application system for non-island.is reports', async () => {
@@ -585,6 +661,82 @@ describe('ReportWorkflowService', () => {
         expect.objectContaining({ status: ReportStatusEnum.APPROVED }),
         { where: { id: 'report-1' } },
       )
+    })
+  })
+
+  describe('openCommunication', () => {
+    it('opens a NOT_STARTED thread to OPEN and emits COMMUNICATION_OPENED', async () => {
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.NOT_STARTED,
+        update,
+      })
+
+      await service.openCommunication(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(update).toHaveBeenCalledWith({
+        communicationStatus: CommunicationStatusEnum.OPEN,
+      })
+      expect(reportEventService.emitCommunicationOpened).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatusEnum.IN_REVIEW,
+        'reviewer-1',
+      )
+    })
+
+    it('is a no-op when already open', async () => {
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
+        update,
+      })
+
+      await service.openCommunication(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(update).not.toHaveBeenCalled()
+      expect(reportEventService.emitCommunicationOpened).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the report is not IN_REVIEW', async () => {
+      await expect(
+        service.openCommunication(reviewerContext(ReportStatusEnum.SUBMITTED)),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.findByPk).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('closeCommunication', () => {
+    it('closes an open thread and emits COMMUNICATION_CLOSED', async () => {
+      const update = jest.fn()
+      reportModel.findByPk.mockResolvedValue({
+        id: 'report-1',
+        communicationStatus: CommunicationStatusEnum.OPEN,
+        update,
+      })
+
+      await service.closeCommunication(
+        reviewerContext(ReportStatusEnum.IN_REVIEW),
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        communicationStatus: CommunicationStatusEnum.CLOSED,
+      })
+      expect(reportEventService.emitCommunicationClosed).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatusEnum.IN_REVIEW,
+        'reviewer-1',
+      )
+    })
+
+    it('rejects when the report is not IN_REVIEW', async () => {
+      await expect(
+        service.closeCommunication(reviewerContext(ReportStatusEnum.APPROVED)),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(reportModel.findByPk).not.toHaveBeenCalled()
     })
   })
 })

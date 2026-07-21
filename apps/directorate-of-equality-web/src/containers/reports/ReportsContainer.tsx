@@ -25,6 +25,7 @@ import {
 } from '../../components/reports/filter/ReportFilter'
 import { TabContent } from '../../components/reports/tabs/TabContent'
 import {
+  CommunicationStatusEnum,
   type ReportListItemDto,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
@@ -121,7 +122,7 @@ function mapReportToCase(report: ReportListItemDto): Case {
     email: report.companyAdminEmail ?? unknown,
     isatCode: report.companyIsatCategory ?? unknown,
     employeeCount: report.companyEmployeeCountCategory ?? unknown,
-    waitingForAction: report.waitingForAction ?? false,
+    communicationStatus: report.communicationStatus,
     companyFinesStarted: report.companyFinesStarted ?? false,
     companyQuarantined: report.companyQuarantined ?? false,
   }
@@ -133,7 +134,11 @@ const commentsColumn: ColumnDef<Case> = {
   size: 56,
   enableSorting: false,
   cell: ({ row }) => {
-    if (!row.original.waitingForAction) return null
+    if (
+      row.original.communicationStatus !==
+      CommunicationStatusEnum.RESPONSE_RECEIVED
+    )
+      return null
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Tooltip

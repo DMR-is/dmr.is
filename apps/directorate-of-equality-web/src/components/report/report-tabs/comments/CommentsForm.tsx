@@ -13,6 +13,7 @@ type Props = {
   companyName?: string | null
   currentUserId?: string | null
   readonly?: boolean
+  canSendExternal?: boolean
   body: string
   isExternal: boolean
   isPending: boolean
@@ -27,6 +28,7 @@ export const CommentsForm = ({
   companyName,
   currentUserId,
   readonly = false,
+  canSendExternal = false,
   body,
   isExternal,
   isPending,
@@ -59,6 +61,7 @@ export const CommentsForm = ({
             <CommentInputForm
               body={body}
               isExternal={isExternal}
+              canSendExternal={canSendExternal}
               isPending={isPending}
               onBodyChange={onBodyChange}
               onExternalChange={onExternalChange}
