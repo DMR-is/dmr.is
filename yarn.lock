@@ -4006,6 +4006,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client"
+  dependencies:
+    "@dmr.is/logging": "npm:*"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/constants@npm:*, @dmr.is/constants@workspace:libs/shared/constants":
   version: 0.0.0-use.local
   resolution: "@dmr.is/constants@workspace:libs/shared/constants"

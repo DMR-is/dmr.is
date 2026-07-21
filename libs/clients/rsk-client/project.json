@@ -1,0 +1,64 @@
+{
+  "name": "clients-rsk-client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/clients/rsk-client/src",
+  "projectType": "library",
+  "tags": [],
+  "generators": {},
+  "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["codegen"],
+      "options": {
+        "commands": ["tsc -p tsconfig.lib.json --noEmit"],
+        "cwd": "libs/clients/rsk-client",
+        "forwardAllArgs": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/clients/rsk-client/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "libs/clients/rsk-client/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/libs/clients/rsk-client"]
+    },
+    "codegen": {
+      "executor": "nx:run-commands",
+      "inputs": ["{projectRoot}/clientConfig.yaml"],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f libs/clients/rsk-client/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    },
+    "update-openapi-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "node libs/clients/rsk-client/scripts/update-openapi-spec.mjs",
+          "prettier --write libs/clients/rsk-client/clientConfig.yaml"
+        ],
+        "parallel": false
+      },
+      "outputs": ["{projectRoot}/clientConfig.yaml"]
+    },
+    "update-client": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["update-openapi-schema"],
+      "options": {
+        "commands": [
+          "node_modules/.bin/openapi-ts -f libs/clients/rsk-client/openapi-ts.config.ts"
+        ]
+      },
+      "outputs": ["{projectRoot}/src/gen/fetch"]
+    }
+  }
+}

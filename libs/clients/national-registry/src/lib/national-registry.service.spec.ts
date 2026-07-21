@@ -9,6 +9,7 @@ import { fetchWithTimeout } from '@dmr.is/utils-server/httpUtils'
 
 import { NationalRegistryService } from './national-registry.service'
 jest.mock('@dmr.is/utils-server/httpUtils', () => ({
+  ...jest.requireActual('@dmr.is/utils-server/httpUtils'),
   fetchWithTimeout: jest.fn(),
 }))
 const mockFetchWithTimeout = fetchWithTimeout as jest.MockedFunction<

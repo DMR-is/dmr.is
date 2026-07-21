@@ -1,0 +1,495 @@
+openapi: 3.0.1
+info:
+  title: Company Registry - Public Api
+  description: A public facing API interface to lookup information from Icelandic Company Registry
+  termsOfService: https://www.skatturinn.is/terms
+  contact:
+    name: Skatturinn
+    url: https://www.skatturinn.is/
+    email: hugbunadur@skatturinn.is
+  version: v2.1
+servers:
+  - url: https://api.skattur.cloud/legalentities/v2.1
+paths:
+  '/{nationalId}':
+    get:
+      tags:
+        - LegalEntities
+      summary: '/{nationalId} - GET'
+      description: '/{nationalId} - GET'
+      operationId: get-nationalid
+      parameters:
+        - name: nationalId
+          in: path
+          required: true
+          schema:
+            enum:
+              - '5402696029'
+            type: string
+            default: '5402696029'
+        - name: language
+          in: query
+          schema:
+            enum:
+              - is
+              - en
+            type: string
+            default: is
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalEntity'
+              example:
+                nationalId: string
+                name: string
+                additionalName: string
+                purposeOfEntity: string
+                initialCapital: 0
+                accountingYear: string
+                dateOfBylaws: string
+                dateOfAgreements: string
+                dateOfBoardChange: string
+                registered: string
+                status: string
+                deregistration:
+                  deregistered: true
+                  deregistrationDate: string
+                  bankrupcy: true
+                  bankrupcyDate: string
+                  insolvency: true
+                  insolvencyDate: string
+                legalForm:
+                  id: string
+                  name: string
+                registryComment: string
+                articlesOfAssociation:
+                  shareCapital: string
+                  shareGroup: string
+                  shareCapitalCurrency: string
+                  signatures: string
+                  votingRights: string
+                  restrictionHandlingOfShares: true
+                  liabilityForRedemptionOfShares: true
+                  specialRights: true
+                  lastUpdated: string
+                registeredNames:
+                  - name: string
+                    registered: string
+                activityCode:
+                  - type: string
+                    codeSystem: string
+                    id: string
+                    name: string
+                vat:
+                  - vatNumber: string
+                    registered: string
+                    deRegistered: string
+                    activityCode:
+                      type: string
+                      codeSystem: string
+                      id: string
+                      name: string
+                addresses:
+                  - type: string
+                    addressName: string
+                    attention: string
+                    postcode: string
+                    city: string
+                    isPostbox: true
+                    municipality: string
+                    municipalityId: string
+                    country: string
+                    countryCode: string
+                relationships:
+                  - nationalId: string
+                    name: string
+                    type: string
+                    position: string
+                    status: string
+                    address: {}
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+  '/{nationalId}/overview':
+    get:
+      tags:
+        - LegalEntities
+      summary: '/{nationalId}/overview - GET'
+      description: '/{nationalId}/overview - GET'
+      operationId: get-nationalid-overview
+      parameters:
+        - name: nationalId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: language
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/BinaryData'
+              examples:
+                default:
+                  value:
+        '400':
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: string
+                status: string
+                detail: string
+                instance: string
+components:
+  schemas:
+    LegalEntity:
+      title: LegalEntity
+      required:
+        - nationalId
+        - name
+      type: object
+      properties:
+        nationalId:
+          type: string
+          description: National Registration Number
+        name:
+          type: string
+          description: Company Name
+        additionalName:
+          type: string
+          description: Additional Name
+          nullable: true
+        purposeOfEntity:
+          type: string
+          description: Purpose of Entity
+          nullable: true
+        initialCapital:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$'
+          type: number
+          description: Initial Capital
+          format: double
+          nullable: true
+        accountingYear:
+          type: string
+          description: Accounting Period
+          nullable: true
+        dateOfBylaws:
+          type: string
+          description: Date of Bylaws
+          format: date-time
+          nullable: true
+        dateOfAgreements:
+          type: string
+          description: Date of Agreements
+          format: date-time
+          nullable: true
+        dateOfBoardChange:
+          type: string
+          description: Date of Board Change
+          format: date-time
+          nullable: true
+        registered:
+          type: string
+          description: Date of Registration in the Registry
+          format: date-time
+        status:
+          type: string
+          description: Current Status
+        deregistration:
+          $ref: '#/components/schemas/Deregistration'
+        legalForm:
+          $ref: '#/components/schemas/LegalForm'
+        registryComment:
+          type: string
+          description: Comment
+          nullable: true
+        articlesOfAssociation:
+          $ref: '#/components/schemas/ArticlesOfAssociation'
+        registeredNames:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegisteredName'
+        activityCode:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityCode'
+        vat:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vat'
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Address'
+        relationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relationship'
+      description: Information for LegalEntity registered with the Icelandic Company Registry
+    ActivityCode:
+      type: object
+      properties:
+        type:
+          type: string
+        codeSystem:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+    ArticlesOfAssociation:
+      type: object
+      properties:
+        shareCapital:
+          pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$'
+          type: string
+          format: double
+        shareGroup:
+          type: string
+          nullable: true
+        shareCapitalCurrency:
+          type: string
+          nullable: true
+        signatures:
+          type: string
+          nullable: true
+        votingRights:
+          type: string
+          nullable: true
+        restrictionHandlingOfShares:
+          type: boolean
+        liabilityForRedemptionOfShares:
+          type: boolean
+        specialRights:
+          type: boolean
+        lastUpdated:
+          type: string
+          format: date-time
+          nullable: true
+    BinaryData: {}
+    Deregistration:
+      type: object
+      properties:
+        deregistered:
+          type: boolean
+        deregistrationDate:
+          type: string
+          format: date-time
+          nullable: true
+        bankrupcy:
+          type: boolean
+        bankrupcyDate:
+          type: string
+          format: date-time
+          nullable: true
+        insolvency:
+          type: boolean
+        insolvencyDate:
+          type: string
+          format: date-time
+          nullable: true
+    LegalForm:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    RegisteredName:
+      type: object
+      properties:
+        name:
+          type: string
+        registered:
+          type: string
+          format: date-time
+          nullable: true
+    Vat:
+      type: object
+      properties:
+        vatNumber:
+          type: string
+        registered:
+          type: string
+          format: date-time
+          nullable: true
+        deRegistered:
+          type: string
+          format: date-time
+          nullable: true
+        activityCode:
+          $ref: '#/components/schemas/ActivityCode'
+    Address:
+      title: Address
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: true
+        addressName:
+          type: string
+          nullable: true
+        attention:
+          type: string
+          nullable: true
+        postcode:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        isPostbox:
+          type: boolean
+          nullable: true
+        municipality:
+          type: string
+          nullable: true
+        municipalityId:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+    Relationship:
+      title: Relationship
+      required:
+        - nationalId
+        - name
+      type: object
+      properties:
+        nationalId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          nullable: true
+        position:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        address:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/Address'
+    Error:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        status:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type: integer
+          format: int32
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: []
+  - apiKeyQuery: []
+tags:
+  - name: LegalEntities
