@@ -4006,6 +4006,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client"
+  dependencies:
+    "@dmr.is/logging": "npm:*"
+    zod: "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^10.4.19
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/constants@npm:*, @dmr.is/constants@workspace:libs/shared/constants":
   version: 0.0.0-use.local
   resolution: "@dmr.is/constants@workspace:libs/shared/constants"
@@ -30401,6 +30412,13 @@ __metadata:
     compress-commons: "npm:^4.1.2"
     readable-stream: "npm:^3.6.0"
   checksum: 10c0/38f91ca116a38561cf184c29e035e9453b12c30eaf574e0993107a4a5331882b58c9a7f7b97f63910664028089fbde3296d0b3682d1ccb2ad96929e68f1b2b89
+  languageName: node
+  linkType: hard
+
+"zod@npm:*":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard
 
