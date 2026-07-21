@@ -23,6 +23,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
+      "dependsOn": ["codegen"],
       "options": {
         "jestConfig": "libs/clients/rsk-client/jest.config.ts",
         "passWithNoTests": true
