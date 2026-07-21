@@ -41,4 +41,8 @@ export const companyMessages = {
     message: `No entity found in national registry for "${nationalId}" and no fallback name provided`,
     translatedMessage: 'Engin skráning fannst í þjóðskrá fyrir þessa kennitölu',
   }),
+  inactiveCannotCreate: (nationalId: string): ErrorMessage => ({
+    message: `Company with national id "${nationalId}" is not active in the RSK company registry and cannot be created`,
+    translatedMessage: 'Ekki er hægt að skrá fyrirtæki sem er ekki virkt',
+  }),
 } as const

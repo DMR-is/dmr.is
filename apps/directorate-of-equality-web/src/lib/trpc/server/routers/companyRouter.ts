@@ -7,6 +7,7 @@ import {
   zDeleteCompanyCommentPath,
   zGetCompanyCommentsPath,
   zGetCompanyTimelinePath,
+  zGetRskCompanyPreviewPath,
   zRskLookupCompanyPath,
   zUpdateCompanyEmailBody,
   zUpdateCompanyEmailPath,
@@ -73,6 +74,14 @@ export const companyRouter = router({
     .input(zRskLookupCompanyPath)
     .query(({ ctx, input }) =>
       ctx.api.rskLookupCompany({ path: { nationalId: input.nationalId } }),
+    ),
+
+  // RSK-backed preview of the fields we auto-map at creation (name, address,
+  // postcode, ÍSAT, status), shown read-only on the create screen.
+  rskPreview: protectedProcedure
+    .input(zGetRskCompanyPreviewPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getRskCompanyPreview({ path: { nationalId: input.nationalId } }),
     ),
 
   create: protectedProcedure

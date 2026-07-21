@@ -26,6 +26,7 @@ import { UserModel } from '../user/models/user.model'
 import { CompanyDto } from './dto/company.dto'
 import { CompanyCommentDto } from './dto/company-comment.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
 import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyDto } from './dto/create-company.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
@@ -84,6 +85,19 @@ export class CompanyController {
     @Param('nationalId', ParseNationalIdPipe) nationalId: string,
   ): Promise<CompanyLookupDto> {
     return this.companyService.rskLookup(nationalId)
+  }
+
+  @Get('preview/:nationalId')
+  @ApiParam({ name: 'nationalId', type: String })
+  @DoeResponse({
+    operationId: 'getRskCompanyPreview',
+    type: CompanyRskPreviewDto,
+    include404: true,
+  })
+  async getRskCompanyPreview(
+    @Param('nationalId', ParseNationalIdPipe) nationalId: string,
+  ): Promise<CompanyRskPreviewDto> {
+    return this.companyService.getRskCompanyPreview(nationalId)
   }
 
   @Post()
