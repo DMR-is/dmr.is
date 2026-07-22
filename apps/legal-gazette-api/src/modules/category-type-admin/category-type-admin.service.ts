@@ -21,6 +21,7 @@ import { TypeDto, TypeModel } from '../../models/type.model'
 import { TypeCategoriesModel } from '../../models/type-categories.model'
 import {
   CategoryTypeActor,
+  CategoryTypeOverviewDto,
   ChangeLogQuery,
   ConnectionBody,
   CreateCategoryBody,
@@ -52,6 +53,47 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     private readonly changeLogModel: typeof CategoryTypeChangeLogModel,
     private readonly sequelize: Sequelize,
   ) {}
+
+  async getOverview(): Promise<CategoryTypeOverviewDto> {
+    const [categories, types] = await Promise.all([
+      this.categoryModel.unscoped().findAll({
+        attributes: ['id', 'title', 'slug', 'active'],
+        include: [
+          {
+            model: TypeModel,
+            through: { attributes: [] },
+            attributes: ['id', 'title', 'slug', 'active'],
+          },
+        ],
+        order: [['title', 'ASC']],
+      }),
+      this.typeModel.unscoped().findAll({
+        attributes: ['id', 'title', 'slug', 'active'],
+        order: [['title', 'ASC']],
+      }),
+    ])
+
+    return {
+      categories: categories.map((category) => ({
+        id: category.id,
+        title: category.title,
+        slug: category.slug,
+        active: category.active,
+        types: (category.types ?? []).map((type) => ({
+          id: type.id,
+          title: type.title,
+          slug: type.slug,
+          active: type.active,
+        })),
+      })),
+      types: types.map((type) => ({
+        id: type.id,
+        title: type.title,
+        slug: type.slug,
+        active: type.active,
+      })),
+    }
+  }
 
   private slugify(value: string): string {
     return slugify(value, { lower: true, strict: true })
