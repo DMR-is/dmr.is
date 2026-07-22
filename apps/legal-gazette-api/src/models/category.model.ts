@@ -1,4 +1,4 @@
-import { BelongsToMany } from 'sequelize-typescript'
+import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared-models-base'
 
@@ -20,6 +20,11 @@ export enum CategoryDefaultIdEnum {
 export class CategoryModel extends BaseEntityModel<CategoryDto> {
   @BelongsToMany(() => TypeModel, { through: () => TypeCategoriesModel })
   types!: TypeModel[]
+
+  // Non-selectable (legacy) categories are excluded from the create-flow
+  // dropdowns but remain valid for existing adverts and search facets.
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+  active!: boolean
 }
 
 export class CategoryDto extends BaseEntityDto {}
