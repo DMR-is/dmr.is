@@ -1,5 +1,3 @@
-import { Op } from 'sequelize'
-
 import {
   Controller,
   Get,
@@ -11,7 +9,6 @@ import { ApiBearerAuth } from '@nestjs/swagger'
 
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
-import { UNASSIGNABLE_CATEGORY_IDS } from '../../../core/constants'
 import { AdminAccess } from '../../../core/decorators/admin.decorator'
 import { LGResponse } from '../../../core/decorators/lg-response.decorator'
 import { AuthorizationGuard } from '../../../core/guards/authorization.guard'
@@ -62,11 +59,7 @@ export class CategoryController extends BaseEntityController<
     @Query() query: GetCategoriesQueryDto,
   ): Promise<GetCategoriesDto> {
     const categories = await super.findAll({
-      where: query.excludeUnassignable
-        ? {
-            id: { [Op.notIn]: UNASSIGNABLE_CATEGORY_IDS },
-          }
-        : undefined,
+      where: query.excludeUnassignable ? { active: true } : undefined,
       include: [
         {
           model: TypeModel,

@@ -39,6 +39,7 @@ export enum LegalGazetteModels {
   SUBSCRIBER_PAYMENT = 'subscriber_payments',
   PUBLICATION_SEARCH_EVENT = 'publication_search_event',
   BACKFILLED_PUBLICATION = 'backfilled_publication',
+  CATEGORY_TYPE_CHANGE_LOG = 'category_type_change_log',
 }
 
 export const RECALL_BANKRUPTCY_ADVERT_TYPE_ID =
@@ -73,19 +74,6 @@ export const COMMON_ADVERT_TYPES_IDS = [
   'cc18a165-b359-45b2-b587-aae21a09b565',
   '06f349ce-bda5-43d5-afae-4d658ed17b51',
   'b4b31515-b759-44c9-88d2-f33da574ea72',
-]
-
-export const UNASSIGNABLE_CATEGORY_IDS = [
-  '52112993-EDCE-46A1-B7E6-8E3E5CD296F6', // Allar auglýsingar
-  'b2b798e2-e8a3-4928-94eb-0021a5f13409', // Greiðsluaðlögun
-]
-
-export const UNASSIGNABLE_TYPE_IDS = [
-  '82425CC8-B32E-4ADE-9EE4-BC6F8261B735', // Almennar auglýsingar
-  '0A066E81-31AD-4F80-94D2-CE81F68F5368', // Handbækur
-  'aa408eae-a76a-4ed8-9aa3-388dc0c8ff05', // Tölublöð
-  'EC153CBB-BB48-4984-9F96-5E26CC522DD3', // Umferðarauglýsingar
-  'CE0490FA-9CC0-48B4-AD47-5964D081DCDF', // Greiðsluáskorun
 ]
 
 export const TASK_JOB_IDS = {
