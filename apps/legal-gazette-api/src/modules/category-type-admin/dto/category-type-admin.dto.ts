@@ -157,3 +157,44 @@ export class ChangeLogQuery {
   @IsOptional()
   offset?: number
 }
+
+// --- Admin overview (current state, incl. inactive rows + connections) ---
+
+export class TypeOverviewDto {
+  @ApiUUId()
+  id!: string
+
+  @ApiString()
+  title!: string
+
+  @ApiString()
+  slug!: string
+
+  @ApiBoolean()
+  active!: boolean
+}
+
+export class CategoryOverviewDto {
+  @ApiUUId()
+  id!: string
+
+  @ApiString()
+  title!: string
+
+  @ApiString()
+  slug!: string
+
+  @ApiBoolean()
+  active!: boolean
+
+  @ApiDtoArray(TypeOverviewDto)
+  types!: TypeOverviewDto[]
+}
+
+export class CategoryTypeOverviewDto {
+  @ApiDtoArray(CategoryOverviewDto)
+  categories!: CategoryOverviewDto[]
+
+  @ApiDtoArray(TypeOverviewDto)
+  types!: TypeOverviewDto[]
+}
