@@ -2,6 +2,7 @@ import { CategoryDto } from '../../models/category.model'
 import { TypeDto } from '../../models/type.model'
 import {
   CategoryTypeActor,
+  CategoryTypeOverviewDto,
   ChangeLogQuery,
   ConnectionBody,
   CreateCategoryBody,
@@ -15,6 +16,9 @@ import {
 } from './dto/category-type-admin.dto'
 
 export interface ICategoryTypeAdminService {
+  // Current state (incl. inactive rows + connections)
+  getOverview(): Promise<CategoryTypeOverviewDto>
+
   // Categories
   createCategory(body: CreateCategoryBody, actor: CategoryTypeActor): Promise<CategoryDto>
   updateCategory(
