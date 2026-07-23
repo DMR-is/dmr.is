@@ -146,7 +146,11 @@ export const getOsBody = (
   const q = qp?.search?.trim() ?? ''
 
   const pageSize = Math.min(Math.max(1, qp?.pageSize ?? 20), 100)
-  const page = Math.max(1, Number(qp?.page ?? 1))
+  // OpenSearch rejects from + size > index.max_result_window (default 10000).
+  // Clamp page so deep pagination degrades gracefully instead of throwing.
+  const MAX_RESULT_WINDOW = 10000
+  const maxPage = Math.max(1, Math.floor(MAX_RESULT_WINDOW / pageSize))
+  const page = Math.min(Math.max(1, Number(qp?.page ?? 1)), maxPage)
   const from = (page - 1) * pageSize
   const size = pageSize
 
