@@ -117,10 +117,10 @@ export const ApplicationCard = ({ application }: Props) => {
     }
   }
 
-  const recallInProgress =
-    application.type !== ApplicationTypeEnum.COMMON &&
-    application.status === ApplicationStatusEnum.SUBMITTED &&
-    !allPublished
+  // Whether the estate is still open is decided server side: a rejected
+  // Skiptalok reopens an estate that already looked concluded, which neither
+  // the application status nor the publication counts above can express.
+  const canAddAdverts = application.canAddAdverts
 
   const canBeRemoved = publications.length == 0 && !allPublished && !rejected
 
@@ -179,7 +179,7 @@ export const ApplicationCard = ({ application }: Props) => {
 
         <Stack space={1}>
           <Text variant="h3">{application.title}</Text>
-          {recallInProgress && (
+          {canAddAdverts && (
             <Text variant="medium">{application.subtitle}</Text>
           )}
           <Inline
@@ -188,11 +188,9 @@ export const ApplicationCard = ({ application }: Props) => {
             collapseBelow="sm"
             space={1}
           >
-            {recallInProgress ? (
+            {canAddAdverts ? (
               <div className={cardExtraButtonStyle}>
-                <AddAdvertsToApplicationMenu
-                  applicationId={application.id}
-                />
+                <AddAdvertsToApplicationMenu applicationId={application.id} />
               </div>
             ) : (
               <Text variant="medium">{application.subtitle}</Text>

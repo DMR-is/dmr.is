@@ -13,6 +13,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger'
 
 import {
+  ApiBoolean,
   ApiEnum,
   ApiNumber,
   ApiOptionalString,
@@ -29,6 +30,7 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { LegalGazetteModels } from '../core/constants'
+import { isEstateOpen } from '../core/utils/estate.util'
 import { DetailedDto } from '../modules/shared/dto/detailed.dto'
 import { AdvertDto, AdvertModel } from './advert.model'
 import { AdvertPublicationModel } from './advert-publication.model'
@@ -201,6 +203,35 @@ export class ApplicationModel extends ParanoidModel<
     return get(this.answers, 'fields.caption', '')
   }
 
+  /**
+   * Whether the advertiser may still add Skiptafundur/Skiptalok adverts to this
+   * estate. Only recall applications ever can, and only once their Innköllun
+   * has been submitted.
+   *
+   * Requires `adverts` to be loaded; without them we cannot tell whether a
+   * Skiptalok is already live, so we report false rather than risk letting a
+   * duplicate through.
+   */
+  get canAddAdverts(): boolean {
+    const isRecall =
+      this.applicationType === ApplicationTypeEnum.RECALL_BANKRUPTCY ||
+      this.applicationType === ApplicationTypeEnum.RECALL_DECEASED
+
+    if (!isRecall || !this.adverts) {
+      return false
+    }
+
+    // FINISHED counts as submitted: it is only ever an approximation of "estate
+    // closed", and isEstateOpen is what actually decides. That also means an
+    // application left FINISHED by a since-rejected Skiptalok reopens on its
+    // own, with no backfill needed.
+    const isSubmitted =
+      this.status === ApplicationStatusEnum.SUBMITTED ||
+      this.status === ApplicationStatusEnum.FINISHED
+
+    return isSubmitted && isEstateOpen(this.adverts)
+  }
+
   get previewTitle() {
     if (this.applicationType === ApplicationTypeEnum.RECALL_DECEASED) {
       return (
@@ -233,6 +264,7 @@ export class ApplicationModel extends ParanoidModel<
       subtitle: model.subtitle,
       adverts:
         model.adverts?.flatMap((advert) => advert.fromModelToSimple()) || [],
+      canAddAdverts: model.canAddAdverts,
       currentStep: model.currentStep,
     }
   }
@@ -290,6 +322,9 @@ export class ApplicationDto extends DetailedDto {
   @Type(() => AdvertDto)
   @ValidateNested({ each: true })
   adverts?: AdvertDto[]
+
+  @ApiBoolean()
+  canAddAdverts!: boolean
 
   @ApiNumber()
   currentStep!: number
