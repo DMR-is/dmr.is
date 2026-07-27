@@ -20,7 +20,10 @@ export interface ICategoryTypeAdminService {
   getOverview(): Promise<CategoryTypeOverviewDto>
 
   // Categories
-  createCategory(body: CreateCategoryBody, actor: CategoryTypeActor): Promise<CategoryDto>
+  createCategory(
+    body: CreateCategoryBody,
+    actor: CategoryTypeActor,
+  ): Promise<CategoryDto>
   updateCategory(
     id: string,
     body: UpdateCategoryBody,
@@ -55,7 +58,10 @@ export interface ICategoryTypeAdminService {
 
   // Bulk advert re-pointing
   getMoveImpact(body: MoveAdvertsBody): Promise<ImpactDto>
-  moveAdverts(body: MoveAdvertsBody, actor: CategoryTypeActor): Promise<ImpactDto>
+  moveAdverts(
+    body: MoveAdvertsBody,
+    actor: CategoryTypeActor,
+  ): Promise<ImpactDto>
 
   // Audit + undo
   getChangeLog(query: ChangeLogQuery): Promise<GetChangeLogDto>

@@ -10,6 +10,7 @@ import {
 import {
   ApiBoolean,
   ApiDtoArray,
+  ApiEnum,
   ApiNumber,
   ApiOptionalArray,
   ApiOptionalEnum,
@@ -148,12 +149,34 @@ export class ImpactDto {
   sampleAdvertIds?: string[]
 }
 
+/**
+ * Name for an id appearing in a log entry or its snapshots, so the client can
+ * render „Skiptalok" instead of a UUID.
+ */
+export class ChangeLogTitleDto {
+  @ApiUUId()
+  id!: string
+
+  @ApiString()
+  title!: string
+
+  @ApiEnum(ChangeLogEntity, { enumName: 'ChangeLogEntity' })
+  entityType!: ChangeLogEntity
+}
+
 export class GetChangeLogDto {
   @ApiDtoArray(CategoryTypeChangeLogDto)
   entries!: CategoryTypeChangeLogDto[]
 
   @ApiNumber()
   total!: number
+
+  /**
+   * Titles of every category and type, deleted ones included — log entries
+   * routinely reference entities that no longer exist.
+   */
+  @ApiDtoArray(ChangeLogTitleDto)
+  titles!: ChangeLogTitleDto[]
 }
 
 export class ChangeLogQuery {
@@ -189,6 +212,10 @@ export class TypeOverviewDto {
 
   @ApiBoolean()
   active!: boolean
+
+  /** Adverts referencing this type, across every category. */
+  @ApiNumber()
+  advertCount!: number
 }
 
 export class CategoryOverviewDto {
@@ -203,6 +230,10 @@ export class CategoryOverviewDto {
 
   @ApiBoolean()
   active!: boolean
+
+  /** Adverts referencing this category, across every type. */
+  @ApiNumber()
+  advertCount!: number
 
   @ApiDtoArray(TypeOverviewDto)
   types!: TypeOverviewDto[]

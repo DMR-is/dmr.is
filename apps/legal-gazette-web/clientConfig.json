@@ -6296,6 +6296,67 @@
         "tags": ["Legal gazette - internal API"]
       }
     },
+    "/api/v1/category-type/overview": {
+      "get": {
+        "operationId": "getCategoryTypeOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryTypeOverviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - internal API"]
+      }
+    },
     "/api/v1/category-type/categories": {
       "post": {
         "operationId": "createCategory",
@@ -9273,6 +9334,46 @@
         },
         "required": ["advertIds"]
       },
+      "TypeOverviewDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "active": { "type": "boolean" },
+          "advertCount": { "type": "number" }
+        },
+        "required": ["id", "title", "slug", "active", "advertCount"]
+      },
+      "CategoryOverviewDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "active": { "type": "boolean" },
+          "advertCount": { "type": "number" },
+          "types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TypeOverviewDto" }
+          }
+        },
+        "required": ["id", "title", "slug", "active", "advertCount", "types"]
+      },
+      "CategoryTypeOverviewDto": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CategoryOverviewDto" }
+          },
+          "types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TypeOverviewDto" }
+          }
+        },
+        "required": ["categories", "types"]
+      },
       "CreateCategoryBody": {
         "type": "object",
         "properties": {
@@ -9385,6 +9486,17 @@
           "createdAt"
         ]
       },
+      "ChangeLogTitleDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "entityType": {
+            "allOf": [{ "$ref": "#/components/schemas/ChangeLogEntity" }]
+          }
+        },
+        "required": ["id", "title", "entityType"]
+      },
       "GetChangeLogDto": {
         "type": "object",
         "properties": {
@@ -9392,9 +9504,13 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/CategoryTypeChangeLogDto" }
           },
-          "total": { "type": "number" }
+          "total": { "type": "number" },
+          "titles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChangeLogTitleDto" }
+          }
         },
-        "required": ["entries", "total"]
+        "required": ["entries", "total", "titles"]
       },
       "BaseEntityDto": {
         "type": "object",

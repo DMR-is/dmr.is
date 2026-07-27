@@ -205,7 +205,10 @@ export class CategoryTypeAdminController {
   // --- Audit + undo ---
 
   @Get('/change-log')
-  @LGResponse({ operationId: 'getCategoryTypeChangeLog', type: GetChangeLogDto })
+  @LGResponse({
+    operationId: 'getCategoryTypeChangeLog',
+    type: GetChangeLogDto,
+  })
   getChangeLog(@Query() query: ChangeLogQuery): Promise<GetChangeLogDto> {
     return this.service.getChangeLog(query)
   }

@@ -119,7 +119,9 @@ export const MoveTypeModal = ({
               placeholder="Óbreytt"
               isClearable
               options={categoryOptions}
-              value={categoryOptions.find((o) => o.value === toCategoryId) ?? null}
+              value={
+                categoryOptions.find((o) => o.value === toCategoryId) ?? null
+              }
               onChange={(opt) => {
                 setToCategoryId(opt?.value)
                 onTargetChange()

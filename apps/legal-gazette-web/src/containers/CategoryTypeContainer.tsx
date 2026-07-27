@@ -1,37 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import Hero from '@dmr.is/ui/components/Hero/Hero'
-import { AccordionCard } from '@dmr.is/ui/components/island-is/AccordionCard'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
+import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
-import { Inline } from '@dmr.is/ui/components/island-is/Inline'
-import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { Input } from '@dmr.is/ui/components/island-is/Input'
+import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
-import { CategoriesTable } from '../components/category-type/CategoriesTable'
+import { CategoryTypeTree } from '../components/category-type/CategoryTypeTree'
+import * as styles from '../components/category-type/CategoryTypeTree.css'
+import {
+  buildCategoryTypeTree,
+  TreeSelection,
+} from '../components/category-type/categoryTypeTree.utils'
 import { ChangeLogTable } from '../components/category-type/ChangeLogTable'
+import { EntityDetailPanel } from '../components/category-type/EntityDetailPanel'
 import {
   MovePayload,
   MoveTypeModal,
 } from '../components/category-type/MoveTypeModal'
 import { NameModal } from '../components/category-type/NameModal'
-import { TypesTable } from '../components/category-type/TypesTable'
 import { TRPCErrorAlert } from '../components/trpc/TRPCErrorAlert'
-import {
-  CategoryOverviewDto,
-  ChangeLogEntity,
-  TypeOverviewDto,
-} from '../gen/fetch'
+import { ChangeLogEntity, TypeOverviewDto } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+const LOG_PAGE_SIZE = 25
 
 type NameModalState =
   | { mode: 'create-category' }
@@ -44,18 +47,38 @@ export const CategoryTypeContainer = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>()
-  const [selectedTypeId, setSelectedTypeId] = useState<string>()
+  const [search, setSearch] = useState('')
+  const [showInactive, setShowInactive] = useState(false)
+  const [selection, setSelection] = useState<TreeSelection | null>(null)
   const [nameModal, setNameModal] = useState<NameModalState>(null)
   const [moveType, setMoveType] = useState<TypeOverviewDto | null>(null)
   const [moveImpact, setMoveImpact] = useState<number | undefined>()
-  const [busyId, setBusyId] = useState<string>()
+  const [logLimit, setLogLimit] = useState(LOG_PAGE_SIZE)
+  // Selection scopes the change log; this records the selection the user asked
+  // to see the unfiltered log for, so scoping resumes on the next selection.
+  const [unscopedFor, setUnscopedFor] = useState<string | null>(null)
 
-  const logInput = selectedTypeId
-    ? { entityType: ChangeLogEntity.TYPE, entityId: selectedTypeId }
-    : selectedCategoryId
-      ? { entityType: ChangeLogEntity.CATEGORY, entityId: selectedCategoryId }
-      : {}
+  /** Clicking the selected row again clears it, closing the detail panel. */
+  const toggleSelection = (next: TreeSelection) =>
+    setSelection((current) =>
+      current?.kind === next.kind && current.id === next.id ? null : next,
+    )
+
+  const selectionKey = selection ? `${selection.kind}:${selection.id}` : null
+  const logScoped = Boolean(selectionKey) && unscopedFor !== selectionKey
+
+  const logInput = {
+    ...(logScoped && selection
+      ? {
+          entityType:
+            selection.kind === 'type'
+              ? ChangeLogEntity.TYPE
+              : ChangeLogEntity.CATEGORY,
+          entityId: selection.id,
+        }
+      : {}),
+    limit: logLimit,
+  }
 
   const {
     data: overview,
@@ -70,23 +93,19 @@ export const CategoryTypeContainer = () => {
   const categories = overview?.categories ?? []
   const types = overview?.types ?? []
 
-  const categoriesByTypeId: Record<string, { id: string; title: string }[]> = {}
-  categories.forEach((category) => {
-    category.types.forEach((type) => {
-      categoriesByTypeId[type.id] = [
-        ...(categoriesByTypeId[type.id] ?? []),
-        { id: category.id, title: category.title },
-      ]
-    })
-  })
+  const selectedTitle = selection
+    ? ((selection.kind === 'category' ? categories : types).find(
+        (entity) => entity.id === selection.id,
+      )?.title ?? '')
+    : ''
 
-  const invalidateCategories = () => {
-    queryClient.invalidateQueries(trpc.getCategoryTypeOverview.queryFilter())
-  }
+  const loadedLogEntries = changeLog?.entries.length ?? 0
+  const hasMoreLogEntries = loadedLogEntries < (changeLog?.total ?? 0)
 
-  const invalidateTypes = () => {
-    queryClient.invalidateQueries(trpc.getCategoryTypeOverview.queryFilter())
-  }
+  const tree = useMemo(
+    () => buildCategoryTypeTree(categories, types, { search, showInactive }),
+    [categories, types, search, showInactive],
+  )
 
   const invalidateAll = () => {
     queryClient.invalidateQueries(trpc.getCategoryTypeOverview.queryFilter())
@@ -102,7 +121,7 @@ export const CategoryTypeContainer = () => {
       onSuccess: () => {
         toast.success('Flokkur stofnaður')
         setNameModal(null)
-        invalidateCategories()
+        invalidateAll()
       },
       onError: onError('Ekki tókst að stofna flokk'),
     }),
@@ -159,6 +178,7 @@ export const CategoryTypeContainer = () => {
     trpc.deleteCategory.mutationOptions({
       onSuccess: () => {
         toast.success('Flokki eytt')
+        setSelection(null)
         invalidateAll()
       },
       onError: onError('Ekki tókst að eyða flokki'),
@@ -168,6 +188,7 @@ export const CategoryTypeContainer = () => {
     trpc.deleteType.mutationOptions({
       onSuccess: () => {
         toast.success('Tegund eytt')
+        setSelection(null)
         invalidateAll()
       },
       onError: onError('Ekki tókst að eyða tegund'),
@@ -233,21 +254,6 @@ export const CategoryTypeContainer = () => {
     }
   }
 
-  const toggleCategory = (category: CategoryOverviewDto) => {
-    setBusyId(category.id)
-    setCategoryActive.mutate({ id: category.id, active: !category.active })
-  }
-  const toggleType = (type: TypeOverviewDto) => {
-    setBusyId(type.id)
-    setTypeActive.mutate({ id: type.id, active: !type.active })
-  }
-
-  const categoryOptions = categories.map((c) => ({
-    label: c.title,
-    value: c.id,
-  }))
-  const typeOptions = types.map((t) => ({ label: t.title, value: t.id }))
-
   const nameModalConfig = nameModal
     ? {
         'create-category': { title: 'Nýr flokkur', label: 'Heiti flokks' },
@@ -284,82 +290,93 @@ export const CategoryTypeContainer = () => {
           </GridColumn>
         )}
 
-        {/* Filters */}
-        <GridColumn span={['12/12', '6/12']}>
-          <Select
-            size="sm"
-            backgroundColor="blue"
-            label="Flokkur"
-            placeholder="Allir flokkar"
-            isClearable
-            options={categoryOptions}
-            value={
-              categoryOptions.find((o) => o.value === selectedCategoryId) ??
-              null
-            }
-            onChange={(opt) => {
-              setSelectedCategoryId(opt?.value)
-              setSelectedTypeId(undefined)
-            }}
-          />
-        </GridColumn>
-        <GridColumn span={['12/12', '6/12']}>
-          <Select
-            size="sm"
-            backgroundColor="blue"
-            label="Tegund"
-            placeholder="Allar tegundir"
-            isClearable
-            options={typeOptions}
-            value={typeOptions.find((o) => o.value === selectedTypeId) ?? null}
-            onChange={(opt) => {
-              setSelectedTypeId(opt?.value)
-              setSelectedCategoryId(undefined)
-            }}
-          />
-        </GridColumn>
-
-        {/* Categories */}
-        <GridColumn span="12/12">
-          <AccordionCard
-            id="categories"
-            label={
-              <Inline alignY="center" space={2}>
-                <Text variant="h4">Flokkar</Text>
-                <Box position="relative" zIndex={10}>
+        {/* Filters + creation */}
+        <GridColumn span={['12/12', '12/12', '3/12']}>
+          <Box className={styles.sidebar}>
+            <Stack space={2}>
+              <Text variant="h4">Leit og aðgerðir</Text>
+              <Input
+                size="sm"
+                backgroundColor="white"
+                name="category-type-search"
+                label="Leita"
+                placeholder="Heiti flokks eða tegundar"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <Checkbox
+                name="show-inactive"
+                label="Sýna óvirkt"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+              />
+              <Stack space={1}>
+                <Box background="white" borderRadius="large">
                   <Button
                     variant="utility"
                     size="small"
                     icon="add"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setNameModal({ mode: 'create-category' })
-                    }}
+                    fluid
+                    onClick={() => setNameModal({ mode: 'create-category' })}
                   >
                     Nýr flokkur
                   </Button>
                 </Box>
-              </Inline>
-            }
-          >
-            <CategoriesTable
-              categories={
-                selectedCategoryId
-                  ? categories.filter((c) => c.id === selectedCategoryId)
-                  : categories
-              }
+                <Box background="white" borderRadius="large">
+                  <Button
+                    variant="utility"
+                    size="small"
+                    icon="add"
+                    fluid
+                    onClick={() => setNameModal({ mode: 'create-type' })}
+                  >
+                    Ný tegund
+                  </Button>
+                </Box>
+              </Stack>
+            </Stack>
+          </Box>
+        </GridColumn>
+
+        {/* Tree + actions */}
+        <GridColumn span={['12/12', '12/12', '9/12']}>
+          <Stack space={[2, 3]}>
+            <CategoryTypeTree
+              tree={tree}
+              selection={selection}
               loading={overviewPending}
-              busyId={setCategoryActive.isPending ? busyId : undefined}
-              onRename={(c) =>
-                setNameModal({
-                  mode: 'rename-category',
-                  id: c.id,
-                  current: c.title,
-                })
+              onSelect={toggleSelection}
+            />
+            <EntityDetailPanel
+              selection={selection}
+              categories={categories}
+              types={types}
+              categoriesByTypeId={tree.categoriesByTypeId}
+              togglingActive={
+                setCategoryActive.isPending || setTypeActive.isPending
               }
-              onToggleActive={toggleCategory}
-              onDelete={(c) => deleteCategory.mutate({ id: c.id })}
-              allTypes={types}
+              onClear={() => setSelection(null)}
+              onRename={(kind, id, current) =>
+                setNameModal(
+                  kind === 'category'
+                    ? { mode: 'rename-category', id, current }
+                    : { mode: 'rename-type', id, current },
+                )
+              }
+              onToggleActive={(kind, id, active) =>
+                kind === 'category'
+                  ? setCategoryActive.mutate({ id, active })
+                  : setTypeActive.mutate({ id, active })
+              }
+              onDelete={(kind, id) =>
+                kind === 'category'
+                  ? deleteCategory.mutate({ id })
+                  : deleteType.mutate({ id })
+              }
+              onMove={(type) => {
+                setMoveImpact(undefined)
+                setMoveType(type)
+              }}
               onAttach={(typeId, categoryId) =>
                 attach.mutate({ typeId, categoryId })
               }
@@ -367,51 +384,55 @@ export const CategoryTypeContainer = () => {
                 detach.mutate({ typeId, categoryId })
               }
             />
-          </AccordionCard>
-        </GridColumn>
-
-        {/* Types */}
-        <GridColumn span="12/12">
-          <AccordionCard id="types" label="Tegundir">
-            <TypesTable
-              types={
-                selectedTypeId
-                  ? types.filter((t) => t.id === selectedTypeId)
-                  : types
-              }
-              categoriesByTypeId={categoriesByTypeId}
-              loading={overviewPending}
-              busyId={setTypeActive.isPending ? busyId : undefined}
-              onRename={(t) =>
-                setNameModal({
-                  mode: 'rename-type',
-                  id: t.id,
-                  current: t.title,
-                })
-              }
-              onToggleActive={toggleType}
-              onMove={(t) => {
-                setMoveImpact(undefined)
-                setMoveType(t)
-              }}
-              onDelete={(t) => deleteType.mutate({ id: t.id })}
-              onDetach={(typeId, categoryId) =>
-                detach.mutate({ typeId, categoryId })
-              }
-            />
-          </AccordionCard>
+          </Stack>
         </GridColumn>
 
         {/* Change log */}
         <GridColumn span="12/12">
-          <AccordionCard id="change-log" label="Breytingasaga" startExpanded>
+          <Stack space={2}>
+            <Text variant="h4">Breytingasaga</Text>
+            {logScoped && (
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="spaceBetween"
+                flexWrap="wrap"
+                columnGap={2}
+                rowGap={1}
+              >
+                <Text variant="small" color="dark400">
+                  Sýnir aðeins breytingar á „{selectedTitle}“
+                </Text>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => setUnscopedFor(selectionKey)}
+                >
+                  Sýna allar breytingar
+                </Button>
+              </Box>
+            )}
             <ChangeLogTable
               entries={changeLog?.entries}
+              titles={changeLog?.titles}
               loading={logPending}
               revertingId={revert.isPending ? revert.variables?.id : undefined}
               onRevert={(id) => revert.mutate({ id })}
             />
-          </AccordionCard>
+            {hasMoreLogEntries && (
+              <Box display="flex" justifyContent="center">
+                <Button
+                  variant="ghost"
+                  size="small"
+                  onClick={() =>
+                    setLogLimit((current) => current + LOG_PAGE_SIZE)
+                  }
+                >
+                  Sýna meira ({loadedLogEntries} af {changeLog?.total})
+                </Button>
+              </Box>
+            )}
+          </Stack>
         </GridColumn>
       </GridRow>
 

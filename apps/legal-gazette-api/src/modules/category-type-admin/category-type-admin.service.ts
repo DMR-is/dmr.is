@@ -1,4 +1,9 @@
-import { Op, Transaction, UniqueConstraintError } from 'sequelize'
+import {
+  GroupedCountResultItem,
+  Op,
+  Transaction,
+  UniqueConstraintError,
+} from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 
@@ -24,6 +29,7 @@ import {
   CategoryTypeActor,
   CategoryTypeOverviewDto,
   ChangeLogQuery,
+  ChangeLogTitleDto,
   ConnectionBody,
   CreateCategoryBody,
   CreateTypeBody,
@@ -31,6 +37,7 @@ import {
   ImpactDto,
   MoveAdvertsBody,
   SetActiveBody,
+  TypeOverviewDto,
   UpdateCategoryBody,
   UpdateTypeBody,
 } from './dto/category-type-admin.dto'
@@ -82,7 +89,7 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   ) {}
 
   async getOverview(): Promise<CategoryTypeOverviewDto> {
-    const [categories, types] = await Promise.all([
+    const [categories, types, categoryCounts, typeCounts] = await Promise.all([
       this.categoryModel.unscoped().findAll({
         attributes: ['id', 'title', 'slug', 'active'],
         include: [
@@ -98,7 +105,23 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         attributes: ['id', 'title', 'slug', 'active'],
         order: [['title', 'ASC']],
       }),
+      this.advertModel.count({
+        attributes: ['categoryId'],
+        group: ['categoryId'],
+      }),
+      this.advertModel.count({ attributes: ['typeId'], group: ['typeId'] }),
     ])
+
+    const advertsByCategoryId = this.countsById(categoryCounts, 'categoryId')
+    const advertsByTypeId = this.countsById(typeCounts, 'typeId')
+
+    const typeOverview = (type: TypeModel): TypeOverviewDto => ({
+      id: type.id,
+      title: type.title,
+      slug: type.slug,
+      active: type.active,
+      advertCount: advertsByTypeId[type.id] ?? 0,
+    })
 
     return {
       categories: categories.map((category) => ({
@@ -106,20 +129,24 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         title: category.title,
         slug: category.slug,
         active: category.active,
-        types: (category.types ?? []).map((type) => ({
-          id: type.id,
-          title: type.title,
-          slug: type.slug,
-          active: type.active,
-        })),
+        advertCount: advertsByCategoryId[category.id] ?? 0,
+        types: (category.types ?? []).map(typeOverview),
       })),
-      types: types.map((type) => ({
-        id: type.id,
-        title: type.title,
-        slug: type.slug,
-        active: type.active,
-      })),
+      types: types.map(typeOverview),
     }
+  }
+
+  /** Flattens Sequelize's grouped count rows into an id -> count lookup. */
+  private countsById(
+    rows: GroupedCountResultItem[],
+    key: 'typeId' | 'categoryId',
+  ): Record<string, number> {
+    const counts: Record<string, number> = {}
+    for (const row of rows) {
+      const id = row[key]
+      if (typeof id === 'string') counts[id] = row.count
+    }
+    return counts
   }
 
   private slugify(value: string): string {
@@ -701,17 +728,52 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     if (query.entityType) where.entityType = query.entityType
     if (query.entityId) where.entityId = query.entityId
 
-    const { rows, count } = await this.changeLogModel.findAndCountAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      limit: query.limit ?? 50,
-      offset: query.offset ?? 0,
-    })
+    const [{ rows, count }, titles] = await Promise.all([
+      this.changeLogModel.findAndCountAll({
+        where,
+        order: [['createdAt', 'DESC']],
+        limit: query.limit ?? 50,
+        offset: query.offset ?? 0,
+      }),
+      this.changeLogTitles(),
+    ])
 
     return {
       entries: rows.map((r) => r.fromModel()),
       total: count,
+      titles,
     }
+  }
+
+  /**
+   * Every category and type name, soft-deleted rows included: log entries keep
+   * pointing at entities after they are deleted, and a UUID tells the reader
+   * nothing. Both tables are small enough to send whole.
+   */
+  private async changeLogTitles(): Promise<ChangeLogTitleDto[]> {
+    const [categories, types] = await Promise.all([
+      this.categoryModel.unscoped().findAll({
+        attributes: ['id', 'title'],
+        paranoid: false,
+      }),
+      this.typeModel.unscoped().findAll({
+        attributes: ['id', 'title'],
+        paranoid: false,
+      }),
+    ])
+
+    return [
+      ...categories.map((category) => ({
+        id: category.id,
+        title: category.title,
+        entityType: ChangeLogEntity.CATEGORY,
+      })),
+      ...types.map((type) => ({
+        id: type.id,
+        title: type.title,
+        entityType: ChangeLogEntity.TYPE,
+      })),
+    ]
   }
 
   async revert(auditId: string, actor: CategoryTypeActor): Promise<void> {
@@ -888,9 +950,10 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     }
   }
 
-  private connectionFromSnapshot(
-    snapshot: ChangeLogSnapshot | null,
-  ): { typeId: string; categoryId: string } {
+  private connectionFromSnapshot(snapshot: ChangeLogSnapshot | null): {
+    typeId: string
+    categoryId: string
+  } {
     const typeId = snapshot?.typeId
     const categoryId = snapshot?.categoryId
     if (typeof typeId !== 'string' || typeof categoryId !== 'string') {
