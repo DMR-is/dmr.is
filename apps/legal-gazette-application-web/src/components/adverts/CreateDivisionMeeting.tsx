@@ -250,7 +250,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
           />
           <FormElement
             type="text"
-            label="Fyrir hönd undirritara"
+            label="Fyrir hönd:"
             onChange={(e) =>
               handleSetState('signature', {
                 ...state.signature,
