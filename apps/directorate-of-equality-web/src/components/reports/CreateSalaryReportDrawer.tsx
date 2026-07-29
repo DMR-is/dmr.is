@@ -52,6 +52,7 @@ const GENDER_OPTIONS = [
 
 const EMPTY_FORM = {
   companyAdminName: '',
+  companyAdminTitle: '',
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
@@ -270,6 +271,7 @@ export const CreateSalaryReportDrawer = () => {
       providerType: 'SYSTEM' as const,
       providerId: Math.random().toString(36).substring(2, 15), // random ID to avoid replay, see report-create.service.ts
       companyAdminName: form.companyAdminName,
+      companyAdminTitle: form.companyAdminTitle || null,
       companyAdminEmail: form.companyAdminEmail,
       companyAdminGender: form.companyAdminGender,
       contactName: form.contactName,
@@ -560,6 +562,16 @@ export const CreateSalaryReportDrawer = () => {
               size="xs"
               value={form.companyAdminName}
               onChange={(e) => set('companyAdminName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="companyAdminTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.companyAdminTitle}
+              onChange={(e) => set('companyAdminTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>
