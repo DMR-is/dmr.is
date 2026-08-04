@@ -1,7 +1,7 @@
 import {
   ApiEnum,
-  ApiOptionalNumber,
   ApiHTML,
+  ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
