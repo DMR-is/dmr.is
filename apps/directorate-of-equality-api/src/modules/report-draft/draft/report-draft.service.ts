@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
   ReportModel,
   ReportProviderEnum,
@@ -40,7 +41,13 @@ const LOGGING_CONTEXT = 'ReportDraftService'
  */
 const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
 
-/** Report-level columns the applicant may patch on a draft via `updateDraft`. */
+/**
+ * Report-level columns the applicant may patch on a draft via `updateDraft`.
+ * `salaryDataBasis` / `salaryDataPeriod` are deliberately absent — the pair is
+ * interdependent (AVERAGE clears the month, a month is normalised to the 1st),
+ * so it is resolved through `resolveDraftSalaryDataBasis` instead of copied key
+ * by key.
+ */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',
   'companyAdminEmail',
@@ -111,6 +118,8 @@ export class ReportDraftService implements IReportDraftService {
       averageEmployeeMaleCount: report.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: report.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: report.averageEmployeeNeutralCount,
+      salaryDataBasis: report.salaryDataBasis,
+      salaryDataPeriod: report.salaryDataPeriod,
       equalityReportContent: report.equalityReportContent,
       counts: { employees, criteria, outlierGroups },
       createdAt: report.createdAt ?? null,
@@ -120,9 +129,15 @@ export class ReportDraftService implements IReportDraftService {
 
   /**
    * Patches report-level header fields on a draft (contact / admin / headcount /
-   * equality narrative). PATCH semantics: only keys present in the body are
-   * written — an omitted key is left untouched, an explicit `null` clears the
-   * column. Returns the refreshed draft detail.
+   * salary-data basis / equality narrative). PATCH semantics: only keys present
+   * in the body are written — an omitted key is left untouched, an explicit
+   * `null` clears the column. Returns the refreshed draft detail.
+   *
+   * The salary-data basis is the one interdependent pair: declaring AVERAGE
+   * clears any month already stored, and a month is normalised to the 1st. It is
+   * still PATCH-shaped — an untouched basis stays untouched. Completeness (a
+   * MONTH basis actually naming its month) is a submit-time check, so the
+   * applicant can fill the two in either order.
    */
   async updateDraft(
     providerId: string,
@@ -139,6 +154,8 @@ export class ReportDraftService implements IReportDraftService {
         ;(patch as Record<string, unknown>)[key] = input[key]
       }
     }
+
+    Object.assign(patch, resolveDraftSalaryDataBasis(input))
 
     if (Object.keys(patch).length > 0) {
       await this.reportModel.update(patch, { where: { id: report.id } })

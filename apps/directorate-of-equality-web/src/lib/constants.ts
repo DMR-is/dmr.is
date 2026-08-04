@@ -26,6 +26,21 @@ export const formatDateIS = (dateStr: string) => {
   return `${day}. ${IS_MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
+/**
+ * Month-precision date as "mars 2026". Used for values that only ever mean a
+ * month (the salary-data period the API returns as `YYYY-MM-01`), so the day is
+ * deliberately dropped rather than rendered as a misleading "01.".
+ *
+ * Parsed off the string rather than through `new Date()`, which would read
+ * `YYYY-MM-DD` as UTC midnight and shift the month backwards west of Greenwich.
+ */
+export const formatMonthYearIS = (dateStr: string) => {
+  const [year, month] = dateStr.split('-')
+  const name = IS_MONTHS[Number(month) - 1]
+
+  return name ? `${name} ${year}` : dateStr
+}
+
 export enum ReportStatusTranslatedEnum {
   SUBMITTED = 'Innsending',
   POSTPONED = 'Frestað',

@@ -5,7 +5,10 @@ import {
   ApiOptionalString,
 } from '@dmr.is/decorators'
 
-import { GenderEnum } from '../../../report/models/report.enums'
+import {
+  GenderEnum,
+  SalaryDataBasisEnum,
+} from '../../../report/models/report.enums'
 
 /**
  * Patch body for `PATCH /api/v1/application/reports/:providerId/draft`. Every
@@ -41,6 +44,21 @@ export class UpdateDraftDto {
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeNeutralCount?: number | null
+
+  @ApiOptionalEnum(SalaryDataBasisEnum, {
+    nullable: true,
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Salary-only. Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Setting `AVERAGE` clears `salaryDataPeriod`. Required to submit a salary report.',
+  })
+  salaryDataBasis?: SalaryDataBasisEnum | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required alongside `salaryDataBasis: MONTH` by submit time.',
+  })
+  salaryDataPeriod?: string | null
 
   @ApiOptionalHTML({
     nullable: true,

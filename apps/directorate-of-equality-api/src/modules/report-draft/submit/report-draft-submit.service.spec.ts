@@ -11,7 +11,11 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
-import { ReportStatusEnum, ReportTypeEnum } from '../../report/models/report.model'
+import {
+  ReportStatusEnum,
+  ReportTypeEnum,
+  SalaryDataBasisEnum,
+} from '../../report/models/report.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
@@ -65,9 +69,27 @@ describe('ReportDraftSubmitService', () => {
   let outlierFindAll: jest.Mock
   let groupFindAll: jest.Mock
 
-  const makeReport = (type: ReportTypeEnum) => {
+  // A salary draft carries a declared salary-data basis by default — the
+  // applicant sets it during drafting via the header PATCH, and submit requires
+  // it. Tests that exercise the missing/incomplete cases override it.
+  const makeReport = (
+    type: ReportTypeEnum,
+    salaryData: {
+      salaryDataBasis?: SalaryDataBasisEnum | null
+      salaryDataPeriod?: string | null
+    } = {
+      salaryDataBasis: SalaryDataBasisEnum.MONTH,
+      salaryDataPeriod: '2026-03-01',
+    },
+  ) => {
     reportUpdate = jest.fn()
-    return { id: REPORT_ID, type, update: reportUpdate }
+    return {
+      id: REPORT_ID,
+      type,
+      salaryDataBasis: salaryData.salaryDataBasis ?? null,
+      salaryDataPeriod: salaryData.salaryDataPeriod ?? null,
+      update: reportUpdate,
+    }
   }
 
   beforeEach(async () => {
@@ -151,6 +173,50 @@ describe('ReportDraftSubmitService', () => {
         }),
       ),
     ).rejects.toThrow(BadRequestException)
+  })
+
+  it('400s a salary submit when the salary-data basis was never declared', async () => {
+    findOwnedDraft.mockResolvedValueOnce(
+      makeReport(ReportTypeEnum.SALARY, {
+        salaryDataBasis: null,
+        salaryDataPeriod: null,
+      }),
+    )
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow(BadRequestException)
+    expect(createCompanyReportSnapshots).not.toHaveBeenCalled()
+  })
+
+  it('400s a salary submit when the basis is MONTH but no month was stated', async () => {
+    findOwnedDraft.mockResolvedValueOnce(
+      makeReport(ReportTypeEnum.SALARY, {
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: null,
+      }),
+    )
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow(BadRequestException)
+    expect(createCompanyReportSnapshots).not.toHaveBeenCalled()
+  })
+
+  it('submits a salary draft on a twelve-month average, which needs no month', async () => {
+    findOwnedDraft.mockResolvedValueOnce(
+      makeReport(ReportTypeEnum.SALARY, {
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+        salaryDataPeriod: null,
+      }),
+    )
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+    )
   })
 
   it('submits an equality draft as SUBMITTED without touching scores/result', async () => {

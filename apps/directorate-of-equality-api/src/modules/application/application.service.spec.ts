@@ -25,6 +25,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
@@ -312,6 +313,8 @@ describe('ApplicationService', () => {
         averageEmployeeMaleCount: input.averageEmployeeMaleCount,
         averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
         averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+        salaryDataBasis: input.salaryDataBasis,
+        salaryDataPeriod: input.salaryDataPeriod ?? null,
         parsed: input.parsed,
         companies: [makeCompanySnapshot()],
         outliersPostponed: undefined,
@@ -1635,6 +1638,8 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     averageEmployeeMaleCount: 30,
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
+    salaryDataBasis: SalaryDataBasisEnum.MONTH,
+    salaryDataPeriod: '2026-03-01',
     parsed: makeRequest().parsed,
     company: {
       name: 'Acme ehf.',

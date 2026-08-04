@@ -718,6 +718,8 @@ export class ApplicationService implements IApplicationService {
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+      salaryDataBasis: input.salaryDataBasis,
+      salaryDataPeriod: input.salaryDataPeriod ?? null,
       parsed: input.parsed,
       companies,
       outliersPostponed: input.outliersPostponed,

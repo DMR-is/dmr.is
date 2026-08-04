@@ -16,6 +16,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
@@ -229,6 +230,8 @@ describe('ReportDraftService', () => {
       averageEmployeeMaleCount: null,
       averageEmployeeFemaleCount: null,
       averageEmployeeNeutralCount: null,
+      salaryDataBasis: SalaryDataBasisEnum.MONTH,
+      salaryDataPeriod: '2026-03-01',
       equalityReportContent: null,
       createdAt: new Date('2026-06-30T00:00:00Z'),
       updatedAt: new Date('2026-06-30T00:00:00Z'),
@@ -247,6 +250,8 @@ describe('ReportDraftService', () => {
         type: ReportTypeEnum.SALARY,
         status: ReportStatusEnum.DRAFT,
         companyAdminEmail: 'admin@example.is',
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: '2026-03-01',
         counts: { employees: 3, criteria: 5, outlierGroups: 1 },
       })
     })
@@ -298,6 +303,8 @@ describe('ReportDraftService', () => {
       averageEmployeeMaleCount: null,
       averageEmployeeFemaleCount: null,
       averageEmployeeNeutralCount: null,
+      salaryDataBasis: null,
+      salaryDataPeriod: null,
       equalityReportContent: null,
       createdAt: new Date('2026-06-30T00:00:00Z'),
       updatedAt: new Date('2026-06-30T00:00:00Z'),
@@ -315,6 +322,45 @@ describe('ReportDraftService', () => {
 
       expect(reportUpdate).toHaveBeenCalledWith(
         { companyAdminEmail: 'new@example.is', contactName: null },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('normalises a declared salary-data month to the 1st', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: '2026-03-17',
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        {
+          salaryDataBasis: SalaryDataBasisEnum.MONTH,
+          salaryDataPeriod: '2026-03-01',
+        },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('clears a previously stated month when switching to the twelve-month average', async () => {
+      reportFindOne.mockResolvedValue({
+        ...draftRow,
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: '2026-03-01',
+      })
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        {
+          salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+          salaryDataPeriod: null,
+        },
         { where: { id: REPORT_ID } },
       )
     })

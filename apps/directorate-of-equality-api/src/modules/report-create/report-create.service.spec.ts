@@ -18,6 +18,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
@@ -260,6 +261,9 @@ describe('ReportCreateService', () => {
         equalityReportId: EQUALITY_REPORT_ID,
         companyAdminEmail: 'admin@example.is',
         companyNationalId: '5500000000',
+        // Declared basis persisted, month normalised to the 1st.
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: '2026-03-01',
       }),
     )
 
@@ -320,6 +324,41 @@ describe('ReportCreateService', () => {
         systemDecision: AutoReviewDecisionEnum.AUTO_APPROVE,
         reason: 'Engin frávik greind.',
         companyId: PARENT_COMPANY_ID,
+      }),
+    )
+  })
+
+  it('rejects a salary submission that does not declare the salary-data basis', async () => {
+    const input = makeInput()
+    // @ts-expect-error — the DTO requires it; this is the wire-level omission.
+    delete input.salaryDataBasis
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
+    expect(reportCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects a MONTH basis that does not state which month', async () => {
+    const input = makeInput()
+    input.salaryDataPeriod = null
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
+    expect(reportCreate).not.toHaveBeenCalled()
+  })
+
+  it('stores no month for a twelve-month average, even if one is sent', async () => {
+    const input = makeInput()
+    input.salaryDataBasis = SalaryDataBasisEnum.AVERAGE
+
+    await service.createSalary(input)
+
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+        salaryDataPeriod: null,
       }),
     )
   })
@@ -1063,6 +1102,8 @@ function makeInput(): CreateReportDto {
     averageEmployeeMaleCount: 30,
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
+    salaryDataBasis: SalaryDataBasisEnum.MONTH,
+    salaryDataPeriod: '2026-03-15',
     companies: [makeCompanySnapshot(PARENT_COMPANY_ID, null)],
     parsed: {
       criteria: [

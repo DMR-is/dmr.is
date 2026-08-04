@@ -9,6 +9,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyService } from '../../company/company.service.interface'
 import { CompanyDto } from '../../company/dto/company.dto'
+import { resolveSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import { ReportStatusEnum, ReportTypeEnum } from '../../report/models/report.model'
 import { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import { CreateReportResponseDto } from '../../report-create/dto/create-report-response.dto'
@@ -61,6 +62,14 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       throw new BadRequestException(
         'equalityReportId is required to submit a salary report',
       )
+    }
+
+    // The applicant must have declared what period the salary figures describe:
+    // a specific payroll month (and which one) or a twelve-month average. Both
+    // arrive during drafting via the header PATCH, which already normalised the
+    // pair — this only gates completeness, before anything is written.
+    if (isSalary) {
+      resolveSalaryDataBasis(report)
     }
 
     // Snapshot company details (frozen at submit) — validate parent matches the
