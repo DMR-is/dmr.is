@@ -10,6 +10,7 @@ import { reportText } from '../../../../lib/text'
 type Props = {
   body: string
   isExternal: boolean
+  canSendExternal?: boolean
   isPending: boolean
   onBodyChange: (value: string) => void
   onExternalChange: (value: boolean) => void
@@ -19,6 +20,7 @@ type Props = {
 export function CommentInputForm({
   body,
   isExternal,
+  canSendExternal = false,
   isPending,
   onBodyChange,
   onExternalChange,
@@ -38,6 +40,10 @@ export function CommentInputForm({
       <Checkbox
         label={reportText.comments.sendToApplicant}
         checked={isExternal}
+        disabled={!canSendExternal}
+        tooltip={
+          canSendExternal ? undefined : reportText.comments.externalDisabledHint
+        }
         onChange={(e) => onExternalChange(e.target.checked)}
       />
       <Box alignSelf="flexEnd">

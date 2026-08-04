@@ -151,6 +151,8 @@ export const reportText = {
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
+    externalDisabledHint:
+      'Opnaðu samskipti til að senda innsendanda skilaboð.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
@@ -164,6 +166,25 @@ export const reportText = {
     assignButton: 'Færa í vinnslu',
     approveButton: 'Samþykkja',
     denyButton: 'Hafna',
+  },
+  communicationControl: {
+    label: 'Staða samskipta',
+    successToast: 'Uppfærsla á samskiptum tókst.',
+    errorToast:
+      'Villa við að uppfæra samskipti. Vinsamlegast reyndu aftur síðar.',
+    openButton: 'Opna',
+    closeButton: 'Loka',
+    sendToEditButton: 'Breytingar',
+  },
+  sendToEditModal: {
+    heading: 'Senda skýrslu í breytingar',
+    description:
+      'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
+    warningTitle: 'Athugið',
+    warningMessage:
+      'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
+    reasonLabel: 'Ástæða',
+    submitButton: 'Senda í breytingar',
   },
   employeeSelect: {
     label: 'Starfsmaður',
@@ -260,6 +281,9 @@ export const reportText = {
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
+    edited: 'gerði breytingar á skýrslu',
+    communicationOpened: 'opnaði á samskipti við innsendanda',
+    communicationClosed: 'lokaði á samskipti við innsendanda',
     companyCreated: 'Fyrirtæki skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',

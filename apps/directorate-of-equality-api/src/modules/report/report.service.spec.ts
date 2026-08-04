@@ -10,7 +10,11 @@ import {
   type GetReportsQueryDto,
   SortDirectionEnum,
 } from './dto/get-reports.query.dto'
-import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
+import {
+  CommunicationStatusEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './models/report.enums'
 import type { ReportModel } from './models/report.model'
 import { ReportService } from './report.service'
 
@@ -33,6 +37,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
     identifier: 'ABC-001',
     type: ReportTypeEnum.SALARY,
     status: ReportStatusEnum.SUBMITTED,
+    communicationStatus: CommunicationStatusEnum.NOT_STARTED,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     correctionDeadline: null,
     validUntil: null,
@@ -52,10 +57,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
   // Instance methods the service calls — projections the real model
   // provides via BaseModel. Tests only need something that returns a
   // plain object shape-compatible with the DTO.
-  row.fromModelToListItem = (
-    waitingForAction = false,
-    includesImprovementPlan = false,
-  ) => {
+  row.fromModelToListItem = (includesImprovementPlan = false) => {
     const companyReport = row.companyReport as
       | {
           name?: string
@@ -69,6 +71,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       identifier: row.identifier,
       type: row.type,
       status: row.status,
+      communicationStatus: row.communicationStatus,
       companyName: companyReport?.name ?? null,
       companyNationalId: companyReport?.nationalId ?? null,
       companyIsatCategory: companyReport?.isatCategory ?? null,
@@ -78,7 +81,6 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       companyAdminEmail: row.companyAdminEmail,
       companyAdminGender: row.companyAdminGender,
       reviewer: row.reviewer,
-      waitingForAction,
       includesImprovementPlan,
       createdAt: row.createdAt,
       correctionDeadline: row.correctionDeadline,
@@ -141,9 +143,6 @@ const makeService = () => {
   const companyReportModel = {
     findAll: companyReportFindAll,
   } as unknown as typeof import('../company/models/company-report.model').CompanyReportModel
-  const reportCommentModel = {
-    findAll: jest.fn().mockResolvedValue([]),
-  } as unknown as typeof import('../report-comment/models/report-comment.model').ReportCommentModel
 
   const outlierGroupFindAll = jest.fn().mockResolvedValue([])
   const reportOutlierGroupModel = {
@@ -157,7 +156,6 @@ const makeService = () => {
     reportRoleResultModel,
     reportEmployeeOutlierModel,
     companyReportModel,
-    reportCommentModel,
     reportOutlierGroupModel,
   )
   return {

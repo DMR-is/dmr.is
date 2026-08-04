@@ -67,7 +67,6 @@ import {
 import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
-import { ReportRoleEnum } from './types/report-resource-context'
 import {
   buildFreeTextWhere,
   buildImprovementPlanWhere,
@@ -96,8 +95,6 @@ export class ReportService implements IReportService {
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
-    @InjectModel(ReportCommentModel)
-    private readonly reportCommentModel: typeof ReportCommentModel,
     @InjectModel(ReportOutlierGroupModel)
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
   ) {}
@@ -171,15 +168,10 @@ export class ReportService implements IReportService {
     ])
 
     const pageIds = rows.map((r) => r.id)
-    const [waitingMap, improvementPlanMap] = await Promise.all([
-      this.computeWaitingForAction(pageIds),
-      this.computeIncludesImprovementPlan(pageIds),
-    ])
+    const improvementPlanMap =
+      await this.computeIncludesImprovementPlan(pageIds)
     const reports = rows.map((r) =>
-      r.fromModelToListItem(
-        waitingMap.get(r.id) ?? false,
-        improvementPlanMap.get(r.id) ?? false,
-      ),
+      r.fromModelToListItem(improvementPlanMap.get(r.id) ?? false),
     )
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
@@ -221,15 +213,10 @@ export class ReportService implements IReportService {
       })
 
     const pageIds = rows.map((r) => r.id)
-    const [waitingMap, improvementPlanMap] = await Promise.all([
-      this.computeWaitingForAction(pageIds),
-      this.computeIncludesImprovementPlan(pageIds),
-    ])
+    const improvementPlanMap =
+      await this.computeIncludesImprovementPlan(pageIds)
     const reports = rows.map((r) =>
-      r.fromModelToListItem(
-        waitingMap.get(r.id) ?? false,
-        improvementPlanMap.get(r.id) ?? false,
-      ),
+      r.fromModelToListItem(improvementPlanMap.get(r.id) ?? false),
     )
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
@@ -297,62 +284,6 @@ export class ReportService implements IReportService {
       companyQuarantined: report.companyReport.company?.quarantined ?? false,
       includesImprovementPlan,
     }
-  }
-
-  /**
-   * Per-page boolean: true when the most recent timeline item (event OR
-   * comment, whichever is newer) is a COMPANY-authored comment — i.e. the
-   * applicant has said something and no reviewer action/comment has come
-   * after it. Computed via two MAX(createdAt) GROUP BY queries scoped to the
-   * page's report IDs, then compared in JS — bounded by pageSize, no N+1.
-   */
-  private async computeWaitingForAction(
-    reportIds: string[],
-  ): Promise<Map<string, boolean>> {
-    const result = new Map<string, boolean>()
-    if (reportIds.length === 0) return result
-
-    const [latestEvents, latestCompanyComments] = await Promise.all([
-      this.reportEventModel.findAll({
-        where: { reportId: { [Op.in]: reportIds } },
-        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
-        group: ['reportId'],
-        raw: true,
-      }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
-      this.reportCommentModel.findAll({
-        where: {
-          reportId: { [Op.in]: reportIds },
-          authorKind: ReportRoleEnum.COMPANY,
-        },
-        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
-        group: ['reportId'],
-        raw: true,
-      }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
-    ])
-
-    const eventMap = new Map(
-      latestEvents.map((e) => [e.reportId, new Date(e.latestAt).getTime()]),
-    )
-    const commentMap = new Map(
-      latestCompanyComments.map((c) => [
-        c.reportId,
-        new Date(c.latestAt).getTime(),
-      ]),
-    )
-
-    for (const reportId of reportIds) {
-      const eventAt = eventMap.get(reportId)
-      const commentAt = commentMap.get(reportId)
-      if (commentAt === undefined) {
-        result.set(reportId, false)
-      } else if (eventAt === undefined) {
-        result.set(reportId, true)
-      } else {
-        result.set(reportId, commentAt > eventAt)
-      }
-    }
-
-    return result
   }
 
   /**

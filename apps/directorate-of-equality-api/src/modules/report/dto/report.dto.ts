@@ -14,6 +14,7 @@ import {
 
 import { UserDto } from '../../user/dto/user.dto'
 import {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -29,6 +30,9 @@ export class ReportDto {
 
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   status!: ReportStatusEnum
+
+  @ApiEnum(CommunicationStatusEnum, { enumName: 'CommunicationStatusEnum' })
+  communicationStatus!: CommunicationStatusEnum
 
   @ApiOptionalString({ nullable: true })
   companyAdminName!: string | null
