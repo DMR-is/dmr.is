@@ -202,12 +202,32 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             }}
           />
         </FormGroup>
-        <FormGroup title="Efni auglýsingar">
+        <FormGroup
+          title={
+            <>
+              Hvernig var skiptum lokið{' '}
+              <Text fontWeight="regular" color="red600" as="span">
+                *
+              </Text>
+            </>
+          }
+        >
           <FormElement
             width="full"
             type="editor"
             withZIndex={false}
-            onChange={(val) => handleSetState('content', val || undefined)}
+            error={errors?.properties?.content?.errors[0]}
+            onChange={(val) => {
+              handleSetState('content', val || undefined)
+              setErrors((prev) =>
+                prev?.properties
+                  ? {
+                      ...prev,
+                      properties: { ...prev.properties, content: undefined },
+                    }
+                  : prev,
+              )
+            }}
           />
         </FormGroup>
         <FormGroup title="Lýstar kröfur búsins">
