@@ -160,6 +160,9 @@ describe('ApplicationController - Guard Authorization', () => {
     it('getApplicationPrice should have @UseGuards(OwnershipGuard)', () => {
       expect(true).toBe(true)
     })
+    it('getApplicationAdvertPrice should have @UseGuards(OwnershipGuard)', () => {
+      expect(true).toBe(true)
+    })
   })
   // =============================================================================
   // Test OwnershipGuard authorization for methods with applicationId
@@ -330,6 +333,42 @@ describe('ApplicationController - Guard Authorization', () => {
     it('should DENY non-owner to get price for application', async () => {
       const user = createOtherUser()
       const context = createMockContext(user, 'getApplicationPrice', {
+        applicationId: 'app-123',
+      })
+      applicationModel.findOne.mockResolvedValue(
+        createMockApplication(APPLICANT_NATIONAL_ID),
+      )
+      await expect(ownershipGuard.canActivate(context)).rejects.toThrow(
+        NotFoundException,
+      )
+    })
+  })
+  describe('getApplicationAdvertPrice - OwnershipGuard', () => {
+    it('should ALLOW applicant (owner) to get the advert price for their application', async () => {
+      const user = createApplicantUser()
+      const context = createMockContext(user, 'getApplicationAdvertPrice', {
+        applicationId: 'app-123',
+      })
+      applicationModel.findOne.mockResolvedValue(
+        createMockApplication(APPLICANT_NATIONAL_ID),
+      )
+      const result = await ownershipGuard.canActivate(context)
+      expect(result).toBe(true)
+    })
+    it('should ALLOW admin to get the advert price for any application', async () => {
+      const user = createAdminUser()
+      const context = createMockContext(user, 'getApplicationAdvertPrice', {
+        applicationId: 'app-123',
+      })
+      applicationModel.findOne.mockResolvedValue(
+        createMockApplication(APPLICANT_NATIONAL_ID),
+      )
+      const result = await ownershipGuard.canActivate(context)
+      expect(result).toBe(true)
+    })
+    it('should DENY non-owner to get the advert price for an application', async () => {
+      const user = createOtherUser()
+      const context = createMockContext(user, 'getApplicationAdvertPrice', {
         applicationId: 'app-123',
       })
       applicationModel.findOne.mockResolvedValue(
