@@ -22,7 +22,11 @@ export const createDivisionEndingInput = z.object({
   scheduledAt: z.coerce.date({
     error: 'Dagsetning birtingar er nauðsynleg',
   }),
-  content: z.string().optional(),
+  content: z
+    .string('Nauðsynlegt er að fylla út hvernig skiptum var lokið')
+    .refine((content) => content.length > 0, {
+      message: 'Nauðsynlegt er að fylla út hvernig skiptum var lokið',
+    }),
   additionalText: z.string().optional(),
   signature: signatureSchemaRefined,
 })
