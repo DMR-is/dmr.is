@@ -790,6 +790,70 @@ export class AdvertService implements IAdvertService {
     }
   }
 
+  /**
+   * Works out which category an advert should end up with after an update.
+   *
+   * A type is assignable to several categories, so a type change cannot derive
+   * "the" category of that type - doing so silently discarded the category the
+   * editor had picked. Instead: honour an explicitly supplied category, keep the
+   * current one while it is still assignable to the new type, and only fall back
+   * to deriving one when the type change leaves the current category invalid.
+   *
+   * Returns undefined when the category should be left untouched.
+   */
+  private async resolveUpdatedCategoryId(
+    advert: AdvertModel,
+    body: UpdateAdvertDto,
+  ): Promise<string | undefined> {
+    if (!body.typeId && !body.categoryId) {
+      return undefined
+    }
+
+    const typeId = body.typeId ?? advert.typeId
+    const sameId = (a?: string, b?: string) =>
+      !!a && !!b && a.toLowerCase() === b.toLowerCase()
+
+    const { type } = await this.typeCategoriesService.findByTypeId(typeId)
+
+    if (body.categoryId) {
+      // Validated against every category of the type, unassignable ones
+      // included - the editorial UI deliberately offers those as well.
+      if (
+        !type.categories.some((category) =>
+          sameId(category.id, body.categoryId),
+        )
+      ) {
+        throw new BadRequestException(
+          `Flokkurinn er ekki gildur fyrir tegundina "${type.title}"`,
+        )
+      }
+
+      return body.categoryId
+    }
+
+    // Type-only change - keep the current category while the new type allows it.
+    if (
+      type.categories.some((category) => sameId(category.id, advert.categoryId))
+    ) {
+      return undefined
+    }
+
+    const { type: assignableOnly } =
+      await this.typeCategoriesService.findByTypeId(typeId, {
+        excludeUnassignable: true,
+      })
+
+    if (assignableOnly.categories.length === 0) {
+      throw new BadRequestException(
+        `Tegundin "${type.title}" hefur engan gildan flokk`,
+      )
+    }
+
+    // Deterministic now that findByTypeId orders by title and drops
+    // unassignable categories - still a fallback, not a canonical mapping.
+    return assignableOnly.categories[0].id
+  }
+
   async updateAdvert(
     id: string,
     body: UpdateAdvertDto,
@@ -809,14 +873,11 @@ export class AdvertService implements IAdvertService {
       throw new BadRequestException('Cannot modify published adverts')
     }
 
-    const category = body.typeId
-      ? (await this.typeCategoriesService.findByTypeId(body.typeId)).type
-          .categories[0]
-      : undefined
+    const categoryId = await this.resolveUpdatedCategoryId(advert, body)
 
     const updated = await advert.update({
       typeId: body.typeId,
-      categoryId: category ? category.id : body.categoryId,
+      categoryId,
       title: body.title,
       content: body.content,
       additionalText: body.additionalText,

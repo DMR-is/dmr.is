@@ -8,11 +8,12 @@ export const SelectController = (
   props: UseControllerProps & {
     label?: string
     required?: boolean
+    placeholder?: string
     options: { value: string; label: string }[]
     onChange?: (value?: string) => void
   },
 ) => {
-  const { label, required, options, ...rest } = props
+  const { label, required, placeholder, options, ...rest } = props
   const { field, fieldState } = useController(rest)
 
   const error = fieldState.error
@@ -38,6 +39,7 @@ export const SelectController = (
         id={field.name}
         {...fieldWithoutRef}
         label={label}
+        placeholder={placeholder}
         backgroundColor="blue"
         size="sm"
         options={options}

@@ -374,6 +374,13 @@ describe('updateAdvert', () => {
       expect(typeCategoriesService.findByTypeId).toHaveBeenCalledWith(
         'new-type-id',
       )
+      const advert = await advertModel.findByPkOrThrow('advert-123')
+      expect(advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          typeId: 'new-type-id',
+          categoryId: 'derived-category-id',
+        }),
+      )
     })
     it('should update caption when provided', async () => {
       // Arrange
@@ -386,6 +393,146 @@ describe('updateAdvert', () => {
         expect.objectContaining({
           caption: 'New Caption',
         }),
+      )
+    })
+  })
+  // A type is assignable to several categories, so a type change must not
+  // silently re-derive the category and discard the editor's choice.
+  describe('category resolution', () => {
+    const typeWithTwoCategories = {
+      id: 'new-type-id',
+      title: 'Fyrirkall',
+      slug: 'fyrirkall',
+      categories: [
+        { id: 'askoranir-id', title: 'Áskoranir', slug: 'askoranir' },
+        {
+          id: 'fyrirkoll-id',
+          title: 'Fyrirköll og ákærur',
+          slug: 'fyrirkoll-og-akaerur',
+        },
+      ],
+    }
+    let editableAdvert: MockAdvert
+    beforeEach(() => {
+      editableAdvert = createMockAdvert({
+        statusId: StatusIdEnum.SUBMITTED,
+        typeId: 'current-type-id',
+        categoryId: 'askoranir-id',
+      })
+      advertModel.withScope.mockReturnThis()
+      advertModel.findByPkOrThrow = jest.fn().mockResolvedValue(editableAdvert)
+    })
+    it('should keep the supplied categoryId when type and category are both given', async () => {
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: typeWithTwoCategories,
+      })
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({
+          typeId: 'new-type-id',
+          categoryId: 'fyrirkoll-id',
+        }),
+      )
+      expect(editableAdvert.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          typeId: 'new-type-id',
+          categoryId: 'fyrirkoll-id',
+        }),
+      )
+    })
+    it('should throw when the supplied categoryId is not assignable to the type', async () => {
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: typeWithTwoCategories,
+      })
+      await expect(
+        service.updateAdvert(
+          'advert-123',
+          createMockUpdateDto({
+            typeId: 'new-type-id',
+            categoryId: 'unrelated-category-id',
+          }),
+        ),
+      ).rejects.toThrow('Flokkurinn er ekki gildur fyrir tegundina "Fyrirkall"')
+      expect(editableAdvert.update).not.toHaveBeenCalled()
+    })
+    it('should validate a category-only change against the current type', async () => {
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: typeWithTwoCategories,
+      })
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ categoryId: 'fyrirkoll-id' }),
+      )
+      expect(typeCategoriesService.findByTypeId).toHaveBeenCalledWith(
+        'current-type-id',
+      )
+      expect(editableAdvert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
+      )
+    })
+    it('should leave the category untouched on a type-only change when it is still assignable', async () => {
+      typeCategoriesService.findByTypeId.mockResolvedValue({
+        type: typeWithTwoCategories,
+      })
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'new-type-id' }),
+      )
+      expect(editableAdvert.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          typeId: 'new-type-id',
+          categoryId: undefined,
+        }),
+      )
+      // No fallback derivation needed, so no second (filtered) lookup.
+      expect(typeCategoriesService.findByTypeId).toHaveBeenCalledTimes(1)
+    })
+    it('should derive an assignable category on a type-only change when the current one is invalid', async () => {
+      editableAdvert.categoryId = 'stale-category-id'
+      typeCategoriesService.findByTypeId
+        .mockResolvedValueOnce({ type: typeWithTwoCategories })
+        .mockResolvedValueOnce({
+          type: {
+            ...typeWithTwoCategories,
+            categories: [typeWithTwoCategories.categories[1]],
+          },
+        })
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ typeId: 'new-type-id' }),
+      )
+      expect(typeCategoriesService.findByTypeId).toHaveBeenNthCalledWith(
+        2,
+        'new-type-id',
+        { excludeUnassignable: true },
+      )
+      expect(editableAdvert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: 'fyrirkoll-id' }),
+      )
+    })
+    it('should throw when the new type has no assignable category', async () => {
+      editableAdvert.categoryId = 'stale-category-id'
+      typeCategoriesService.findByTypeId
+        .mockResolvedValueOnce({ type: typeWithTwoCategories })
+        .mockResolvedValueOnce({
+          type: { ...typeWithTwoCategories, categories: [] },
+        })
+      await expect(
+        service.updateAdvert(
+          'advert-123',
+          createMockUpdateDto({ typeId: 'new-type-id' }),
+        ),
+      ).rejects.toThrow('Tegundin "Fyrirkall" hefur engan gildan flokk')
+      expect(editableAdvert.update).not.toHaveBeenCalled()
+    })
+    it('should not look up categories when neither type nor category changes', async () => {
+      await service.updateAdvert(
+        'advert-123',
+        createMockUpdateDto({ title: 'Only the title' }),
+      )
+      expect(typeCategoriesService.findByTypeId).not.toHaveBeenCalled()
+      expect(editableAdvert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId: undefined }),
       )
     })
   })
