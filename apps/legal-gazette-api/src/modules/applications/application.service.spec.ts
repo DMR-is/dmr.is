@@ -46,10 +46,41 @@ const createMockApplication = (
   }),
   ...overrides,
 })
+// Answers that satisfy commonApplicationAnswersRefined, so submission gets past
+// schema validation and reaches the type/category checks.
+const createValidCommonAnswers = (
+  fields: Record<string, unknown> = {},
+): Record<string, unknown> => {
+  const inTwoDays = new Date()
+  inTwoDays.setDate(inTwoDays.getDate() + 2)
+
+  return {
+    prequisitesAccepted: true,
+    publishingDates: [inTwoDays.toISOString()],
+    signature: { name: 'Test User', location: 'Reykjavík', date: null },
+    communicationChannels: [{ email: 'test@example.com' }],
+    fields: {
+      type: {
+        id: 'e35498be-da79-41d1-a2a0-cbef3a51331c',
+        title: 'Fyrirkall',
+        slug: 'fyrirkall',
+      },
+      category: {
+        id: 'c3b48892-ac9d-48d4-903a-26f21083143e',
+        title: 'Áskoranir',
+        slug: 'askoranir',
+      },
+      caption: 'Test caption',
+      html: '<p>Test content</p>',
+      ...fields,
+    },
+  }
+}
 describe('ApplicationService - Status Validation', () => {
   let service: ApplicationService
   let applicationModel: any
   let advertService: any
+  let categoryModel: any
   beforeEach(async () => {
     const mockApplicationModel = {
       findByPkOrThrow: jest.fn(),
@@ -71,6 +102,7 @@ describe('ApplicationService - Status Validation', () => {
     }
     const mockCategoryModel = {
       findByPkOrThrow: jest.fn(),
+      findOne: jest.fn(),
     }
     const mockLogger = {
       info: jest.fn(),
@@ -97,6 +129,7 @@ describe('ApplicationService - Status Validation', () => {
     service = module.get<ApplicationService>(ApplicationService)
     applicationModel = module.get(getModelToken(ApplicationModel))
     advertService = module.get(IAdvertService)
+    categoryModel = module.get(getModelToken(CategoryModel))
   })
   describe('submitApplication - Status Check Validation', () => {
     // Note: These tests focus on status validation, not full schema validation
@@ -152,6 +185,43 @@ describe('ApplicationService - Status Validation', () => {
         /Cannot submit application with status 'FINISHED'/,
       )
       expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+  })
+  // The type/category pair is denormalized into the answers JSON by the client,
+  // so it has to be re-checked before it becomes a published advert.
+  describe('submitApplication - Type and category validation', () => {
+    it('should throw BadRequestException when the category is not assignable to the type', async () => {
+      const application = createMockApplication({
+        status: ApplicationStatusEnum.DRAFT,
+        applicationType: ApplicationTypeEnum.COMMON,
+        answers: createValidCommonAnswers(),
+      })
+      applicationModel.findByPkOrThrow.mockResolvedValue(application)
+      categoryModel.findOne.mockResolvedValue(null)
+      await expect(
+        service.submitApplication('app-123', createTestUser()),
+      ).rejects.toThrow(
+        'Flokkurinn "Áskoranir" er ekki gildur fyrir tegundina "Fyrirkall"',
+      )
+      expect(advertService.createAdvert).not.toHaveBeenCalled()
+    })
+    it('should create the advert when the type and category match', async () => {
+      const application = createMockApplication({
+        status: ApplicationStatusEnum.DRAFT,
+        applicationType: ApplicationTypeEnum.COMMON,
+        answers: createValidCommonAnswers(),
+      })
+      applicationModel.findByPkOrThrow.mockResolvedValue(application)
+      categoryModel.findOne.mockResolvedValue({
+        id: 'c3b48892-ac9d-48d4-903a-26f21083143e',
+      })
+      await service.submitApplication('app-123', createTestUser())
+      expect(advertService.createAdvert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          typeId: 'e35498be-da79-41d1-a2a0-cbef3a51331c',
+          categoryId: 'c3b48892-ac9d-48d4-903a-26f21083143e',
+        }),
+      )
     })
   })
   describe('updateApplication - Status Check Validation', () => {
