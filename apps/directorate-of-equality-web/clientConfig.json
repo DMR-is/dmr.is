@@ -4376,6 +4376,11 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
@@ -4434,6 +4439,11 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
@@ -5250,6 +5260,11 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,
@@ -5774,6 +5789,11 @@
             ]
           },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,

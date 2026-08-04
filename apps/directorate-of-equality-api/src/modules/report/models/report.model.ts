@@ -43,6 +43,7 @@ type ReportAttributes = {
   communicationStatus: CommunicationStatusEnum
 
   companyAdminName: string | null
+  companyAdminTitle: string | null
   companyAdminEmail: string | null
   companyAdminGender: GenderEnum | null
 
@@ -75,6 +76,7 @@ type ReportCreateAttributes = {
   communicationStatus?: CommunicationStatusEnum
 
   companyAdminName?: string | null
+  companyAdminTitle?: string | null
   companyAdminEmail?: string | null
   companyAdminGender?: GenderEnum | null
 
@@ -210,6 +212,13 @@ export class ReportModel extends MutableModel<
 
   @Column({ type: DataType.TEXT, allowNull: true, field: 'company_admin_name' })
   companyAdminName!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'company_admin_title',
+  })
+  companyAdminTitle!: string | null
 
   @Column({
     type: DataType.TEXT,
@@ -359,6 +368,7 @@ export class ReportModel extends MutableModel<
       status: model.status,
       communicationStatus: model.communicationStatus,
       companyAdminName: model.companyAdminName,
+      companyAdminTitle: model.companyAdminTitle,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       contactName: model.contactName,
@@ -432,6 +442,7 @@ export class ReportModel extends MutableModel<
       companyEmployeeCountCategory:
         model.companyReport?.employeeCountCategory ?? null,
       companyAdminName: model.companyAdminName,
+      companyAdminTitle: model.companyAdminTitle,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,

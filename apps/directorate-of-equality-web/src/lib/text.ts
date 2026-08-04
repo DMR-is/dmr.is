@@ -572,6 +572,7 @@ export const sharedText = {
   },
   form: {
     nameLabel: 'Nafn',
+    jobTitleLabel: 'Starfsheiti',
     kennitalaLabel: 'Kennitala',
     emailLabel: 'Netfang',
     phoneLabel: 'Símanúmer',

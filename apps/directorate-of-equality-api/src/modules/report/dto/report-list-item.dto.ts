@@ -57,6 +57,12 @@ export class ReportListItemDto {
   @ApiOptionalString({ nullable: true })
   companyAdminName!: string | null
 
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company executive.',
+  })
+  companyAdminTitle!: string | null
+
   @ApiOptionalString({ nullable: true })
   companyAdminEmail!: string | null
 

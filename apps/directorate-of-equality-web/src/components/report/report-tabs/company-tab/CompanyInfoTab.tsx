@@ -54,6 +54,7 @@ interface CompanyInfoTabProps {
   }
   admin?: {
     name?: string
+    jobTitle?: string
     email?: string
     gender?: string
   }
@@ -113,6 +114,7 @@ export const CompanyInfoTab = ({
           <InfoItems
             items={[
               { label: f.nameLabel, children: admin?.name },
+              { label: f.jobTitleLabel, children: admin?.jobTitle },
               { label: f.emailLabel, children: admin?.email },
               { label: f.genderLabel, children: mapGender(admin?.gender) },
             ]}

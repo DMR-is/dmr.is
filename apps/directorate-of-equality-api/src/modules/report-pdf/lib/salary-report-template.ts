@@ -63,6 +63,7 @@ function topManagerSection(report: ReportDetailDto): string {
     'Æðsti stjórnandi',
     `<div class="field-grid">
       ${field('Nafn', orDash(report.companyAdminName))}
+      ${field('Starfsheiti', orDash(report.companyAdminTitle))}
       ${field('Kyn æðsta stjórnanda', genderLabel(report.companyAdminGender))}
       ${field('Netfang', orDash(report.companyAdminEmail))}
     </div>`,
