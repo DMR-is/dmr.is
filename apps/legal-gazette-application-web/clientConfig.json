@@ -3246,6 +3246,74 @@
         "tags": ["Legal gazette - application web API"]
       }
     },
+    "/api/v1/applications/{applicationId}/advert-price": {
+      "get": {
+        "operationId": "getApplicationAdvertPrice",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApplicationAdvertPriceDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Legal gazette - application web API"]
+      }
+    },
     "/api/v1/applications/{applicationId}/{advertId}": {
       "delete": {
         "operationId": "deleteAdvertFromApplication",
@@ -4083,6 +4151,10 @@
             ]
           },
           "message": { "type": "string" },
+          "translatedMessage": {
+            "type": "string",
+            "description": "User-facing, localized message safe to display directly in the client. Absent when the error has no curated translation."
+          },
           "details": { "type": "array", "items": { "type": "string" } }
         },
         "required": ["statusCode", "timestamp"]
@@ -4198,7 +4270,7 @@
           "partnerNationalId": {
             "type": "string",
             "nullable": true,
-            "maxLength": 255
+            "maxLength": 10
           },
           "partnerName": {
             "type": "string",
@@ -4758,7 +4830,7 @@
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           },
-          "partnerNationalId": { "type": "string", "maxLength": 255 },
+          "partnerNationalId": { "type": "string", "maxLength": 10 },
           "partnerName": { "type": "string", "maxLength": 255 },
           "partnerDateOfDeath": {
             "type": "string",
@@ -5337,6 +5409,20 @@
         "type": "object",
         "properties": { "price": { "type": "number" } },
         "required": ["price"]
+      },
+      "GetApplicationAdvertPriceDto": {
+        "type": "object",
+        "properties": {
+          "totalPrice": {
+            "type": "number",
+            "description": "Total price of the adverts belonging to the application. Omitted when the price cannot be calculated."
+          },
+          "isEstimate": {
+            "type": "boolean",
+            "description": "True when at least one of the adverts has not been charged yet, meaning the total is an estimate."
+          }
+        },
+        "required": ["isEstimate"]
       },
       "PublishedPublicationDto": {
         "type": "object",

@@ -30,6 +30,7 @@ import {
 } from '../../models/application.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
+  GetApplicationAdvertPriceDto,
   GetApplicationEstimatedPriceDto,
   GetApplicationsDto,
   UpdateApplicationDto,
@@ -140,6 +141,18 @@ export class ApplicationController {
         applicationId,
       )
     return { price }
+  }
+
+  @Get(':applicationId/advert-price')
+  @LGResponse({
+    operationId: 'getApplicationAdvertPrice',
+    type: GetApplicationAdvertPriceDto,
+  })
+  @UseGuards(OwnershipGuard)
+  async getApplicationAdvertPrice(
+    @Param('applicationId') applicationId: string,
+  ): Promise<GetApplicationAdvertPriceDto> {
+    return this.priceCalculatorService.getApplicationAdvertPrice(applicationId)
   }
 
   @Delete(':applicationId/:advertId')
