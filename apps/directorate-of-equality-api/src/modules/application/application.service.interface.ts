@@ -43,6 +43,10 @@ export interface IApplicationService {
     company: CompanyDto,
     query: PagingQuery,
   ): Promise<GetReportOutliersResponseDto>
+  getReportComments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<ApplicationReportCommentDto[]>
   createReportComment(
     providerId: string,
     input: SubmitApplicationReportCommentDto,

@@ -817,6 +817,82 @@ describe('ApplicationService', () => {
     })
   })
 
+  describe('getReportComments', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
+
+    it('throws NotFoundException when no report matches the providerId', async () => {
+      reportFindOne.mockResolvedValueOnce(null)
+
+      await expect(
+        service.getReportComments(PROVIDER_ID, COMPANY),
+      ).rejects.toThrow(NotFoundException)
+      expect(getCommentsByReportId).not.toHaveBeenCalled()
+    })
+
+    it("throws NotFoundException when the resolved company isn't the parent", async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({
+          reportId: REPORT_ID,
+          companyId: 'someone-else',
+          parentCompanyId: null,
+        }),
+      ])
+
+      await expect(
+        service.getReportComments(PROVIDER_ID, COMPANY),
+      ).rejects.toThrow(NotFoundException)
+      expect(getCommentsByReportId).not.toHaveBeenCalled()
+    })
+
+    it('reads through the COMPANY actor context and returns slim comment DTOs', async () => {
+      const comment = makeCommentDto({
+        id: 'comment-1',
+        reportId: REPORT_ID,
+        body: 'Reviewer asked for a correction',
+        authorKind: ReportRoleEnum.REVIEWER,
+        authorUserId: 'reviewer-1',
+      })
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({
+          id: REPORT_ID,
+          providerId: PROVIDER_ID,
+          status: ReportStatusEnum.IN_REVIEW,
+        }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+      getCommentsByReportId.mockResolvedValueOnce([comment])
+
+      const result = await service.getReportComments(PROVIDER_ID, COMPANY)
+
+      expect(result).toEqual([
+        {
+          id: 'comment-1',
+          authorKind: ReportRoleEnum.REVIEWER,
+          body: 'Reviewer asked for a correction',
+          createdAt: comment.createdAt,
+        },
+      ])
+      expect(result[0]).not.toHaveProperty('visibility')
+      expect(result[0]).not.toHaveProperty('authorUserId')
+      // The COMPANY actor kind is what makes ReportCommentService filter the
+      // thread down to EXTERNAL comments.
+      expect(getCommentsByReportId).toHaveBeenCalledWith({
+        reportId: REPORT_ID,
+        reportStatus: ReportStatusEnum.IN_REVIEW,
+        actor: {
+          kind: ReportRoleEnum.COMPANY,
+          nationalId: COMPANY.nationalId,
+        },
+      })
+    })
+  })
+
   describe('createReportComment', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'

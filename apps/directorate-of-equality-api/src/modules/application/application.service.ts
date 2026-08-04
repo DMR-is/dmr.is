@@ -295,6 +295,28 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * Comment thread on its own, for portals that poll the conversation without
+   * re-fetching the whole report detail payload. Only EXTERNAL comments are
+   * returned — the COMPANY actor context makes `ReportCommentService` filter
+   * out reviewer-internal notes.
+   */
+  async getReportComments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<ApplicationReportCommentDto[]> {
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+    )
+
+    const comments = await this.reportCommentService.getByReportId(
+      this.createCompanyReportContext(report, company),
+    )
+
+    return comments.map(ApplicationReportCommentDto.fromReportComment)
+  }
+
   async createReportComment(
     providerId: string,
     input: SubmitApplicationReportCommentDto,

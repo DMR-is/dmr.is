@@ -263,6 +263,27 @@ export class ApplicationController {
     return this.applicationService.getReportOutliers(providerId, company, query)
   }
 
+  @Get('reports/:providerId/comments')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'getApplicationReportComments',
+    include404: true,
+    description:
+      "The report's external comment thread on its own, ordered oldest-first. Only comments with `EXTERNAL` visibility are returned — reviewer-internal notes are never exposed to the applicant. Use this instead of re-fetching the report detail when only the conversation is needed; the same list is embedded as `externalComments` in `GET /application/reports/:providerId`.",
+    type: [ApplicationReportCommentDto],
+  })
+  async getReportComments(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<ApplicationReportCommentDto[]> {
+    return this.applicationService.getReportComments(providerId, company)
+  }
+
   @Post('reports/:providerId/comments')
   @HttpCode(HttpStatus.CREATED)
   @ApiParam({
