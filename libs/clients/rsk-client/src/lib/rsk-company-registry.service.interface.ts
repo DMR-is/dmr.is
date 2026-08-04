@@ -1,4 +1,4 @@
-import type { LegalEntity } from '../gen/fetch'
+import type { LegalEntityDto } from './dto/legal-entity.dto'
 
 export type RskLanguage = 'is' | 'en'
 
@@ -10,7 +10,7 @@ export interface IRskCompanyRegistryService {
   getLegalEntityByNationalId(
     nationalId: string,
     language?: RskLanguage,
-  ): Promise<LegalEntity>
+  ): Promise<LegalEntityDto>
 
   /**
    * Retrieve the legal entity overview as a PDF document.

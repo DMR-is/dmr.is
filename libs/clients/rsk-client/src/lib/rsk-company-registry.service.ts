@@ -1,13 +1,16 @@
-import { BadGatewayException, Inject, Injectable } from '@nestjs/common'
+import {
+  BadGatewayException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getApiErrorMessage } from '@dmr.is/utils-server/httpUtils'
 
-import {
-  getNationalid,
-  getNationalidOverview,
-  type LegalEntity,
-} from '../gen/fetch'
+import { getNationalid, getNationalidOverview } from '../gen/fetch'
+import type { LegalEntityDto } from './dto/legal-entity.dto'
+import { mapLegalEntityResponse } from './dto/legal-entity.mapper'
 import { rskCompanyRegistryClient } from './rsk-company-registry.config'
 import {
   IRskCompanyRegistryService,
@@ -23,7 +26,7 @@ export class RskCompanyRegistryService implements IRskCompanyRegistryService {
   async getLegalEntityByNationalId(
     nationalId: string,
     language?: RskLanguage,
-  ): Promise<LegalEntity> {
+  ): Promise<LegalEntityDto> {
     this.logger.info('Fetching legal entity from RSK company registry', {
       context: LOGGING_CONTEXT,
     })
@@ -40,6 +43,14 @@ export class RskCompanyRegistryService implements IRskCompanyRegistryService {
         statusCode: response?.status,
         error,
       })
+      // A 404 means the legal entity simply does not exist — surface that
+      // distinctly so callers can tell "not found" apart from a registry
+      // outage (which stays a 502 Bad Gateway).
+      if (response?.status === 404) {
+        throw new NotFoundException(
+          `RSK company registry has no legal entity for national id "${nationalId}"`,
+        )
+      }
       throw new BadGatewayException(
         `RSK company registry legal entity lookup failed: ${getApiErrorMessage(error)}`,
       )
@@ -50,7 +61,7 @@ export class RskCompanyRegistryService implements IRskCompanyRegistryService {
       { context: LOGGING_CONTEXT },
     )
 
-    return data
+    return mapLegalEntityResponse(data)
   }
 
   async getLegalEntityOverview(

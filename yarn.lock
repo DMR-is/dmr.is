@@ -4006,7 +4006,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client":
+"@dmr.is/clients-rsk-client@npm:*, @dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client":
   version: 0.0.0-use.local
   resolution: "@dmr.is/clients-rsk-client@workspace:libs/clients/rsk-client"
   dependencies:
@@ -4068,6 +4068,7 @@ __metadata:
   dependencies:
     "@dmr.is/apm": "npm:*"
     "@dmr.is/clients-national-registry": "npm:*"
+    "@dmr.is/clients-rsk-client": "npm:*"
     "@dmr.is/constants": "npm:*"
     "@dmr.is/db": "npm:*"
     "@dmr.is/decorators": "npm:*"
