@@ -12,6 +12,7 @@
       "libs/mocks",
       "libs/nx-open-next",
       "libs/clients/national-registry",
+      "libs/clients/rsk-client",
       "libs/legal-gazette/dto",
       "libs/legal-gazette/html",
       "libs/legal-gazette/schemas",

@@ -10,6 +10,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { INationalRegistryService } from '@dmr.is/clients-national-registry'
+import { IRskCompanyRegistryService } from '@dmr.is/clients-rsk-client'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   generatePaging,
@@ -18,8 +19,10 @@ import {
 
 import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import { PostcodeModel } from '../location/models/postcode.model'
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
 import {
   CompanyTimelineItemDto,
   CompanyTimelineItemKindEnum,
@@ -36,7 +39,7 @@ import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
-import { CompanySizeEnum } from './models/company.enums'
+import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import {
@@ -46,6 +49,7 @@ import {
   buildCompanyOverdueWhere,
   buildCompanyStatusWhere,
 } from './utils/filters'
+import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { companyMessages } from './company.messages'
 import {
   CreateCompanyInput,
@@ -63,10 +67,14 @@ export class CompanyService implements ICompanyService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(INationalRegistryService)
     private readonly nationalRegistryService: INationalRegistryService,
+    @Inject(IRskCompanyRegistryService)
+    private readonly rskCompanyRegistryService: IRskCompanyRegistryService,
     @InjectModel(CompanyModel)
     private readonly companyModel: typeof CompanyModel,
     @InjectModel(IsatCategoryModel)
     private readonly isatCategoryModel: typeof IsatCategoryModel,
+    @InjectModel(PostcodeModel)
+    private readonly postcodeModel: typeof PostcodeModel,
     @Inject(ICompanyEventService)
     private readonly companyEventService: ICompanyEventService,
     @Inject(ICompanyCommentService)
@@ -234,15 +242,143 @@ export class CompanyService implements ICompanyService {
       )
     }
 
+    const enrichment = await this.resolveRskEnrichment(input.nationalId)
+
+    // Guard: an inactive (deregistered) company must not be created. Only fires
+    // when RSK was actually reached and reported inactive — a registry outage
+    // leaves `status` unset (best-effort) and does not block creation.
+    if (enrichment.status === CompanyStatusEnum.INACTIVE) {
+      throw new BadRequestException(
+        companyMessages.inactiveCannotCreate(input.nationalId),
+      )
+    }
+
     const company = await this.companyModel.create({
       name: input.name,
       nationalId: input.nationalId,
       employeeCountCategory: input.employeeCountCategory,
+      ...enrichment,
     })
 
     await this.companyEventService.emitCreated(company.id, company.status)
 
     return this.loadCompanyDto(company.id)
+  }
+
+  /**
+   * Best-effort enrichment from the RSK company registry, applied at creation.
+   * Everything RSK can give us is mapped (address, postcode, ÍSAT, status);
+   * `employeeCountCategory` is not derivable and stays as the admin-provided
+   * value. A registry failure must never block company creation, so any error
+   * degrades to no enrichment (the company is still created from the base
+   * input). `postcode`/`isatCategoryCode` resolve against our reference tables
+   * and fall back to null when the RSK value has no match.
+   */
+  private async resolveRskEnrichment(nationalId: string): Promise<{
+    status?: CompanyStatusEnum
+    address?: string | null
+    postcodeId?: string | null
+    isatCategoryCode?: string | null
+  }> {
+    let entity
+    try {
+      entity =
+        await this.rskCompanyRegistryService.getLegalEntityByNationalId(
+          nationalId,
+        )
+    } catch (error) {
+      this.logger.warn(
+        `RSK enrichment skipped for national id "${nationalId}"; creating from base input only`,
+        { context: LOGGING_CONTEXT, error },
+      )
+      return {}
+    }
+
+    if (!entity) {
+      return {}
+    }
+
+    const mapped = mapRskLegalEntity(entity)
+
+    const [postcode, isatCategory] = await Promise.all([
+      this.resolvePostcode(mapped.postcodeCode),
+      this.resolveIsatCategory(mapped.isatCode),
+    ])
+
+    return {
+      status: mapped.status,
+      address: mapped.address,
+      postcodeId: postcode?.id ?? null,
+      isatCategoryCode: isatCategory?.code ?? null,
+    }
+  }
+
+  /**
+   * Read-only preview of the RSK-derived company fields, backing the create
+   * screen so the admin sees exactly what will be stored before submitting.
+   * Unlike `create`, a registry failure surfaces to the caller (the admin is
+   * actively looking the company up). `postcode`/`isatCategory` are the
+   * human-readable forms of the values `create` persists — null when the RSK
+   * value has no match in our reference tables (and so would not be stored).
+   */
+  async getRskCompanyPreview(
+    nationalId: string,
+  ): Promise<CompanyRskPreviewDto> {
+    this.logger.debug(
+      `Previewing RSK company registry data for national id "${nationalId}"`,
+      { context: LOGGING_CONTEXT },
+    )
+
+    const entity =
+      await this.rskCompanyRegistryService.getLegalEntityByNationalId(
+        nationalId,
+      )
+
+    const mapped = mapRskLegalEntity(entity)
+
+    const [postcode, isatCategory] = await Promise.all([
+      this.resolvePostcode(mapped.postcodeCode),
+      this.resolveIsatCategory(mapped.isatCode),
+    ])
+
+    return {
+      name: entity.name,
+      nationalId: entity.nationalId,
+      status: mapped.status,
+      statusReason: mapped.statusReason,
+      address: mapped.address,
+      postcode: postcode
+        ? `${postcode.code} ${postcode.place}`
+        : mapped.postcodeCode,
+      isatCategory: isatCategory
+        ? `${isatCategory.codeDotted} ${isatCategory.description}`
+        : null,
+    }
+  }
+
+  /** Resolve an RSK 3-digit postcode to our `postcode` row, or null if unknown. */
+  private async resolvePostcode(
+    code: string | null,
+  ): Promise<PostcodeModel | null> {
+    if (!code) {
+      return null
+    }
+
+    return this.postcodeModel.findOne({ where: { code } })
+  }
+
+  /**
+   * Resolve an RSK ÍSAT code against the ÍSAT2008 reference table. Returns the
+   * row only when it exists (the company FK rejects unknown codes), else null.
+   */
+  private async resolveIsatCategory(
+    code: string | null,
+  ): Promise<IsatCategoryModel | null> {
+    if (!code) {
+      return null
+    }
+
+    return this.isatCategoryModel.findByPk(code)
   }
 
   async getByNationalId(nationalId: string): Promise<CompanyDto> {

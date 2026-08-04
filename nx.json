@@ -109,6 +109,7 @@
       "inputs": ["default", "^production"]
     },
     "test": {
+      "dependsOn": ["^codegen"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
     "external-test": {
@@ -137,6 +138,7 @@
     },
     "@nx/jest:jest": {
       "cache": true,
+      "dependsOn": ["^codegen"],
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "options": {
         "passWithNoTests": true
