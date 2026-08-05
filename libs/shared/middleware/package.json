@@ -13,7 +13,7 @@
     "@dmr.is/constants": "*",
     "@dmr.is/logging": "*",
     "cls-hooked": "^4.2.2",
-    "express": "4.21.2",
+    "express": "4.22.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
