@@ -153,15 +153,19 @@ export class ApplicationService implements IApplicationService {
     // separately (as a 404) by `createSalary` below, so it is not re-checked
     // here. Only the company-facing portal path is gated — admin/system
     // creation is not.
-    const renewal = evaluateSalaryRenewalEligibility(
-      company.nextSalaryReportDueAt ?? null,
-      new Date(),
-    )
-    if (!renewal.eligible) {
-      throw new ConflictException(
-        `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
-      )
-    }
+
+    // !!!! -> COMMENTED OUT FOR TESTING PURPOSES <- !!!!
+    // SHOULD BE BACK IN PLACE FOR PRODUCTION RELEASE
+
+    // const renewal = evaluateSalaryRenewalEligibility(
+    // company.nextSalaryReportDueAt ?? null,
+    // new Date(),
+    //)
+    // if (!renewal.eligible) {
+    //   throw new ConflictException(
+    //     `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
+    //   )
+    // }
 
     const createInput = await this.createSalaryReportInput(input, company)
     return this.reportCreateService.createSalary(createInput)
@@ -469,8 +473,7 @@ export class ApplicationService implements IApplicationService {
         report.communicationStatus === CommunicationStatusEnum.OPEN ||
         report.communicationStatus ===
           CommunicationStatusEnum.AWAITING_RESPONSE ||
-        report.communicationStatus ===
-          CommunicationStatusEnum.RESPONSE_RECEIVED
+        report.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
 
       await this.reportModel.update(
         { communicationStatus: CommunicationStatusEnum.CLOSED },
@@ -641,9 +644,7 @@ export class ApplicationService implements IApplicationService {
 
     // 5. If we were resolving postponement, transition POSTPONED → SUBMITTED.
     const wasPostponed = report.status === ReportStatusEnum.POSTPONED
-    const newStatus = wasPostponed
-      ? ReportStatusEnum.SUBMITTED
-      : report.status
+    const newStatus = wasPostponed ? ReportStatusEnum.SUBMITTED : report.status
 
     if (wasPostponed) {
       await this.reportModel.update(
@@ -926,7 +927,11 @@ export class ApplicationService implements IApplicationService {
           },
         ],
         order: [
-          [{ model: ReportEmployeeModel, as: 'reportEmployee' }, 'ordinal', 'ASC'],
+          [
+            { model: ReportEmployeeModel, as: 'reportEmployee' },
+            'ordinal',
+            'ASC',
+          ],
         ],
         limit,
         offset,
@@ -946,7 +951,7 @@ export class ApplicationService implements IApplicationService {
       ReportEmployeeOutlierModel.fromModel(
         row,
         row.reportEmployee
-          ? analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null
+          ? (analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null)
           : null,
       ),
     )
