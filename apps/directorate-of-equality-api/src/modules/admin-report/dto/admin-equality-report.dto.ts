@@ -1,6 +1,7 @@
 import {
   ApiEnum,
   ApiHTML,
+  ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
@@ -46,4 +47,13 @@ export class AdminEqualityReportDto {
       'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
   })
   equalityReportContent!: string
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeMaleCount?: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeFemaleCount?: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeNeutralCount?: number | null
 }

@@ -6,6 +6,7 @@ import {
   ApiEnum,
   ApiHTML,
   ApiOptionalDtoArray,
+  ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
@@ -58,6 +59,15 @@ export class SubmitEqualityReportDto {
     return value
   })
   equalityReportContent!: string
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeMaleCount?: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeFemaleCount?: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  averageEmployeeNeutralCount?: number | null
 
   @ApiDto(SubmitReportCompanyDto)
   company!: SubmitReportCompanyDto
