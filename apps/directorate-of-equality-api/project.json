@@ -7,6 +7,7 @@
   "targets": {
     "tsc": {
       "executor": "nx:run-commands",
+      "dependsOn": ["^codegen"],
       "options": {
         "commands": ["tsc -p tsconfig.app.json --noEmit"],
         "cwd": "apps/directorate-of-equality-api",
@@ -23,6 +24,7 @@
     "build": {
       "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
+      "dependsOn": ["^build", "^codegen"],
       "defaultConfiguration": "production",
       "options": {
         "target": "node",
