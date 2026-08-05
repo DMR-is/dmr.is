@@ -22,6 +22,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import { PagingQuery } from '@dmr.is/shared-dto'
 import {
   generatePaging,
   getLimitAndOffset,
@@ -47,6 +48,7 @@ import {
   GetReportsQueryDto,
   SortDirectionEnum,
 } from './dto/get-reports.query.dto'
+import { GetReportsForCompanyResponseDto } from './dto/get-reports-for-company-response.dto'
 import {
   GetReportsResponseDto,
   ReportStatusCountsDto,
@@ -65,7 +67,6 @@ import {
 import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
-import { ReportRoleEnum } from './types/report-resource-context'
 import {
   buildFreeTextWhere,
   buildImprovementPlanWhere,
@@ -94,8 +95,6 @@ export class ReportService implements IReportService {
     private readonly reportEmployeeOutlierModel: typeof ReportEmployeeOutlierModel,
     @InjectModel(CompanyReportModel)
     private readonly companyReportModel: typeof CompanyReportModel,
-    @InjectModel(ReportCommentModel)
-    private readonly reportCommentModel: typeof ReportCommentModel,
     @InjectModel(ReportOutlierGroupModel)
     private readonly reportOutlierGroupModel: typeof ReportOutlierGroupModel,
   ) {}
@@ -169,15 +168,10 @@ export class ReportService implements IReportService {
     ])
 
     const pageIds = rows.map((r) => r.id)
-    const [waitingMap, improvementPlanMap] = await Promise.all([
-      this.computeWaitingForAction(pageIds),
-      this.computeIncludesImprovementPlan(pageIds),
-    ])
+    const improvementPlanMap =
+      await this.computeIncludesImprovementPlan(pageIds)
     const reports = rows.map((r) =>
-      r.fromModelToListItem(
-        waitingMap.get(r.id) ?? false,
-        improvementPlanMap.get(r.id) ?? false,
-      ),
+      r.fromModelToListItem(improvementPlanMap.get(r.id) ?? false),
     )
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
@@ -189,6 +183,44 @@ export class ReportService implements IReportService {
     }
 
     return { reports, paging, statusCounts }
+  }
+
+  /**
+   * Reports that include a given company — the company-detail reports tab.
+   * Unlike `list` (the admin `/yfirlit` free-text search, which only ever
+   * matches the PARENT company snapshot), this joins the company's OWN
+   * `company_report` row via the `forCompany` scope, so a subsidiary sees the
+   * group reports it was filed on. No status tab counts here — this is a flat,
+   * newest-first list of one company's reports.
+   */
+  async listForCompany(
+    companyId: string,
+    query: PagingQuery,
+  ): Promise<GetReportsForCompanyResponseDto> {
+    this.logger.debug('Listing reports for company', {
+      context: LOGGING_CONTEXT,
+      companyId,
+    })
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const { rows, count } = await this.reportModel
+      .scope({ method: ['forCompany', companyId] })
+      .findAndCountAll({
+        order: [['createdAt', 'DESC']],
+        limit,
+        offset,
+      })
+
+    const pageIds = rows.map((r) => r.id)
+    const improvementPlanMap =
+      await this.computeIncludesImprovementPlan(pageIds)
+    const reports = rows.map((r) =>
+      r.fromModelToListItem(improvementPlanMap.get(r.id) ?? false),
+    )
+    const paging = generatePaging(reports, query.page, query.pageSize, count)
+
+    return { reports, paging }
   }
 
   async getById(id: string): Promise<ReportDetailDto> {
@@ -252,62 +284,6 @@ export class ReportService implements IReportService {
       companyQuarantined: report.companyReport.company?.quarantined ?? false,
       includesImprovementPlan,
     }
-  }
-
-  /**
-   * Per-page boolean: true when the most recent timeline item (event OR
-   * comment, whichever is newer) is a COMPANY-authored comment — i.e. the
-   * applicant has said something and no reviewer action/comment has come
-   * after it. Computed via two MAX(createdAt) GROUP BY queries scoped to the
-   * page's report IDs, then compared in JS — bounded by pageSize, no N+1.
-   */
-  private async computeWaitingForAction(
-    reportIds: string[],
-  ): Promise<Map<string, boolean>> {
-    const result = new Map<string, boolean>()
-    if (reportIds.length === 0) return result
-
-    const [latestEvents, latestCompanyComments] = await Promise.all([
-      this.reportEventModel.findAll({
-        where: { reportId: { [Op.in]: reportIds } },
-        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
-        group: ['reportId'],
-        raw: true,
-      }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
-      this.reportCommentModel.findAll({
-        where: {
-          reportId: { [Op.in]: reportIds },
-          authorKind: ReportRoleEnum.COMPANY,
-        },
-        attributes: ['reportId', [fn('MAX', col('created_at')), 'latestAt']],
-        group: ['reportId'],
-        raw: true,
-      }) as unknown as Promise<{ reportId: string; latestAt: Date }[]>,
-    ])
-
-    const eventMap = new Map(
-      latestEvents.map((e) => [e.reportId, new Date(e.latestAt).getTime()]),
-    )
-    const commentMap = new Map(
-      latestCompanyComments.map((c) => [
-        c.reportId,
-        new Date(c.latestAt).getTime(),
-      ]),
-    )
-
-    for (const reportId of reportIds) {
-      const eventAt = eventMap.get(reportId)
-      const commentAt = commentMap.get(reportId)
-      if (commentAt === undefined) {
-        result.set(reportId, false)
-      } else if (eventAt === undefined) {
-        result.set(reportId, true)
-      } else {
-        result.set(reportId, commentAt > eventAt)
-      }
-    }
-
-    return result
   }
 
   /**

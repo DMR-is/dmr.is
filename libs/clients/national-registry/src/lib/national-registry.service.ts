@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-import { fetchWithTimeout } from '@dmr.is/utils-server/httpUtils'
+import {
+  fetchWithTimeout,
+  getApiErrorMessage,
+} from '@dmr.is/utils-server/httpUtils'
 
 import {
   GetNationalRegistryEntityDto,
@@ -21,11 +24,6 @@ interface AuthResponse {
   accessToken: string
 }
 
-interface ErrorResponse {
-  title?: string
-  detail?: string
-}
-
 function isAuthResponse(data: unknown): data is AuthResponse {
   return (
     typeof data === 'object' &&
@@ -35,14 +33,6 @@ function isAuthResponse(data: unknown): data is AuthResponse {
     'accessToken' in data &&
     typeof (data as AuthResponse).accessToken === 'string'
   )
-}
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === 'object' && error !== null) {
-    const err = error as ErrorResponse
-    return err.title || err.detail || 'Unknown error'
-  }
-  return 'Unknown error'
 }
 
 const REQUIRED_ENV_VARS = [
@@ -160,7 +150,7 @@ export class NationalRegistryService implements INationalRegistryService {
         })
 
         throw new BadGatewayException(
-          `National registry authentication failed: ${getErrorMessage(error)}`,
+          `National registry authentication failed: ${getApiErrorMessage(error)}`,
         )
       }
 
@@ -273,7 +263,7 @@ export class NationalRegistryService implements INationalRegistryService {
         })
 
         throw new BadGatewayException(
-          `National registry entity lookup failed: ${getErrorMessage(error)}`,
+          `National registry entity lookup failed: ${getApiErrorMessage(error)}`,
         )
       }
 

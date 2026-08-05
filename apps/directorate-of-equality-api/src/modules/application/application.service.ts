@@ -24,6 +24,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
+  CommunicationStatusEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -294,6 +295,28 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * Comment thread on its own, for portals that poll the conversation without
+   * re-fetching the whole report detail payload. Only EXTERNAL comments are
+   * returned — the COMPANY actor context makes `ReportCommentService` filter
+   * out reviewer-internal notes.
+   */
+  async getReportComments(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<ApplicationReportCommentDto[]> {
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+    )
+
+    const comments = await this.reportCommentService.getByReportId(
+      this.createCompanyReportContext(report, company),
+    )
+
+    return comments.map(ApplicationReportCommentDto.fromReportComment)
+  }
+
   async createReportComment(
     providerId: string,
     input: SubmitApplicationReportCommentDto,
@@ -437,6 +460,31 @@ export class ApplicationService implements IApplicationService {
       report.status,
       ReportStatusEnum.WITHDRAWN,
     )
+
+    // A withdrawn report accepts no further messages — force the conversation
+    // closed from any state. The audit event only fires when it was open (a
+    // never-opened thread flips NOT_STARTED -> CLOSED silently).
+    if (report.communicationStatus !== CommunicationStatusEnum.CLOSED) {
+      const wasOpen =
+        report.communicationStatus === CommunicationStatusEnum.OPEN ||
+        report.communicationStatus ===
+          CommunicationStatusEnum.AWAITING_RESPONSE ||
+        report.communicationStatus ===
+          CommunicationStatusEnum.RESPONSE_RECEIVED
+
+      await this.reportModel.update(
+        { communicationStatus: CommunicationStatusEnum.CLOSED },
+        { where: { id: report.id } },
+      )
+
+      if (wasOpen) {
+        await this.reportEventService.emitCommunicationClosed(
+          report.id,
+          ReportStatusEnum.WITHDRAWN,
+          null,
+        )
+      }
+    }
   }
 
   /**
@@ -661,6 +709,7 @@ export class ApplicationService implements IApplicationService {
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
+      companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,
       companyAdminGender: input.companyAdminGender,
       contactName: input.contactName,
@@ -687,6 +736,7 @@ export class ApplicationService implements IApplicationService {
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,
+      companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,
       companyAdminGender: input.companyAdminGender,
       contactName: input.contactName,

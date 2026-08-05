@@ -1,5 +1,6 @@
 import { CompanyDto } from './dto/company.dto'
 import { CompanyLookupDto } from './dto/company-lookup.dto'
+import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
 import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
 import { CreateCompanyInput } from './dto/create-company-input.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
@@ -31,6 +32,7 @@ export interface ICompanyService {
     fallbackName?: string,
   ): Promise<CompanyDto>
   rskLookup(nationalId: string): Promise<CompanyLookupDto>
+  getRskCompanyPreview(nationalId: string): Promise<CompanyRskPreviewDto>
   create(input: CreateCompanyInput): Promise<CompanyDto>
   getOrCreateSubsidiaryReportSnapshotSource(
     input: SubsidiaryReportSnapshotLookup,

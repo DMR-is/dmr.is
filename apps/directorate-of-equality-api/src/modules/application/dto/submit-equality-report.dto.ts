@@ -7,6 +7,7 @@ import {
   ApiHTML,
   ApiOptionalDtoArray,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
 
@@ -25,6 +26,12 @@ export class SubmitEqualityReportDto {
 
   @ApiString()
   companyAdminName!: string
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company executive.',
+  })
+  companyAdminTitle?: string | null
 
   @ApiString()
   companyAdminEmail!: string

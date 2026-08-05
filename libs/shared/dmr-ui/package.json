@@ -33,11 +33,13 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/utils-shared": "*",
     "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-virtual": "3.14.5",
     "classnames": "^2.5.1",
     "next-usequerystate": "1.20.0",
     "react-animate-height": "^3.1.2",
     "react-hook-form": "7.62.0",
     "react-is": "19",
+    "react-select": "5.8.0",
     "react-top-loading-bar": "^2.3.1",
     "react-use": "^15.3.3"
   },

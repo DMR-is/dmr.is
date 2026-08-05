@@ -1,4 +1,5 @@
 import * as Kennitala from 'kennitala'
+import { Op } from 'sequelize'
 
 import { InternalServerErrorException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
@@ -6,6 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { StatusIdEnum } from '../../../core/enums/status.enum'
 import { AdvertModel } from '../../../models/advert.model'
 import { TBRCompanySettingsModel } from '../../../models/tbr-company-settings.model'
 import { TypeModel } from '../../../models/type.model'
@@ -21,6 +23,9 @@ const MOCK_ENV = {
 describe('PriceCalculatorService', () => {
   let service: PriceCalculatorService
   let tbrCompanySettingsModel: jest.Mocked<typeof TBRCompanySettingsModel>
+  let advertFindAll: jest.Mock
+  let advertScope: jest.Mock
+  let logger: { warn: jest.Mock }
   // Test data factories
   const createMockCompany = (overrides = {}) => ({
     id: 'company-123',
@@ -65,7 +70,12 @@ describe('PriceCalculatorService', () => {
       getApplicationById: jest.fn(),
       previewApplication: jest.fn(),
     }
-    const mockAdvertModel = {}
+    advertFindAll = jest.fn()
+    const mockAdvertModel = {
+      scope: jest.fn().mockReturnValue({ findAll: advertFindAll }),
+    }
+    advertScope = mockAdvertModel.scope
+    logger = mockLogger
     const mockTypeModel = {}
     const mockTbrCompanySettingsModel = {
       findOne: jest.fn(),
@@ -273,6 +283,107 @@ describe('PriceCalculatorService', () => {
             context: 'PriceCalculatorService',
           }),
         )
+      })
+    })
+  })
+  // ==========================================
+  // getApplicationAdvertPrice Tests
+  // ==========================================
+  describe('getApplicationAdvertPrice', () => {
+    const APPLICATION_ID = 'application-123'
+    // Only the fields the aggregation reads are needed
+    const createMockAdvert = (overrides = {}) => ({
+      id: 'advert-1',
+      estimatedPrice: 1500,
+      transaction: null,
+      ...overrides,
+    })
+    it('should sum the estimates of adverts that have not been charged', async () => {
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({ id: 'advert-1' }),
+        createMockAdvert({ id: 'advert-2' }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ totalPrice: 3000, isEstimate: true })
+    })
+    it('should add rather than concatenate prices returned as strings by the pg driver', async () => {
+      // `numeric` columns come back as strings, so a flat fee arrives as '1500'
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({ id: 'advert-1', estimatedPrice: '1500' }),
+        createMockAdvert({ id: 'advert-2', estimatedPrice: '1500' }),
+        createMockAdvert({
+          id: 'advert-3',
+          transaction: { totalPrice: '1480' },
+        }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ totalPrice: 4480, isEstimate: true })
+      expect(typeof result.totalPrice).toBe('number')
+    })
+    it('should omit the total when a price is not numeric', async () => {
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({ id: 'advert-1', estimatedPrice: 'not-a-number' }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ isEstimate: true })
+    })
+    it('should use the charged price and not flag an estimate when every advert is charged', async () => {
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({
+          id: 'advert-1',
+          estimatedPrice: 1500,
+          transaction: { totalPrice: 1480 },
+        }),
+        createMockAdvert({
+          id: 'advert-2',
+          estimatedPrice: 1500,
+          transaction: { totalPrice: 1500 },
+        }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ totalPrice: 2980, isEstimate: false })
+    })
+    it('should mix charged and estimated prices and flag the total as an estimate', async () => {
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({ id: 'advert-1', transaction: { totalPrice: 1480 } }),
+        createMockAdvert({ id: 'advert-2', estimatedPrice: 2000 }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ totalPrice: 3480, isEstimate: true })
+    })
+    it('should omit the total when an advert price cannot be estimated', async () => {
+      advertFindAll.mockResolvedValue([
+        createMockAdvert({ id: 'advert-1' }),
+        createMockAdvert({ id: 'advert-2', estimatedPrice: null }),
+      ])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ isEstimate: true })
+      expect(result.totalPrice).toBeUndefined()
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Could not estimate the price of an advert, omitting the application total',
+        expect.objectContaining({
+          applicationId: APPLICATION_ID,
+          advertId: 'advert-2',
+          context: 'PriceCalculatorService',
+        }),
+      )
+    })
+    it('should omit the total when the application has no adverts', async () => {
+      advertFindAll.mockResolvedValue([])
+      const result = await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(result).toEqual({ isEstimate: true })
+    })
+    it('should load adverts with the detailed scope, excluding rejected and withdrawn ones', async () => {
+      advertFindAll.mockResolvedValue([createMockAdvert()])
+      await service.getApplicationAdvertPrice(APPLICATION_ID)
+      expect(advertScope).toHaveBeenCalledWith('detailed')
+      expect(advertFindAll).toHaveBeenCalledWith({
+        where: {
+          applicationId: APPLICATION_ID,
+          statusId: {
+            [Op.notIn]: [StatusIdEnum.REJECTED, StatusIdEnum.WITHDRAWN],
+          },
+        },
       })
     })
   })

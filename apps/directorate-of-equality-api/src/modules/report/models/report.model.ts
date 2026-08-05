@@ -20,6 +20,7 @@ import type { EqualityReportDto } from '../dto/equality-report.dto'
 import type { ReportDto } from '../dto/report.dto'
 import { ReportListItemDto } from '../dto/report-list-item.dto'
 import {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -29,6 +30,7 @@ import {
 // Re-export for backwards compatibility — many callers import these enums
 // from `report.model.ts` directly. New code should prefer `report.enums.ts`.
 export {
+  CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -38,8 +40,10 @@ export {
 type ReportAttributes = {
   type: ReportTypeEnum
   status: ReportStatusEnum
+  communicationStatus: CommunicationStatusEnum
 
   companyAdminName: string | null
+  companyAdminTitle: string | null
   companyAdminEmail: string | null
   companyAdminGender: GenderEnum | null
 
@@ -69,8 +73,10 @@ type ReportAttributes = {
 type ReportCreateAttributes = {
   type: ReportTypeEnum
   status?: ReportStatusEnum
+  communicationStatus?: CommunicationStatusEnum
 
   companyAdminName?: string | null
+  companyAdminTitle?: string | null
   companyAdminEmail?: string | null
   companyAdminGender?: GenderEnum | null
 
@@ -107,6 +113,8 @@ type ReportCreateAttributes = {
  *   snapshot (drives the name/kennitala columns) and reviewer.
  * - `detailed`: everything the detail screen needs — same includes as
  *   listview plus comments, newest-first, not paranoid-deleted.
+ * - `forCompany(companyId)`: the company-detail reports tab — reports that
+ *   include this specific company, joined on its OWN snapshot row.
  */
 @Scopes(() => ({
   listview: {
@@ -153,6 +161,28 @@ type ReportCreateAttributes = {
       { model: ReportResultModel, as: 'result', required: false },
     ],
   },
+  // Company-scoped list for the company-detail reports tab. Joins the
+  // company's OWN `company_report` row — the parent submission when the
+  // company filed on its own behalf (`parentCompanyId` null), or the
+  // subsidiary row when it was included on a parent's group submission
+  // (`parentCompanyId` set). Filtering the join to one company means at most
+  // one snapshot matches per report, so each report appears once WITHOUT the
+  // parent-only pinning `listview` needs — that pin exists only because the
+  // unfiltered list join would otherwise multiply a group report into one row
+  // per company. `fromModelToListItem` reads `companyReport.name` etc, so the
+  // `company` include is kept for the fines/quarantine flags.
+  forCompany: (companyId: string) => ({
+    include: [
+      {
+        model: CompanyReportModel,
+        as: 'companyReport',
+        required: true,
+        where: { companyId },
+        include: [{ model: CompanyModel, as: 'company', required: false }],
+      },
+      { model: UserModel, as: 'reviewer', required: false },
+    ],
+  }),
 }))
 @MutableTable({ tableName: DoeModels.REPORT })
 export class ReportModel extends MutableModel<
@@ -172,8 +202,23 @@ export class ReportModel extends MutableModel<
   })
   status!: ReportStatusEnum
 
+  @Column({
+    type: DataType.ENUM(...Object.values(CommunicationStatusEnum)),
+    allowNull: false,
+    defaultValue: CommunicationStatusEnum.NOT_STARTED,
+    field: 'communication_status',
+  })
+  communicationStatus!: CommunicationStatusEnum
+
   @Column({ type: DataType.TEXT, allowNull: true, field: 'company_admin_name' })
   companyAdminName!: string | null
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'company_admin_title',
+  })
+  companyAdminTitle!: string | null
 
   @Column({
     type: DataType.TEXT,
@@ -321,7 +366,9 @@ export class ReportModel extends MutableModel<
       id: model.id,
       type: model.type,
       status: model.status,
+      communicationStatus: model.communicationStatus,
       companyAdminName: model.companyAdminName,
+      companyAdminTitle: model.companyAdminTitle,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       contactName: model.contactName,
@@ -381,7 +428,6 @@ export class ReportModel extends MutableModel<
 
   static fromModelToListItem(
     model: ReportModel,
-    waitingForAction = false,
     includesImprovementPlan = false,
   ): ReportListItemDto {
     return {
@@ -389,18 +435,19 @@ export class ReportModel extends MutableModel<
       identifier: model.identifier,
       type: model.type,
       status: model.status,
+      communicationStatus: model.communicationStatus,
       companyName: model.companyReport?.name ?? null,
       companyNationalId: model.companyReport?.nationalId ?? null,
       companyIsatCategory: model.companyReport?.isatCategory ?? null,
       companyEmployeeCountCategory:
         model.companyReport?.employeeCountCategory ?? null,
       companyAdminName: model.companyAdminName,
+      companyAdminTitle: model.companyAdminTitle,
       companyAdminEmail: model.companyAdminEmail,
       companyAdminGender: model.companyAdminGender,
       reviewer: model.reviewer ? UserModel.fromModel(model.reviewer) : null,
       companyFinesStarted: model.companyReport?.company?.finesStarted ?? false,
       companyQuarantined: model.companyReport?.company?.quarantined ?? false,
-      waitingForAction,
       includesImprovementPlan,
       createdAt: model.createdAt,
       correctionDeadline: model.correctionDeadline,
@@ -412,15 +459,8 @@ export class ReportModel extends MutableModel<
     return ReportModel.fromModelToEqualityReport(this)
   }
 
-  fromModelToListItem(
-    waitingForAction = false,
-    includesImprovementPlan = false,
-  ): ReportListItemDto {
-    return ReportModel.fromModelToListItem(
-      this,
-      waitingForAction,
-      includesImprovementPlan,
-    )
+  fromModelToListItem(includesImprovementPlan = false): ReportListItemDto {
+    return ReportModel.fromModelToListItem(this, includesImprovementPlan)
   }
 
   fromModel(): ReportDto {

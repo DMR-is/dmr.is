@@ -1,6 +1,6 @@
 'use client'
 
-import { useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
+import { useQuery, useSuspenseQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -35,6 +35,10 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
     trpc.getApplicationById.queryOptions({ id: applicationId }),
   )
 
+  const { data: price, isPending: isPricePending } = useQuery(
+    trpc.getApplicationAdvertPrice.queryOptions({ applicationId }),
+  )
+
   const description = mapApplicationDescription(application.type)
 
   const canAddAdverts =
@@ -53,6 +57,9 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
                 subtitle={application.subtitle}
                 description={description}
                 showAddAdvertsButton={canAddAdverts}
+                totalPrice={price?.totalPrice}
+                isPriceEstimate={price?.isEstimate}
+                isPriceLoading={isPricePending}
               />
               <ApplicationAdverts
                 showToggle={application.type !== ApplicationTypeEnum.COMMON}

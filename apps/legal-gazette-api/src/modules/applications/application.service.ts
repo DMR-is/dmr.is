@@ -32,7 +32,7 @@ import {
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
-import { TypeIdEnum } from '../../models/type.model'
+import { TypeIdEnum, TypeModel } from '../../models/type.model'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,
@@ -84,6 +84,25 @@ export class ApplicationService implements IApplicationService {
     submittee: DMRUser,
   ) {
     const parsed = commonApplicationAnswersRefined.parse(application.answers)
+
+    // The type and category are denormalized into the answers JSON by the client,
+    // so verify the combination is actually assignable before it becomes an advert.
+    const assignableCategory = await this.categoryModel.findOne({
+      where: { id: { [Op.eq]: parsed.fields.category.id } },
+      include: [
+        {
+          model: TypeModel,
+          where: { id: { [Op.eq]: parsed.fields.type.id } },
+          required: true,
+        },
+      ],
+    })
+
+    if (!assignableCategory) {
+      throw new BadRequestException(
+        `Flokkurinn "${parsed.fields.category.title}" er ekki gildur fyrir tegundina "${parsed.fields.type.title}"`,
+      )
+    }
 
     let feeQuantity: number | undefined = undefined
     if (parsed.fields.type.id === TypeIdEnum.FORECLOSURE) {

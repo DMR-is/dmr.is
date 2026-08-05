@@ -42,9 +42,11 @@ export const CompaniesContainer = () => {
       : [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
-    dailyFines: filter.finesStarted ? ['active'] : [],
-    overdue: filter.overdue ? ['overdue'] : [],
-    quarantined: filter.quarantined ? ['quarantined'] : [],
+    flags: [
+      ...(filter.finesStarted ? ['fines'] : []),
+      ...(filter.overdue ? ['overdue'] : []),
+      ...(filter.quarantined ? ['quarantined'] : []),
+    ],
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
     isatCategoryCode: filter.isatCategoryCode ?? [],
@@ -122,13 +124,14 @@ export const CompaniesContainer = () => {
       })
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
-    } else if (key === 'dailyFines') {
-      // Boolean server param: any selection means "in the fines process".
-      setFilter({ finesStarted: val.length ? true : null, page: 1 })
-    } else if (key === 'overdue') {
-      setFilter({ overdue: val.length ? true : null, page: 1 })
-    } else if (key === 'quarantined') {
-      setFilter({ quarantined: val.length ? true : null, page: 1 })
+    } else if (key === 'flags') {
+      // Combined multi-select; each value maps to its own boolean server param.
+      setFilter({
+        finesStarted: val.includes('fines') ? true : null,
+        overdue: val.includes('overdue') ? true : null,
+        quarantined: val.includes('quarantined') ? true : null,
+        page: 1,
+      })
     } else if (key === 'postcode') {
       setFilter({ postcode: val, page: 1 })
     } else if (key === 'isatCategoryCode') {
@@ -144,9 +147,7 @@ export const CompaniesContainer = () => {
       employees: [],
       status: [],
       expires: [],
-      dailyFines: [],
-      overdue: [],
-      quarantined: [],
+      flags: [],
       regionCode: [],
       postcode: [],
       isatCategoryCode: [],

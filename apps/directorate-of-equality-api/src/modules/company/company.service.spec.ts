@@ -6,10 +6,12 @@ import {
   INationalRegistryService,
   NationalRegistryEntityDto,
 } from '@dmr.is/clients-national-registry'
+import { IRskCompanyRegistryService } from '@dmr.is/clients-rsk-client'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import { PostcodeModel } from '../location/models/postcode.model'
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
 import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
 import { CompanyModel } from './models/company.model'
@@ -30,6 +32,7 @@ describe('CompanyService', () => {
   let findOne: jest.Mock
   let create: jest.Mock
   let getEntityByNationalId: jest.Mock
+  let getLegalEntityByNationalId: jest.Mock
   let emitCreated: jest.Mock
   let emitStatusChanged: jest.Mock
   let emitFinesStarted: jest.Mock
@@ -39,13 +42,16 @@ describe('CompanyService', () => {
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
+  let postcodeFindOne: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
     isatFindByPk = jest.fn()
+    postcodeFindOne = jest.fn()
     getEntityByNationalId = jest.fn()
+    getLegalEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
     emitStatusChanged = jest.fn()
     emitFinesStarted = jest.fn()
@@ -74,12 +80,20 @@ describe('CompanyService', () => {
           useValue: { getEntityByNationalId },
         },
         {
+          provide: IRskCompanyRegistryService,
+          useValue: { getLegalEntityByNationalId },
+        },
+        {
           provide: getModelToken(CompanyModel),
           useValue: companyModelMock,
         },
         {
           provide: getModelToken(IsatCategoryModel),
           useValue: { findByPk: isatFindByPk },
+        },
+        {
+          provide: getModelToken(PostcodeModel),
+          useValue: { findOne: postcodeFindOne },
         },
         {
           provide: ICompanyEventService,
@@ -367,6 +381,101 @@ describe('CompanyService', () => {
         'company-9',
         CompanyStatusEnum.ACTIVE,
       )
+    })
+
+    it('enriches the new company with mapped RSK values', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'RSK ehf.',
+        deregistration: { deregistered: false },
+        addresses: [{ addressName: 'Borgartún 1', postcode: '105 Reykjavík' }],
+        activityCode: [{ codeSystem: 'ÍSAT2008', id: '62.01.0' }],
+      })
+      postcodeFindOne.mockResolvedValue({ id: 'postcode-105' })
+      isatFindByPk.mockResolvedValue({ code: '62010' })
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-10' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-10' }))
+
+      await service.create({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(postcodeFindOne).toHaveBeenCalledWith({ where: { code: '105' } })
+      expect(isatFindByPk).toHaveBeenCalledWith('62010')
+      expect(create).toHaveBeenCalledWith({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+        status: CompanyStatusEnum.ACTIVE,
+        address: 'Borgartún 1',
+        postcodeId: 'postcode-105',
+        isatCategoryCode: '62010',
+      })
+    })
+
+    it('rejects creating a company that is inactive in RSK', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'RSK ehf.',
+        deregistration: { deregistered: true },
+      })
+
+      await expect(
+        service.create({
+          name: 'New ehf.',
+          nationalId: '5501234567',
+          employeeCountCategory: CompanySizeEnum.SMALL,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('previews the RSK status and reason without persisting', async () => {
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'RSK ehf.',
+        status: 'Afskráð',
+        deregistration: { deregistered: true },
+      })
+
+      const preview = await service.getRskCompanyPreview('5501234567')
+
+      expect(preview).toEqual({
+        name: 'RSK ehf.',
+        nationalId: '5501234567',
+        status: CompanyStatusEnum.INACTIVE,
+        statusReason: 'Afskráð',
+        address: null,
+        postcode: null,
+        isatCategory: null,
+      })
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('creates from base input when RSK enrichment fails', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockRejectedValue(new Error('RSK down'))
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-11' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-11' }))
+
+      await service.create({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(create).toHaveBeenCalledWith({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+      expect(postcodeFindOne).not.toHaveBeenCalled()
+      expect(isatFindByPk).not.toHaveBeenCalled()
     })
   })
 

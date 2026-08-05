@@ -10,7 +10,11 @@ import {
   type GetReportsQueryDto,
   SortDirectionEnum,
 } from './dto/get-reports.query.dto'
-import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
+import {
+  CommunicationStatusEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './models/report.enums'
 import type { ReportModel } from './models/report.model'
 import { ReportService } from './report.service'
 
@@ -33,6 +37,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
     identifier: 'ABC-001',
     type: ReportTypeEnum.SALARY,
     status: ReportStatusEnum.SUBMITTED,
+    communicationStatus: CommunicationStatusEnum.NOT_STARTED,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     correctionDeadline: null,
     validUntil: null,
@@ -52,10 +57,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
   // Instance methods the service calls — projections the real model
   // provides via BaseModel. Tests only need something that returns a
   // plain object shape-compatible with the DTO.
-  row.fromModelToListItem = (
-    waitingForAction = false,
-    includesImprovementPlan = false,
-  ) => {
+  row.fromModelToListItem = (includesImprovementPlan = false) => {
     const companyReport = row.companyReport as
       | {
           name?: string
@@ -69,6 +71,7 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       identifier: row.identifier,
       type: row.type,
       status: row.status,
+      communicationStatus: row.communicationStatus,
       companyName: companyReport?.name ?? null,
       companyNationalId: companyReport?.nationalId ?? null,
       companyIsatCategory: companyReport?.isatCategory ?? null,
@@ -78,7 +81,6 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
       companyAdminEmail: row.companyAdminEmail,
       companyAdminGender: row.companyAdminGender,
       reviewer: row.reviewer,
-      waitingForAction,
       includesImprovementPlan,
       createdAt: row.createdAt,
       correctionDeadline: row.correctionDeadline,
@@ -141,9 +143,6 @@ const makeService = () => {
   const companyReportModel = {
     findAll: companyReportFindAll,
   } as unknown as typeof import('../company/models/company-report.model').CompanyReportModel
-  const reportCommentModel = {
-    findAll: jest.fn().mockResolvedValue([]),
-  } as unknown as typeof import('../report-comment/models/report-comment.model').ReportCommentModel
 
   const outlierGroupFindAll = jest.fn().mockResolvedValue([])
   const reportOutlierGroupModel = {
@@ -157,12 +156,12 @@ const makeService = () => {
     reportRoleResultModel,
     reportEmployeeOutlierModel,
     companyReportModel,
-    reportCommentModel,
     reportOutlierGroupModel,
   )
   return {
     service,
     findAndCountAll,
+    scope: reportModel.scope,
     findByPkOrThrow,
     findOne,
     roleResultFindAll,
@@ -181,6 +180,72 @@ const baseQuery = (
   page: 1,
   pageSize: 10,
   ...overrides,
+})
+
+describe('ReportService.listForCompany', () => {
+  const COMPANY_ID = '00000000-0000-0000-0000-0000000000c1'
+
+  it('selects the forCompany scope with the given company id', async () => {
+    const { service, findAndCountAll, scope } = makeService()
+    findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    await service.listForCompany(COMPANY_ID, { page: 1, pageSize: 10 })
+
+    expect(scope).toHaveBeenCalledWith({
+      method: ['forCompany', COMPANY_ID],
+    })
+    // No status-tab counts on this path — a single list query, unlike `list`.
+    expect(findAndCountAll).toHaveBeenCalledTimes(1)
+  })
+
+  it('lists newest-first with limit/offset from paging and no statusCounts', async () => {
+    const { service, findAndCountAll } = makeService()
+    findAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+    const result = await service.listForCompany(COMPANY_ID, {
+      page: 3,
+      pageSize: 25,
+    })
+
+    const opts = findAndCountAll.mock.calls[0][0]
+    expect(opts.order).toEqual([['createdAt', 'DESC']])
+    expect(opts.limit).toBe(25)
+    expect(opts.offset).toBe(50)
+    expect(result).not.toHaveProperty('statusCounts')
+  })
+
+  it('maps matched rows to list items (the subsidiary snapshot the scope joined)', async () => {
+    const { service, findAndCountAll } = makeService()
+    // The `forCompany` scope joins THIS company's own company_report row —
+    // here a subsidiary row on a parent's group report — so the snapshot on
+    // the returned row is the subsidiary's, not the parent's.
+    const row = makeReportRow({
+      id: '00000000-0000-0000-0000-0000000000a1',
+      companyReport: {
+        name: 'Dótturfélag ehf.',
+        nationalId: '5508870269',
+        isatCategory: '62.01.0',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      },
+    })
+    findAndCountAll.mockResolvedValueOnce({
+      rows: [row as unknown as ReportModel],
+      count: 1,
+    })
+
+    const result = await service.listForCompany(COMPANY_ID, {
+      page: 1,
+      pageSize: 10,
+    })
+
+    expect(result.reports).toHaveLength(1)
+    expect(result.reports[0]).toMatchObject({
+      id: '00000000-0000-0000-0000-0000000000a1',
+      companyName: 'Dótturfélag ehf.',
+      companyNationalId: '5508870269',
+    })
+    expect(result.paging.totalItems).toBe(1)
+  })
 })
 
 describe('ReportService.list — filter & query building', () => {

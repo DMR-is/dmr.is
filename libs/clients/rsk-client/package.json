@@ -1,0 +1,15 @@
+{
+  "name": "@dmr.is/clients-rsk-client",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.19"
+  },
+  "dependencies": {
+    "@dmr.is/logging": "*",
+    "zod": "4.1.11"
+  }
+}

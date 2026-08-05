@@ -1,5 +1,10 @@
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common'
 
+import { CommunicationStatusEnum } from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -30,6 +35,22 @@ describe('ReportCommentService', () => {
   const mailService = {
     sendExternalCommentNotification: jest.fn(),
   }
+
+  // A loaded report record the service can read `communicationStatus` off and
+  // call `.update()` on to move the directional sub-state.
+  const makeReport = (
+    communicationStatus: CommunicationStatusEnum = CommunicationStatusEnum.NOT_STARTED,
+  ) => ({
+    id: 'report-1',
+    communicationStatus,
+    update: jest.fn(),
+  })
+
+  const makeComment = (id: string) => ({
+    id,
+    fromModel: () => ({ id }),
+    reload: jest.fn(),
+  })
 
   let service: ReportCommentService
   let reviewerContext: ReportResourceContext
@@ -62,14 +83,8 @@ describe('ReportCommentService', () => {
   })
 
   it('creates a reviewer comment with the current report status snapshot', async () => {
-    const commentDto = { id: 'comment-1' }
-    const commentRecord = {
-      id: 'comment-1',
-      fromModel: () => commentDto,
-      reload: jest.fn(),
-    }
-
-    reportCommentModel.create.mockResolvedValue(commentRecord)
+    reportModel.findByPk.mockResolvedValue(makeReport())
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-1'))
 
     const dto: CreateReportCommentDto = {
       visibility: CommentVisibilityEnum.INTERNAL,
@@ -86,7 +101,7 @@ describe('ReportCommentService', () => {
       body: 'Needs follow-up',
       reportStatus: 'IN_REVIEW',
     })
-    expect(result).toEqual(commentDto)
+    expect(result).toEqual({ id: 'comment-1' })
   })
 
   it('filters company users to external comments only', async () => {
@@ -111,14 +126,10 @@ describe('ReportCommentService', () => {
     expect(result).toEqual([commentDto])
   })
 
-  it('creates a company comment when the guard has already limited visibility', async () => {
-    const commentDto = { id: 'comment-2' }
-
-    reportCommentModel.create.mockResolvedValue({
-      id: 'comment-2',
-      fromModel: () => commentDto,
-      reload: jest.fn(),
-    })
+  it('creates a company comment and flips the thread to RESPONSE_RECEIVED', async () => {
+    const report = makeReport(CommunicationStatusEnum.AWAITING_RESPONSE)
+    reportModel.findByPk.mockResolvedValue(report)
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-2'))
 
     const result = await service.create(companyContext, {
       visibility: CommentVisibilityEnum.EXTERNAL,
@@ -133,7 +144,25 @@ describe('ReportCommentService', () => {
       body: 'Reply from company',
       reportStatus: 'SUBMITTED',
     })
-    expect(result).toEqual(commentDto)
+    expect(report.update).toHaveBeenCalledWith({
+      communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
+    })
+    expect(result).toEqual({ id: 'comment-2' })
+  })
+
+  it('rejects a company comment when communication is not open', async () => {
+    reportModel.findByPk.mockResolvedValue(
+      makeReport(CommunicationStatusEnum.NOT_STARTED),
+    )
+
+    await expect(
+      service.create(companyContext, {
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'Reply from company',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException)
+
+    expect(reportCommentModel.create).not.toHaveBeenCalled()
   })
 
   it('rejects internal comments from company users', async () => {
@@ -143,6 +172,25 @@ describe('ReportCommentService', () => {
         body: 'Internal note',
       }),
     ).rejects.toThrow('Company admins may only create external comments')
+
+    expect(reportCommentModel.create).not.toHaveBeenCalled()
+  })
+
+  it('rejects reviewer internal comments on a draft report', async () => {
+    reportModel.findByPk.mockResolvedValue(makeReport())
+
+    await expect(
+      service.create(
+        {
+          ...reviewerContext,
+          reportStatus: 'DRAFT' as never,
+        },
+        {
+          visibility: CommentVisibilityEnum.INTERNAL,
+          body: 'Internal note',
+        },
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException)
 
     expect(reportCommentModel.create).not.toHaveBeenCalled()
   })
@@ -158,72 +206,89 @@ describe('ReportCommentService', () => {
     expect(reportCommentModel.create).not.toHaveBeenCalled()
   })
 
-  it('sends an external comment notification when a reviewer posts an external comment', async () => {
-    const commentRecord = {
-      id: 'comment-3',
-      fromModel: () => ({ id: 'comment-3' }),
-      reload: jest.fn(),
-    }
-    const reportRecord = { id: 'report-1' }
+  it('throws NotFound when the report cannot be loaded', async () => {
+    reportModel.findByPk.mockResolvedValue(null)
 
+    await expect(
+      service.create(reviewerContext, {
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'External reviewer comment',
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException)
+
+    expect(reportCommentModel.create).not.toHaveBeenCalled()
+  })
+
+  it('sends an external comment notification when a reviewer posts an external comment', async () => {
+    const report = makeReport(CommunicationStatusEnum.OPEN)
+    const commentRecord = makeComment('comment-3')
+
+    reportModel.findByPk.mockResolvedValue(report)
     reportCommentModel.create.mockResolvedValue(commentRecord)
-    reportModel.findByPk.mockResolvedValue(reportRecord)
 
     await service.create(reviewerContext, {
       visibility: CommentVisibilityEnum.EXTERNAL,
       body: 'Please update the report',
     })
 
-    expect(reportModel.findByPk).toHaveBeenCalledWith('report-1')
     expect(mailService.sendExternalCommentNotification).toHaveBeenCalledWith(
-      reportRecord,
+      report,
       commentRecord,
     )
   })
 
-  it('does not send mail for reviewer internal comments', async () => {
-    reportCommentModel.create.mockResolvedValue({
-      id: 'comment-4',
-      fromModel: () => ({ id: 'comment-4' }),
-      reload: jest.fn(),
+  it('rejects a reviewer external comment when communication is not open', async () => {
+    reportModel.findByPk.mockResolvedValue(
+      makeReport(CommunicationStatusEnum.NOT_STARTED),
+    )
+
+    await expect(
+      service.create(reviewerContext, {
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'This should be blocked',
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException)
+
+    expect(reportCommentModel.create).not.toHaveBeenCalled()
+  })
+
+  it('flips an open thread back to AWAITING_RESPONSE on a reviewer external reply', async () => {
+    const report = makeReport(CommunicationStatusEnum.RESPONSE_RECEIVED)
+    reportModel.findByPk.mockResolvedValue(report)
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-3b'))
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'Thanks, one more thing',
     })
+
+    expect(report.update).toHaveBeenCalledWith({
+      communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+    })
+  })
+
+  it('flips OPEN to AWAITING_RESPONSE on a reviewer external comment', async () => {
+    const report = makeReport(CommunicationStatusEnum.OPEN)
+    reportModel.findByPk.mockResolvedValue(report)
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-3c'))
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'First message to the applicant',
+    })
+
+    expect(report.update).toHaveBeenCalledWith({
+      communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+    })
+  })
+
+  it('does not send mail for reviewer internal comments', async () => {
+    reportModel.findByPk.mockResolvedValue(makeReport())
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-4'))
 
     await service.create(reviewerContext, {
       visibility: CommentVisibilityEnum.INTERNAL,
       body: 'Internal reviewer note',
-    })
-
-    expect(reportModel.findByPk).not.toHaveBeenCalled()
-    expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
-  })
-
-  it('does not send mail for company-authored comments', async () => {
-    reportCommentModel.create.mockResolvedValue({
-      id: 'comment-5',
-      fromModel: () => ({ id: 'comment-5' }),
-      reload: jest.fn(),
-    })
-
-    await service.create(companyContext, {
-      visibility: CommentVisibilityEnum.EXTERNAL,
-      body: 'Reply from company',
-    })
-
-    expect(reportModel.findByPk).not.toHaveBeenCalled()
-    expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
-  })
-
-  it('skips mail when the report cannot be loaded', async () => {
-    reportCommentModel.create.mockResolvedValue({
-      id: 'comment-6',
-      fromModel: () => ({ id: 'comment-6' }),
-      reload: jest.fn(),
-    })
-    reportModel.findByPk.mockResolvedValue(null)
-
-    await service.create(reviewerContext, {
-      visibility: CommentVisibilityEnum.EXTERNAL,
-      body: 'External reviewer comment',
     })
 
     expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()

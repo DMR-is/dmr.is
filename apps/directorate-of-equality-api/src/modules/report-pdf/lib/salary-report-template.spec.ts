@@ -20,6 +20,7 @@ function makeData(
     type: ReportTypeEnum.SALARY,
     status: ReportStatusEnum.APPROVED,
     companyAdminName: 'Jónína J. Jónsdóttir',
+    companyAdminTitle: 'Framkvæmdastjóri',
     companyAdminEmail: 'jonina@mycompany.is',
     companyAdminGender: GenderEnum.FEMALE,
     contactName: 'Jón J. Jónsson',
@@ -72,6 +73,7 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('Testing-hugbúnaður ehf.')
     expect(html).toContain('000000-0000')
     expect(html).toContain('Æðsti stjórnandi')
+    expect(html).toContain('Framkvæmdastjóri')
     expect(html).toContain('Tengiliður')
     expect(html).toContain('Meðalfjöldi starfsmanna á ársgrundvelli')
     expect(html).toContain('Dótturfyrirtæki')

@@ -40,3 +40,30 @@ export async function fetchWithTimeout(
     signal: AbortSignal.timeout(timeoutMs),
   })
 }
+
+/** RFC 7807-style problem payload returned by most of our upstream APIs. */
+interface ProblemDetails {
+  title?: string | null
+  detail?: string | null
+}
+
+/**
+ * Extracts a human-readable message from an unknown upstream error payload.
+ *
+ * Handles the common shapes returned by external APIs: an RFC 7807
+ * `problem+json` object (`title`/`detail`) or a plain string. Falls back to a
+ * generic message so callers can always surface something safe.
+ *
+ * @example
+ * throw new BadGatewayException(`Lookup failed: ${getApiErrorMessage(error)}`)
+ */
+export function getApiErrorMessage(error: unknown): string {
+  if (typeof error === 'string') {
+    return error
+  }
+  if (typeof error === 'object' && error !== null) {
+    const problem = error as ProblemDetails
+    return problem.title || problem.detail || 'Unknown error'
+  }
+  return 'Unknown error'
+}

@@ -7,10 +7,11 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { AlertMessage } from '@island.is/island-ui/core'
 
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
+import { ReportCommunicationControl } from '../../components/report/report-sidebar/ReportCommunicationControl'
 import { ReportFormStepper } from '../../components/report/report-sidebar/ReportFormStepper'
 import { ReportSidebar } from '../../components/report/report-sidebar/ReportSidebar'
 import { ReportStatusSelect } from '../../components/report/report-sidebar/ReportStatusSelect'
-import { ReportDetailDto } from '../../gen/fetch'
+import { ReportDetailDto, ReportStatusEnum } from '../../gen/fetch'
 import { companiesText, reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -28,10 +29,12 @@ export function ReportSidebarContainer({
     ...trpc.reports.getById.queryOptions({ id: report.id }),
     initialData: report,
   })
-  const isDisabled =
-    data.status === 'POSTPONED' ||
-    data.status === 'DENIED' ||
-    data.status === 'APPROVED'
+  // Terminal statuses lock the sidebar entirely. POSTPONED only locks reviewer
+  // assignment (the API rejects assigning postponed reports) — the status
+  // actions stay live so a reviewer can deny a report whose postponed outliers
+  // are never resolved.
+  const isTerminal = data.status === 'DENIED' || data.status === 'APPROVED'
+  const isDisabled = isTerminal || data.status === 'POSTPONED'
 
   return (
     <ReportSidebar>
@@ -60,7 +63,15 @@ export function ReportSidebarContainer({
       <ReportStatusSelect
         reportId={data.id}
         status={data.status}
-        disabled={isDisabled}
+        disabled={isTerminal}
+      />
+      <Box paddingTop={1}>
+        <Divider />
+      </Box>
+      <ReportCommunicationControl
+        reportId={data.id}
+        communicationStatus={data.communicationStatus}
+        disabled={data.status !== ReportStatusEnum.IN_REVIEW}
       />
       <Box paddingTop={1}>
         <Divider />

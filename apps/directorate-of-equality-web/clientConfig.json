@@ -678,6 +678,74 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/preview/{nationalId}": {
+      "get": {
+        "operationId": "getRskCompanyPreview",
+        "parameters": [
+          {
+            "name": "nationalId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyRskPreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}/status": {
       "patch": {
         "operationId": "updateCompanyStatus",
@@ -2568,6 +2636,79 @@
         "tags": ["Reports"]
       }
     },
+    "/api/v1/reports/company/{companyId}": {
+      "get": {
+        "description": "Reports that include the given company — whether it filed on its own behalf or was included as a subsidiary on a parent company's group submission. Powers the company-detail reports tab. Newest first.",
+        "operationId": "listReportsForCompany",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 1, "example": 1, "type": "number" }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": { "default": 10, "example": 10, "type": "number" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetReportsForCompanyResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Reports"]
+      }
+    },
     "/api/v1/reports/{id}": {
       "get": {
         "operationId": "getReportById",
@@ -3148,6 +3289,191 @@
     "/api/v1/reports/{reportId}/approve": {
       "post": {
         "operationId": "approveReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/send-to-edit": {
+      "post": {
+        "operationId": "sendReportToEdit",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendToEditDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/communication/open": {
+      "post": {
+        "operationId": "openReportCommunication",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report Workflow"]
+      }
+    },
+    "/api/v1/reports/{reportId}/communication/close": {
+      "post": {
+        "operationId": "closeReportCommunication",
         "parameters": [
           {
             "name": "reportId",
@@ -4050,6 +4376,11 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
@@ -4108,6 +4439,11 @@
           },
           "providerId": { "type": "string", "nullable": true },
           "companyAdminName": { "type": "string" },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string" },
           "companyAdminGender": {
             "type": "string",
@@ -4310,6 +4646,33 @@
           "nationalId": { "type": "string" }
         },
         "required": ["name", "nationalId"]
+      },
+      "CompanyRskPreviewDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "nationalId": { "type": "string" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyStatusEnum" }]
+          },
+          "statusReason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason the company is not active (null when active). Shown on the create screen."
+          },
+          "address": { "type": "string", "nullable": true },
+          "postcode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Resolved postcode, e.g. \"105 Reykjavík\"."
+          },
+          "isatCategory": {
+            "type": "string",
+            "nullable": true,
+            "description": "Resolved ÍSAT2008 classification, e.g. \"62.01.0 Computer programming\"."
+          }
+        },
+        "required": ["name", "nationalId", "status"]
       },
       "CreateCompanyDto": {
         "type": "object",
@@ -4866,6 +5229,16 @@
         ]
       },
       "SortDirectionEnum": { "type": "string", "enum": ["asc", "desc"] },
+      "CommunicationStatusEnum": {
+        "type": "string",
+        "enum": [
+          "NOT_STARTED",
+          "OPEN",
+          "AWAITING_RESPONSE",
+          "RESPONSE_RECEIVED",
+          "CLOSED"
+        ]
+      },
       "GenderEnum": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
       "ReportListItemDto": {
         "type": "object",
@@ -4878,6 +5251,11 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
+          },
           "companyName": { "type": "string", "nullable": true },
           "companyNationalId": { "type": "string", "nullable": true },
           "companyIsatCategory": { "type": "string", "nullable": true },
@@ -4886,6 +5264,11 @@
             "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
           },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,
@@ -4902,10 +5285,6 @@
           "companyQuarantined": {
             "type": "boolean",
             "description": "Quarantine flag. `true` means the company is currently quarantined."
-          },
-          "waitingForAction": {
-            "type": "boolean",
-            "description": "True when the most recent activity on this report is a comment authored by the company (application side). Resets to false whenever a reviewer action/event or reviewer comment supersedes it."
           },
           "includesImprovementPlan": {
             "type": "boolean",
@@ -4934,9 +5313,9 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "companyFinesStarted",
           "companyQuarantined",
-          "waitingForAction",
           "includesImprovementPlan"
         ]
       },
@@ -4963,6 +5342,17 @@
           }
         },
         "required": ["reports", "paging", "statusCounts"]
+      },
+      "GetReportsForCompanyResponseDto": {
+        "type": "object",
+        "properties": {
+          "reports": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportListItemDto" }
+          },
+          "paging": { "$ref": "#/components/schemas/Paging" }
+        },
+        "required": ["reports", "paging"]
       },
       "ReportProviderEnum": {
         "type": "string",
@@ -5046,7 +5436,9 @@
           "SUPERSEDED",
           "EDITED",
           "WITHDRAWN",
-          "SYSTEM_AUTO_REVIEW"
+          "SYSTEM_AUTO_REVIEW",
+          "COMMUNICATION_OPENED",
+          "COMMUNICATION_CLOSED"
         ]
       },
       "AutoReviewDecisionEnum": {
@@ -5395,7 +5787,17 @@
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/ReportStatusEnum" }]
           },
+          "communicationStatus": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CommunicationStatusEnum" }
+            ]
+          },
           "companyAdminName": { "type": "string", "nullable": true },
+          "companyAdminTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Job title (starfsheiti) of the company executive."
+          },
           "companyAdminEmail": { "type": "string", "nullable": true },
           "companyAdminGender": {
             "nullable": true,
@@ -5495,6 +5897,7 @@
           "id",
           "type",
           "status",
+          "communicationStatus",
           "importedFromExcel",
           "createdAt",
           "company",
@@ -5641,6 +6044,11 @@
         "type": "object",
         "properties": { "denialReason": { "type": "string" } },
         "required": ["denialReason"]
+      },
+      "SendToEditDto": {
+        "type": "object",
+        "properties": { "reason": { "type": "string" } },
+        "required": ["reason"]
       },
       "GenderWageGapDto": {
         "type": "object",

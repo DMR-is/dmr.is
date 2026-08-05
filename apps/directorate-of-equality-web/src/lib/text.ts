@@ -80,6 +80,8 @@ export const overviewText = {
     heading: 'Ný jafnréttisáætlun',
     employeeCountHeading: 'Starfsmannafjöldi',
     successToast: 'Skýrsla send inn',
+    inflightConflictToast:
+      'Fyrirtækið er nú þegar með jafnréttisáætlun í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný jafnréttisáætlun er send inn.',
   },
   createSalaryReport: {
     drawerLabel: 'Skrá launagreiningu',
@@ -129,6 +131,8 @@ export const overviewText = {
       'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
     missingEqualityToast:
       'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en launagreining er send inn.',
+    inflightConflictToast:
+      'Fyrirtækið er nú þegar með launagreiningu í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný launagreining er send inn.',
   },
 }
 
@@ -148,6 +152,8 @@ export const reportText = {
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
+    externalDisabledHint:
+      'Opnaðu samskipti til að senda innsendanda skilaboð.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
@@ -161,6 +167,25 @@ export const reportText = {
     assignButton: 'Færa í vinnslu',
     approveButton: 'Samþykkja',
     denyButton: 'Hafna',
+  },
+  communicationControl: {
+    label: 'Staða samskipta',
+    successToast: 'Uppfærsla á samskiptum tókst.',
+    errorToast:
+      'Villa við að uppfæra samskipti. Vinsamlegast reyndu aftur síðar.',
+    openButton: 'Opna',
+    closeButton: 'Loka',
+    sendToEditButton: 'Breytingar',
+  },
+  sendToEditModal: {
+    heading: 'Senda skýrslu í breytingar',
+    description:
+      'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
+    warningTitle: 'Athugið',
+    warningMessage:
+      'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
+    reasonLabel: 'Ástæða',
+    submitButton: 'Senda í breytingar',
   },
   employeeSelect: {
     label: 'Starfsmaður',
@@ -257,6 +282,10 @@ export const reportText = {
     unassignedOther: 'tók',
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
+    edited: 'gerði breytingar á skýrslu',
+    communicationOpened: 'opnaði á samskipti við innsendanda',
+    communicationClosed: 'lokaði á samskipti við innsendanda',
+    companyCreated: 'Fyrirtæki skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
     companyQuarantined: 'hefur sett fyrirtækið í var',
@@ -289,8 +318,17 @@ export const companiesText = {
   newButton: 'Nýtt fyrirtæki',
   filterHeading: 'Leit og síun',
   filterPlaceholder: 'Sláðu inn leitarorð',
+  // Accordion card headings — each groups several select filters.
+  cardCompany: 'Fyrirtæki',
+  cardStatus: 'Staða',
+  cardLocation: 'Staðsetning',
   avgEmployeeCount: 'Meðalfjöldi starfsmanna',
+  avgEmployeeCountPlaceholder: 'Veldu stærð',
   validPeriod: 'Gildistími',
+  validPeriodPlaceholder: 'Veldu gildistíma',
+  statusPlaceholder: 'Veldu stöðu',
+  flags: 'Annað',
+  flagsPlaceholder: 'Veldu',
   dailyFines: 'Dagsektir',
   overdue: 'Skiladagur',
   overdueTag: 'Skiladagur liðinn',
@@ -322,8 +360,20 @@ export const companiesText = {
     kennitalaEyebrow: 'Kennitala fyrirtækis',
     kennitalaPlaceholder: '000000-0000',
     lookupButton: 'Fletta upp',
-    notFoundError: 'Fyrirtæki fannst ekki í þjóðskrá',
+    notFoundTitle: 'Fyrirtæki fannst ekki',
+    notFoundError: 'Fyrirtæki fannst ekki í fyrirtækjaskrá RSK',
+    lookupErrorTitle: 'Villa við uppflettingu',
+    lookupError:
+      'Ekki tókst að sækja gögn frá fyrirtækjaskrá RSK. Reyndu aftur síðar.',
+    activeTitle: 'Fyrirtæki er virkt',
+    activeMessage: 'Fyrirtæki er virkt í fyrirtækjaskrá RSK',
+    inactiveTitle: 'Fyrirtæki er ekki virkt',
+    inactiveFallbackReason: 'Fyrirtæki er ekki virkt í fyrirtækjaskrá RSK',
     nameLabel: 'Nafn fyrirtækis',
+    addressLabel: 'Heimilisfang',
+    postcodeLabel: 'Póstnúmer',
+    isatCategoryLabel: 'ÍSAT-flokkur',
+    emptyValue: '—',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
     submit: 'Skrá fyrirtæki',
     successToast: 'Fyrirtæki skráð',
@@ -523,6 +573,7 @@ export const sharedText = {
   },
   form: {
     nameLabel: 'Nafn',
+    jobTitleLabel: 'Starfsheiti',
     kennitalaLabel: 'Kennitala',
     emailLabel: 'Netfang',
     phoneLabel: 'Símanúmer',

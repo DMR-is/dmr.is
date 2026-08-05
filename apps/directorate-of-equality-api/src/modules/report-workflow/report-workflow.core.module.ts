@@ -5,6 +5,7 @@ import { ApplicationSystemCoreModule } from '../application-system/application-s
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportModel } from '../report/models/report.model'
+import { ReportCommentCoreModule } from '../report-comment/report-comment.core.module'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportEventCoreModule } from '../report-event/report-event.core.module'
 import { UserModel } from '../user/models/user.model'
@@ -22,6 +23,7 @@ import { IReportWorkflowService } from './report-workflow.service.interface'
     ]),
     ReportEventCoreModule,
     ApplicationSystemCoreModule,
+    ReportCommentCoreModule,
   ],
   providers: [
     {

@@ -28,7 +28,11 @@ import {
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatNationalId, formatSalary } from '../../lib/utils'
+import {
+  formatNationalId,
+  formatSalary,
+  parseInflightConflictStatus,
+} from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -48,6 +52,7 @@ const GENDER_OPTIONS = [
 
 const EMPTY_FORM = {
   companyAdminName: '',
+  companyAdminTitle: '',
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
@@ -266,6 +271,7 @@ export const CreateSalaryReportDrawer = () => {
       providerType: 'SYSTEM' as const,
       providerId: Math.random().toString(36).substring(2, 15), // random ID to avoid replay, see report-create.service.ts
       companyAdminName: form.companyAdminName,
+      companyAdminTitle: form.companyAdminTitle || null,
       companyAdminEmail: form.companyAdminEmail,
       companyAdminGender: form.companyAdminGender,
       contactName: form.contactName,
@@ -319,6 +325,15 @@ export const CreateSalaryReportDrawer = () => {
       // report" error as a clear message instead of the generic fallback.
       if (/equality report/i.test(message)) {
         toast.error(t.missingEqualityToast)
+        return
+      }
+
+      // The API blocks a new submit while a sibling report is IN_REVIEW or
+      // POSTPONED (409). Tell the admin which status is blocking instead of
+      // the generic fallback so they know to resolve the in-flight report.
+      const conflictStatus = parseInflightConflictStatus(message)
+      if (conflictStatus) {
+        toast.error(t.inflightConflictToast.replace('{status}', conflictStatus))
         return
       }
 
@@ -547,6 +562,16 @@ export const CreateSalaryReportDrawer = () => {
               size="xs"
               value={form.companyAdminName}
               onChange={(e) => set('companyAdminName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="companyAdminTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.companyAdminTitle}
+              onChange={(e) => set('companyAdminTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>
