@@ -71,8 +71,8 @@ export enum EducationEnum {
 type ReportEmployeeAttributes = {
   ordinal: number
   education: EducationEnum
-  field: string
-  department: string
+  field: string | null
+  department: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -93,8 +93,8 @@ type ReportEmployeeAttributes = {
 type ReportEmployeeCreateAttributes = {
   ordinal: number
   education: EducationEnum
-  field: string
-  department: string
+  field?: string | null
+  department?: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -124,11 +124,11 @@ export class ReportEmployeeModel extends MutableModel<
   })
   education!: EducationEnum
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  field!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  field!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  department!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  department!: string | null
 
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'start_date' })
   startDate!: string

@@ -3,6 +3,7 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
 
@@ -95,11 +96,11 @@ export class ParsedEmployeeDto {
   @ApiEnum(GenderEnum)
   gender!: GenderEnum
 
-  @ApiString()
-  field!: string
+  @ApiOptionalString({ nullable: true })
+  field!: string | null
 
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department!: string | null
 
   @ApiString()
   startDate!: string

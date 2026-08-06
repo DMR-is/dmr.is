@@ -221,15 +221,14 @@ const buildEmployee = (
     ok = false
   }
 
-  // The 6 salary sub-components are all optional — no missing-field guards.
-  // An absent value stays null in storage; parents derive it as 0.
+  // The 6 salary sub-components, field and department are all optional — no
+  // missing-field guards. An absent value stays null in storage; the salary
+  // parents derive their sum as 0.
   if (!role) missingField(COLS.role, 'Starf')
   if (!genderDisplay) missingField(COLS.gender, 'Kyn')
   if (workRatio == null) missingField(COLS.workRatio, 'Starfshlutfall')
   if (!educationDisplay) missingField(COLS.education, 'Menntun')
   if (baseSalary == null) missingField(COLS.baseSalary, 'Grunnlaun')
-  if (!field) missingField(COLS.field, 'Svið')
-  if (!department) missingField(COLS.department, 'Deild')
   if (!startDate) missingField(COLS.startDate, 'Ráðningardagur')
 
   if (
@@ -239,8 +238,6 @@ const buildEmployee = (
     workRatio == null ||
     educationDisplay == null ||
     baseSalary == null ||
-    field == null ||
-    department == null ||
     startDate == null
   ) {
     return null
