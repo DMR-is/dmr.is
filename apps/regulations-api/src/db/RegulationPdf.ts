@@ -313,6 +313,32 @@ export const cleanupPdfTempDir = async () => {
   }
 }
 
+/**
+ * Logs the versions of the PDF render toolchain once, at startup.
+ *
+ * Neither Chromium (`apk add chromium`) nor pagedjs-cli (`npm install -g`) is
+ * version-pinned in the Dockerfile, so an image rebuild can silently swap the
+ * renderer with no code change — which is exactly how PDF rendering broke in
+ * July 2026 (Chromium 149 -> 150 between two releases). Recording the versions
+ * makes that drift visible in the logs instead of invisible.
+ */
+export const logRenderToolchain = () => {
+  const version = (label: string, cmd: string) =>
+    exec(cmd, (err, stdout) => {
+      console.info(
+        `PDF renderer ${label}:`,
+        err
+          ? `UNAVAILABLE (${err.message.split('\n')[0]})`
+          : // `npm ls` prints a small tree; the package is on the last line.
+            stdout.trim().split('\n').pop()?.replace(/^\W+/, ''),
+      )
+    })
+
+  // pagedjs-cli has no --version flag, so ask npm for the installed version.
+  version('chromium', `${process.env.PUPPETEER_EXECUTABLE_PATH} --version`)
+  version('pagedjs-cli', 'npm ls -g --depth=0 pagedjs-cli')
+}
+
 const makeRegulationPdf = (
   regulation?:
     | InputRegulation
@@ -356,12 +382,28 @@ const makeRegulationPdf = (
               `  --browserArgs --no-sandbox,--font-render-hinting=none,--user-data-dir=${userDataDir}` +
               `  --timeout ${90 * SECOND}` +
               `  --output ${outFile}`,
-            (err) => {
+            // pagedjs-cli reports render progress and Chromium reports crashes
+            // on stdout/stderr. `exec` buffers both and drops them unless the
+            // callback asks for them — without this a failed render logs only
+            // the command line, which is what made the July 2026 outage
+            // undiagnosable. 1MB (the default) is not enough for a chatty
+            // render, and overflowing it would itself fail the render.
+            { maxBuffer: 10 * 1024 * 1024 },
+            (err, stdout, stderr) => {
               // Always clean up the HTML input and the Chromium profile dir,
               // regardless of success/failure.
               tryUnlink(htmlFile)
               tryRmDir(userDataDir)
               if (err) {
+                console.error('pagedjs-cli failed', {
+                  // `signal` distinguishes a Chromium/Node abort (SIGABRT) from
+                  // a kernel OOM kill (SIGKILL) from a clean non-zero exit.
+                  code: err.code,
+                  signal: err.signal,
+                  killed: err.killed,
+                  stdout,
+                  stderr,
+                })
                 // pagedjs-cli may have written a partial/complete output file
                 // before failing; clean it up so it doesn't leak to disk.
                 tryUnlink(outFile)
