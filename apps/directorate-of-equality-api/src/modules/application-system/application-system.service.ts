@@ -53,7 +53,7 @@ export class ApplicationSystemService implements IApplicationSystemService {
   }
 
   async notifyDenied(applicationId: string): Promise<void> {
-    await this.submitEvent(applicationId, ApplicationSystemEvent.DENY)
+    await this.submitEvent(applicationId, ApplicationSystemEvent.REJECT)
   }
 
   async notifyEdited(applicationId: string): Promise<void> {
