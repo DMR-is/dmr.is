@@ -8,7 +8,6 @@ import {
 
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 
 export class ParsedSubCriterionStepDto {
   @ApiNumber()
@@ -88,9 +87,6 @@ export class ParsedEmployeeDto {
 
   @ApiString()
   roleTitle!: string
-
-  @ApiEnum(EducationEnum)
-  education!: EducationEnum
 
   @ApiEnum(GenderEnum)
   gender!: GenderEnum

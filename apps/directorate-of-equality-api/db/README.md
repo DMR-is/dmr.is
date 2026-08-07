@@ -351,7 +351,6 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                      |
 | `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
-| `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
 | `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`   |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
 | `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW` |
@@ -362,29 +361,6 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                   |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
-
-### `EducationEnum` — Iceland to Western mapping
-
-Salary equality reports can be submitted by both Icelandic-resident employees and foreign staff, so education levels are stored in a Western-generic enum rather than raw Icelandic school names. The mapping follows [UNESCO ISCED 2011](https://uis.unesco.org/en/topic/international-standard-classification-education-isced) (the international standard for classifying education levels) so translation to/from other countries is unambiguous.
-
-| Enum value        | ISCED                      | Icelandic                                    | English (approx.)                                                                                                                                  |
-| ----------------- | -------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `COMPULSORY`      | 1–2                        | grunnskóli                                   | Primary + lower secondary (compulsory, ages 6–16)                                                                                                  |
-| `UPPER_SECONDARY` | 3                          | menntaskóli / framhaldsskóli (general track) | Upper secondary / high school                                                                                                                      |
-| `VOCATIONAL`      | 3–4                        | iðnskóli / iðnnám / starfsnám                | Vocational or trade education (welder, electrician, hairdresser, etc.)                                                                             |
-| `BACHELOR`        | 6                          | háskóli (BA / BS / B.Ed)                     | University undergraduate degree                                                                                                                    |
-| `MASTER`          | 7                          | háskóli (MA / MS / M.Ed / integrated master) | University graduate degree                                                                                                                         |
-| `DOCTORATE`       | 8                          | háskóli (PhD / doktorsgráða)                 | Research doctorate                                                                                                                                 |
-| `PROFESSIONAL`    | post-6, non-ISCED-standard | sérfræðinám / sérnám                         | Specialized post-tertiary certification (medical specialty, chartered accounting, bar exam, etc.) — not a research degree but above bachelor level |
-
-Notes for reviewers mapping a CV:
-
-- A candidate who finished only grunnskóli (no further schooling) → `COMPULSORY`.
-- Someone who completed menntaskóli but not university → `UPPER_SECONDARY`.
-- A trained electrician / plumber / hairdresser who went through iðnnám → `VOCATIONAL`, even if they also attended menntaskóli alongside.
-- BA + MA as separate steps → use highest (`MASTER`). Integrated 5-year master's → `MASTER`.
-- MA followed by a specialist certification → use highest degree held. If the specialist certification is the top qualification (no MA), use `PROFESSIONAL`.
-- When in doubt between two values, pick the **higher** level the employee actually completed, not the one they're currently studying.
 
 ## Naming conventions
 
@@ -589,7 +565,6 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | ------------------------- | --------------------------- |
 | `id`                      | `uuid` PK                   |
 | `ordinal`                 | `int`                       |
-| `education`               | `EducationEnum`             |
 | `field`                   | `text`                      |
 | `department`              | `text`                      |
 | `start_date`              | `date`                      |

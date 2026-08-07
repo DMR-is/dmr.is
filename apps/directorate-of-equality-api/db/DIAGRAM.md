@@ -69,7 +69,6 @@ erDiagram
         uuid report_id FK
         uuid report_employee_role_id FK
         GenderEnum gender
-        EducationEnum education
         decimal score "nullable, NULL until submit"
     }
     report_employee_role {

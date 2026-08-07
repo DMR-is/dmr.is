@@ -11,12 +11,11 @@ import {
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../../report/models/report.enums'
-import { EducationEnum } from '../../../report-employee/models/report-employee.model'
 import { SyncMethodEnum } from '../sync-method.enum'
 
 /**
  * Editable fields of an employee in a sync batch. All optional (flat command
- * DTO); the CREATE-required fields (role, education, gender, field, department,
+ * DTO); the CREATE-required fields (role, gender, field, department,
  * startDate, workRatio, baseSalary) are validated server-side. `ordinal` and
  * `score` are never client-set — ordinal is server-assigned, score derived at
  * submit.
@@ -28,9 +27,6 @@ import { SyncMethodEnum } from '../sync-method.enum'
 export class EmployeeChangeDataDto {
   @ApiOptionalUUID({ description: 'Id of a role on the same draft.' })
   reportEmployeeRoleId?: string
-
-  @ApiOptionalEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education?: EducationEnum
 
   @ApiOptionalEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender?: GenderEnum

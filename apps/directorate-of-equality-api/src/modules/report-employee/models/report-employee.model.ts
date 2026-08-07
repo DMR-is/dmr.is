@@ -58,19 +58,8 @@ export function requireComputedScore(employee: {
   return employee.score
 }
 
-export enum EducationEnum {
-  COMPULSORY = 'COMPULSORY',
-  UPPER_SECONDARY = 'UPPER_SECONDARY',
-  VOCATIONAL = 'VOCATIONAL',
-  BACHELOR = 'BACHELOR',
-  MASTER = 'MASTER',
-  DOCTORATE = 'DOCTORATE',
-  PROFESSIONAL = 'PROFESSIONAL',
-}
-
 type ReportEmployeeAttributes = {
   ordinal: number
-  education: EducationEnum
   field: string
   department: string
   startDate: string
@@ -92,7 +81,6 @@ type ReportEmployeeAttributes = {
 
 type ReportEmployeeCreateAttributes = {
   ordinal: number
-  education: EducationEnum
   field: string
   department: string
   startDate: string
@@ -117,12 +105,6 @@ export class ReportEmployeeModel extends MutableModel<
 > {
   @Column({ type: DataType.INTEGER, allowNull: false })
   ordinal!: number
-
-  @Column({
-    type: DataType.ENUM(...Object.values(EducationEnum)),
-    allowNull: false,
-  })
-  education!: EducationEnum
 
   @Column({ type: DataType.TEXT, allowNull: false })
   field!: string
@@ -282,7 +264,6 @@ export class ReportEmployeeModel extends MutableModel<
     return {
       id: model.id,
       ordinal: model.ordinal,
-      education: model.education,
       field: model.field,
       department: model.department,
       startDate: model.startDate,

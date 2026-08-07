@@ -8,7 +8,6 @@ import { ReportCriterionTypeEnum } from '../report-criterion/models/report-crite
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
@@ -183,7 +182,6 @@ function makeParsed(): ParsedReportDto {
         ordinal: 1,
         identifier: 'TVE-001',
         roleTitle: 'Framkvaemdastjori',
-        education: EducationEnum.MASTER,
         gender: GenderEnum.FEMALE,
         field: 'Mgmt',
         department: 'Mgmt',

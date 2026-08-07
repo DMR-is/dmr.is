@@ -30,7 +30,6 @@ import { ReportCriterionModel } from '../report-criterion/models/report-criterio
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
@@ -1127,7 +1126,6 @@ function makeInput(): CreateReportDto {
           ordinal: 1,
           identifier: 'TVE-001',
           roleTitle: 'Framkvaemdastjori',
-          education: EducationEnum.MASTER,
           gender: GenderEnum.FEMALE,
           field: 'Mgmt',
           department: 'Mgmt',
@@ -1182,7 +1180,6 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
     ordinal: ordinal as number,
     identifier: `TVE-00${ordinal}`,
     roleTitle: 'Framkvaemdastjori',
-    education: EducationEnum.MASTER,
     gender: gender as GenderEnum,
     field: 'Mgmt',
     department: 'Mgmt',

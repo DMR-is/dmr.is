@@ -7,7 +7,6 @@ import {
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../report/models/report.model'
-import { EducationEnum } from '../models/report-employee.model'
 
 export class ReportEmployeeDto {
   @ApiUUId()
@@ -15,9 +14,6 @@ export class ReportEmployeeDto {
 
   @ApiNumber()
   ordinal!: number
-
-  @ApiEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education!: EducationEnum
 
   @ApiString()
   field!: string

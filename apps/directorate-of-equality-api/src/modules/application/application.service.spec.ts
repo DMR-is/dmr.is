@@ -41,7 +41,6 @@ import { IReportCommentService } from '../report-comment/report-comment.service.
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
@@ -1586,7 +1585,6 @@ function makeEmployee({
     ordinal,
     identifier: `TVE-00${ordinal}`,
     roleTitle: 'Framkvaemdastjori',
-    education: EducationEnum.MASTER,
     gender,
     field: 'Mgmt',
     department: 'Mgmt',

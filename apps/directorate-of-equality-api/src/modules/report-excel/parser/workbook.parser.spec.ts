@@ -5,7 +5,6 @@ import { BadRequestException } from '@nestjs/common'
 
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
 import { parseWorkbook } from './workbook.parser'
@@ -94,7 +93,6 @@ const writeEmployeeRow = (
     role: string
     gender: string
     workRatio: number
-    education: string
     baseSalary: number
     additionalFixedOvertime: number | null
     additionalFixedCarAllowance: number | null
@@ -114,17 +112,16 @@ const writeEmployeeRow = (
   s.getCell(`C${r}`).value = values.role
   s.getCell(`D${r}`).value = values.gender
   s.getCell(`E${r}`).value = values.workRatio
-  s.getCell(`F${r}`).value = values.education
-  s.getCell(`G${r}`).value = values.field
-  s.getCell(`H${r}`).value = values.department
-  s.getCell(`I${r}`).value = values.startDate
-  s.getCell(`J${r}`).value = values.baseSalary
-  s.getCell(`K${r}`).value = values.additionalFixedOvertime
-  s.getCell(`L${r}`).value = values.additionalFixedCarAllowance
-  s.getCell(`M${r}`).value = values.bonusOccasionalCarAllowance
-  s.getCell(`N${r}`).value = values.bonusOccasionalOvertime
-  s.getCell(`O${r}`).value = values.bonusPayments
-  s.getCell(`P${r}`).value = values.bonusOther
+  s.getCell(`F${r}`).value = values.field
+  s.getCell(`G${r}`).value = values.department
+  s.getCell(`H${r}`).value = values.startDate
+  s.getCell(`I${r}`).value = values.baseSalary
+  s.getCell(`J${r}`).value = values.additionalFixedOvertime
+  s.getCell(`K${r}`).value = values.additionalFixedCarAllowance
+  s.getCell(`L${r}`).value = values.bonusOccasionalCarAllowance
+  s.getCell(`M${r}`).value = values.bonusOccasionalOvertime
+  s.getCell(`N${r}`).value = values.bonusPayments
+  s.getCell(`O${r}`).value = values.bonusOther
 }
 
 // Step-order inputs sit on every SECOND column (score column interleaved after
@@ -252,7 +249,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Forstöðumaður',
     gender: 'Kona',
     workRatio: 1,
-    education: 'BA/BS eða sambærilegt háskólanám',
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -269,7 +265,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Sérfræðingur',
     gender: 'Karl',
     workRatio: 1,
-    education: 'Háskólapróf á framhaldsstigi (MA/MS)',
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -286,7 +281,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Verkstjóri',
     gender: 'Kona',
     workRatio: 0.8,
-    education: 'Styttra framhaldsnám (t.d. leikskóla-/félagsliði)',
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -385,7 +379,6 @@ describe('parseWorkbook', () => {
           ordinal: 3,
           roleTitle: 'Verkstjóri',
           gender: GenderEnum.FEMALE,
-          education: EducationEnum.VOCATIONAL,
           workRatio: 0.8,
           baseSalary: 600000,
           startDate: '2022-03-15',
@@ -424,7 +417,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -479,7 +471,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -526,7 +517,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -543,7 +533,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Karl',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -582,7 +571,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -622,7 +610,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Other',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -646,39 +633,6 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects unknown education value', async () => {
-      const wb = await loadTemplate()
-      writeEmployeeRow(wb, 1, {
-        name: 'X',
-        role: 'R',
-        gender: 'Kona',
-        workRatio: 1,
-        education: 'Made-up degree',
-        baseSalary: 1,
-        additionalFixedOvertime: 0,
-        additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
-        bonusOccasionalOvertime: null,
-        bonusPayments: null,
-        bonusOther: null,
-        field: 'X',
-        department: 'X',
-        startDate: new Date('2024-01-01'),
-      })
-      fillCriteriaAndSubCriteria(wb)
-      fillRoleClassification(wb, [[1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1]])
-
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
-      expect(
-        errors.some((e) =>
-          e.message.includes('Óþekkt menntunarstig „Made-up degree“'),
-        ),
-      ).toBe(true)
-    })
-
     it('rejects out-of-range workRatio', async () => {
       const wb = await loadTemplate()
       writeEmployeeRow(wb, 1, {
@@ -686,7 +640,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1.5,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -714,13 +667,12 @@ describe('parseWorkbook', () => {
 
     it('rejects required missing field with specific column reference', async () => {
       const wb = await loadTemplate()
-      // Only fill partial row — omit education
+      // Only fill partial row — omit field (Svið)
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: '',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -728,7 +680,7 @@ describe('parseWorkbook', () => {
         bonusOccasionalOvertime: null,
         bonusPayments: null,
         bonusOther: null,
-        field: 'X',
+        field: '',
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
@@ -743,7 +695,7 @@ describe('parseWorkbook', () => {
         errors.some(
           (e) =>
             e.message.includes('Nauðsynlegan reit vantar') &&
-            e.message.includes('Menntun'),
+            e.message.includes('Svið'),
         ),
       ).toBe(true)
     })
@@ -755,7 +707,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -795,7 +746,6 @@ describe('parseWorkbook', () => {
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
           workRatio: 1,
-          education: 'BA/BS eða sambærilegt háskólanám',
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,

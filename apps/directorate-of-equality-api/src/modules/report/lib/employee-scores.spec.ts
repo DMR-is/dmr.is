@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 import type { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import { GenderEnum } from '../models/report.enums'
 import { assertParsedPayloadIntegrity } from './employee-scores'
@@ -205,7 +204,6 @@ function makeEmployee(
     ordinal,
     identifier: `TVE-${String(ordinal).padStart(3, '0')}`,
     roleTitle: 'Manager',
-    education: EducationEnum.MASTER,
     gender: GenderEnum.FEMALE,
     field: 'Management',
     department: 'Operations',
