@@ -3,7 +3,6 @@ import S3 from 'aws-sdk/clients/s3'
 import { exec } from 'child_process'
 import fs from 'fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'fs/promises'
-import fetch from 'node-fetch'
 import os from 'os'
 import path from 'path'
 
@@ -442,24 +441,43 @@ const cleanUpRegulationBodyInput = (
 
 // ---------------------------------------------------------------------------
 
-const fetchPdf = (fileKey: string) =>
-  fetch(
-    `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION_NAME}.amazonaws.com/${fileKey}`,
-  )
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`Error fetching '${res.url}' (${res.status})`)
-      }
-      return res.buffer().then((contents) => ({
-        contents: contents,
-        modifiedDate:
-          toISODateTime(res.headers.get('Last-Modified')) || ('' as const),
-      }))
-    })
-    .catch(() => ({ contents: false, modifiedDate: '' }) as const)
-
 const s3 = new S3({ region: AWS_REGION_NAME })
 const doLog = !!MEDIA_BUCKET_FOLDER
+
+/**
+ * Reads a cached PDF from S3.
+ *
+ * This used to be an unauthenticated `fetch()` against the bucket's public
+ * URL, which could never work: the bucket is private (it is a CloudFront
+ * origin), so anonymous reads get a 403 even for objects that exist. Going
+ * through the SDK signs the request with the task role, which already grants
+ * `s3:GetObject` on this bucket.
+ *
+ * A miss is normal and expected — it just means the PDF has to be rendered —
+ * so `NoSuchKey` stays quiet. Anything else means the cache is misconfigured
+ * rather than merely cold, and is worth surfacing: the previous version
+ * swallowed every error identically, which is why a completely dead cache went
+ * unnoticed.
+ */
+const fetchPdf = (fileKey: string) =>
+  s3
+    .getObject({ Bucket: AWS_BUCKET_NAME, Key: fileKey })
+    .promise()
+    .then(
+      (res) =>
+        ({
+          contents: res.Body as Buffer,
+          modifiedDate:
+            toISODateTime(res.LastModified?.toISOString()) || ('' as const),
+        }) as const,
+    )
+    .catch((error: unknown) => {
+      const code = (error as { code?: string })?.code
+      if (code !== 'NoSuchKey' && code !== 'NotFound') {
+        console.error('Unable to read cached PDF', fileKey, code ?? error)
+      }
+      return { contents: false, modifiedDate: '' } as const
+    })
 
 const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
   s3
@@ -474,8 +492,10 @@ const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
       doLog && console.info('🆗 Uploaded', data.Key)
     })
     .catch((error: unknown) => {
+      // Upload failures used to log at `console.info`, so an S3 client built
+      // with an empty region failed silently for months.
       const message = error instanceof Error ? error.message : error
-      console.info('⚠️ ', message)
+      console.error('Unable to cache PDF', fileKey, message)
     })
 
 type RegOpts = {
