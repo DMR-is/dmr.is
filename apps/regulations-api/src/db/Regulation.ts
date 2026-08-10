@@ -339,10 +339,22 @@ export const fetchModifiedDate = async (
   if (!reg) {
     return
   }
+  // For a historic date we want the latest change up to that date; for
+  // `current` we want the latest change up to now (which is what
+  // `getLatestRegulationChange` defaults `beforeDate` to).
+  //
+  // `current` used to skip this lookup entirely and fall back to the original
+  // publication date. Since a PDF is always cached *after* the regulation was
+  // published, the staleness check `cachedDate < publishedDate` was then always
+  // false — so a cached current-version PDF was never regenerated when the
+  // regulation was amended, and served pre-amendment text indefinitely.
   const change =
     date &&
-    date !== 'current' &&
-    (await getLatestRegulationChange(reg.id, date, ['date']))
+    (await getLatestRegulationChange(
+      reg.id,
+      date === 'current' ? undefined : date,
+      ['date'],
+    ))
   // FIXME: The database should be updated to contain lastModified/created timestamps
   return ((change ? change.date : reg.publisheddate) +
     'T08:00:00') as ISODateTime
