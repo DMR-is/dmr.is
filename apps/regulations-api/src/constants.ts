@@ -2,12 +2,22 @@ import { ensurePosInt } from '@dmr.is/regulations-tools/utils'
 
 const AWS_PRESIGNED_POST_EXPIRES_DEFAULT = 600
 
-const {
-  AWS_BUCKET_NAME = '',
-  AWS_REGION_NAME = '',
-  API_SERVER,
-  MEDIA_BUCKET_FOLDER,
-} = process.env
+const { AWS_BUCKET_NAME = '', API_SERVER, MEDIA_BUCKET_FOLDER } = process.env
+
+/**
+ * The region the PDF cache bucket lives in.
+ *
+ * `AWS_REGION_NAME` is our own name for this and is not set in any environment
+ * — it is absent from the infrastructure repo entirely. ECS injects the
+ * standard `AWS_REGION` / `AWS_DEFAULT_REGION` on every task, so fall back to
+ * those rather than silently resolving to '' (which produced the malformed
+ * host `<bucket>.s3..amazonaws.com` and made every cache read fail DNS).
+ */
+const AWS_REGION_NAME =
+  process.env.AWS_REGION_NAME ||
+  process.env.AWS_REGION ||
+  process.env.AWS_DEFAULT_REGION ||
+  ''
 
 if (!AWS_BUCKET_NAME || !AWS_REGION_NAME || !API_SERVER) {
   // eslint-disable-next-line no-console
