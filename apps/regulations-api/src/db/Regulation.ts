@@ -335,7 +335,14 @@ export const fetchModifiedDate = async (
   name: RegName,
   date?: Date | 'current',
 ) => {
-  const reg = await getRegulationByName(name, ['id', 'publishedDate'])
+  // NOTE: `publisheddate`, not `publishedDate`. The model declares the column
+  // in lowercase, and Sequelize silently drops attributes it does not
+  // recognise — so the camelCase spelling returned `dataValues: { id }` only,
+  // leaving `reg.publisheddate` undefined and `regModified` the literal string
+  // 'undefinedT08:00:00'. That is truthy, and its leading 'u' sorts after every
+  // digit, so every staleness comparison below evaluated true and no cached PDF
+  // was ever usable.
+  const reg = await getRegulationByName(name, ['id', 'publisheddate'])
   if (!reg) {
     return
   }
