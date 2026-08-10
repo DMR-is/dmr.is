@@ -34,7 +34,7 @@
     "class-validator": "^0.14.1",
     "date-fns": "2.30.0",
     "mammoth": "^1.8.0",
-    "nodemailer": "^6.10.0",
+    "nodemailer": "^9.0.4",
     "pdf-lib": "1.17.1",
     "puppeteer": "^22.8.1",
     "react-pdf": "^7.5.0",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@types/multer": "^1.4.11",
-    "@types/nodemailer": "^6",
+    "@types/nodemailer": "^8",
     "@types/react-pdf": "^5.0.9"
   }
 }
