@@ -4,7 +4,7 @@
  */
 export enum ApplicationSystemEvent {
   APPROVE = 'APPROVE',
-  DENY = 'DENY',
+  REJECT = 'REJECT',
   EDIT = 'EDIT',
 }
 
@@ -19,7 +19,7 @@ export interface IApplicationSystemService {
 
   /**
    * Notify the island.is application system that the DoE report tied to the
-   * given application has been denied.
+   * given application has been rejected.
    *
    * @param applicationId island.is application UUID (report `providerId`)
    */
