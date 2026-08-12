@@ -15,7 +15,7 @@ export const serveRobotsTxt = (server: FastifyInstance, robotsFile: string) => {
     // regulations-api's esbuild `assets` config), so this only happens when
     // this module is loaded unbundled (e.g. from a test) relative to a
     // different cwd/__dirname. Don't let that break server construction.
-    console.warn('Could not read robots.txt at ' + robotsPath, err)
+    server.log.warn({ err, robotsPath }, 'Could not read robots.txt')
   }
 
   server.get('/robots.txt', (request, reply) => {
