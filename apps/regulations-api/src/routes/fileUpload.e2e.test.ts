@@ -168,6 +168,20 @@ const PLAIN_XML = Buffer.from(
   '<?xml version="1.0"?><note><body>hello</body></note>',
 )
 
+/**
+ * An SVG larger than one 64KB stream chunk — 76,068 bytes. Built by repetition
+ * so the bytes, and therefore the `--20071098` hash, are deterministic.
+ *
+ * Size is the whole point: the old stack sniffed only the first chunk, so
+ * anything past 65,536 bytes was invisible to it. Maps and technical diagrams
+ * in a regulations corpus land here routinely.
+ */
+const LARGE_SVG = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<path fill="#00CD9F" d="M0 0h1v1H0z"/>'.repeat(2000) +
+    '</svg>',
+)
+
 const BOUNDARY = '----dmrisuploadboundary'
 
 const multipartBody = (
@@ -550,6 +564,10 @@ describe('POST /api/v1/file-upload — rejections and limits', () => {
  *
  * These tests fail against the unguarded implementation and pass with the
  * guard, which is the only thing that makes them worth having.
+ *
+ * ONE test in this block is SPECIFIED rather than characterized — the >64KB
+ * SVG — and says so in its own comment. It asserts a deliberate improvement on
+ * the old behaviour, not a match to it.
  */
 describe('POST /api/v1/file-upload — content type detection', () => {
   let app: FastifyInstance
@@ -561,8 +579,12 @@ describe('POST /api/v1/file-upload — content type detection', () => {
   })
 
   it('sniffs a bare <svg> file', async () => {
-    // The shape that kept working through the regression — kept so the pair
-    // below reads as a contrast rather than a lone failure.
+    // CONTROL, not load-bearing: this shape passes with or WITHOUT the xml
+    // guard, because `file-type@16` returns undefined for a bare `<svg…>` and
+    // the request reaches `isSvg` either way. It is here so the cases below
+    // read as a contrast rather than a lone failure. If the SVG coverage ever
+    // gets trimmed, trim THIS one — the `<?xml?>` and `<!DOCTYPE>` cases are
+    // the ones that actually prove the guard does something.
     app = build()
 
     const res = await upload(app, {
@@ -631,6 +653,46 @@ describe('POST /api/v1/file-upload — content type detection', () => {
     expect(uploaded().ContentType).toBe('application/octet-stream')
     expect(locationOf(res)).toBe(
       'https://files.reglugerd.is/admin-drafts/files/foo/metadata--1fa4dc10.xml',
+    )
+  })
+
+  it('SPECIFIED: an SVG over 64KB is image/svg+xml — a deliberate IMPROVEMENT on the old behaviour', async () => {
+    // NOT characterization. The old stack returned `application/octet-stream`
+    // here; this test asserts the new, BETTER answer, and does so on purpose.
+    //
+    // Measured, old stack vs new, on this exact 76,068-byte buffer:
+    //   OLD (is-svg 2.1.0 on the first 65,536 bytes) = application/octet-stream
+    //   NEW (is-svg 4.4.0 on the whole buffer)       = image/svg+xml
+    //
+    // `AUTO_CONTENT_TYPE` sniffed `file.stream.once('data')` — one chunk, 64KB
+    // by default — so a larger SVG was judged on a truncated fragment with no
+    // closing `</svg>`, `isSvg` said no, and it was stored as a download that
+    // will not render in an `<img>`. The rewrite buffers the whole file because
+    // it must (the MD5 is part of the object key) and therefore sniffs all of
+    // it. The improvement falls out of that; it is not caused by the xml guard.
+    //
+    // This is NOT preservable — restoring it would mean deliberately truncating
+    // the sniff to reproduce a bug. Verified that the divergence is truncation
+    // and not the library version: is-svg 2.1.0 and 4.4.0 BOTH return false on
+    // the truncated prefix and true on the whole buffer.
+    //
+    // The reason to spend a test on a fix: without it, someone diffing against
+    // the old implementation sees a mismatch, calls it a regression, and
+    // characterizes the truncated behaviour back in.
+    app = build()
+
+    const res = await upload(app, {
+      filename: 'map.svg',
+      content: LARGE_SVG,
+      contentType: 'image/svg+xml',
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(LARGE_SVG.length).toBeGreaterThan(65536) // guards the premise
+    expect(uploaded().ContentType).toBe('image/svg+xml')
+    expect(uploaded().ContentType).not.toBe('application/octet-stream')
+    expect(locationOf(res)).toBe(
+      'https://files.reglugerd.is/admin-drafts/files/foo/map--20071098.svg',
     )
   })
 
