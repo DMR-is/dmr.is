@@ -7,7 +7,7 @@ RUN node -e "const f='package.json',p=JSON.parse(require('fs').readFileSync(f));
 RUN npm install --omit=dev --legacy-peer-deps
 
 # Production image, copy all the files and run nest
-FROM docker.io/node:lts-alpine AS runner
+FROM docker.io/node:20.15.0-alpine AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 WORKDIR /usr/src/app
