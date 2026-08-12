@@ -97,7 +97,8 @@ export function buildServer(): FastifyInstance {
     fastify.register(elasticRebuildRoutes, { prefix: '/api/v1' })
   }
 
-  fastify.register(fastifyMultipart, { prefix: '/api/v1' }) // Required for fastify-multer to work
+  // Decorates the request with `file()`, which POST /file-upload calls directly.
+  fastify.register(fastifyMultipart, { prefix: '/api/v1' })
   fastify.register(fileUploadRoutes, { prefix: '/api/v1' })
 
   fastify.register(regulationRoutes, { prefix: '/api/v1' })

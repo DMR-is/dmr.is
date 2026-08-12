@@ -103,10 +103,23 @@ const getS3Client = () => {
 }
 
 /** Reproduces `multer-s3-transform`'s `AUTO_CONTENT_TYPE`: magic bytes first,
- * then an SVG sniff, then a generic fallback. */
+ * then an SVG sniff, then a generic fallback.
+ *
+ * The XML guard is load-bearing. `AUTO_CONTENT_TYPE` ran `file-type@3`, which
+ * detected no text formats at all, so the SVG sniff always got its turn. The
+ * `file-type@16` we run here *does* detect XML, and an `application/xml`
+ * verdict would shadow the sniff below — storing every SVG that carries an
+ * `<?xml …?>` declaration (i.e. anything Illustrator or Inkscape exports) as
+ * `application/xml`, which browsers refuse to render in an `<img>`. Bare
+ * `<svg …>` files would keep working, so the breakage would look intermittent.
+ *
+ * Falling through to `application/octet-stream` rather than to `type.mime`
+ * keeps non-SVG XML on the old stack's answer too. Verified against
+ * `file-type@3.9.0` + `is-svg@2.1.0` from the Yarn cache: identical output on
+ * every case tried. */
 const detectContentType = async (body: Buffer): Promise<string> => {
   const type = await file_type.fromBuffer(body)
-  if (type) {
+  if (type && type.mime !== 'application/xml') {
     return type.mime
   }
   if (isSvg(body)) {
