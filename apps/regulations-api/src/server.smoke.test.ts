@@ -63,7 +63,7 @@ afterEach(() => {
  * call time (not module load), so no `jest.resetModules()` dance is needed. */
 const build = (): FastifyInstance => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { buildServer } = require('./server') as {
+  const { buildServer } = require('./app') as {
     buildServer: () => FastifyInstance
   }
   return buildServer()

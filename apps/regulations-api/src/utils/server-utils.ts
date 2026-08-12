@@ -7,7 +7,10 @@ import { DAY, SECOND } from '@hugsmidjan/qj/time'
 export const serveRobotsTxt = (server: FastifyInstance, robotsFile: string) => {
   const robotsPath = path.join(__dirname, robotsFile)
 
-  let robotsTxt = ''
+  // Fail closed: if the real file can't be read, disallow everything rather
+  // than default to an empty body, which crawlers read as "allow everything"
+  // — and this response is cached for 24 days, so a wrong default sticks.
+  let robotsTxt = 'User-agent: *\nDisallow: /\n'
   try {
     robotsTxt = readFileSync(robotsPath, 'utf8')
   } catch (err) {
