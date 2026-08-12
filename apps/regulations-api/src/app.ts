@@ -30,7 +30,14 @@ import fastifyRedis from '@fastify/redis'
 export function buildServer(): FastifyInstance {
   const fastify = fast({
     logger: true,
-    ignoreTrailingSlash: true,
+    // Fastify 5 moved the router options behind `routerOptions`. Passing
+    // `ignoreTrailingSlash` at the top level still works but emits FSTDEP022
+    // (see fastify/lib/route.js `buildRouterOptions`), and the top-level form
+    // is removed in Fastify 6. Behaviour is identical — v5 merely copies the
+    // top-level value into `routerOptions` when it is absent there.
+    routerOptions: {
+      ignoreTrailingSlash: true,
+    },
   })
 
   const {
@@ -85,6 +92,11 @@ export function buildServer(): FastifyInstance {
     )
   }
   if (OPENSEARCH_CLUSTER_ENDPOINT) {
+    // NOTE: @fastify/opensearch@2 declares `@opensearch-project/opensearch@^3.3.0`.
+    // The root package.json pins that nested dependency back to the 2.13.x this
+    // app uses, so `this.opensearch` and everything in `src/elastic/` share one
+    // client version. Remove that resolution and the search routes silently get
+    // a major-version-newer client as a side effect of a Fastify upgrade.
     fastify.register(FastifyOpenSearch, {
       node: OPENSEARCH_CLUSTER_ENDPOINT,
       ssl: { rejectUnauthorized: false },
@@ -98,7 +110,11 @@ export function buildServer(): FastifyInstance {
   }
 
   // Decorates the request with `file()`, which POST /file-upload calls directly.
-  fastify.register(fastifyMultipart, { prefix: '/api/v1' })
+  // No `prefix` — the plugin registers no routes of its own, so a prefix was
+  // always inert here. No `limits` either: the upload route sets its own
+  // per-call `fileSize` (see `uploadFileFromRequest`), and adding a ceiling
+  // here would be a behaviour change rather than part of this upgrade.
+  fastify.register(fastifyMultipart)
   fastify.register(fileUploadRoutes, { prefix: '/api/v1' })
 
   fastify.register(regulationRoutes, { prefix: '/api/v1' })

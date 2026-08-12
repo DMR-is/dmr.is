@@ -93,8 +93,19 @@ const basic = (user: string, pass: string) =>
  * green straight through the regression it is supposed to catch. Getting past
  * auth is what puts the request in front of the parser.
  *
- * Expected on Fastify 5: the first test flips 200 -> 400, and the second
- * starts returning 400 instead of reaching the handler at all.
+ * THE CANARY FIRED. On the Fastify 5 bump these two were the only failures out
+ * of 119, with exactly the predicted transitions: 200 -> 400 and 500 -> 400.
+ * They are now CHARACTERIZED against Fastify 5. The Fastify 4 baselines they
+ * previously asserted are preserved in git history at commit 01b2677e.
+ *
+ * The 400 was accepted deliberately rather than papered over. Fastify 4 ALREADY
+ * returns 400 for the same request whenever `content-length: 0` is present (see
+ * the test at the bottom of this block, which passed on both majors), and
+ * virtually every real HTTP client sends that header on a bodyless request — so
+ * most callers were receiving 400 before this upgrade. Fastify 5 generalizes an
+ * existing failure mode rather than introducing one. Restoring the old
+ * behaviour would have required a parser strictly MORE permissive than Fastify
+ * 4, since it would also have had to accept the `content-length: 0` case.
  */
 describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: application/json', () => {
   let app: FastifyInstance
@@ -105,7 +116,7 @@ describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: app
     }
   })
 
-  it('DELETE /api/v1/cache/ministries reaches the handler and returns 200', async () => {
+  it('DELETE /api/v1/cache/ministries is rejected by the body parser with 400', async () => {
     setEnv({ ROUTES_USERNAME: 'reg-user', ROUTES_PASSWORD: 'reg-pass' })
     app = build()
 
@@ -119,17 +130,16 @@ describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: app
       // deliberately no payload — and therefore no content-length either
     })
 
-    // Fastify 4: parsing is skipped, the handler runs, redis is undefined so
-    // `del()` short-circuits to 0.
-    expect(res.statusCode).toBe(200)
-    expect(JSON.parse(res.body)).toEqual({ deleted: 0 })
-
-    // Fastify 5 turns this into 400 FST_ERR_CTP_EMPTY_JSON_BODY.
-    expect(res.statusCode).not.toBe(400)
-    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
+    // Fastify 4 returned 200 {"deleted":0}: parsing was skipped, the handler
+    // ran, and redis being undefined short-circuited `del()` to 0.
+    // Fastify 5 never reaches the handler — the JSON parser rejects the empty
+    // body first. Asserting the error CODE and not just the status, so that a
+    // future change in *which* rejection occurs is visible rather than silent.
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).code).toBe('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
 
-  it('DELETE /api/v1/change-suggestions/:id reaches the handler (which then fails on the absent DB)', async () => {
+  it('DELETE /api/v1/change-suggestions/:id is rejected by the body parser before the handler', async () => {
     setEnv({
       ROUTES_USERNAME_CHANGESUGGESTION: 'cs-user',
       ROUTES_PASSWORD_CHANGESUGGESTION: 'cs-pass',
@@ -146,14 +156,17 @@ describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: app
       // deliberately no payload
     })
 
-    // Past auth (not 401) and into the handler. Deliberately NOT asserting the
-    // handler's own status: today it is 500 because `connectSequelize()` was
-    // never called, but a CI with a reachable database would make it 200 or
-    // 404 and that must not turn this red. The load-bearing part is that the
-    // body parser did not stop the request.
+    // On Fastify 4 this got past auth and into the handler, which then 500'd
+    // because `connectSequelize()` was never called. On Fastify 5 the parser
+    // rejects it first, so the handler is never entered and the absent DB is
+    // no longer reachable from this test.
+    //
+    // Still asserting `not.toBe(401)` explicitly: the 400 must come from the
+    // body parser, not from auth. If credentials ever stopped working, the
+    // status alone would not distinguish the two failures.
     expect(res.statusCode).not.toBe(401)
-    expect(res.statusCode).not.toBe(400)
-    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).code).toBe('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
 
   it('control: the same DELETE without a content-type header also reaches the handler', async () => {
@@ -346,6 +359,36 @@ describe('routes that need no infrastructure', () => {
     // the prefixed path does NOT exist.
     const prefixed = await app.inject({ method: 'GET', url: '/api/v1/health' })
     expect(prefixed.statusCode).toBe(404)
+  })
+
+  /**
+   * CHARACTERIZED. `ignoreTrailingSlash` has been set since the Fastify 4 days
+   * and every route is reachable with or without a trailing slash.
+   *
+   * This exists because the Fastify 5 bump had to MOVE that option: passing it
+   * at the top level still works in v5 but emits FSTDEP022 and is removed in
+   * v6, so it now lives under `routerOptions` (app.ts). That is a silent kind
+   * of change — if the option stopped applying, nothing else in this suite
+   * would notice, and every caller using a trailing slash would start getting
+   * 404s in production. Verified against the built bundle too: /health/ and
+   * /robots.txt/ both answered 200.
+   */
+  it('routes are reachable with a trailing slash (ignoreTrailingSlash)', async () => {
+    app = build()
+
+    const bare = await app.inject({ method: 'GET', url: '/health' })
+    const slashed = await app.inject({ method: 'GET', url: '/health/' })
+
+    expect(bare.statusCode).toBe(200)
+    expect(slashed.statusCode).toBe(200)
+    // Compare the stable field only — /health returns a fresh `Date.now()`
+    // timestamp per request, so the raw bodies never match.
+    expect(JSON.parse(slashed.body).status).toBe('ok')
+
+    // Also true for a route registered outside a plugin, which takes a
+    // different registration path through the router.
+    const robots = await app.inject({ method: 'GET', url: '/robots.txt/' })
+    expect(robots.statusCode).toBe(200)
   })
 
   it('GET /robots.txt returns 200 with a long-lived cache header', async () => {
