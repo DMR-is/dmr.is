@@ -3,7 +3,6 @@ import { Op } from 'sequelize'
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { UNASSIGNABLE_CATEGORY_IDS } from '../../core/constants'
 import { CategoryModel } from '../../models/category.model'
 import { TypeModel } from '../../models/type.model'
 import {
@@ -69,9 +68,7 @@ export class TypeCategoriesService implements ITypeCategoriesService {
       include: [
         {
           model: CategoryModel,
-          where: options?.excludeUnassignable
-            ? { id: { [Op.notIn]: UNASSIGNABLE_CATEGORY_IDS } }
-            : undefined,
+          where: options?.excludeUnassignable ? { active: true } : undefined,
           required: false,
         },
       ],
