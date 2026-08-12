@@ -65,7 +65,7 @@ export const overviewText = {
     reviewerLabel: 'Starfsmaður',
     dateLabel: 'Dagsetning',
     typeLabel: 'Tegund',
-    companyLabel: 'Fyrirtæki',
+    companyLabel: 'Málsaðili',
     dateRangeLabel: 'Tímabil',
     dateFrom: 'Frá',
     dateFromPlaceholder: 'Veldu dagsetningu',

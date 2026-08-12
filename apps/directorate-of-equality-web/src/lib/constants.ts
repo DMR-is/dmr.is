@@ -112,7 +112,7 @@ export const COLUMN_REVIEWER: ColumnDef<Case> = {
 }
 
 export const DETAIL_FIELDS: Array<{ label: string; key: keyof Case }> = [
-  { label: sharedText.form.companyHeading, key: 'company' },
+  { label: overviewText.filter.companyLabel, key: 'company' },
   { label: sharedText.form.topManagerHeading, key: 'companyAdmin' },
   { label: sharedText.form.kennitalaLabel, key: 'kennitala' },
   { label: sharedText.form.emailLabel, key: 'email' },
