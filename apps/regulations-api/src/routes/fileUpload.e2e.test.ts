@@ -35,12 +35,13 @@ import type { FastifyInstance } from 'fastify'
  *
  *   SPECIFIED — the old implementation had no equivalent, so these state what
  *   the new code MUST do rather than what the old code did. Nobody should read
- *   them as historical contract. Covers: the SVG sniff (a reimplementation of
- *   `multer-s3-transform`'s AUTO_CONTENT_TYPE, which the rewrite had to write
- *   from scratch), 400 on a wrong field name, and 400 on a non-multipart body.
- *   The last two are a deliberate behaviour CHANGE — the old handler's guard
- *   was dead code and returned 200 with a `location` ending in the literal
- *   string `undefined`.
+ *   them as historical contract. Covers 400 on a wrong field name and 400 on a
+ *   non-multipart body, which are a deliberate behaviour CHANGE: the old
+ *   handler's guard was dead code and returned 200 with a `location` ending in
+ *   the literal string `undefined`.
+ *
+ * Content-type detection was SPECIFIED until the old sniffing stack could be
+ * measured from the yarn cache; it is now CHARACTERIZED. See that block.
  *
  * The ONLY thing stubbed is the S3 network boundary — `@aws-sdk/lib-storage`'s
  * `Upload` — so the assertions can read the exact params the app tried to
@@ -140,8 +141,31 @@ const PNG = Buffer.from(
 // mean a changed hash algorithm produced a changed key and the test still
 // agreed with it.
 
+/** Bare `<svg>` — the shape that kept working through the content-type
+ * regression, because `file-type` does not recognise it. */
 const SVG = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg"><path fill="#00CD9F"/></svg>',
+)
+
+/** SVG with an XML declaration — what most editors emit, and the shape that
+ * `file-type@16` reports as `application/xml`. */
+const XML_DECL_SVG = Buffer.from(
+  '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
+    '<path fill="#00CD9F" d="M0 0h16v16H0z"/></svg>',
+)
+
+/** SVG with both an XML declaration and a DOCTYPE — Illustrator/Inkscape. */
+const DOCTYPE_SVG = Buffer.from(
+  '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ' +
+    '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n' +
+    '<svg xmlns="http://www.w3.org/2000/svg"><path fill="#00CD9F"/></svg>',
+)
+
+/** XML that is not SVG — the other side of the guard. */
+const PLAIN_XML = Buffer.from(
+  '<?xml version="1.0"?><note><body>hello</body></note>',
 )
 
 const BOUNDARY = '----dmrisuploadboundary'
@@ -503,9 +527,30 @@ describe('POST /api/v1/file-upload — rejections and limits', () => {
   })
 })
 
-/** SPECIFIED, not characterized. `multer-s3-transform`'s AUTO_CONTENT_TYPE
- * did this, but the rewrite had to reimplement it, so these state what the new
- * code must do rather than replaying a measured old value. */
+/**
+ * CHARACTERIZED. Upgraded from SPECIFIED once the old stack could be measured
+ * directly: `file-type@3.9.0` and `is-svg@2.1.0` — the exact versions
+ * `multer-s3-transform` bundled — were extracted from the yarn cache and run
+ * through AUTO_CONTENT_TYPE's algorithm verbatim (`fileType(chunk)`, else
+ * `isSvg(chunk)`, else `application/octet-stream`). Measured results:
+ *
+ *   input                          OLD                       NEW without guard
+ *   svg, bare <svg>                image/svg+xml             image/svg+xml
+ *   svg, <?xml?> declaration       image/svg+xml             application/xml   <-- REGRESSION
+ *   svg, <?xml?> + <!DOCTYPE>      image/svg+xml             application/xml   <-- REGRESSION
+ *   png                            image/png                 image/png
+ *   non-svg xml                    application/octet-stream  application/xml   <-- REGRESSION
+ *   plain text                     application/octet-stream  application/octet-stream
+ *
+ * `file-type@16` detects XML where `file-type@3` detected no text formats at
+ * all, so it returns before the `isSvg` fallback ever runs. Every SVG carrying
+ * an `<?xml …?>` declaration — i.e. anything Illustrator or Inkscape exports —
+ * would be stored as `application/xml` and refuse to render in an `<img>`.
+ * Bare `<svg>` files keep working, which is what makes it look intermittent.
+ *
+ * These tests fail against the unguarded implementation and pass with the
+ * guard, which is the only thing that makes them worth having.
+ */
 describe('POST /api/v1/file-upload — content type detection', () => {
   let app: FastifyInstance
 
@@ -515,10 +560,9 @@ describe('POST /api/v1/file-upload — content type detection', () => {
     }
   })
 
-  it('sniffs SVG, which has no magic bytes', async () => {
-    // The old `AUTO_CONTENT_TYPE` fell back to an is-svg check before giving
-    // up on application/octet-stream. Pinned because losing it would store
-    // every SVG as a download rather than an image.
+  it('sniffs a bare <svg> file', async () => {
+    // The shape that kept working through the regression — kept so the pair
+    // below reads as a contrast rather than a lone failure.
     app = build()
 
     const res = await upload(app, {
@@ -530,8 +574,86 @@ describe('POST /api/v1/file-upload — content type detection', () => {
     expect(res.statusCode).toBe(200)
     expect(uploaded().ContentType).toBe('image/svg+xml')
     expect(locationOf(res)).toBe(
-      `https://files.reglugerd.is/admin-drafts/files/foo/logo--cc9a9756.svg`,
+      'https://files.reglugerd.is/admin-drafts/files/foo/logo--cc9a9756.svg',
     )
+  })
+
+  it('sniffs an SVG carrying an <?xml?> declaration as image/svg+xml', async () => {
+    // THE REGRESSION CASE. Stored as application/xml without the guard.
+    app = build()
+
+    const res = await upload(app, {
+      filename: 'logo.svg',
+      content: XML_DECL_SVG,
+      contentType: 'image/svg+xml',
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(uploaded().ContentType).toBe('image/svg+xml')
+    expect(uploaded().ContentType).not.toBe('application/xml')
+    expect(locationOf(res)).toBe(
+      'https://files.reglugerd.is/admin-drafts/files/foo/logo--4df6e1b8.svg',
+    )
+  })
+
+  it('sniffs an SVG with an <?xml?> declaration AND a <!DOCTYPE> as image/svg+xml', async () => {
+    // What Illustrator and Inkscape actually emit.
+    app = build()
+
+    const res = await upload(app, {
+      filename: 'diagram.svg',
+      content: DOCTYPE_SVG,
+      contentType: 'image/svg+xml',
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(uploaded().ContentType).toBe('image/svg+xml')
+    expect(uploaded().ContentType).not.toBe('application/xml')
+    expect(locationOf(res)).toBe(
+      'https://files.reglugerd.is/admin-drafts/files/foo/diagram--8dfa5fd5.svg',
+    )
+  })
+
+  it('stores non-SVG XML as application/octet-stream, as the old stack did', async () => {
+    // The other half of the guard. `file-type@3` recognised no text formats,
+    // so XML that is not SVG fell through to the generic type. Pinned so a
+    // future "improvement" that returns `application/xml` here is a visible
+    // decision rather than a silent drift.
+    app = build()
+
+    const res = await upload(app, {
+      filename: 'metadata.xml',
+      content: PLAIN_XML,
+      contentType: 'application/xml',
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(uploaded().ContentType).toBe('application/octet-stream')
+    expect(locationOf(res)).toBe(
+      'https://files.reglugerd.is/admin-drafts/files/foo/metadata--1fa4dc10.xml',
+    )
+  })
+
+  it('stores an ordinary PNG as image/png', async () => {
+    app = build()
+
+    await upload(app, { filename: 'barchart.png' })
+
+    expect(uploaded().ContentType).toBe('image/png')
+  })
+
+  it('stores the pasted JPEG object as image/png — a pre-existing quirk', async () => {
+    // The type is sniffed from the ORIGINAL bytes, so the flattened JPEG is
+    // stored describing itself as PNG. This is wrong, and it is what every
+    // pasted image already in the bucket looks like, so it is pinned as
+    // characterization. Fixing it is a separate deliberate change, not
+    // something to correct quietly here.
+    app = build()
+
+    await upload(app, { filename: 'blobid12345.png' })
+
+    expect(uploaded().Key.endsWith('.jpg')).toBe(true)
+    expect(uploaded().ContentType).toBe('image/png')
   })
 
   it('ignores the multipart part’s declared content type and sniffs the bytes', async () => {
