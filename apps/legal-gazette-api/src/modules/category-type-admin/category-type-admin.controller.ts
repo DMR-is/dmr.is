@@ -26,6 +26,7 @@ import { CategoryDto } from '../../models/category.model'
 import { TypeDto } from '../../models/type.model'
 import {
   CategoryTypeActor,
+  CategoryTypeOverviewDto,
   ChangeLogQuery,
   ConnectionBody,
   CreateCategoryBody,
@@ -51,6 +52,17 @@ export class CategoryTypeAdminController {
 
   private actor(user: DMRUser): CategoryTypeActor {
     return { id: user.nationalId, name: user.name ?? user.fullName ?? null }
+  }
+
+  // --- Overview ---
+
+  @Get('/overview')
+  @LGResponse({
+    operationId: 'getCategoryTypeOverview',
+    type: CategoryTypeOverviewDto,
+  })
+  getOverview(): Promise<CategoryTypeOverviewDto> {
+    return this.service.getOverview()
   }
 
   // --- Categories ---
@@ -193,7 +205,10 @@ export class CategoryTypeAdminController {
   // --- Audit + undo ---
 
   @Get('/change-log')
-  @LGResponse({ operationId: 'getCategoryTypeChangeLog', type: GetChangeLogDto })
+  @LGResponse({
+    operationId: 'getCategoryTypeChangeLog',
+    type: GetChangeLogDto,
+  })
   getChangeLog(@Query() query: ChangeLogQuery): Promise<GetChangeLogDto> {
     return this.service.getChangeLog(query)
   }
