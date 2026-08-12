@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import {
   BadRequestException,
   ConflictException,
@@ -46,6 +49,13 @@ import { ReportCreateService } from './report-create.service'
 
 const REPORT_ID = 'report-id-1'
 const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-00000000eee1'
+
+// A payroll month inside the API's 36-month reporting window, derived from the
+// clock rather than hardcoded — a literal month would silently age out of the
+// bound and start failing years from now.
+const PERIOD_MONTH = format(subMonths(new Date(), 1), 'yyyy-MM')
+const PERIOD_INPUT = `${PERIOD_MONTH}-15`
+const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const PARENT_COMPANY_ID = '00000000-0000-0000-0000-000000000c01'
 const SUBSIDIARY_COMPANY_ID = '00000000-0000-0000-0000-000000000c02'
 
@@ -263,7 +273,7 @@ describe('ReportCreateService', () => {
         companyNationalId: '5500000000',
         // Declared basis persisted, month normalised to the 1st.
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
-        salaryDataPeriod: '2026-03-01',
+        salaryDataPeriod: PERIOD_STORED,
       }),
     )
 
@@ -1103,7 +1113,7 @@ function makeInput(): CreateReportDto {
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
     salaryDataBasis: SalaryDataBasisEnum.MONTH,
-    salaryDataPeriod: '2026-03-15',
+    salaryDataPeriod: PERIOD_INPUT,
     companies: [makeCompanySnapshot(PARENT_COMPANY_ID, null)],
     parsed: {
       criteria: [

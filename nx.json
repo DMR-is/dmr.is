@@ -106,7 +106,6 @@
       "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
     },
     "tsc": {
-      "dependsOn": ["^codegen"],
       "inputs": ["default", "^production"]
     },
     "test": {
@@ -163,7 +162,7 @@
     },
     "@nx/webpack:webpack": {
       "cache": true,
-      "dependsOn": ["^build", "^codegen"],
+      "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
     "@nx/js:tsc": {

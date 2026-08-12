@@ -4393,14 +4393,13 @@
           "averageEmployeeFemaleCount": { "type": "number" },
           "averageEmployeeNeutralCount": { "type": "number" },
           "salaryDataBasis": {
-            "type": "string",
-            "enum": ["MONTH", "AVERAGE"],
-            "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`)."
+            "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`).",
+            "allOf": [{ "$ref": "#/components/schemas/SalaryDataBasisEnum" }]
           },
           "salaryDataPeriod": {
             "type": "string",
             "nullable": true,
-            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`."
+            "description": "The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago."
           },
           "parsed": {
             "description": "Parsed workbook payload from the excel import endpoint. Contains the criteria tree, role list, and employee rows.",

@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import { BadRequestException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
@@ -28,6 +31,12 @@ import { ReportDraftSubmitService } from './report-draft-submit.service'
 
 const REPORT_ID = 'report-id-1'
 const EQUALITY_REPORT_ID = 'eq-1'
+
+// A payroll month inside the API's 36-month reporting window, derived from the
+// clock so the fixture cannot age out of the bound.
+const PERIOD_MONTH = format(subMonths(new Date(), 1), 'yyyy-MM')
+const PERIOD_INPUT = `${PERIOD_MONTH}-17`
+const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const COMPANY_NATIONAL_ID = '5500000000'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
@@ -79,7 +88,7 @@ describe('ReportDraftSubmitService', () => {
       salaryDataPeriod?: string | null
     } = {
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
-      salaryDataPeriod: '2026-03-01',
+      salaryDataPeriod: PERIOD_STORED,
     },
   ) => {
     reportUpdate = jest.fn()
@@ -215,7 +224,27 @@ describe('ReportDraftSubmitService', () => {
     await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
 
     expect(reportUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+      expect.objectContaining({
+        status: ReportStatusEnum.SUBMITTED,
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+        salaryDataPeriod: null,
+      }),
+    )
+  })
+
+  it('normalises a stored mid-month day when it persists the basis at submit', async () => {
+    findOwnedDraft.mockResolvedValueOnce(
+      makeReport(ReportTypeEnum.SALARY, {
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: PERIOD_INPUT,
+      }),
+    )
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ salaryDataPeriod: PERIOD_STORED }),
     )
   })
 
@@ -249,9 +278,13 @@ describe('ReportDraftSubmitService', () => {
     expect(assertEqualityReportApproved).toHaveBeenCalledWith(EQUALITY_REPORT_ID)
     expect(persistScores).toHaveBeenCalledWith(REPORT_ID)
     expect(createForReport).toHaveBeenCalledWith(REPORT_ID)
+    // The resolved basis is written alongside the status, so submit does not
+    // rely on the draft PATCH having normalised the pair earlier.
     expect(reportUpdate).toHaveBeenCalledWith({
       status: ReportStatusEnum.SUBMITTED,
       equalityReportId: EQUALITY_REPORT_ID,
+      salaryDataBasis: SalaryDataBasisEnum.MONTH,
+      salaryDataPeriod: PERIOD_STORED,
     })
   })
 

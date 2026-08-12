@@ -282,6 +282,8 @@ export class ApplicationService implements IApplicationService {
         report.type === ReportTypeEnum.EQUALITY
           ? report.equalityReportContent
           : null,
+      salaryDataBasis: report.salaryDataBasis,
+      salaryDataPeriod: report.salaryDataPeriod,
       outliersPostponed:
         report.type === ReportTypeEnum.SALARY
           ? report.status === ReportStatusEnum.POSTPONED

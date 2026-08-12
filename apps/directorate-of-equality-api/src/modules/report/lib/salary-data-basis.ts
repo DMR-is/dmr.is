@@ -1,4 +1,10 @@
+import format from 'date-fns/format'
+import startOfMonth from 'date-fns/startOfMonth'
+import subMonths from 'date-fns/subMonths'
+
 import { BadRequestException } from '@nestjs/common'
+
+import { SALARY_DATA_PERIOD_MONTHS_BACK } from '@dmr.is/constants'
 
 import { SalaryDataBasisEnum } from '../models/report.enums'
 
@@ -9,7 +15,8 @@ import { SalaryDataBasisEnum } from '../models/report.enums'
  * PATCH/submit) so the rules cannot drift between them.
  *
  * Two rules, everywhere:
- *   - MONTH   → a month is required, stored normalised to the 1st.
+ *   - MONTH   → a month is required, stored normalised to the 1st, and it must
+ *               fall inside the reporting window (see `normalizeSalaryDataPeriod`).
  *   - AVERAGE → no month applies; any value supplied is cleared.
  *
  * The stored value has month precision, so a caller may send any day within the
@@ -39,9 +46,36 @@ export type SalaryDataBasisPatch = {
 const PERIOD_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
 /**
+ * The window a declared payroll month must fall in, as canonical `YYYY-MM-01`
+ * strings: the current month back through `SALARY_DATA_PERIOD_MONTHS_BACK`
+ * months, counting the current one as the first. Both bounds are in canonical
+ * form, so they compare correctly as strings.
+ *
+ * Computed per call rather than at module load — the API is long-running, and a
+ * bound frozen at boot would drift out of date after a month of uptime.
+ */
+function salaryDataPeriodWindow(): { earliest: string; latest: string } {
+  const currentMonth = startOfMonth(new Date())
+
+  return {
+    earliest: `${format(
+      subMonths(currentMonth, SALARY_DATA_PERIOD_MONTHS_BACK - 1),
+      'yyyy-MM',
+    )}-01`,
+    latest: `${format(currentMonth, 'yyyy-MM')}-01`,
+  }
+}
+
+/**
  * Validates an incoming salary-data period and normalises it to the 1st of the
- * month it names (`YYYY-MM-01`), the canonical stored form. Throws 400 on
- * anything that is not a real calendar date in `YYYY-MM-DD` form.
+ * month it names (`YYYY-MM-01`), the canonical stored form. Throws 400 unless
+ * the value is a `YYYY-MM-DD` string naming a month inside the reporting window
+ * (see `salaryDataPeriodWindow`) — the figures qualify published wage-gap
+ * numbers, so a future month or one from a decade ago is a mistake, not data.
+ *
+ * The day is discarded rather than checked against the month's length: the
+ * stored value has month precision, so `2026-02-30` and `2026-02-28` name the
+ * same month and there is nothing for the extra strictness to protect.
  */
 export function normalizeSalaryDataPeriod(period: string): string {
   const match = PERIOD_PATTERN.exec(period.trim())
@@ -57,11 +91,26 @@ export function normalizeSalaryDataPeriod(period: string): string {
 
   if (monthNumber < 1 || monthNumber > 12 || dayNumber < 1 || dayNumber > 31) {
     throw new BadRequestException(
-      `salaryDataPeriod "${period}" is not a valid calendar date`,
+      `salaryDataPeriod "${period}" is not a month of the year with a day in it`,
     )
   }
 
-  return `${year}-${month}-01`
+  const normalized = `${year}-${month}-01`
+  const { earliest, latest } = salaryDataPeriodWindow()
+
+  if (normalized > latest) {
+    throw new BadRequestException(
+      `salaryDataPeriod "${period}" is in the future — the payroll month must have happened (latest is ${latest})`,
+    )
+  }
+
+  if (normalized < earliest) {
+    throw new BadRequestException(
+      `salaryDataPeriod "${period}" is older than the ${SALARY_DATA_PERIOD_MONTHS_BACK}-month reporting window (earliest is ${earliest})`,
+    )
+  }
+
+  return normalized
 }
 
 /**
@@ -70,12 +119,21 @@ export function normalizeSalaryDataPeriod(period: string): string {
  * one PATCH and the month in the next.
  *
  * Returns only the keys the caller actually touched, so PATCH semantics survive
- * (an untouched key stays untouched). Setting the basis to AVERAGE always
- * writes `salaryDataPeriod: null` alongside it, so switching away from MONTH
- * cannot leave a stale month behind.
+ * (an untouched key stays untouched).
+ *
+ * The rules are applied against the basis the draft *ends up in*, which is why
+ * `storedBasis` is required: a PATCH that names only a month while the draft
+ * already says AVERAGE must not write that month, or the row lands as
+ * `(AVERAGE, <month>)` and the `report_salary_data_period_average_null` CHECK
+ * turns a valid partial PATCH into an opaque 500. AVERAGE wins in both
+ * directions — declared here or already stored, the month is cleared.
+ *
+ * Undeclaring the basis (`salaryDataBasis: null`) takes its month with it; a
+ * stored month under no basis is not a state anything downstream can read.
  */
 export function resolveDraftSalaryDataBasis(
   input: SalaryDataBasisInput,
+  storedBasis: SalaryDataBasisEnum | null,
 ): SalaryDataBasisPatch {
   const patch: SalaryDataBasisPatch = {}
 
@@ -83,8 +141,18 @@ export function resolveDraftSalaryDataBasis(
     patch.salaryDataBasis = input.salaryDataBasis ?? null
   }
 
-  if (input.salaryDataBasis === SalaryDataBasisEnum.AVERAGE) {
+  // The basis this PATCH leaves the draft in: what it declares, or what is
+  // already stored when it does not touch the key.
+  const effectiveBasis =
+    input.salaryDataBasis !== undefined
+      ? (input.salaryDataBasis ?? null)
+      : storedBasis
+
+  if (effectiveBasis === SalaryDataBasisEnum.AVERAGE) {
     // A twelve-month average has no month — clear whatever was there.
+    patch.salaryDataPeriod = null
+  } else if (input.salaryDataBasis === null) {
+    // Undeclaring the basis takes its month with it.
     patch.salaryDataPeriod = null
   } else if (input.salaryDataPeriod !== undefined) {
     patch.salaryDataPeriod = input.salaryDataPeriod

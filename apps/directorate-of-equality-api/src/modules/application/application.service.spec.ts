@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import {
   BadRequestException,
   ConflictException,
@@ -1639,7 +1642,8 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
     salaryDataBasis: SalaryDataBasisEnum.MONTH,
-    salaryDataPeriod: '2026-03-01',
+    // Inside the API's 36-month reporting window whenever the suite runs.
+    salaryDataPeriod: `${format(subMonths(new Date(), 1), 'yyyy-MM')}-01`,
     parsed: makeRequest().parsed,
     company: {
       name: 'Acme ehf.',

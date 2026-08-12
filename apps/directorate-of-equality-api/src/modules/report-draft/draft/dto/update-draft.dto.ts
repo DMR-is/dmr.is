@@ -49,14 +49,14 @@ export class UpdateDraftDto {
     nullable: true,
     enumName: 'SalaryDataBasisEnum',
     description:
-      'Salary-only. Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Setting `AVERAGE` clears `salaryDataPeriod`. Required to submit a salary report.',
+      'Salary-only. Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Setting `AVERAGE` clears `salaryDataPeriod`, and so does clearing the basis itself. Required to submit a salary report.',
   })
   salaryDataBasis?: SalaryDataBasisEnum | null
 
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required alongside `salaryDataBasis: MONTH` by submit time.',
+      'The payroll month the salary data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Must name a month that has already happened, no earlier than 36 months ago. Required alongside `salaryDataBasis: MONTH` by submit time; ignored while the stored basis is `AVERAGE`.',
   })
   salaryDataPeriod?: string | null
 

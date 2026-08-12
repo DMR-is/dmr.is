@@ -1,7 +1,10 @@
 'use client'
 
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
 import { useMemo, useRef, useState } from 'react'
 
+import { SALARY_DATA_PERIOD_MONTHS_BACK } from '@dmr.is/constants'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
@@ -51,9 +54,6 @@ const GENDER_OPTIONS = [
   { label: s.genders.female, value: GenderEnum.FEMALE },
   { label: s.genders.neutral, value: GenderEnum.NEUTRAL },
 ]
-
-/** How far back the payroll-month picker reaches (three years of months). */
-const MONTH_OPTION_COUNT = 36
 
 const DATA_BASIS_OPTIONS = [
   { label: t.dataBasisMonthOption, value: SalaryDataBasisEnum.MONTH },
@@ -131,18 +131,20 @@ export const CreateSalaryReportDrawer = () => {
   const nextGroup = () => makeGroup(`g${(groupIdCounter.current += 1)}`)
 
   // Payroll months to choose from, newest first. A month list rather than a date
-  // picker: the value has month precision, so there is no day to get wrong.
-  // Three years back covers current filings and any late catch-up.
+  // picker: the value has month precision, so there is no day to get wrong. The
+  // depth comes from the same constant the API validates against, so the picker
+  // cannot offer a month the API would reject.
   const monthOptions = useMemo(() => {
     const now = new Date()
 
-    return Array.from({ length: MONTH_OPTION_COUNT }, (_, offset) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - offset, 1)
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const value = `${date.getFullYear()}-${month}`
+    return Array.from(
+      { length: SALARY_DATA_PERIOD_MONTHS_BACK },
+      (_, offset) => {
+        const value = format(subMonths(now, offset), 'yyyy-MM')
 
-      return { label: formatMonthYearIS(`${value}-01`), value }
-    })
+        return { label: formatMonthYearIS(`${value}-01`), value }
+      },
+    )
   }, [])
 
   const companiesQuery = useQuery(
@@ -297,7 +299,9 @@ export const CreateSalaryReportDrawer = () => {
     !hasOutliers || (postpone ? !!postponeReason.trim() : explanationsValid)
 
   const handleSubmit = async () => {
-    if (!companyId || !parsedReport) return
+    // `canSubmit` already gates the button on all three; repeated here so the
+    // basis narrows to the non-null enum the API requires.
+    if (!companyId || !parsedReport || !salaryDataBasis) return
 
     const body = {
       importedFromExcel: true,
@@ -313,9 +317,9 @@ export const CreateSalaryReportDrawer = () => {
       averageEmployeeMaleCount: Number(form.averageEmployeeMaleCount),
       averageEmployeeFemaleCount: Number(form.averageEmployeeFemaleCount),
       averageEmployeeNeutralCount: Number(form.averageEmployeeNeutralCount),
-      // `canSubmit` guarantees a basis is picked. The month picker yields
-      // `YYYY-MM`; the API takes a date and stores the 1st of that month.
-      salaryDataBasis: salaryDataBasis as SalaryDataBasisEnum,
+      // The month picker yields `YYYY-MM`; the API takes a date and stores the
+      // 1st of that month.
+      salaryDataBasis,
       salaryDataPeriod:
         salaryDataBasis === SalaryDataBasisEnum.MONTH
           ? `${salaryDataMonth}-01`

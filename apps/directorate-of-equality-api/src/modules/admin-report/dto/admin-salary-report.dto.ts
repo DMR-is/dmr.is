@@ -61,6 +61,7 @@ export class AdminSalaryReportDto {
   averageEmployeeNeutralCount!: number
 
   @ApiEnum(SalaryDataBasisEnum, {
+    enumName: 'SalaryDataBasisEnum',
     description:
       'Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`).',
   })
@@ -69,7 +70,7 @@ export class AdminSalaryReportDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`.',
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; the day is normalised to the 1st). Required when `salaryDataBasis` is `MONTH`. Must name a month that has already happened, no earlier than 36 months ago.',
   })
   salaryDataPeriod?: string | null
 

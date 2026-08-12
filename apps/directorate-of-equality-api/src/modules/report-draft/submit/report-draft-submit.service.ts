@@ -67,10 +67,10 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     // The applicant must have declared what period the salary figures describe:
     // a specific payroll month (and which one) or a twelve-month average. Both
     // arrive during drafting via the header PATCH, which already normalised the
-    // pair — this only gates completeness, before anything is written.
-    if (isSalary) {
-      resolveSalaryDataBasis(report)
-    }
+    // pair; the resolved pair is persisted again below so submit does not depend
+    // on that having happened. Runs before anything is written, so an
+    // undeclared basis fails the whole submit.
+    const salaryDataBasis = isSalary ? resolveSalaryDataBasis(report) : null
 
     // Snapshot company details (frozen at submit) — validate parent matches the
     // authenticated company and resolve subsidiaries.
@@ -104,6 +104,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     await report.update({
       status,
       equalityReportId: input.equalityReportId ?? null,
+      ...(salaryDataBasis ?? {}),
     })
 
     await this.finalizeService.emitSubmittedEvent(report.id, status, company.id)

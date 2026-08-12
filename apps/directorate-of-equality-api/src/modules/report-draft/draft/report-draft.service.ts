@@ -133,11 +133,11 @@ export class ReportDraftService implements IReportDraftService {
    * in the body are written — an omitted key is left untouched, an explicit
    * `null` clears the column. Returns the refreshed draft detail.
    *
-   * The salary-data basis is the one interdependent pair: declaring AVERAGE
-   * clears any month already stored, and a month is normalised to the 1st. It is
-   * still PATCH-shaped — an untouched basis stays untouched. Completeness (a
-   * MONTH basis actually naming its month) is a submit-time check, so the
-   * applicant can fill the two in either order.
+   * The salary-data basis is the one interdependent pair: an AVERAGE basis —
+   * declared in this PATCH or already stored — carries no month, and a month is
+   * normalised to the 1st. It is still PATCH-shaped: an untouched basis stays
+   * untouched. Completeness (a MONTH basis actually naming its month) is a
+   * submit-time check, so the applicant can fill the two in either order.
    */
   async updateDraft(
     providerId: string,
@@ -155,7 +155,13 @@ export class ReportDraftService implements IReportDraftService {
       }
     }
 
-    Object.assign(patch, resolveDraftSalaryDataBasis(input))
+    // Resolved against the basis already on the row, not just the incoming
+    // keys — a month sent on its own while the draft says AVERAGE has to be
+    // dropped rather than written into a row the CHECK constraint rejects.
+    Object.assign(
+      patch,
+      resolveDraftSalaryDataBasis(input, report.salaryDataBasis),
+    )
 
     if (Object.keys(patch).length > 0) {
       await this.reportModel.update(patch, { where: { id: report.id } })

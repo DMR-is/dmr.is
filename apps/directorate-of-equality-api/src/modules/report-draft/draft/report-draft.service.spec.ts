@@ -1,3 +1,5 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
 import { UniqueConstraintError } from 'sequelize'
 
 import { ConflictException, NotFoundException } from '@nestjs/common'
@@ -32,6 +34,12 @@ import { ReportDraftService } from './report-draft.service'
 
 const REPORT_ID = 'report-id-1'
 const EXISTING_DRAFT_ID = '00000000-0000-0000-0000-0000000000df'
+
+// A payroll month inside the API's 36-month reporting window, derived from the
+// clock so the fixture cannot age out of the bound.
+const PERIOD_MONTH = format(subMonths(new Date(), 1), 'yyyy-MM')
+const PERIOD_INPUT = `${PERIOD_MONTH}-17`
+const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const COMPANY_NATIONAL_ID = '5500000000'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
@@ -332,13 +340,13 @@ describe('ReportDraftService', () => {
 
       await service.updateDraft(PROVIDER_ID, COMPANY, {
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
-        salaryDataPeriod: '2026-03-17',
+        salaryDataPeriod: PERIOD_INPUT,
       })
 
       expect(reportUpdate).toHaveBeenCalledWith(
         {
           salaryDataBasis: SalaryDataBasisEnum.MONTH,
-          salaryDataPeriod: '2026-03-01',
+          salaryDataPeriod: PERIOD_STORED,
         },
         { where: { id: REPORT_ID } },
       )
@@ -348,7 +356,7 @@ describe('ReportDraftService', () => {
       reportFindOne.mockResolvedValue({
         ...draftRow,
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
-        salaryDataPeriod: '2026-03-01',
+        salaryDataPeriod: PERIOD_STORED,
       })
       reportUpdate.mockResolvedValueOnce([1])
 
@@ -361,6 +369,45 @@ describe('ReportDraftService', () => {
           salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
           salaryDataPeriod: null,
         },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    // The stored basis, not just the incoming keys, decides what is written —
+    // otherwise this PATCH lands `(AVERAGE, <month>)` and the CHECK constraint
+    // turns a legitimate partial PATCH into a 500.
+    it('drops a month-only PATCH while the stored basis is the twelve-month average', async () => {
+      reportFindOne.mockResolvedValue({
+        ...draftRow,
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+        salaryDataPeriod: null,
+      })
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        salaryDataPeriod: PERIOD_INPUT,
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { salaryDataPeriod: null },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('clears the stored month when the applicant undeclares the basis', async () => {
+      reportFindOne.mockResolvedValue({
+        ...draftRow,
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: PERIOD_STORED,
+      })
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        salaryDataBasis: null,
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { salaryDataBasis: null, salaryDataPeriod: null },
         { where: { id: REPORT_ID } },
       )
     })
