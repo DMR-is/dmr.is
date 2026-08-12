@@ -94,6 +94,16 @@ export const getStatementPrefix = (settlement?: BaseSettlement) => {
   return 'að '
 }
 
+/**
+ * Returns the court district title in "eignarfall" (genitive), which is the
+ * case required by the templates that interpolate it, e.g.
+ * "Með úrskurði Héraðsdóms Reykjavíkur uppkveðnum ...".
+ *
+ * Titles that do not start with "Héraðsdómur" are returned untouched.
+ */
+export const toPossessiveCourtDistrict = (title?: string | null) =>
+  (title ?? '').replace(/^Héraðsdómur\b/, 'Héraðsdóms')
+
 export const formatNationalId = (nationalId = '') => {
   // Format: XXXXXX-XXXX or XXXXXXXXXX or XXXXXX XXXX
   const cleaned = nationalId.replace(/[^0-9]/g, '')

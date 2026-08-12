@@ -13,6 +13,7 @@ import {
 
 import { LegalGazetteHTMLTemplates } from '../constants'
 import { getAdvertHTMLMarkup } from '../templates/base'
+import { toPossessiveCourtDistrict } from '../templates/utils'
 
 const mapApplicationTypeToTemplate = (
   applicationType: string,
@@ -139,8 +140,9 @@ export const getApplicationPreview = (
       const html = getAdvertHTMLMarkup({
         templateType: LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY,
         additionalText: answers.additionalText,
-        courtDistrict:
+        courtDistrict: toPossessiveCourtDistrict(
           answers.fields?.courtAndJudgmentFields?.courtDistrict?.title,
+        ),
         judgementDate: judgementDate,
         publishDate: publishDate,
         signature: answers.signature,
