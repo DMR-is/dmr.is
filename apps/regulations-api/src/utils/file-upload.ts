@@ -60,7 +60,11 @@ const getSingleQuery = (req: ExpressRequest, param: string): string => {
   return value || ''
 }
 
-const getKey = (req: ExpressRequest, _file: MulterFile) => {
+/** Computes the S3 object key for an uploaded file.
+ *
+ * Exported for characterization tests — the exact strings this returns are the
+ * contract for every piece of media already sitting in the bucket. */
+export const getKey = (req: ExpressRequest, _file: MulterFile) => {
   const file = _file as MulterFileWithHash
   const regName = ensureRegName(getSingleQuery(req, 'scope'))
 
