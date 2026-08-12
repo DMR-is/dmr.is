@@ -667,10 +667,11 @@ describe('parseWorkbook', () => {
 
     it('rejects required missing field with specific column reference', async () => {
       const wb = await loadTemplate()
-      // Only fill partial row — omit field (Svið)
+      // Only fill partial row — omit role (Starf), which is still required.
+      // field (Svið) and department (Deild) are intentionally optional.
       writeEmployeeRow(wb, 1, {
         name: 'X',
-        role: 'R',
+        role: '',
         gender: 'Kona',
         workRatio: 1,
         baseSalary: 1,
@@ -680,7 +681,7 @@ describe('parseWorkbook', () => {
         bonusOccasionalOvertime: null,
         bonusPayments: null,
         bonusOther: null,
-        field: '',
+        field: 'X',
         department: 'X',
         startDate: new Date('2024-01-01'),
       })
@@ -695,7 +696,7 @@ describe('parseWorkbook', () => {
         errors.some(
           (e) =>
             e.message.includes('Nauðsynlegan reit vantar') &&
-            e.message.includes('Svið'),
+            e.message.includes('Starf'),
         ),
       ).toBe(true)
     })
