@@ -23,6 +23,25 @@ import type { FastifyInstance } from 'fastify'
  * for media already in the bucket; a diff here is a production 404, not a test
  * that needs updating.
  *
+ * TWO KINDS OF TEST LIVE IN THIS FILE, and they carry different authority.
+ * Each describe block below is labelled CHARACTERIZED or SPECIFIED.
+ *
+ *   CHARACTERIZED — the old implementation demonstrably behaved this way, so
+ *   the value is historical contract and a change to it breaks live URLs.
+ *   Covers: the raw upload's key and byte-identical body, the pasted blob's
+ *   `.jpg` location, the literal `undefined` folder segment, RegName
+ *   slugification, MEDIA_BUCKET_FOLDER prefixing, the original-bytes content
+ *   type on a transformed object, and large-file acceptance.
+ *
+ *   SPECIFIED — the old implementation had no equivalent, so these state what
+ *   the new code MUST do rather than what the old code did. Nobody should read
+ *   them as historical contract. Covers: the SVG sniff (a reimplementation of
+ *   `multer-s3-transform`'s AUTO_CONTENT_TYPE, which the rewrite had to write
+ *   from scratch), 400 on a wrong field name, and 400 on a non-multipart body.
+ *   The last two are a deliberate behaviour CHANGE — the old handler's guard
+ *   was dead code and returned 200 with a `location` ending in the literal
+ *   string `undefined`.
+ *
  * The ONLY thing stubbed is the S3 network boundary — `@aws-sdk/lib-storage`'s
  * `Upload` — so the assertions can read the exact params the app tried to
  * send. Nothing belonging to this codebase is mocked.
@@ -185,6 +204,7 @@ const uploaded = (): UploadParams => {
 
 // ---------------------------------------------------------------------------
 
+/** CHARACTERIZED from the pre-rewrite implementation at c937fbda. */
 describe('POST /api/v1/file-upload — an ordinary file', () => {
   let app: FastifyInstance
 
@@ -231,6 +251,7 @@ describe('POST /api/v1/file-upload — an ordinary file', () => {
   })
 })
 
+/** CHARACTERIZED from the pre-rewrite implementation at c937fbda. */
 describe('POST /api/v1/file-upload — a pasted blob', () => {
   let app: FastifyInstance
 
@@ -297,6 +318,7 @@ describe('POST /api/v1/file-upload — a pasted blob', () => {
   })
 })
 
+/** CHARACTERIZED from the pre-rewrite implementation at c937fbda. */
 describe('POST /api/v1/file-upload — isPasted is the only gate on the transform', () => {
   let app: FastifyInstance
 
@@ -343,6 +365,7 @@ describe('POST /api/v1/file-upload — isPasted is the only gate on the transfor
   })
 })
 
+/** CHARACTERIZED from the pre-rewrite implementation at c937fbda. */
 describe('POST /api/v1/file-upload — folder and rootFolder in the returned URL', () => {
   let app: FastifyInstance
 
@@ -390,6 +413,8 @@ describe('POST /api/v1/file-upload — folder and rootFolder in the returned URL
   })
 })
 
+/** SPECIFIED (the two 400s) and CHARACTERIZED (the large upload) — see the
+ * per-test comments; this block deliberately mixes the two. */
 describe('POST /api/v1/file-upload — rejections and limits', () => {
   let app: FastifyInstance
 
@@ -427,11 +452,26 @@ describe('POST /api/v1/file-upload — rejections and limits', () => {
   })
 
   it('accepts a file well over Fastify’s 1MB bodyLimit', async () => {
-    // `@fastify/multipart` defaults `fileSize` to `bodyLimit` (1MB). Without
-    // the explicit `limits: { fileSize: Infinity }` in file-upload.ts, every
-    // regulation image above 1MB would start failing — silently, since the
-    // multipart error surfaces as a generic rejection. multer imposed no such
-    // limit, so this is a rewrite-introduced hazard with no other coverage.
+    // CHARACTERIZED, and the direction matters: the pre-rewrite path accepted
+    // large uploads, so SUCCESS is the contract. Asserting a rejection here
+    // would have pinned a regression.
+    //
+    // Measured rather than assumed, because fastify-multer is uninstalled and
+    // the old path can no longer be driven directly:
+    //   1. fastify-multer 2.0.3 (the version at c937fbda, read from the yarn
+    //      cache) registers `addContentTypeParser('multipart', (req, payload,
+    //      done) => done(null))` — a STREAM-form parser that never buffers.
+    //   2. Fastify 4's `bodyLimit` does not apply to stream-form parsers.
+    //      Verified empirically on fastify 4.29.1 with a parser of that exact
+    //      shape: 0.5MB, 3MB and 12MB all reached the handler intact.
+    //   3. The old code called `multer({ storage })` with no `limits` key, and
+    //      busboy's default `fileSize` is Infinity.
+    // So the old path had no size limit at all.
+    //
+    // `@fastify/multipart` instead defaults `fileSize` to `bodyLimit`, so the
+    // explicit `limits: { fileSize: Infinity }` in file-upload.ts is what
+    // preserves this. Removing it makes exactly this test fail with 413 —
+    // checked, not assumed. Government regulation scans routinely exceed 1MB.
     app = build()
 
     const big = Buffer.alloc(3 * 1024 * 1024, 7)
@@ -463,6 +503,9 @@ describe('POST /api/v1/file-upload — rejections and limits', () => {
   })
 })
 
+/** SPECIFIED, not characterized. `multer-s3-transform`'s AUTO_CONTENT_TYPE
+ * did this, but the rewrite had to reimplement it, so these state what the new
+ * code must do rather than replaying a measured old value. */
 describe('POST /api/v1/file-upload — content type detection', () => {
   let app: FastifyInstance
 

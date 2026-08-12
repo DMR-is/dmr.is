@@ -505,7 +505,7 @@ describe('POST /api/v1/file-upload — the `no file was uploaded` path', () => {
     }
   })
 
-  it('never returns a location containing the literal string "undefined"', async () => {
+  it('returns exactly 400 with the documented body, and no location', async () => {
     app = build()
 
     const res = await app.inject({
@@ -514,10 +514,10 @@ describe('POST /api/v1/file-upload — the `no file was uploaded` path', () => {
       headers: { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_DRAFT },
     })
 
-    // The exact status depends on how the multipart plugin rejects a
-    // non-multipart body; what must hold is that this is an error and that no
-    // broken URL is handed back to the caller.
-    expect(res.statusCode).toBeGreaterThanOrEqual(400)
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body)).toEqual({ error: 'No file was uploaded' })
+
+    // The half that matters most: no broken URL reaches the caller.
     expect(res.body).not.toContain('files.reglugerd.is/undefined')
     expect(res.body).not.toContain('"location"')
   })
