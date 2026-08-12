@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
 } from 'class-validator'
 
 import {
@@ -24,6 +25,18 @@ import {
   ChangeLogEntity,
 } from '../../../models/category-type-change-log.model'
 
+/**
+ * Slugs are public URL segments, so they are constrained to the same shape the
+ * server would derive from a title. The service additionally normalises whatever
+ * comes in through `slugify()`; this is the cheap guard that rejects nonsense
+ * before it gets there.
+ */
+export const SLUG_PATTERN = /^[a-z0-9-]+$/
+const SLUG_MESSAGE =
+  'slug má aðeins innihalda lágstafi (a-z), tölustafi og bandstrik'
+const SLUG_DESCRIPTION =
+  'Lowercase letters, digits and hyphens only. Derived from the title when omitted.'
+
 /** Who performed the action (resolved from the authenticated admin). */
 export interface CategoryTypeActor {
   id: string
@@ -35,9 +48,10 @@ export class CreateCategoryBody {
   @IsString()
   title!: string
 
-  @ApiOptionalString()
+  @ApiOptionalString({ description: SLUG_DESCRIPTION })
   @IsOptional()
   @IsString()
+  @Matches(SLUG_PATTERN, { message: SLUG_MESSAGE })
   slug?: string
 }
 
@@ -47,9 +61,10 @@ export class UpdateCategoryBody {
   @IsString()
   title?: string
 
-  @ApiOptionalString()
+  @ApiOptionalString({ description: SLUG_DESCRIPTION })
   @IsOptional()
   @IsString()
+  @Matches(SLUG_PATTERN, { message: SLUG_MESSAGE })
   slug?: string
 }
 
@@ -58,9 +73,10 @@ export class CreateTypeBody {
   @IsString()
   title!: string
 
-  @ApiOptionalString()
+  @ApiOptionalString({ description: SLUG_DESCRIPTION })
   @IsOptional()
   @IsString()
+  @Matches(SLUG_PATTERN, { message: SLUG_MESSAGE })
   slug?: string
 
   @ApiOptionalArray({ type: String })
@@ -76,9 +92,10 @@ export class UpdateTypeBody {
   @IsString()
   title?: string
 
-  @ApiOptionalString()
+  @ApiOptionalString({ description: SLUG_DESCRIPTION })
   @IsOptional()
   @IsString()
+  @Matches(SLUG_PATTERN, { message: SLUG_MESSAGE })
   slug?: string
 }
 

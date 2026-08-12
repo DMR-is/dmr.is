@@ -1,9 +1,10 @@
-import { Op, Transaction } from 'sequelize'
+import { Op, Transaction, UniqueConstraintError } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import slugify from 'slugify'
 
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
@@ -39,6 +40,32 @@ const SAMPLE_LIMIT = 20
 // Per-advert original values captured for exact undo of a move.
 type MovedAdvert = { id: string; typeId: string; categoryId: string }
 
+// The type<->category join rows removed alongside a soft-deleted entity, so that
+// undoing the delete restores exactly those and not every join row the entity has
+// ever had. Stored under `before.connections`.
+type ConnectionRef = { typeId: string; categoryId: string }
+
+// Name of the partial unique index added in
+// `m-20260722-category-type-change-log.js`.
+const REVERTS_AUDIT_ID_UNIQUE_INDEX =
+  'category_type_change_log_reverts_audit_id_unique_idx'
+
+/**
+ * True when a write failed because another revert of the same entry got there
+ * first. Narrowed to that one index so unrelated unique violations still surface.
+ */
+function isRevertsAuditIdConflict(error: unknown): boolean {
+  if (!(error instanceof UniqueConstraintError)) return false
+  const constraint = (error.parent as { constraint?: string } | undefined)
+    ?.constraint
+  return (
+    constraint?.toLowerCase() === REVERTS_AUDIT_ID_UNIQUE_INDEX ||
+    Object.keys(error.fields ?? {}).some(
+      (field) => field.toLowerCase() === 'reverts_audit_id',
+    )
+  )
+}
+
 @Injectable()
 export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   constructor(
@@ -55,6 +82,52 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
 
   private slugify(value: string): string {
     return slugify(value, { lower: true, strict: true })
+  }
+
+  /**
+   * Slugs are public URL segments, so a caller-supplied one is normalised rather
+   * than trusted. Falls back to the title when no slug was supplied.
+   */
+  private resolveSlug(title: string, slug?: string): string {
+    const source = slug?.trim() ? slug : title
+    const resolved = this.slugify(source)
+    if (!resolved) {
+      throw new BadRequestException(
+        'Ekki tókst að búa til slóð (slug) út frá gefnu heiti.',
+      )
+    }
+    return resolved
+  }
+
+  /**
+   * `slug` is `TEXT NOT NULL UNIQUE` and both tables are paranoid, so a
+   * soft-deleted row still occupies its slug. Without this check, deleting "Foo"
+   * and creating it again raises a raw 23505 and 500s.
+   */
+  private async assertSlugAvailable(
+    entityType: ChangeLogEntity.CATEGORY | ChangeLogEntity.TYPE,
+    slug: string,
+    transaction: Transaction,
+    excludeId?: string,
+  ): Promise<void> {
+    const options = {
+      where: excludeId ? { slug, id: { [Op.ne]: excludeId } } : { slug },
+      paranoid: false,
+      transaction,
+    }
+    const existing =
+      entityType === ChangeLogEntity.CATEGORY
+        ? await this.categoryModel.unscoped().findOne(options)
+        : await this.typeModel.unscoped().findOne(options)
+    if (!existing) return
+
+    const label = entityType === ChangeLogEntity.CATEGORY ? 'flokkur' : 'tegund'
+    const suffix = existing.deletedAt
+      ? ' Sá aðili er í eyddum færslum — afturkallaðu eyðinguna eða veldu aðra slóð.'
+      : ''
+    throw new ConflictException(
+      `Slóðin (slug) "${slug}" er þegar í notkun af öðrum ${label}.${suffix}`,
+    )
   }
 
   private async writeChangeLog(
@@ -113,14 +186,50 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     return { title: model.title, slug: model.slug, active: model.active }
   }
 
+  /** The join rows currently attached to an entity (excluding soft-deleted ones). */
+  private async liveConnections(
+    where: { typeId: string } | { categoryId: string },
+    transaction: Transaction,
+  ): Promise<ConnectionRef[]> {
+    const rows = await this.typeCategoriesModel.unscoped().findAll({
+      where,
+      attributes: ['typeId', 'categoryId'],
+      transaction,
+    })
+    return rows.map((row) => ({
+      typeId: row.typeId,
+      categoryId: row.categoryId,
+    }))
+  }
+
+  /** Reads `before.connections` back out of a DELETE snapshot, if it has one. */
+  private connectionsFromSnapshot(
+    snapshot: ChangeLogSnapshot | null,
+  ): ConnectionRef[] | null {
+    const raw = snapshot?.connections
+    if (!Array.isArray(raw)) return null
+    return raw.filter(
+      (entry): entry is ConnectionRef =>
+        typeof entry === 'object' &&
+        entry !== null &&
+        typeof (entry as ConnectionRef).typeId === 'string' &&
+        typeof (entry as ConnectionRef).categoryId === 'string',
+    )
+  }
+
   // --- Categories ---------------------------------------------------------
 
   async createCategory(
     body: CreateCategoryBody,
     actor: CategoryTypeActor,
   ): Promise<CategoryDto> {
-    const slug = body.slug ?? this.slugify(body.title)
+    const slug = this.resolveSlug(body.title, body.slug)
     return this.sequelize.transaction(async (transaction) => {
+      await this.assertSlugAvailable(
+        ChangeLogEntity.CATEGORY,
+        slug,
+        transaction,
+      )
       const created = await this.categoryModel.create(
         { title: body.title, slug },
         { transaction },
@@ -151,7 +260,18 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       }
       const before = this.categorySnapshot(category)
       if (body.title !== undefined) category.title = body.title
-      if (body.slug !== undefined) category.slug = body.slug
+      if (body.slug !== undefined) {
+        const slug = this.resolveSlug(category.title, body.slug)
+        if (slug !== category.slug) {
+          await this.assertSlugAvailable(
+            ChangeLogEntity.CATEGORY,
+            slug,
+            transaction,
+            category.id,
+          )
+          category.slug = slug
+        }
+      }
       await category.save({ transaction })
       await this.writeChangeLog(transaction, {
         actor,
@@ -213,7 +333,16 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
           `Cannot delete category: ${affectedAdvertCount} adverts still reference it. Move them first.`,
         )
       }
-      const before = this.categorySnapshot(category)
+      // Capture the live connections before destroying them, so undoing this
+      // delete restores exactly these and not connections detached earlier.
+      const connections = await this.liveConnections(
+        { categoryId: id },
+        transaction,
+      )
+      const before = {
+        ...this.categorySnapshot(category),
+        connections,
+      }
       await this.typeCategoriesModel.destroy({
         where: { categoryId: id },
         transaction,
@@ -236,8 +365,9 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     body: CreateTypeBody,
     actor: CategoryTypeActor,
   ): Promise<TypeDto> {
-    const slug = body.slug ?? this.slugify(body.title)
+    const slug = this.resolveSlug(body.title, body.slug)
     return this.sequelize.transaction(async (transaction) => {
+      await this.assertSlugAvailable(ChangeLogEntity.TYPE, slug, transaction)
       const created = await this.typeModel.create(
         { title: body.title, slug },
         { transaction },
@@ -274,7 +404,18 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       }
       const before = this.typeSnapshot(type)
       if (body.title !== undefined) type.title = body.title
-      if (body.slug !== undefined) type.slug = body.slug
+      if (body.slug !== undefined) {
+        const slug = this.resolveSlug(type.title, body.slug)
+        if (slug !== type.slug) {
+          await this.assertSlugAvailable(
+            ChangeLogEntity.TYPE,
+            slug,
+            transaction,
+            type.id,
+          )
+          type.slug = slug
+        }
+      }
       await type.save({ transaction })
       await this.writeChangeLog(transaction, {
         actor,
@@ -332,7 +473,16 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
           `Cannot delete type: ${affectedAdvertCount} adverts still reference it. Move them first.`,
         )
       }
-      const before = this.typeSnapshot(type)
+      // Capture the live connections before destroying them, so undoing this
+      // delete restores exactly these and not connections detached earlier.
+      const connections = await this.liveConnections(
+        { typeId: id },
+        transaction,
+      )
+      const before = {
+        ...this.typeSnapshot(type),
+        connections,
+      }
       await this.typeCategoriesModel.destroy({
         where: { typeId: id },
         transaction,
@@ -369,10 +519,9 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
       }
       return false
     }
-    await this.typeCategoriesModel.create(
-      { typeId, categoryId } as never,
-      { transaction },
-    )
+    await this.typeCategoriesModel.create({ typeId, categoryId } as never, {
+      transaction,
+    })
     return true
   }
 
@@ -380,7 +529,9 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
     await this.sequelize.transaction(async (transaction) => {
       const [type, category] = await Promise.all([
         this.typeModel.unscoped().findByPk(body.typeId, { transaction }),
-        this.categoryModel.unscoped().findByPk(body.categoryId, { transaction }),
+        this.categoryModel
+          .unscoped()
+          .findByPk(body.categoryId, { transaction }),
       ])
       if (!type) throw new NotFoundException(`Type ${body.typeId} not found`)
       if (!category) {
@@ -522,6 +673,24 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
   }
 
   async revert(auditId: string, actor: CategoryTypeActor): Promise<void> {
+    try {
+      await this.revertInTransaction(auditId, actor)
+    } catch (error) {
+      // The `alreadyReverted` read below is not serialisable under READ
+      // COMMITTED, so two concurrent reverts of the same entry both pass it. The
+      // partial unique index on `reverts_audit_id` stops the second one here —
+      // translate it into the same friendly error the fast path produces.
+      if (isRevertsAuditIdConflict(error)) {
+        throw new BadRequestException('This change has already been reverted')
+      }
+      throw error
+    }
+  }
+
+  private async revertInTransaction(
+    auditId: string,
+    actor: CategoryTypeActor,
+  ): Promise<void> {
     await this.sequelize.transaction(async (transaction) => {
       const audit = await this.changeLogModel.findByPk(auditId, { transaction })
       if (!audit) {
@@ -564,9 +733,7 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
           break
         }
         default:
-          throw new BadRequestException(
-            `Cannot revert action ${audit.action}`,
-          )
+          throw new BadRequestException(`Cannot revert action ${audit.action}`)
       }
 
       await this.writeChangeLog(transaction, {
@@ -625,11 +792,23 @@ export class CategoryTypeAdminService implements ICategoryTypeAdminService {
         .unscoped()
         .restore({ where: { id: audit.entityId }, transaction })
     }
-    // Restore any join rows that were soft-deleted alongside it.
-    const where = isCategory
-      ? { categoryId: audit.entityId }
-      : { typeId: audit.entityId }
-    await this.typeCategoriesModel.restore({ where, transaction })
+    // Restore only the join rows this delete actually removed. Restoring by
+    // entity id would also resurrect connections the admin detached deliberately
+    // in an earlier, separate DETACH action.
+    const connections = this.connectionsFromSnapshot(audit.before)
+    if (connections === null) {
+      // Log rows written before `before.connections` existed carry no record of
+      // which connections went with the delete. Restoring nothing is the safe
+      // choice: an admin can re-attach from the UI, whereas a wrongly resurrected
+      // connection silently widens what citizens can select in the public form.
+      return
+    }
+    for (const connection of connections) {
+      await this.typeCategoriesModel.restore({
+        where: { typeId: connection.typeId, categoryId: connection.categoryId },
+        transaction,
+      })
+    }
   }
 
   private applySnapshot(
