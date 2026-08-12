@@ -9378,7 +9378,10 @@
         "type": "object",
         "properties": {
           "title": { "type": "string" },
-          "slug": { "type": "string" }
+          "slug": {
+            "type": "string",
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted."
+          }
         },
         "required": ["title"]
       },
@@ -9386,7 +9389,10 @@
         "type": "object",
         "properties": {
           "title": { "type": "string" },
-          "slug": { "type": "string" }
+          "slug": {
+            "type": "string",
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted."
+          }
         }
       },
       "SetActiveBody": {
@@ -9406,7 +9412,10 @@
         "type": "object",
         "properties": {
           "title": { "type": "string" },
-          "slug": { "type": "string" },
+          "slug": {
+            "type": "string",
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted."
+          },
           "categoryIds": { "type": "string" }
         },
         "required": ["title"]
@@ -9415,7 +9424,10 @@
         "type": "object",
         "properties": {
           "title": { "type": "string" },
-          "slug": { "type": "string" }
+          "slug": {
+            "type": "string",
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted."
+          }
         }
       },
       "ConnectionBody": {
