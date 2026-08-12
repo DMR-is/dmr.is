@@ -17,15 +17,46 @@ import type { DataTablePagingProps } from '../DataTable/types'
 import * as styles from './Table.css'
 
 import {
+  type Column,
   type ColumnDef,
   type ExpandedState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getSortedRowModel,
+  type RowData,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
+
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    /**
+     * Shrink the column to its content instead of a set width. Requires
+     * `layout="auto"` on the table.
+     */
+    fit?: boolean
+    /**
+     * Absorb the width the other columns do not use. Requires `layout="auto"`.
+     */
+    grow?: boolean
+  }
+}
+
+/**
+ * Content-driven width for a column that opted into `fit` or `grow`, so callers
+ * do not have to hand-tune pixel sizes. `width: 1` with `auto` layout collapses
+ * the cell to its content; `100%` makes the remaining space fall to one column.
+ */
+const sizingStyle = <TData extends object>(
+  column: Column<TData, unknown>,
+): React.CSSProperties | undefined => {
+  const { fit, grow } = column.columnDef.meta ?? {}
+  if (fit) return { width: 1, whiteSpace: 'nowrap' }
+  if (grow) return { width: '100%' }
+  return undefined
+}
 
 export type TableProps<TData extends object> = {
   columns: ColumnDef<TData>[]
@@ -152,9 +183,10 @@ export const Table = <TData extends object>({
                   <T.HeadData
                     key={header.id}
                     style={
-                      explicitSize !== undefined
+                      sizingStyle(header.column) ??
+                      (explicitSize !== undefined
                         ? { width: explicitSize }
-                        : undefined
+                        : undefined)
                     }
                     box={{
                       paddingLeft: [1, 2],
@@ -313,11 +345,12 @@ export const Table = <TData extends object>({
                               ? () => router.push(href)
                               : undefined
                           }
-                          style={
-                            getRowExpanded && href
+                          style={{
+                            ...sizingStyle(cell.column),
+                            ...(getRowExpanded && href
                               ? { cursor: 'pointer' }
-                              : undefined
-                          }
+                              : {}),
+                          }}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
