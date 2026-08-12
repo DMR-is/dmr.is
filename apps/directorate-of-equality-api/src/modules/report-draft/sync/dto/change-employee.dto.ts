@@ -16,10 +16,10 @@ import { SyncMethodEnum } from '../sync-method.enum'
 
 /**
  * Editable fields of an employee in a sync batch. All optional (flat command
- * DTO); the CREATE-required fields (role, education, gender, field, department,
- * startDate, workRatio, baseSalary) are validated server-side. `ordinal` and
- * `score` are never client-set — ordinal is server-assigned, score derived at
- * submit.
+ * DTO); the CREATE-required fields (role, education, gender, startDate,
+ * workRatio, baseSalary) are validated server-side — `field` and `department`
+ * are optional and may be left unset. `ordinal` and `score` are never
+ * client-set — ordinal is server-assigned, score derived at submit.
  *
  * `stepIds`, when present, REPLACES the employee's personal step-assignment set.
  * `outlierGroupId` sets/clears outlier-group membership (null clears) and is
@@ -35,11 +35,11 @@ export class EmployeeChangeDataDto {
   @ApiOptionalEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender?: GenderEnum
 
-  @ApiOptionalString()
-  field?: string
+  @ApiOptionalString({ nullable: true })
+  field?: string | null
 
-  @ApiOptionalString()
-  department?: string
+  @ApiOptionalString({ nullable: true })
+  department?: string | null
 
   @ApiOptionalString({ description: 'Employment start date (YYYY-MM-DD).' })
   startDate?: string
