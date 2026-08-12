@@ -33,6 +33,7 @@ import { ForeclosureModel } from '../models/foreclosure.model'
 import { ForeclosurePropertyModel } from '../models/foreclosure-property.model'
 import { IssueModel } from '../models/issues.model'
 import { IssueSettingsModel } from '../models/issues-settings.model'
+import { PublicationSearchEventModel } from '../models/publication-search-event.model'
 import { SettlementModel } from '../models/settlement.model'
 import { SignatureModel } from '../models/signature.model'
 import { StatusModel } from '../models/status.model'
@@ -107,6 +108,10 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
             SignatureModel,
             TBRCompanySettingsModel,
             BackfilledPublicationModel,
+            // Must be listed here, not just in SequelizeModule.forFeature():
+            // autoLoadModels is false above, so forFeature alone never attaches
+            // the model to the connection and every write throws.
+            PublicationSearchEventModel,
           ],
         }),
       ],
