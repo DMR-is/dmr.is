@@ -297,7 +297,7 @@ function employeesSql() {
           : num(Number(value).toFixed(2))
       return (
         `  (${escStr(empId)}, ${escStr(RICH_SAL)}, ${num(e.ordinal)}, ` +
-        `${escStr(e.education)}, ${escStr(e.field)}, ${escStr(e.department)}, ` +
+        `${escStr(e.field)}, ${escStr(e.department)}, ` +
         `${escStr(e.startDate)}, ${num(e.workRatio)}, ` +
         `${num(Number(e.baseSalary).toFixed(2))}, ` +
         `${nullableSalary(e.additionalFixedOvertime)}, ${nullableSalary(e.additionalFixedCarAllowance)}, ` +
@@ -329,7 +329,7 @@ function employeesSql() {
   return `
 BEGIN;
 
-INSERT INTO report_employee (id, report_id, ordinal, education, field, department,
+INSERT INTO report_employee (id, report_id, ordinal, field, department,
   start_date, work_ratio, base_salary,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,

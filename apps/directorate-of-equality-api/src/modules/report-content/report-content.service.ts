@@ -111,7 +111,6 @@ export class ReportContentService implements IReportContentService {
     const employeeRows = await this.reportEmployeeModel.bulkCreate(
       parsed.employees.map((employee, index) => ({
         ordinal: employee.ordinal,
-        education: employee.education,
         field: employee.field,
         department: employee.department,
         startDate: employee.startDate,

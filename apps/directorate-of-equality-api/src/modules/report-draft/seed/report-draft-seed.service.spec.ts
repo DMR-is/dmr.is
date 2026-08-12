@@ -56,7 +56,6 @@ const validParsed = () => ({
       ordinal: 1,
       identifier: 'ABC-001',
       roleTitle: 'Sérfræðingur',
-      education: 'BACHELOR',
       gender: 'FEMALE',
       field: 'Eng',
       department: 'R&D',

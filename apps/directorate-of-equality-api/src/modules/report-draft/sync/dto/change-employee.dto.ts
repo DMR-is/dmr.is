@@ -11,7 +11,6 @@ import {
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../../report/models/report.enums'
-import { EducationEnum } from '../../../report-employee/models/report-employee.model'
 import { SyncMethodEnum } from '../sync-method.enum'
 
 /**
@@ -28,9 +27,6 @@ import { SyncMethodEnum } from '../sync-method.enum'
 export class EmployeeChangeDataDto {
   @ApiOptionalUUID({ description: 'Id of a role on the same draft.' })
   reportEmployeeRoleId?: string
-
-  @ApiOptionalEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education?: EducationEnum
 
   @ApiOptionalEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender?: GenderEnum
