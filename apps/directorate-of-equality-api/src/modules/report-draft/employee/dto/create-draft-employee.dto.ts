@@ -2,6 +2,7 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -21,11 +22,11 @@ export class CreateDraftEmployeeDto {
   @ApiEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender!: GenderEnum
 
-  @ApiString()
-  field!: string
+  @ApiOptionalString({ nullable: true })
+  field?: string | null
 
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department?: string | null
 
   @ApiString({ description: 'Employment start date (YYYY-MM-DD).' })
   startDate!: string

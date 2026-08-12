@@ -7,6 +7,7 @@ import * as z from 'zod'
 import {
   getAdvertHTMLMarkup,
   LegalGazetteHTMLTemplates,
+  toPossessiveCourtDistrict,
 } from '@dmr.is/legal-gazette-html'
 import { createDivisionEndingInput } from '@dmr.is/legal-gazette-schemas'
 import { useQuery } from '@dmr.is/trpc/client/trpc'
@@ -102,9 +103,8 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
     additionalText: state.additionalText,
     content: state.content,
     settlementDeclaredClaims: state.declaredClaims,
-    courtDistrict: courtDistrictInfo?.courtDistrict?.title?.replace(
-      'Héraðsdómur',
-      'Héraðsdóms',
+    courtDistrict: toPossessiveCourtDistrict(
+      courtDistrictInfo?.courtDistrict?.title,
     ),
     judgementDate: courtDistrictInfo?.judgmentDate,
     settlementName: settlementInfo?.name,
@@ -313,7 +313,7 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
           />
           <FormElement
             type="text"
-            label="Fyrir hönd undirritara"
+            label="Fyrir hönd"
             onChange={(e) =>
               handleSetState('signature', {
                 ...state.signature,

@@ -2,6 +2,7 @@ import { mergeRouters } from '../trpc'
 import { advertPublishRouter } from './advertPublishRouter'
 import { advertsRouter } from './advertsRouter'
 import { baseEntityRouter } from './baseEntityRouter'
+import { categoryTypeAdminRouter } from './categoryTypeAdminRouter'
 import { channelsRouter } from './channelsRouter'
 import { commentRouter } from './commentRouter'
 import { htmlAdminRouter } from './htmlAdminRouter'
@@ -19,6 +20,7 @@ import { usersRouter } from './usersRouter'
 export const appRouter = mergeRouters(
   advertsRouter,
   baseEntityRouter,
+  categoryTypeAdminRouter,
   usersRouter,
   publicationsRouter,
   settlementRouter,

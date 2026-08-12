@@ -1,4 +1,4 @@
-import { BelongsToMany } from 'sequelize-typescript'
+import { BelongsToMany, Column, DataType } from 'sequelize-typescript'
 
 import { BaseEntityModel, BaseEntityTable } from '@dmr.is/shared-models-base'
 
@@ -30,6 +30,11 @@ export class TypeModel extends BaseEntityModel<TypeDto> {
   // This is always a array with one element, we need to use BelongsToMany to get the join table
   @BelongsToMany(() => FeeCodeModel, { through: () => AdvertTypeFeeCodeModel })
   feeCode?: FeeCodeModel[]
+
+  // Non-selectable (legacy) types are excluded from the create-flow dropdowns
+  // but remain valid for existing adverts and search facets.
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: true })
+  active!: boolean
 
   static fromModelWithCategories(model: TypeModel): TypeWithCategoriesDto {
     return {

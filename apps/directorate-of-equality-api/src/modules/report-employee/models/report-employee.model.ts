@@ -9,9 +9,7 @@ import { ReportEmployeeRoleModel } from './report-employee-role.model'
 
 /** DECIMAL columns come back from the driver as strings; null stays null. */
 const parseNullableDecimal = (value: unknown): number | null =>
-  value !== null && value !== undefined
-    ? parseFloat(value as string)
-    : null
+  value !== null && value !== undefined ? parseFloat(value as string) : null
 
 /**
  * Viðbótarlaun (additional salary) = sum of its fixed sub-components, each
@@ -60,8 +58,8 @@ export function requireComputedScore(employee: {
 
 type ReportEmployeeAttributes = {
   ordinal: number
-  field: string
-  department: string
+  field: string | null
+  department: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -81,8 +79,8 @@ type ReportEmployeeAttributes = {
 
 type ReportEmployeeCreateAttributes = {
   ordinal: number
-  field: string
-  department: string
+  field?: string | null
+  department?: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -106,11 +104,11 @@ export class ReportEmployeeModel extends MutableModel<
   @Column({ type: DataType.INTEGER, allowNull: false })
   ordinal!: number
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  field!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  field!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  department!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  department!: string | null
 
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'start_date' })
   startDate!: string

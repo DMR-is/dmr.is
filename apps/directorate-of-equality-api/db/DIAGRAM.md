@@ -38,6 +38,8 @@ erDiagram
         uuid id PK
         ReportTypeEnum type
         ReportStatusEnum status
+        SalaryDataBasisEnum salary_data_basis "nullable, SALARY only"
+        date salary_data_period "nullable, month when basis MONTH"
         text company_national_id "nullable"
         uuid reviewer_user_id FK "nullable"
         uuid equality_report_id FK "nullable, SALARY to EQUALITY"

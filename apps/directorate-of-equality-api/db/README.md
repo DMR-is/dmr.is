@@ -305,6 +305,17 @@ Application-side submit receives the parent as `company` and subsidiaries as `su
 
 The schema does **not** track which specific company paid which specific employee. Aggregate visibility (the list of participating companies) is sufficient for the audit.
 
+## Salary-data basis
+
+A salary report's figures come from one of two places, and which one it is changes how the numbers should be read — so the submittee declares it rather than us inferring it. `report.salary_data_basis` carries the declaration:
+
+- `MONTH` — the figures are one specific payroll month's. Which month is in `report.salary_data_period`, stored as a `date` on the 1st (the value has month precision; any day a client sends is normalised to the 1st).
+- `AVERAGE` — the figures are a twelve-month average. No single month applies, so `salary_data_period` stays `NULL`.
+
+Both columns are nullable at the DB level, because the same table holds `EQUALITY` rows (no salary data at all) and because a `SALARY` row starts as a `DRAFT` that is filled in field by field — the applicant may pick the basis in one PATCH and the month in the next. Requiredness is therefore a **submit-time** rule, enforced identically on all three submit paths (application portal, admin web, draft submit): the basis must be declared, and a `MONTH` basis must name its month, or the submit is rejected with 400. Reports submitted before the field existed are `NULL` on both columns.
+
+Two CHECK constraints hold the invariants that are true at every point in a draft's life, so they never block an in-progress edit: an `AVERAGE` basis never carries a month, and a stored month is always the 1st. Declaring `AVERAGE` clears any month already entered, so a basis switch cannot leave a stale month behind.
+
 ## Criteria scoring (how a report is evaluated)
 
 Each report is evaluated against a set of weighted criteria:
@@ -353,6 +364,7 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
 | `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`   |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
+| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                               |
 | `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW` |
 | `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                   |
 | `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                             |
@@ -516,6 +528,8 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
 | `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
 | `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
+| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                     |
+| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |

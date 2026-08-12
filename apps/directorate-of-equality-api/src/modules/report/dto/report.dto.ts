@@ -19,6 +19,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../models/report.model'
 
 export class ReportDto {
@@ -69,6 +70,21 @@ export class ReportDto {
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeNeutralCount!: number | null
+
+  @ApiOptionalEnum(SalaryDataBasisEnum, {
+    enumName: 'SalaryDataBasisEnum',
+    nullable: true,
+    description:
+      'Salary-only. Whether the submitted salary data describes one specific payroll month (`MONTH`, with the month in `salaryDataPeriod`) or a twelve-month average (`AVERAGE`). Null on equality reports and on salary reports submitted before the field existed.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the salary data is based on, as an ISO date normalised to the 1st of that month (`YYYY-MM-01`). Set when `salaryDataBasis` is `MONTH`, null for `AVERAGE`.',
+  })
+  salaryDataPeriod!: string | null
 
   @ApiOptionalEnum(ReportProviderEnum, {
     enumName: 'ReportProviderEnum',

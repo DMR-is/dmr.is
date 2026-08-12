@@ -9,6 +9,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyService } from '../../company/company.service.interface'
 import { CompanyDto } from '../../company/dto/company.dto'
+import { resolveSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import { ReportStatusEnum, ReportTypeEnum } from '../../report/models/report.model'
 import { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import { CreateReportResponseDto } from '../../report-create/dto/create-report-response.dto'
@@ -63,6 +64,14 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       )
     }
 
+    // The applicant must have declared what period the salary figures describe:
+    // a specific payroll month (and which one) or a twelve-month average. Both
+    // arrive during drafting via the header PATCH, which already normalised the
+    // pair; the resolved pair is persisted again below so submit does not depend
+    // on that having happened. Runs before anything is written, so an
+    // undeclared basis fails the whole submit.
+    const salaryDataBasis = isSalary ? resolveSalaryDataBasis(report) : null
+
     // Snapshot company details (frozen at submit) — validate parent matches the
     // authenticated company and resolve subsidiaries.
     const companies = await this.buildCompanySnapshots(input, company)
@@ -95,6 +104,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     await report.update({
       status,
       equalityReportId: input.equalityReportId ?? null,
+      ...(salaryDataBasis ?? {}),
     })
 
     await this.finalizeService.emitSubmittedEvent(report.id, status, company.id)

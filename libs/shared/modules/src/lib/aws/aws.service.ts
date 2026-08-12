@@ -26,7 +26,7 @@ import {
   S3Client,
   UploadPartCommand,
 } from '@aws-sdk/client-s3'
-import { SendRawEmailCommand, SESClient } from '@aws-sdk/client-ses'
+import { SendEmailCommand, SESv2Client } from '@aws-sdk/client-sesv2'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
@@ -47,7 +47,7 @@ export class AWSService implements IAWSService {
       : undefined,
   })
 
-  private readonly ses = new SESClient({
+  private readonly ses = new SESv2Client({
     region: process.env.AWS_REGION ?? 'eu-west-1',
     credentials: process.env.AWS_CREDENTIALS_SOURCE
       ? fromIni({ profile: process.env.AWS_CREDENTIALS_SOURCE })
@@ -394,7 +394,7 @@ export class AWSService implements IAWSService {
       subject: message.subject,
     })
     const transporter = nodemailer.createTransport({
-      SES: { ses: this.ses, aws: { SendRawEmailCommand } },
+      SES: { sesClient: this.ses, SendEmailCommand },
     })
     return ResultWrapper.ok(await transporter.sendMail(message))
   }

@@ -2,6 +2,7 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -15,11 +16,11 @@ export class ReportEmployeeDto {
   @ApiNumber()
   ordinal!: number
 
-  @ApiString()
-  field!: string
+  @ApiOptionalString({ nullable: true })
+  field!: string | null
 
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department!: string | null
 
   @ApiString()
   startDate!: string
