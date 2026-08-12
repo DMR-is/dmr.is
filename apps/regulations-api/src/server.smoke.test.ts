@@ -79,20 +79,24 @@ const basic = (user: string, pass: string) =>
 /**
  * FASTIFY 5 BREAKING CHANGE CANARY.
  *
- * Fastify 5 rejects a request that declares `Content-Type: application/json`
- * but carries an empty body with `FST_ERR_CTP_EMPTY_JSON_BODY` (HTTP 400),
- * and it does so in the content-type parser — i.e. *after* `onRequest` in the
- * lifecycle, but Fastify 5 also made the empty-body check unconditional, so
- * bodyless JSON DELETEs that sail through today start 400ing.
+ * `handleRequest` in Fastify 4 (`lib/handleRequest.js:48-56`) only runs the
+ * content-type parser for `DELETE`/`OPTIONS` when a `content-type` header is
+ * present *and* `transfer-encoding` or `content-length` is also present.
+ * A bodyless DELETE that merely declares `content-type: application/json`
+ * therefore skips parsing entirely and reaches the handler. Fastify 5 drops
+ * that special case, so the same request hits the default JSON parser, which
+ * rejects an empty body with `FST_ERR_CTP_EMPTY_JSON_BODY` (HTTP 400).
  *
- * Both live DELETE routes are guarded by an `onRequest` hook, so on Fastify 4
- * an unauthenticated, bodyless `DELETE` is rejected by auth with 401 and the
- * body is never parsed. If either of these tests reports 400 /
- * `FST_ERR_CTP_EMPTY_JSON_BODY`, the upgrade changed the order in which a
- * client sees auth vs. body-parse failures — any caller that sends
- * `content-type: application/json` on a bodyless DELETE will break.
+ * The tests below MUST send valid credentials. `onRequest` runs before the
+ * content-type parser on both majors, so an *unauthenticated* request is
+ * short-circuited by auth with 401 on Fastify 4 and Fastify 5 alike — it stays
+ * green straight through the regression it is supposed to catch. Getting past
+ * auth is what puts the request in front of the parser.
+ *
+ * Expected on Fastify 5: the first test flips 200 -> 400, and the second
+ * flips 500 -> 400.
  */
-describe('Fastify 5 canary: bodyless DELETE with content-type: application/json', () => {
+describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: application/json', () => {
   let app: FastifyInstance
 
   afterEach(async () => {
@@ -101,36 +105,216 @@ describe('Fastify 5 canary: bodyless DELETE with content-type: application/json'
     }
   })
 
-  it('DELETE /api/v1/cache/ministries is rejected by basic auth, not by the body parser', async () => {
+  it('DELETE /api/v1/cache/ministries reaches the handler and returns 200', async () => {
+    setEnv({ ROUTES_USERNAME: 'reg-user', ROUTES_PASSWORD: 'reg-pass' })
+    app = build()
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/cache/ministries',
+      headers: {
+        authorization: basic('reg-user', 'reg-pass'),
+        'content-type': 'application/json',
+      },
+      // deliberately no payload — and therefore no content-length either
+    })
+
+    // Fastify 4: parsing is skipped, the handler runs, redis is undefined so
+    // `del()` short-circuits to 0.
+    expect(res.statusCode).toBe(200)
+    expect(JSON.parse(res.body)).toEqual({ deleted: 0 })
+
+    // Fastify 5 turns this into 400 FST_ERR_CTP_EMPTY_JSON_BODY.
+    expect(res.statusCode).not.toBe(400)
+    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
+  })
+
+  it('DELETE /api/v1/change-suggestions/:id reaches the handler (which then fails on the absent DB)', async () => {
+    setEnv({
+      ROUTES_USERNAME_CHANGESUGGESTION: 'cs-user',
+      ROUTES_PASSWORD_CHANGESUGGESTION: 'cs-pass',
+    })
+    app = build()
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/change-suggestions/123',
+      headers: {
+        authorization: basic('cs-user', 'cs-pass'),
+        'content-type': 'application/json',
+      },
+      // deliberately no payload
+    })
+
+    // Past auth (not 401) and into the handler, which throws because
+    // `connectSequelize()` was never called. The exact 500 is incidental; what
+    // matters is that the request was NOT stopped by the body parser.
+    expect(res.statusCode).not.toBe(401)
+    expect(res.statusCode).toBe(500)
+
+    expect(res.statusCode).not.toBe(400)
+    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
+  })
+
+  it('control: the same DELETE without a content-type header also reaches the handler', async () => {
+    // Isolates the trigger — it is the content-type header, not the method.
+    setEnv({ ROUTES_USERNAME: 'reg-user', ROUTES_PASSWORD: 'reg-pass' })
+    app = build()
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/cache/ministries',
+      headers: { authorization: basic('reg-user', 'reg-pass') },
+    })
+
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('pre-existing on Fastify 4: adding content-length: 0 ALREADY produces the 400', async () => {
+    // This is the other half of the Fastify 4 condition. A client that sends
+    // `Content-Length: 0` alongside the JSON content-type is rejected today,
+    // which is exactly the behaviour Fastify 5 generalizes to every bodyless
+    // JSON DELETE. Pinned so the upgrade is understood as "this case spreads",
+    // not "this case appears".
+    setEnv({ ROUTES_USERNAME: 'reg-user', ROUTES_PASSWORD: 'reg-pass' })
+    app = build()
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/v1/cache/ministries',
+      headers: {
+        authorization: basic('reg-user', 'reg-pass'),
+        'content-type': 'application/json',
+        'content-length': '0',
+      },
+    })
+
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).code).toBe('FST_ERR_CTP_EMPTY_JSON_BODY')
+  })
+})
+
+/**
+ * The same hazard class for bodyless POSTs. Fastify 4 runs the content-type
+ * parser for POST whenever a content-type is present (`handleRequest.js:30-44`
+ * — no content-length escape hatch), so these already 400 today. Pinned to
+ * prove the baseline: if one of these changes status on Fastify 5, the change
+ * is wider than the DELETE special case.
+ */
+describe('bodyless POST with content-type: application/json (already 400 on Fastify 4)', () => {
+  let app: FastifyInstance
+
+  afterEach(async () => {
+    if (app) {
+      await app.close()
+    }
+  })
+
+  it('POST /api/v1/change-suggestions/process', async () => {
+    setEnv({
+      ROUTES_USERNAME_CHANGESUGGESTION: 'cs-user',
+      ROUTES_PASSWORD_CHANGESUGGESTION: 'cs-pass',
+    })
+    app = build()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/change-suggestions/process',
+      headers: {
+        authorization: basic('cs-user', 'cs-pass'),
+        'content-type': 'application/json',
+      },
+    })
+
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).code).toBe('FST_ERR_CTP_EMPTY_JSON_BODY')
+  })
+
+  it('POST /api/v1/regulation/publish', async () => {
+    setEnv({
+      REGULATIONS_API_USERNAME: 'pub-user',
+      REGULATIONS_API_PASSWORD: 'pub-pass',
+    })
+    app = build()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/regulation/publish',
+      headers: {
+        authorization: basic('pub-user', 'pub-pass'),
+        'content-type': 'application/json',
+      },
+    })
+
+    expect(res.statusCode).toBe(400)
+    expect(JSON.parse(res.body).code).toBe('FST_ERR_CTP_EMPTY_JSON_BODY')
+  })
+
+  it('but a POST with an actual JSON body gets through to the handler', async () => {
+    // Guards against the above two tests passing for the wrong reason (e.g.
+    // auth quietly failing with a 400-shaped error).
+    setEnv({
+      REGULATIONS_API_USERNAME: 'pub-user',
+      REGULATIONS_API_PASSWORD: 'pub-pass',
+    })
+    app = build()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/regulation/publish',
+      headers: {
+        authorization: basic('pub-user', 'pub-pass'),
+        'content-type': 'application/json',
+      },
+      payload: JSON.stringify({ name: '0123/2021' }),
+    })
+
+    expect(res.statusCode).not.toBe(400)
+    expect(res.statusCode).toBe(500) // no DB connection
+  })
+})
+
+describe('auth runs before body parsing (true on both Fastify majors)', () => {
+  let app: FastifyInstance
+
+  afterEach(async () => {
+    if (app) {
+      await app.close()
+    }
+  })
+
+  // NOTE: these are NOT upgrade canaries. `onRequest` precedes the
+  // content-type parser in the Fastify 4 and 5 lifecycles alike, so an
+  // unauthenticated request never reaches the parser on either. They document
+  // that ordering; the tests that actually detect the regression are the
+  // authenticated ones above.
+  it('an unauthenticated bodyless JSON DELETE is rejected by auth with 401', async () => {
     app = build()
 
     const res = await app.inject({
       method: 'DELETE',
       url: '/api/v1/cache/ministries',
       headers: { 'content-type': 'application/json' },
-      // deliberately no payload
     })
 
     expect(res.statusCode).toBe(401)
-
-    // Explicit negative assertions: this is the thing that flips on Fastify 5.
-    expect(res.statusCode).not.toBe(400)
-    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
 
-  it('DELETE /api/v1/change-suggestions/:id is rejected by its auth hook, not by the body parser', async () => {
+  it('auth wins even when the body parser would also have rejected the request', async () => {
+    // content-length: 0 makes the parser reject on Fastify 4 — but only if the
+    // request gets that far. Without credentials it does not.
     app = build()
 
     const res = await app.inject({
       method: 'DELETE',
-      url: '/api/v1/change-suggestions/123',
-      headers: { 'content-type': 'application/json' },
-      // deliberately no payload
+      url: '/api/v1/cache/ministries',
+      headers: {
+        'content-type': 'application/json',
+        'content-length': '0',
+      },
     })
 
     expect(res.statusCode).toBe(401)
-
-    expect(res.statusCode).not.toBe(400)
     expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
 })
@@ -170,6 +354,85 @@ describe('routes that need no infrastructure', () => {
     expect(res.statusCode).toBe(200)
     // 24 days, not 24 hours — `serveRobotsTxt` computes `24 * DAY / SECOND`.
     expect(res.headers['cache-control']).toBe('public, max-age=2073600')
+
+    // CAVEAT: `buildServer` passes the relative path 'static/robots-api.txt',
+    // which resolves against the *bundle* directory. Loaded unbundled under
+    // ts-jest `__dirname` is `src/utils`, so this route serves the fail-closed
+    // fallback here, not the real asset. The two happen to be byte-identical,
+    // so this assertion holds either way and proves nothing about which branch
+    // ran. Branch coverage lives in `describe('serveRobotsTxt')` below, which
+    // tells them apart via the warning rather than the body.
+    expect(res.body).toBe('User-agent: *\nDisallow: /\n')
+  })
+})
+
+/**
+ * Direct coverage of `serveRobotsTxt`, which the integration test above can
+ * only reach through its fallback branch. Both branches are exercised against
+ * real files — no fs mocking.
+ */
+describe('serveRobotsTxt', () => {
+  let app: FastifyInstance
+
+  afterEach(async () => {
+    if (app) {
+      await app.close()
+    }
+  })
+
+  const bare = (): FastifyInstance => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { fastify } = require('fastify') as typeof import('fastify')
+    return fastify()
+  }
+
+  it('serves the real asset when the path resolves', async () => {
+    // `serveRobotsTxt` joins against its own `__dirname` (src/utils), so walk
+    // back up to the checked-in asset.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const serverUtils = require('./utils/server-utils') as typeof import('./utils/server-utils')
+    const { serveRobotsTxt } = serverUtils
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { readFileSync } = require('fs') as typeof import('fs')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { join } = require('path') as typeof import('path')
+
+    const expected = readFileSync(
+      join(__dirname, '..', 'static', 'robots-api.txt'),
+      'utf8',
+    )
+
+    app = bare()
+    const warn = jest.spyOn(app.log, 'warn')
+    serveRobotsTxt(app, '../../static/robots-api.txt')
+
+    const res = await app.inject({ method: 'GET', url: '/robots.txt' })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toBe(expected)
+    // The checked-in asset is byte-identical to the fail-closed fallback, so
+    // the response body CANNOT distinguish the two branches. The absence of
+    // the warning is what proves the file was actually read.
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it('fails closed with a full Disallow when the path does not resolve', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const serverUtils = require('./utils/server-utils') as typeof import('./utils/server-utils')
+    const { serveRobotsTxt } = serverUtils
+
+    app = bare()
+    const warn = jest.spyOn(app.log, 'warn')
+
+    serveRobotsTxt(app, 'definitely/not/here.txt')
+
+    const res = await app.inject({ method: 'GET', url: '/robots.txt' })
+
+    expect(res.statusCode).toBe(200)
+    // An empty body would read to crawlers as "allow everything", cached for
+    // 24 days. Disallow-all is the safe default.
+    expect(res.body).toBe('User-agent: *\nDisallow: /\n')
+    expect(warn).toHaveBeenCalled()
   })
 })
 
