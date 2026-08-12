@@ -97,7 +97,7 @@ export const DivisionSignatureFields = ({
           name="signatureOnBehalfOf"
           backgroundColor="blue"
           size="sm"
-          label="Fyrir hönd:"
+          label="Fyrir hönd"
           onChange={(e) =>
             setFormState({
               ...formState,

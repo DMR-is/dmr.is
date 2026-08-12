@@ -68,7 +68,7 @@ export const SignatureFields = () => {
             <GridColumn span={['12/12', '6/12']}>
               <InputController
                 name="signature.onBehalfOf"
-                label="Fyrir hönd:"
+                label="Fyrir hönd"
                 onChange={(val) => onChangeHandler('onBehalfOf', val)}
               />
             </GridColumn>
