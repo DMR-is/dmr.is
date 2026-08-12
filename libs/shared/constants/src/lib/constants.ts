@@ -118,13 +118,3 @@ export const REGULATION_TYPES = [
 
 export const CHROME_USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-
-/**
- * DoE salary reports: how many months back a declared payroll month may reach,
- * counting the current month as the first. Three years of months covers current
- * filings and any late catch-up.
- *
- * Shared so the one bound is enforced by the API (`salary-data-basis.ts`) and
- * offered by the admin month picker rather than each deciding for itself.
- */
-export const SALARY_DATA_PERIOD_MONTHS_BACK = 36

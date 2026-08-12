@@ -4,9 +4,20 @@ import subMonths from 'date-fns/subMonths'
 
 import { BadRequestException } from '@nestjs/common'
 
-import { SALARY_DATA_PERIOD_MONTHS_BACK } from '@dmr.is/constants'
-
 import { SalaryDataBasisEnum } from '../models/report.enums'
+
+/**
+ * How many months back a declared payroll month may reach, counting the current
+ * month as the first. Three years of months covers current filings and any late
+ * catch-up.
+ *
+ * This is the authoritative bound — it is enforced on every write path and
+ * stated in the OpenAPI descriptions of `salaryDataPeriod`. The admin month
+ * picker offers the same depth (`MONTH_OPTION_COUNT` in
+ * `CreateSalaryReportDrawer.tsx`); the two live in separate apps with no shared
+ * library between them, so that one mirrors this and must be changed with it.
+ */
+export const SALARY_DATA_PERIOD_MONTHS_BACK = 36
 
 /**
  * The salary-data basis a submittee declares on a SALARY report: either one

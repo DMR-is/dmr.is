@@ -4,7 +4,6 @@ import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
 import { useMemo, useRef, useState } from 'react'
 
-import { SALARY_DATA_PERIOD_MONTHS_BACK } from '@dmr.is/constants'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
 import { AccordionItem } from '@dmr.is/ui/components/island-is/AccordionItem'
@@ -54,6 +53,14 @@ const GENDER_OPTIONS = [
   { label: s.genders.female, value: GenderEnum.FEMALE },
   { label: s.genders.neutral, value: GenderEnum.NEUTRAL },
 ]
+
+/**
+ * How far back the payroll-month picker reaches. Mirrors
+ * `SALARY_DATA_PERIOD_MONTHS_BACK` in the API's `salary-data-basis.ts`, which is
+ * the authoritative bound and 400s anything outside it — offering more here just
+ * produces a rejected submit, so the two must be changed together.
+ */
+const MONTH_OPTION_COUNT = 36
 
 const DATA_BASIS_OPTIONS = [
   { label: t.dataBasisMonthOption, value: SalaryDataBasisEnum.MONTH },
@@ -131,20 +138,15 @@ export const CreateSalaryReportDrawer = () => {
   const nextGroup = () => makeGroup(`g${(groupIdCounter.current += 1)}`)
 
   // Payroll months to choose from, newest first. A month list rather than a date
-  // picker: the value has month precision, so there is no day to get wrong. The
-  // depth comes from the same constant the API validates against, so the picker
-  // cannot offer a month the API would reject.
+  // picker: the value has month precision, so there is no day to get wrong.
   const monthOptions = useMemo(() => {
     const now = new Date()
 
-    return Array.from(
-      { length: SALARY_DATA_PERIOD_MONTHS_BACK },
-      (_, offset) => {
-        const value = format(subMonths(now, offset), 'yyyy-MM')
+    return Array.from({ length: MONTH_OPTION_COUNT }, (_, offset) => {
+      const value = format(subMonths(now, offset), 'yyyy-MM')
 
-        return { label: formatMonthYearIS(`${value}-01`), value }
-      },
-    )
+      return { label: formatMonthYearIS(`${value}-01`), value }
+    })
   }, [])
 
   const companiesQuery = useQuery(

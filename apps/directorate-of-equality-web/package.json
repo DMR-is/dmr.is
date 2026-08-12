@@ -6,7 +6,6 @@
     "@ariakit/react": "0.4.17",
     "@dmr.is/api-client": "*",
     "@dmr.is/auth": "*",
-    "@dmr.is/constants": "*",
     "@dmr.is/island-ui-theme": "*",
     "@dmr.is/logging-next": "*",
     "@dmr.is/trpc": "*",
