@@ -87,8 +87,11 @@ export const ApplicationCard = ({ application }: Props) => {
         if (pub.publishedAt) {
           advertsCount++
         }
-        // if Skiptalok is published, mark all as published
-        if (advert.type.title == 'Skiptalok') {
+        // if Skiptalok is published, mark all as published. A Skiptalok that
+        // was created but never published (e.g. rejected) must not mark the
+        // estate as concluded, otherwise the tag contradicts the add-adverts
+        // menu, which is driven by the server-derived canAddAdverts.
+        if (advert.type.title == 'Skiptalok' && pub.publishedAt) {
           allPublished = true
         }
 
