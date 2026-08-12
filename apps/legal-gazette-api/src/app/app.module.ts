@@ -25,6 +25,7 @@ import { ApplicationModel } from '../models/application.model'
 import { BackfilledPublicationModel } from '../models/backfilled-publication.model'
 import { CaseModel } from '../models/case.model'
 import { CategoryModel } from '../models/category.model'
+import { CategoryTypeChangeLogModel } from '../models/category-type-change-log.model'
 import { CommentModel } from '../models/comment.model'
 import { CommunicationChannelModel } from '../models/communication-channel.model'
 import { CourtDistrictModel } from '../models/court-district.model'
@@ -108,6 +109,7 @@ import { PublicWebSwaggerModule } from '../modules/swagger/public-web.swagger.mo
             SignatureModel,
             TBRCompanySettingsModel,
             BackfilledPublicationModel,
+            CategoryTypeChangeLogModel,
             // Must be listed here, not just in SequelizeModule.forFeature():
             // autoLoadModels is false above, so forFeature alone never attaches
             // the model to the connection and every write throws.

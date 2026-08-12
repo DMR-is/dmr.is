@@ -21,6 +21,10 @@ import {
   RECALL_DECEASED_ADVERT_TYPE_ID,
 } from '../../../core/constants'
 import {
+  liveDivisionEndingWhere,
+  notTerminatedWhere,
+} from '../../../core/utils/estate.util'
+import {
   AdvertModel,
   AdvertTemplateType,
 } from '../../../models/advert.model'
@@ -52,6 +56,36 @@ export class RecallApplicationService implements IRecallApplicationService {
     @InjectModel(ApplicationModel)
     private applicationModel: typeof ApplicationModel,
   ) {}
+
+  /**
+   * Nothing may be added to an estate once a Skiptalok is live, so this backs
+   * both the Skiptafundur and the Skiptalok endpoints.
+   *
+   * The check is deliberately on the adverts and not on application.status:
+   * status only says whether a Skiptalok was ever published, so on its own it
+   * would keep an estate closed after its Skiptalok had been rejected.
+   */
+  private async assertEstateOpen(applicationId: string): Promise<void> {
+    const liveDivisionEnding = await this.advertModel.findOne({
+      attributes: ['id'],
+      where: liveDivisionEndingWhere(applicationId),
+    })
+
+    if (!liveDivisionEnding) {
+      return
+    }
+
+    this.logger.warn(
+      `Cannot add adverts to an estate that already has a division ending advert`,
+      {
+        context: LOGGING_CONTEXT,
+        applicationId: applicationId,
+        advertId: liveDivisionEnding.id,
+      },
+    )
+
+    throw new BadRequestException('Estate already has a division ending advert')
+  }
 
   private cloneSettlement(
     settlement: SettlementModel,
@@ -90,6 +124,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       attributes: ['id', 'createdAt'],
       where: {
         applicationId: applicationId,
+        ...notTerminatedWhere,
       },
       include: [
         {
@@ -145,6 +180,7 @@ export class RecallApplicationService implements IRecallApplicationService {
             RECALL_DECEASED_ADVERT_TYPE_ID,
           ],
         },
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC']],
       include: [
@@ -236,6 +272,8 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Settlement not set on application')
     }
 
+    await this.assertEstateOpen(applicationId)
+
     const advert = await this.advertService.createAdvert({
       applicationId: application.id,
       templateType:
@@ -300,10 +338,19 @@ export class RecallApplicationService implements IRecallApplicationService {
       throw new BadRequestException('Judgement date not set on recall advert')
     }
 
+    // FINISHED is accepted alongside SUBMITTED because it only records that a
+    // Skiptalok was once published; assertEstateOpen below is what decides
+    // whether one is still live. That also lets an application left FINISHED by
+    // a since-rejected Skiptalok take a replacement without a backfill.
     const application = await this.applicationModel.findOne({
       where: {
         id: applicationId,
-        status: ApplicationStatusEnum.SUBMITTED,
+        status: {
+          [Op.in]: [
+            ApplicationStatusEnum.SUBMITTED,
+            ApplicationStatusEnum.FINISHED,
+          ],
+        },
         applicationType: {
           [Op.or]: [
             ApplicationTypeEnum.RECALL_BANKRUPTCY,
@@ -315,13 +362,13 @@ export class RecallApplicationService implements IRecallApplicationService {
 
     if (!application) {
       this.logger.error(
-        `Cannot create division ending advert for application that is not in SUBMITTED status`,
+        `Cannot create division ending advert for application that has not been submitted`,
         {
           context: LOGGING_CONTEXT,
           applicationId: applicationId,
         },
       )
-      throw new BadRequestException('Application is not in SUBMITTED status')
+      throw new BadRequestException('Application has not been submitted')
     }
 
     if (!application.settlement) {
@@ -334,6 +381,8 @@ export class RecallApplicationService implements IRecallApplicationService {
       )
       throw new BadRequestException('Settlement not set on application')
     }
+
+    await this.assertEstateOpen(applicationId)
 
     const advert = await this.advertService.createAdvert({
       applicationId: application.id,
@@ -360,8 +409,12 @@ export class RecallApplicationService implements IRecallApplicationService {
       scheduledAt: [body.scheduledAt],
     })
 
+    // The application is deliberately not marked FINISHED here. Creating a
+    // Skiptalok is only a request to close the estate; it is closed when the
+    // advert actually publishes, which DivisionEndingPublishedListener handles.
+    // Writing it here left the estate closed even when an editor went on to
+    // reject the advert, locking the advertiser out of a replacement.
     await application.update({
-      status: ApplicationStatusEnum.FINISHED,
       settlementId: advert.settlement?.id ?? application.settlementId,
     })
   }
@@ -381,6 +434,7 @@ export class RecallApplicationService implements IRecallApplicationService {
       where: {
         applicationId: applicationId,
         typeId: TypeIdEnum.DIVISION_MEETING,
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC']],
       include: [
@@ -435,6 +489,7 @@ export class RecallApplicationService implements IRecallApplicationService {
             RECALL_DECEASED_ADVERT_TYPE_ID,
           ],
         },
+        ...notTerminatedWhere,
       },
       order: [['createdAt', 'ASC NULLS LAST']],
       include: [

@@ -172,7 +172,7 @@ export function getAdvertHtmlMarkup(
     case LegalGazetteHTMLTemplates.RECALL_BANKRUPTCY:
       return getAdvertHTMLMarkup({
         ...baseProps,
-        courtDistrict: model.courtDistrict?.title ?? '',
+        courtDistrict: model.courtDistrict?.possessiveTitle ?? '',
         judgementDate: model.judgementDate ?? undefined,
         settlement: {
           address: model.settlement?.address ?? '',
@@ -194,7 +194,7 @@ export function getAdvertHtmlMarkup(
     case LegalGazetteHTMLTemplates.RECALL_DECEASED:
       return getAdvertHTMLMarkup({
         ...baseProps,
-        courtDistrict: model.courtDistrict?.title ?? '',
+        courtDistrict: model.courtDistrict?.possessiveTitle ?? '',
         judgementDate: model.judgementDate ?? undefined,
         settlement: {
           address: model.settlement?.address ?? '',
@@ -259,7 +259,7 @@ export function getAdvertHtmlMarkup(
       return getAdvertHTMLMarkup({
         ...baseProps,
         content: model.content ?? '',
-        courtDistrict: model.courtDistrict?.title ?? '',
+        courtDistrict: model.courtDistrict?.possessiveTitle ?? '',
         endingDate: model.settlement?.endingDate ?? undefined,
         judgementDate: model.judgementDate?.toISOString() ?? '',
         settlementDeclaredClaims: model.settlement?.declaredClaims ?? undefined,
