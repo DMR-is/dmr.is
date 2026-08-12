@@ -3,7 +3,7 @@ import { FastifyPluginCallback } from 'fastify'
 import { ensureRegName } from '@dmr.is/regulations-tools/utils'
 
 import { DRAFTS_FOLDER, FILE_SERVER } from '../constants'
-import { fileUploader, MulterS3StorageFile } from '../utils/file-upload'
+import { uploadFileFromRequest } from '../utils/file-upload'
 import { moveUrlsToFileServer } from '../utils/file-upload-urls'
 import {
   ensureFileScopeToken,
@@ -56,28 +56,21 @@ export const fileUploadRoutes: FastifyPluginCallback = (
           done(error as Error)
         }
       },
-      preHandler: fileUploader,
     },
-    (request, reply) => {
-      const fileObj = (
-        request as unknown as { file: MulterS3StorageFile | undefined }
-      ).file
+    async (request, reply) => {
+      // Returns the key the object was actually written to — for a pasted
+      // image that is the transformed `.jpg`, not the `.png` `getKey()` named.
+      const uploaded = await uploadFileFromRequest(request)
 
-      // NOTE: Not sure if this is needed. May be handled inside `fileUploader` – Már @2021-11-03
-      if (!fileObj) {
+      if (!uploaded) {
         reply.code(400).send({ error: 'No file was uploaded' })
         return
       }
 
       // eslint-disable-next-line no-console
-      process.env.MEDIA_BUCKET_FOLDER && console.info(fileObj)
+      process.env.MEDIA_BUCKET_FOLDER && console.info(uploaded)
 
-      const uploadInfo =
-        // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-        (fileObj.transforms as Array<MulterS3StorageFile> | undefined)?.[0] ||
-        fileObj
-
-      return reply.send({ location: FILE_SERVER + '/' + uploadInfo.key })
+      return reply.send({ location: FILE_SERVER + '/' + uploaded.key })
     },
   )
 

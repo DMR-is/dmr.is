@@ -1,10 +1,8 @@
-import S3 from 'aws-sdk/clients/s3'
 import { createHash } from 'crypto'
-import type { Request as ExpressRequest } from 'express'
-import multer from 'fastify-multer'
-import multerS3 from 'multer-s3-transform'
+import type { FastifyRequest } from 'fastify'
+import file_type from 'file-type'
+import isSvg from 'is-svg'
 import sharp from 'sharp'
-import { Readable } from 'stream'
 
 import { ensureRegName, nameToSlug } from '@dmr.is/regulations-tools/utils'
 
@@ -16,43 +14,33 @@ import {
 } from '../constants'
 import { ensureFileScopeToken, ensureUploadTypeHeader } from './misc'
 
-// `multer-s3-transform` doesn't have TypeScript definitions, so we just make do with this
-// copied over from https://www.npmjs.com/package/multer-s3-transform#file-information
-type MulterFile = Omit<
-  Express.Multer.File,
-  'filename' | 'destination' | 'path' | 'buffer' | 'stream'
->
+import { S3Client } from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
+import type { MultipartFile } from '@fastify/multipart'
 
-export type MulterS3StorageFile = MulterFile & {
-  /** The bucket used to store the file */
-  bucket: string
-  /** The name of the file */
-  key: string
-  /** Access control for the file */
-  acl: string
-  /** The mimetype used to upload the file */
-  contentType: string
-  /** The metadata object to be sent to S3 */
-  metadata: string
-  /** The S3 url to access the file */
-  location: string
-  /** The etagof the uploaded file in S3 */
-  etag: string
-  /** The contentDisposition used to upload the file */
-  contentDisposition: string
-  /** The storageClass to be used for the uploaded file in S3 */
-  storageClass: string
-  /** The versionId is an optional param returned by S3 for versioned buckets. */
-  versionId: string
+/** The slice of a request that `getKey()` reads. `FastifyRequest` satisfies
+ * this structurally, and so do the plain objects the characterization tests
+ * hand it. */
+type KeyRequest = Pick<FastifyRequest, 'headers'> & {
+  query: Record<string, unknown>
 }
 
-type MulterFileWithHash = MulterFile & {
+/** The mutable slice of an uploaded file that `getKey()` reads — and, in the
+ * case of `isPasted`, writes. */
+type UploadFileInfo = {
+  originalname: string
+  /** First 8 hex characters of the file's MD5, baked into the object key. */
   $hash$?: string
+  /** Set by `getKey()`; decides whether the PNG -> JPEG transform runs. */
   isPasted?: boolean
-  key?: string
 }
 
-const getSingleQuery = (req: ExpressRequest, param: string): string => {
+export type UploadedFile = {
+  /** The S3 object key the file ended up under. */
+  key: string
+}
+
+const getSingleQuery = (req: KeyRequest, param: string): string => {
   let value = req.query[param] as string | Array<string> | undefined
   if (value && typeof value !== 'string') {
     value = value[0]
@@ -64,8 +52,7 @@ const getSingleQuery = (req: ExpressRequest, param: string): string => {
  *
  * Exported for characterization tests — the exact strings this returns are the
  * contract for every piece of media already sitting in the bucket. */
-export const getKey = (req: ExpressRequest, _file: MulterFile) => {
-  const file = _file as MulterFileWithHash
+export const getKey = (req: KeyRequest, file: UploadFileInfo) => {
   const regName = ensureRegName(getSingleQuery(req, 'scope'))
 
   const folder = ensureFileScopeToken(
@@ -99,90 +86,110 @@ export const getKey = (req: ExpressRequest, _file: MulterFile) => {
   return fileUrl
 }
 
-const storage = multerS3({
-  s3: new S3({ region: AWS_REGION_NAME }),
-  bucket: AWS_BUCKET_NAME || '',
-  contentType: multerS3.AUTO_CONTENT_TYPE,
-  key: (req, file, cb) => {
-    cb(null, getKey(req as ExpressRequest, file))
-  },
-  // See also: https://www.npmjs.com/package/multer-s3-transform#transforming-files-before-upload
-  // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-  shouldTransform: function (req, file: MulterFileWithHash, cb) {
-    // cb(null, false); // no transforming for the time being. Deafult to all pasted files being just bulky PNG
-    cb(null, file.isPasted)
-  },
-  transforms: [
-    {
-      id: 'original',
-      key: (
-        req: ExpressRequest,
-        file: MulterFileWithHash,
-        // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-        cb,
-      ) => {
-        cb(null, getKey(req, file).replace(/\.png$/, '.jpg'))
-      },
-      // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-      transform: (req: Request, file, cb) => {
-        cb(
-          null,
-          sharp().flatten({ background: '#ffffff' }).jpeg({ quality: 85 }),
-        )
-      },
-    },
-    // {
-    //   id: 'webp nearLossless',
-    //   // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-    //   key: (req: Request, file: MulterFileWithHash, cb) => {
-    //     cb(null, getKey(req, file).replace(/\.png$/, '-nll.webp'));
-    //   },
-    //   // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-    //   transform: (req: Request, file, cb) => {
-    //     cb(null, sharp().webp({ quality: 85, nearLossless: true }));
-    //   },
-    // },
-    // {
-    //   id: 'webp lossy',
-    //   // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-    //   key: (req: Request, file: MulterFileWithHash, cb) => {
-    //     cb(null, getKey(req, file).replace(/\.png$/, '.webp'));
-    //   },
-    //   // @ts-expect-error  (multer-s3-transform has no .d.ts files)
-    //   transform: (req: Request, file, cb) => {
-    //     cb(null, sharp().webp({ quality: 85 }));
-    //   },
-    // },
-  ],
-})
+/** The key a pasted image is actually stored under. `getKey()` names the
+ * upload; this names the object. They differ, and the route must return this
+ * one — see `uploadFileFromRequest`. */
+export const toTransformedKey = (key: string) => key.replace(/\.png$/, '.jpg')
 
-const multerS3_handleFile = storage._handleFile
-storage._handleFile = function (req, file, cb) {
-  // eslint-disable-next-line @typescript-eslint/no-this-alias
-  const _this = this
-  const hash = createHash('md5')
-  const fileData: Array<Buffer> = []
-  file.stream
-    .on('data', (data: Buffer) => {
-      hash.update(data.toString('binary'))
-      fileData.push(data)
-    })
-    .on('end', () => {
-      const $hash$ = hash.digest('hex').slice(0, 8)
-      multerS3_handleFile.call(
-        _this,
-        req,
-        {
-          ...file,
-          $hash$,
-          stream: Readable.from(fileData),
-        },
-        cb,
-      )
-    })
+// ---------------------------------------------------------------------------
+
+let s3Client: S3Client | undefined
+
+const getS3Client = () => {
+  if (!s3Client) {
+    s3Client = new S3Client({ region: AWS_REGION_NAME })
+  }
+  return s3Client
 }
 
-export const fileUploader = multer({
-  // @ts-expect-error  (multer-s3-transform assumes Express.js-branded Response/Request objects)
-  storage,
-}).single('file')
+/** Reproduces `multer-s3-transform`'s `AUTO_CONTENT_TYPE`: magic bytes first,
+ * then an SVG sniff, then a generic fallback. */
+const detectContentType = async (body: Buffer): Promise<string> => {
+  const type = await file_type.fromBuffer(body)
+  if (type) {
+    return type.mime
+  }
+  if (isSvg(body)) {
+    return 'image/svg+xml'
+  }
+  return 'application/octet-stream'
+}
+
+/** multer imposed no size limit of its own. `@fastify/multipart` otherwise
+ * defaults `fileSize` to Fastify's 1MB `bodyLimit`, which would start
+ * rejecting perfectly ordinary regulation images. */
+const NO_FILE_SIZE_LIMIT = { limits: { fileSize: Infinity } }
+
+/** The multipart field the upload must arrive under. */
+const FILE_FIELD = 'file'
+
+/** Reads the multipart `file` field off the request and stores it in S3,
+ * returning the key it was written to — or `undefined` when the request
+ * carried no such file, which the route turns into a 400.
+ *
+ * The whole file is buffered before anything is sent, because the MD5 of its
+ * bytes is part of the object key: the key cannot be computed until the last
+ * byte has arrived. That is deliberate, not an oversight — do not "optimise"
+ * it into a straight-through stream.
+ */
+export const uploadFileFromRequest = async (
+  request: FastifyRequest,
+): Promise<UploadedFile | undefined> => {
+  // `request.file()` throws FST_INVALID_MULTIPART_CONTENT_TYPE (406) on a
+  // non-multipart body. Answering "no file arrived" the same way regardless of
+  // why is both what the handler documents and what it always meant to do.
+  if (!request.isMultipart()) {
+    return undefined
+  }
+
+  const part: MultipartFile | undefined = await request.file(NO_FILE_SIZE_LIMIT)
+
+  if (!part || part.fieldname !== FILE_FIELD) {
+    return undefined
+  }
+
+  const body = await part.toBuffer()
+
+  const hash = createHash('md5')
+  // NOTE: hashing the latin1 *string* rather than the raw bytes is what the
+  // shipped implementation did, and the first 8 hex characters of that digest
+  // are baked into every key already in the bucket. Do not "correct" this.
+  hash.update(body.toString('binary'))
+
+  const file: UploadFileInfo = {
+    originalname: part.filename,
+    $hash$: hash.digest('hex').slice(0, 8),
+  }
+
+  // Side effect: this is where `file.isPasted` gets set.
+  const key = getKey(request as KeyRequest, file)
+
+  // Detected from the ORIGINAL bytes, exactly as `AUTO_CONTENT_TYPE` did —
+  // so a transformed pasted image keeps its `image/png` content type even
+  // though the stored body is JPEG. Pre-existing; every pasted image already
+  // in the bucket looks like this.
+  const contentType = await detectContentType(body)
+
+  const transformed = !!file.isPasted
+  const uploadKey = transformed ? toTransformedKey(key) : key
+  const uploadBody = transformed
+    ? await sharp(body)
+        .flatten({ background: '#ffffff' })
+        .jpeg({ quality: 85 })
+        .toBuffer()
+    : body
+
+  await new Upload({
+    client: getS3Client(),
+    params: {
+      Bucket: AWS_BUCKET_NAME || '',
+      Key: uploadKey,
+      ACL: 'private',
+      ContentType: contentType,
+      StorageClass: 'STANDARD',
+      Body: uploadBody,
+    },
+  }).done()
+
+  return { key: uploadKey }
+}

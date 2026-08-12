@@ -1345,6 +1345,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-sdk/lib-storage@npm:3.744.0":
+  version: 3.744.0
+  resolution: "@aws-sdk/lib-storage@npm:3.744.0"
+  dependencies:
+    "@smithy/abort-controller": "npm:^4.0.1"
+    "@smithy/middleware-endpoint": "npm:^4.0.3"
+    "@smithy/smithy-client": "npm:^4.1.3"
+    buffer: "npm:5.6.0"
+    events: "npm:3.3.0"
+    stream-browserify: "npm:3.0.0"
+    tslib: "npm:^2.6.2"
+  peerDependencies:
+    "@aws-sdk/client-s3": ^3.744.0
+  checksum: 10c0/d9821f5b86db3494b2a687fb0f53c799ba62a63126e73df643def9209f3dcd9cf047da5fa141af9a190b92ff32da8870daf7680f4282f9eaba8f7426e9c08362
+  languageName: node
+  linkType: hard
+
 "@aws-sdk/middleware-bucket-endpoint@npm:3.734.0":
   version: 3.734.0
   resolution: "@aws-sdk/middleware-bucket-endpoint@npm:3.734.0"
@@ -4644,6 +4661,7 @@ __metadata:
   resolution: "@dmr.is/regulations-api@workspace:apps/regulations-api"
   dependencies:
     "@aws-sdk/client-s3": "npm:3.744.0"
+    "@aws-sdk/lib-storage": "npm:3.744.0"
     "@aws-sdk/s3-presigned-post": "npm:3.744.0"
     "@dmr.is/regulations-tools": "npm:0.10.3"
     "@fastify/basic-auth": "npm:5.1.1"
@@ -4656,11 +4674,9 @@ __metadata:
     aws-sdk: "npm:2.1692.0"
     date-fns: "npm:2.30.0"
     elastic-builder: "npm:2.31.0"
-    express: "npm:4.22.2"
     fastify: "npm:4.29.1"
-    fastify-multer: "npm:2.0.3"
     file-type: "npm:16.5.4"
-    multer-s3-transform: "npm:2.10.3"
+    is-svg: "npm:4.4.0"
     node-fetch: "npm:2.6.7"
     pg: "npm:8.13.3"
     reflect-metadata: "npm:0.1.14"
@@ -5415,15 +5431,6 @@ __metadata:
     "@fastify/error": "npm:^3.0.0"
     fastify-plugin: "npm:^4.0.0"
   checksum: 10c0/6085e0867d98ba061d06fbcdd8fb1726f2d4637a1139e760b9ff3954f252d89616afab48148129302c20705103f7bc77f2506a0c93b0362872dde524092ab935
-  languageName: node
-  linkType: hard
-
-"@fastify/busboy@npm:^1.0.0":
-  version: 1.2.1
-  resolution: "@fastify/busboy@npm:1.2.1"
-  dependencies:
-    text-decoding: "npm:^1.0.0"
-  checksum: 10c0/fe13effa7a7a2aa270ef62586cd8d04339036b10ffa1d3d6a883e502fcc1bdc6d8de1bd7ac9d46ef7718bed3b1202cac058e281f5053dee262af7538243cb780
   languageName: node
   linkType: hard
 
@@ -14221,6 +14228,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"buffer@npm:5.6.0":
+  version: 5.6.0
+  resolution: "buffer@npm:5.6.0"
+  dependencies:
+    base64-js: "npm:^1.0.2"
+    ieee754: "npm:^1.1.4"
+  checksum: 10c0/07037a0278b07fbc779920f1ba1b473933ffb4a2e2f7b387c55daf6ac64a05b58c27da9e85730a4046e8f97a49f8acd9f7bf89605c0a4dfda88ebfb7e08bfe4a
+  languageName: node
+  linkType: hard
+
 "buffer@npm:5.7.1, buffer@npm:^5.2.1, buffer@npm:^5.5.0":
   version: 5.7.1
   resolution: "buffer@npm:5.7.1"
@@ -17592,7 +17609,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"events@npm:^3.2.0, events@npm:^3.3.0":
+"events@npm:3.3.0, events@npm:^3.2.0, events@npm:^3.3.0":
   version: 3.3.0
   resolution: "events@npm:3.3.0"
   checksum: 10c0/d6b6f2adbccbcda74ddbab52ed07db727ef52e31a61ed26db9feb7dc62af7fc8e060defa65e5f8af9449b86b52cc1a1f6a79f2eafcf4e62add2b7a1fa4a432f6
@@ -17919,31 +17936,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify-multer@npm:2.0.3":
-  version: 2.0.3
-  resolution: "fastify-multer@npm:2.0.3"
-  dependencies:
-    "@fastify/busboy": "npm:^1.0.0"
-    append-field: "npm:^1.0.0"
-    concat-stream: "npm:^2.0.0"
-    fastify-plugin: "npm:^2.0.1"
-    mkdirp: "npm:^1.0.4"
-    on-finished: "npm:^2.3.0"
-    type-is: "npm:~1.6.18"
-    xtend: "npm:^4.0.2"
-  checksum: 10c0/ad49f7b6ebe4e703acfc2ad6f3da559b797cf816c4611b9071098ca38f0e74e9f85a4048fc52ab91196b1302a4fb1c8507d6519c0c35dae2d0d8b2a5e09f5d72
-  languageName: node
-  linkType: hard
-
-"fastify-plugin@npm:^2.0.1":
-  version: 2.3.4
-  resolution: "fastify-plugin@npm:2.3.4"
-  dependencies:
-    semver: "npm:^7.3.2"
-  checksum: 10c0/8264ff11fdeac1fd2a93e2c7ece20f859c3748a9aeb90abf6616d123958309b63906bf6cdb491335b9238e9bf2ae061bb1894c95edf6f4d696657900c61f6160
-  languageName: node
-  linkType: hard
-
 "fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.5.0":
   version: 4.5.1
   resolution: "fastify-plugin@npm:4.5.1"
@@ -18084,13 +18076,6 @@ __metadata:
     token-types: "npm:^6.0.0"
     uint8array-extras: "npm:^1.4.0"
   checksum: 10c0/ae6f65e537205a9a3e07ae574de74ed5210aa78899d6478351a466f97e3f17096b93d74cb97f3fce7488bc8486a21e449ab076ec358ed06984f4a9a8f48a9f55
-  languageName: node
-  linkType: hard
-
-"file-type@npm:^3.3.0":
-  version: 3.9.0
-  resolution: "file-type@npm:3.9.0"
-  checksum: 10c0/7ae074b350c2300807a99d428600a8ee6b2ace901400898706a20ddc2c43c9abb7e05177ff55ed67a2fd26dfa9b91857b21ec9c0ab3202b9cabebc7e65900240
   languageName: node
   linkType: hard
 
@@ -22285,7 +22270,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:1.0.4, mkdirp@npm:^1.0.4":
+"mkdirp@npm:1.0.4":
   version: 1.0.4
   resolution: "mkdirp@npm:1.0.4"
   bin:
@@ -22413,17 +22398,6 @@ __metadata:
   bin:
     mssql: bin/mssql
   checksum: 10c0/6320bf7e03c072dd3a6ee45f396257c5987be7d99c588c086384cd98e40f03e2b3033e9e1d319a8ce4198a4611594e9677f9dedd8a2f4c3482460465704a8c81
-  languageName: node
-  linkType: hard
-
-"multer-s3-transform@npm:2.10.3":
-  version: 2.10.3
-  resolution: "multer-s3-transform@npm:2.10.3"
-  dependencies:
-    file-type: "npm:^3.3.0"
-    is-svg: "npm:^2.1.0"
-    run-parallel: "npm:^1.1.6"
-  checksum: 10c0/4c8b651acae4aab222cf960afcf3bb5f1969aca0dc34a4486dd3402877a90d2c0a1520c117e16fe11cff3974fcefcaa9e11422131cd44cecb44914fa257efc8e
   languageName: node
   linkType: hard
 
@@ -25552,7 +25526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:3.6.2, readable-stream@npm:^3.0.2, readable-stream@npm:^3.0.6, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
+"readable-stream@npm:3.6.2, readable-stream@npm:^3.0.2, readable-stream@npm:^3.0.6, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.5.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
   version: 3.6.2
   resolution: "readable-stream@npm:3.6.2"
   dependencies:
@@ -26218,7 +26192,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"run-parallel@npm:^1.1.6, run-parallel@npm:^1.1.9":
+"run-parallel@npm:^1.1.9":
   version: 1.2.0
   resolution: "run-parallel@npm:1.2.0"
   dependencies:
@@ -26754,7 +26728,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.2, semver@npm:^7.3.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.8.5":
+"semver@npm:^7.3.4, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.2, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.8.5":
   version: 7.8.5
   resolution: "semver@npm:7.8.5"
   bin:
@@ -27663,6 +27637,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stream-browserify@npm:3.0.0":
+  version: 3.0.0
+  resolution: "stream-browserify@npm:3.0.0"
+  dependencies:
+    inherits: "npm:~2.0.4"
+    readable-stream: "npm:^3.5.0"
+  checksum: 10c0/ec3b975a4e0aa4b3dc5e70ffae3fc8fd29ac725353a14e72f213dff477b00330140ad014b163a8cbb9922dfe90803f81a5ea2b269e1bbfd8bd71511b88f889ad
+  languageName: node
+  linkType: hard
+
 "stream-shift@npm:^1.0.0, stream-shift@npm:^1.0.2":
   version: 1.0.3
   resolution: "stream-shift@npm:1.0.3"
@@ -28289,13 +28273,6 @@ __metadata:
   dependencies:
     b4a: "npm:^1.6.4"
   checksum: 10c0/e527d05454b59c0fa77456495de68c88e560a122de3dd28b3ebdbf81828aabeaa7e9bb8054b9eb52bc5029ccb5899ad04f466cbba3c53b2685270599d1710cee
-  languageName: node
-  linkType: hard
-
-"text-decoding@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "text-decoding@npm:1.0.0"
-  checksum: 10c0/290dbd6111f39a4020b3e2384de614f90051eff3cd11176329fda0a40ac0b0a07e6820b9aeb4b0b7c2cc7869b62cd3b25944c71e9e16b628bcf57299ab84e311
   languageName: node
   linkType: hard
 
@@ -30199,7 +30176,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"xtend@npm:^4.0.0, xtend@npm:^4.0.2, xtend@npm:~4.0.1":
+"xtend@npm:^4.0.0, xtend@npm:~4.0.1":
   version: 4.0.2
   resolution: "xtend@npm:4.0.2"
   checksum: 10c0/366ae4783eec6100f8a02dff02ac907bf29f9a00b82ac0264b4d8b832ead18306797e283cf19de776538babfdcb2101375ec5646b59f08c52128ac4ab812ed0e

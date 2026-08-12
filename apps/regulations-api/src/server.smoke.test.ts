@@ -94,7 +94,7 @@ const basic = (user: string, pass: string) =>
  * auth is what puts the request in front of the parser.
  *
  * Expected on Fastify 5: the first test flips 200 -> 400, and the second
- * flips 500 -> 400.
+ * starts returning 400 instead of reaching the handler at all.
  */
 describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: application/json', () => {
   let app: FastifyInstance
@@ -146,12 +146,12 @@ describe('Fastify 5 canary: authenticated bodyless DELETE with content-type: app
       // deliberately no payload
     })
 
-    // Past auth (not 401) and into the handler, which throws because
-    // `connectSequelize()` was never called. The exact 500 is incidental; what
-    // matters is that the request was NOT stopped by the body parser.
+    // Past auth (not 401) and into the handler. Deliberately NOT asserting the
+    // handler's own status: today it is 500 because `connectSequelize()` was
+    // never called, but a CI with a reachable database would make it 200 or
+    // 404 and that must not turn this red. The load-bearing part is that the
+    // body parser did not stop the request.
     expect(res.statusCode).not.toBe(401)
-    expect(res.statusCode).toBe(500)
-
     expect(res.statusCode).not.toBe(400)
     expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
@@ -269,8 +269,10 @@ describe('bodyless POST with content-type: application/json (already 400 on Fast
       payload: JSON.stringify({ name: '0123/2021' }),
     })
 
+    // Same reasoning as the canary above: assert only that the parser let it
+    // through, not the handler's own status, which depends on DB reachability.
     expect(res.statusCode).not.toBe(400)
-    expect(res.statusCode).toBe(500) // no DB connection
+    expect(res.body).not.toContain('FST_ERR_CTP_EMPTY_JSON_BODY')
   })
 })
 

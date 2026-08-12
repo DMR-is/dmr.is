@@ -443,15 +443,16 @@ describe('POST /api/v1/file-upload — onRequest guard', () => {
       ).statusCode,
     ).toBe(403)
 
-    // A well-formed RegName gets past onRequest and on into the multipart
-    // preHandler, which rejects the non-multipart body with 415 or 406 rather
-    // than 403 — enough to prove the guard itself passed.
+    // A well-formed RegName gets past onRequest and into the handler, which
+    // then rejects the bodyless request with 400 (see the `no file was
+    // uploaded` describe below). 400 rather than 403 is what proves the scope
+    // guard itself passed.
     const ok = await app.inject({
       method: 'POST',
       url: '/api/v1/file-upload?scope=0123%2F2021',
       headers: { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_PUBLISH },
     })
-    expect(ok.statusCode).not.toBe(403)
+    expect(ok.statusCode).toBe(400)
   })
 
   it('requires a file-scope token for draft uploads', async () => {
@@ -467,11 +468,78 @@ describe('POST /api/v1/file-upload — onRequest guard', () => {
       ).statusCode,
     ).toBe(403)
 
+    // Same as above: 400 from the handler, not 403 from the scope guard.
     const ok = await app.inject({
       method: 'POST',
       url: '/api/v1/file-upload?scope=foo',
       headers: { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_DRAFT },
     })
-    expect(ok.statusCode).not.toBe(403)
+    expect(ok.statusCode).toBe(400)
+  })
+})
+
+describe('POST /api/v1/file-upload — the `no file was uploaded` path', () => {
+  /**
+   * REGRESSION GUARD for a bug the upload rewrite closed.
+   *
+   * Before the rewrite this guard was dead code. `buildServer` registers
+   * `@fastify/multipart` before `fileUploadRoutes`, and that plugin decorates
+   * every request with a `file()` METHOD — so the old handler's
+   * `const fileObj = request.file` read a function, `if (!fileObj)` could
+   * never be true, and a request that uploaded nothing returned:
+   *
+   *     200 {"location":"https://files.reglugerd.is/undefined"}
+   *
+   * (verified against commit c937fbda). The rewrite makes `request.file()` an
+   * awaited call rather than a property read, so the guard now fires.
+   *
+   * This is one of the few places the rewrite deliberately CHANGES behaviour
+   * rather than preserving it, which is why it is asserted rather than
+   * characterized: the old value must never come back.
+   */
+  let app: FastifyInstance
+
+  afterEach(async () => {
+    if (app) {
+      await app.close()
+    }
+  })
+
+  it('never returns a location containing the literal string "undefined"', async () => {
+    app = build()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/file-upload?scope=foo',
+      headers: { 'x-apikey': API_KEYS.FILE_UPLOAD_KEY_DRAFT },
+    })
+
+    // The exact status depends on how the multipart plugin rejects a
+    // non-multipart body; what must hold is that this is an error and that no
+    // broken URL is handed back to the caller.
+    expect(res.statusCode).toBeGreaterThanOrEqual(400)
+    expect(res.body).not.toContain('files.reglugerd.is/undefined')
+    expect(res.body).not.toContain('"location"')
+  })
+
+  it('`request.file` is @fastify/multipart’s method, not an uploaded file', async () => {
+    // Root cause of the old bug, observed directly so the diagnosis cannot
+    // rot. A test-only route on the test's own instance reports what
+    // `request.file` actually is on a request that uploaded nothing.
+    app = build()
+    app.get('/__probe-request-file', (request, reply) =>
+      reply.send({
+        type: typeof (request as unknown as { file: unknown }).file,
+      }),
+    )
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/__probe-request-file',
+    })
+
+    // Truthy, which is precisely why reading it as a property could never
+    // detect "no file was uploaded".
+    expect(JSON.parse(res.body).type).toBe('function')
   })
 })

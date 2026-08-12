@@ -376,3 +376,142 @@ describe('getKey — MEDIA_BUCKET_FOLDER (devFolder) segment', () => {
     expect(key).toBe('files/undefined/barchart.png')
   })
 })
+
+// ---------------------------------------------------------------------------
+// The PNG -> JPEG transform
+// ---------------------------------------------------------------------------
+
+/**
+ * CHARACTERIZATION of the pasted-image transform.
+ *
+ * `getKey()` is only half the story. For a pasted blob the object actually
+ * written to S3 has its `.png` rewritten to `.jpg`, and the route returns THAT
+ * key as the `location`. So `getKey` naming `…/image.png` while the bucket
+ * holds `…/image.jpg` is correct and intended — and a rewrite that returns the
+ * `getKey` value as the location 404s every pasted image.
+ *
+ * PROVENANCE OF THESE STRINGS: captured by executing the pre-rewrite
+ * `multer-s3-transform` implementation (its `transforms[0].key` callback) taken
+ * from commit c937fbda, not derived from the current code. The old
+ * implementation expressed this as a storage-object callback and the current
+ * one as `toTransformedKey`; the keys are identical either way, which is
+ * exactly what must stay true.
+ */
+describe('the pasted-PNG to JPEG key rewrite', () => {
+  const load = (env: Record<string, string> = API_KEYS) => {
+    jest.resetModules()
+    Object.entries(env).forEach(([key, value]) => {
+      process.env[key] = value
+    })
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('./file-upload') as {
+      getKey: GetKey
+      toTransformedKey: (key: string) => string
+    }
+  }
+
+  it('stores a pasted blob as .jpg even though getKey names it .png', () => {
+    // THE RELATIONSHIP, in one test. Both halves asserted together so the
+    // dependency between them is impossible to miss.
+    const { getKey, toTransformedKey } = load()
+    const req = makeReq({ folder: 'foo' })
+
+    const named = getKey(req, makeFile('blobid12345.png'))
+    expect(named).toBe('files/foo/image.png')
+
+    expect(toTransformedKey(named)).toBe('files/foo/image.jpg')
+  })
+
+  it('keeps the hash across the extension rewrite', () => {
+    const { getKey, toTransformedKey } = load()
+
+    expect(
+      toTransformedKey(
+        getKey(
+          makeReq({ folder: 'foo' }),
+          makeFile('blobid12345.png', 'cafebabe'),
+        ),
+      ),
+    ).toBe('files/foo/image--cafebabe.jpg')
+  })
+
+  it('rewrites the extension unconditionally — gating is isPasted alone', () => {
+    // The rewrite does not look at `isPasted`; it rewrites any .png. The ONLY
+    // thing that stops an ordinary PNG being flattened to JPEG is the
+    // `isPasted` check at the call site. A refactor that folds the gate into
+    // the key function, or drops it, changes which objects exist in S3.
+    const { getKey, toTransformedKey } = load()
+    const req = makeReq({ folder: 'foo' })
+
+    const file = makeFile('plain.png')
+    expect(toTransformedKey(getKey(req, file))).toBe('files/foo/plain.jpg')
+    // ...but this file is not pasted, so nothing ever asks for that key.
+    expect(file.isPasted).toBeUndefined()
+  })
+
+  it('leaves a non-png extension untouched', () => {
+    const { getKey, toTransformedKey } = load()
+
+    expect(
+      toTransformedKey(
+        getKey(makeReq({ folder: 'foo' }), makeFile('photo.jpeg')),
+      ),
+    ).toBe('files/foo/photo.jpeg')
+  })
+
+  it('only the pasted file gets its key rewritten, and getKey is what decides', () => {
+    // `isPasted` is set as a side effect of `getKey`, and it is the sole input
+    // to the transform decision. Pinning both files side by side makes the
+    // asymmetry explicit.
+    const { getKey, toTransformedKey } = load()
+    const req = makeReq({ folder: 'foo' })
+
+    const pasted = makeFile('blobid12345.png')
+    const ordinary = makeFile('barchart.png')
+
+    const pastedKey = getKey(req, pasted)
+    const ordinaryKey = getKey(req, ordinary)
+
+    expect(pasted.isPasted).toBe(true)
+    expect(ordinary.isPasted).toBeUndefined()
+
+    // Stored key = transformed for the pasted one, untouched for the other.
+    expect(pasted.isPasted ? toTransformedKey(pastedKey) : pastedKey).toBe(
+      'files/foo/image.jpg',
+    )
+    expect(
+      ordinary.isPasted ? toTransformedKey(ordinaryKey) : ordinaryKey,
+    ).toBe('files/foo/barchart.png')
+  })
+})
+
+describe('the two candidate `location` values for a pasted upload', () => {
+  it('differ, so returning the wrong one yields a URL that 404s', () => {
+    // The route builds `location` as FILE_SERVER + '/' + <stored key>. These
+    // are the two URLs that choice selects between; they are not
+    // interchangeable, and only the .jpg one exists in the bucket.
+    jest.resetModules()
+    Object.entries(API_KEYS).forEach(([key, value]) => {
+      process.env[key] = value
+    })
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getKey, toTransformedKey } = require('./file-upload') as {
+      getKey: GetKey
+      toTransformedKey: (key: string) => string
+    }
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { FILE_SERVER } = require('../constants') as { FILE_SERVER: string }
+
+    const named = getKey(makeReq({ folder: 'foo' }), makeFile('blobid12345.png'))
+    const stored = toTransformedKey(named)
+
+    expect(FILE_SERVER + '/' + stored).toBe(
+      'https://files.reglugerd.is/files/foo/image.jpg',
+    )
+    expect(FILE_SERVER + '/' + named).toBe(
+      'https://files.reglugerd.is/files/foo/image.png',
+    )
+    expect(stored).not.toBe(named)
+  })
+})
+
