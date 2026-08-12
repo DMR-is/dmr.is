@@ -286,6 +286,8 @@ export class ApplicationService implements IApplicationService {
         report.type === ReportTypeEnum.EQUALITY
           ? report.equalityReportContent
           : null,
+      salaryDataBasis: report.salaryDataBasis,
+      salaryDataPeriod: report.salaryDataPeriod,
       outliersPostponed:
         report.type === ReportTypeEnum.SALARY
           ? report.status === ReportStatusEnum.POSTPONED
@@ -719,6 +721,8 @@ export class ApplicationService implements IApplicationService {
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+      salaryDataBasis: input.salaryDataBasis,
+      salaryDataPeriod: input.salaryDataPeriod ?? null,
       parsed: input.parsed,
       companies,
       outliersPostponed: input.outliersPostponed,

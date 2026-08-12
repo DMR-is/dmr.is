@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import {
   BadRequestException,
   ConflictException,
@@ -18,6 +21,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
@@ -45,6 +49,13 @@ import { ReportCreateService } from './report-create.service'
 
 const REPORT_ID = 'report-id-1'
 const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-00000000eee1'
+
+// A payroll month inside the API's 36-month reporting window, derived from the
+// clock rather than hardcoded — a literal month would silently age out of the
+// bound and start failing years from now.
+const PERIOD_MONTH = format(subMonths(new Date(), 1), 'yyyy-MM')
+const PERIOD_INPUT = `${PERIOD_MONTH}-15`
+const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const PARENT_COMPANY_ID = '00000000-0000-0000-0000-000000000c01'
 const SUBSIDIARY_COMPANY_ID = '00000000-0000-0000-0000-000000000c02'
 
@@ -260,6 +271,9 @@ describe('ReportCreateService', () => {
         equalityReportId: EQUALITY_REPORT_ID,
         companyAdminEmail: 'admin@example.is',
         companyNationalId: '5500000000',
+        // Declared basis persisted, month normalised to the 1st.
+        salaryDataBasis: SalaryDataBasisEnum.MONTH,
+        salaryDataPeriod: PERIOD_STORED,
       }),
     )
 
@@ -320,6 +334,41 @@ describe('ReportCreateService', () => {
         systemDecision: AutoReviewDecisionEnum.AUTO_APPROVE,
         reason: 'Engin frávik greind.',
         companyId: PARENT_COMPANY_ID,
+      }),
+    )
+  })
+
+  it('rejects a salary submission that does not declare the salary-data basis', async () => {
+    const input = makeInput()
+    // @ts-expect-error — the DTO requires it; this is the wire-level omission.
+    delete input.salaryDataBasis
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
+    expect(reportCreate).not.toHaveBeenCalled()
+  })
+
+  it('rejects a MONTH basis that does not state which month', async () => {
+    const input = makeInput()
+    input.salaryDataPeriod = null
+
+    await expect(service.createSalary(input)).rejects.toThrow(
+      BadRequestException,
+    )
+    expect(reportCreate).not.toHaveBeenCalled()
+  })
+
+  it('stores no month for a twelve-month average, even if one is sent', async () => {
+    const input = makeInput()
+    input.salaryDataBasis = SalaryDataBasisEnum.AVERAGE
+
+    await service.createSalary(input)
+
+    expect(reportCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+        salaryDataPeriod: null,
       }),
     )
   })
@@ -1089,6 +1138,8 @@ function makeInput(): CreateReportDto {
     averageEmployeeMaleCount: 30,
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
+    salaryDataBasis: SalaryDataBasisEnum.MONTH,
+    salaryDataPeriod: PERIOD_INPUT,
     companies: [makeCompanySnapshot(PARENT_COMPANY_ID, null)],
     parsed: {
       criteria: [

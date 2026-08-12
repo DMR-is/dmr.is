@@ -25,6 +25,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from './report.enums'
 
 // Re-export for backwards compatibility — many callers import these enums
@@ -35,6 +36,7 @@ export {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from './report.enums'
 
 type ReportAttributes = {
@@ -55,6 +57,9 @@ type ReportAttributes = {
   averageEmployeeMaleCount: number | null
   averageEmployeeFemaleCount: number | null
   averageEmployeeNeutralCount: number | null
+
+  salaryDataBasis: SalaryDataBasisEnum | null
+  salaryDataPeriod: string | null
 
   providerType: ReportProviderEnum | null
   providerId: string | null
@@ -88,6 +93,9 @@ type ReportCreateAttributes = {
   averageEmployeeMaleCount?: number | null
   averageEmployeeFemaleCount?: number | null
   averageEmployeeNeutralCount?: number | null
+
+  salaryDataBasis?: SalaryDataBasisEnum | null
+  salaryDataPeriod?: string | null
 
   providerType?: ReportProviderEnum | null
   providerId?: string | null
@@ -289,6 +297,32 @@ export class ReportModel extends MutableModel<
   })
   averageEmployeeNeutralCount!: number | null
 
+  /**
+   * Salary-only. Whether the submitted figures describe one specific payroll
+   * month or a twelve-month average. Declared by the submittee and mandatory on
+   * a submitted salary report — nullable here because equality reports carry no
+   * salary data, a draft is filled in field by field, and pre-existing reports
+   * predate the field.
+   */
+  @Column({
+    type: DataType.ENUM(...Object.values(SalaryDataBasisEnum)),
+    allowNull: true,
+    field: 'salary_data_basis',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum | null
+
+  /**
+   * The payroll month the data is based on, as `YYYY-MM-01` — the value has
+   * month precision, so it is always stored on the 1st (DB CHECK constraint).
+   * Set when `salaryDataBasis` is MONTH, null for AVERAGE.
+   */
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: true,
+    field: 'salary_data_period',
+  })
+  salaryDataPeriod!: string | null
+
   @Column({
     type: DataType.ENUM(...Object.values(ReportProviderEnum)),
     allowNull: true,
@@ -378,6 +412,8 @@ export class ReportModel extends MutableModel<
       averageEmployeeMaleCount: model.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: model.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: model.averageEmployeeNeutralCount,
+      salaryDataBasis: model.salaryDataBasis,
+      salaryDataPeriod: model.salaryDataPeriod,
       providerType: model.providerType,
       providerId: model.providerId,
       importedFromExcel: model.importedFromExcel,
