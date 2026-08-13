@@ -2,19 +2,20 @@ import { Sequelize } from 'sequelize-typescript'
 
 import { VersioningType } from '@nestjs/common'
 import { NestApplication } from '@nestjs/core'
-import { SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { openApi } from '../openApi'
+import { buildSwaggerDocument } from '../setupSwaggerDocument'
+import { SWAGGER_CONFIG } from '../swagger.config'
 import { AppModule } from './app.module'
 
 /**
- * Guards the emitted OpenAPI document: five web apps consume clients generated
- * from it, so any unintended change to the schema is a breaking change for them.
+ * Guards the emitted OpenAPI documents: doe-web consumes a client generated
+ * from them, so any unintended change to a schema is a breaking change for it.
  *
- * The document is built from the real AppModule with the same DocumentBuilder
- * config, global prefix and versioning main.ts uses. Only the Sequelize
- * connection is stubbed -- Swagger needs route metadata, not a live database.
+ * The documents are built from the real AppModule through the same
+ * `buildSwaggerDocument` production uses, with the global prefix and versioning
+ * main.ts applies. Only the Sequelize connection is stubbed -- Swagger needs
+ * route metadata, not a live database.
  */
 describe('Swagger documentation', () => {
   let app: NestApplication
@@ -36,10 +37,10 @@ describe('Swagger documentation', () => {
     await app.close()
   })
 
-  it('emits an unchanged OpenAPI schema', () => {
-    const document = SwaggerModule.createDocument(app, openApi, {
-      autoTagControllers: false,
-    })
+  it.each(
+    SWAGGER_CONFIG.map((config) => [config.swaggerPath, config] as const),
+  )('emits an unchanged OpenAPI schema for %s', (_swaggerPath, config) => {
+    const document = buildSwaggerDocument(app, config)
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
     expect(document).toMatchSnapshot()
