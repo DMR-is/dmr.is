@@ -4473,7 +4473,11 @@
         },
         "required": ["outliers", "baseSalaryByGenderAndScoreAll"]
       },
-      "SalaryDataBasisEnum": { "type": "string", "enum": ["MONTH", "AVERAGE"] },
+      "SalaryDataBasisEnum": {
+        "type": "string",
+        "enum": ["MONTH", "AVERAGE"],
+        "description": "Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`)."
+      },
       "CreateReportOutlierGroupDto": {
         "type": "object",
         "properties": {
@@ -4689,6 +4693,7 @@
           "isatSection": {
             "nullable": true,
             "description": "The resolved section, when it was joined in. Null when not loaded — read `section` for the letter itself.",
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/IsatSectionDto" }]
           }
         },
@@ -4753,6 +4758,7 @@
           },
           "isatCategory": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/IsatCategoryDto" }]
           },
           "sector": {
@@ -5077,10 +5083,12 @@
           },
           "event": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CompanyEventDto" }]
           },
           "comment": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/CompanyCommentDto" }]
           }
         },
@@ -5499,6 +5507,7 @@
           },
           "reviewer": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "companyFinesStarted": {
@@ -5782,10 +5791,12 @@
           },
           "event": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportEventDto" }]
           },
           "comment": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportCommentDto" }]
           }
         },
@@ -6086,6 +6097,7 @@
           "equalityReportContent": { "type": "string", "nullable": true },
           "reviewer": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/UserDto" }]
           },
           "createdAt": {
@@ -6107,6 +6119,7 @@
           },
           "result": {
             "nullable": true,
+            "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
           },
           "roleResults": {

@@ -5542,6 +5542,7 @@
         "properties": {
           "entity": {
             "nullable": true,
+            "type": "object",
             "allOf": [
               { "$ref": "#/components/schemas/NationalRegistryEntityDto" }
             ]
