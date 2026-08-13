@@ -1,5 +1,6 @@
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
 } from '../../gen/fetch/types.gen'
 
@@ -46,6 +47,23 @@ export const FLAG_FILTER_OPTIONS = [
   { value: 'overdue', label: 'Skiladagur liðinn' },
   { value: 'quarantined', label: 'Fyrirtæki er í var' },
 ]
+
+// Ownership sector (private vs government/state), derived server-side from the
+// RSK legal form. UNKNOWN is offered as its own choice on purpose: it is not a
+// synonym for private, so an admin has to be able to see — and count — the
+// companies we have not classified yet rather than have them hidden inside
+// another bucket.
+export const SECTOR_LABEL: Record<CompanySectorEnum, string> = {
+  [CompanySectorEnum.PRIVATE]: 'Almennur markaður',
+  [CompanySectorEnum.PUBLIC]: 'Ríki og sveitarfélög',
+  [CompanySectorEnum.UNKNOWN]: 'Óflokkað',
+}
+
+export const SECTOR_FILTER_OPTIONS = [
+  CompanySectorEnum.PRIVATE,
+  CompanySectorEnum.PUBLIC,
+  CompanySectorEnum.UNKNOWN,
+].map((value) => ({ value, label: SECTOR_LABEL[value] }))
 
 export const PAGE_SIZE = 10
 

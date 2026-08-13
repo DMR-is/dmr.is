@@ -16,9 +16,11 @@ import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
+  SECTOR_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
 } from './companyStatus'
 import { IsatCategoryFilter } from './IsatCategoryFilter'
+import { IsatSectionFilter } from './IsatSectionFilter'
 import { SelectFilter } from './SelectFilter'
 
 export type FilterOption = { value: string; label: string }
@@ -31,6 +33,8 @@ export type CompanyFilters = {
   regionCode: string[]
   postcode: string[]
   isatCategoryCode: string[]
+  isatSection: string[]
+  sector: string[]
 }
 
 type Props = {
@@ -97,7 +101,12 @@ export const CompanyFilter = ({
               label={companiesText.cardCompany}
               labelUse="h5"
               labelVariant="h5"
-              labelColor={labelColor(filters.employees, filters.isatCategoryCode)}
+              labelColor={labelColor(
+                filters.employees,
+                filters.sector,
+                filters.isatSection,
+                filters.isatCategoryCode,
+              )}
               iconVariant="small"
             >
               <Stack space={2}>
@@ -110,6 +119,21 @@ export const CompanyFilter = ({
                   selected={filters.employees}
                   isMulti={false}
                   onChange={(val) => onFiltersChange('employees', val)}
+                />
+                <MultiSelectFilter
+                  name="sector"
+                  label={companiesText.sector}
+                  placeholder={companiesText.sectorPlaceholder}
+                  noOptionsMessage={companiesText.filterNoResults}
+                  isSearchable={false}
+                  options={SECTOR_FILTER_OPTIONS}
+                  selected={filters.sector}
+                  onChange={(val) => onFiltersChange('sector', val)}
+                />
+                <IsatSectionFilter
+                  label={companiesText.isatSection}
+                  selected={filters.isatSection}
+                  onChange={(codes) => onFiltersChange('isatSection', codes)}
                 />
                 <IsatCategoryFilter
                   label={companiesText.isatCategory}

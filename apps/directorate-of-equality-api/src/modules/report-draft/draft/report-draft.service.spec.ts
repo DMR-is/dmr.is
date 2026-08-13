@@ -11,6 +11,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyDto } from '../../company/dto/company.dto'
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
@@ -60,6 +61,10 @@ const COMPANY: CompanyDto = {
   nextSalaryReportDueAt: null,
   isatCategoryCode: null,
   isatCategory: null,
+  sector: CompanySectorEnum.UNKNOWN,
+  sectorOverride: false,
+  legalFormId: null,
+  legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
   equalityReportOverdue: false,
   salaryReportOverdue: false,

@@ -32,11 +32,13 @@ import { CreateCompanyDto } from './dto/create-company.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
+import { IsatSectionDto } from './dto/isat-section.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
+import { UpdateCompanySectorDto } from './dto/update-company-sector.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 import { ICompanyService } from './company.service.interface'
 
@@ -72,6 +74,15 @@ export class CompanyController {
     @Query() query: SearchIsatCategoriesQueryDto,
   ): Promise<IsatCategoryDto[]> {
     return this.companyService.searchIsatCategories(query)
+  }
+
+  @Get('isat-sections')
+  @DoeResponse({
+    operationId: 'listIsatSections',
+    type: [IsatSectionDto],
+  })
+  async listIsatSections(): Promise<IsatSectionDto[]> {
+    return this.companyService.listIsatSections()
   }
 
   @Get('lookup/:nationalId')
@@ -120,6 +131,23 @@ export class CompanyController {
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyDto> {
     return this.companyService.updateStatus(id, dto, admin.id)
+  }
+
+  // Manual sector classification. PRIVATE/PUBLIC marks the value admin-owned so
+  // a backfill won't overwrite it; UNKNOWN clears that flag. See updateSector.
+  @Patch(':id/sector')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'updateCompanySector',
+    type: CompanyDto,
+    include404: true,
+  })
+  async updateSector(
+    @Param('id') id: string,
+    @Body() dto: UpdateCompanySectorDto,
+    @CurrentAdminUser() admin: UserModel,
+  ): Promise<CompanyDto> {
+    return this.companyService.updateSector(id, dto, admin.id)
   }
 
   @Patch(':id/isat')

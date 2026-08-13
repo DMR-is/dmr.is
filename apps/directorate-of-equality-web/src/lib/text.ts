@@ -351,6 +351,15 @@ export const companiesText = {
   isatCategory: 'ÍSAT-flokkur',
   isatCategoryPlaceholder: 'Leita að ÍSAT-flokki',
   isatCategoryNoResults: 'Engir flokkar fundust',
+  isatSection: 'ÍSAT-bálkur',
+  isatSectionPlaceholder: 'Veldu bálk',
+  isatSectionNoResults: 'Engir bálkar fundust',
+  // "Eignarhald", not "rekstrarform": the values are Almennur markaður / Ríki
+  // og sveitarfélög, i.e. who owns the entity. Rekstrarform is the RSK legal
+  // form the classification is *derived* from, and is reserved for that hint on
+  // the detail view — the two must not share a word the admin can edit.
+  sector: 'Eignarhald',
+  sectorPlaceholder: 'Veldu eignarhald',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
@@ -382,6 +391,11 @@ export const companiesText = {
     addressLabel: 'Heimilisfang',
     postcodeLabel: 'Póstnúmer',
     isatCategoryLabel: 'ÍSAT-flokkur',
+    sectorLabel: 'Eignarhald',
+    // Shown under the sector field when RSK's rekstrarform is one we do not map
+    // yet, so the admin sees it here rather than after the company exists.
+    sectorUnknownHint:
+      'Ekki tókst að flokka eignarhald sjálfvirkt. Hægt er að skrá það handvirkt eftir að fyrirtækið hefur verið stofnað.',
     emptyValue: '—',
     employeeCountLabel: 'Meðalfjöldi starfsmanna',
     submit: 'Skrá fyrirtæki',
@@ -441,6 +455,22 @@ export const companiesText = {
     finesAlert: 'Fyrirtækið er í dagsektarferli',
     finesAlertReasonAlertMessage:
       'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
+    // Only sectorLegalFormHint says "rekstrarform" — it is the RSK legal form,
+    // a read-only input to the classification. The editable field above it is
+    // eignarhald. Stacking both concepts under one word on the same screen
+    // invites an admin to "correct" one when they meant the other.
+    sectorLabel: 'Eignarhald',
+    sectorEditButton: 'Breyta',
+    sectorSaveButton: 'Vista',
+    sectorCancelButton: 'Hætta',
+    sectorPlaceholder: 'Veldu eignarhald',
+    sectorSavedToast: 'Eignarhald uppfært',
+    sectorErrorToast: 'Villa við að uppfæra eignarhald',
+    sectorOverrideHint: 'Skráð handvirkt af umsjónarmanni',
+    sectorLegalFormHint: 'Rekstrarform úr fyrirtækjaskrá RSK: ',
+    sectorUnknownHint:
+      'Ekki hefur verið unnt að flokka fyrirtækið sjálfvirkt. Veldu eignarhald handvirkt.',
 
     emailLabel: 'Netfang',
     emailPlaceholder: 'netfang@fyrirtaeki.is',
