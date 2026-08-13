@@ -4295,8 +4295,8 @@
           "identifier": { "type": "string" },
           "roleTitle": { "type": "string" },
           "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
-          "field": { "type": "string" },
-          "department": { "type": "string" },
+          "field": { "type": "string", "nullable": true },
+          "department": { "type": "string", "nullable": true },
           "startDate": { "type": "string" },
           "workRatio": { "type": "number" },
           "baseSalary": { "type": "number" },
@@ -4316,8 +4316,6 @@
           "identifier",
           "roleTitle",
           "gender",
-          "field",
-          "department",
           "startDate",
           "workRatio",
           "baseSalary",
@@ -4475,6 +4473,7 @@
         },
         "required": ["outliers", "baseSalaryByGenderAndScoreAll"]
       },
+      "SalaryDataBasisEnum": { "type": "string", "enum": ["MONTH", "AVERAGE"] },
       "CreateReportOutlierGroupDto": {
         "type": "object",
         "properties": {
@@ -5578,7 +5577,6 @@
         },
         "required": ["reports", "paging"]
       },
-      "SalaryDataBasisEnum": { "type": "string", "enum": ["MONTH", "AVERAGE"] },
       "ReportProviderEnum": {
         "type": "string",
         "enum": ["SYSTEM", "ISLAND_IS", "OTHER"]
