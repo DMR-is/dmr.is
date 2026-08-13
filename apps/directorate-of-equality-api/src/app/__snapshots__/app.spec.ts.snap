@@ -7173,44 +7173,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         "operationId": "getCompanies",
         "parameters": [
           {
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "example": 1,
-              "type": "number",
-            },
-          },
-          {
-            "in": "query",
-            "name": "pageSize",
-            "required": false,
-            "schema": {
-              "default": 10,
-              "example": 10,
-              "type": "number",
-            },
-          },
-          {
-            "description": "Free-text search on company name or national ID.",
-            "in": "query",
-            "name": "q",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Return only companies whose employee-count bucket matches.",
-            "in": "query",
-            "name": "employeeCountCategory",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/CompanySizeEnum",
-            },
-          },
-          {
             "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
             "in": "query",
             "name": "companyStatus",
@@ -7220,6 +7182,23 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
                 "$ref": "#/components/schemas/CompanyReportStatusEnum",
               },
               "type": "array",
+            },
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CompanySortDirectionEnum",
+            },
+          },
+          {
+            "description": "Return only companies whose employee-count bucket matches.",
+            "in": "query",
+            "name": "employeeCountCategory",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CompanySizeEnum",
             },
           },
           {
@@ -7244,24 +7223,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
-            "description": "When true, return only quarantined companies (quarantined = true).",
-            "in": "query",
-            "name": "quarantined",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
-            "description": "When true, return only companies whose next equality or salary report due date has passed.",
-            "in": "query",
-            "name": "overdue",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
             "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. "01110").",
             "in": "query",
             "name": "isatCategoryCode",
@@ -7274,15 +7235,32 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
-            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. "CAPITAL"). Resolved via the company postcode.",
+            "description": "When true, return only companies whose next equality or salary report due date has passed.",
             "in": "query",
-            "name": "regionCode",
+            "name": "overdue",
             "required": false,
             "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
+              "type": "boolean",
+            },
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number",
+            },
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number",
             },
           },
           {
@@ -7298,19 +7276,41 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
+            "description": "Free-text search on company name or national ID.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "When true, return only quarantined companies (quarantined = true).",
+            "in": "query",
+            "name": "quarantined",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+            },
+          },
+          {
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. "CAPITAL"). Resolved via the company postcode.",
+            "in": "query",
+            "name": "regionCode",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
             "in": "query",
             "name": "sortBy",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/CompanySortByEnum",
-            },
-          },
-          {
-            "in": "query",
-            "name": "direction",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/CompanySortDirectionEnum",
             },
           },
         ],
@@ -7611,15 +7611,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         "operationId": "searchIsatCategories",
         "parameters": [
           {
-            "description": "Free-text search on ÍSAT code or description (Icelandic/English). Returns the top matches.",
-            "in": "query",
-            "name": "q",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "description": "Resolve these exact ÍSAT leaf codes — used to label an existing selection. Takes precedence over \`q\`.",
             "in": "query",
             "name": "codes",
@@ -7629,6 +7620,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
                 "type": "string",
               },
               "type": "array",
+            },
+          },
+          {
+            "description": "Free-text search on ÍSAT code or description (Icelandic/English). Returns the top matches.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
             },
           },
         ],
@@ -8145,7 +8145,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         "parameters": [
           {
             "in": "path",
-            "name": "id",
+            "name": "commentId",
             "required": true,
             "schema": {
               "type": "string",
@@ -8153,7 +8153,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           },
           {
             "in": "path",
-            "name": "commentId",
+            "name": "id",
             "required": true,
             "schema": {
               "type": "string",
@@ -9360,98 +9360,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         "parameters": [
           {
             "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "default": 1,
-              "example": 1,
-              "type": "number",
-            },
-          },
-          {
-            "in": "query",
-            "name": "pageSize",
-            "required": false,
-            "schema": {
-              "default": 10,
-              "example": 10,
-              "type": "number",
-            },
-          },
-          {
-            "in": "query",
-            "name": "type",
-            "required": false,
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/ReportTypeEnum",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/ReportStatusEnum",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "in": "query",
-            "name": "reviewerUserId",
-            "required": false,
-            "schema": {
-              "items": {
-                "format": "uuid",
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "When true, returns only reports with no reviewer assigned. Overrides \`reviewerUserId\` if both are set.",
-            "in": "query",
-            "name": "unassignedReviewer",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
-            "description": "When true, returns only reports that have at least one employee outlier (i.e. an improvement plan applies). When false, returns only reports with no outliers. Omit for no constraint.",
-            "in": "query",
-            "name": "hasImprovementPlan",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
-            "in": "query",
-            "name": "createdFrom",
-            "required": false,
-            "schema": {
-              "example": "2026-02-19T10:30:00.000Z",
-              "format": "date-time",
-              "type": "string",
-            },
-          },
-          {
-            "in": "query",
-            "name": "createdTo",
-            "required": false,
-            "schema": {
-              "example": "2026-02-19T10:30:00.000Z",
-              "format": "date-time",
-              "type": "string",
-            },
-          },
-          {
-            "in": "query",
             "name": "approvedFrom",
             "required": false,
             "schema": {
@@ -9463,26 +9371,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           {
             "in": "query",
             "name": "approvedTo",
-            "required": false,
-            "schema": {
-              "example": "2026-02-19T10:30:00.000Z",
-              "format": "date-time",
-              "type": "string",
-            },
-          },
-          {
-            "in": "query",
-            "name": "validUntilFrom",
-            "required": false,
-            "schema": {
-              "example": "2026-02-19T10:30:00.000Z",
-              "format": "date-time",
-              "type": "string",
-            },
-          },
-          {
-            "in": "query",
-            "name": "validUntilTo",
             "required": false,
             "schema": {
               "example": "2026-02-19T10:30:00.000Z",
@@ -9511,12 +9399,81 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
+            "in": "query",
+            "name": "createdFrom",
+            "required": false,
+            "schema": {
+              "example": "2026-02-19T10:30:00.000Z",
+              "format": "date-time",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "createdTo",
+            "required": false,
+            "schema": {
+              "example": "2026-02-19T10:30:00.000Z",
+              "format": "date-time",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirectionEnum",
+            },
+          },
+          {
+            "description": "When true, returns only reports that have at least one employee outlier (i.e. an improvement plan applies). When false, returns only reports with no outliers. Omit for no constraint.",
+            "in": "query",
+            "name": "hasImprovementPlan",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+            },
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "example": 1,
+              "type": "number",
+            },
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "example": 10,
+              "type": "number",
+            },
+          },
+          {
             "description": "Free-text search across company name, kennitala, and report identifier. Case-insensitive partial match. Person fields (contacts and company admin/CEO) are not searched.",
             "in": "query",
             "name": "q",
             "required": false,
             "schema": {
               "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "reviewerUserId",
+            "required": false,
+            "schema": {
+              "items": {
+                "format": "uuid",
+                "type": "string",
+              },
+              "type": "array",
             },
           },
           {
@@ -9529,10 +9486,53 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           },
           {
             "in": "query",
-            "name": "direction",
+            "name": "status",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/SortDirectionEnum",
+              "items": {
+                "$ref": "#/components/schemas/ReportStatusEnum",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/ReportTypeEnum",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "When true, returns only reports with no reviewer assigned. Overrides \`reviewerUserId\` if both are set.",
+            "in": "query",
+            "name": "unassignedReviewer",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+            },
+          },
+          {
+            "in": "query",
+            "name": "validUntilFrom",
+            "required": false,
+            "schema": {
+              "example": "2026-02-19T10:30:00.000Z",
+              "format": "date-time",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "validUntilTo",
+            "required": false,
+            "schema": {
+              "example": "2026-02-19T10:30:00.000Z",
+              "format": "date-time",
+              "type": "string",
             },
           },
         ],
@@ -10018,6 +10018,24 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           },
           {
             "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirectionEnum",
+            },
+          },
+          {
+            "description": "Restrict the list to the outliers belonging to a single group.",
+            "in": "query",
+            "name": "groupId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
             "name": "page",
             "required": false,
             "schema": {
@@ -10037,29 +10055,11 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
-            "description": "Restrict the list to the outliers belonging to a single group.",
-            "in": "query",
-            "name": "groupId",
-            "required": false,
-            "schema": {
-              "format": "uuid",
-              "type": "string",
-            },
-          },
-          {
             "in": "query",
             "name": "sortBy",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/ReportOutlierSortByEnum",
-            },
-          },
-          {
-            "in": "query",
-            "name": "direction",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/SortDirectionEnum",
             },
           },
         ],

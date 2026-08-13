@@ -4,6 +4,8 @@ import { VersioningType } from '@nestjs/common'
 import { NestApplication } from '@nestjs/core'
 import { Test } from '@nestjs/testing'
 
+import { sortOpenApiParameters } from '@dmr.is/utils-shared/openapi/sort-parameters'
+
 import { buildSwaggerDocument } from '../setupSwaggerDocument'
 import { SWAGGER_CONFIG } from '../swagger.config'
 import { AppModule } from './app.module'
@@ -34,7 +36,10 @@ describe('Swagger documentation', () => {
   }, 60000)
 
   afterAll(async () => {
-    await app.close()
+    // Guarded: if `compile()` above threw, `app` was never assigned, and an
+    // unguarded `app.close()` raises a TypeError that replaces the real boot
+    // error in the output.
+    await app?.close()
   })
 
   it.each(
@@ -43,6 +48,6 @@ describe('Swagger documentation', () => {
     const document = buildSwaggerDocument(app, config)
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
-    expect(document).toMatchSnapshot()
+    expect(sortOpenApiParameters(document)).toMatchSnapshot()
   })
 })

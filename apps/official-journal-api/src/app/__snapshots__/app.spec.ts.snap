@@ -1431,6 +1431,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getMainTypes",
         "parameters": [
           {
+            "description": "Search by department slug, title or id",
+            "in": "query",
+            "name": "department",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
             "description": "Search by id",
             "in": "query",
             "name": "id",
@@ -1440,45 +1449,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
-            "description": "Filter by unassigned",
-            "in": "query",
-            "name": "unassigned",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
             "description": "Search by main type id",
             "in": "query",
             "name": "mainType",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by title",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by slug",
-            "in": "query",
-            "name": "slug",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by department slug, title or id",
-            "in": "query",
-            "name": "department",
             "required": false,
             "schema": {
               "type": "string",
@@ -1500,6 +1473,33 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "required": false,
             "schema": {
               "type": "number",
+            },
+          },
+          {
+            "description": "Search by title",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Search by slug",
+            "in": "query",
+            "name": "slug",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Filter by unassigned",
+            "in": "query",
+            "name": "unassigned",
+            "required": false,
+            "schema": {
+              "type": "boolean",
             },
           },
         ],
@@ -1601,6 +1601,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getTypes",
         "parameters": [
           {
+            "description": "Search by department slug, title or id",
+            "in": "query",
+            "name": "department",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
             "description": "Search by id",
             "in": "query",
             "name": "id",
@@ -1610,45 +1619,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
-            "description": "Filter by unassigned",
-            "in": "query",
-            "name": "unassigned",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-            },
-          },
-          {
             "description": "Search by main type id",
             "in": "query",
             "name": "mainType",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by title",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by slug",
-            "in": "query",
-            "name": "slug",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Search by department slug, title or id",
-            "in": "query",
-            "name": "department",
             "required": false,
             "schema": {
               "type": "string",
@@ -1670,6 +1643,33 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "required": false,
             "schema": {
               "type": "number",
+            },
+          },
+          {
+            "description": "Search by title",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Search by slug",
+            "in": "query",
+            "name": "slug",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Filter by unassigned",
+            "in": "query",
+            "name": "unassigned",
+            "required": false,
+            "schema": {
+              "type": "boolean",
             },
           },
         ],
@@ -1771,93 +1771,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getAdverts",
         "parameters": [
           {
-            "description": "String to search for in adverts.",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Page number to return.",
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "type": "number",
-            },
-          },
-          {
-            "description": "Page size to return.",
-            "in": "query",
-            "name": "pageSize",
-            "required": false,
-            "schema": {
-              "type": "number",
-            },
-          },
-          {
-            "description": "One or more departments (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "department",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "Year (signature year) to filter by",
-            "in": "query",
-            "name": "year",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "One or more types (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "type",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "One or more main types (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "mainType",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
             "description": "One or more categories (by \`slug\`) to filter on.",
             "in": "query",
             "name": "category",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "One or more involved parties (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "involvedParty",
             "required": false,
             "schema": {
               "items": {
@@ -1885,6 +1801,78 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
+            "description": "One or more departments (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "department",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "example": "ASC",
+              "type": "string",
+            },
+          },
+          {
+            "description": "One or more involved parties (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "involvedParty",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "One or more main types (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "mainType",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "Page number to return.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "description": "Page size to return.",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "description": "String to search for in adverts.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
             "in": "query",
             "name": "sortBy",
             "required": false,
@@ -1894,11 +1882,23 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
+            "description": "One or more types (by \`slug\`) to filter on.",
             "in": "query",
-            "name": "direction",
+            "name": "type",
             "required": false,
             "schema": {
-              "example": "ASC",
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "Year (signature year) to filter by",
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
               "type": "string",
             },
           },
@@ -1923,93 +1923,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getAdvertsLean",
         "parameters": [
           {
-            "description": "String to search for in adverts.",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Page number to return.",
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "type": "number",
-            },
-          },
-          {
-            "description": "Page size to return.",
-            "in": "query",
-            "name": "pageSize",
-            "required": false,
-            "schema": {
-              "type": "number",
-            },
-          },
-          {
-            "description": "One or more departments (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "department",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "Year (signature year) to filter by",
-            "in": "query",
-            "name": "year",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "One or more types (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "type",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "One or more main types (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "mainType",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
             "description": "One or more categories (by \`slug\`) to filter on.",
             "in": "query",
             "name": "category",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "string",
-              },
-              "type": "array",
-            },
-          },
-          {
-            "description": "One or more involved parties (by \`slug\`) to filter on.",
-            "in": "query",
-            "name": "involvedParty",
             "required": false,
             "schema": {
               "items": {
@@ -2037,6 +1953,78 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
+            "description": "One or more departments (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "department",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "example": "ASC",
+              "type": "string",
+            },
+          },
+          {
+            "description": "One or more involved parties (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "involvedParty",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "One or more main types (by \`slug\`) to filter on.",
+            "in": "query",
+            "name": "mainType",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "Page number to return.",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "description": "Page size to return.",
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "description": "String to search for in adverts.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
             "in": "query",
             "name": "sortBy",
             "required": false,
@@ -2046,11 +2034,23 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
+            "description": "One or more types (by \`slug\`) to filter on.",
             "in": "query",
-            "name": "direction",
+            "name": "type",
             "required": false,
             "schema": {
-              "example": "ASC",
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "Year (signature year) to filter by",
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
               "type": "string",
             },
           },
@@ -2131,15 +2131,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getCasesInProgress",
         "parameters": [
           {
-            "description": "String to search for",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "in": "query",
             "name": "ids",
             "required": false,
@@ -2167,6 +2158,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "required": false,
             "schema": {
               "type": "number",
+            },
+          },
+          {
+            "description": "String to search for",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
             },
           },
         ],
@@ -2190,15 +2190,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getCategories",
         "parameters": [
           {
-            "description": "String to search for",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "in": "query",
             "name": "ids",
             "required": false,
@@ -2228,6 +2219,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
               "type": "number",
             },
           },
+          {
+            "description": "String to search for",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
         ],
         "responses": {
           "200": {
@@ -2249,15 +2249,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getDepartments",
         "parameters": [
           {
-            "description": "String to search for in departments.",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "description": "Page number to return.",
             "in": "query",
             "name": "page",
@@ -2273,6 +2264,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "required": false,
             "schema": {
               "type": "number",
+            },
+          },
+          {
+            "description": "String to search for in departments.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
             },
           },
         ],
@@ -2335,15 +2335,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "operationId": "getInstitutions",
         "parameters": [
           {
-            "description": "String to search for",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "in": "query",
             "name": "ids",
             "required": false,
@@ -2373,6 +2364,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
               "type": "number",
             },
           },
+          {
+            "description": "String to search for",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
         ],
         "responses": {
           "200": {
@@ -2395,6 +2395,22 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "parameters": [
           {
             "in": "query",
+            "name": "departmentId",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "in": "query",
             "name": "page",
             "required": false,
             "schema": {
@@ -2410,22 +2426,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "schema": {
               "default": 10,
               "example": 10,
-              "type": "number",
-            },
-          },
-          {
-            "in": "query",
-            "name": "departmentId",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "query",
-            "name": "month",
-            "required": false,
-            "schema": {
               "type": "number",
             },
           },
@@ -2459,18 +2459,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "parameters": [
           {
             "in": "query",
-            "name": "departmentId",
+            "name": "date",
             "required": true,
             "schema": {
+              "format": "date-time",
               "type": "string",
             },
           },
           {
             "in": "query",
-            "name": "date",
+            "name": "departmentId",
             "required": true,
             "schema": {
-              "format": "date-time",
               "type": "string",
             },
           },
@@ -2492,15 +2492,6 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
       "get": {
         "operationId": "getMainCategories",
         "parameters": [
-          {
-            "description": "String to search for",
-            "in": "query",
-            "name": "search",
-            "required": false,
-            "schema": {
-              "type": "string",
-            },
-          },
           {
             "in": "query",
             "name": "ids",
@@ -2529,6 +2520,15 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             "required": false,
             "schema": {
               "type": "number",
+            },
+          },
+          {
+            "description": "String to search for",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string",
             },
           },
         ],
@@ -2760,13 +2760,12 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
-            "description": "Search for a specific signature by type",
+            "description": "Page number to return.",
             "in": "query",
-            "name": "type",
+            "name": "page",
             "required": false,
             "schema": {
-              "example": "Regular",
-              "type": "string",
+              "type": "number",
             },
           },
           {
@@ -2780,12 +2779,13 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             },
           },
           {
-            "description": "Page number to return.",
+            "description": "Search for a specific signature by type",
             "in": "query",
-            "name": "page",
+            "name": "type",
             "required": false,
             "schema": {
-              "type": "number",
+              "example": "Regular",
+              "type": "string",
             },
           },
         ],
