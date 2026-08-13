@@ -159,6 +159,20 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
             ],
             "nullable": true,
           },
+          "salaryDataBasis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SalaryDataBasisEnum",
+              },
+            ],
+            "description": "Salary-only. Whether the submitted salary data describes one specific payroll month (\`MONTH\`, with the month in \`salaryDataPeriod\`) or a twelve-month average (\`AVERAGE\`). Reads back the basis the applicant declared while drafting. Null on equality reports.",
+            "nullable": true,
+          },
+          "salaryDataPeriod": {
+            "description": "The payroll month the salary data is based on, as an ISO date normalised to the 1st of that month (\`YYYY-MM-01\`). Set when \`salaryDataBasis\` is \`MONTH\`, null for \`AVERAGE\`.",
+            "nullable": true,
+            "type": "string",
+          },
           "status": {
             "allOf": [
               {
@@ -239,6 +253,16 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
             "nullable": true,
             "type": "string",
           },
+          "legalFormId": {
+            "description": "RSK's raw legal-form code (rekstrarform), as returned.",
+            "nullable": true,
+            "type": "string",
+          },
+          "legalFormName": {
+            "description": "RSK's raw legal-form name. Useful for seeing the form behind an UNKNOWN sector.",
+            "nullable": true,
+            "type": "string",
+          },
           "name": {
             "type": "string",
           },
@@ -283,6 +307,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "salaryReportRequiredOverride": {
             "type": "boolean",
           },
+          "sector": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanySectorEnum",
+              },
+            ],
+            "description": "Ownership sector (private vs government/state), derived from the RSK legal form. UNKNOWN means unclassified — it does NOT mean private.",
+          },
+          "sectorOverride": {
+            "description": "True when an admin set the sector by hand; a backfill must not overwrite it.",
+            "type": "boolean",
+          },
           "status": {
             "allOf": [
               {
@@ -301,6 +337,8 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "salaryReportRequiredOverride",
           "finesStarted",
           "quarantined",
+          "sector",
+          "sectorOverride",
           "reportStatus",
           "equalityReportOverdue",
           "salaryReportOverdue",
@@ -372,6 +410,14 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "MISSING_SALARY_REPORT",
           "MISSING_ACTION_PLAN",
           "SATISFACTORY",
+        ],
+        "type": "string",
+      },
+      "CompanySectorEnum": {
+        "enum": [
+          "UNKNOWN",
+          "PRIVATE",
+          "PUBLIC",
         ],
         "type": "string",
       },
@@ -594,10 +640,51 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
             "description": "English description.",
             "type": "string",
           },
+          "division": {
+            "description": "ÍSAT2008 division — the 2-digit code prefix, e.g. "01".",
+            "type": "string",
+          },
+          "isatSection": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IsatSectionDto",
+              },
+            ],
+            "description": "The resolved section, when it was joined in. Null when not loaded — read \`section\` for the letter itself.",
+            "nullable": true,
+          },
+          "section": {
+            "description": "ÍSAT2008 section (bálkur) letter this leaf rolls up into: "A"–"U", or "X" for unknown activity.",
+            "type": "string",
+          },
         },
         "required": [
           "code",
           "codeDotted",
+          "description",
+          "descriptionEn",
+          "section",
+          "division",
+        ],
+        "type": "object",
+      },
+      "IsatSectionDto": {
+        "properties": {
+          "code": {
+            "description": "ÍSAT2008 section (bálkur) letter: "A"–"U", or "X" for unknown activity.",
+            "type": "string",
+          },
+          "description": {
+            "description": "Icelandic description.",
+            "type": "string",
+          },
+          "descriptionEn": {
+            "description": "English description.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "code",
           "description",
           "descriptionEn",
         ],
@@ -721,21 +808,11 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
             "type": "number",
           },
           "department": {
-            "type": "string",
-          },
-          "education": {
-            "enum": [
-              "COMPULSORY",
-              "UPPER_SECONDARY",
-              "VOCATIONAL",
-              "BACHELOR",
-              "MASTER",
-              "DOCTORATE",
-              "PROFESSIONAL",
-            ],
+            "nullable": true,
             "type": "string",
           },
           "field": {
+            "nullable": true,
             "type": "string",
           },
           "gender": {
@@ -772,10 +849,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "ordinal",
           "identifier",
           "roleTitle",
-          "education",
           "gender",
-          "field",
-          "department",
           "startDate",
           "workRatio",
           "baseSalary",
@@ -1287,6 +1361,13 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "neutral",
         ],
         "type": "object",
+      },
+      "SalaryDataBasisEnum": {
+        "enum": [
+          "MONTH",
+          "AVERAGE",
+        ],
+        "type": "string",
       },
       "SalaryDifferencesDto": {
         "properties": {
@@ -1852,6 +1933,19 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "providerId": {
             "type": "string",
           },
+          "salaryDataBasis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SalaryDataBasisEnum",
+              },
+            ],
+            "description": "Whether the salary data describes one specific payroll month (\`MONTH\`) or a twelve-month average (\`AVERAGE\`). The submittee must declare one.",
+          },
+          "salaryDataPeriod": {
+            "description": "The payroll month the data is based on, as an ISO date (\`YYYY-MM-DD\`; any day within the month is accepted and normalised to the 1st). Required when \`salaryDataBasis\` is \`MONTH\`, ignored for \`AVERAGE\`. Must name a month that has already happened, no earlier than 36 months ago.",
+            "nullable": true,
+            "type": "string",
+          },
           "subsidiaries": {
             "items": {
               "$ref": "#/components/schemas/SubmitReportSubsidiaryDto",
@@ -1873,6 +1967,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/app
           "averageEmployeeMaleCount",
           "averageEmployeeFemaleCount",
           "averageEmployeeNeutralCount",
+          "salaryDataBasis",
           "parsed",
           "company",
         ],
@@ -3514,6 +3609,19 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             ],
             "type": "string",
           },
+          "salaryDataBasis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SalaryDataBasisEnum",
+              },
+            ],
+            "description": "Whether the salary data describes one specific payroll month (\`MONTH\`) or a twelve-month average (\`AVERAGE\`).",
+          },
+          "salaryDataPeriod": {
+            "description": "The payroll month the data is based on, as an ISO date (\`YYYY-MM-DD\`; the day is normalised to the 1st). Required when \`salaryDataBasis\` is \`MONTH\`. Must name a month that has already happened, no earlier than 36 months ago.",
+            "nullable": true,
+            "type": "string",
+          },
         },
         "required": [
           "importedFromExcel",
@@ -3527,6 +3635,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           "averageEmployeeMaleCount",
           "averageEmployeeFemaleCount",
           "averageEmployeeNeutralCount",
+          "salaryDataBasis",
           "parsed",
         ],
         "type": "object",
@@ -3735,6 +3844,16 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "nullable": true,
             "type": "string",
           },
+          "legalFormId": {
+            "description": "RSK's raw legal-form code (rekstrarform), as returned.",
+            "nullable": true,
+            "type": "string",
+          },
+          "legalFormName": {
+            "description": "RSK's raw legal-form name. Useful for seeing the form behind an UNKNOWN sector.",
+            "nullable": true,
+            "type": "string",
+          },
           "name": {
             "type": "string",
           },
@@ -3779,6 +3898,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           "salaryReportRequiredOverride": {
             "type": "boolean",
           },
+          "sector": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanySectorEnum",
+              },
+            ],
+            "description": "Ownership sector (private vs government/state), derived from the RSK legal form. UNKNOWN means unclassified — it does NOT mean private.",
+          },
+          "sectorOverride": {
+            "description": "True when an admin set the sector by hand; a backfill must not overwrite it.",
+            "type": "boolean",
+          },
           "status": {
             "allOf": [
               {
@@ -3797,6 +3928,8 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           "salaryReportRequiredOverride",
           "finesStarted",
           "quarantined",
+          "sector",
+          "sectorOverride",
           "reportStatus",
           "equalityReportOverdue",
           "salaryReportOverdue",
@@ -4158,6 +4291,11 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "nullable": true,
             "type": "string",
           },
+          "legalFormName": {
+            "description": "Raw RSK legal form name (rekstrarform) the sector was derived from, e.g. "Einkahlutafélag". Null when RSK carried no legal form.",
+            "nullable": true,
+            "type": "string",
+          },
           "name": {
             "type": "string",
           },
@@ -4168,6 +4306,14 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "description": "Resolved postcode, e.g. "105 Reykjavík".",
             "nullable": true,
             "type": "string",
+          },
+          "sector": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanySectorEnum",
+              },
+            ],
+            "description": "Ownership sector derived from the RSK legal form, exactly as \`create\` will store it. UNKNOWN here means the legal form is one we do not map yet — the create screen is the cheapest place for an admin to notice that, rather than after the row exists.",
           },
           "status": {
             "allOf": [
@@ -4186,8 +4332,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           "name",
           "nationalId",
           "status",
+          "sector",
         ],
         "type": "object",
+      },
+      "CompanySectorEnum": {
+        "enum": [
+          "UNKNOWN",
+          "PRIVATE",
+          "PUBLIC",
+        ],
+        "type": "string",
       },
       "CompanySizeEnum": {
         "enum": [
@@ -4707,10 +4862,51 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "description": "English description.",
             "type": "string",
           },
+          "division": {
+            "description": "ÍSAT2008 division — the 2-digit code prefix, e.g. "01".",
+            "type": "string",
+          },
+          "isatSection": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IsatSectionDto",
+              },
+            ],
+            "description": "The resolved section, when it was joined in. Null when not loaded — read \`section\` for the letter itself.",
+            "nullable": true,
+          },
+          "section": {
+            "description": "ÍSAT2008 section (bálkur) letter this leaf rolls up into: "A"–"U", or "X" for unknown activity.",
+            "type": "string",
+          },
         },
         "required": [
           "code",
           "codeDotted",
+          "description",
+          "descriptionEn",
+          "section",
+          "division",
+        ],
+        "type": "object",
+      },
+      "IsatSectionDto": {
+        "properties": {
+          "code": {
+            "description": "ÍSAT2008 section (bálkur) letter: "A"–"U", or "X" for unknown activity.",
+            "type": "string",
+          },
+          "description": {
+            "description": "Icelandic description.",
+            "type": "string",
+          },
+          "descriptionEn": {
+            "description": "English description.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "code",
           "description",
           "descriptionEn",
         ],
@@ -4834,21 +5030,11 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "type": "number",
           },
           "department": {
-            "type": "string",
-          },
-          "education": {
-            "enum": [
-              "COMPULSORY",
-              "UPPER_SECONDARY",
-              "VOCATIONAL",
-              "BACHELOR",
-              "MASTER",
-              "DOCTORATE",
-              "PROFESSIONAL",
-            ],
+            "nullable": true,
             "type": "string",
           },
           "field": {
+            "nullable": true,
             "type": "string",
           },
           "gender": {
@@ -4885,10 +5071,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
           "ordinal",
           "identifier",
           "roleTitle",
-          "education",
           "gender",
-          "field",
-          "department",
           "startDate",
           "workRatio",
           "baseSalary",
@@ -5305,6 +5488,20 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
               "$ref": "#/components/schemas/ReportRoleResultDto",
             },
             "type": "array",
+          },
+          "salaryDataBasis": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SalaryDataBasisEnum",
+              },
+            ],
+            "description": "Salary-only. Whether the submitted salary data describes one specific payroll month (\`MONTH\`, with the month in \`salaryDataPeriod\`) or a twelve-month average (\`AVERAGE\`). Null on equality reports and on salary reports submitted before the field existed.",
+            "nullable": true,
+          },
+          "salaryDataPeriod": {
+            "description": "The payroll month the salary data is based on, as an ISO date normalised to the 1st of that month (\`YYYY-MM-01\`). Set when \`salaryDataBasis\` is \`MONTH\`, null for \`AVERAGE\`.",
+            "nullable": true,
+            "type": "string",
           },
           "status": {
             "allOf": [
@@ -6239,6 +6436,13 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         ],
         "type": "object",
       },
+      "SalaryDataBasisEnum": {
+        "enum": [
+          "MONTH",
+          "AVERAGE",
+        ],
+        "type": "string",
+      },
       "SalaryDifferencesDto": {
         "properties": {
           "femaleMale": {
@@ -6629,6 +6833,22 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
         },
         "required": [
           "quarantined",
+        ],
+        "type": "object",
+      },
+      "UpdateCompanySectorDto": {
+        "properties": {
+          "sector": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanySectorEnum",
+              },
+            ],
+            "description": "The ownership sector to set. PRIVATE or PUBLIC marks the classification as admin-owned (\`sectorOverride = true\`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
+          },
+        },
+        "required": [
+          "sector",
         ],
         "type": "object",
       },
@@ -7235,6 +7455,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             },
           },
           {
+            "description": "Return only companies whose ÍSAT2008 section (bálkur) is one of the given letters, e.g. "O" for public administration. Case-insensitive. The premade industry filter — resolved via the company ÍSAT category, so companies with no ÍSAT code are excluded.",
+            "in": "query",
+            "name": "isatSection",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
             "description": "When true, return only companies whose next equality or salary report due date has passed.",
             "in": "query",
             "name": "overdue",
@@ -7301,6 +7533,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "schema": {
               "items": {
                 "type": "string",
+              },
+              "type": "array",
+            },
+          },
+          {
+            "description": "Return only companies in one of the given ownership sectors — the premade "private vs government/state" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "in": "query",
+            "name": "sector",
+            "required": false,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/CompanySectorEnum",
               },
               "type": "array",
             },
@@ -7639,6 +7883,76 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
                 "schema": {
                   "items": {
                     "$ref": "#/components/schemas/IsatCategoryDto",
+                  },
+                  "type": "array",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Companies",
+        ],
+      },
+    },
+    "/api/v1/companies/isat-sections": {
+      "get": {
+        "operationId": "listIsatSections",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IsatSectionDto",
                   },
                   "type": "array",
                 },
@@ -8532,6 +8846,102 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger/int
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateCompanyQuarantineDto",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Companies",
+        ],
+      },
+    },
+    "/api/v1/companies/{id}/sector": {
+      "patch": {
+        "operationId": "updateCompanySector",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanySectorDto",
               },
             },
           },

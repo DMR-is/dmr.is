@@ -420,6 +420,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "applicantNationalId": {
             "type": "string",
           },
+          "canAddAdverts": {
+            "type": "boolean",
+          },
           "caseId": {
             "format": "uuid",
             "type": "string",
@@ -485,6 +488,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "status",
           "title",
           "type",
+          "canAddAdverts",
           "currentStep",
           "answers",
         ],
@@ -501,6 +505,9 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "applicantNationalId": {
             "type": "string",
           },
+          "canAddAdverts": {
+            "type": "boolean",
+          },
           "caseId": {
             "format": "uuid",
             "type": "string",
@@ -566,6 +573,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "status",
           "title",
           "type",
+          "canAddAdverts",
           "currentStep",
         ],
         "type": "object",
@@ -13348,6 +13356,171 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         ],
         "type": "object",
       },
+      "CategoryOverviewDto": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+          },
+          "advertCount": {
+            "type": "number",
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "slug": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/TypeOverviewDto",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "active",
+          "advertCount",
+          "types",
+        ],
+        "type": "object",
+      },
+      "CategoryTypeChangeLogDto": {
+        "properties": {
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChangeLogAction",
+              },
+            ],
+          },
+          "actorId": {
+            "type": "string",
+          },
+          "actorName": {
+            "type": "string",
+          },
+          "affectedAdvertCount": {
+            "type": "number",
+          },
+          "affectedAdvertIds": {
+            "type": "string",
+          },
+          "after": {
+            "additionalProperties": true,
+            "type": "object",
+          },
+          "before": {
+            "additionalProperties": true,
+            "type": "object",
+          },
+          "createdAt": {
+            "example": "2026-02-19T10:30:00.000Z",
+            "format": "date-time",
+            "type": "string",
+          },
+          "entityId": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "entityType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChangeLogEntity",
+              },
+            ],
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "revertsAuditId": {
+            "format": "uuid",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "actorId",
+          "action",
+          "entityType",
+          "affectedAdvertCount",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "CategoryTypeOverviewDto": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryOverviewDto",
+            },
+            "type": "array",
+          },
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/TypeOverviewDto",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "categories",
+          "types",
+        ],
+        "type": "object",
+      },
+      "ChangeLogAction": {
+        "enum": [
+          "CREATE",
+          "UPDATE",
+          "DELETE",
+          "ATTACH",
+          "DETACH",
+          "SET_ACTIVE",
+          "MOVE",
+          "REVERT",
+        ],
+        "type": "string",
+      },
+      "ChangeLogEntity": {
+        "enum": [
+          "CATEGORY",
+          "TYPE",
+          "CONNECTION",
+        ],
+        "type": "string",
+      },
+      "ChangeLogTitleDto": {
+        "properties": {
+          "entityType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChangeLogEntity",
+              },
+            ],
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "title",
+          "entityType",
+        ],
+        "type": "object",
+      },
       "CommentDto": {
         "properties": {
           "actor": {
@@ -13454,6 +13627,23 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
           "id",
           "advertId",
           "email",
+        ],
+        "type": "object",
+      },
+      "ConnectionBody": {
+        "properties": {
+          "categoryId": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "typeId": {
+            "format": "uuid",
+            "type": "string",
+          },
+        },
+        "required": [
+          "typeId",
+          "categoryId",
         ],
         "type": "object",
       },
@@ -13601,6 +13791,21 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         },
         "required": [
           "id",
+        ],
+        "type": "object",
+      },
+      "CreateCategoryBody": {
+        "properties": {
+          "slug": {
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted.",
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
         ],
         "type": "object",
       },
@@ -13901,6 +14106,24 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         ],
         "type": "object",
       },
+      "CreateTypeBody": {
+        "properties": {
+          "categoryIds": {
+            "type": "string",
+          },
+          "slug": {
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted.",
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "title",
+        ],
+        "type": "object",
+      },
       "CreateUserDto": {
         "properties": {
           "email": {
@@ -14054,6 +14277,31 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         },
         "required": [
           "categories",
+        ],
+        "type": "object",
+      },
+      "GetChangeLogDto": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryTypeChangeLogDto",
+            },
+            "type": "array",
+          },
+          "titles": {
+            "items": {
+              "$ref": "#/components/schemas/ChangeLogTitleDto",
+            },
+            "type": "array",
+          },
+          "total": {
+            "type": "number",
+          },
+        },
+        "required": [
+          "entries",
+          "total",
+          "titles",
         ],
         "type": "object",
       },
@@ -14326,6 +14574,20 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         ],
         "type": "object",
       },
+      "ImpactDto": {
+        "properties": {
+          "affectedAdvertCount": {
+            "type": "number",
+          },
+          "sampleAdvertIds": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "affectedAdvertCount",
+        ],
+        "type": "object",
+      },
       "IssueDto": {
         "properties": {
           "createdAt": {
@@ -14376,6 +14638,30 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
           "runningPageNumber",
           "isLegacy",
           "hash",
+        ],
+        "type": "object",
+      },
+      "MoveAdvertsBody": {
+        "properties": {
+          "fromCategoryId": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "fromTypeId": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "toCategoryId": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "toTypeId": {
+            "format": "uuid",
+            "type": "string",
+          },
+        },
+        "required": [
+          "fromTypeId",
         ],
         "type": "object",
       },
@@ -14854,6 +15140,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         ],
         "type": "object",
       },
+      "SetActiveBody": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "active",
+        ],
+        "type": "object",
+      },
       "SettlementCompanyDto": {
         "properties": {
           "companyName": {
@@ -15267,6 +15564,34 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         ],
         "type": "object",
       },
+      "TypeOverviewDto": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+          },
+          "advertCount": {
+            "type": "number",
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string",
+          },
+          "slug": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "active",
+          "advertCount",
+        ],
+        "type": "object",
+      },
       "UpdateAdvertDto": {
         "properties": {
           "additionalText": {
@@ -15326,6 +15651,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "required": [
           "scheduledAt",
         ],
+        "type": "object",
+      },
+      "UpdateCategoryBody": {
+        "properties": {
+          "slug": {
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted.",
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
         "type": "object",
       },
       "UpdateCommunicationChannelDto": {
@@ -15466,6 +15803,18 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
             "type": "string",
           },
           "phone": {
+            "type": "string",
+          },
+        },
+        "type": "object",
+      },
+      "UpdateTypeBody": {
+        "properties": {
+          "slug": {
+            "description": "Lowercase letters, digits and hyphens only. Derived from the title when omitted.",
+            "type": "string",
+          },
+          "title": {
             "type": "string",
           },
         },
@@ -18294,6 +18643,1491 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CategoryDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/categories": {
+      "post": {
+        "operationId": "createCategory",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/categories/{id}": {
+      "delete": {
+        "operationId": "deleteCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+      "put": {
+        "operationId": "updateCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/categories/{id}/active": {
+      "put": {
+        "operationId": "setCategoryActive",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/categories/{id}/impact": {
+      "get": {
+        "operationId": "getCategoryImpact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/change-log": {
+      "get": {
+        "operationId": "getCategoryTypeChangeLog",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "entityId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "entityType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ChangeLogEntity",
+            },
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "number",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetChangeLogDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/change-log/{id}/revert": {
+      "post": {
+        "operationId": "revertCategoryTypeChange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/connections": {
+      "post": {
+        "operationId": "attachTypeCategory",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "204": {
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/connections/detach": {
+      "post": {
+        "operationId": "detachTypeCategory",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "204": {
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/moves": {
+      "post": {
+        "operationId": "moveAdverts",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveAdvertsBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/moves/impact": {
+      "post": {
+        "operationId": "getMoveImpact",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveAdvertsBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/overview": {
+      "get": {
+        "operationId": "getCategoryTypeOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryTypeOverviewDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/types": {
+      "post": {
+        "operationId": "createType",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTypeBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypeDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/types/{id}": {
+      "delete": {
+        "operationId": "deleteType",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "204": {
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+      "put": {
+        "operationId": "updateType",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTypeBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypeDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/types/{id}/active": {
+      "put": {
+        "operationId": "setTypeActive",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveBody",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TypeDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorDto",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "bearer": [],
+          },
+        ],
+        "summary": "",
+        "tags": [
+          "Legal gazette - internal API",
+        ],
+      },
+    },
+    "/api/v1/category-type/types/{id}/impact": {
+      "get": {
+        "operationId": "getTypeImpact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactDto",
                 },
               },
             },
