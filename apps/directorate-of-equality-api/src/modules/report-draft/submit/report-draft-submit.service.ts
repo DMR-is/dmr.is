@@ -103,6 +103,11 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
 
     await report.update({
       status,
+      // Minted here rather than at draft-create: the identifier only exists so
+      // reviewers can refer to a report without quoting a kennitala, and a
+      // DRAFT is invisible to reviewers until this point. Drafts are also
+      // reaped, so codes handed out earlier would be spent on nothing.
+      identifier: await this.reportDraftService.allocateIdentifier(),
       equalityReportId: input.equalityReportId ?? null,
       ...(salaryDataBasis ?? {}),
     })

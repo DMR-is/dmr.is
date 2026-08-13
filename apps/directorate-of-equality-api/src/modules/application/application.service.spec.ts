@@ -306,7 +306,7 @@ describe('ApplicationService', () => {
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).toHaveBeenCalledWith({
         equalityReportId: input.equalityReportId,
-        identifier: input.identifier,
+        // No `identifier` — the creation service mints it.
         importedFromExcel: input.importedFromExcel,
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
@@ -495,7 +495,7 @@ describe('ApplicationService', () => {
 
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).toHaveBeenCalledWith({
-        identifier: input.identifier,
+        // No `identifier` — the creation service mints it.
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
         companyAdminName: input.companyAdminName,
@@ -1654,7 +1654,6 @@ function makeCompanySnapshotSource(
 function makeSubmitSalaryInput(): SubmitSalaryReportDto {
   return {
     equalityReportId: '00000000-0000-0000-0000-00000000eee1',
-    identifier: 'SAL-2026-001',
     importedFromExcel: true,
     providerId: 'salary-provider-1',
     companyAdminName: 'Anna Admin',
@@ -1684,7 +1683,6 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
 
 function makeSubmitEqualityInput(): SubmitEqualityReportDto {
   return {
-    identifier: 'EQ-2026-001',
     providerId: 'equality-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminTitle: 'Framkvæmdastjóri',

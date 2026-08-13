@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { allocateReportIdentifier } from '../../report/lib/report-identifier'
 import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -50,6 +51,7 @@ const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
  */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',
+  'companyAdminTitle',
   'companyAdminEmail',
   'companyAdminGender',
   'contactName',
@@ -110,6 +112,7 @@ export class ReportDraftService implements IReportDraftService {
       status: report.status,
       identifier: report.identifier,
       companyAdminName: report.companyAdminName,
+      companyAdminTitle: report.companyAdminTitle,
       companyAdminEmail: report.companyAdminEmail,
       companyAdminGender: report.companyAdminGender,
       contactName: report.contactName,
@@ -188,13 +191,54 @@ export class ReportDraftService implements IReportDraftService {
   }
 
   /**
+   * Mints an unused report identifier for a draft about to be submitted. The
+   * draft path updates an existing row rather than going through
+   * `ReportCreateService`, so it allocates here — through the same shared
+   * allocator, so the two creation paths cannot drift on format or retry policy.
+   */
+  allocateIdentifier(): Promise<string> {
+    return allocateReportIdentifier(
+      async (candidate) =>
+        (await this.reportModel.count({ where: { identifier: candidate } })) > 0,
+      (_candidate, attempt) =>
+        this.logger.warn('Report identifier collision — retrying', {
+          context: LOGGING_CONTEXT,
+          attempt,
+        }),
+    )
+  }
+
+  /**
+   * Marks the report row as active without changing any column, so
+   * `pruneStaleDrafts` sees child-only edits as activity.
+   *
+   * Bulk sync writes employees / criteria / roles / groups — never the report
+   * row — so without this a draft built entirely through `POST …/draft/sync`
+   * ages toward deletion exactly as if it had been abandoned. `updated_at` is
+   * set explicitly (`silent` keeps Sequelize from also managing it) because a
+   * no-column update would otherwise issue no query at all.
+   */
+  async touchDraft(reportId: string): Promise<void> {
+    await this.reportModel.update(
+      { updatedAt: new Date() },
+      { where: { id: reportId }, silent: true },
+    )
+  }
+
+  /**
    * Reaps abandoned drafts — every report still in `DRAFT` whose row has not
    * been touched since `cutoff` — hard-deleting each. System maintenance, not
    * company-scoped. Returns how many were pruned.
    *
-   * `updated_at` here is the report ROW's last change (create, header edit,
-   * submit attempt). If finer-grained "any child edit" activity should reset
-   * the clock, child-CRUD writes would need to touch the report row too.
+   * `updated_at` is the report ROW's last change, which every draft write path
+   * keeps current: create, header PATCH and submit write the row directly, and
+   * bulk sync — which only ever writes children — calls `touchDraft`. So a
+   * draft is reaped only on genuine inactivity.
+   *
+   * Runs from the prune cron, which has no request-scoped CLS transaction, so
+   * each `hardDeleteDraftTree` autocommits statement by statement rather than
+   * as one unit. Acceptable for reaping abandoned rows; a partial failure
+   * leaves a subtree that the next run re-reaps.
    */
   async pruneStaleDrafts(cutoff: Date): Promise<number> {
     const stale = await this.reportModel.findAll({
@@ -224,8 +268,11 @@ export class ReportDraftService implements IReportDraftService {
    * id. A draft has no DB-level cascade, so the tree is removed by hand in
    * FK-safe order (leaves first): outlier + step-assignment join rows → the
    * entities they reference → the report row. A DRAFT is audit-free and has no
-   * company_report / report_result snapshot, so those are not involved. Runs in
-   * the caller's transaction, so the whole delete is atomic.
+   * company_report / report_result snapshot, so those are not involved.
+   *
+   * Atomic when called from a request (the CLS transaction spans it); the prune
+   * cron has no such transaction and autocommits per statement — see
+   * `pruneStaleDrafts`.
    */
   private async hardDeleteDraftTree(reportId: string): Promise<void> {
     await this.clearDraftChildren(reportId)

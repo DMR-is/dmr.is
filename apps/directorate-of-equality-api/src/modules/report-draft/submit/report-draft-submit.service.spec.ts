@@ -48,6 +48,9 @@ const COMPANY = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
 
+/** What the stubbed `allocateIdentifier` hands back. */
+const IDENTIFIER = 'KTPQZW'
+
 const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => ({
   company: {
     name: 'Acme',
@@ -64,6 +67,7 @@ const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => 
 describe('ReportDraftSubmitService', () => {
   let service: ReportDraftSubmitService
   let findOwnedDraft: jest.Mock
+  let allocateIdentifier: jest.Mock
   let reportUpdate: jest.Mock
   let persistScores: jest.Mock
   let getDetectedOutlierEmployeeIds: jest.Mock
@@ -103,6 +107,7 @@ describe('ReportDraftSubmitService', () => {
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn()
+    allocateIdentifier = jest.fn().mockResolvedValue(IDENTIFIER)
     persistScores = jest.fn().mockResolvedValue(undefined)
     getDetectedOutlierEmployeeIds = jest.fn().mockResolvedValue(new Set())
     createForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
@@ -123,7 +128,10 @@ describe('ReportDraftSubmitService', () => {
           provide: LOGGER_PROVIDER,
           useValue: { debug: jest.fn(), info: jest.fn(), error: jest.fn() },
         },
-        { provide: IReportDraftService, useValue: { findOwnedDraft } },
+        {
+          provide: IReportDraftService,
+          useValue: { findOwnedDraft, allocateIdentifier },
+        },
         {
           provide: IReportDraftAnalysisService,
           useValue: { persistScores, getDetectedOutlierEmployeeIds },
@@ -282,10 +290,25 @@ describe('ReportDraftSubmitService', () => {
     // rely on the draft PATCH having normalised the pair earlier.
     expect(reportUpdate).toHaveBeenCalledWith({
       status: ReportStatusEnum.SUBMITTED,
+      identifier: IDENTIFIER,
       equalityReportId: EQUALITY_REPORT_ID,
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
       salaryDataPeriod: PERIOD_STORED,
     })
+  })
+
+  // Reviewers search reports by identifier and it is printed on the PDF, so a
+  // draft-born report that submits without one is effectively unfindable.
+  it('mints an identifier server-side and freezes it onto the report', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    allocateIdentifier.mockResolvedValueOnce('XYZWVU')
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(allocateIdentifier).toHaveBeenCalledTimes(1)
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ identifier: 'XYZWVU' }),
+    )
   })
 
   it('400s when a detected outlier is not assigned to a group', async () => {

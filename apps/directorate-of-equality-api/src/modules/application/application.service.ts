@@ -148,7 +148,7 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Submitting salary report from application portal', {
       context: LOGGING_CONTEXT,
       companyId: company.id,
-      identifier: input.identifier,
+      providerId: input.providerId,
     })
 
     // Renewal-window gate: a company may only submit a salary report once its
@@ -211,7 +211,7 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Submitting equality report from application portal', {
       context: LOGGING_CONTEXT,
       companyId: company.id,
-      identifier: input.identifier,
+      providerId: input.providerId,
     })
 
     const createInput = await this.createEqualityReportInput(input, company)
@@ -724,7 +724,6 @@ export class ApplicationService implements IApplicationService {
 
     return {
       equalityReportId: input.equalityReportId,
-      identifier: input.identifier,
       importedFromExcel: input.importedFromExcel,
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
@@ -754,7 +753,6 @@ export class ApplicationService implements IApplicationService {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      identifier: input.identifier,
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,

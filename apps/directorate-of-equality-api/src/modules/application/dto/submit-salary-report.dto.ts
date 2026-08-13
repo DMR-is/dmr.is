@@ -28,9 +28,6 @@ export class SubmitSalaryReportDto {
   })
   equalityReportId!: string
 
-  @ApiString()
-  identifier!: string
-
   @ApiBoolean()
   importedFromExcel!: boolean
 

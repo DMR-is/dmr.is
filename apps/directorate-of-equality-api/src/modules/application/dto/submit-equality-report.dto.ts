@@ -17,10 +17,11 @@ import {
   SubmitReportSubsidiaryDto,
 } from './submit-report-company.dto'
 
+/**
+ * The report identifier is not supplied: it is a meaningless pseudonymous
+ * handle, minted server-side at creation and returned on the report reads.
+ */
 export class SubmitEqualityReportDto {
-  @ApiString()
-  identifier!: string
-
   @ApiString()
   providerId!: string
 
