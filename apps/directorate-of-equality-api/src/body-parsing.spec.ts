@@ -27,10 +27,20 @@
  *      would now be a visible change.
  *
  * LABELS
- *   CHARACTERIZED -- measured against Express 4.22.2 / body-parser 1.20.6 /
- *                    Nest 10.4 as committed. A later reader may change these
- *                    when the bump lands, deliberately.
- *   SPECIFIED     -- a decision. Changing it needs a new decision.
+ *   CHARACTERIZED    -- measured and unchanged across the bump. These held on
+ *                       Express 4.22.2 / body-parser 1.20.6 / Nest 10.4 and
+ *                       still hold on Express 5.2.1 / body-parser 2.3.0 /
+ *                       Nest 11.1.29.
+ *   NEST 11 BASELINE -- moved on the bump. The superseded Nest 10 value is named
+ *                       in each comment.
+ *   SPECIFIED        -- a decision. Changing it needs a new decision.
+ *
+ * THE SIMULATION WAS ACCURATE
+ * The prediction below was made by mocking body-parser 2.3.0 under Nest 10. When
+ * the real bump landed, exactly the four named tests reddened and nothing else --
+ * plus the environment canary itself, which is what it is for. Every raw-mount
+ * test stayed green as predicted, so `ImportUploadLocalController`'s
+ * `Buffer.isBuffer` guard is confirmed on both sides of the bump.
  *
  * THE FUTURE WAS SIMULATED, NOT GUESSED
  * `express.json` / `express.raw` are direct re-exports of body-parser
@@ -121,8 +131,14 @@ class UnrelatedProbeController {
  * and rather than `require()` because that trips
  * `@typescript-eslint/no-var-requires`.
  */
-const packageVersion = (name: string): string => {
-  const contents = readFileSync(require.resolve(`${name}/package.json`), 'utf8')
+const packageVersion = (name: string, from?: string): string => {
+  const contents = readFileSync(
+    require.resolve(
+      `${name}/package.json`,
+      from ? { paths: [require.resolve(`${from}/package.json`)] } : undefined,
+    ),
+    'utf8',
+  )
 
   return (JSON.parse(contents) as { version: string }).version
 }
@@ -160,7 +176,7 @@ const rawRequest = (port: number, headerLines: Array<string>): Promise<string> =
     socket.on('error', reject)
   })
 
-describe('body parsing (directorate-of-equality-api, Express 4)', () => {
+describe('body parsing (directorate-of-equality-api, Express 5)', () => {
   let app: INestApplication
   let port: number
   let storedUploads: Array<{ key: string; data: Buffer }>
@@ -216,22 +232,31 @@ describe('body parsing (directorate-of-equality-api, Express 4)', () => {
   const req = () => request(app.getHttpServer())
 
   describe('the environment under test', () => {
-    it('CHARACTERIZED: Express 4 / body-parser 1.x, with three parsers in the stack', () => {
-      expect(packageVersion('express')).toMatch(/^4\./)
-      expect(packageVersion('body-parser')).toMatch(/^1\./)
+    it('NEST 11 BASELINE: Express 5 / body-parser 2.x, with three parsers in the stack', () => {
+      // Was Express 4.x / body-parser 1.x.
+      expect(packageVersion('express')).toMatch(/^5\./)
+
+      // body-parser MUST be resolved through express, not from here. Nx dev
+      // tooling (@nx/react, @nx/module-federation, webpack-dev-server) still
+      // depends on express 4, so the HOISTED body-parser is 1.20.6 while the
+      // copy that actually parses request bodies is express's own nested
+      // 2.x. Probing the hoisted one would make this canary quietly lie.
+      expect(packageVersion('body-parser', 'express')).toMatch(/^2\./)
 
       // Nest dedups its own default parsers by FUNCTION NAME
       // (express-adapter.js:166-168), and `body-parser` names its exports
       // `jsonParser` / `urlencodedParser` / `rawParser`. So main.ts's 6mb pair
       // suppresses Nest's 100kb defaults entirely, and the path-scoped
-      // `rawParser` is not affected by that dedup. Verified against
-      // body-parser 2.3.0 out of band: those names are unchanged, so the dedup
-      // is expected to survive the bump.
-      // Express 5 renames `app._router` to `app.router`.
+      // `rawParser` is not affected by that dedup.
+      //
+      // MEASURED: body-parser 2.3.0 keeps all three export names, so the dedup
+      // survived the bump -- the counts below are unchanged from Nest 10.
+      // Express 5 did rename `app._router` to `app.router`, so the reach into
+      // the stack had to move.
       const names = app
         .getHttpAdapter()
         .getInstance()
-        ._router.stack.map((layer: { name: string }) => layer.name)
+        .router.stack.map((layer: { name: string }) => layer.name)
 
       expect(names.filter((n: string) => n === 'jsonParser')).toHaveLength(1)
       expect(names.filter((n: string) => n === 'urlencodedParser')).toHaveLength(
@@ -443,21 +468,23 @@ describe('body parsing (directorate-of-equality-api, Express 4)', () => {
       expect(storedUploads[0].data.length).toBe(0)
     })
 
-    it('CHARACTERIZED: on a JSON endpoint the two cases AGREE today ({} either way) -- body-parser 2 is what splits them', async () => {
+    it('NEST 11 BASELINE: on a JSON endpoint the two cases now DIVERGE -- undefined against {}', async () => {
       // `content-length: 0` + a matching content-type takes body-parser's READ
       // path and hits its zero-length special case, which returns `{}` in 1.x
-      // and in 2.x alike. No content-length takes the SKIP path, which is the
-      // one 2.x changed from `{}` to `undefined`. So this test passes today and
-      // is expected to fail on exactly its first half after the bump.
+      // and in 2.x alike -- the second half below is unchanged.
+      //
+      // No content-length takes the SKIP path, which is what 2.x changed from
+      // `{}` to `undefined`. On Nest 10 both halves read
+      // '"typeofBody":"object"' / '"isUndefined":false' / '"keys":[]'.
       const bodyless = await rawRequest(port, [
         'POST /api/v1/other/echo HTTP/1.1',
         'Host: 127.0.0.1',
         'Content-Type: application/json',
       ])
       expect(bodyless).toContain('HTTP/1.1 201')
-      expect(bodyless).toContain('"typeofBody":"object"')
-      expect(bodyless).toContain('"isUndefined":false')
-      expect(bodyless).toContain('"keys":[]')
+      expect(bodyless).toContain('"typeofBody":"undefined"')
+      expect(bodyless).toContain('"isUndefined":true')
+      expect(bodyless).toContain('"keys":null')
 
       const withZeroLength = await rawRequest(port, [
         'POST /api/v1/other/echo HTTP/1.1',
@@ -470,15 +497,21 @@ describe('body parsing (directorate-of-equality-api, Express 4)', () => {
       expect(withZeroLength).toContain('"keys":[]')
     })
 
-    it('CHARACTERIZED: a bodyless POST to a JSON endpoint -> body is an EMPTY OBJECT, not undefined', async () => {
+    it('NEST 11 BASELINE: a bodyless POST to a JSON endpoint -> body is UNDEFINED, not {}', async () => {
       const res = await req().post('/api/v1/other/echo').expect(201)
 
-      // The single most likely expectation in this file to move: body-parser 2
-      // leaves `req.body === undefined` here, so `typeofBody` becomes
-      // 'undefined', `isUndefined` becomes true and `keys` becomes null.
-      expect(res.body.typeofBody).toBe('object')
-      expect(res.body.isUndefined).toBe(false)
-      expect(res.body.keys).toEqual([])
+      // The expectation this file was written to catch, and it moved as
+      // predicted. On Nest 10 / body-parser 1.x this was 'object' / false / [];
+      // body-parser 2.x leaves `req.body` unassigned on the SKIP path.
+      //
+      // Consequence to keep in mind for handler code: `req.body.foo` now throws
+      // a TypeError where it used to read undefined, and `Object.keys(req.body)`
+      // throws instead of returning []. Reaching a handler with no body at all
+      // requires a request that sends no content-length, which no client in this
+      // repo does.
+      expect(res.body.typeofBody).toBe('undefined')
+      expect(res.body.isUndefined).toBe(true)
+      expect(res.body.keys).toBeNull()
     })
 
     it('CHARACTERIZED: an empty-string JSON body -> {} (body-parser special-cases zero length in 1.x AND 2.x)', async () => {
@@ -533,9 +566,11 @@ describe('body parsing (directorate-of-equality-api, Express 4)', () => {
   })
 
   describe('6. wrong content-type', () => {
-    it('CHARACTERIZED: multipart sent to a JSON endpoint -> body is {} and the file is LOST (no multer anywhere in this API)', async () => {
+    it('NEST 11 BASELINE: multipart sent to a JSON endpoint -> body is UNDEFINED and the file is LOST', async () => {
       // directorate-of-equality-api registers no multipart interceptor at all,
-      // so a multipart request is simply unparsed.
+      // so a multipart request is simply unparsed. No parser claims the
+      // content-type, which is the SKIP path: `keys` was [] on body-parser 1.x
+      // and is null now. The file is lost either way.
       const res = await req()
         .post('/api/v1/other/echo')
         .attach('file', WORKBOOK_BYTES, {
@@ -546,17 +581,19 @@ describe('body parsing (directorate-of-equality-api, Express 4)', () => {
         .expect(201)
 
       expect(res.body.isBuffer).toBe(false)
-      expect(res.body.keys).toEqual([])
+      expect(res.body.keys).toBeNull()
     })
 
-    it('CHARACTERIZED: a JSON body under `content-type: text/plain` is NOT parsed', async () => {
+    it('NEST 11 BASELINE: a JSON body under `content-type: text/plain` is NOT parsed', async () => {
       const res = await req()
         .post('/api/v1/other/echo')
         .set('content-type', 'text/plain')
         .send('{"a":1}')
         .expect(201)
 
-      expect(res.body.keys).toEqual([])
+      // Also the SKIP path -- no parser matches text/plain. Was [] on
+      // body-parser 1.x.
+      expect(res.body.keys).toBeNull()
     })
   })
 

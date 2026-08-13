@@ -5,19 +5,22 @@
  * WHY THIS EXISTS
  * Nest 11 ships `@nestjs/platform-express` with Express 5, whose default
  * `query parser` setting changes from `extended` (qs) to `simple`
- * (node:querystring). Under `simple`:
- *   - `?a=1&a=2`     still yields `['1','2']`         (unchanged)
- *   - `?a[]=1&a[]=2` yields the literal key `'a[]'`   (CHANGES)
- *   - `?a[b]=1`      yields the literal key `'a[b]'`  (CHANGES)
- * Accepting the `simple` parser is a decision already taken. These tests do
- * not prevent that change -- they record what Express 4 does today so the
- * effect of the flip is visible instead of silent.
+ * (node:querystring). Measured across the bump:
+ *   - `?a=1&a=2`     still yields `['1','2']`         (UNCHANGED)
+ *   - `?a=1`         still yields `'1'`               (UNCHANGED)
+ *   - `?a[]=1&a[]=2` yields the literal key `'a[]'`   (CHANGED)
+ *   - `?a[b]=1`      yields the literal key `'a[b]'`  (CHANGED)
+ *
+ * Accepting the `simple` parser is a decision already taken. What these tests
+ * now pin is the SHAPE of the consequence for this app: `whitelist: true` strips
+ * the renamed key, so a bracket-syntax filter vanishes with a 200 and no error
+ * of any kind. No caller in this repo sends bracket syntax; an external one
+ * would stop being filtered silently.
  *
  * LABELS
- *   CHARACTERIZED -- measured against Express 4 / Nest 10 as committed. A
- *                    later reader is allowed to change these once the parser
- *                    flips, as long as the change is deliberate.
- *   SPECIFIED     -- a decision. Changing it needs a new decision.
+ *   NEST 11 BASELINE -- measured after the bump. The superseded Express 4 value
+ *                       is named in each comment.
+ *   SPECIFIED        -- a decision. Changing it needs a new decision.
  *
  * PIPE
  * Every test in this file runs the DTO through the exact global pipe from
@@ -95,13 +98,12 @@ describe('query-string parsing (legal-gazette DTOs, main.ts ValidationPipe)', ()
 
   const get = (url: string) => request(app.getHttpServer()).get(url)
 
-  it('CHARACTERIZED: Express is on the `extended` (qs) query parser', () => {
-    // This is the canary for the whole file. Express 4 defaults to
-    // `extended`; Express 5 defaults to `simple`. When this assertion fails,
-    // every CHARACTERIZED bracket-syntax expectation below is expected to
-    // fail with it.
+  it('NEST 11 BASELINE: Express is on the `simple` (node:querystring) parser', () => {
+    // The canary for the whole file. Was 'extended' on Express 4. Nothing in
+    // this repo calls `app.set('query parser', ...)`, so this is Express 5's
+    // own default -- accepted deliberately, not inherited by accident.
     const expressInstance = app.getHttpAdapter().getInstance()
-    expect(expressInstance.get('query parser')).toBe('extended')
+    expect(expressInstance.get('query parser')).toBe('simple')
   })
 
   describe('GetPublicationsQueryDto.categoryId -- `@IsUUID(\'4\', { each: true })`, no @IsArray, no @Transform', () => {
@@ -114,16 +116,20 @@ describe('query-string parsing (legal-gazette DTOs, main.ts ValidationPipe)', ()
       expect(res.body.query.categoryId).toEqual([UUID_A, UUID_B])
     })
 
-    it('CHARACTERIZED: bracket syntax also arrives as an array (qs only -- this is what the Express 5 flip breaks)', async () => {
+    it('NEST 11 BASELINE: bracket syntax is stripped by `whitelist` and the filter disappears', async () => {
       const res = await get(
         `/echo/publications?categoryId[]=${UUID_A}&categoryId[]=${UUID_B}`,
       )
 
+      // Was `[UUID_A, UUID_B]` on Express 4 / qs.
+      //
+      // The `simple` parser renames the key to the literal 'categoryId[]', which
+      // `whitelist: true` then strips. So BOTH names are absent: 200, no
+      // validation error, and the category filter silently gone. Legal Gazette
+      // is quieter about this than the official-journal APIs, which have no
+      // `whitelist` and so keep the literal key on the DTO.
       expect(res.status).toBe(200)
-      expect(res.body.query.categoryId).toEqual([UUID_A, UUID_B])
-      // Under Express 5's `simple` parser the key becomes the literal string
-      // 'categoryId[]', which `whitelist: true` then strips. The request
-      // still returns 200 -- the category filter is just gone.
+      expect(res.body.query.categoryId).toBeUndefined()
       expect(res.body.query['categoryId[]']).toBeUndefined()
     })
 
@@ -170,13 +176,19 @@ describe('query-string parsing (legal-gazette DTOs, main.ts ValidationPipe)', ()
       expect(res.body.query.excludeTypes).toEqual([UUID_A, UUID_B])
     })
 
-    it('CHARACTERIZED: bracket syntax also arrives as an array (qs only)', async () => {
+    it('NEST 11 BASELINE: bracket syntax is stripped -- and `@IsArray()` does NOT catch it', async () => {
       const res = await get(
         `/echo/types?excludeTypes[]=${UUID_A}&excludeTypes[]=${UUID_B}`,
       )
 
+      // Was `[UUID_A, UUID_B]` on Express 4 / qs.
+      //
+      // Worth reading against the next test: a SINGLE `excludeTypes=` value is a
+      // 400 because `@IsArray()` sees a string, but bracket syntax leaves the
+      // field absent and `@IsOptional()` waves it through with a 200. The
+      // stricter-looking DTO is the one that fails louder.
       expect(res.status).toBe(200)
-      expect(res.body.query.excludeTypes).toEqual([UUID_A, UUID_B])
+      expect(res.body.query.excludeTypes).toBeUndefined()
       expect(res.body.query['excludeTypes[]']).toBeUndefined()
     })
 

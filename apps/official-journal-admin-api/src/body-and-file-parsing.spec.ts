@@ -24,11 +24,23 @@
  * nested-body behaviour rather than to guard a default.
  *
  * LABELS
- *   CHARACTERIZED -- measured against Express 4.22.2 / body-parser 1.20.6 /
- *                    multer 2.2.0 / Nest 10.4 as committed. A later reader may
- *                    change these when the bump lands, as long as the change is
- *                    deliberate and the new value is written down.
- *   SPECIFIED     -- a decision. Changing it needs a new decision.
+ *   CHARACTERIZED    -- measured and unchanged across the bump. These held on
+ *                       Express 4.22.2 / body-parser 1.20.6 / Nest 10.4 and
+ *                       still hold on Express 5.2.1 / body-parser 2.3.0 /
+ *                       Nest 11.1.29. multer stayed on 2.2.0 throughout.
+ *   NEST 11 BASELINE -- moved on the bump. The superseded Nest 10 value is named
+ *                       in each comment.
+ *   SPECIFIED        -- a decision. Changing it needs a new decision.
+ *
+ * THE SIMULATION WAS ACCURATE, WITH ONE MISS
+ * The prediction below named exactly the three body-parser SKIP-path tests that
+ * reddened. Two further tests moved that it did not anticipate, because neither
+ * is about body-parser:
+ *   - the multer "Unexpected field" message, which
+ *     `@nestjs/platform-express@11` now suffixes with ` - <field>`
+ *   - the parser-dedup probe, because Express 5 renamed `app._router` to
+ *     `app.router`
+ * The dedup itself survived, as predicted.
  *
  * THE FUTURE WAS SIMULATED, NOT GUESSED
  * `express.json` is a direct re-export of `body-parser.json`
@@ -105,9 +117,12 @@ class ProbeJsonDto {
  * and rather than `require()` because that trips
  * `@typescript-eslint/no-var-requires`.
  */
-const packageVersion = (name: string): string => {
+const packageVersion = (name: string, from?: string): string => {
   const contents = readFileSync(
-    require.resolve(`${name}/package.json`),
+    require.resolve(
+      `${name}/package.json`,
+      from ? { paths: [require.resolve(`${from}/package.json`)] } : undefined,
+    ),
     'utf8',
   )
 
@@ -216,7 +231,7 @@ const rawRequest = (
     socket.on('error', reject)
   })
 
-describe('body + multipart parsing (official-journal-admin-api, Express 4)', () => {
+describe('body + multipart parsing (official-journal-admin-api, Express 5)', () => {
   let app: INestApplication
   let port: number
 
@@ -256,12 +271,18 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
   const post = (url: string) => request(app.getHttpServer()).post(url)
 
   describe('the environment under test', () => {
-    it('CHARACTERIZED: Express 4 and body-parser 1.x are what these numbers were measured on', () => {
+    it('NEST 11 BASELINE: Express 5 and body-parser 2.x are what these numbers were measured on', () => {
       // Canary for the whole file, the body-side twin of the `query parser`
-      // canary in query-string-parsing.spec.ts. When this fails, every
-      // CHARACTERIZED expectation below is expected to be re-measured.
-      expect(packageVersion('express')).toMatch(/^4\./)
-      expect(packageVersion('body-parser')).toMatch(/^1\./)
+      // canary in query-string-parsing.spec.ts. Was Express 4.x / body-parser
+      // 1.x.
+      expect(packageVersion('express')).toMatch(/^5\./)
+
+      // body-parser MUST be resolved through express, not from here. Nx dev
+      // tooling (@nx/react, @nx/module-federation, webpack-dev-server) still
+      // depends on express 4, so the HOISTED body-parser is 1.20.6 while the
+      // copy that actually parses request bodies is express's own nested 2.x.
+      // Probing the hoisted one would make this canary quietly lie.
+      expect(packageVersion('body-parser', 'express')).toMatch(/^2\./)
     })
 
     it('CHARACTERIZED: multer is already on 2.x, so the multer major bump is NOT part of the Nest 11 risk', () => {
@@ -277,15 +298,15 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       // parsers do not merely run first -- they stop Nest registering its
       // 100kb defaults at all.
       //
-      // Verified against body-parser 2.3.0 out of band: the function names are
-      // still `jsonParser` / `urlencodedParser`, so the dedup is expected to
-      // survive the bump. If it ever stopped matching, both parsers would be in
-      // the stack and this count would be 2.
+      // MEASURED on the bump: body-parser 2.3.0 keeps the function names
+      // `jsonParser` / `urlencodedParser`, so the dedup survived and both counts
+      // below are unchanged from Nest 10. If it ever stopped matching, both
+      // parsers would be in the stack and these counts would be 2.
       //
-      // Note for the bump: Express 5 renames `app._router` to `app.router`, so
-      // this accessor changes even when the behaviour does not.
+      // Express 5 did rename `app._router` to `app.router` -- an accessor change
+      // with no behaviour change behind it.
       const instance = app.getHttpAdapter().getInstance()
-      const names = instance._router.stack.map(
+      const names = instance.router.stack.map(
         (layer: { name: string }) => layer.name,
       )
 
@@ -338,7 +359,7 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       expect(res.body.file.bufferLength).toBe(ONE_MEGA_BYTE * 10)
     })
 
-    it('CHARACTERIZED: a field name other than `file` is multer\'s own 400 "Unexpected field" -- nothing is parsed', async () => {
+    it('NEST 11 BASELINE: a field name other than `file` is a 400 that now NAMES the offending field', async () => {
       const res = await post('/probe/single-file')
         .attach('skjal', PDF_BYTES, {
           filename: 'skjal.pdf',
@@ -348,11 +369,19 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
 
       // This is a MulterError (LIMIT_UNEXPECTED_FILE), not a Nest validation
       // error, and it reaches the client through Nest's external-exception
-      // handler rather than through ExceptionFactoryPipe. Both multer's error
-      // vocabulary and that handler are in scope for the Nest 11 bump, so the
-      // message is pinned literally.
+      // handler rather than through ExceptionFactoryPipe.
+      //
+      // Was the bare 'Unexpected field' on Nest 10. multer is unchanged at 2.2.0
+      // and still sets `message = 'Unexpected field'` with the field name on a
+      // separate `field` property -- it is `@nestjs/platform-express@11`'s
+      // `transformException` (multer/multer/multer.utils.js:23-24) that now
+      // appends ` - ${error.field}`.
+      //
+      // A client-visible 400 message changed shape. The appended value is the
+      // field name the CLIENT sent, so nothing about the server leaks; but any
+      // consumer matching on this string exactly will stop matching.
       expect(res.body.file).toBeUndefined()
-      expect(res.body.message).toBe('Unexpected field')
+      expect(res.body.message).toBe('Unexpected field - skjal')
     })
 
     it('CHARACTERIZED: a 20MB+ file is rejected by MaxFileSizeValidator with 400 and the configured message', async () => {
@@ -418,21 +447,23 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
   })
 
   describe('2. bodyless and empty-body requests to a JSON endpoint', () => {
-    it('CHARACTERIZED: no body at all -> 201 and `req.body` is an EMPTY OBJECT, not undefined', async () => {
+    it('NEST 11 BASELINE: no body at all -> 201 and `req.body` is UNDEFINED, not {}', async () => {
       const res = await post('/probe/json').expect(201)
 
-      // This is the single most likely thing in this file to move. A Node HTTP
-      // client sends `content-length: 0` and no content-type here, so no parser
-      // claims the request and body-parser takes its SKIP path. Under
-      // body-parser 2 that path leaves `req.body === undefined`
-      // (lib/read.js:45-48), so `typeofBody` becomes 'undefined', `keys`
-      // becomes null and `isUndefined` becomes true. Confirmed by running this
-      // file against a real body-parser 2.3.0 -- see the note in the file
-      // header.
-      expect(res.body.typeofBody).toBe('object')
-      expect(res.body.isUndefined).toBe(false)
-      expect(res.body.keys).toEqual([])
-      expect(res.body.body).toEqual({})
+      // The expectation this file was written to catch, and it moved as
+      // predicted. A Node HTTP client sends `content-length: 0` and no
+      // content-type here, so no parser claims the request and body-parser takes
+      // its SKIP path, which in 2.x leaves `req.body === undefined`
+      // (lib/read.js:45-48). On Nest 10 this read 'object' / false / [] / {}.
+      //
+      // Consequence for handler code: `Object.keys(body)` and `{ ...body }` now
+      // throw a TypeError where they used to yield [] and {}. The probe above
+      // guards its own `Object.keys` with a typeof check, which is why it can
+      // report the shape instead of 500-ing.
+      expect(res.body.typeofBody).toBe('undefined')
+      expect(res.body.isUndefined).toBe(true)
+      expect(res.body.keys).toBeNull()
+      expect(res.body.body).toBeNull()
     })
 
     it('CHARACTERIZED: `content-type: application/json` with a literal empty string body -> 201 and {}', async () => {
@@ -511,11 +542,14 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       expect(res.body.keys).toEqual([])
     })
 
-    it('CHARACTERIZED: `content-length: 0` with NO content-type -> 201 and {} -- the SKIP path', async () => {
+    it('NEST 11 BASELINE: `content-length: 0` with NO content-type -> 201 and UNDEFINED -- the SKIP path', async () => {
       // Sent over a socket on purpose: superagent's `.send('')` quietly sets
       // `content-type: application/x-www-form-urlencoded`, which would put this
       // request on the read path and make the test measure the opposite of what
       // its name claims.
+      //
+      // Was 'object' / false / [] on Nest 10. Contrast the READ-path test above,
+      // which is unchanged -- the content-type is the whole difference.
       const response = await rawRequest(port, [
         'POST /probe/json HTTP/1.1',
         'Host: 127.0.0.1',
@@ -523,12 +557,16 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       ])
 
       expect(response).toContain('HTTP/1.1 201')
-      expect(response).toContain('"typeofBody":"object"')
-      expect(response).toContain('"isUndefined":false')
-      expect(response).toContain('"keys":[]')
+      expect(response).toContain('"typeofBody":"undefined"')
+      expect(response).toContain('"isUndefined":true')
+      expect(response).toContain('"keys":null')
     })
 
-    it('CHARACTERIZED: no content-length header at all, WITH a JSON content-type -> 201 and {} -- also the SKIP path', async () => {
+    it('NEST 11 BASELINE: no content-length header at all, WITH a JSON content-type -> 201 and UNDEFINED -- also the SKIP path', async () => {
+      // Was 'object' / false / [] on Nest 10. A matching content-type is not
+      // enough on its own: with no content-length and no transfer-encoding there
+      // is nothing to read, so body-parser skips rather than hitting its
+      // zero-length special case.
       const response = await rawRequest(port, [
         'POST /probe/json HTTP/1.1',
         'Host: 127.0.0.1',
@@ -536,9 +574,9 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       ])
 
       expect(response).toContain('HTTP/1.1 201')
-      expect(response).toContain('"typeofBody":"object"')
-      expect(response).toContain('"isUndefined":false')
-      expect(response).toContain('"keys":[]')
+      expect(response).toContain('"typeofBody":"undefined"')
+      expect(response).toContain('"isUndefined":true')
+      expect(response).toContain('"keys":null')
     })
   })
 
@@ -623,7 +661,7 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
       expect(res.body.message).toBe('File is required')
     })
 
-    it('CHARACTERIZED: multipart sent to a JSON endpoint -> the body is {} and the file fields are LOST', async () => {
+    it('NEST 11 BASELINE: multipart sent to a JSON endpoint -> the body is UNDEFINED and the file fields are LOST', async () => {
       const res = await post('/probe/json')
         .attach('file', PDF_BYTES, {
           filename: 'skjal.pdf',
@@ -632,20 +670,20 @@ describe('body + multipart parsing (official-journal-admin-api, Express 4)', () 
         .expect(201)
 
       // No parser claims multipart, so nothing populates `req.body` and the
-      // request stream is left unread. Today that surfaces as `{}`; under
-      // body-parser 2 it becomes `undefined`, which is the same divergence as
-      // test 2.
-      expect(res.body.typeofBody).toBe('object')
-      expect(res.body.keys).toEqual([])
+      // request stream is left unread -- the SKIP path again. Was 'object' / []
+      // on Nest 10. The file is lost either way.
+      expect(res.body.typeofBody).toBe('undefined')
+      expect(res.body.keys).toBeNull()
     })
 
-    it('CHARACTERIZED: a JSON body under `content-type: text/plain` is NOT parsed -- body stays {}', async () => {
+    it('NEST 11 BASELINE: a JSON body under `content-type: text/plain` is NOT parsed -- body is UNDEFINED', async () => {
       const res = await post('/probe/json')
         .set('content-type', 'text/plain')
         .send('{"name":"a"}')
         .expect(201)
 
-      expect(res.body.keys).toEqual([])
+      // Also the SKIP path -- no parser matches text/plain. Was [] on Nest 10.
+      expect(res.body.keys).toBeNull()
     })
   })
 

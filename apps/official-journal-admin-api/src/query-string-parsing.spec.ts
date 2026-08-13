@@ -5,19 +5,25 @@
  * WHY THIS EXISTS
  * Nest 11 ships `@nestjs/platform-express` with Express 5, whose default
  * `query parser` setting changes from `extended` (qs) to `simple`
- * (node:querystring). Under `simple`:
- *   - `?a=1&a=2`     still yields `['1','2']`         (unchanged)
- *   - `?a[]=1&a[]=2` yields the literal key `'a[]'`   (CHANGES)
- *   - `?a[b]=1`      yields the literal key `'a[b]'`  (CHANGES)
- * Accepting the `simple` parser is a decision already taken. These tests do
- * not prevent that change -- they record what Express 4 does today so the
- * effect of the flip is visible instead of silent.
+ * (node:querystring). Measured across the bump:
+ *   - `?a=1&a=2`     still yields `['1','2']`         (UNCHANGED)
+ *   - `?a=1`         still yields `'1'`               (UNCHANGED)
+ *   - `?a[]=1&a[]=2` yields the literal key `'a[]'`   (CHANGED)
+ *   - `?a[b]=1`      yields the literal key `'a[b]'`  (CHANGED)
+ *
+ * Accepting the `simple` parser is a decision already taken. What these tests
+ * now pin is the SHAPE of the consequence: because `ExceptionFactoryPipe` does
+ * not set `whitelist`, a bracket-syntax key is not rejected -- it survives onto
+ * the DTO under its literal name while the declared field stays undefined. Every
+ * bracket-syntax filter therefore degrades to "no filter" with a 200, and on
+ * `GetAdvertsQueryParams.department` a former 400 becomes a silent 200. No
+ * caller in this repo sends bracket syntax; an external one would stop being
+ * filtered without any error.
  *
  * LABELS
- *   CHARACTERIZED -- measured against Express 4 / Nest 10 as committed. A
- *                    later reader is allowed to change these once the parser
- *                    flips, as long as the change is deliberate.
- *   SPECIFIED     -- a decision. Changing it needs a new decision.
+ *   NEST 11 BASELINE -- measured after the bump. The superseded Express 4 value
+ *                       is named in each comment.
+ *   SPECIFIED        -- a decision. Changing it needs a new decision.
  *
  * PIPE
  * Every test in this file runs the DTO through `ExceptionFactoryPipe()`, the
@@ -98,13 +104,12 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
 
   const get = (url: string) => request(app.getHttpServer()).get(url)
 
-  it('CHARACTERIZED: Express is on the `extended` (qs) query parser', () => {
-    // This is the canary for the whole file. Express 4 defaults to
-    // `extended`; Express 5 defaults to `simple`. When this assertion fails,
-    // every CHARACTERIZED bracket-syntax expectation below is expected to
-    // fail with it.
+  it('NEST 11 BASELINE: Express is on the `simple` (node:querystring) parser', () => {
+    // The canary for the whole file. Was 'extended' on Express 4. Nothing in
+    // this repo calls `app.set('query parser', ...)`, so this is Express 5's
+    // own default -- accepted deliberately, not inherited by accident.
     const expressInstance = app.getHttpAdapter().getInstance()
-    expect(expressInstance.get('query parser')).toBe('extended')
+    expect(expressInstance.get('query parser')).toBe('simple')
   })
 
   describe('DefaultSearchParams.ids -- `@IsOptional() @Expose()`, no validator, no @Transform', () => {
@@ -115,16 +120,17 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       expect(res.body.query.ids).toEqual(['a', 'b'])
     })
 
-    it('CHARACTERIZED: bracket syntax also arrives as an array (qs only -- this is what the Express 5 flip breaks)', async () => {
+    it('NEST 11 BASELINE: bracket syntax is a LITERAL key and the filter is silently dropped', async () => {
       const res = await get('/echo/default-search-params?ids[]=a&ids[]=b')
 
+      // On Express 4 / qs this was `ids === ['a', 'b']` with no 'ids[]' key.
+      // Under Express 5's `simple` parser the key stays the literal string
+      // 'ids[]', and because ExceptionFactoryPipe does not set `whitelist` it
+      // survives onto the DTO. `ids` is undefined: no validation error, no 400,
+      // just a filter that silently stops being applied.
       expect(res.status).toBe(200)
-      expect(res.body.query.ids).toEqual(['a', 'b'])
-      // Under Express 5's `simple` parser the key becomes the literal
-      // string 'ids[]'. Since ExceptionFactoryPipe does not set
-      // `whitelist`, that literal key will survive onto the DTO and `ids`
-      // will be undefined -- no validation error, just a dropped filter.
-      expect(res.body.query['ids[]']).toBeUndefined()
+      expect(res.body.query.ids).toBeUndefined()
+      expect(res.body.query['ids[]']).toEqual(['a', 'b'])
     })
 
     it('CHARACTERIZED: a single value arrives as a bare string, NOT a one-element array', async () => {
@@ -139,14 +145,17 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       expect(Array.isArray(res.body.query.ids)).toBe(false)
     })
 
-    it('CHARACTERIZED: bracket-object syntax reaches the DTO as an object (qs only)', async () => {
+    it('NEST 11 BASELINE: bracket-object syntax is a literal key, not an object', async () => {
       const res = await get('/echo/default-search-params?ids[x]=a')
 
+      // On Express 4 / qs this was `ids === { x: 'a' }` -- an object arriving
+      // where `string[]` is declared, with no validator to reject it. The
+      // `simple` parser yields the literal key 'ids[x]' instead, which is
+      // strictly an improvement: `ids` now holds nothing rather than the wrong
+      // type.
       expect(res.status).toBe(200)
-      // An object arrives where `string[]` is declared, and no validator
-      // rejects it. Express 5's `simple` parser would turn this into the
-      // literal key 'ids[x]' instead -- strictly an improvement here.
-      expect(res.body.query.ids).toEqual({ x: 'a' })
+      expect(res.body.query.ids).toBeUndefined()
+      expect(res.body.query['ids[x]']).toBe('a')
     })
 
     it('CHARACTERIZED: a comma-separated value is NOT split (no @Transform on this field)', async () => {
@@ -170,13 +179,20 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       ])
     })
 
-    it('CHARACTERIZED: bracket syntax also arrives as an array (qs only)', async () => {
+    it('NEST 11 BASELINE: bracket syntax is a literal key -- and `@IsArray()` does NOT catch it', async () => {
       const res = await get(
         `/echo/cases-with-status-count?statuses[]=${CaseStatusEnum.Submitted}&statuses[]=${CaseStatusEnum.InProgress}`,
       )
 
+      // On Express 4 / qs this was `statuses === ['Innsent', 'Grunnvinnsla']`.
+      //
+      // Worth noting against the neighbouring test: a SINGLE `statuses=` value
+      // is a 400 because `@IsArray()` sees a string, but bracket syntax leaves
+      // `statuses` absent entirely, and `@IsOptional()` then waves it through
+      // with a 200. The stricter-looking DTO is the one that fails louder.
       expect(res.status).toBe(200)
-      expect(res.body.query.statuses).toEqual([
+      expect(res.body.query.statuses).toBeUndefined()
+      expect(res.body.query['statuses[]']).toEqual([
         CaseStatusEnum.Submitted,
         CaseStatusEnum.InProgress,
       ])
@@ -228,11 +244,17 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       ])
     })
 
-    it('CHARACTERIZED: `department` REJECTS bracket syntax with the same 400', async () => {
+    it('NEST 11 BASELINE: `department` bracket syntax is now a 200 with the filter dropped', async () => {
       const res = await get('/echo/adverts?department[]=a&department[]=b')
 
-      expect(res.status).toBe(400)
-      expect(res.body.message[0].property).toBe('department')
+      // On Express 4 / qs this was a 400 on `department` -- qs produced an array
+      // and `@IsString()` without `{ each: true }` rejected it. The literal
+      // 'department[]' key leaves `department` absent, so validation passes and
+      // the request succeeds while filtering by nothing. A loud 400 became a
+      // quiet wrong answer.
+      expect(res.status).toBe(200)
+      expect(res.body.query.department).toBeUndefined()
+      expect(res.body.query['department[]']).toEqual(['a', 'b'])
     })
 
     it('CHARACTERIZED: `department` accepts a single value as a bare string', async () => {
@@ -263,12 +285,17 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       ['category'],
       ['involvedParty'],
     ])(
-      'CHARACTERIZED: `%s` accepts bracket syntax as an array (qs only)',
+      'NEST 11 BASELINE: `%s` bracket syntax is a literal key, so the filter is dropped',
       async (field: string) => {
         const res = await get(`/echo/adverts?${field}[]=a&${field}[]=b`)
 
+        // Was `['a', 'b']` on Express 4 / qs. These four fields carry
+        // `@IsString({ each: true })`, so unlike `department` they never
+        // returned a 400 -- the flip turns a working array filter into no
+        // filter, with a 200 either way.
         expect(res.status).toBe(200)
-        expect(res.body.query[field]).toEqual(['a', 'b'])
+        expect(res.body.query[field]).toBeUndefined()
+        expect(res.body.query[`${field}[]`]).toEqual(['a', 'b'])
       },
     )
 
@@ -303,11 +330,19 @@ describe('query-string parsing (official-journal DTOs, ExceptionFactoryPipe)', (
       expect(res.body.query.status).toEqual([UUID_A, UUID_B])
     })
 
-    it('CHARACTERIZED: bracket syntax arrives as an array (qs only)', async () => {
+    it('NEST 11 BASELINE: @Transform does NOT protect against the renamed key', async () => {
       const res = await get(`/echo/cases?status[]=${UUID_A}&status[]=${UUID_B}`)
 
+      // Was `[UUID_A, UUID_B]` on Express 4 / qs.
+      //
+      // This is the limit of what @Transform buys. It normalises whatever
+      // arrives under the name `status`, so it covers the single-value and
+      // comma-separated cases below -- but the `simple` parser renames the key
+      // to 'status[]', and a transformer on `status` never runs at all. Bracket
+      // syntax is dropped here exactly as it is on the unprotected DTOs above.
       expect(res.status).toBe(200)
-      expect(res.body.query.status).toEqual([UUID_A, UUID_B])
+      expect(res.body.query.status).toBeUndefined()
+      expect(res.body.query['status[]']).toEqual([UUID_A, UUID_B])
     })
 
     it('SPECIFIED: a single value is normalised UP to a one-element array', async () => {

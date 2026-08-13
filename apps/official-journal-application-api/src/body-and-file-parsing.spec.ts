@@ -1,7 +1,7 @@
 /**
  * Characterization tests for multi-file upload and for the DEFAULT body-parser
  * configuration -- official-journal-application-api calls no `app.use(...)` at
- * all, so everything here is whatever Nest 10 / Express 4 hands out.
+ * all, so everything here is whatever Nest 11 / Express 5 hands out.
  *
  * WHY THIS EXISTS
  * `official-journal-api`, `official-journal-application-api` and
@@ -24,10 +24,19 @@
  *      that, and Nest is what is being upgraded.
  *
  * LABELS
- *   CHARACTERIZED -- measured against Express 4.22.2 / body-parser 1.20.6 /
- *                    multer 2.2.0 / Nest 10.4 as committed. A later reader may
- *                    change these when the bump lands, deliberately.
- *   SPECIFIED     -- a decision. Changing it needs a new decision.
+ *   CHARACTERIZED    -- measured and unchanged across the bump. These held on
+ *                       Express 4.22.2 / body-parser 1.20.6 / Nest 10.4 and
+ *                       still hold on Express 5.2.1 / body-parser 2.3.0 /
+ *                       Nest 11.1.29. multer stayed on 2.2.0 throughout.
+ *   NEST 11 BASELINE -- moved on the bump. The superseded Nest 10 value is named
+ *                       in each comment.
+ *   SPECIFIED        -- a decision. Changing it needs a new decision.
+ *
+ * THE SIMULATION WAS ACCURATE
+ * The prediction below named exactly the two tests that reddened when the real
+ * bump landed -- plus the environment canary itself, which is what it is for.
+ * The 100kb ceiling, the 413 envelope and every multipart assertion were
+ * unaffected, as predicted.
  *
  * THE FUTURE WAS SIMULATED, NOT GUESSED
  * Nest's parser registration does `require('body-parser')`, so mocking that one
@@ -82,8 +91,14 @@ import {
  * and rather than `require()` because that trips
  * `@typescript-eslint/no-var-requires`.
  */
-const packageVersion = (name: string): string => {
-  const contents = readFileSync(require.resolve(`${name}/package.json`), 'utf8')
+const packageVersion = (name: string, from?: string): string => {
+  const contents = readFileSync(
+    require.resolve(
+      `${name}/package.json`,
+      from ? { paths: [require.resolve(`${from}/package.json`)] } : undefined,
+    ),
+    'utf8',
+  )
 
   return (JSON.parse(contents) as { version: string }).version
 }
@@ -143,7 +158,7 @@ const PDF_BYTES = Buffer.from('%PDF-1.7 fyrsta\n')
 const DOCX_MIME =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
-describe('body + multi-file parsing (official-journal-application-api, Express 4 defaults)', () => {
+describe('body + multi-file parsing (official-journal-application-api, Express 5 defaults)', () => {
   let app: INestApplication
 
   beforeAll(async () => {
@@ -165,19 +180,27 @@ describe('body + multi-file parsing (official-journal-application-api, Express 4
   const post = (url: string) => request(app.getHttpServer()).post(url)
 
   describe('the environment under test', () => {
-    it('CHARACTERIZED: Express 4 / body-parser 1.x, and NOTHING in main.ts overrides the parsers', () => {
-      expect(packageVersion('express')).toMatch(/^4\./)
-      expect(packageVersion('body-parser')).toMatch(/^1\./)
+    it('NEST 11 BASELINE: Express 5 / body-parser 2.x, and NOTHING in main.ts overrides the parsers', () => {
+      // Was Express 4.x / body-parser 1.x.
+      expect(packageVersion('express')).toMatch(/^5\./)
+
+      // body-parser MUST be resolved through express, not from here. Nx dev
+      // tooling (@nx/react, @nx/module-federation, webpack-dev-server) still
+      // depends on express 4, so the HOISTED body-parser is 1.20.6 while the
+      // copy that actually parses request bodies is express's own nested 2.x.
+      // Probing the hoisted one would make this canary quietly lie.
+      expect(packageVersion('body-parser', 'express')).toMatch(/^2\./)
 
       // Nest registered its own pair, one each. If main.ts ever adds an
       // `app.use(json(...))`, Nest's name-based dedup
       // (express-adapter.js:166-168) keeps this at 1 rather than making it 2 --
       // so this assertion says "a parser is installed", not "ours is".
-      // Express 5 renames `app._router` to `app.router`.
+      // Express 5 renamed `app._router` to `app.router`; the counts are
+      // unchanged.
       const names = app
         .getHttpAdapter()
         .getInstance()
-        ._router.stack.map((layer: { name: string }) => layer.name)
+        .router.stack.map((layer: { name: string }) => layer.name)
 
       expect(names.filter((n: string) => n === 'jsonParser')).toHaveLength(1)
       expect(names.filter((n: string) => n === 'urlencodedParser')).toHaveLength(
@@ -354,16 +377,16 @@ describe('body + multi-file parsing (official-journal-application-api, Express 4
   })
 
   describe('2. bodyless and empty-body requests to a JSON endpoint', () => {
-    it('CHARACTERIZED: no body at all -> 201 and `req.body` is an EMPTY OBJECT, not undefined', async () => {
+    it('NEST 11 BASELINE: no body at all -> 201 and `req.body` is UNDEFINED, not {}', async () => {
       const res = await post('/probe/json').expect(201)
 
-      // The highest-value line in this file. Under body-parser 2 the same
-      // request leaves `req.body === undefined`, so `typeofBody` becomes
-      // 'undefined', `isUndefined` becomes true and `keys` becomes null.
-      expect(res.body.typeofBody).toBe('object')
-      expect(res.body.isUndefined).toBe(false)
-      expect(res.body.keys).toEqual([])
-      expect(res.body.body).toEqual({})
+      // The highest-value line in this file, and it moved as predicted:
+      // body-parser 2 leaves `req.body === undefined` on the SKIP path. On
+      // Nest 10 this read 'object' / false / [] / {}.
+      expect(res.body.typeofBody).toBe('undefined')
+      expect(res.body.isUndefined).toBe(true)
+      expect(res.body.keys).toBeNull()
+      expect(res.body.body).toBeNull()
     })
 
     it('CHARACTERIZED: an empty-string JSON body -> 201 and {} (body-parser special-cases zero length in 1.x AND 2.x)', async () => {
@@ -448,7 +471,7 @@ describe('body + multi-file parsing (official-journal-application-api, Express 4
       expect(res.body.message).toBe('File is required')
     })
 
-    it('CHARACTERIZED: multipart sent to a JSON endpoint -> body is {} and the files are LOST', async () => {
+    it('NEST 11 BASELINE: multipart sent to a JSON endpoint -> body is UNDEFINED and the files are LOST', async () => {
       const res = await post('/probe/json')
         .attach('files', PDF_BYTES, {
           filename: 'fyrsta.pdf',
@@ -456,8 +479,10 @@ describe('body + multi-file parsing (official-journal-application-api, Express 4
         })
         .expect(201)
 
-      expect(res.body.typeofBody).toBe('object')
-      expect(res.body.keys).toEqual([])
+      // No parser claims multipart -- the SKIP path. Was 'object' / [] on
+      // Nest 10. The files are lost either way.
+      expect(res.body.typeofBody).toBe('undefined')
+      expect(res.body.keys).toBeNull()
     })
   })
 

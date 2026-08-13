@@ -14,10 +14,11 @@
  * `cls.middleware.ts` and `log-request.middleware.ts` -- so a silent non-match
  * costs every request its correlation id and its access-log line.
  *
- * MEASURED, not reasoned about. Every expectation below was produced by running
- * this file. The Express 5 column in the table was produced the same way, in a
- * throwaway project on @nestjs/core 11.1.29 / express 5.2.1 / path-to-regexp
- * 8.4.2, because it cannot be executed from inside this repo yet.
+ * MEASURED, not reasoned about. Both columns below were produced by running this
+ * file -- the Express 4 column before the bump, the Express 5 column after it.
+ * The pre-bump prediction for the Express 5 column, made in a throwaway project
+ * on @nestjs/core 11.1.29 / express 5.2.1 / path-to-regexp 8.4.2, matched the
+ * real result in every row.
  *
  *   forRoutes spelling            Express 4 / Nest 10    Express 5 / Nest 11
  *   ---------------------------   --------------------   -------------------
@@ -27,14 +28,17 @@
  *   '*splat'                      MOUNTS NOTHING         mounts
  *   '/**'                         mounts                 BOOT FAILURE
  *
- * `'*'` survives the bump because Nest 11's `LegacyRouteConverter` rewrites it
+ * `'*'` survived the bump because Nest 11's `LegacyRouteConverter` rewrites it
  * to `'{*path}'` before handing it to path-to-regexp, and deliberately skips
- * the deprecation warning for the bare catch-all. So the correct pre-flight
- * action for the five `forRoutes('*')` sites is to leave them alone.
+ * the deprecation warning for the bare catch-all. So the correct action for the
+ * five `forRoutes('*')` sites was to leave them alone, and that is what
+ * happened.
  *
- * `'/**'` is the opposite case: it works today and throws
- * `PathError: Missing parameter name at index 2` at boot on Express 5. Nest 11's
- * converter does not recognise it. This app was the only site using it.
+ * `'/**'` is the opposite case: it worked on Express 4 and throws
+ * `TypeError: Missing parameter name at index 6: /api/**` at boot on Express 5
+ * (index 6 rather than 2 because `setGlobalPrefix('api')` is applied first).
+ * Nest 11's converter does not recognise it. This app was the only site using
+ * it, and it was moved off `/**` before the bump.
  */
 import type { NextFunction, Request, Response } from 'express'
 import { Sequelize } from 'sequelize-typescript'
@@ -115,16 +119,14 @@ const hitCountFor = async (
 }
 
 describe('forRoutes wildcard spellings on the installed Express', () => {
-  it('CHARACTERIZED: the installed Express is 4.x (path-to-regexp 0.1.x)', async () => {
-    // The canary for this whole file. Express 4 defaults `query parser` to
+  it('NEST 11 BASELINE: the installed Express is 5.x (path-to-regexp 8.x)', async () => {
+    // The canary for this whole file. Express 4 defaulted `query parser` to
     // `extended`, Express 5 to `simple` -- the same canary
     // `apps/official-journal-admin-api/src/query-string-parsing.spec.ts` uses.
-    // When it fails, the bump has happened and the two MOUNTS-NOTHING
-    // expectations below are expected to flip to 1.
     const app = await mountOn('*')
     try {
       const expressInstance = app.getHttpAdapter().getInstance()
-      expect(expressInstance.get('query parser')).toBe('extended')
+      expect(expressInstance.get('query parser')).toBe('simple')
     } finally {
       await app.close()
     }
@@ -140,18 +142,28 @@ describe('forRoutes wildcard spellings on the installed Express', () => {
     ).resolves.toBe(1)
   })
 
-  it('CHARACTERIZED: `{*splat}` -- the Express 5 spelling -- mounts NOTHING here', async () => {
-    // This is the silent regression. The request still succeeds; the
-    // middleware simply never runs. Do not adopt this spelling before the bump.
-    await expect(hitCountFor('{*splat}', '/api/v1/probe')).resolves.toBe(0)
+  it('NEST 11 BASELINE: `{*splat}` -- the Express 5 spelling -- now mounts', async () => {
+    // Was 0 on Express 4, where braces are literal characters and this mounted
+    // on a path no request can have. Now a valid spelling. `'*'` is still the
+    // one that works on both, so the five `forRoutes('*')` sites stay as they
+    // are rather than migrating to this.
+    await expect(hitCountFor('{*splat}', '/api/v1/probe')).resolves.toBe(1)
   })
 
-  it('CHARACTERIZED: `*splat` mounts NOTHING here either', async () => {
-    await expect(hitCountFor('*splat', '/api/v1/probe')).resolves.toBe(0)
+  it('NEST 11 BASELINE: `*splat` now mounts too', async () => {
+    // Was 0 on Express 4.
+    await expect(hitCountFor('*splat', '/api/v1/probe')).resolves.toBe(1)
   })
 
-  it('CHARACTERIZED: `/**` mounts the middleware here but is a boot failure on Express 5', async () => {
-    await expect(hitCountFor('/**', '/api/v1/probe')).resolves.toBe(1)
+  it('NEST 11 BASELINE: `/**` is now a boot failure', async () => {
+    // Mounted fine on Express 4 (hit count 1); path-to-regexp 8.x rejects the
+    // unnamed double wildcard outright and Nest 11's LegacyRouteConverter does
+    // not rewrite it. This app was the only site using `/**`, and it had already
+    // been changed off it before the bump landed -- this test is what proves the
+    // spelling would have been a hard boot failure, not a silent no-match.
+    await expect(hitCountFor('/**', '/api/v1/probe')).rejects.toThrow(
+      /Missing parameter name/,
+    )
   })
 
   it('SPECIFIED: `*` also mounts on paths that match no route', async () => {

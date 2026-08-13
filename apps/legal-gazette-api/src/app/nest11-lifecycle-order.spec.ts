@@ -14,23 +14,29 @@ import { Test } from '@nestjs/testing'
  * Nest 11 reverses the order of the termination hooks (`OnModuleDestroy`,
  * `BeforeApplicationShutdown`, `OnApplicationShutdown`).
  *
- * What Nest 10 actually does -- read from
+ * What Nest 10 did -- read from
  * `NestApplicationContext.getModulesToTriggerHooksOn` and
- * `DependenciesScanner.calculateModulesDistance` -- is sort every module by
+ * `DependenciesScanner.calculateModulesDistance` -- was sort every module by
  * DESCENDING distance from the root module and walk that single ordering for
- * init and for teardown alike. Distance is plain graph depth; there is no
- * special case for `@Global()`, so a global module leads only when it happens
- * to be declared first among modules at the same depth. The upstream note that
- * "global modules initialise first and are destroyed last" describes the Nest 11
- * result, not a Nest 10 rule about globals.
+ * init and for teardown alike, so a module's teardown hook ran AFTER the modules
+ * it imports had already been torn down. Distance is plain graph depth; there is
+ * no special case for `@Global()`, so a global module leads only when it happens
+ * to be declared first among modules at the same depth.
  *
- * The practical consequence today: a module's teardown hook runs AFTER the
- * modules it imports have already been torn down. Nest 11 inverts that, so any
- * hook written against one arrangement misbehaves under the other -- silently,
- * with no type error and no boot failure.
+ * Measured on the bump: Nest 11 keeps init deepest-first and reverses all three
+ * teardown phases to root-first. The upstream note that "global modules
+ * initialise first and are destroyed last" describes this Nest 11 result, not a
+ * Nest 10 rule about globals.
  *
- * Expectations are labelled CHARACTERIZED (measured against Nest 10; the bump is
- * expected to flip these) or SPECIFIED (a decision made now).
+ * The flip is silent -- no type error, no boot failure -- so any hook written
+ * against one arrangement misbehaves under the other. It is inert in this repo
+ * today for the reason spelled out in the last test below: nothing calls
+ * `enableShutdownHooks()` or `close()`, so on a deployed pod none of these hooks
+ * run at all.
+ *
+ * Expectations are labelled NEST 11 BASELINE (measured after the bump, with the
+ * superseded Nest 10 value named in the comment) or SPECIFIED (a decision made
+ * now).
  */
 
 const record: string[] = []
@@ -65,7 +71,7 @@ describe('Nest 11 termination hook order', () => {
     record.length = 0
   })
 
-  it('walks a nested graph deepest-first in every phase', async () => {
+  it('initialises deepest-first and tears down root-first', async () => {
     const LeafProbe = probe('leaf')
     const MidProbe = probe('mid')
     const RootProbe = probe('root')
@@ -87,26 +93,31 @@ describe('Nest 11 termination hook order', () => {
     await app.init()
     await app.close()
 
-    // CHARACTERIZED: one ordering -- deepest module first -- drives init and
-    // teardown alike. On Nest 11 the three teardown phases invert to
-    // root, mid, leaf while init stays leaf, mid, root.
+    // NEST 11 BASELINE: init still walks deepest-first (leaf, mid, root), but
+    // all three teardown phases now walk root-first. On Nest 10 a single
+    // descending-distance ordering drove every phase, so teardown also ran
+    // leaf, mid, root:
+    //
+    //   leaf:destroy,        mid:destroy,        root:destroy
+    //   leaf:beforeShutdown, mid:beforeShutdown, root:beforeShutdown
+    //   leaf:shutdown,       mid:shutdown,       root:shutdown
     expect(record).toEqual([
       'leaf:init',
       'mid:init',
       'root:init',
-      'leaf:destroy',
-      'mid:destroy',
       'root:destroy',
-      'leaf:beforeShutdown',
-      'mid:beforeShutdown',
+      'mid:destroy',
+      'leaf:destroy',
       'root:beforeShutdown',
-      'leaf:shutdown',
-      'mid:shutdown',
+      'mid:beforeShutdown',
+      'leaf:beforeShutdown',
       'root:shutdown',
+      'mid:shutdown',
+      'leaf:shutdown',
     ])
   }, 60000)
 
-  it('destroys an imported module before the module that imports it', async () => {
+  it('destroys the importing module before the module it imports', async () => {
     const seen: string[] = []
 
     @Injectable()
@@ -152,12 +163,15 @@ describe('Nest 11 termination hook order', () => {
     await app.init()
     await app.close()
 
-    // CHARACTERIZED: the imported module sits deeper, so it is destroyed first
-    // and the flusher observes an already-closed dependency. On Nest 11 the
-    // order inverts and this reads 'open'. Either way the hook silently gets a
-    // different world than its author tested against -- which is why no
-    // teardown hook in this repo should depend on a dependency's state.
-    expect(seen).toEqual(['closed'])
+    // NEST 11 BASELINE: 'open'. The importing module is torn down first, so the
+    // flusher still sees a live dependency -- which is the arrangement a
+    // "flush the queue on shutdown" hook actually wants. On Nest 10 this read
+    // 'closed': the imported module sat deeper and was destroyed first, so the
+    // flusher observed an already-closed dependency.
+    //
+    // The reading flipped without a type error or a boot failure, which is why
+    // no teardown hook in this repo should depend on a dependency's state.
+    expect(seen).toEqual(['open'])
   }, 60000)
 
   it('breaks ties between equally deep modules by declaration order', async () => {
@@ -182,20 +196,27 @@ describe('Nest 11 termination hook order', () => {
     await app.init()
     await app.close()
 
-    // CHARACTERIZED: both modules are one hop from the root, so the descending
-    // distance sort is a tie and the stable sort keeps container insertion
-    // order -- i.e. the order they are listed in `imports`. `@Global()` earns
-    // no priority of its own; swapping the two entries in `imports` swaps the
-    // hook order. Teardown follows the same ordering as init on Nest 10.
+    // NEST 11 BASELINE: both modules are one hop from the root, so the sort is a
+    // tie and the stable sort keeps the order they are listed in `imports`.
+    // `@Global()` still earns no priority of its own -- swapping the two entries
+    // swaps the hook order. Init keeps declaration order; teardown reverses it,
+    // so the globally-declared module is now destroyed LAST. That is the
+    // arrangement the upstream "global modules are destroyed last" note
+    // describes; it was not true on Nest 10, where teardown ran in declaration
+    // order too:
+    //
+    //   first:destroy,        second:destroy
+    //   first:beforeShutdown, second:beforeShutdown
+    //   first:shutdown,       second:shutdown
     expect(record).toEqual([
       'first:init',
       'second:init',
-      'first:destroy',
       'second:destroy',
-      'first:beforeShutdown',
+      'first:destroy',
       'second:beforeShutdown',
-      'first:shutdown',
+      'first:beforeShutdown',
       'second:shutdown',
+      'first:shutdown',
     ])
   }, 60000)
 

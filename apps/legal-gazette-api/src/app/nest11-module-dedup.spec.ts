@@ -14,8 +14,8 @@ import { ITBRService } from '../modules/tbr/tbr.service.interface'
 import { AppModule } from './app.module'
 
 /**
- * Nest 10 deduplicates dynamic modules by hashing their metadata: two separate
- * `Something.forRoot(...)` calls that serialize identically collapse into ONE
+ * Nest 10 deduplicated dynamic modules by hashing their metadata: two separate
+ * `Something.forRoot(...)` calls that serialized identically collapsed into ONE
  * module instance. Nest 11 keys deduplication on object *reference* instead, so
  * every call site becomes its own module instance -- with its own copy of every
  * provider that module declares.
@@ -25,10 +25,17 @@ import { AppModule } from './app.module'
  * Redis client, a second connection pool, a second in-memory cache that the
  * first writer never invalidates.
  *
- * These tests record what Nest 10 does today. Every expectation is labelled
- * CHARACTERIZED (measured against Nest 10 -- expected to change on the bump,
- * and a reviewer may update it once the new value is understood) or SPECIFIED
- * (a decision we are making now -- it must keep holding after the bump).
+ * Measured on the Nest 11 bump, the real legal-gazette-api graph went to three
+ * CacheModules (three Redis clients) and four TBRModules. The fix was to hoist
+ * each shared dynamic module to a single module-level object reference --
+ * `modules/advert/advert-publications-cache.ts` and
+ * `modules/tbr/tbr.shared-module.ts` -- which restores the Nest 10 shape under
+ * reference keying. The 'the real legal-gazette-api container' block below is
+ * what guards that.
+ *
+ * Expectations are labelled NEST 11 BASELINE (measured after the bump, with the
+ * superseded Nest 10 value named in the comment) or SPECIFIED (a decision that
+ * must keep holding).
  *
  * `createRedisCacheOptions` picks its CacheModule shape from the Redis env at
  * module load time; `src/test-redis-env.ts` pins those vars through the jest
@@ -85,7 +92,7 @@ describe('Nest 11 dynamic-module deduplication', () => {
      * `CacheModule.registerAsync` object whose `useFactory` constructs a fresh
      * KeyvRedis client.
      */
-    it('collapses three call sites into one cache manager', async () => {
+    it('gives each of three separate call sites its own cache manager', async () => {
       @Injectable()
       class PublishingConsumer {
         constructor(@Inject(CACHE_MANAGER) readonly cache: Cache) {}
@@ -134,22 +141,29 @@ describe('Nest 11 dynamic-module deduplication', () => {
 
       const container = testingModule.get(ModulesContainer)
 
-      // CHARACTERIZED: three registerAsync objects hash identically on Nest 10,
-      // so exactly one CacheModule -- and one Redis client -- exists.
-      expect(countModules(container, 'CacheModule')).toBe(1)
+      // NEST 11 BASELINE: three separate `createRedisCacheOptions(...)` calls
+      // are three distinct objects, so Nest 11 builds three CacheModules and
+      // three cache managers. Was 1 and 1 on Nest 10, which hashed the metadata
+      // instead of comparing references.
+      //
+      // This measures Nest's mechanism, not the app's wiring. The real
+      // legal-gazette-api graph still gets ONE of each, because the three
+      // production call sites now import a single hoisted object reference --
+      // `modules/advert/advert-publications-cache.ts`. See the
+      // 'the real legal-gazette-api container' block below.
+      expect(countModules(container, 'CacheModule')).toBe(3)
+      expect(countProviders(container, 'CACHE_MANAGER')).toBe(3)
 
-      // CHARACTERIZED: one cache manager instance, not three.
-      expect(countProviders(container, 'CACHE_MANAGER')).toBe(1)
-
-      // CHARACTERIZED: the three consuming modules resolve the SAME object.
-      // On Nest 11 each consumer gets its own cache manager, so a value written
-      // through one is invisible to the other two.
+      // NEST 11 BASELINE: each consumer resolves its OWN cache manager, so a
+      // value written through one is invisible to the other two. On Nest 10 all
+      // three were the same object. This is exactly the failure mode the hoisted
+      // shared reference exists to prevent.
       const publishing = testingModule.get(PublishingConsumer)
       const publication = testingModule.get(PublicationConsumer)
       const advertPublish = testingModule.get(AdvertPublishConsumer)
 
-      expect(publishing.cache).toBe(publication.cache)
-      expect(publishing.cache).toBe(advertPublish.cache)
+      expect(publishing.cache).not.toBe(publication.cache)
+      expect(publishing.cache).not.toBe(advertPublish.cache)
 
       await testingModule.close()
     }, 60000)
@@ -187,11 +201,12 @@ describe('Nest 11 dynamic-module deduplication', () => {
 
       const container = testingModule.get(ModulesContainer)
 
-      // CHARACTERIZED: two DIFFERENT namespaces still produce one CacheModule.
-      // This is a bug, not a property worth keeping -- if the Nest 11 bump makes
-      // this 2, that is the bug being fixed, and the expectation should be
-      // updated rather than the code reverted.
-      expect(countModules(container, 'CacheModule')).toBe(1)
+      // NEST 11 BASELINE: 2 -- the bug described above is FIXED. Was 1 on
+      // Nest 10, where two different namespaces silently collapsed into one
+      // cache because `Function.prototype.toString()` hashed the two closures
+      // identically. Reference keying cannot make that mistake, so an app is now
+      // free to use two namespaces at once.
+      expect(countModules(container, 'CacheModule')).toBe(2)
 
       await testingModule.close()
     }, 60000)
@@ -203,7 +218,7 @@ describe('Nest 11 dynamic-module deduplication', () => {
      * payments.provider, payment.task, publication.listener and
      * subscriber.provider.
      */
-    it('collapses identical configs into one module', async () => {
+    it('gives each identical-config call site its own module', async () => {
       const config = {
         credentials: 'test-credentials',
         officeId: 'test-office',
@@ -243,12 +258,16 @@ describe('Nest 11 dynamic-module deduplication', () => {
 
       const container = testingModule.get(ModulesContainer)
 
-      // CHARACTERIZED: four forRoot calls, one module instance on Nest 10.
-      expect(countModules(container, 'TBRModule')).toBe(1)
-
-      // CHARACTERIZED: one config provider, not four. On Nest 11 this becomes
-      // four TBRService instances, each with its own HTTP client state.
-      expect(countProviders(container, String(ITBRConfig))).toBe(1)
+      // NEST 11 BASELINE: four separate forRoot calls are four objects, so four
+      // module instances and four config providers. Was 1 and 1 on Nest 10.
+      //
+      // As with CacheModule above, this measures Nest's mechanism. The real
+      // graph still gets one, because the four production call sites now import
+      // the single hoisted `TBRSharedModule`. TBRService holds no HTTP client or
+      // token state -- it calls `fetchWithTimeout` per request -- so the four
+      // instances would have been wasteful rather than incorrect.
+      expect(countModules(container, 'TBRModule')).toBe(4)
+      expect(countProviders(container, String(ITBRConfig))).toBe(4)
 
       await testingModule.close()
     }, 60000)
@@ -324,13 +343,21 @@ describe('Nest 11 dynamic-module deduplication', () => {
     })
 
     it('builds exactly one cache manager', () => {
-      // CHARACTERIZED: three createRedisCacheOptions call sites, one client.
+      // SPECIFIED: one Redis client per process. Held on Nest 10 because the
+      // three call sites hashed identically; holds on Nest 11 because they now
+      // import one hoisted object reference from
+      // `modules/advert/advert-publications-cache.ts`. Three clients would mean
+      // three connections against a Redis sized for one, and -- on the in-memory
+      // fallback branch of `createRedisCacheOptions` -- three caches that never
+      // invalidate each other.
       expect(countModules(container, 'CacheModule')).toBe(1)
       expect(countProviders(container, 'CACHE_MANAGER')).toBe(1)
     })
 
     it('builds exactly one TBR module', () => {
-      // CHARACTERIZED: four TBRModule.forRoot call sites, one module.
+      // SPECIFIED: one TBRModule. Held on Nest 10 by metadata hashing; holds on
+      // Nest 11 because the four call sites import the one hoisted
+      // `TBRSharedModule`.
       expect(countModules(container, 'TBRModule')).toBe(1)
     })
 
@@ -342,14 +369,24 @@ describe('Nest 11 dynamic-module deduplication', () => {
         ),
       ]
 
-      // CHARACTERIZED: `SequelizeModule.forFeature` hashes the model array in
-      // order, so `[AdvertModel, AdvertPublicationModel]` and
-      // `[AdvertPublicationModel, AdvertModel]` already fail to collapse today.
-      // Two such pairs exist. On Nest 11 every forFeature call site becomes its
-      // own module and this list grows to cover every repeated model set.
+      // NEST 11 BASELINE: every `SequelizeModule.forFeature` call site is its own
+      // object, so every repeated model set now appears more than once -- five
+      // duplicated signatures where Nest 10 had two:
+      //
+      //   'AdvertModelRepository + AdvertPublicationModelRepository + ApplicationConfig + ModuleRef'
+      //   'ApplicationConfig + ModuleRef'
+      //
+      // Left as-is rather than hoisted the way the cache and TBR modules were.
+      // `forFeature` declares only repository wrappers over the ONE Sequelize
+      // instance -- 'opens exactly one database connection' above is the
+      // invariant that matters, and it still holds -- so the duplicates cost a
+      // little memory and no connections, correctness or cache coherency.
       expect(duplicated).toEqual([
         'AdvertModelRepository + AdvertPublicationModelRepository + ApplicationConfig + ModuleRef',
+        'AdvertModelRepository + ApplicationConfig + ApplicationModelRepository + CaseModelRepository + ModuleRef',
+        'AdvertPublicationModelRepository + ApplicationConfig + ModuleRef',
         'ApplicationConfig + ModuleRef',
+        'ApplicationConfig + ModuleRef + TypeModelRepository',
       ])
     })
   })
