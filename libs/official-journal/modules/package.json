@@ -13,7 +13,7 @@
     "@nestjs/core": "^11.1.29",
     "@nestjs/schedule": "6.0.0",
     "@nestjs/sequelize": "^11.0.0",
-    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/swagger": "^11.4.6",
     "sequelize": "6.37.3",
     "sequelize-typescript": "2.1.6",
     "winston": "^3.11.0"

@@ -7,7 +7,7 @@
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.29",
-    "@nestjs/swagger": "^8.1.1"
+    "@nestjs/swagger": "^11.4.6"
   },
   "dependencies": {
     "@dmr.is/constants": "*",

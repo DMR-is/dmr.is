@@ -27,7 +27,7 @@
     "@nestjs/platform-express": "^11.1.29",
     "@nestjs/schedule": "6.0.0",
     "@nestjs/sequelize": "^11.0.0",
-    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/swagger": "^11.4.6",
     "@nestjs/throttler": "6.5.0",
     "cache-manager": "7.2.4",
     "class-transformer": "^0.5.1",

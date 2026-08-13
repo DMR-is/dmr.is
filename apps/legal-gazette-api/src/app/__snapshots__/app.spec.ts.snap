@@ -328,6 +328,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
         "type": "object",
       },
       "AdvertTemplateType": {
+        "description": undefined,
         "enum": [
           "COMMON",
           "RECALL_BANKRUPTCY",
@@ -339,14 +340,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "ADDITIONAL_ANNOUNCEMENT",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertVersionEnum": {
+        "description": undefined,
         "enum": [
           "A",
           "B",
           "C",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ApiErrorDto": {
         "properties": {
@@ -579,14 +583,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
         "type": "object",
       },
       "ApplicationRequirementStatementEnum": {
+        "description": undefined,
         "enum": [
           "LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_EMAIL",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ApplicationStatusEnum": {
+        "description": undefined,
         "enum": [
           "DRAFT",
           "IN_PROGRESS",
@@ -594,14 +601,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "FINISHED",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ApplicationTypeEnum": {
+        "description": undefined,
         "enum": [
           "COMMON",
           "RECALL_BANKRUPTCY",
           "RECALL_DECEASED",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "BaseEntityDto": {
         "properties": {
@@ -743,6 +753,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
         "type": "object",
       },
       "CommentTypeEnum": {
+        "description": undefined,
         "enum": [
           "SUBMIT",
           "ASSIGN",
@@ -753,6 +764,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
           "CREATE_PUBLICATION",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "CommonAdvertFieldsDto": {
         "properties": {
@@ -1440,6 +1452,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
               },
             ],
             "nullable": true,
+            "type": "object",
           },
         },
         "required": [
@@ -2006,12 +2019,14 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for application
         "type": "object",
       },
       "SettlementType": {
+        "description": undefined,
         "enum": [
           "DEFAULT",
           "UNDIVIDED",
           "OWNER",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "SignatureDto": {
         "properties": {
@@ -12939,6 +12954,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "type": "object",
       },
       "AdvertTemplateType": {
+        "description": undefined,
         "enum": [
           "COMMON",
           "RECALL_BANKRUPTCY",
@@ -12950,14 +12966,17 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
           "ADDITIONAL_ANNOUNCEMENT",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertVersionEnum": {
+        "description": undefined,
         "enum": [
           "A",
           "B",
           "C",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ApiErrorDto": {
         "properties": {
@@ -13017,20 +13036,24 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "type": "object",
       },
       "ApplicationRequirementStatementEnum": {
+        "description": undefined,
         "enum": [
           "LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_EMAIL",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ApplicationTypeEnum": {
+        "description": undefined,
         "enum": [
           "COMMON",
           "RECALL_BANKRUPTCY",
           "RECALL_DECEASED",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "BackfillHtmlItemDto": {
         "properties": {
@@ -13477,6 +13500,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "type": "object",
       },
       "ChangeLogAction": {
+        "description": undefined,
         "enum": [
           "CREATE",
           "UPDATE",
@@ -13488,6 +13512,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
           "REVERT",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "ChangeLogEntity": {
         "enum": [
@@ -13565,6 +13590,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "type": "object",
       },
       "CommentTypeEnum": {
+        "description": undefined,
         "enum": [
           "SUBMIT",
           "ASSIGN",
@@ -13575,6 +13601,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
           "CREATE_PUBLICATION",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "CommonAdvertFieldsDto": {
         "properties": {
@@ -14439,6 +14466,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
               },
             ],
             "nullable": true,
+            "type": "object",
           },
         },
         "required": [
@@ -15259,12 +15287,14 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema for swagger 1`]
         "type": "object",
       },
       "SettlementType": {
+        "description": undefined,
         "enum": [
           "DEFAULT",
           "UNDIVIDED",
           "OWNER",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "SignatureDto": {
         "properties": {

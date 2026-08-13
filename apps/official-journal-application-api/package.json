@@ -22,7 +22,7 @@
     "@nestjs/platform-express": "^11.1.29",
     "@nestjs/schedule": "6.0.0",
     "@nestjs/sequelize": "^11.0.0",
-    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/swagger": "^11.4.6",
     "express": "^5.2.1",
     "nest-winston": "^1.9.4",
     "pg": "8.13.3",

@@ -23,7 +23,7 @@
     "@nestjs/platform-express": "^11.1.29",
     "@nestjs/schedule": "6.0.0",
     "@nestjs/sequelize": "^11.0.0",
-    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/swagger": "^11.4.6",
     "@opensearch-project/opensearch": "2.13.0",
     "date-fns": "2.30.0",
     "express": "^5.2.1",

@@ -714,6 +714,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "CaseActionEnum": {
+        "description": "The action that created the comment",
         "enum": [
           "SUBMIT",
           "ASSIGN_USER",
@@ -724,6 +725,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "APPLICATION_COMMENT",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "CasePriceResponse": {
         "properties": {
@@ -766,6 +768,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "CaseStatusEnum": {
+        "description": "Status of the case",
         "enum": [
           "Innsent",
           "Grunnvinnsla",
@@ -776,6 +779,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "Birtingu hafnað",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "Category": {
         "properties": {
@@ -907,6 +911,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "The receiver of the comment",
             "nullable": true,
+            "type": "object",
           },
         },
         "required": [
@@ -1512,6 +1517,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
               },
             ],
             "nullable": true,
+            "type": "object",
           },
           "id": {
             "type": "string",

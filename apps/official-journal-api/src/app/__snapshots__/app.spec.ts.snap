@@ -101,6 +101,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Publication number of the advert",
             "nullable": true,
+            "type": "object",
           },
           "signature": {
             "allOf": [
@@ -325,6 +326,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Publication number of the advert",
             "nullable": true,
+            "type": "object",
           },
           "status": {
             "allOf": [
@@ -547,11 +549,13 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "AdvertSignatureType": {
+        "description": "Type of the signature",
         "enum": [
           "Hefðbundin",
           "Nefnd",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertSimilar": {
         "properties": {
@@ -602,6 +606,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Publication number of the advert",
             "nullable": true,
+            "type": "object",
           },
           "subject": {
             "description": "Subject of the advert, always dependant on the \`type\`.",
@@ -626,6 +631,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "AdvertStatus": {
+        "description": "Status of the advert",
         "enum": [
           "Virk",
           "Afturkölluð",
@@ -639,6 +645,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "Útgefin",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertType": {
         "properties": {

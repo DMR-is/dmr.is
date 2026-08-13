@@ -138,6 +138,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Publication number of the advert",
             "nullable": true,
+            "type": "object",
           },
           "signature": {
             "allOf": [
@@ -314,6 +315,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "AdvertFeeType": {
+        "description": "Type of fee",
         "enum": [
           "BASE",
           "ADDITIONAL_DOC",
@@ -325,6 +327,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "PERCENTAGE",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertMainType": {
         "properties": {
@@ -504,13 +507,16 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "AdvertSignatureType": {
+        "description": "Type of the signature",
         "enum": [
           "Hefðbundin",
           "Nefnd",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertStatus": {
+        "description": "Status of the advert",
         "enum": [
           "Virk",
           "Afturkölluð",
@@ -524,6 +530,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "Útgefin",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "AdvertType": {
         "properties": {
@@ -730,6 +737,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "User the case is assigned to.",
             "nullable": true,
+            "type": "object",
           },
           "caseNumber": {
             "description": "Case number (numeric string) gets generated automatically when a case is created.",
@@ -805,6 +813,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Case fee transaction.",
             "nullable": true,
+            "type": "object",
           },
           "year": {
             "description": "Year the case was created.",
@@ -836,6 +845,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
         "type": "object",
       },
       "CaseActionEnum": {
+        "description": "The action that created the comment",
         "enum": [
           "SUBMIT",
           "ASSIGN_USER",
@@ -846,6 +856,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
           "APPLICATION_COMMENT",
         ],
         "type": "string",
+        "x-enumNames": undefined,
       },
       "CaseAddition": {
         "properties": {
@@ -1033,6 +1044,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "User the case is assigned to.",
             "nullable": true,
+            "type": "object",
           },
           "attachments": {
             "items": {
@@ -1190,6 +1202,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Case fee transaction.",
             "nullable": true,
+            "type": "object",
           },
           "year": {
             "description": "Year the case was created.",
@@ -1243,6 +1256,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "Employee the case was assigned to.",
             "nullable": true,
+            "type": "object",
           },
           "caseId": {
             "description": "Id of the case the history record is related to.",
@@ -1572,6 +1586,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
             ],
             "description": "The receiver of the comment",
             "nullable": true,
+            "type": "object",
           },
         },
         "required": [
@@ -3561,6 +3576,7 @@ exports[`Swagger documentation emits an unchanged OpenAPI schema 1`] = `
               },
             ],
             "nullable": true,
+            "type": "object",
           },
           "id": {
             "type": "string",
