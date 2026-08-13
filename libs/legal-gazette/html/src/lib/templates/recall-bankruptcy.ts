@@ -131,7 +131,7 @@ export const getRecallBankruptcyTemplate = ({
 
   const divisionMeetingCell = parsedMeetingDate
     ? getTableCell({
-        text: [parsedMeetingDate, formattedWeekday, formattedMeetingTime].join(
+        text: [formattedWeekday, parsedMeetingDate, formattedMeetingTime].join(
           '<br />',
         ),
       })

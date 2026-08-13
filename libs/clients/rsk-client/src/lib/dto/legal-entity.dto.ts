@@ -33,6 +33,39 @@ export interface ActivityCodeDto {
   name: string | null
 }
 
+/**
+ * RSK's registered legal form (rekstrarform) — e.g. hf., ehf., a state
+ * institution, a municipality. This is the only field in the payload that
+ * distinguishes *who owns* an entity; `activityCode` only says what it does, so
+ * a state-owned hospital and a private clinic are indistinguishable by ÍSAT
+ * alone. Consumers deriving a public/private sector should map `id` (the stable
+ * machine key) and keep `name` for display and for spotting unmapped forms.
+ */
+export interface LegalFormDto {
+  /** RSK's stable form code. */
+  id: string | null
+  /** Localized form name, e.g. "Hlutafélag". */
+  name: string | null
+}
+
+/**
+ * One VAT (VSK) registration. An entity holds one per taxable activity — so
+ * several, or none. Note this is a *registration*, not a classification: it
+ * carries its own `activityCode`, which is the useful part when the
+ * entity-level `activityCode` array comes back empty.
+ *
+ * VAT presence is a poor proxy for public vs private in both directions (public
+ * bodies are generally not VAT-registered for non-commercial administration but
+ * often are for commercial side activities; exempt and dormant private entities
+ * have none), so prefer `legalForm` for that.
+ */
+export interface VatDto {
+  vatNumber: string | null
+  registered: string | null
+  deRegistered: string | null
+  activityCode: ActivityCodeDto | null
+}
+
 export interface AddressDto {
   /** RSK address type, e.g. "Lögheimilisfang" (legal domicile) or "Póstfang". */
   type: string | null
@@ -51,6 +84,8 @@ export interface LegalEntityDto {
   /** RSK's own localized status wording, e.g. "Virk skráning". */
   status: string | null
   deregistration: DeregistrationDto | null
+  legalForm: LegalFormDto | null
   activityCode: ActivityCodeDto[]
+  vat: VatDto[]
   addresses: AddressDto[]
 }

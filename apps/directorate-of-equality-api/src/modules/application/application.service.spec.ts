@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import {
   BadRequestException,
   ConflictException,
@@ -13,6 +16,7 @@ import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../company/models/company.enums'
@@ -25,6 +29,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
@@ -41,7 +46,6 @@ import { IReportCommentService } from '../report-comment/report-comment.service.
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
@@ -74,6 +78,10 @@ const COMPANY: CompanyDto = {
   nextSalaryReportDueAt: null,
   isatCategoryCode: null,
   isatCategory: null,
+  sector: CompanySectorEnum.UNKNOWN,
+  sectorOverride: false,
+  legalFormId: null,
+  legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
@@ -312,6 +320,8 @@ describe('ApplicationService', () => {
         averageEmployeeMaleCount: input.averageEmployeeMaleCount,
         averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
         averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+        salaryDataBasis: input.salaryDataBasis,
+        salaryDataPeriod: input.salaryDataPeriod ?? null,
         parsed: input.parsed,
         companies: [makeCompanySnapshot()],
         outliersPostponed: undefined,
@@ -1586,7 +1596,6 @@ function makeEmployee({
     ordinal,
     identifier: `TVE-00${ordinal}`,
     roleTitle: 'Framkvaemdastjori',
-    education: EducationEnum.MASTER,
     gender,
     field: 'Mgmt',
     department: 'Mgmt',
@@ -1658,6 +1667,9 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     averageEmployeeMaleCount: 30,
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
+    salaryDataBasis: SalaryDataBasisEnum.MONTH,
+    // Inside the API's 36-month reporting window whenever the suite runs.
+    salaryDataPeriod: `${format(subMonths(new Date(), 1), 'yyyy-MM')}-01`,
     parsed: makeRequest().parsed,
     company: {
       name: 'Acme ehf.',

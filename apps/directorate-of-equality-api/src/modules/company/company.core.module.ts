@@ -9,12 +9,18 @@ import { CompanyEventCoreModule } from '../company-event/company-event.core.modu
 import { PostcodeModel } from '../location/models/postcode.model'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
+import { IsatSectionModel } from './models/isat-section.model'
 import { CompanyService } from './company.service'
 import { ICompanyService } from './company.service.interface'
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([CompanyModel, IsatCategoryModel, PostcodeModel]),
+    SequelizeModule.forFeature([
+      CompanyModel,
+      IsatCategoryModel,
+      IsatSectionModel,
+      PostcodeModel,
+    ]),
     NationalRegistryModule,
     RskCompanyRegistryModule,
     CompanyEventCoreModule,

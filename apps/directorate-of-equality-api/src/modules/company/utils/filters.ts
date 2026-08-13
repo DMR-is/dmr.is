@@ -3,7 +3,11 @@ import { Includeable, literal, Op, WhereOptions } from 'sequelize'
 import { DoeModels } from '../../../core/constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import { RegionModel } from '../../location/models/region.model'
-import { CompanyReportStatusEnum } from '../models/company.enums'
+import {
+  CompanyReportStatusEnum,
+  CompanySectorEnum,
+} from '../models/company.enums'
+import { IsatCategoryModel } from '../models/isat-category.model'
 import {
   COMPANY_QUERY_ALIAS,
   companyReportStatusCaseSql,
@@ -40,6 +44,46 @@ export function buildCompanyOverdueWhere(): WhereOptions {
  */
 export function buildCompanyIsatWhere(codes: string[]): WhereOptions {
   return { isatCategoryCode: { [Op.in]: codes } }
+}
+
+/**
+ * Filter by ÍSAT2008 section (bálkur) — the premade industry filter, e.g.
+ * section `O` for public administration instead of enumerating every leaf under
+ * division 84. Resolved through the company's ÍSAT category, mirroring the
+ * postcode → region join: an inner-join `include` selecting no extra columns, so
+ * it narrows the result set without changing the selected attributes.
+ *
+ * Because the join is `required`, companies with no `isat_category_code` are
+ * excluded — correct, since an unclassified company belongs to no section and
+ * must not be silently swept into one.
+ *
+ * Returns null when no sections were requested.
+ */
+export function buildCompanyIsatSectionInclude(
+  sections?: string[],
+): Includeable | null {
+  if (!sections?.length) return null
+
+  return {
+    model: IsatCategoryModel,
+    as: 'isatCategory',
+    attributes: [],
+    required: true,
+    where: { section: { [Op.in]: sections } },
+  }
+}
+
+/**
+ * Filter by ownership sector (private vs government/state). A direct column on
+ * the company, derived from the RSK legal form.
+ *
+ * Note UNKNOWN is filterable in its own right and is never merged into PRIVATE —
+ * asking for PRIVATE returns only companies we actually classified as private.
+ */
+export function buildCompanySectorWhere(
+  sectors: CompanySectorEnum[],
+): WhereOptions {
+  return { sector: { [Op.in]: sectors } }
 }
 
 /**

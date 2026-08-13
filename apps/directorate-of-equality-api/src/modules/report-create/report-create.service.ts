@@ -17,6 +17,7 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
+import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import {
   ReportModel,
   ReportProviderEnum,
@@ -84,6 +85,10 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
+    // What period the figures describe — declared by the submittee, required on
+    // a salary report. MONTH must name its month; AVERAGE never carries one.
+    const salaryDataBasis = resolveSalaryDataBasis(input)
+
     const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
@@ -131,6 +136,8 @@ export class ReportCreateService implements IReportCreateService {
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+      salaryDataBasis: salaryDataBasis.salaryDataBasis,
+      salaryDataPeriod: salaryDataBasis.salaryDataPeriod,
     })
 
     this.logger.info(`Created SALARY report row "${report.id}"`, {

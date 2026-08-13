@@ -6,6 +6,7 @@ import { CreateCompanyInput } from './dto/create-company-input.dto'
 import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
+import { IsatSectionDto } from './dto/isat-section.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
 import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snapshot-source.dto'
@@ -13,6 +14,7 @@ import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
 import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
 import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
+import { UpdateCompanySectorDto } from './dto/update-company-sector.dto'
 import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
 
 export {
@@ -66,6 +68,12 @@ export interface ICompanyService {
   searchIsatCategories(
     query: SearchIsatCategoriesQueryDto,
   ): Promise<IsatCategoryDto[]>
+  listIsatSections(): Promise<IsatSectionDto[]>
+  updateSector(
+    id: string,
+    dto: UpdateCompanySectorDto,
+    actorUserId: string,
+  ): Promise<CompanyDto>
 }
 
 export const ICompanyService = Symbol('ICompanyService')

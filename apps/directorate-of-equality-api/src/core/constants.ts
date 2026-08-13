@@ -4,6 +4,7 @@ export enum DoeModels {
   USER = 'doe_user',
   REGION = 'region',
   POSTCODE = 'postcode',
+  ISAT_SECTION = 'isat_section',
   ISAT_CATEGORY = 'isat_category',
   COMPANY = 'company',
   COMPANY_REPORT = 'company_report',

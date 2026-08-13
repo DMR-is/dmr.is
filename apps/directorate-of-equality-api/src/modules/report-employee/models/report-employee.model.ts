@@ -9,9 +9,7 @@ import { ReportEmployeeRoleModel } from './report-employee-role.model'
 
 /** DECIMAL columns come back from the driver as strings; null stays null. */
 const parseNullableDecimal = (value: unknown): number | null =>
-  value !== null && value !== undefined
-    ? parseFloat(value as string)
-    : null
+  value !== null && value !== undefined ? parseFloat(value as string) : null
 
 /**
  * Viðbótarlaun (additional salary) = sum of its fixed sub-components, each
@@ -58,21 +56,10 @@ export function requireComputedScore(employee: {
   return employee.score
 }
 
-export enum EducationEnum {
-  COMPULSORY = 'COMPULSORY',
-  UPPER_SECONDARY = 'UPPER_SECONDARY',
-  VOCATIONAL = 'VOCATIONAL',
-  BACHELOR = 'BACHELOR',
-  MASTER = 'MASTER',
-  DOCTORATE = 'DOCTORATE',
-  PROFESSIONAL = 'PROFESSIONAL',
-}
-
 type ReportEmployeeAttributes = {
   ordinal: number
-  education: EducationEnum
-  field: string
-  department: string
+  field: string | null
+  department: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -92,9 +79,8 @@ type ReportEmployeeAttributes = {
 
 type ReportEmployeeCreateAttributes = {
   ordinal: number
-  education: EducationEnum
-  field: string
-  department: string
+  field?: string | null
+  department?: string | null
   startDate: string
   workRatio: number
   baseSalary: number
@@ -118,17 +104,11 @@ export class ReportEmployeeModel extends MutableModel<
   @Column({ type: DataType.INTEGER, allowNull: false })
   ordinal!: number
 
-  @Column({
-    type: DataType.ENUM(...Object.values(EducationEnum)),
-    allowNull: false,
-  })
-  education!: EducationEnum
+  @Column({ type: DataType.TEXT, allowNull: true })
+  field!: string | null
 
-  @Column({ type: DataType.TEXT, allowNull: false })
-  field!: string
-
-  @Column({ type: DataType.TEXT, allowNull: false })
-  department!: string
+  @Column({ type: DataType.TEXT, allowNull: true })
+  department!: string | null
 
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'start_date' })
   startDate!: string
@@ -282,7 +262,6 @@ export class ReportEmployeeModel extends MutableModel<
     return {
       id: model.id,
       ordinal: model.ordinal,
-      education: model.education,
       field: model.field,
       department: model.department,
       startDate: model.startDate,

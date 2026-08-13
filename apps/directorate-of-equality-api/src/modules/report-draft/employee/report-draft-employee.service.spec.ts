@@ -6,10 +6,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { GenderEnum } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
-import {
-  EducationEnum,
-  ReportEmployeeModel,
-} from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
@@ -34,7 +31,6 @@ const changeData = (
   overrides: Partial<EmployeeChangeDataDto> = {},
 ): EmployeeChangeDataDto => ({
   reportEmployeeRoleId: ROLE_ID,
-  education: EducationEnum.BACHELOR,
   gender: GenderEnum.FEMALE,
   field: 'Engineering',
   department: 'R&D',
