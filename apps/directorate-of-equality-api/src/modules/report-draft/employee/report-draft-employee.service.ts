@@ -16,10 +16,7 @@ import {
 import { CompanyDto } from '../../company/dto/company.dto'
 import { GenderEnum } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
-import {
-  EducationEnum,
-  ReportEmployeeModel,
-} from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
@@ -33,7 +30,6 @@ const LOGGING_CONTEXT = 'ReportDraftEmployeeService'
 /** Editable employee columns — `ordinal`, `score`, `reportId` are never patched. */
 const EMPLOYEE_PATCH_KEYS = [
   'reportEmployeeRoleId',
-  'education',
   'gender',
   'field',
   'department',
@@ -51,10 +47,7 @@ const EMPLOYEE_PATCH_KEYS = [
 /** Fields an employee CREATE must supply (the non-nullable columns). */
 const EMPLOYEE_REQUIRED_KEYS = [
   'reportEmployeeRoleId',
-  'education',
   'gender',
-  'field',
-  'department',
   'startDate',
   'workRatio',
   'baseSalary',
@@ -152,10 +145,9 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       ordinal,
       score: null,
       reportEmployeeRoleId: data.reportEmployeeRoleId as string,
-      education: data.education as EducationEnum,
       gender: data.gender as GenderEnum,
-      field: data.field as string,
-      department: data.department as string,
+      field: data.field ?? null,
+      department: data.department ?? null,
       startDate: data.startDate as string,
       workRatio: data.workRatio as number,
       baseSalary: data.baseSalary as number,

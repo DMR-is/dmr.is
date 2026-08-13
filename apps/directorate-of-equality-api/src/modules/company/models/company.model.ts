@@ -19,6 +19,7 @@ import {
 } from '../utils/report-status'
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from './company.enums'
@@ -39,6 +40,10 @@ type CompanyAttributes = {
   nextEqualityReportDueAt: Date | null
   nextSalaryReportDueAt: Date | null
   isatCategoryCode: string | null
+  sector: CompanySectorEnum
+  sectorOverride: boolean
+  legalFormId: string | null
+  legalFormName: string | null
 }
 
 type CompanyCreateAttributes = {
@@ -56,6 +61,10 @@ type CompanyCreateAttributes = {
   nextEqualityReportDueAt?: Date | null
   nextSalaryReportDueAt?: Date | null
   isatCategoryCode?: string | null
+  sector?: CompanySectorEnum
+  sectorOverride?: boolean
+  legalFormId?: string | null
+  legalFormName?: string | null
 }
 
 /**
@@ -180,6 +189,38 @@ export class CompanyModel extends MutableModel<
   })
   isatCategory?: IsatCategoryModel | null
 
+  // Ownership sector (private vs government/state), derived from the RSK legal
+  // form below — NOT from ÍSAT, which only says what the company does. Defaults
+  // to UNKNOWN and is never inferred as PRIVATE; see CompanySectorEnum.
+  @Column({
+    type: DataType.ENUM(...Object.values(CompanySectorEnum)),
+    allowNull: false,
+    defaultValue: CompanySectorEnum.UNKNOWN,
+  })
+  sector!: CompanySectorEnum
+
+  // Set when an admin has corrected the sector by hand. A backfill/refresh must
+  // skip these rows rather than reset them to UNKNOWN because RSK returned a
+  // legal form we do not map. Mirrors `salary_report_required_override`.
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    field: 'sector_override',
+  })
+  sectorOverride!: boolean
+
+  // RSK's raw legal form (rekstrarform), kept alongside the derived `sector` so
+  // a corrected legal-form → sector mapping can be re-applied with a local
+  // UPDATE. Re-deriving from RSK instead would mean one HTTP call per company —
+  // the registry has no bulk endpoint. `legalFormName` also lets an admin see
+  // the form behind an UNKNOWN classification.
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'legal_form_id' })
+  legalFormId!: string | null
+
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'legal_form_name' })
+  legalFormName!: string | null
+
   // Derived compliance status — not a stored column. Populated by the
   // `withReportStatus` scope; undefined when the model is loaded outside it, so
   // every CompanyDto read goes through that scope.
@@ -214,6 +255,10 @@ export class CompanyModel extends MutableModel<
       isatCategory: model.isatCategory
         ? model.isatCategory.fromModel()
         : null,
+      sector: model.sector,
+      sectorOverride: model.sectorOverride,
+      legalFormId: model.legalFormId,
+      legalFormName: model.legalFormName,
       reportStatus: model.reportStatus,
       equalityReportOverdue: model.equalityReportOverdue,
       salaryReportOverdue: model.salaryReportOverdue,

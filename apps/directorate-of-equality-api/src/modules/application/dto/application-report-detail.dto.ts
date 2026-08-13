@@ -5,6 +5,7 @@ import {
   ApiOptionalBoolean,
   ApiOptionalDateTime,
   ApiOptionalDto,
+  ApiOptionalEnum,
   ApiOptionalString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -14,6 +15,7 @@ import { EqualityReportSummaryDto } from '../../report/dto/equality-report-summa
 import {
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../../report/models/report.enums'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
 import { ApplicationReportCommentDto } from './application-report-comment.dto'
@@ -51,6 +53,21 @@ export class ApplicationReportDetailDto {
 
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiOptionalEnum(SalaryDataBasisEnum, {
+    nullable: true,
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Salary-only. Whether the submitted salary data describes one specific payroll month (`MONTH`, with the month in `salaryDataPeriod`) or a twelve-month average (`AVERAGE`). Reads back the basis the applicant declared while drafting. Null on equality reports.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the salary data is based on, as an ISO date normalised to the 1st of that month (`YYYY-MM-01`). Set when `salaryDataBasis` is `MONTH`, null for `AVERAGE`.',
+  })
+  salaryDataPeriod!: string | null
 
   @ApiOptionalBoolean({
     nullable: true,

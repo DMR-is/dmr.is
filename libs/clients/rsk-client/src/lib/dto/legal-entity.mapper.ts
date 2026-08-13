@@ -4,6 +4,8 @@ import type {
   AddressDto,
   DeregistrationDto,
   LegalEntityDto,
+  LegalFormDto,
+  VatDto,
 } from './legal-entity.dto'
 
 /**
@@ -40,12 +42,26 @@ interface RawAddress {
   CountryCode?: string | null
 }
 
+interface RawLegalForm {
+  Id?: string | null
+  Name?: string | null
+}
+
+interface RawVat {
+  VatNumber?: string | null
+  Registered?: string | null
+  DeRegistered?: string | null
+  ActivityCode?: RawActivityCode | null
+}
+
 interface RawLegalEntity {
   NationalId?: string
   Name?: string
   Status?: string
   Deregistration?: RawDeregistration
+  LegalForm?: RawLegalForm
   ActivityCode?: RawActivityCode[]
+  Vat?: RawVat[]
   Addresses?: RawAddress[]
 }
 
@@ -72,6 +88,26 @@ function mapActivityCode(raw: RawActivityCode): ActivityCodeDto {
     codeSystem: raw.CodeSystem ?? null,
     id: raw.Id ?? null,
     name: raw.Name ?? null,
+  }
+}
+
+function mapLegalForm(raw: RawLegalForm | undefined): LegalFormDto | null {
+  if (!raw) {
+    return null
+  }
+
+  return {
+    id: raw.Id ?? null,
+    name: raw.Name ?? null,
+  }
+}
+
+function mapVat(raw: RawVat): VatDto {
+  return {
+    vatNumber: raw.VatNumber ?? null,
+    registered: raw.Registered ?? null,
+    deRegistered: raw.DeRegistered ?? null,
+    activityCode: raw.ActivityCode ? mapActivityCode(raw.ActivityCode) : null,
   }
 }
 
@@ -103,7 +139,9 @@ export function mapLegalEntityResponse(response: LegalEntity): LegalEntityDto {
     name: raw.Name ?? '',
     status: raw.Status ?? null,
     deregistration: mapDeregistration(raw.Deregistration),
+    legalForm: mapLegalForm(raw.LegalForm),
     activityCode: (raw.ActivityCode ?? []).map(mapActivityCode),
+    vat: (raw.Vat ?? []).map(mapVat),
     addresses: (raw.Addresses ?? []).map(mapAddress),
   }
 }

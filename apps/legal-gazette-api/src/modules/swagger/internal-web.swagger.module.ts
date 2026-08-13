@@ -15,6 +15,7 @@ import { CourtDistrictControllerModule } from '../base-entity/court-district/cou
 import { StatusControllerModule } from '../base-entity/status/status.controller.module'
 import { TypeControllerModule } from '../base-entity/type/type.controller.module'
 import { CaseControllerModule } from '../case/case.controller.module'
+import { CategoryTypeAdminControllerModule } from '../category-type-admin/category-type-admin.controller.module'
 import { CommentControllerModule } from '../comment/comment.controller.module'
 import { CommunicationChannelControllerModule } from '../communication-channel/communication-channel.module'
 import { FeeCodeModule } from '../fee-code/fee-code.controller.module'
@@ -49,6 +50,7 @@ import { UserControllerModule } from '../users/users.controller.module'
     LGNationalRegistryControllerModule,
     PaymentsControllerModule,
     AdvertPublishControllerModule,
+    CategoryTypeAdminControllerModule,
   ],
 })
 export class InternalWebSwaggerModule {}

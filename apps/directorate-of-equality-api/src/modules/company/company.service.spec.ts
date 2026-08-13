@@ -13,9 +13,14 @@ import { ICompanyCommentService } from '../company-comment/company-comment.servi
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { CompanyTimelineItemKindEnum } from './dto/company-timeline-item.dto'
-import { CompanySizeEnum, CompanyStatusEnum } from './models/company.enums'
+import {
+  CompanySectorEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from './models/company.enums'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
+import { IsatSectionModel } from './models/isat-section.model'
 import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
@@ -42,6 +47,7 @@ describe('CompanyService', () => {
   let eventsByCompanyId: jest.Mock
   let commentsByCompanyId: jest.Mock
   let isatFindByPk: jest.Mock
+  let isatSectionFindAll: jest.Mock
   let postcodeFindOne: jest.Mock
 
   beforeEach(async () => {
@@ -49,6 +55,7 @@ describe('CompanyService', () => {
     findOne = jest.fn()
     create = jest.fn()
     isatFindByPk = jest.fn()
+    isatSectionFindAll = jest.fn()
     postcodeFindOne = jest.fn()
     getEntityByNationalId = jest.fn()
     getLegalEntityByNationalId = jest.fn()
@@ -90,6 +97,10 @@ describe('CompanyService', () => {
         {
           provide: getModelToken(IsatCategoryModel),
           useValue: { findByPk: isatFindByPk },
+        },
+        {
+          provide: getModelToken(IsatSectionModel),
+          useValue: { findAll: isatSectionFindAll },
         },
         {
           provide: getModelToken(PostcodeModel),
@@ -204,10 +215,15 @@ describe('CompanyService', () => {
         'Body-provided name',
       )
 
+      // RSK is unreachable in this test (getLegalEntityByNationalId is unmocked),
+      // which must degrade the sector rather than block the provisioning.
       expect(create).toHaveBeenCalledWith({
         name: 'Registry Name ehf.',
         nationalId: '6601234567',
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        sector: CompanySectorEnum.UNKNOWN,
+        legalFormId: null,
+        legalFormName: null,
       })
       expect(result).toEqual({
         id: 'company-2',
@@ -246,8 +262,76 @@ describe('CompanyService', () => {
         name: 'Body-provided name',
         nationalId: '7701234567',
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        sector: CompanySectorEnum.UNKNOWN,
+        legalFormId: null,
+        legalFormName: null,
       })
       expect(result.name).toBe('Body-provided name')
+    })
+
+    it('classifies the sector of an auto-provisioned company from RSK', async () => {
+      // Auto-provisioning used to leave sector UNKNOWN permanently, so the
+      // unclassified set grew every time an application arrived for a company
+      // we had never seen.
+      findOne.mockResolvedValue(null)
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: '6601234567',
+          nafn: 'Ríkisútvarpið ohf.',
+        }),
+      })
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '6601234567',
+        name: 'Ríkisútvarpið ohf.',
+        deregistration: { deregistered: false },
+        legalForm: { id: 'ohf', name: 'Opinbert hlutafélag' },
+        addresses: [],
+        activityCode: [],
+      })
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-4' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-4' }))
+
+      await service.getOrCreateByNationalId('6601234567')
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sector: CompanySectorEnum.PUBLIC,
+          legalFormId: 'ohf',
+          legalFormName: 'Opinbert hlutafélag',
+        }),
+      )
+    })
+
+    it('does not inherit RSK status on the auto-provisioning path', async () => {
+      // A deregistered RSK record must not create the company INACTIVE here:
+      // this path exists so an incoming submission can be filed against the
+      // company, and an INACTIVE row would block the very submission that
+      // triggered the provisioning. Ownership is safe to take; lifecycle is not.
+      findOne.mockResolvedValue(null)
+      getEntityByNationalId.mockResolvedValue({
+        entity: makeRegistryEntity({
+          kennitala: '9901234567',
+          nafn: 'Afskráð ehf.',
+        }),
+      })
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '9901234567',
+        name: 'Afskráð ehf.',
+        status: 'Afskráð',
+        deregistration: { deregistered: true },
+        legalForm: { id: 'ehf', name: 'Einkahlutafélag' },
+        addresses: [],
+        activityCode: [],
+      })
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-5' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-5' }))
+
+      await service.getOrCreateByNationalId('9901234567')
+
+      const createArg = create.mock.calls[0][0]
+      expect(createArg.sector).toBe(CompanySectorEnum.PRIVATE)
+      expect(createArg).not.toHaveProperty('status')
+      expect(createArg).not.toHaveProperty('address')
     })
 
     it('throws NotFoundException when neither the registry nor a fallback name yield a name', async () => {
@@ -332,6 +416,9 @@ describe('CompanyService', () => {
         name: 'Subsidiary ehf.',
         nationalId: '6601234567',
         employeeCountCategory: CompanySizeEnum.UNKNOWN,
+        sector: CompanySectorEnum.UNKNOWN,
+        legalFormId: null,
+        legalFormName: null,
       })
       expect(result).toEqual({
         companyId: 'company-2',
@@ -413,7 +500,104 @@ describe('CompanyService', () => {
         address: 'Borgartún 1',
         postcodeId: 'postcode-105',
         isatCategoryCode: '62010',
+        // RSK carried no legalForm, so the sector stays UNKNOWN — never guessed
+        // as PRIVATE.
+        sector: CompanySectorEnum.UNKNOWN,
+        legalFormId: null,
+        legalFormName: null,
       })
+    })
+
+    it('classifies a private legal form as PRIVATE and persists the raw RSK form', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'RSK ehf.',
+        deregistration: { deregistered: false },
+        legalForm: { id: 'ehf', name: 'Einkahlutafélag' },
+        addresses: [],
+        activityCode: [],
+      })
+      postcodeFindOne.mockResolvedValue(null)
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-11' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-11' }))
+
+      await service.create({
+        name: 'New ehf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sector: CompanySectorEnum.PRIVATE,
+          legalFormId: 'ehf',
+          legalFormName: 'Einkahlutafélag',
+        }),
+      )
+    })
+
+    it('classifies ohf (state-owned hlutafélag) as PUBLIC, not PRIVATE', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'Ríkisfyrirtæki ohf.',
+        deregistration: { deregistered: false },
+        legalForm: { id: 'ohf', name: 'Opinbert hlutafélag' },
+        addresses: [],
+        activityCode: [],
+      })
+      postcodeFindOne.mockResolvedValue(null)
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-12' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-12' }))
+
+      await service.create({
+        name: 'Ríkisfyrirtæki ohf.',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({ sector: CompanySectorEnum.PUBLIC }),
+      )
+    })
+
+    it('leaves an unrecognized legal form UNKNOWN and logs the unmapped key', async () => {
+      findOne.mockResolvedValue(null)
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'Something odd',
+        deregistration: { deregistered: false },
+        legalForm: { id: 'ZZ-99', name: 'Eitthvað allt annað' },
+        addresses: [],
+        activityCode: [],
+      })
+      postcodeFindOne.mockResolvedValue(null)
+      create.mockResolvedValue(makeCompanyModel({ id: 'company-13' }))
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-13' }))
+
+      await service.create({
+        name: 'Something odd',
+        nationalId: '5501234567',
+        employeeCountCategory: CompanySizeEnum.SMALL,
+      })
+
+      expect(create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sector: CompanySectorEnum.UNKNOWN,
+          legalFormId: 'ZZ-99',
+          legalFormName: 'Eitthvað allt annað',
+        }),
+      )
+      // The warning is how the real RSK vocabulary surfaces from production.
+      // Both candidates are reported: if RSK's id turns out to be an opaque
+      // code, the meaningful token is the name.
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('zz99'),
+        expect.objectContaining({
+          unmappedLegalFormKeys: ['zz99', 'eitthvadalltannad'],
+        }),
+      )
     })
 
     it('rejects creating a company that is inactive in RSK', async () => {
@@ -453,7 +637,30 @@ describe('CompanyService', () => {
         address: null,
         postcode: null,
         isatCategory: null,
+        sector: CompanySectorEnum.UNKNOWN,
+        legalFormName: null,
       })
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('previews the sector create will store, from the same RSK call', async () => {
+      // The create screen is the cheapest place for an admin to notice a
+      // state-owned company came back classified — or came back UNKNOWN.
+      getLegalEntityByNationalId.mockResolvedValue({
+        nationalId: '5501234567',
+        name: 'Ríkisútvarpið ohf.',
+        deregistration: { deregistered: false },
+        legalForm: { id: 'ohf', name: 'Opinbert hlutafélag' },
+        addresses: [],
+        activityCode: [],
+      })
+      postcodeFindOne.mockResolvedValue(null)
+
+      const preview = await service.getRskCompanyPreview('5501234567')
+
+      expect(preview.sector).toBe(CompanySectorEnum.PUBLIC)
+      expect(preview.legalFormName).toBe('Opinbert hlutafélag')
+      expect(getLegalEntityByNationalId).toHaveBeenCalledTimes(1)
       expect(create).not.toHaveBeenCalled()
     })
 
@@ -714,6 +921,115 @@ describe('CompanyService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(emitQuarantined).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateSector', () => {
+    // `updateSector` re-reads through the withReportStatus scope after writing,
+    // so findOneOrThrow is stubbed twice: the loaded row, then the reload.
+    const stubCompany = (fields: Record<string, unknown>) => {
+      const update = jest.fn()
+      findOneOrThrow
+        .mockResolvedValueOnce({
+          id: 'company-20',
+          update,
+          fromModel: () => ({ id: 'company-20' }),
+          ...fields,
+        })
+        .mockResolvedValueOnce({
+          fromModel: () => ({ id: 'company-20' }),
+        })
+      return update
+    }
+
+    it('sets PUBLIC and marks the classification admin-owned', async () => {
+      const update = stubCompany({
+        sector: CompanySectorEnum.UNKNOWN,
+        sectorOverride: false,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.PUBLIC },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        sector: CompanySectorEnum.PUBLIC,
+        sectorOverride: true,
+      })
+    })
+
+    it('clears the override when set back to UNKNOWN, handing it to automatic classification', async () => {
+      const update = stubCompany({
+        sector: CompanySectorEnum.PRIVATE,
+        sectorOverride: true,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.UNKNOWN },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        sector: CompanySectorEnum.UNKNOWN,
+        sectorOverride: false,
+      })
+    })
+
+    it('is a no-op when the sector and override are both unchanged', async () => {
+      const update = stubCompany({
+        sector: CompanySectorEnum.PRIVATE,
+        sectorOverride: true,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.PRIVATE },
+        'admin-1',
+      )
+
+      expect(update).not.toHaveBeenCalled()
+    })
+
+    it('still writes when the sector matches but the override flag does not', async () => {
+      // An automatically-derived PRIVATE that an admin confirms by hand must
+      // become admin-owned, or the next backfill could silently change it.
+      const update = stubCompany({
+        sector: CompanySectorEnum.PRIVATE,
+        sectorOverride: false,
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.PRIVATE },
+        'admin-1',
+      )
+
+      expect(update).toHaveBeenCalledWith({
+        sector: CompanySectorEnum.PRIVATE,
+        sectorOverride: true,
+      })
+    })
+
+    it('leaves the raw RSK legal form untouched', async () => {
+      const update = stubCompany({
+        sector: CompanySectorEnum.UNKNOWN,
+        sectorOverride: false,
+        legalFormId: 'ZZ-99',
+        legalFormName: 'Eitthvað annað',
+      })
+
+      await service.updateSector(
+        'company-20',
+        { sector: CompanySectorEnum.PUBLIC },
+        'admin-1',
+      )
+
+      const written = update.mock.calls[0][0]
+      expect(written).not.toHaveProperty('legalFormId')
+      expect(written).not.toHaveProperty('legalFormName')
     })
   })
 

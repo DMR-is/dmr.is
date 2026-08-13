@@ -3,12 +3,12 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 
 export class ParsedSubCriterionStepDto {
   @ApiNumber()
@@ -89,17 +89,14 @@ export class ParsedEmployeeDto {
   @ApiString()
   roleTitle!: string
 
-  @ApiEnum(EducationEnum)
-  education!: EducationEnum
-
   @ApiEnum(GenderEnum)
   gender!: GenderEnum
 
-  @ApiString()
-  field!: string
+  @ApiOptionalString({ nullable: true })
+  field!: string | null
 
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department!: string | null
 
   @ApiString()
   startDate!: string

@@ -10,7 +10,10 @@ import {
   ApiUUID,
 } from '@dmr.is/decorators'
 
-import { GenderEnum } from '../../report/models/report.enums'
+import {
+  GenderEnum,
+  SalaryDataBasisEnum,
+} from '../../report/models/report.enums'
 import { CreateReportOutlierGroupDto } from '../../report-create/dto/create-report.dto'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import {
@@ -66,6 +69,20 @@ export class SubmitSalaryReportDto {
 
   @ApiNumber()
   averageEmployeeNeutralCount!: number
+
+  @ApiEnum(SalaryDataBasisEnum, {
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). The submittee must declare one.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored for `AVERAGE`. Must name a month that has already happened, no earlier than 36 months ago.',
+  })
+  salaryDataPeriod?: string | null
 
   @ApiDto(ParsedReportDto, {
     description:

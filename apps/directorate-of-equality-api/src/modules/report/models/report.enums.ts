@@ -51,6 +51,24 @@ export enum GenderEnum {
   NEUTRAL = 'NEUTRAL',
 }
 
+/**
+ * What period the salary data on a SALARY report describes — declared by the
+ * submittee, not derived.
+ *
+ *   MONTH   the figures come from one specific payroll month. The month itself
+ *           is carried in `report.salary_data_period`.
+ *   AVERAGE the figures are a twelve-month average, so no single month applies
+ *           and `report.salary_data_period` is null.
+ *
+ * Mandatory on a submitted salary report (enforced on every submit path); null
+ * on equality reports, on drafts that have not declared it yet, and on reports
+ * submitted before the field existed.
+ */
+export enum SalaryDataBasisEnum {
+  MONTH = 'MONTH',
+  AVERAGE = 'AVERAGE',
+}
+
 export enum ReportProviderEnum {
   SYSTEM = 'SYSTEM',
   ISLAND_IS = 'ISLAND_IS',

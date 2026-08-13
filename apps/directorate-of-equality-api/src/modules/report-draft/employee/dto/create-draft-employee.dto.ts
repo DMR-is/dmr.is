@@ -2,12 +2,12 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../../report/models/report.enums'
-import { EducationEnum } from '../../../report-employee/models/report-employee.model'
 
 /**
  * Body for adding one employee to a draft. `ordinal` is assigned server-side
@@ -19,17 +19,14 @@ export class CreateDraftEmployeeDto {
   @ApiUUId({ description: 'Id of a role already defined on this draft.' })
   reportEmployeeRoleId!: string
 
-  @ApiEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education!: EducationEnum
-
   @ApiEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender!: GenderEnum
 
-  @ApiString()
-  field!: string
+  @ApiOptionalString({ nullable: true })
+  field?: string | null
 
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department?: string | null
 
   @ApiString({ description: 'Employment start date (YYYY-MM-DD).' })
   startDate!: string

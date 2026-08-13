@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 import {
   ParsedCriterionDto,
   ParsedEmployeeDto,
@@ -46,7 +45,6 @@ const employee = (
   ordinal,
   identifier: `XXX-${String(ordinal).padStart(3, '0')}`,
   roleTitle,
-  education: EducationEnum.BACHELOR,
   gender: GenderEnum.NEUTRAL,
   field: 'x',
   department: 'x',

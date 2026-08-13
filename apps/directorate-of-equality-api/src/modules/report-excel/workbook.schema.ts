@@ -23,7 +23,6 @@
 
 import { GenderEnum, ReportTypeEnum } from '../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 
 /**
  * Factor mapping a sub-criterion's weight percent to its max score.
@@ -197,37 +196,3 @@ export const GENDER_ENUM_TO_DISPLAY: Readonly<Record<GenderEnum, string>> = {
   [GenderEnum.FEMALE]: 'Kona',
   [GenderEnum.NEUTRAL]: 'Hlutlaust',
 }
-
-/**
- * Icelandic education display ↔ `EducationEnum`. Keys match the template's
- * dropdown list exactly; diacritics and slashes are significant (comparison
- * is string-equal after trim, no normalisation).
- */
-export const EDUCATION_DISPLAY_TO_ENUM: Readonly<
-  Record<string, EducationEnum>
-> = {
-  // Legacy template values kept so older, already-downloaded workbooks can
-  // still be imported. New labels below intentionally win in the reverse map.
-  'Framhaldsskóla-/stúdentspróf': EducationEnum.UPPER_SECONDARY,
-  'Iðn-/starfsmenntun': EducationEnum.VOCATIONAL,
-  'Háskólapróf (BA/BS)': EducationEnum.BACHELOR,
-  'Meistarapróf (MA/MS)': EducationEnum.MASTER,
-  Sérfræðinám: EducationEnum.PROFESSIONAL,
-  Grunnskólapróf: EducationEnum.COMPULSORY,
-  'Styttri námskeið': EducationEnum.PROFESSIONAL,
-  'Styttra framhaldsnám (t.d. leikskóla-/félagsliði)':
-    EducationEnum.VOCATIONAL,
-  'Framhaldsnám (t.d. stúdentspróf/sveinspróf)':
-    EducationEnum.UPPER_SECONDARY,
-  'Meistarapróf/Diploma á háskólastigi': EducationEnum.PROFESSIONAL,
-  'BA/BS eða sambærilegt háskólanám': EducationEnum.BACHELOR,
-  'Háskólapróf á framhaldsstigi (MA/MS)': EducationEnum.MASTER,
-  Doktorspróf: EducationEnum.DOCTORATE,
-}
-
-export const EDUCATION_ENUM_TO_DISPLAY: Readonly<
-  Record<EducationEnum, string>
-> = Object.entries(EDUCATION_DISPLAY_TO_ENUM).reduce(
-  (acc, [display, enumVal]) => ({ ...acc, [enumVal]: display }),
-  {} as Record<EducationEnum, string>,
-)

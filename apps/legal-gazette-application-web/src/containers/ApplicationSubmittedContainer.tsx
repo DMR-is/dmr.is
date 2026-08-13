@@ -9,7 +9,7 @@ import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 
 import { ApplicationSubmittedHeader } from '../components/application/application-submitted/Header'
 import { ApplicationAdverts } from '../components/application-adverts/ApplicationAdverts'
-import { ApplicationStatusEnum, ApplicationTypeEnum } from '../gen/fetch'
+import { ApplicationTypeEnum } from '../gen/fetch'
 import { useTRPC } from '../lib/trpc/client/trpc'
 
 type Props = {
@@ -41,10 +41,6 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
 
   const description = mapApplicationDescription(application.type)
 
-  const canAddAdverts =
-    application.type !== ApplicationTypeEnum.COMMON &&
-    application.status !== ApplicationStatusEnum.FINISHED
-
   return (
     <GridContainer>
       <GridRow>
@@ -56,7 +52,7 @@ export const ApplicationSubmittedContainer = ({ applicationId }: Props) => {
                 title={application.title}
                 subtitle={application.subtitle}
                 description={description}
-                showAddAdvertsButton={canAddAdverts}
+                showAddAdvertsButton={application.canAddAdverts}
                 totalPrice={price?.totalPrice}
                 isPriceEstimate={price?.isEstimate}
                 isPriceLoading={isPricePending}

@@ -89,6 +89,14 @@ export class ApplicationSystemService implements IApplicationSystemService {
         `Failed to submit event "${event}"`,
       )
     }
+
+    this.logger.info('Successfully submitted event to application system', {
+      category: LOGGING_CATEGORY,
+      context: LOGGING_CONTEXT,
+      applicationId,
+      event,
+      statusCode: res.status,
+    })
   }
 
   private applicationCallbackUrl(applicationId: string, path = ''): string {
@@ -195,6 +203,12 @@ export class ApplicationSystemService implements IApplicationSystemService {
     const token: IdsToken = await res.json()
     this.idsToken = token
     this.tokenExpiresAt = Date.now() + token.expires_in * 1_000
+
+    this.logger.info('Successfully fetched access token from ids', {
+      category: LOGGING_CATEGORY,
+      context: LOGGING_CONTEXT,
+      expiresIn: token.expires_in,
+    })
   }
 
   private requireEnv(name: string): string {
