@@ -7,6 +7,6 @@ export default {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json', diagnostics: false }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  setupFiles: ['<rootDir>/src/test-redis-env.ts'],
+  setupFiles: ['<rootDir>/src/test-env.ts'],
   coverageDirectory: '../../coverage/apps/legal-gazette-api',
 }
