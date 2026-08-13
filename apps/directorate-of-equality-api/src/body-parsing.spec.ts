@@ -42,14 +42,24 @@
  * test stayed green as predicted, so `ImportUploadLocalController`'s
  * `Buffer.isBuffer` guard is confirmed on both sides of the bump.
  *
- * THE FUTURE WAS SIMULATED, NOT GUESSED
+ * THE FUTURE WAS SIMULATED, NOT GUESSED -- AND THE TECHNIQUE NO LONGER WORKS
  * `express.json` / `express.raw` are direct re-exports of body-parser
- * (express/lib/express.js:78-83), and Nest's own registration does
- * `require('body-parser')` too, so swapping that single module swaps the whole
+ * (express/lib/express.js:78-83), and Nest 10's own registration did
+ * `require('body-parser')` too, so swapping that single module swapped the whole
  * parsing layer. This file was run with
  *   jest.mock('body-parser', () => require('<path to a real body-parser@2.3.0>'))
- * prepended, against Nest 10 / Express 4 otherwise untouched. Exactly four tests
- * reddened, all body-parser SKIP-path cases on JSON endpoints:
+ * prepended, against Nest 10 / Express 4 otherwise untouched.
+ *
+ * Do NOT reuse that recipe on Nest 11. `@nestjs/platform-express@11` no longer
+ * declares or requires body-parser -- `registerParserMiddleware`
+ * (express-adapter.js:188-195) calls `express.json()` / `express.urlencoded()`.
+ * And a bare `jest.mock('body-parser')` now resolves the HOISTED 1.20.6 (Nx
+ * build tooling still depends on Express 4), not express's nested 2.3.0 that
+ * actually parses bodies, so the mock would bind to the wrong module and prove
+ * nothing.
+ *
+ * Exactly four tests reddened under the simulation, all body-parser SKIP-path
+ * cases on JSON endpoints:
  *   - "a bodyless POST to a JSON endpoint -> {} not undefined"
  *   - "on a JSON endpoint the two cases AGREE today" (its bodyless half)
  *   - "multipart sent to a JSON endpoint -> body is {}"
@@ -243,16 +253,18 @@ describe('body parsing (directorate-of-equality-api, Express 5)', () => {
       // 2.x. Probing the hoisted one would make this canary quietly lie.
       expect(packageVersion('body-parser', 'express')).toMatch(/^2\./)
 
-      // Nest dedups its own default parsers by FUNCTION NAME
-      // (express-adapter.js:166-168), and `body-parser` names its exports
-      // `jsonParser` / `urlencodedParser` / `rawParser`. So main.ts's 6mb pair
-      // suppresses Nest's 100kb defaults entirely, and the path-scoped
-      // `rawParser` is not affected by that dedup.
+      // Nest dedups its own default parsers by FUNCTION NAME:
+      // `registerParserMiddleware` (express-adapter.js:188-195) drops any parser
+      // whose name `isMiddlewareApplied` already finds via `layer.handle.name`,
+      // and body-parser names its returned functions `jsonParser` /
+      // `urlencodedParser` / `rawParser`. So main.ts's 6mb pair suppresses Nest's
+      // 100kb defaults entirely, and the path-scoped `rawParser` is not affected
+      // by that dedup.
       //
-      // MEASURED: body-parser 2.3.0 keeps all three export names, so the dedup
-      // survived the bump -- the counts below are unchanged from Nest 10.
-      // Express 5 did rename `app._router` to `app.router`, so the reach into
-      // the stack had to move.
+      // MEASURED: body-parser 2.3.0 keeps all three names, so the dedup survived
+      // the bump -- the counts below are unchanged from Nest 10. Express 5
+      // renamed `app._router` to `app.router`; Nest 11's `isMiddlewareApplied`
+      // reads `app.router`, and this test had to follow the same rename.
       const names = app
         .getHttpAdapter()
         .getInstance()

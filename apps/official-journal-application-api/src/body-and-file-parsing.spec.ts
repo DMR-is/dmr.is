@@ -19,9 +19,10 @@
  *      which requests these three APIs accept.
  *   3. `express.urlencoded`'s `extended` default flips to false in Express 5.
  *      Nest passes `extended: true` explicitly
- *      (express-adapter.js:159-161), so test 7 records the nested-body
+ *      (express-adapter.js:190-192), so test 7 records the nested-body
  *      behaviour rather than guarding a default -- but it is Nest's code doing
- *      that, and Nest is what is being upgraded.
+ *      that, and Nest is what is being upgraded. MEASURED: still passed
+ *      explicitly on Nest 11, and test 7 is unchanged.
  *
  * LABELS
  *   CHARACTERIZED    -- measured and unchanged across the bump. These held on
@@ -38,12 +39,21 @@
  * The 100kb ceiling, the 413 envelope and every multipart assertion were
  * unaffected, as predicted.
  *
- * THE FUTURE WAS SIMULATED, NOT GUESSED
- * Nest's parser registration does `require('body-parser')`, so mocking that one
- * module swaps the whole parsing layer. This file was run with
+ * THE FUTURE WAS SIMULATED, NOT GUESSED -- AND THE TECHNIQUE NO LONGER WORKS
+ * Nest 10's parser registration did `require('body-parser')`, so mocking that
+ * one module swapped the whole parsing layer. This file was run with
  *   jest.mock('body-parser', () => require('<path to a real body-parser@2.3.0>'))
- * prepended, against Nest 10 / Express 4 otherwise untouched. Exactly two tests
- * reddened, both body-parser SKIP-path cases:
+ * prepended, against Nest 10 / Express 4 otherwise untouched.
+ *
+ * Do NOT reuse that recipe on Nest 11. `@nestjs/platform-express@11` no longer
+ * declares or requires body-parser -- `registerParserMiddleware`
+ * (express-adapter.js:188-195) calls `express.json()` / `express.urlencoded()`.
+ * And a bare `jest.mock('body-parser')` now resolves the HOISTED 1.20.6 (Nx
+ * build tooling still depends on Express 4), not express's nested 2.3.0 that
+ * actually parses bodies, so the mock would bind to the wrong module.
+ *
+ * Exactly two tests reddened under the simulation, both body-parser SKIP-path
+ * cases:
  *   - "no body at all -> {} not undefined"
  *   - "multipart sent to a JSON endpoint -> body is {}"
  * The 100kb ceiling, the 413 envelope and every multipart assertion were
@@ -193,10 +203,10 @@ describe('body + multi-file parsing (official-journal-application-api, Express 5
 
       // Nest registered its own pair, one each. If main.ts ever adds an
       // `app.use(json(...))`, Nest's name-based dedup
-      // (express-adapter.js:166-168) keeps this at 1 rather than making it 2 --
-      // so this assertion says "a parser is installed", not "ours is".
-      // Express 5 renamed `app._router` to `app.router`; the counts are
-      // unchanged.
+      // (express-adapter.js:188-195, matching on `layer.handle.name`) keeps this
+      // at 1 rather than making it 2 -- so this assertion says "a parser is
+      // installed", not "ours is". Express 5 renamed `app._router` to
+      // `app.router`; the counts are unchanged.
       const names = app
         .getHttpAdapter()
         .getInstance()
