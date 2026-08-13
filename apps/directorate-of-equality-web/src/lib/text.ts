@@ -61,10 +61,10 @@ export const overviewText = {
   filter: {
     heading: 'Leit og síun',
     placeholder: 'Sláðu inn leitarorð',
-    categoryLabel: 'Flokkur',
+    categoryLabel: 'Mál',
     reviewerLabel: 'Starfsmaður',
     dateLabel: 'Dagsetning',
-    typeLabel: 'Tegund',
+    typeLabel: 'Mál',
     companyLabel: 'Málsaðili',
     dateRangeLabel: 'Tímabil',
     dateFrom: 'Frá',
