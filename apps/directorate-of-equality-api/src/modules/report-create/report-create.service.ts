@@ -17,6 +17,7 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
+import { allocateReportIdentifier } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -35,6 +36,12 @@ import { CreateReportResponseDto } from './dto/create-report-response.dto'
 import { IReportCreateService } from './report-create.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCreateService'
+
+/**
+ * Every report row is born here or in the draft-submit path, and both mint their
+ * own identifier — it is a meaningless pseudonymous handle (used so reports can
+ * be referred to without quoting a kennitala), so no caller ever supplies one.
+ */
 
 @Injectable()
 export class ReportCreateService implements IReportCreateService {
@@ -57,6 +64,19 @@ export class ReportCreateService implements IReportCreateService {
     @Inject(IConfigService)
     private readonly configService: IConfigService,
   ) {}
+
+  /** Mints an unused identifier for a report row about to be created. */
+  private allocateIdentifier(): Promise<string> {
+    return allocateReportIdentifier(
+      async (candidate) =>
+        (await this.reportModel.count({ where: { identifier: candidate } })) > 0,
+      (_candidate, attempt) =>
+        this.logger.warn('Report identifier collision — retrying', {
+          context: LOGGING_CONTEXT,
+          attempt,
+        }),
+    )
+  }
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
     return this.createSalaryReport(input)
@@ -121,7 +141,7 @@ export class ReportCreateService implements IReportCreateService {
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
       equalityReportId: input.equalityReportId,
-      identifier: input.identifier,
+      identifier: await this.allocateIdentifier(),
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
       providerId: input.providerId,
@@ -265,7 +285,7 @@ export class ReportCreateService implements IReportCreateService {
     const report = await this.reportModel.create({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
-      identifier: input.identifier,
+      identifier: await this.allocateIdentifier(),
       importedFromExcel: false,
       providerType: input.providerType,
       providerId: input.providerId,

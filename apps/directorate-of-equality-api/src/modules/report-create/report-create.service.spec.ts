@@ -69,6 +69,7 @@ describe('ReportCreateService', () => {
   let service: ReportCreateService
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
+  let reportCount: jest.Mock
   let reportFindAll: jest.Mock
   let reportUpdate: jest.Mock
   let reportEventCreate: jest.Mock
@@ -93,6 +94,7 @@ describe('ReportCreateService', () => {
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue({ id: EQUALITY_REPORT_ID })
+    reportCount = jest.fn().mockResolvedValue(0)
     reportFindAll = jest.fn().mockResolvedValue([])
     reportUpdate = jest.fn().mockResolvedValue([0])
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
@@ -169,6 +171,8 @@ describe('ReportCreateService', () => {
             findOne: reportFindOne,
             findAll: reportFindAll,
             update: reportUpdate,
+            // Identifier-uniqueness probe: nothing taken by default.
+            count: reportCount,
           },
         },
         {
@@ -1124,7 +1128,6 @@ function makeCompanyRow(
 function makeInput(): CreateReportDto {
   return {
     equalityReportId: EQUALITY_REPORT_ID,
-    identifier: 'SAL-2026-001',
     importedFromExcel: true,
     providerType: ReportProviderEnum.SYSTEM,
     providerId: null,
@@ -1256,7 +1259,6 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
 
 function makeEqualityInput(): CreateEqualityReportDto {
   return {
-    identifier: 'EQ-2026-001',
     providerType: ReportProviderEnum.SYSTEM,
     providerId: null,
     companyAdminName: 'Anna Admin',

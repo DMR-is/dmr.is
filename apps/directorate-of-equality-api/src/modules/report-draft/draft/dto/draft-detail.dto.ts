@@ -45,11 +45,21 @@ export class DraftDetailDto {
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   status!: ReportStatusEnum
 
-  @ApiOptionalString({ nullable: true })
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      "Short pseudonymous handle (`KTPQZW`) used to refer to the report without quoting the company's kennitala. Always null while the report is a DRAFT — the server mints it at submit.",
+  })
   identifier!: string | null
 
   @ApiOptionalString({ nullable: true })
   companyAdminName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company executive.',
+  })
+  companyAdminTitle!: string | null
 
   @ApiOptionalString({ nullable: true })
   companyAdminEmail!: string | null

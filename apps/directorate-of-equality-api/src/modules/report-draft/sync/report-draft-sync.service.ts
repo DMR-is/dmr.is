@@ -67,6 +67,7 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
    *   5. clear folded outlier-group membership (`outlierGroupId: null`)
    *   6. removals, dependents first (employees → steps → sub → criteria → roles → groups)
    *   7. derive outliers, then apply membership sets (validated against the set)
+   *   8. touch the report row so the prune cron sees child-only edits
    * Any failure throws and the CLS transaction rolls the whole batch back.
    * Referential integrity is enforced inline by the appliers (role/group remove
    * refuse to orphan; membership requires a detected outlier) plus DB FKs.
@@ -205,6 +206,10 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
         )
       }
     }
+
+    // Everything above writes children only. Touch the report row so the
+    // abandoned-draft reaper sees an actively-edited draft as active.
+    await this.reportDraftService.touchDraft(report.id)
 
     this.logger.info(`Synced draft "${report.id}"`, {
       context: LOGGING_CONTEXT,

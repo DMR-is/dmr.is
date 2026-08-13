@@ -100,6 +100,9 @@ export class CreateReportCompanySnapshotDto {
  * Request body for `POST /api/v1/reports/salary`. Combines submission
  * metadata that the application/auth context owns with the parsed workbook
  * payload that `POST /api/v1/reports/excel/import` returned earlier.
+ *
+ * The report identifier is not part of this payload: it is a meaningless
+ * pseudonymous handle, minted by `ReportCreateService` when the row is created.
  */
 export class CreateReportDto {
   @ApiUUID({
@@ -107,9 +110,6 @@ export class CreateReportDto {
       'FK to the approved EQUALITY report this salary was audited against.',
   })
   equalityReportId!: string
-
-  @ApiString()
-  identifier!: string
 
   @ApiBoolean()
   importedFromExcel!: boolean

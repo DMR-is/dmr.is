@@ -29,6 +29,18 @@ export interface IReportDraftService {
   deleteDraft(providerId: string, company: CompanyDto): Promise<void>
 
   /**
+   * Mints an unused report identifier (the short pseudonymous handle used
+   * instead of a kennitala), retrying on collision. Called at submit.
+   */
+  allocateIdentifier(): Promise<string>
+
+  /**
+   * Bumps the report row's `updated_at` so child-only edits (bulk sync) count
+   * as activity against the abandoned-draft reaper.
+   */
+  touchDraft(reportId: string): Promise<void>
+
+  /**
    * Hard-deletes every DRAFT untouched since `cutoff` (abandoned-draft reaper,
    * run by the prune cron). Not company-scoped. Returns the count pruned.
    */

@@ -19,11 +19,11 @@ import { CreateReportCompanySnapshotDto } from './create-report.dto'
  * Request body for `POST /api/v1/reports/equality`. EQUALITY submissions are
  * a free-form narrative — no criteria, no employees, no Excel parsing. The
  * report type is implied by the endpoint, so the DTO does not carry it.
+ *
+ * The report identifier is not carried either: it is a meaningless pseudonymous
+ * handle, minted by `ReportCreateService` when the row is created.
  */
 export class CreateEqualityReportDto {
-  @ApiString()
-  identifier!: string
-
   @ApiEnum(ReportProviderEnum)
   providerType!: ReportProviderEnum
 
