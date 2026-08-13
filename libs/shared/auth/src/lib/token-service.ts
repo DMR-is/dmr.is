@@ -9,17 +9,26 @@ const LOGGING_CATEGORY = 'refreshAccessToken'
 const renewalSeconds = 20 // seconds
 
 /**
- * Statuses where IDS is telling us "not right now" rather than "this refresh
- * token is dead". The refresh token survives these, so the session must too.
+ * The only OAuth error that proves the refresh token itself can no longer be
+ * used, and therefore the only one that justifies ending the session.
+ *
+ * Everything else — `invalid_client` from a rotated secret, `invalid_request`
+ * from a malformed call, any 5xx — says something about us or about IDS, not
+ * about this user's refresh token. Ending sessions on those kills the whole
+ * fleet over a config mistake while every refresh token is still perfectly
+ * valid. They are transient here, bounded by the consecutive-failure ceiling in
+ * `refresh-single-flight` so a permanent misconfiguration still eventually
+ * prompts re-authentication instead of retrying forever.
  */
-const TRANSIENT_HTTP_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504])
+const TERMINAL_OAUTH_ERRORS = new Set(['invalid_grant'])
 
 /**
- * Ceiling on a single `/connect/token` call.
+ * Ceiling on a single `/connect/token` call, covering the body read as well as
+ * the response headers.
  *
  * `fetch` has no timeout of its own, and concurrent refreshes are collapsed into
- * one shared call (see `refresh-single-flight`) — so a hung request would hang
- * every request waiting on it, not just its own.
+ * one shared call (see `refresh-single-flight`) — so a request that hangs while
+ * streaming its body would hang every request waiting on it, not just its own.
  */
 export const REFRESH_TIMEOUT_MS = 10 * 1000
 
@@ -50,14 +59,43 @@ export const isTransientRefreshError = (
 ): error is TransientRefreshError =>
   error instanceof Error && error.name === 'TransientRefreshError'
 
+/**
+ * Reads the token response, keeping "could not read it" distinguishable from
+ * "read it, and it was empty".
+ *
+ * Collapsing the two is what let an unreadable success body — a gateway cutting
+ * in with HTML, or our own abort landing mid-stream — reach the
+ * `AccessTokenOrIdTokenMissing` branch and end the session, which is precisely
+ * the failure class this module exists to avoid.
+ */
 const readBody = async (
   response: Response,
-): Promise<Record<string, unknown>> => {
+): Promise<
+  { parsed: true; body: Record<string, unknown> } | { parsed: false }
+> => {
   try {
-    return (await response.json()) as Record<string, unknown>
+    return {
+      parsed: true,
+      body: (await response.json()) as Record<string, unknown>,
+    }
   } catch {
-    // A gateway erroring out mid-request answers with HTML, not JSON.
-    return {}
+    return { parsed: false }
+  }
+}
+
+/** Reads a JWT's `exp` for logging. Never throws — diagnostics must not fail a refresh. */
+const expiresAt = (token: unknown): string | undefined => {
+  if (typeof token !== 'string' || token.length === 0) {
+    return undefined
+  }
+
+  try {
+    const exp = decodeJwt(token).exp
+    return typeof exp === 'number'
+      ? new Date(exp * 1000).toISOString()
+      : undefined
+  } catch {
+    return undefined
   }
 }
 
@@ -101,9 +139,11 @@ export const refreshAccessToken = async (
     return { ...token, error: 'RefreshTokenMissing', invalid: true }
   }
 
-  let response: Response
   const abort = new AbortController()
   const timeout = setTimeout(() => abort.abort(), REFRESH_TIMEOUT_MS)
+
+  let response: Response
+  let body: Awaited<ReturnType<typeof readBody>>
 
   try {
     response = await fetch(
@@ -124,6 +164,11 @@ export const refreshAccessToken = async (
         signal: abort.signal,
       },
     )
+
+    // Inside the abort scope on purpose: a response whose body never finishes
+    // streaming is the one case that would hang every request collapsed onto
+    // this call.
+    body = await readBody(response)
   } catch (error) {
     // DNS, TLS, connection reset, or our own timeout. Treated as transient: we
     // cannot know whether an aborted request reached IDS, and assuming the
@@ -139,40 +184,50 @@ export const refreshAccessToken = async (
     clearTimeout(timeout)
   }
 
-  const body = await readBody(response)
+  const oauthError = body.parsed
+    ? (body.body.error as string | undefined)
+    : undefined
 
   if (!response.ok) {
-    if (TRANSIENT_HTTP_STATUSES.has(response.status)) {
-      logger.warn('Refreshing failed, identity server unavailable', {
-        error: body.error ?? `HTTP ${response.status}`,
+    if (oauthError && TERMINAL_OAUTH_ERRORS.has(oauthError)) {
+      logger.error('Refreshing failed, refresh token is no longer usable', {
+        error: oauthError,
         metadata: { status: response.status },
         category: LOGGING_CATEGORY,
       })
 
-      throw new TransientRefreshError(
-        `Identity server responded with ${response.status}`,
-        body,
-      )
+      return { ...token, error: oauthError, invalid: true }
     }
 
-    logger.error('Refreshing failed', {
-      error: body.error ?? `HTTP ${response.status}`,
+    logger.warn('Refreshing failed, identity server rejected the request', {
+      error: oauthError ?? `HTTP ${response.status}`,
       metadata: { status: response.status },
       category: LOGGING_CATEGORY,
     })
 
-    return {
-      ...token,
-      error: (body.error as string) ?? 'RefreshAccessTokenError',
-      invalid: true,
-    }
+    throw new TransientRefreshError(
+      `Identity server responded with ${response.status}`,
+      oauthError ?? response.status,
+    )
   }
 
-  const newTokens = body as {
+  if (!body.parsed) {
+    // HTTP 200 we could not read. IDS may well have rotated the refresh token,
+    // but we have no tokens to store, so retrying is the only option that does
+    // not throw away a session over an unreadable response.
+    logger.warn('Refreshing failed, could not read the token response', {
+      error: 'UnreadableTokenResponse',
+      category: LOGGING_CATEGORY,
+    })
+
+    throw new TransientRefreshError('Could not read the token response')
+  }
+
+  const newTokens = body.body as {
     access_token?: string
     id_token?: string
     refresh_token?: string
-    expires_in: number
+    expires_in?: number
   }
 
   if (!newTokens.access_token || !newTokens.id_token) {
@@ -183,16 +238,25 @@ export const refreshAccessToken = async (
     return { ...token, error: 'AccessTokenOrIdTokenMissing', invalid: true }
   }
 
-  const expiresIn = Math.floor(Date.now() + newTokens.expires_in * 1000)
-  const decodedOldAccessToken = decodeJwt(token.accessToken)
+  const prevIdExpires = expiresAt(token.idToken)
+  const newIdExpires = expiresAt(newTokens.id_token)
 
   logger.info('Token refreshed', {
     metadata: {
       timeNow: new Date().toISOString(),
-      prevExpires: new Date(
-        (decodedOldAccessToken.exp as number) * 1000,
-      ).toISOString(),
-      newExpires: new Date(expiresIn).toISOString(),
+      prevExpires: expiresAt(token.accessToken),
+      newExpires: expiresAt(newTokens.access_token),
+      // DoE is the only app that also refreshes on ID-token expiry, which ties
+      // its refresh cadence to a lifetime it does not control. These three
+      // fields say whether that lifetime is shorter than the access token's,
+      // and whether it advances on refresh at all — without anyone having to
+      // decode a token by hand. Timestamps only; no token material.
+      prevIdExpires,
+      newIdExpires,
+      idTokenAdvanced:
+        prevIdExpires !== undefined && newIdExpires !== undefined
+          ? newIdExpires > prevIdExpires
+          : undefined,
     },
     category: LOGGING_CATEGORY,
   })

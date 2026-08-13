@@ -38,6 +38,24 @@ const refreshed = (accessToken: string) =>
     refreshToken: 'new-refresh',
   }) as unknown as Awaited<ReturnType<typeof refreshAccessToken>>
 
+/**
+ * A refresh result whose access token is a decodable JWT, so the reuse window is
+ * derived from its lifetime rather than falling back to the cap.
+ */
+const refreshedWithAccessTokenExpiringIn = (seconds: number) => {
+  const encode = (value: object) =>
+    Buffer.from(JSON.stringify(value))
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+
+  const exp = Math.floor(Date.now() / 1000) + seconds
+  const jwt = `${encode({ alg: 'RS256' })}.${encode({ exp })}.signature`
+
+  return refreshed(jwt)
+}
+
 /** A promise plus the handles to settle it, so timing can be controlled. */
 const deferred = <T>() => {
   let resolve!: (value: T) => void
@@ -130,20 +148,125 @@ describe('refreshAccessTokenOnce', () => {
     expect(results.every((error) => error instanceof Error)).toBe(true)
   })
 
-  it('retries after a transient failure rather than caching it', async () => {
-    mockedRefresh
-      .mockRejectedValueOnce(new TransientRefreshError('IDS unavailable'))
-      .mockResolvedValueOnce(refreshed('new-access'))
+  describe('failure backoff', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
 
-    await expect(
-      refreshAccessTokenOnce(tokenWith('shared-refresh')),
-    ).rejects.toThrow()
-    // The refresh token survived a transient failure, so the next request must
-    // get a real attempt and not a replay of the error.
-    const retried = await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+    afterEach(() => {
+      jest.useRealTimers()
+    })
 
-    expect(mockedRefresh).toHaveBeenCalledTimes(2)
-    expect(retried.accessToken).toBe('new-access')
+    // Otherwise an IDS outage turns every incoming request into its own call to
+    // /connect/token — and since 429 is transient, being rate-limited would make
+    // us generate more traffic.
+    it('replays a transient failure for the backoff window', async () => {
+      mockedRefresh.mockRejectedValue(new TransientRefreshError('unavailable'))
+
+      await expect(
+        refreshAccessTokenOnce(tokenWith('shared-refresh')),
+      ).rejects.toThrow()
+      await expect(
+        refreshAccessTokenOnce(tokenWith('shared-refresh')),
+      ).rejects.toThrow()
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(1)
+    })
+
+    it('attempts again once the backoff window has passed', async () => {
+      mockedRefresh
+        .mockRejectedValueOnce(new TransientRefreshError('unavailable'))
+        .mockResolvedValueOnce(refreshed('new-access'))
+
+      await expect(
+        refreshAccessTokenOnce(tokenWith('shared-refresh')),
+      ).rejects.toThrow()
+      await jest.advanceTimersByTimeAsync(2500)
+      const retried = await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(2)
+      expect(retried.accessToken).toBe('new-access')
+    })
+
+    // Leaving the session intact is right for a blip and wrong forever: isExpired
+    // keeps returning true, so without a ceiling the user sits on a silently
+    // 401-ing UI while we retry against IDS indefinitely.
+    it('ends the session once retrying is no longer plausible', async () => {
+      mockedRefresh.mockRejectedValue(new TransientRefreshError('unavailable'))
+
+      let lastResult: Awaited<
+        ReturnType<typeof refreshAccessTokenOnce>
+      > | null = null
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        lastResult = await refreshAccessTokenOnce(
+          tokenWith('shared-refresh'),
+        ).catch(() => null)
+        await jest.advanceTimersByTimeAsync(31_000)
+      }
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(5)
+      expect(lastResult).toMatchObject({
+        invalid: true,
+        error: 'RefreshRetriesExhausted',
+      })
+    })
+
+    it('forgets the failure run after a success', async () => {
+      mockedRefresh
+        .mockRejectedValueOnce(new TransientRefreshError('unavailable'))
+        .mockResolvedValueOnce(refreshed('new-access'))
+        .mockRejectedValue(new TransientRefreshError('unavailable'))
+
+      await expect(
+        refreshAccessTokenOnce(tokenWith('shared-refresh')),
+      ).rejects.toThrow()
+      await jest.advanceTimersByTimeAsync(2500)
+      await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+
+      // Back to the shortest backoff rather than partway up the ladder.
+      await expect(
+        refreshAccessTokenOnce(tokenWith('other-refresh')),
+      ).rejects.toThrow()
+      await jest.advanceTimersByTimeAsync(2500)
+      await expect(
+        refreshAccessTokenOnce(tokenWith('other-refresh')),
+      ).rejects.toThrow()
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(4)
+    })
+  })
+
+  describe('reuse window', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    // The straggler cache is only safe while it closes before the next refresh is
+    // due, or it could hand back a refresh token that has since been rotated.
+    it('closes the window well before the next refresh falls due', async () => {
+      mockedRefresh.mockResolvedValue(refreshedWithAccessTokenExpiringIn(40))
+
+      await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+      await jest.advanceTimersByTimeAsync(25_000)
+      await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(2)
+    })
+
+    it('still serves stragglers inside the window', async () => {
+      mockedRefresh.mockResolvedValue(refreshedWithAccessTokenExpiringIn(40))
+
+      await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+      await jest.advanceTimersByTimeAsync(5_000)
+      await refreshAccessTokenOnce(tokenWith('shared-refresh'))
+
+      expect(mockedRefresh).toHaveBeenCalledTimes(1)
+    })
   })
 
   it('passes through when there is no refresh token to key on', async () => {

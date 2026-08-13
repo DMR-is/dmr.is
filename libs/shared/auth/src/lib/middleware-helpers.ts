@@ -163,18 +163,30 @@ export async function tryToUpdateCookie(
       newSessionToken,
     }
   } catch (error) {
-    // The refresh token was not consumed (IDS unreachable, timing out or 5xx),
-    // or we failed before we could write anything. Leave the session cookie
-    // exactly as it is so the next request retries — writing `invalid: true`
-    // here would end the session permanently, since `isExpired` stops returning
-    // true once it is set and the middleware would never refresh again.
+    // Either way the session cookie is left exactly as it is, so the next request
+    // retries: writing `invalid: true` here would end the session permanently,
+    // since `isExpired` stops returning true once it is set and the middleware
+    // would never refresh again. `refresh-single-flight` bounds the retrying.
     const logger = getLogger(LOGGING_CATEGORY)
 
-    logger.warn('Leaving session untouched after failed refresh', {
-      error: error as Error,
-      metadata: { transient: isTransientRefreshError(error) },
-      category: LOGGING_CATEGORY,
-    })
+    if (isTransientRefreshError(error)) {
+      // Expected: IDS unreachable, timing out, or rejecting for a reason that
+      // says nothing about this refresh token.
+      logger.warn('Leaving session untouched after failed refresh', {
+        error: error as Error,
+        category: LOGGING_CATEGORY,
+      })
+    } else {
+      // Unexpected — in practice `encode` failing for want of NEXTAUTH_SECRET.
+      // Worth its own level, because the refresh itself may well have SUCCEEDED:
+      // if the client rotates, IDS has burned the old refresh token and the new
+      // one is in the value we just failed to persist, so this session cannot be
+      // refreshed again and the user will have to sign in.
+      logger.error('Could not persist a refreshed session', {
+        error: error as Error,
+        category: LOGGING_CATEGORY,
+      })
+    }
 
     return { response }
   }

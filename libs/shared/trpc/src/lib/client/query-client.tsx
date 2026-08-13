@@ -1,3 +1,7 @@
+import {
+  hasLoginCooldown,
+  loginCooldownCookie,
+} from '@dmr.is/auth/loginCooldown'
 import { forceLogin } from '@dmr.is/auth/useLogOut'
 
 import {
@@ -10,6 +14,9 @@ import { TRPCClientError } from '@trpc/react-query'
 /**
  * A dead session makes every in-flight call fail at once, and each failure would
  * otherwise kick off its own redirect to IDS. Only the first one is allowed to.
+ *
+ * This only covers one page load. The cooldown cookie below is what stops a loop
+ * across reloads.
  */
 let redirectingToLogin = false
 
@@ -41,10 +48,19 @@ const forceLoginOnUnauthorized = (error: unknown): boolean => {
     return false
   }
 
-  if (typeof window !== 'undefined' && !redirectingToLogin) {
-    redirectingToLogin = true
-    forceLogin(window.location.pathname)
+  if (typeof window === 'undefined' || redirectingToLogin) {
+    return true
   }
+
+  if (hasLoginCooldown(document.cookie)) {
+    // Already tried recently and we are still being told 401, so this is not a
+    // session we can fix by signing in again. Let the error reach the UI.
+    return true
+  }
+
+  redirectingToLogin = true
+  document.cookie = loginCooldownCookie()
+  forceLogin(window.location.pathname)
 
   return true
 }
