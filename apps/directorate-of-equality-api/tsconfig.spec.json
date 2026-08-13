@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.preset-nestjs.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["jest", "node"]
