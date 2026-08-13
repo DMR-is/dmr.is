@@ -50,6 +50,32 @@ export enum CompanyStatusEnum {
 }
 
 /**
+ * Ownership sector — the "private vs government/state" axis for admin filters.
+ * Derived from RSK's registered legal form (rekstrarform), NOT from ÍSAT: ÍSAT
+ * classifies what an entity *does*, so a state-owned hospital and a private
+ * clinic share `86xxx` and section Q. See `utils/legal-form-sector.ts`.
+ *
+ *   UNKNOWN → not classified. Either RSK has not been consulted for this
+ *             company yet, or it returned a legal form we do not map.
+ *   PRIVATE → privately owned (hf., ehf., sf., sole trader, …).
+ *   PUBLIC  → central government, municipalities, and public institutions.
+ *
+ * UNKNOWN is deliberately its own value and must never be folded into PRIVATE:
+ * an admin filtering for private companies must not silently be shown companies
+ * we merely failed to classify. Report it as its own bucket in the UI.
+ *
+ * Declaration order is load-bearing (Postgres orders by declaration order), so
+ * `ORDER BY sector` yields UNKNOWN < PRIVATE < PUBLIC. A finer split (e.g.
+ * MUNICIPAL separate from central government) can be added in Postgres with
+ * `ALTER TYPE company_sector_enum ADD VALUE`.
+ */
+export enum CompanySectorEnum {
+  UNKNOWN = 'UNKNOWN',
+  PRIVATE = 'PRIVATE',
+  PUBLIC = 'PUBLIC',
+}
+
+/**
  * Derived reporting-compliance status surfaced on `CompanyDto`. Not persisted —
  * computed from the company's size/obligations and its reports (see
  * `utils/report-status.ts`). A single value, evaluated in priority order; the

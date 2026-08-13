@@ -9,12 +9,14 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
+import { CompanySectorEnum } from '../../gen/fetch'
 import { companiesText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { employeeCountCategoryFromCount } from './companyStatus'
+import { employeeCountCategoryFromCount, SECTOR_LABEL } from './companyStatus'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -201,6 +203,30 @@ export const CreateCompanyModal = ({ isOpen, onClose }: Props) => {
               }
               readOnly
             />
+
+            {/*
+              `create` persists the sector too, so the preview has to show it —
+              otherwise an admin creating a state-owned company cannot see the
+              classification, or that it came back unclassified, until the row
+              exists.
+            */}
+            <TextInput
+              name="sector"
+              label={companiesText.createModal.sectorLabel}
+              size="xs"
+              value={
+                lookupQuery.data
+                  ? SECTOR_LABEL[lookupQuery.data.sector]
+                  : companiesText.createModal.emptyValue
+              }
+              readOnly
+            />
+
+            {lookupQuery.data?.sector === CompanySectorEnum.UNKNOWN && (
+              <Text variant="small" color="dark300">
+                {companiesText.createModal.sectorUnknownHint}
+              </Text>
+            )}
 
             <TextInput
               name="employeeCount"

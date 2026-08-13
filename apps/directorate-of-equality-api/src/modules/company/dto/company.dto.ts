@@ -12,6 +12,7 @@ import {
 
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../models/company.enums'
@@ -78,6 +79,32 @@ export class CompanyDto {
 
   @ApiPropertyOptional({ type: IsatCategoryDto, nullable: true })
   isatCategory!: IsatCategoryDto | null
+
+  @ApiEnum(CompanySectorEnum, {
+    enumName: 'CompanySectorEnum',
+    description:
+      'Ownership sector (private vs government/state), derived from the RSK legal form. UNKNOWN means unclassified — it does NOT mean private.',
+  })
+  sector!: CompanySectorEnum
+
+  @ApiBoolean({
+    description:
+      'True when an admin set the sector by hand; a backfill must not overwrite it.',
+  })
+  sectorOverride!: boolean
+
+  @ApiOptionalString({
+    nullable: true,
+    description: "RSK's raw legal-form code (rekstrarform), as returned.",
+  })
+  legalFormId!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      "RSK's raw legal-form name. Useful for seeing the form behind an UNKNOWN sector.",
+  })
+  legalFormName!: string | null
 
   @ApiEnum(CompanyReportStatusEnum, { enumName: 'CompanyReportStatusEnum' })
   reportStatus!: CompanyReportStatusEnum

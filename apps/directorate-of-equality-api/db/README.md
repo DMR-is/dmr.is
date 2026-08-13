@@ -45,12 +45,35 @@ Companies carry an industry classification using the Icelandic ÍSAT2008 standar
 
 How we handle it:
 
-- **Leaf codes only.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes. A company is always classified at its own leaf — sections, divisions, groups, and classes are not stored. The 2-digit division is recoverable from the leaf prefix (`01110` → `01`); the section letter (`A`) is not numerically derivable and is intentionally dropped.
+- **Leaf codes only on the company.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes, and a company is always classified at its own leaf — groups and classes are not stored.
+- **Section and division are stored on the leaf, for rollup filtering.** `isat_category.division` is the 2-digit prefix (`01110` → `01`), and `isat_category.section` is the ÍSAT bálkur letter (`A`–`U`, or `X`), a FK into the 22-row `isat_section` reference table. Section is *not* arithmetic on the division but it is a **total function** of it, via the fixed NACE Rev. 2 division→section table encoded in the `isat_section_for_code()` SQL function — the single source of truth used both by the backfill and by `db/seeders/seed-isat-category.js`. A division outside NACE yields NULL and trips the `NOT NULL`, rather than silently misfiling the row. This mirrors `postcode → region`: the rollup is reached by joining and is never denormalized onto the company.
+  - **`X` (Óþekkt starfsemi) is the one exception to the division rule.** ÍSAT2008 adds it on the fifth digit and NACE has no equivalent, so division `99` holds both `99.00.0` (extraterritorial organisations → `U`) and `99.99.9` (unknown activity → `X`). `isat_section_for_code()` matches `99999` on the whole code, ahead of the division rules. Mapping it by division instead would file every company of unknown activity under `U` and surface them in the section filter as embassies.
+  - Icelandic section names in `isat_section` are verbatim from [Hagstofan's ÍSAT2008 handbook](https://hagstofa.is/media/49171/isat2008.pdf); English names are the official NACE Rev. 2 section titles. Don't reword them.
 - **Normalized code is the key.** `isat_category.code` is the normalized 5-digit form (`01110`). The dotted form (`01.11.0`) is kept alongside for display only. Company-level classification is always the normalized code.
 - **Admin-owned.** `company.isat_category_code` is set and kept current by DoE admins, in the same spirit as the `salary_report_required*` flags — not supplied by company admins at submission. It is refreshed by a **manual job run once a year** against an admin-uploaded company-info file.
 - **Snapshot independence.** `company.isat_category_code` and `company_report.isat_category` are unrelated. The latter is a free-text dotted code frozen at submission (a snapshot is just a snapshot); the former is the live admin-maintained classification. The submission flow never reads from or writes to the company-level value, and `company_report` is never updated when the company's classification changes.
 
 > **Subject to change.** This is an interim design while the feature is in development. The long-term intent is to source classification directly from the RSK API once we have access; until then, the annual admin-uploaded file is the source of truth. The stored format (normalized leaf code) and admin ownership may change when that integration lands.
+
+## Sector (private vs government/state)
+
+ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer "private vs government/state" on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | PRIVATE | PUBLIC` derived from RSK's registered legal form (rekstrarform).
+
+- **The raw legal form is stored too.** `company.legal_form_id` and `legal_form_name` keep RSK's own values alongside the derived `sector`. The id→sector mapping is currently **inferred, not confirmed against live payloads**; keeping the raw id means a corrected mapping can be re-derived with one local `UPDATE` instead of re-sweeping RSK, which matters because the registry has **no bulk endpoint** — only `GET /{nationalId}`, one call per company.
+- **`UNKNOWN` is first-class and never collapsed into `PRIVATE`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
+- **`sector_override` protects manual corrections**, exactly like `salary_report_required_override`: when an admin sets a sector by hand, any backfill must skip that row rather than reset it to `UNKNOWN`.
+- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned.
+- **`MUNICIPAL`** (municipalities as distinct from central government) is a plausible future value; add it with `ALTER TYPE company_sector_enum ADD VALUE`.
+
+**How rows actually get classified.** The three creation paths differ, and the difference matters when reading `sector` data:
+
+- `CompanyService.create` (admin creates one company) — classified, from the same RSK call that supplies address/postcode/ÍSAT.
+- `getOrCreateByNationalId` / `getOrCreateSubsidiaryReportSnapshotSource` (auto-provision) — classified, via one extra RSK call for the legal form only. These create from the *national* registry, which carries no legal form. RSK's `status` is deliberately **not** taken here: a deregistered record would create the company `INACTIVE` and block the very submission that triggered the provisioning.
+- `CompanyImportService` (annual `.xlsx`) — **not classified.** Rows are born `UNKNOWN`.
+
+Most companies arrive through the import, so most of the register is `UNKNOWN` and stays that way until it is filled deliberately. That is a decision, not a gap: RSK has no bulk endpoint, the workbook carries no legal-form column, and `reconcile` runs for both preview and apply — so per-row lookups would mean thousands of HTTP calls, twice per import. **An automated RSK sweep was considered and ruled out.** Don't add one without revisiting that call.
+
+The backlog is instead planned to be filled by a one-off bulk SQL `UPDATE` (ÍSAT section `O` is the sensible basis: high precision for public administration, low recall — it misses state-owned companies like RÚV ohf. that sit in other sections by activity), with `PATCH /company/:id/sector` covering the tail. Any such pass must skip `sector_override = true`.
 
 ## Company import (annual register)
 

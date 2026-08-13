@@ -12,6 +12,8 @@ export type {
   AddressDto,
   DeregistrationDto,
   LegalEntityDto,
+  LegalFormDto,
+  VatDto,
 } from './lib/dto/legal-entity.dto'
 
 // Configured client instance + config helper
