@@ -212,6 +212,36 @@ describe('refreshAccessTokenOnce', () => {
       })
     })
 
+    // Pins the real cost of the ceiling. Both conditions must hold, so the count
+    // alone is reached in ~30s and it is the 2-minute span that decides. Under
+    // continuous traffic the doubling backoff makes that ~8 attempts — the test
+    // above reaches it in 5 because sparse traffic accumulates span faster than
+    // it accumulates attempts.
+    it('reaches the ceiling in about eight attempts over two minutes', async () => {
+      mockedRefresh.mockRejectedValue(new TransientRefreshError('unavailable'))
+
+      const startedAt = Date.now()
+      let ended: { invalid?: boolean; error?: string } | null = null
+
+      // A busy tab: keep asking every second until the session is declared over.
+      for (let tick = 0; tick < 400 && ended === null; tick++) {
+        const result = await refreshAccessTokenOnce(
+          tokenWith('shared-refresh'),
+        ).catch(() => null)
+
+        if (result?.invalid) {
+          ended = result
+          break
+        }
+
+        await jest.advanceTimersByTimeAsync(1_000)
+      }
+
+      expect(ended).toMatchObject({ error: 'RefreshRetriesExhausted' })
+      expect(mockedRefresh).toHaveBeenCalledTimes(8)
+      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(120_000)
+    })
+
     it('forgets the failure run after a success', async () => {
       mockedRefresh
         .mockRejectedValueOnce(new TransientRefreshError('unavailable'))

@@ -145,6 +145,18 @@ const evictExpired = (now: number): void => {
       }
     }
   }
+
+  // Failure runs are keyed on refresh tokens too, so they get the same explicit
+  // ceiling rather than being bounded only by how many distinct tokens happen to
+  // be failing inside one prune window. Dropping the oldest costs at most a
+  // restarted backoff ladder.
+  while (failures.size > MAX_ENTRIES) {
+    const oldest = failures.keys().next()
+    if (oldest.done) {
+      break
+    }
+    failures.delete(oldest.value)
+  }
 }
 
 /**
