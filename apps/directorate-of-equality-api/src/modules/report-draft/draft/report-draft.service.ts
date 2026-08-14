@@ -11,6 +11,7 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { isReportIdentifierCollision } from '../../report/lib/report-identifier'
 import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -405,8 +406,15 @@ export class ReportDraftService implements IReportDraftService {
     } catch (error) {
       // Lost a concurrent create race for the same tuple: the partial unique
       // index on (provider_type, provider_id) rejects the second insert. Treat
-      // it as a replay and return the winner.
-      if (error instanceof UniqueConstraintError) {
+      // it as a replay and return the winner. Scoped to that one constraint —
+      // `report` now also carries a unique index on `identifier`, and a
+      // collision there is a different failure that must not be swallowed as a
+      // replay (draft-create leaves `identifier` null, so it cannot happen here
+      // today; the guard is so that stays true).
+      if (
+        error instanceof UniqueConstraintError &&
+        !isReportIdentifierCollision(error)
+      ) {
         const winner = await this.findExistingByProviderTupleForNationalId(
           input.providerType,
           input.providerId,

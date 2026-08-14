@@ -41,9 +41,14 @@ export class ReportIdentifierService implements IReportIdentifierService {
       async (candidate) =>
         (await this.reportModel.count({ where: { identifier: candidate } })) >
         0,
-      (_candidate, attempt) =>
+      (candidate, attempt) =>
+        // The candidate is logged deliberately: it is a meaningless handle, not
+        // PII — avoiding a kennitala is the reason it exists — and it is what
+        // distinguishes a real birthday collision from a probe returning true
+        // for everything.
         this.logger.warn('Report identifier collision — retrying', {
           context: LOGGING_CONTEXT,
+          candidate,
           attempt,
         }),
     )

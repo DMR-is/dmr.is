@@ -1,10 +1,12 @@
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
+import { UniqueConstraintError } from 'sequelize'
 
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
@@ -16,6 +18,7 @@ import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { REPORT_IDENTIFIER_INDEX } from '../report/lib/report-identifier'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -799,6 +802,32 @@ describe('ReportCreateService', () => {
       expect(allocate).toHaveBeenCalledTimes(1)
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({ identifier: IDENTIFIER }),
+      )
+    })
+
+    it('maps an identifier collision to a retryable error, not a 400', async () => {
+      // The index is the backstop the probe cannot be: reaching it means two
+      // concurrent requests drew the same code. Left uncaught, the shared
+      // SequelizeExceptionFilter maps it to 400 and island.is treats a
+      // perfectly good submission as unretryable.
+      const collision = new UniqueConstraintError({})
+      Object.defineProperty(collision, 'parent', {
+        value: Object.assign(new Error('duplicate key'), {
+          constraint: REPORT_IDENTIFIER_INDEX,
+        }),
+      })
+      reportCreate.mockRejectedValueOnce(collision)
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        ServiceUnavailableException,
+      )
+    })
+
+    it('leaves an unrelated write failure untouched', async () => {
+      reportCreate.mockRejectedValueOnce(new Error('connection reset'))
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        'connection reset',
       )
     })
 

@@ -1,6 +1,10 @@
 import { randomBytes } from 'crypto'
+import { UniqueConstraintError } from 'sequelize'
 
-import { InternalServerErrorException } from '@nestjs/common'
+import {
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 
 const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -9,6 +13,48 @@ export const REPORT_IDENTIFIER_LENGTH = 6
 
 /** Retries allowed when a minted identifier turns out to be taken. */
 export const IDENTIFIER_ALLOCATION_ATTEMPTS = 5
+
+/** Partial unique index on `report.identifier`, added by m-20260814. */
+export const REPORT_IDENTIFIER_INDEX = 'report_identifier_unique_idx'
+
+/** True when `error` is the `report.identifier` uniqueness violation. */
+export function isReportIdentifierCollision(error: unknown): boolean {
+  if (!(error instanceof UniqueConstraintError)) {
+    return false
+  }
+
+  const constraint = (error.parent as { constraint?: string } | undefined)
+    ?.constraint
+
+  return constraint === REPORT_IDENTIFIER_INDEX
+}
+
+/**
+ * Re-raises a write failure, turning an identifier collision into a *retryable*
+ * error and leaving everything else untouched.
+ *
+ * Without this the collision surfaces as HTTP 400: `SequelizeExceptionFilter`
+ * maps every `UniqueConstraintError` to 400, which tells island.is the request
+ * was malformed and must not be retried. It is the opposite — the payload was
+ * fine, two concurrent draws happened to collide, and retrying succeeds. On a
+ * report submit a 400 means a silently dropped submission.
+ *
+ * Deliberately not a retry loop. Probe and insert both run inside the request's
+ * CLS transaction, so catching the violation leaves that transaction aborted —
+ * an in-place retry would need the insert wrapped in a nested
+ * `sequelize.transaction()` (a `SAVEPOINT`) on every report creation, to survive
+ * an event with a ~1-in-309M chance per concurrent pair. Handing the caller a
+ * 503 it already knows how to retry is the proportionate answer.
+ */
+export function rethrowReportWriteError(error: unknown): never {
+  if (isReportIdentifierCollision(error)) {
+    throw new ServiceUnavailableException(
+      'Could not allocate a unique report identifier — please retry',
+    )
+  }
+
+  throw error
+}
 
 /**
  * Mints a report identifier — the short handle (`KTPQZW`) reviewers and
@@ -26,7 +72,9 @@ export const IDENTIFIER_ALLOCATION_ATTEMPTS = 5
 export function generateReportIdentifier(
   length = REPORT_IDENTIFIER_LENGTH,
 ): string {
-  return Array.from(randomBytes(length), (b) => ALPHA[b % ALPHA.length]).join('')
+  return Array.from(randomBytes(length), (b) => ALPHA[b % ALPHA.length]).join(
+    '',
+  )
 }
 
 /**

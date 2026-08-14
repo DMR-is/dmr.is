@@ -9,6 +9,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ICompanyService } from '../../company/company.service.interface'
 import { CompanyDto } from '../../company/dto/company.dto'
+import { rethrowReportWriteError } from '../../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import { ReportStatusEnum, ReportTypeEnum } from '../../report/models/report.model'
 import { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
@@ -104,16 +105,22 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       status = await this.resolveSalaryOutlierStatus(report.id)
     }
 
-    await report.update({
-      status,
-      // Minted here rather than at draft-create: the identifier only exists so
-      // reviewers can refer to a report without quoting a kennitala, and a
-      // DRAFT is invisible to reviewers until this point. Drafts are also
-      // reaped, so codes handed out earlier would be spent on nothing.
-      identifier: await this.reportIdentifierService.allocate(),
-      equalityReportId: input.equalityReportId ?? null,
-      ...(salaryDataBasis ?? {}),
-    })
+    try {
+      await report.update({
+        status,
+        // Minted here rather than at draft-create: the identifier only exists
+        // so reviewers can refer to a report without quoting a kennitala, and a
+        // DRAFT is invisible to reviewers until this point. Drafts are also
+        // reaped, so codes handed out earlier would be spent on nothing.
+        identifier: await this.reportIdentifierService.allocate(),
+        equalityReportId: input.equalityReportId ?? null,
+        ...(salaryDataBasis ?? {}),
+      })
+    } catch (error) {
+      // A collision on the freshly minted identifier is transient, not a bad
+      // request — see `rethrowReportWriteError`.
+      rethrowReportWriteError(error)
+    }
 
     await this.finalizeService.emitSubmittedEvent(report.id, status, company.id)
     await this.finalizeService.recordAutoReview(report.id, status, company.id)

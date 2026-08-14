@@ -20,6 +20,10 @@ import {
 /**
  * The report identifier is not supplied: it is a meaningless pseudonymous
  * handle, minted server-side at creation and returned on the report reads.
+ *
+ * `identifier` was accepted here until #1406, and a caller still sending one is
+ * silently ignored rather than rejected — see db/README.md → "Report identifier"
+ * for the island.is client change that pairs with its removal.
  */
 export class SubmitEqualityReportDto {
   @ApiString()

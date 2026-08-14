@@ -21,20 +21,22 @@ const fs = require('fs')
 const path = require('path')
 
 const ExcelJS = require('exceljs')
-const prettier = require('prettier')
 
 const SHEET = 'Undirviðmiðalisti (Lýsigögn)'
 
 /**
- * Sheet geometry. Mirrors `report-excel/workbook.schema.ts` — `TABLE_HEADER_ROW`
- * (5), `TABLE_FIRST_DATA_ROW` (6) and `MAX_STEPS` (8) — which a plain CJS script
- * cannot import. `sub-criterion-catalog.data.spec.ts` imports both the schema
- * and the generated data and pins the pair, so a drift there fails the suite.
+ * Sheet geometry, duplicating `report-excel/workbook.schema.ts` —
+ * `TABLE_HEADER_ROW` (5), `TABLE_FIRST_DATA_ROW` (6) and `MAX_STEPS` (8) — which
+ * a plain CJS script cannot import.
  *
- * Nothing below is trusted blindly: `assertLayout` verifies the header row and
- * the generic-scale marker before a single data row is read, because this sheet
- * has no named range to anchor on (the parser's usual contract) and a column
- * insert would otherwise silently shift every field by one.
+ * Only `MAX_STEPS` is cross-checked from `sub-criterion-catalog.data.spec.ts`,
+ * and weakly (the generated data must not exceed it). The two row numbers are
+ * *not* pinned anywhere and cannot be: the generated file encodes no row numbers,
+ * so nothing downstream can observe them. `assertLayout` is what protects them
+ * instead — it verifies the header row and the generic-scale marker before a
+ * single data row is read, so a row insert or a column shift throws here rather
+ * than silently reading the wrong field. That matters because this sheet has no
+ * named range to anchor on, unlike the parser's other reads.
  */
 const HEADER_ROW = 5
 const FIRST_DATA_ROW = 6
@@ -109,9 +111,40 @@ const DEFAULT_SOURCE = path.join(
   'template.xlsx',
 )
 
-/** Human-readable cell address for error messages (`C7`). */
-const address = (row, col) =>
-  `${String.fromCharCode('A'.charCodeAt(0) + col - 1)}${row}`
+/**
+ * Human-readable cell reference for error messages (`C7`).
+ *
+ * Taken from ExcelJS rather than derived from the column number, which would
+ * need two-letter handling past column Z — and the whole point of these messages
+ * is naming the offending cell correctly.
+ */
+const address = (sheet, row, col) => sheet.getCell(row, col).address
+
+/**
+ * Characters that must never reach the generated file or the API response.
+ *
+ * C0 controls (bar tab), the Unicode line/paragraph separators U+2028/U+2029 and
+ * the zero-width/BOM family are all invisible in Excel and survive
+ * `JSON.stringify` verbatim, so they would ship into Jafnréttisstofa's wording
+ * unnoticed. In a hand-maintained sheet they are a paste accident, never intent
+ * — so this rejects rather than silently stripping, which would make the
+ * generated file disagree with the workbook it claims to mirror.
+ */
+/* The control characters are the entire point of this pattern. */
+/* eslint-disable no-control-regex */
+const INVISIBLE =
+  /[\u0000-\u0008\u000B-\u001F\u007F\u200B-\u200D\u2028\u2029\uFEFF]/
+/* eslint-enable no-control-regex */
+
+const assertNoInvisibles = (text, ref) => {
+  const match = INVISIBLE.exec(text)
+  if (match) {
+    const code = match[0].codePointAt(0).toString(16).padStart(4, '0')
+    throw new Error(
+      `${ref} contains the invisible character U+${code.toUpperCase()} at offset ${match.index} — retype the cell rather than pasting it`,
+    )
+  }
+}
 
 /**
  * ExcelJS cell value → trimmed string, flattening rich text and formulas.
@@ -123,34 +156,34 @@ const address = (row, col) =>
  * Skilgreining as missing. There are none on this sheet today; the throw is so
  * that stays true.
  */
-const readString = (value, row, col) => {
+const readString = (value, ref) => {
   if (value == null) return null
   if (typeof value === 'object') {
     if (Array.isArray(value.richText)) {
-      return readString(
-        value.richText.map((part) => part.text).join(''),
-        row,
-        col,
-      )
+      return readString(value.richText.map((part) => part.text).join(''), ref)
     }
     if (value.formula != null || value.sharedFormula != null) {
       if (value.result == null) {
         throw new Error(
-          `${address(row, col)} is a formula with no cached result — open the workbook in Excel and save it so the value is written`,
+          `${ref} is a formula with no cached result — open the workbook in Excel and save it so the value is written`,
         )
       }
-      return readString(value.result, row, col)
+      return readString(value.result, ref)
     }
-    if (value.text != null) return readString(value.text, row, col)
-    if (value.result != null) return readString(value.result, row, col)
+    if (value.text != null) return readString(value.text, ref)
+    if (value.result != null) return readString(value.result, ref)
     return null
   }
+
   const text = String(value).trim()
-  return text.length > 0 ? text : null
+  if (text.length === 0) return null
+
+  assertNoInvisibles(text, ref)
+  return text
 }
 
 const cell = (sheet, row, col) =>
-  readString(sheet.getCell(row, col).value, row, col)
+  readString(sheet.getCell(row, col).value, address(sheet, row, col))
 
 /**
  * Fails before any data is read if the sheet is not laid out as expected.
@@ -172,7 +205,7 @@ const assertLayout = (sheet) => {
     const detail = wrong
       .map(
         ({ col, expected, actual }) =>
-          `${address(HEADER_ROW, col)} is ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`,
+          `${address(sheet, HEADER_ROW, col)} is ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`,
       )
       .join('; ')
     throw new Error(
@@ -183,21 +216,22 @@ const assertLayout = (sheet) => {
   const marker = cell(sheet, SCALE_ROW, COLS.numSteps)
   if (marker !== SCALE_MARKER) {
     throw new Error(
-      `Expected ${JSON.stringify(SCALE_MARKER)} at ${address(SCALE_ROW, COLS.numSteps)}, found ${JSON.stringify(marker)} — the generic step scale is not where it was`,
+      `Expected ${JSON.stringify(SCALE_MARKER)} at ${address(sheet, SCALE_ROW, COLS.numSteps)}, found ${JSON.stringify(marker)} — the generic step scale is not where it was`,
     )
   }
 }
 
 /**
- * Reads the Þrep columns for one row.
+ * Reads the Þrep columns of one row, left to right, up to the last filled one.
  *
  * Every column is scanned rather than stopping at the first blank, so a gap
  * (blank Þrep 2 with Þrep 3 filled) is rejected instead of silently shipping a
- * truncated scale. `Fjöldi þrepa` catches that too, but it is blank on the
- * employer-authored personal entries, which is exactly where the guard is
- * needed.
+ * truncated scale. `Fjöldi þrepa` would catch that on most rows, but it is blank
+ * on the employer-authored personal entries — and on the generic scale row there
+ * is no step count at all — which is exactly where the guard is needed. `label`
+ * names the thing being read for the error message.
  */
-const readSteps = (sheet, row, title) => {
+const readContiguous = (sheet, row, label) => {
   const columns = []
   for (let col = COLS.firstStep; col <= COLS.lastStep; col++) {
     columns.push(cell(sheet, row, col))
@@ -210,11 +244,16 @@ const readSteps = (sheet, row, title) => {
   const gap = columns.findIndex((value, index) => !value && index < lastFilled)
   if (gap !== -1) {
     throw new Error(
-      `Row ${row} ("${title}") leaves ${address(row, COLS.firstStep + gap)} blank but fills a later Þrep column — steps must be contiguous from step 1`,
+      `${label} leaves ${address(sheet, row, COLS.firstStep + gap)} blank but fills a later Þrep column — steps must be contiguous from step 1`,
     )
   }
 
-  const steps = columns.slice(0, lastFilled + 1)
+  return columns.slice(0, lastFilled + 1)
+}
+
+const readSteps = (sheet, row, title) => {
+  const steps = readContiguous(sheet, row, `Row ${row} ("${title}")`)
+
   if (steps.length === 0) {
     throw new Error(`Row ${row} ("${title}") has no step descriptions`)
   }
@@ -248,7 +287,15 @@ const extract = (sheet) => {
   for (let row = FIRST_DATA_ROW; row <= LAST_DATA_ROW; row++) {
     const parentTitle = cell(sheet, row, COLS.parent)
     const title = cell(sheet, row, COLS.title)
-    if (!parentTitle || !title) continue
+    // A wholly blank row ends a section and is skipped; a half-filled one is a
+    // defect. Silently dropping it would shrink the served catalog by a row
+    // Jafnréttisstofa believes it shipped.
+    if (!parentTitle && !title) continue
+    if (!parentTitle || !title) {
+      throw new Error(
+        `Row ${row} fills only one of Yfirviðmið / Undirviðmið (${JSON.stringify(parentTitle)} / ${JSON.stringify(title)}) — both are required`,
+      )
+    }
 
     const criterionType = TYPE_BY_PARENT[parentTitle]
     if (!criterionType) {
@@ -292,12 +339,14 @@ const extract = (sheet) => {
 }
 
 const extractGeneralScale = (sheet) => {
-  const scale = []
-  for (let col = COLS.firstStep; col <= COLS.lastStep; col++) {
-    const value = cell(sheet, SCALE_ROW, col)
-    if (!value) break
-    scale.push(value)
-  }
+  // Read through a gap rather than stopping at it, exactly like `readSteps`: a
+  // blank Þrep 2 with Þrep 3 filled would otherwise ship a one-item scale, and
+  // this is the only suggested wording the employer-authored entries get.
+  const scale = readContiguous(
+    sheet,
+    SCALE_ROW,
+    `the generic step scale on row ${SCALE_ROW}`,
+  )
 
   if (scale.length === 0) {
     throw new Error(
@@ -383,6 +432,14 @@ ${rendered}
 }
 
 const main = async () => {
+  // Required lazily: prettier 3 loads its parsers through dynamic import, which
+  // throws under jest without --experimental-vm-modules, and the spec exercising
+  // the validation layer above has no use for the formatter. Resolved from the
+  // workspace root deliberately — the point is to format with the repo's own
+  // prettier and `.prettierrc`, so the generated file matches what everything
+  // else in the monorepo is formatted with, not a version pinned here.
+  const prettier = require('prettier')
+
   const source = process.argv[2] ?? DEFAULT_SOURCE
 
   const workbook = new ExcelJS.Workbook()
@@ -415,7 +472,31 @@ const main = async () => {
   )
 }
 
-main().catch((error) => {
-  console.error(error.message)
-  process.exit(1)
-})
+// Only run when invoked as a script — requiring this file from the spec must not
+// rewrite the committed catalog.
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.message)
+    process.exit(1)
+  })
+}
+
+// Exported for `refresh-sub-criterion-catalog.spec.ts`, which builds workbooks in
+// memory to exercise every rejection path above. `require.main` keeps the CLI
+// behaviour unchanged when the file is run directly.
+module.exports = {
+  SHEET,
+  HEADER_ROW,
+  FIRST_DATA_ROW,
+  SCALE_ROW,
+  MAX_STEPS,
+  COLS,
+  EXPECTED_HEADERS,
+  SCALE_MARKER,
+  TYPE_BY_PARENT,
+  assertLayout,
+  extract,
+  extractGeneralScale,
+  readSteps,
+  render,
+}

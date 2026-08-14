@@ -17,6 +17,7 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
+import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -67,6 +68,25 @@ export class ReportCreateService implements IReportCreateService {
     @Inject(IReportIdentifierService)
     private readonly reportIdentifierService: IReportIdentifierService,
   ) {}
+
+  /**
+   * Inserts the report row, mapping an identifier collision to a retryable error.
+   *
+   * The minted identifier is probed first, so reaching the index means two
+   * concurrent requests drew the same code — transient, and the caller should
+   * retry rather than be told its payload was bad. See
+   * `rethrowReportWriteError`.
+   */
+  private async createReportRow(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    values: any,
+  ): Promise<ReportModel> {
+    try {
+      return await this.reportModel.create(values)
+    } catch (error) {
+      rethrowReportWriteError(error)
+    }
+  }
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
     return this.createSalaryReport(input)
@@ -127,7 +147,7 @@ export class ReportCreateService implements IReportCreateService {
     const initialStatus = outliersPostponed
       ? ReportStatusEnum.POSTPONED
       : ReportStatusEnum.SUBMITTED
-    const report = await this.reportModel.create({
+    const report = await this.createReportRow({
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
       equalityReportId: input.equalityReportId,
@@ -272,7 +292,7 @@ export class ReportCreateService implements IReportCreateService {
       ReportTypeEnum.EQUALITY,
     )
 
-    const report = await this.reportModel.create({
+    const report = await this.createReportRow({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
       identifier: await this.reportIdentifierService.allocate(),

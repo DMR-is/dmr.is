@@ -13,7 +13,17 @@ export type SetupSwaggerOptions = {
   autoTagControllers?: boolean
 }
 
-export const setupSwaggerDocument = (
+/**
+ * Builds the exact document `setupSwaggerDocument` serves, without mounting it.
+ *
+ * Split out so `swagger-coverage.spec.ts` can assert on the served artifact
+ * rather than on its own re-implementation of this function. That distinction is
+ * load-bearing: `filterPaths` runs *after* `createDocument`, so a spec that only
+ * called `createDocument` would not see paths this function removes — and
+ * `filterPaths` is one config edit away from hiding a whole flow from the
+ * generated client.
+ */
+export const buildSwaggerDocument = (
   app: INestApplication,
   options: SetupSwaggerOptions,
 ) => {
@@ -44,6 +54,15 @@ export const setupSwaggerDocument = (
       }
     })
   }
+
+  return document
+}
+
+export const setupSwaggerDocument = (
+  app: INestApplication,
+  options: SetupSwaggerOptions,
+) => {
+  const document = buildSwaggerDocument(app, options)
 
   SwaggerModule.setup(options.swaggerPath, app, document, {
     customSiteTitle: options.swaggerTitle,

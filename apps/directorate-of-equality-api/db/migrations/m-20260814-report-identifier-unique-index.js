@@ -71,6 +71,10 @@ module.exports = {
 
     DROP INDEX IF EXISTS report_identifier_unique_idx;
 
+    -- Restore the pre-migration comment. Leaving the one written by \`up\` would
+    -- have the schema documenting a uniqueness guarantee nothing enforces.
+    COMMENT ON COLUMN report.identifier IS NULL;
+
     COMMIT;
     `)
   },
