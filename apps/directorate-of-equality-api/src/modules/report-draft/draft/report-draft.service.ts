@@ -1,4 +1,5 @@
 import { Op, UniqueConstraintError } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import {
   ConflictException,
@@ -6,11 +7,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { isReportIdentifierCollision } from '../../report/lib/report-identifier'
 import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -50,6 +52,7 @@ const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
  */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',
+  'companyAdminTitle',
   'companyAdminEmail',
   'companyAdminGender',
   'contactName',
@@ -65,6 +68,7 @@ const DRAFT_HEADER_KEYS = [
 export class ReportDraftService implements IReportDraftService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectConnection() private readonly sequelize: Sequelize,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEmployeeModel)
@@ -110,6 +114,7 @@ export class ReportDraftService implements IReportDraftService {
       status: report.status,
       identifier: report.identifier,
       companyAdminName: report.companyAdminName,
+      companyAdminTitle: report.companyAdminTitle,
       companyAdminEmail: report.companyAdminEmail,
       companyAdminGender: report.companyAdminGender,
       contactName: report.contactName,
@@ -188,13 +193,38 @@ export class ReportDraftService implements IReportDraftService {
   }
 
   /**
+   * Marks the report row as active without changing any column, so
+   * `pruneStaleDrafts` sees child-only edits as activity.
+   *
+   * Bulk sync and workbook import write employees / criteria / roles / groups —
+   * never the report row — so without this a draft built entirely through
+   * `POST …/draft/sync` or `POST …/draft/import` ages toward deletion exactly as
+   * if it had been abandoned. `updated_at` is set explicitly (`silent` keeps
+   * Sequelize from also managing it) because a no-column update would otherwise
+   * issue no query at all.
+   */
+  async touchDraft(reportId: string): Promise<void> {
+    await this.reportModel.update(
+      { updatedAt: new Date() },
+      { where: { id: reportId }, silent: true },
+    )
+  }
+
+  /**
    * Reaps abandoned drafts — every report still in `DRAFT` whose row has not
    * been touched since `cutoff` — hard-deleting each. System maintenance, not
    * company-scoped. Returns how many were pruned.
    *
-   * `updated_at` here is the report ROW's last change (create, header edit,
-   * submit attempt). If finer-grained "any child edit" activity should reset
-   * the clock, child-CRUD writes would need to touch the report row too.
+   * `updated_at` is the report ROW's last change, which every draft write path
+   * keeps current: create, header PATCH and submit write the row directly, and
+   * the two child-only paths — bulk sync and workbook import — call
+   * `touchDraft`. Every other draft endpoint is a read. So a draft is reaped
+   * only on genuine inactivity.
+   *
+   * Runs from the prune cron, which has no request-scoped CLS transaction, so
+   * each `hardDeleteDraftTree` autocommits statement by statement rather than
+   * as one unit. Acceptable for reaping abandoned rows; a partial failure
+   * leaves a subtree that the next run re-reaps.
    */
   async pruneStaleDrafts(cutoff: Date): Promise<number> {
     const stale = await this.reportModel.findAll({
@@ -224,8 +254,11 @@ export class ReportDraftService implements IReportDraftService {
    * id. A draft has no DB-level cascade, so the tree is removed by hand in
    * FK-safe order (leaves first): outlier + step-assignment join rows → the
    * entities they reference → the report row. A DRAFT is audit-free and has no
-   * company_report / report_result snapshot, so those are not involved. Runs in
-   * the caller's transaction, so the whole delete is atomic.
+   * company_report / report_result snapshot, so those are not involved.
+   *
+   * Atomic when called from a request (the CLS transaction spans it); the prune
+   * cron has no such transaction and autocommits per statement — see
+   * `pruneStaleDrafts`.
    */
   private async hardDeleteDraftTree(reportId: string): Promise<void> {
     await this.clearDraftChildren(reportId)
@@ -357,14 +390,23 @@ export class ReportDraftService implements IReportDraftService {
     }
 
     try {
-      const report = await this.reportModel.create({
-        type: input.type,
-        status: ReportStatusEnum.DRAFT,
-        providerType: input.providerType,
-        providerId: input.providerId,
-        companyNationalId: input.companyNationalId,
-        importedFromExcel: false,
-      })
+      // The insert gets its own SAVEPOINT. Every request runs inside one CLS
+      // transaction (`CLSMiddleware` is applied to all routes), and a unique
+      // violation aborts it — so without a savepoint the recovery SELECT below
+      // would be the next statement in an aborted transaction and fail with
+      // `25P02 current transaction is aborted`, making the replay recovery
+      // unreachable in production. Sequelize emits a SAVEPOINT for a nested
+      // `transaction()`, so only the failed insert is rolled back.
+      const report = await this.sequelize.transaction(() =>
+        this.reportModel.create({
+          type: input.type,
+          status: ReportStatusEnum.DRAFT,
+          providerType: input.providerType,
+          providerId: input.providerId,
+          companyNationalId: input.companyNationalId,
+          importedFromExcel: false,
+        }),
+      )
 
       this.logger.info(`Created DRAFT ${input.type} report row "${report.id}"`, {
         context: LOGGING_CONTEXT,
@@ -375,8 +417,15 @@ export class ReportDraftService implements IReportDraftService {
     } catch (error) {
       // Lost a concurrent create race for the same tuple: the partial unique
       // index on (provider_type, provider_id) rejects the second insert. Treat
-      // it as a replay and return the winner.
-      if (error instanceof UniqueConstraintError) {
+      // it as a replay and return the winner. Scoped to that one constraint —
+      // `report` now also carries a unique index on `identifier`, and a
+      // collision there is a different failure that must not be swallowed as a
+      // replay (draft-create leaves `identifier` null, so it cannot happen here
+      // today; the guard is so that stays true).
+      if (
+        error instanceof UniqueConstraintError &&
+        !isReportIdentifierCollision(error)
+      ) {
         const winner = await this.findExistingByProviderTupleForNationalId(
           input.providerType,
           input.providerId,

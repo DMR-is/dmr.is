@@ -1,7 +1,11 @@
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
+import { UniqueConstraintError } from 'sequelize'
 
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -14,6 +18,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { REPORT_IDENTIFIER_INDEX } from '../../report/lib/report-identifier'
 import {
   ReportStatusEnum,
   ReportTypeEnum,
@@ -23,6 +28,7 @@ import { ReportEmployeeModel } from '../../report-employee/models/report-employe
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../../report-result/report-result.service.interface'
 import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -48,7 +54,12 @@ const COMPANY = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
 
-const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => ({
+/** What the stubbed `IReportIdentifierService.allocate` hands back. */
+const IDENTIFIER = 'KTPQZW'
+
+const salaryBody = (
+  overrides: Partial<SubmitDraftDto> = {},
+): SubmitDraftDto => ({
   company: {
     name: 'Acme',
     nationalId: COMPANY_NATIONAL_ID,
@@ -64,6 +75,7 @@ const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => 
 describe('ReportDraftSubmitService', () => {
   let service: ReportDraftSubmitService
   let findOwnedDraft: jest.Mock
+  let allocate: jest.Mock
   let reportUpdate: jest.Mock
   let persistScores: jest.Mock
   let getDetectedOutlierEmployeeIds: jest.Mock
@@ -103,6 +115,7 @@ describe('ReportDraftSubmitService', () => {
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn()
+    allocate = jest.fn().mockResolvedValue(IDENTIFIER)
     persistScores = jest.fn().mockResolvedValue(undefined)
     getDetectedOutlierEmployeeIds = jest.fn().mockResolvedValue(new Set())
     createForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
@@ -123,7 +136,14 @@ describe('ReportDraftSubmitService', () => {
           provide: LOGGER_PROVIDER,
           useValue: { debug: jest.fn(), info: jest.fn(), error: jest.fn() },
         },
-        { provide: IReportDraftService, useValue: { findOwnedDraft } },
+        {
+          provide: IReportDraftService,
+          useValue: { findOwnedDraft },
+        },
+        {
+          provide: IReportIdentifierService,
+          useValue: { allocate },
+        },
         {
           provide: IReportDraftAnalysisService,
           useValue: { persistScores, getDetectedOutlierEmployeeIds },
@@ -166,7 +186,11 @@ describe('ReportDraftSubmitService', () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
 
     await expect(
-      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody({ equalityReportId: null })),
+      service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ equalityReportId: null }),
+      ),
     ).rejects.toThrow(BadRequestException)
   })
 
@@ -275,17 +299,61 @@ describe('ReportDraftSubmitService', () => {
 
     await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
 
-    expect(assertEqualityReportApproved).toHaveBeenCalledWith(EQUALITY_REPORT_ID)
+    expect(assertEqualityReportApproved).toHaveBeenCalledWith(
+      EQUALITY_REPORT_ID,
+    )
     expect(persistScores).toHaveBeenCalledWith(REPORT_ID)
     expect(createForReport).toHaveBeenCalledWith(REPORT_ID)
     // The resolved basis is written alongside the status, so submit does not
     // rely on the draft PATCH having normalised the pair earlier.
     expect(reportUpdate).toHaveBeenCalledWith({
       status: ReportStatusEnum.SUBMITTED,
+      identifier: IDENTIFIER,
       equalityReportId: EQUALITY_REPORT_ID,
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
       salaryDataPeriod: PERIOD_STORED,
     })
+  })
+
+  // Reviewers search reports by identifier and it is printed on the PDF, so a
+  // draft-born report that submits without one is effectively unfindable.
+  it('mints an identifier server-side and freezes it onto the report', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    allocate.mockResolvedValueOnce('XYZWVU')
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(allocate).toHaveBeenCalledTimes(1)
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ identifier: 'XYZWVU' }),
+    )
+  })
+
+  it('maps an identifier collision on submit to a retryable 503', async () => {
+    // The finding this whole path exists for: uncaught, the shared
+    // SequelizeExceptionFilter turns the collision into a 400 and island.is
+    // treats a good submission as unretryable, silently dropping it.
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    const collision = new UniqueConstraintError({})
+    Object.defineProperty(collision, 'parent', {
+      value: Object.assign(new Error('duplicate key'), {
+        constraint: REPORT_IDENTIFIER_INDEX,
+      }),
+    })
+    reportUpdate.mockRejectedValueOnce(collision)
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow(ServiceUnavailableException)
+  })
+
+  it('leaves an unrelated submit failure untouched', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    reportUpdate.mockRejectedValueOnce(new Error('connection reset'))
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow('connection reset')
   })
 
   it('400s when a detected outlier is not assigned to a group', async () => {

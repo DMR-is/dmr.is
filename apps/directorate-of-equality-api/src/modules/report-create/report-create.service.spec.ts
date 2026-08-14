@@ -1,10 +1,12 @@
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
+import { UniqueConstraintError } from 'sequelize'
 
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
@@ -16,6 +18,7 @@ import { CompanySizeEnum } from '../company/models/company.enums'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { REPORT_IDENTIFIER_INDEX } from '../report/lib/report-identifier'
 import {
   GenderEnum,
   ReportProviderEnum,
@@ -41,6 +44,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportFinalizeService } from '../report-finalize/report-finalize.service'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -58,6 +62,9 @@ const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const PARENT_COMPANY_ID = '00000000-0000-0000-0000-000000000c01'
 const SUBSIDIARY_COMPANY_ID = '00000000-0000-0000-0000-000000000c02'
 
+/** What the stubbed `IReportIdentifierService.allocate` hands back. */
+const IDENTIFIER = 'KTPQZW'
+
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -70,6 +77,7 @@ describe('ReportCreateService', () => {
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
   let reportFindAll: jest.Mock
+  let allocate: jest.Mock
   let reportUpdate: jest.Mock
   let reportEventCreate: jest.Mock
   let companyFindAll: jest.Mock
@@ -94,6 +102,7 @@ describe('ReportCreateService', () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue({ id: EQUALITY_REPORT_ID })
     reportFindAll = jest.fn().mockResolvedValue([])
+    allocate = jest.fn().mockResolvedValue(IDENTIFIER)
     reportUpdate = jest.fn().mockResolvedValue([0])
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
     companyFindAll = jest
@@ -162,6 +171,7 @@ describe('ReportCreateService', () => {
       providers: [
         ReportCreateService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        { provide: IReportIdentifierService, useValue: { allocate } },
         {
           provide: getModelToken(ReportModel),
           useValue: {
@@ -761,7 +771,7 @@ describe('ReportCreateService', () => {
     })
   })
 
-it('propagates EQUALITY company_report failures before event creation', async () => {
+  it('propagates EQUALITY company_report failures before event creation', async () => {
     companyReportBulkCreate.mockRejectedValue(new Error('cr boom'))
 
     await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
@@ -770,6 +780,79 @@ it('propagates EQUALITY company_report failures before event creation', async ()
 
     expect(reportCreate).toHaveBeenCalled()
     expect(reportEventCreate).not.toHaveBeenCalled()
+  })
+
+  // Reviewers search reports by identifier and it prints on the PDF, so a row
+  // created without one is effectively unfindable. No caller supplies it — it
+  // is minted here — and nothing else in this suite pins that, since every
+  // other create assertion uses `objectContaining`.
+  describe('server-side identifier minting', () => {
+    it('SALARY: mints an identifier and writes it onto the report row', async () => {
+      await service.createSalary(makeInput())
+
+      expect(allocate).toHaveBeenCalledTimes(1)
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: IDENTIFIER }),
+      )
+    })
+
+    it('EQUALITY: mints an identifier and writes it onto the report row', async () => {
+      await service.createEquality(makeEqualityInput())
+
+      expect(allocate).toHaveBeenCalledTimes(1)
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: IDENTIFIER }),
+      )
+    })
+
+    it('maps an identifier collision to a retryable error, not a 400', async () => {
+      // The index is the backstop the probe cannot be: reaching it means two
+      // concurrent requests drew the same code. Left uncaught, the shared
+      // SequelizeExceptionFilter maps it to 400 and island.is treats a
+      // perfectly good submission as unretryable.
+      const collision = new UniqueConstraintError({})
+      Object.defineProperty(collision, 'parent', {
+        value: Object.assign(new Error('duplicate key'), {
+          constraint: REPORT_IDENTIFIER_INDEX,
+        }),
+      })
+      reportCreate.mockRejectedValueOnce(collision)
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        ServiceUnavailableException,
+      )
+    })
+
+    it('leaves an unrelated write failure untouched', async () => {
+      reportCreate.mockRejectedValueOnce(new Error('connection reset'))
+
+      await expect(service.createSalary(makeInput())).rejects.toThrow(
+        'connection reset',
+      )
+    })
+
+    it('does not burn a code on an idempotent replay', async () => {
+      // The tuple lookup short-circuits before the row is created, so a retry
+      // from upstream must not consume an identifier.
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-replay'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: '00000000-0000-0000-0000-0000000000ee',
+        providerType: input.providerType,
+        providerId: input.providerId,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      await service.createSalary(input)
+
+      expect(allocate).not.toHaveBeenCalled()
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
   })
 
   describe('idempotent replay on (providerType, providerId)', () => {
@@ -1124,7 +1207,6 @@ function makeCompanyRow(
 function makeInput(): CreateReportDto {
   return {
     equalityReportId: EQUALITY_REPORT_ID,
-    identifier: 'SAL-2026-001',
     importedFromExcel: true,
     providerType: ReportProviderEnum.SYSTEM,
     providerId: null,
@@ -1256,7 +1338,6 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
 
 function makeEqualityInput(): CreateEqualityReportDto {
   return {
-    identifier: 'EQ-2026-001',
     providerType: ReportProviderEnum.SYSTEM,
     providerId: null,
     companyAdminName: 'Anna Admin',

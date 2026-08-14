@@ -90,6 +90,19 @@ node scripts/refresh-template-data.js
 
 Commit both the updated xlsx and the regenerated `template-data.ts`.
 
+The `Undirviðmiðalisti (Lýsigögn)` sheet feeds a second generated file — the
+sub-criterion catalog the application portal reads — so a new workbook needs
+that regenerated too:
+
+```bash
+node scripts/refresh-sub-criterion-catalog.js
+```
+
+Both are committed, not built, and neither is run by the build, so a workbook
+shipped without re-running them leaves stale data being served. Review each
+diff; output is prettier-formatted, so no content change means no diff. See
+`modules/application/sub-criterion-catalog/`.
+
 ## Module layout
 
 ```

@@ -77,6 +77,11 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
       nullScores,
     )
 
+    // An import writes children only, exactly like bulk sync, so the report row
+    // has to be touched or the abandoned-draft reaper counts a draft the
+    // employer just populated from a workbook as inactive.
+    await this.reportDraftService.touchDraft(report.id)
+
     this.logger.info(
       `Seeded draft report "${report.id}" from workbook (${parsed.employees.length} employees)`,
       { context: LOGGING_CONTEXT, reportId: report.id },

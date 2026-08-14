@@ -214,6 +214,20 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 **Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists *and the submitting company matches the existing row's parent*, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
+## Report identifier
+
+`report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.
+
+**Who assigns it.** The server, always. No request DTO carries an `identifier` field, and no caller may choose one. `ReportIdentifierService.allocate` mints it: `ReportCreateService` on insert (both the applicant direct-submit and the admin-created paths), `ReportDraftSubmitService` at submit for a draft-born report.
+
+**Why a DRAFT has none.** A draft is invisible to reviewers until it is submitted, and abandoned drafts are reaped after six months — a code handed out at draft-create would be spent on a row that may never exist. So `identifier` is NULL for the whole DRAFT phase and stamped once, at submit.
+
+**Uniqueness.** A partial unique index (`report_identifier_unique_idx`, `WHERE identifier IS NOT NULL`) guarantees no two reports share a code; NULL drafts coexist freely. `allocate` additionally probes with `count` before returning a candidate, which removes the birthday collision against committed rows (~17k reports for a 50% chance of some pair colliding) without ever reaching an error path. The probe cannot close the concurrent window — under the request's CLS transaction it cannot see another request's uncommitted insert at all — so the index is what actually enforces it, rejecting the write rather than storing an identifier the admin search would find twice.
+
+A rejected write is mapped to **503** by `rethrowReportWriteError`, not the 400 that `SequelizeExceptionFilter` gives every `UniqueConstraintError` by default. The distinction matters: the payload was fine and retrying succeeds, so a 400 would tell island.is a good submission was malformed and must not be retried. There is no in-place retry — probe and insert share the request's CLS transaction, so catching the violation leaves it aborted, and a `SAVEPOINT` on every report creation is not worth an event with a ~1-in-309M chance per concurrent pair.
+
+**Release coordination (#1406).** `identifier` used to be a field on every creation payload — `CreateReportDto`, `CreateEqualityReportDto`, `SubmitSalaryReportDto`, `SubmitEqualityReportDto` — and was removed when minting moved server-side. The global `ValidationPipe` runs `whitelist: true` with **no** `forbidNonWhitelisted`, so a caller still sending one gets no error: the field is silently stripped and a different code is minted. That failure is invisible on both sides — if island.is persists or displays the code it sent, the applicant quotes a handle the reviewer's identifier search (`report/utils/filters.ts`) will never match. **The island.is client must stop sending `identifier` and read it back from the report response instead** (`GET /application/reports/:providerId` → `ApplicationService.getReport`). No deploy ordering is required in either direction; the only requirement is that the client is updated.
+
 ## Audit timeline (events + comments)
 
 Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
@@ -556,7 +570,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
-| `identifier`                     | `text`                                                                                                                         |
+| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                   |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")          |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
