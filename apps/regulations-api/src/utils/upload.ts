@@ -15,7 +15,9 @@ export type S3PresignedPost = {
   fields: { [key: string]: string }
 }
 
-const _generateFileKey = (
+/** Exported for characterization tests. Looks like a duplicate of `getKey()`
+ * in `file-upload.ts`, but genuinely diverges — see `upload.test.ts`. */
+export const _generateFileKey = (
   name?: string,
   rootFolder?: string,
   folderToken?: string,
