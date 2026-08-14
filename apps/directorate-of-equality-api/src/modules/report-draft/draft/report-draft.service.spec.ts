@@ -3,7 +3,7 @@ import subMonths from 'date-fns/subMonths'
 import { UniqueConstraintError } from 'sequelize'
 
 import { ConflictException, NotFoundException } from '@nestjs/common'
-import { getModelToken } from '@nestjs/sequelize'
+import { getConnectionToken, getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -15,6 +15,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { REPORT_IDENTIFIER_INDEX } from '../../report/lib/report-identifier'
 import {
   ReportProviderEnum,
   ReportStatusEnum,
@@ -87,6 +88,7 @@ describe('ReportDraftService', () => {
   let employeeCount: jest.Mock
   let criterionCount: jest.Mock
   let outlierGroupCount: jest.Mock
+  let transaction: jest.Mock
 
   const draftInput = (overrides = {}) => ({
     type: ReportTypeEnum.SALARY,
@@ -105,6 +107,7 @@ describe('ReportDraftService', () => {
     employeeCount = jest.fn().mockResolvedValue(0)
     criterionCount = jest.fn().mockResolvedValue(0)
     outlierGroupCount = jest.fn().mockResolvedValue(0)
+    transaction = jest.fn((cb: () => unknown) => cb())
 
     // Child models used by the hard-cascade delete — default to no children.
     const childModel = () => ({
@@ -116,6 +119,13 @@ describe('ReportDraftService', () => {
       providers: [
         ReportDraftService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        {
+          // createDraft wraps its insert in a nested transaction so the
+          // replay-recovery SELECT is legal after a unique violation aborts the
+          // savepoint. Pass the callback straight through.
+          provide: getConnectionToken(),
+          useValue: { transaction },
+        },
         {
           provide: getModelToken(ReportModel),
           useValue: {
@@ -209,6 +219,35 @@ describe('ReportDraftService', () => {
         ConflictException,
       )
       expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('rethrows an identifier collision instead of treating it as a replay', async () => {
+      // The whole point of scoping the catch to the provider-tuple constraint:
+      // a violation on `identifier` is a different failure, and swallowing it as
+      // a replay would return some other company's draft id.
+      const collision = new UniqueConstraintError({})
+      Object.defineProperty(collision, 'parent', {
+        value: Object.assign(new Error('duplicate key'), {
+          constraint: REPORT_IDENTIFIER_INDEX,
+        }),
+      })
+      reportFindOne.mockResolvedValueOnce(null)
+      reportCreate.mockRejectedValueOnce(collision)
+
+      await expect(service.createDraft(draftInput())).rejects.toThrow(
+        UniqueConstraintError,
+      )
+      // No post-race re-lookup: the replay path must not run.
+      expect(reportFindOne).toHaveBeenCalledTimes(1)
+    })
+
+    it('runs the insert inside its own transaction so replay recovery is legal', async () => {
+      // A unique violation aborts the request's CLS transaction, so the
+      // post-race SELECT would fail with 25P02 unless the insert had its own
+      // savepoint to roll back to.
+      await service.createDraft(draftInput())
+
+      expect(transaction).toHaveBeenCalledTimes(1)
     })
 
     it('treats a concurrent unique-constraint race as a replay and returns the winner', async () => {
@@ -478,9 +517,9 @@ describe('ReportDraftService', () => {
         status: ReportStatusEnum.SUBMITTED,
       })
 
-      await expect(
-        service.deleteDraft(PROVIDER_ID, COMPANY),
-      ).rejects.toThrow(NotFoundException)
+      await expect(service.deleteDraft(PROVIDER_ID, COMPANY)).rejects.toThrow(
+        NotFoundException,
+      )
       expect(reportDestroy).not.toHaveBeenCalled()
     })
   })
@@ -488,7 +527,10 @@ describe('ReportDraftService', () => {
   describe('pruneStaleDrafts', () => {
     it('hard-deletes every stale draft and returns the count', async () => {
       const cutoff = new Date('2026-01-01T00:00:00Z')
-      reportFindAll.mockResolvedValueOnce([{ id: 'draft-a' }, { id: 'draft-b' }])
+      reportFindAll.mockResolvedValueOnce([
+        { id: 'draft-a' },
+        { id: 'draft-b' },
+      ])
 
       const pruned = await service.pruneStaleDrafts(cutoff)
 

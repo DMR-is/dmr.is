@@ -1,7 +1,11 @@
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
+import { UniqueConstraintError } from 'sequelize'
 
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -14,6 +18,7 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
+import { REPORT_IDENTIFIER_INDEX } from '../../report/lib/report-identifier'
 import {
   ReportStatusEnum,
   ReportTypeEnum,
@@ -52,7 +57,9 @@ const COMPANY = {
 /** What the stubbed `IReportIdentifierService.allocate` hands back. */
 const IDENTIFIER = 'KTPQZW'
 
-const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => ({
+const salaryBody = (
+  overrides: Partial<SubmitDraftDto> = {},
+): SubmitDraftDto => ({
   company: {
     name: 'Acme',
     nationalId: COMPANY_NATIONAL_ID,
@@ -179,7 +186,11 @@ describe('ReportDraftSubmitService', () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
 
     await expect(
-      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody({ equalityReportId: null })),
+      service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ equalityReportId: null }),
+      ),
     ).rejects.toThrow(BadRequestException)
   })
 
@@ -288,7 +299,9 @@ describe('ReportDraftSubmitService', () => {
 
     await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
 
-    expect(assertEqualityReportApproved).toHaveBeenCalledWith(EQUALITY_REPORT_ID)
+    expect(assertEqualityReportApproved).toHaveBeenCalledWith(
+      EQUALITY_REPORT_ID,
+    )
     expect(persistScores).toHaveBeenCalledWith(REPORT_ID)
     expect(createForReport).toHaveBeenCalledWith(REPORT_ID)
     // The resolved basis is written alongside the status, so submit does not
@@ -314,6 +327,33 @@ describe('ReportDraftSubmitService', () => {
     expect(reportUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ identifier: 'XYZWVU' }),
     )
+  })
+
+  it('maps an identifier collision on submit to a retryable 503', async () => {
+    // The finding this whole path exists for: uncaught, the shared
+    // SequelizeExceptionFilter turns the collision into a 400 and island.is
+    // treats a good submission as unretryable, silently dropping it.
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    const collision = new UniqueConstraintError({})
+    Object.defineProperty(collision, 'parent', {
+      value: Object.assign(new Error('duplicate key'), {
+        constraint: REPORT_IDENTIFIER_INDEX,
+      }),
+    })
+    reportUpdate.mockRejectedValueOnce(collision)
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow(ServiceUnavailableException)
+  })
+
+  it('leaves an unrelated submit failure untouched', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+    reportUpdate.mockRejectedValueOnce(new Error('connection reset'))
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow('connection reset')
   })
 
   it('400s when a detected outlier is not assigned to a group', async () => {

@@ -22,6 +22,9 @@ import { CreateReportCompanySnapshotDto } from './create-report.dto'
  *
  * The report identifier is not carried either: it is a meaningless pseudonymous
  * handle, minted by `ReportCreateService` when the row is created.
+ *
+ * `identifier` was accepted here until #1406 — see db/README.md → "Report
+ * identifier" for the island.is client change that pairs with its removal.
  */
 export class CreateEqualityReportDto {
   @ApiEnum(ReportProviderEnum)

@@ -123,17 +123,22 @@ const address = (sheet, row, col) => sheet.getCell(row, col).address
 /**
  * Characters that must never reach the generated file or the API response.
  *
- * C0 controls (bar tab), the Unicode line/paragraph separators U+2028/U+2029 and
- * the zero-width/BOM family are all invisible in Excel and survive
- * `JSON.stringify` verbatim, so they would ship into Jafnréttisstofa's wording
- * unnoticed. In a hand-maintained sheet they are a paste accident, never intent
- * — so this rejects rather than silently stripping, which would make the
- * generated file disagree with the workbook it claims to mirror.
+ * C0 controls, the Unicode line/paragraph separators U+2028/U+2029 and the
+ * zero-width/BOM family are all invisible in Excel and survive `JSON.stringify`
+ * verbatim, so they would ship into Jafnréttisstofa's wording unnoticed. In a
+ * hand-maintained sheet they are a paste accident, never intent — so this rejects
+ * rather than silently stripping, which would make the generated file disagree
+ * with the workbook it claims to mirror.
+ *
+ * Tab, LF and CR are excluded: an in-cell break (Alt+Enter) is legitimate and
+ * arrives as LF, or as CRLF when the text was pasted from a Windows editor.
+ * Rejecting CR would fail generation on a real line break with a message about
+ * corruption.
  */
 /* The control characters are the entire point of this pattern. */
 /* eslint-disable no-control-regex */
 const INVISIBLE =
-  /[\u0000-\u0008\u000B-\u001F\u007F\u200B-\u200D\u2028\u2029\uFEFF]/
+  /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200D\u2028\u2029\uFEFF]/
 /* eslint-enable no-control-regex */
 
 const assertNoInvisibles = (text, ref) => {
@@ -358,11 +363,15 @@ const extractGeneralScale = (sheet) => {
 }
 
 /**
- * Emits a TS string literal. `JSON.stringify` rather than hand-rolled escaping
- * so an embedded newline (Alt+Enter in a cell), a backslash or a U+2028/U+2029
- * separator cannot produce a broken or subtly wrong literal. Prettier rewrites
- * the double quotes to the project's single-quote style, so output stays
- * byte-stable.
+ * Emits a TS string literal. `JSON.stringify` rather than hand-rolled escaping so
+ * an embedded newline (Alt+Enter in a cell), a backslash or a quote cannot
+ * produce a broken literal — the hand-rolled version escaped only backslash and
+ * apostrophe and emitted a raw newline, which made prettier fail on generated
+ * source rather than naming the offending cell.
+ *
+ * It does *not* protect against U+2028/U+2029, which it emits verbatim; those are
+ * rejected upstream by `assertNoInvisibles`. Prettier rewrites the double quotes
+ * to the project's single-quote style, so output stays byte-stable.
  */
 const quote = (text) => JSON.stringify(text)
 

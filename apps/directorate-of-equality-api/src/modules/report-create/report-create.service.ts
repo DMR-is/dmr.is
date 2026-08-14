@@ -1,3 +1,5 @@
+import { CreationAttributes } from 'sequelize'
+
 import {
   BadRequestException,
   ConflictException,
@@ -78,8 +80,7 @@ export class ReportCreateService implements IReportCreateService {
    * `rethrowReportWriteError`.
    */
   private async createReportRow(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    values: any,
+    values: CreationAttributes<ReportModel>,
   ): Promise<ReportModel> {
     try {
       return await this.reportModel.create(values)
@@ -131,10 +132,11 @@ export class ReportCreateService implements IReportCreateService {
       input.equalityReportId,
     )
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.SALARY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.SALARY,
+      )
 
     const outliersPostponed = input.outliersPostponed ?? false
 
@@ -263,7 +265,10 @@ export class ReportCreateService implements IReportCreateService {
 
     // 12. WITHDRAWN audit events — one per predecessor we just retired, each
     //     linked to the new report that replaced it.
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     return { reportId: report.id }
   }
@@ -287,10 +292,11 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.EQUALITY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.EQUALITY,
+      )
 
     const report = await this.createReportRow({
       type: ReportTypeEnum.EQUALITY,
@@ -335,7 +341,10 @@ export class ReportCreateService implements IReportCreateService {
       submittingCompany.companyId,
     )
 
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     return { reportId: report.id }
   }

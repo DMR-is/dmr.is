@@ -1,4 +1,5 @@
 import { Op, UniqueConstraintError } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
 
 import {
   ConflictException,
@@ -6,7 +7,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -67,6 +68,7 @@ const DRAFT_HEADER_KEYS = [
 export class ReportDraftService implements IReportDraftService {
   constructor(
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    @InjectConnection() private readonly sequelize: Sequelize,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(ReportEmployeeModel)
@@ -388,14 +390,23 @@ export class ReportDraftService implements IReportDraftService {
     }
 
     try {
-      const report = await this.reportModel.create({
-        type: input.type,
-        status: ReportStatusEnum.DRAFT,
-        providerType: input.providerType,
-        providerId: input.providerId,
-        companyNationalId: input.companyNationalId,
-        importedFromExcel: false,
-      })
+      // The insert gets its own SAVEPOINT. Every request runs inside one CLS
+      // transaction (`CLSMiddleware` is applied to all routes), and a unique
+      // violation aborts it — so without a savepoint the recovery SELECT below
+      // would be the next statement in an aborted transaction and fail with
+      // `25P02 current transaction is aborted`, making the replay recovery
+      // unreachable in production. Sequelize emits a SAVEPOINT for a nested
+      // `transaction()`, so only the failed insert is rolled back.
+      const report = await this.sequelize.transaction(() =>
+        this.reportModel.create({
+          type: input.type,
+          status: ReportStatusEnum.DRAFT,
+          providerType: input.providerType,
+          providerId: input.providerId,
+          companyNationalId: input.companyNationalId,
+          importedFromExcel: false,
+        }),
+      )
 
       this.logger.info(`Created DRAFT ${input.type} report row "${report.id}"`, {
         context: LOGGING_CONTEXT,

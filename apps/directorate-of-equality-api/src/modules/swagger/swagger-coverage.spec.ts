@@ -1,9 +1,10 @@
 import { INestApplication, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { OpenAPIObject } from '@nestjs/swagger'
-import { DECORATORS } from '@nestjs/swagger/dist/constants'
 
 import { AppModule } from '../../app/app.module'
+import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
 import { buildSwaggerDocument } from '../../setupSwaggerDocument'
 import { SWAGGER_CONFIG } from '../../swagger.config'
 
@@ -38,7 +39,26 @@ import { SWAGGER_CONFIG } from '../../swagger.config'
  * other side effect.
  */
 
-/** `"GET /v1/application/reports/draft"` — one routed, documentable operation. */
+/**
+ * Swagger's exclusion metadata keys, inlined.
+ *
+ * They live in `@nestjs/swagger/dist/constants`, which is a deep import: it
+ * resolves under the pinned 8.x but 11.x ships an `exports` map that does not
+ * expose `./dist/*`, so importing it there fails at *load* time — and a spec that
+ * cannot load is a guard that silently does nothing. Nothing local would catch
+ * that either: `tsconfig.app.json` excludes specs and jest runs with
+ * `diagnostics: false`. Two string constants are not worth that exposure.
+ */
+const API_EXCLUDE_CONTROLLER = 'swagger/apiExcludeController'
+const API_EXCLUDE_ENDPOINT = 'swagger/apiExcludeEndpoint'
+
+/** Nest's `@UseGuards` metadata key (`@nestjs/common/constants`). */
+const GUARDS_METADATA = '__guards__'
+
+/** Guards that mark a surface as reviewer-only. */
+const ADMIN_GUARDS: readonly unknown[] = [AdminGuard, RequireAdminRoleGuard]
+
+/** `"GET /api/v1/application/reports/draft"` — one routed, documentable operation. */
 type OperationKey = string
 
 /**
@@ -48,7 +68,7 @@ type OperationKey = string
  */
 const UNPUBLISHED: ReadonlySet<OperationKey> = new Set([
   // Infrastructure probe for the cluster, not part of any client contract.
-  'GET /v1/health',
+  'GET /api/v1/health',
 ])
 
 /**
@@ -76,19 +96,22 @@ const HIDDEN_FROM_SWAGGER: ReadonlySet<string> = new Set([
  * tripwire.
  */
 const DRAFT_LIFECYCLE: readonly OperationKey[] = [
-  'POST /v1/application/reports/draft',
-  'GET /v1/application/reports/{providerId}/draft',
-  'PATCH /v1/application/reports/{providerId}/draft',
-  'DELETE /v1/application/reports/{providerId}/draft',
-  'POST /v1/application/reports/{providerId}/draft/sync',
-  'POST /v1/application/reports/{providerId}/draft/import',
-  'POST /v1/application/reports/{providerId}/draft/submit',
+  'POST /api/v1/application/reports/draft',
+  'GET /api/v1/application/reports/{providerId}/draft',
+  'PATCH /api/v1/application/reports/{providerId}/draft',
+  'DELETE /api/v1/application/reports/{providerId}/draft',
+  'POST /api/v1/application/reports/{providerId}/draft/sync',
+  'POST /api/v1/application/reports/{providerId}/draft/import',
+  'POST /api/v1/application/reports/{providerId}/draft/submit',
 ]
+
+/** Mirrors `main.ts`. Baked into every document path by `createDocument`. */
+const GLOBAL_PREFIX = 'api'
 
 const APPLICATION_DOC = 'swagger/application'
 const INTERNAL_DOC = 'swagger/internal'
 /** Path segment every applicant-facing operation shares. */
-const APPLICANT_PREFIX = '/v1/application/'
+const APPLICANT_PREFIX = '/api/v1/application/'
 
 const operationKeys = (document: OpenAPIObject): OperationKey[] =>
   Object.entries(document.paths).flatMap(([path, item]) =>
@@ -113,22 +136,99 @@ const routedControllers = (app: INestApplication) => {
   return found
 }
 
-/** `@ApiExcludeController` / `@ApiExcludeEndpoint` markers on a controller. */
+/**
+ * `@ApiExcludeController` / `@ApiExcludeEndpoint` markers on a controller.
+ *
+ * Both decorators take a `disable` argument defaulting to true and store it —
+ * the controller one as `[disable]`, the endpoint one as `{ disable }` — so the
+ * flag is read rather than the metadata's presence. `@ApiExcludeEndpoint(false)`
+ * excludes nothing, and reporting it as an exclusion would block a legitimate
+ * use.
+ */
 // eslint-disable-next-line @typescript-eslint/ban-types
 const swaggerExclusions = (controller: Function): string[] => {
-  if (Reflect.getMetadata(DECORATORS.API_EXCLUDE_CONTROLLER, controller)) {
+  const onClass: [boolean] | undefined = Reflect.getMetadata(
+    API_EXCLUDE_CONTROLLER,
+    controller,
+  )
+  if (onClass?.[0]) {
     return [controller.name]
   }
 
   return Object.getOwnPropertyNames(controller.prototype)
     .filter((method) => method !== 'constructor')
-    .filter((method) =>
-      Reflect.getMetadata(
-        DECORATORS.API_EXCLUDE_ENDPOINT,
-        controller.prototype[method],
-      ),
+    .filter(
+      (method) =>
+        (
+          Reflect.getMetadata(
+            API_EXCLUDE_ENDPOINT,
+            controller.prototype[method],
+          ) as { disable?: boolean } | undefined
+        )?.disable,
     )
     .map((method) => `${controller.name}.${method}`)
+}
+
+/** Every guard `@UseGuards` puts on the class or any of its handlers. */
+// eslint-disable-next-line @typescript-eslint/ban-types
+const guardsOn = (controller: Function): unknown[] => {
+  const fromClass: unknown[] =
+    Reflect.getMetadata(GUARDS_METADATA, controller) ?? []
+
+  const fromHandlers = Object.getOwnPropertyNames(controller.prototype)
+    .filter((method) => method !== 'constructor')
+    .flatMap(
+      (method) =>
+        (Reflect.getMetadata(
+          GUARDS_METADATA,
+          controller.prototype[method],
+        ) as unknown[]) ?? [],
+    )
+
+  return [...fromClass, ...fromHandlers]
+}
+
+/**
+ * Every controller anywhere under `roots`, by walking module metadata.
+ *
+ * Deliberately unbounded, unlike swagger's one-level scan: this is used to reject
+ * admin-guarded controllers under the applicant aggregate, and one nested two
+ * levels deep would be routed-but-undocumented — still wrong, and still worth
+ * failing on. Erring wide is the safe direction here.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+const controllersUnder = (roots: Function[]): Function[] => {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  const found: Function[] = []
+  const seen = new Set<unknown>()
+  const queue: unknown[] = [...roots]
+
+  while (queue.length > 0) {
+    const entry = queue.shift()
+    // Dynamic modules (`SequelizeModule.forFeature(...)`) are `{ module, ... }`.
+    const target =
+      entry !== null && typeof entry === 'object'
+        ? (entry as { module?: unknown }).module
+        : entry
+
+    if (typeof target !== 'function' || seen.has(target)) {
+      continue
+    }
+    seen.add(target)
+
+    for (const controller of (Reflect.getMetadata('controllers', target) ??
+      []) as unknown[]) {
+      if (typeof controller === 'function') {
+        found.push(controller)
+      }
+    }
+    for (const imported of (Reflect.getMetadata('imports', target) ??
+      []) as unknown[]) {
+      queue.push(imported)
+    }
+  }
+
+  return found
 }
 
 describe('swagger document coverage', () => {
@@ -151,11 +251,16 @@ describe('swagger document coverage', () => {
 
   beforeAll(async () => {
     app = await NestFactory.create(AppModule, { preview: true, logger: false })
-    // URI versioning matches `main.ts` and is what puts `/v1` in every key.
-    // Without it swagger emits no version segment, so a routed-but-undocumented
-    // `version: '2'` twin of a documented controller would collide with its v1
-    // key and pass. The global prefix is left off — it shifts every path
-    // uniformly and every assertion here is relative.
+    // Both of these must match `main.ts:37-41`, because `createDocument` bakes
+    // them into every path and a `filterPaths` predicate is written against the
+    // resulting *absolute* shape. Omitting the prefix once left a predicate
+    // keyed on `/api/v1/...` stripping every draft operation from the served
+    // document while this suite stayed green — the keys it compared simply had a
+    // different shape from the ones production filters. Versioning matters for a
+    // second reason: without it swagger emits no version segment, so a
+    // routed-but-undocumented `version: '2'` twin of a documented controller
+    // would collide with its v1 key and pass.
+    app.setGlobalPrefix(GLOBAL_PREFIX)
     app.enableVersioning({ type: VersioningType.URI })
 
     // No `include` scans every module in the container, which is the routed
@@ -249,6 +354,52 @@ describe('swagger document coverage', () => {
       .sort()
 
     expect(foreign).toEqual([])
+  })
+
+  it('keeps admin-guarded controllers out of the applicant aggregate', () => {
+    // The path check above is necessary but not sufficient: path and guard are
+    // independent, so an admin controller re-pathed under `application/` and
+    // wired into this aggregate satisfies it while publishing reviewer-only
+    // operations to island.is. Contract disclosure rather than an authz bypass —
+    // AdminGuard still rejects at runtime — but the guard should enforce what its
+    // comment claims.
+    const applicationAggregate = SWAGGER_CONFIG.find(
+      (config) => config.swaggerPath === APPLICATION_DOC,
+    )
+    const offenders = controllersUnder(applicationAggregate?.modules ?? [])
+      .filter((controller) =>
+        guardsOn(controller).some((guard) => ADMIN_GUARDS.includes(guard)),
+      )
+      .map((controller) => controller.name)
+      .sort()
+
+    expect(offenders).toEqual([])
+  })
+
+  it('gives every operation in a document a unique operationId', () => {
+    // operationIds are hand-written per handler via `DoeResponse`, and the
+    // generated client turns each into a method name — two operations sharing one
+    // silently collapses to a single method. Invisible to the coverage
+    // comparison, which keys on method+path.
+    const duplicates = SWAGGER_CONFIG.flatMap((config) => {
+      const document = buildSwaggerDocument(app, config)
+      const seen = new Map<string, number>()
+
+      for (const item of Object.values(document.paths)) {
+        for (const operation of Object.values(item)) {
+          const id = (operation as { operationId?: string }).operationId
+          if (id) {
+            seen.set(id, (seen.get(id) ?? 0) + 1)
+          }
+        }
+      }
+
+      return [...seen.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([id, count]) => `${config.swaggerPath}: ${id} ×${count}`)
+    }).sort()
+
+    expect(duplicates).toEqual([])
   })
 
   it('serves the whole applicant surface from the application document', () => {

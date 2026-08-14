@@ -14,6 +14,8 @@ const {
   assertLayout,
   extract,
   extractGeneralScale,
+  readSteps,
+  render,
 } = generator
 
 /**
@@ -99,7 +101,10 @@ describe('sub-criterion catalog generator', () => {
       const sheet = validSheet()
       sheet.getCell(HEADER_ROW, COLS.description).value = 'Lýsing'
 
-      expect(() => run(sheet)).toThrow(/layout.*D5 is "Lýsing"/s)
+      // Two assertions rather than one dotAll pattern: the `s` flag needs an
+      // es2018 target, which this project's spec tsconfig does not set.
+      expect(() => run(sheet)).toThrow(/Unexpected .* layout/)
+      expect(() => run(sheet)).toThrow(/D5 is "Lýsing"/)
     })
 
     it('rejects an inserted column, naming every shifted header', () => {
@@ -245,6 +250,71 @@ describe('sub-criterion catalog generator', () => {
       sheet.getCell(FIRST_DATA_ROW, COLS.description).value = 'Starf\tkrefst.'
 
       expect(run(sheet).entries[0].description).toBe('Starf\tkrefst.')
+    })
+  })
+
+  describe('emitted source', () => {
+    // The generated file is the actual artifact — the layout guards above only
+    // protect what feeds it. Nothing else asserts the shape that reaches the API.
+    const emit = (sheet: ExcelJS.Worksheet) => {
+      const { entries, generalScale } = run(sheet)
+      return render(entries, generalScale, 'template.xlsx')
+    }
+
+    it('emits the enum reference, not a string literal, for criterionType', () => {
+      // The data file imports ReportCriterionTypeEnum; emitting 'COMPETENCE' as a
+      // string would still typecheck against `criterionType` and silently widen it.
+      expect(emit(validSheet())).toContain(
+        'criterionType: ReportCriterionTypeEnum.COMPETENCE',
+      )
+    })
+
+    it('emits a bare null for an employer-authored step count', () => {
+      // `numSteps: null` is meaningful (the employer authors the rest), and it must
+      // not be quoted or omitted.
+      expect(emit(validSheet())).toContain('numSteps: null,')
+    })
+
+    it('emits steps in order, and the generic scale', () => {
+      // Literals are double-quoted here: `quote` is `JSON.stringify`, and the
+      // project's single-quote style is applied by the prettier pass in `main`.
+      // That split is what makes the committed file byte-stable.
+      const source = emit(validSheet())
+
+      expect(source).toContain('"Þrep eitt",')
+      expect(source.indexOf('"Þrep eitt"')).toBeLessThan(
+        source.indexOf('"Þrep tvö"'),
+      )
+      expect(source).toContain('SUB_CRITERION_GENERAL_SCALE')
+      expect(source).toContain('"Aldrei, engin",')
+    })
+
+    it('escapes a quote and a newline rather than breaking the literal', () => {
+      // The hand-rolled escaping this replaced emitted a raw newline, which made
+      // prettier fail on generated source instead of naming the cell.
+      const sheet = validSheet()
+      sheet.getCell(FIRST_DATA_ROW, COLS.description).value =
+        'Starf "krefst"\nnáms.'
+
+      const source = emit(sheet)
+      // Escaped, not raw: a literal newline inside the literal made prettier
+      // abort on generated source instead of naming the offending cell.
+      expect(source).toContain(String.raw`\n`)
+      expect(source).toContain(String.raw`\"krefst\"`)
+      expect(source).not.toMatch(/description: "[^"\n]*\n/)
+    })
+  })
+
+  describe('readSteps', () => {
+    it('rejects a row with no step descriptions at all', () => {
+      const sheet = validSheet()
+      for (let step = 0; step < MAX_STEPS; step++) {
+        sheet.getCell(FIRST_DATA_ROW, COLS.firstStep + step).value = null
+      }
+
+      expect(() => readSteps(sheet, FIRST_DATA_ROW, 'Formleg menntun')).toThrow(
+        /has no step descriptions/,
+      )
     })
   })
 
