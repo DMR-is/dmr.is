@@ -1,7 +1,8 @@
-import { INestApplication, VersioningType } from '@nestjs/common'
+import { INestApplication } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { OpenAPIObject } from '@nestjs/swagger'
 
+import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from '../../api-routing'
 import { AppModule } from '../../app/app.module'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
@@ -55,6 +56,13 @@ const API_EXCLUDE_ENDPOINT = 'swagger/apiExcludeEndpoint'
 /** Nest's `@UseGuards` metadata key (`@nestjs/common/constants`). */
 const GUARDS_METADATA = '__guards__'
 
+/**
+ * Nest's route metadata key (`PATH_METADATA` in `@nestjs/common/constants`),
+ * set on a method by `@Get` / `@Post` / … and by nothing else. Its presence is
+ * what makes a prototype method a routed handler.
+ */
+const PATH_METADATA = 'path'
+
 /** Guards that mark a surface as reviewer-only. */
 const ADMIN_GUARDS: readonly unknown[] = [AdminGuard, RequireAdminRoleGuard]
 
@@ -88,35 +96,87 @@ const HIDDEN_FROM_SWAGGER: ReadonlySet<string> = new Set([
 ])
 
 /**
- * The draft-report lifecycle. These are the operations whose absence from the
- * client was the original bug: the application system cannot hold report content
- * itself (150kb payload cap), so without them the flow is unreachable. Named
- * explicitly rather than covered by an operation count — a threshold sitting one
- * operation from its boundary reads as a structural assertion while being a
- * tripwire.
+ * The draft-report lifecycle, each operation pinned to the `operationId` the
+ * generated client turns into a method name. These are the operations whose
+ * absence from the client was the original bug: the application system cannot
+ * hold report content itself (150kb payload cap), so without them the flow is
+ * unreachable. Named explicitly rather than covered by an operation count — a
+ * threshold sitting one operation from its boundary reads as a structural
+ * assertion while being a tripwire.
+ *
+ * The `operationId` half is not documentation. A path item holds one operation
+ * per method, so two handlers on the same `METHOD` + path are last-writer-wins by
+ * OpenAPI object semantics — Nest does not complain, the surviving key still
+ * exists, and the loser's client method simply disappears. Every set-based
+ * assertion here is blind to that by construction: coverage keys on
+ * `METHOD path` and loses the same key on both sides at once, and the duplicate
+ * check below cannot see an id that was overwritten *out* of the document.
+ * Asserting the id *at* the key is what makes the identity, not just the route,
+ * survive a refactor.
  */
-const DRAFT_LIFECYCLE: readonly OperationKey[] = [
-  'POST /api/v1/application/reports/draft',
-  'GET /api/v1/application/reports/{providerId}/draft',
-  'PATCH /api/v1/application/reports/{providerId}/draft',
-  'DELETE /api/v1/application/reports/{providerId}/draft',
-  'POST /api/v1/application/reports/{providerId}/draft/sync',
-  'POST /api/v1/application/reports/{providerId}/draft/import',
-  'POST /api/v1/application/reports/{providerId}/draft/submit',
-]
-
-/** Mirrors `main.ts`. Baked into every document path by `createDocument`. */
-const GLOBAL_PREFIX = 'api'
+const DRAFT_LIFECYCLE: Readonly<Record<OperationKey, string>> = {
+  'POST /api/v1/application/reports/draft': 'createApplicationReportDraft',
+  'GET /api/v1/application/reports/{providerId}/draft':
+    'getApplicationReportDraft',
+  'PATCH /api/v1/application/reports/{providerId}/draft':
+    'updateApplicationReportDraft',
+  'DELETE /api/v1/application/reports/{providerId}/draft':
+    'deleteApplicationReportDraft',
+  'POST /api/v1/application/reports/{providerId}/draft/sync':
+    'syncApplicationReportDraft',
+  'POST /api/v1/application/reports/{providerId}/draft/import':
+    'importApplicationReportDraftWorkbook',
+  'POST /api/v1/application/reports/{providerId}/draft/submit':
+    'submitApplicationReportDraft',
+}
 
 const APPLICATION_DOC = 'swagger/application'
 const INTERNAL_DOC = 'swagger/internal'
-/** Path segment every applicant-facing operation shares. */
-const APPLICANT_PREFIX = '/api/v1/application/'
 
-const operationKeys = (document: OpenAPIObject): OperationKey[] =>
-  Object.entries(document.paths).flatMap(([path, item]) =>
-    Object.keys(item).map((method) => `${method.toUpperCase()} ${path}`),
+/**
+ * The applicant aggregate root, as a slash-or-end boundary rather than a literal
+ * `'/api/v1/application/'` prefix.
+ *
+ * `ReportDraftController` already sits at `path: 'application'`, so a bare
+ * `@Get()` on it — plausibly the next applicant endpoint added — is served at
+ * exactly `/api/v1/application`. A trailing-slash prefix reports that as a
+ * foreign operation in an island.is-facing document: it fails safe, but on a
+ * legitimate change, which reads as a broken guard.
+ */
+const APPLICANT_PATH = new RegExp(
+  `^/${GLOBAL_PREFIX}/${API_VERSION}/application(/|$)`,
+)
+
+/** `"GET /api/v1/x"` → `"/api/v1/x"`. */
+const pathOf = (key: OperationKey): string => key.slice(key.indexOf(' ') + 1)
+
+const isApplicant = (key: OperationKey): boolean =>
+  APPLICANT_PATH.test(pathOf(key))
+
+/**
+ * Every operation in `document`, keyed by `METHOD path` → its `operationId`.
+ *
+ * A Map rather than a Set because the id is what pins an operation's identity;
+ * see `DRAFT_LIFECYCLE`.
+ */
+const operationsIn = (
+  document: OpenAPIObject,
+): Map<OperationKey, string | undefined> =>
+  new Map(
+    Object.entries(document.paths).flatMap(([path, item]) =>
+      Object.entries(item).map(
+        ([method, operation]) =>
+          [
+            `${method.toUpperCase()} ${path}`,
+            (operation as { operationId?: string }).operationId,
+          ] as const,
+      ),
+    ),
   )
+
+const operationKeys = (document: OpenAPIObject): OperationKey[] => [
+  ...operationsIn(document).keys(),
+]
 
 /** Every controller Nest actually routes, straight from the module container. */
 const routedControllers = (app: INestApplication) => {
@@ -159,15 +219,50 @@ const swaggerExclusions = (controller: Function): string[] => {
     .filter((method) => method !== 'constructor')
     .filter(
       (method) =>
-        (
-          Reflect.getMetadata(
-            API_EXCLUDE_ENDPOINT,
-            controller.prototype[method],
-          ) as { disable?: boolean } | undefined
-        )?.disable,
+        (Reflect.getMetadata(
+          API_EXCLUDE_ENDPOINT,
+          controller.prototype[method],
+        ) as { disable?: boolean } | undefined)?.disable,
     )
     .map((method) => `${controller.name}.${method}`)
 }
+
+/**
+ * Every routed handler swagger is expected to document, as
+ * `ControllerName.method`.
+ *
+ * Counted off the container rather than read out of a document, which is the
+ * whole point: it is the only side of the comparison a route-key collision cannot
+ * move. Two handlers on the same `METHOD` + path collapse to one operation in
+ * every document while both remain here, so the counts diverge. No route paths
+ * are resolved — that would re-implement what `createDocument` does, the mistake
+ * this spec exists to avoid — only handlers are counted.
+ *
+ * Own properties are enough because no controller in this app extends another;
+ * `guardsOn` and `swaggerExclusions` above rely on the same thing.
+ */
+const documentableHandlers = (app: INestApplication): string[] =>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  [...new Set<Function>(routedControllers(app))]
+    .filter(
+      (controller) =>
+        !(Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
+          | [boolean]
+          | undefined)?.[0],
+    )
+    .flatMap((controller) => {
+      const excluded = new Set(swaggerExclusions(controller))
+
+      return Object.getOwnPropertyNames(controller.prototype)
+        .filter((method) => method !== 'constructor')
+        .filter(
+          (method) =>
+            Reflect.getMetadata(PATH_METADATA, controller.prototype[method]) !==
+            undefined,
+        )
+        .map((method) => `${controller.name}.${method}`)
+        .filter((key) => !excluded.has(key))
+    })
 
 /** Every guard `@UseGuards` puts on the class or any of its handlers. */
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -237,11 +332,13 @@ describe('swagger document coverage', () => {
   let routed: OperationKey[]
   /** Every operation reachable through some `SWAGGER_CONFIG` document. */
   let published: Set<OperationKey>
-  /** Per-document operation sets, keyed by `swaggerPath`. */
-  let documents: Map<string, Set<OperationKey>>
+  /** Per-document operations, keyed by `swaggerPath` then by `METHOD path`. */
+  let documents: Map<string, Map<OperationKey, string | undefined>>
 
   /** The document served at `swaggerPath`, or a clear failure if there is none. */
-  const documentFor = (swaggerPath: string): Set<OperationKey> => {
+  const documentFor = (
+    swaggerPath: string,
+  ): Map<OperationKey, string | undefined> => {
     const operations = documents.get(swaggerPath)
     if (!operations) {
       throw new Error(`SWAGGER_CONFIG no longer publishes "${swaggerPath}"`)
@@ -251,17 +348,17 @@ describe('swagger document coverage', () => {
 
   beforeAll(async () => {
     app = await NestFactory.create(AppModule, { preview: true, logger: false })
-    // Both of these must match `main.ts:37-41`, because `createDocument` bakes
-    // them into every path and a `filterPaths` predicate is written against the
-    // resulting *absolute* shape. Omitting the prefix once left a predicate
-    // keyed on `/api/v1/...` stripping every draft operation from the served
-    // document while this suite stayed green — the keys it compared simply had a
-    // different shape from the ones production filters. Versioning matters for a
+    // `applyApiRouting` is the same function `main.ts` calls, not a copy of what
+    // it does — `createDocument` bakes the prefix and version into every path and
+    // a `filterPaths` predicate is written against the resulting *absolute*
+    // shape, so a spec that restates them can be internally consistent while
+    // production serves a different root. Omitting the prefix once left a
+    // predicate keyed on `/api/v1/...` stripping every draft operation from the
+    // served document while this suite stayed green. Versioning matters for a
     // second reason: without it swagger emits no version segment, so a
     // routed-but-undocumented `version: '2'` twin of a documented controller
     // would collide with its v1 key and pass.
-    app.setGlobalPrefix(GLOBAL_PREFIX)
-    app.enableVersioning({ type: VersioningType.URI })
+    applyApiRouting(app)
 
     // No `include` scans every module in the container, which is the routed
     // surface: an unimported api module is not in the container at all, so its
@@ -280,10 +377,12 @@ describe('swagger document coverage', () => {
     documents = new Map(
       SWAGGER_CONFIG.map((config) => [
         config.swaggerPath,
-        new Set(operationKeys(buildSwaggerDocument(app, config))),
+        operationsIn(buildSwaggerDocument(app, config)),
       ]),
     )
-    published = new Set([...documents.values()].flatMap((ops) => [...ops]))
+    published = new Set(
+      [...documents.values()].flatMap((ops) => [...ops.keys()]),
+    )
   })
 
   afterAll(async () => {
@@ -349,8 +448,8 @@ describe('swagger document coverage', () => {
     // comparing the two documents cannot see it. The three unreferenced api
     // modules (report-create / report-excel / report-result) are exactly what
     // someone would wire in, and this aggregate is the shorter list.
-    const foreign = [...documentFor(APPLICATION_DOC)]
-      .filter((key) => !key.includes(APPLICANT_PREFIX))
+    const foreign = [...documentFor(APPLICATION_DOC).keys()]
+      .filter((key) => !isApplicant(key))
       .sort()
 
     expect(foreign).toEqual([])
@@ -404,27 +503,50 @@ describe('swagger document coverage', () => {
 
   it('serves the whole applicant surface from the application document', () => {
     const application = documentFor(APPLICATION_DOC)
-    const applicantOperations = routed.filter((key) =>
-      key.includes(APPLICANT_PREFIX),
-    )
+    const applicantOperations = routed.filter(isApplicant)
 
     expect(
       applicantOperations.filter((key) => !application.has(key)).sort(),
     ).toEqual([])
   })
 
-  it('serves the draft-report lifecycle to island.is', () => {
+  it('serves the draft-report lifecycle to island.is under its own operationIds', () => {
     // The flow that was missing. Named explicitly so removing it from the
-    // document fails on the operations themselves rather than on a count.
+    // document fails on the operations themselves rather than on a count, and
+    // pinned to its operationIds so a route-key collision — which keeps the key
+    // and silently overwrites the id, taking the client method with it — fails
+    // here too. See DRAFT_LIFECYCLE.
     const application = documentFor(APPLICATION_DOC)
 
-    expect(DRAFT_LIFECYCLE.filter((key) => !application.has(key))).toEqual([])
+    const wrong = Object.entries(DRAFT_LIFECYCLE)
+      .filter(([key, operationId]) => application.get(key) !== operationId)
+      .map(([key, operationId]) =>
+        application.has(key)
+          ? `${key} — expected operationId "${operationId}", document has "${
+              application.get(key) ?? '(none)'
+            }"`
+          : `${key} — absent from the document (expected "${operationId}")`,
+      )
+
+    expect(wrong).toEqual([])
+  })
+
+  it('publishes one operation per routed handler', () => {
+    // Backstop for the same collision, beyond the draft lifecycle: a path item
+    // holds one operation per method, so two handlers sharing a `METHOD` + path
+    // silently drop one. Both handlers still exist in the container, so the
+    // counts diverge — whereas every set-based assertion above keys on
+    // `METHOD path` and loses the same key on both sides at once.
+    //
+    // `routed` is the no-`include` document, i.e. the whole container, which is
+    // what makes this comparable to the container-side count.
+    expect(routed.length).toBe(documentableHandlers(app).length)
   })
 
   it('keeps the applicant and admin surfaces disjoint', () => {
     const internal = documentFor(INTERNAL_DOC)
 
-    const overlap = [...documentFor(APPLICATION_DOC)].filter((key) =>
+    const overlap = [...documentFor(APPLICATION_DOC).keys()].filter((key) =>
       internal.has(key),
     )
 
