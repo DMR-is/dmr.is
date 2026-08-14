@@ -105,7 +105,7 @@ const writeEmployeeRow = (
     startDate: Date
   },
 ) => {
-  const s = wb.getWorksheet('Starfsmenn')!
+  const s = wb.getWorksheet('Launagögn')!
   const r = 5 + ordinal
   s.getCell(`A${r}`).value = ordinal
   s.getCell(`B${r}`).value = values.name
@@ -132,7 +132,7 @@ const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
 ) => {
-  const sheet = wb.getWorksheet('Flokkun starfa')!
+  const sheet = wb.getWorksheet('Starfsmat')!
   rolesInOrder.forEach((roleSteps, roleIdx) => {
     roleSteps.forEach((stepOrder, subIdx) => {
       sheet.getCell(11 + roleIdx, 7 + 2 * subIdx).value = stepOrder
@@ -144,7 +144,7 @@ const fillEmployeeClassification = (
   wb: ExcelJS.Workbook,
   empsInOrder: number[][],
 ) => {
-  const sheet = wb.getWorksheet('Flokkun starfsmanna')!
+  const sheet = wb.getWorksheet('Einstaklingsmat')!
   empsInOrder.forEach((empSteps, empIdx) => {
     empSteps.forEach((stepOrder, subIdx) => {
       sheet.getCell(7 + empIdx, 4 + 2 * subIdx).value = stepOrder
@@ -358,7 +358,7 @@ describe('parseWorkbook', () => {
       ])
     })
 
-    it('derives 3 distinct roles from Starfsmenn in first-appearance order', () => {
+    it('derives 3 distinct roles from Launagögn in first-appearance order', () => {
       expect(report.roles.map((r) => r.title)).toEqual([
         'Forstöðumaður',
         'Sérfræðingur',
@@ -548,7 +548,7 @@ describe('parseWorkbook', () => {
       // Mirror the shipped template: column A holds the auto-numbering formula,
       // NOT a literal. Before the row-position fix this made every non-empty
       // row fail with "Raðnúmer vantar".
-      const s = wb.getWorksheet('Starfsmenn')!
+      const s = wb.getWorksheet('Launagögn')!
       s.getCell('A6').value = { formula: 'ROW()-5', result: 1 }
       s.getCell('A7').value = { formula: 'ROW()-5', result: 2 }
 
@@ -587,7 +587,7 @@ describe('parseWorkbook', () => {
       // stray value far below the data pushes sheet.rowCount into the tens of
       // thousands. The scan must break on the long blank run rather than
       // materialise a cell object for every row down to here (the OOM cause).
-      const s = wb.getWorksheet('Starfsmenn')!
+      const s = wb.getWorksheet('Launagögn')!
       s.getCell('B40000').value = 'stray'
       expect(s.rowCount).toBeGreaterThan(30000)
 

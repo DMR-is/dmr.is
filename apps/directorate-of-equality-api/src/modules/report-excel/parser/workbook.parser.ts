@@ -7,10 +7,10 @@
  *
  * 1. Load the workbook via exceljs.
  * 2. Parse criteria + sub-criteria (tree shape, step scores computed).
- * 3. Parse employees (Starfsmenn) — derives the role list as a side effect.
- * 4. Parse role classifications (Flokkun starfa) — attaches step assignments
+ * 3. Parse employees (Launagögn) — derives the role list as a side effect.
+ * 4. Parse role classifications (Starfsmat) — attaches step assignments
  *    to the roles produced in (3).
- * 5. Parse employee classifications (Flokkun starfsmanna) — attaches
+ * 5. Parse employee classifications (Einstaklingsmat) — attaches
  *    personal-sub assignments to the employees produced in (3).
  * 6. Run the semantic validator on the assembled tree.
  * 7. Throw on any accumulated errors, else return the `ParsedReportDto`.
@@ -42,9 +42,7 @@ const SHARED_STRING_CELL_RE =
   /<c\b[^>]*\bt="s"[^>]*>[\s\S]*?<v>(\d+)<\/v>[\s\S]*?<\/c>/g
 
 const emptySharedStringsXml = (count: number): string => {
-  const items = Array.from({ length: count }, () => '<si><t></t></si>').join(
-    '',
-  )
+  const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${count}" uniqueCount="${count}">${items}</sst>`
 }
 
@@ -89,7 +87,9 @@ const formatImportError = (e: ImportErrorDto): string => {
     .filter(Boolean)
     .join(', ')
 
-  return location ? `${e.sheet} (${location}): ${e.message}` : `${e.sheet}: ${e.message}`
+  return location
+    ? `${e.sheet} (${location}): ${e.message}`
+    : `${e.sheet}: ${e.message}`
 }
 
 export const parseWorkbook = async (
