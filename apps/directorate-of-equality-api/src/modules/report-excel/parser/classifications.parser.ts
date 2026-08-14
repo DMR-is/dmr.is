@@ -1,6 +1,6 @@
 /**
  * Parses the two "Flokkun" matrix sheets into step-assignment records that
- * attach onto roles (Flokkun starfa) and employees (Flokkun starfsmanna).
+ * attach onto roles (Starfsmat) and employees (Einstaklingsmat).
  *
  * ## Layout recap
  *
@@ -8,15 +8,15 @@
  * from the raw-data sheets**, not read out of the matrix headers (which are
  * formulas we don't evaluate):
  *
- * - **Flokkun starfa**
+ * - **Starfsmat**
  *   - Rows map 1:1 to distinct roles in the order they first appear on
- *     Starfsmenn.
+ *     Launagögn.
  *   - Step-order columns hold one value per job-based sub-criterion in the
  *     order they appear on Undirviðmið (filtered to `type != PERSONAL`). A
  *     computed score column is interleaved after each, so inputs sit on every
  *     second column.
  *
- * - **Flokkun starfsmanna**
+ * - **Einstaklingsmat**
  *   - Rows map 1:1 to employees in ordinal order.
  *   - Step-order columns hold one value per personal sub-criterion, in the
  *     order personal subs appear on Undirviðmið (same every-second-column
@@ -71,7 +71,7 @@ const colToNum = (letters: string): number =>
     .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
 /**
- * Parse a single rectangular named range (e.g. `'Flokkun starfa'!$G$11:$GX$110`)
+ * Parse a single rectangular named range (e.g. `Starfsmat!$G$11:$GX$110`)
  * into the step-input grid it describes. Returns null if the name is absent or
  * not a single `$COL$ROW:$COL$ROW` range — callers surface that as an error.
  */

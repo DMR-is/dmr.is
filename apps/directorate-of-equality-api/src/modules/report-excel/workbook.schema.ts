@@ -59,11 +59,11 @@ export const MAX_STEPS = 8
  * a clear error instead of silently truncating, and (b) stay consistent with
  * how many rows/columns the Excel template physically provisions:
  *
- * - Roles → rows on Flokkun starfa (100 provisioned).
- * - Personal sub-criteria → columns on Flokkun starfsmanna (100 provisioned).
+ * - Roles → rows on Starfsmat (100 provisioned).
+ * - Personal sub-criteria → columns on Einstaklingsmat (100 provisioned).
  * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows).
  * - Criteria → Viðmið rows (4 mandatory job-based + 1 personal).
- * - Employees → Flokkun starfsmanna rows (10 000, auto-extending table).
+ * - Employees → Launagögn rows (10 000, auto-extending table).
  *
  * Enforced centrally in `assertParsedPayloadIntegrity` so both the Excel
  * import path and the application submit path share one source of truth. The
@@ -85,9 +85,9 @@ export const SHEETS = {
   INSTRUCTIONS: 'Leiðbeiningar',
   CRITERIA: 'Viðmið',
   SUB_CRITERIA: 'Undirviðmið',
-  EMPLOYEES: 'Starfsmenn',
-  ROLE_CLASSIFICATION: 'Flokkun starfa',
-  EMPLOYEE_CLASSIFICATION: 'Flokkun starfsmanna',
+  EMPLOYEES: 'Launagögn',
+  ROLE_CLASSIFICATION: 'Starfsmat',
+  EMPLOYEE_CLASSIFICATION: 'Einstaklingsmat',
   OVERVIEW: 'Yfirlit',
   SUB_CRITERIA_CATALOG: 'Undirviðmiðalisti (Lýsigögn)',
 } as const
@@ -184,15 +184,21 @@ export const TYPE_TO_JOB_BASED_TITLE: Readonly<
   {} as Record<ReportCriterionTypeEnum, string>,
 )
 
-/** Icelandic gender display ↔ `GenderEnum`. */
+/**
+ * Icelandic gender display → `GenderEnum`. The current template's dropdown is
+ * `Karl, Kona, Kynsegin`; the legacy `Hlutlaust` label is kept as an accepted
+ * alias so uploads authored against older templates (or rows already carrying
+ * that value) still map to `NEUTRAL` instead of being rejected as unknown.
+ */
 export const GENDER_DISPLAY_TO_ENUM: Readonly<Record<string, GenderEnum>> = {
   Karl: GenderEnum.MALE,
   Kona: GenderEnum.FEMALE,
+  Kynsegin: GenderEnum.NEUTRAL,
   Hlutlaust: GenderEnum.NEUTRAL,
 }
 
 export const GENDER_ENUM_TO_DISPLAY: Readonly<Record<GenderEnum, string>> = {
   [GenderEnum.MALE]: 'Karl',
   [GenderEnum.FEMALE]: 'Kona',
-  [GenderEnum.NEUTRAL]: 'Hlutlaust',
+  [GenderEnum.NEUTRAL]: 'Kynsegin',
 }
