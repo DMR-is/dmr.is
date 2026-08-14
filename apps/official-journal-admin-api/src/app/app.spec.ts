@@ -5,14 +5,16 @@ import { NestApplication } from '@nestjs/core'
 import { SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { sortOpenApiParameters } from '@dmr.is/utils-shared/openapi/sort-parameters'
-
 import { openApi } from '../openApi'
 import { AppModule } from './app.module'
 
 /**
- * Guards the emitted OpenAPI document: five web apps consume clients generated
- * from it, so any unintended change to the schema is a breaking change for them.
+ * Smoke test: the real AppModule compiles and Swagger emits a document with
+ * routes in it. This is what catches a module that no longer boots.
+ *
+ * Schema DRIFT is not gated here -- the committed clientConfig.json per web app
+ * is the schema baseline, and it is the wire format the generators actually
+ * consume. See PR #1405 for why the snapshot gate was removed.
  *
  * The document is built from the real AppModule with the same DocumentBuilder
  * config, global prefix and versioning main.ts uses. Only the Sequelize
@@ -41,12 +43,11 @@ describe('Swagger documentation', () => {
     await app?.close()
   })
 
-  it('emits an unchanged OpenAPI schema', () => {
+  it('builds a non-empty OpenAPI document', () => {
     const document = SwaggerModule.createDocument(app, openApi, {
       autoTagControllers: false,
     })
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
-    expect(sortOpenApiParameters(document)).toMatchSnapshot()
   })
 })
