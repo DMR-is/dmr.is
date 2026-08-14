@@ -1,8 +1,9 @@
-import { readdirSync, readFileSync } from 'fs'
-import { join } from 'path'
+import { INestApplication } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger'
 
-import { DoeApplicationSwaggerModule } from './doe-application.swagger.module'
-import { DoeWebSwaggerModule } from './doe-web.swagger.module'
+import { AppModule } from '../../app/app.module'
+import { SWAGGER_CONFIG } from '../../swagger.config'
 
 /**
  * Guards the published swagger surface against the failure mode that hid the
@@ -12,142 +13,169 @@ import { DoeWebSwaggerModule } from './doe-web.swagger.module'
  * build notices — the routes work, the tests pass, and the consumer simply has
  * no way to call them.
  *
- * The two swagger aggregates are the runtime registration points in
- * `AppModule`, so reachability from them is the same thing as being routed.
- * Every controller in the tree must therefore be reachable from one of them, or
- * be listed in `UNEXPOSED` with a reason.
+ * Every assertion here is made against documents `SwaggerModule.createDocument`
+ * actually produces, not against a model of how it scans modules. That is
+ * deliberate: a model is what made the first version of this spec unsound. It
+ * walked the `imports` graph transitively, but `createDocument` does not —
+ * `getModules` filters `include` without expanding it, and the `deepScanRoutes`
+ * branch adds exactly **one** level of a listed module's imports and never
+ * recurses. So a controller nested two levels under an aggregate passed that
+ * walk while being absent from the document: the original bug, with a green
+ * test asserting it could not happen.
+ *
+ * Preview mode builds the module graph without instantiating providers, so the
+ * real documents are available here without a database or any other side
+ * effect. The roots come from `SWAGGER_CONFIG` itself, so dropping an aggregate
+ * from it while leaving it in `AppModule` fails too.
  */
 
-/** Nest stores `@Module({ imports, controllers })` under these metadata keys. */
-const IMPORTS = 'imports'
-const CONTROLLERS = 'controllers'
-
-/** A dynamic module — `SequelizeModule.forFeature([...])` and friends. */
-type DynamicModuleRef = { module?: unknown; imports?: unknown[] }
-
-const asDynamicModule = (entry: unknown): DynamicModuleRef | null =>
-  entry !== null && typeof entry === 'object' ? (entry as DynamicModuleRef) : null
+/** `"GET /application/reports/draft"` — one routed, documentable operation. */
+type OperationKey = string
 
 /**
- * Controllers that are deliberately not in any published document.
+ * Routed operations that are deliberately in no published document.
  *
- * The three `Report*` entries are api modules that no module imports at all —
- * their routes are not registered and their operations appear nowhere else in
- * the repo. They are superseded by the admin-report / application surfaces and
- * are kept (not deleted) pending a decision on the flows they were built for.
- * Listing them here is the decision record: adding one back to a swagger
- * aggregate is what publishes it.
+ * Anything reachable from `AppModule` and missing from every document has to be
+ * listed here with a reason, so leaving an operation out is a decision rather
+ * than an oversight.
  */
-const UNEXPOSED = new Set([
-  // Infrastructure probe, intentionally undocumented.
-  'HealthController',
-  // Unreferenced api modules — see note above.
-  'ReportCreateController',
-  'ReportExcelController',
-  'ReportResultController',
+const UNEXPOSED: ReadonlySet<OperationKey> = new Set([
+  // Infrastructure probe for the cluster, not part of any client contract.
+  'GET /health',
 ])
 
-/** Walks a module's `imports` graph and collects every controller class name. */
-const reachableControllers = (root: unknown): Set<string> => {
-  const found = new Set<string>()
-  const seen = new Set<unknown>()
-  const queue: unknown[] = [root]
+const operationKeys = (document: OpenAPIObject): OperationKey[] =>
+  Object.entries(document.paths).flatMap(([path, item]) =>
+    Object.keys(item).map((method) => `${method.toUpperCase()} ${path}`),
+  )
 
-  while (queue.length > 0) {
-    const entry = queue.shift()
-    // `SequelizeModule.forFeature([...])` and friends are dynamic modules —
-    // `{ module, imports, ... }` objects rather than decorated classes.
-    const dynamic = asDynamicModule(entry)
-    const target = dynamic?.module ?? entry
+const buildDocument = (
+  app: INestApplication,
+  title: string,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  include?: Function[],
+): OpenAPIObject =>
+  SwaggerModule.createDocument(
+    app,
+    new DocumentBuilder().setTitle(title).build(),
+    {
+      // Same options `setupSwaggerDocument` passes in production. Omitting
+      // `include` scans every module in the container, which is the routed
+      // surface — an unimported api module is not in the container at all, so
+      // its controllers cannot show up here.
+      deepScanRoutes: true,
+      ...(include ? { include } : {}),
+    },
+  )
 
-    if (typeof target !== 'function' || seen.has(target)) {
-      continue
-    }
-    seen.add(target)
-
-    const controllers: unknown[] =
-      Reflect.getMetadata(CONTROLLERS, target) ?? []
-    for (const controller of controllers) {
-      if (typeof controller === 'function') {
-        found.add(controller.name)
-      }
-    }
-
-    for (const imported of (Reflect.getMetadata(IMPORTS, target) ??
-      []) as unknown[]) {
-      queue.push(imported)
-    }
-    // Dynamic modules can carry their own imports alongside `module`.
-    for (const imported of dynamic?.imports ?? []) {
-      queue.push(imported)
-    }
-  }
-
-  return found
-}
-
-/** Every `*.controller.ts` class in the app, read off disk rather than imported. */
-const declaredControllers = (): Set<string> => {
-  const root = join(__dirname, '..', '..')
-  const names = new Set<string>()
-
-  const walk = (dir: string) => {
-    for (const item of readdirSync(dir, { withFileTypes: true })) {
-      const path = join(dir, item.name)
-      if (item.isDirectory()) {
-        walk(path)
-      } else if (
-        item.name.endsWith('.controller.ts') &&
-        !item.name.endsWith('.spec.ts')
-      ) {
-        const source = readFileSync(path, 'utf-8')
-        for (const match of source.matchAll(
-          /export class (\w*Controller)\b/g,
-        )) {
-          names.add(match[1])
-        }
-      }
-    }
-  }
-
-  walk(root)
-  return names
-}
+const APPLICATION_DOC = 'swagger/application'
+const INTERNAL_DOC = 'swagger/internal'
 
 describe('swagger document coverage', () => {
-  const applicationDoc = reachableControllers(DoeApplicationSwaggerModule)
-  const internalDoc = reachableControllers(DoeWebSwaggerModule)
+  let app: INestApplication
+  /** Every operation the app routes. */
+  let routed: OperationKey[]
+  /** Every operation reachable through some `SWAGGER_CONFIG` document. */
+  let published: Set<OperationKey>
+  /** Per-document operation sets, keyed by `swaggerPath`. */
+  let documents: Map<string, Set<OperationKey>>
 
-  it('finds the controllers on disk', () => {
-    // Sanity check on the disk walk itself — an empty set would make every
-    // assertion below vacuously true.
-    expect(declaredControllers().size).toBeGreaterThan(10)
+  /** The document served at `swaggerPath`, or a clear failure if there is none. */
+  const documentFor = (swaggerPath: string): Set<OperationKey> => {
+    const operations = documents.get(swaggerPath)
+    if (!operations) {
+      throw new Error(`SWAGGER_CONFIG no longer publishes "${swaggerPath}"`)
+    }
+    return operations
+  }
+
+  beforeAll(async () => {
+    // The global prefix and URI versioning `main.ts` applies are left off: they
+    // shift every path uniformly and every assertion below is relative, so
+    // paths read as `/application/...` rather than `/api/v1/application/...`.
+    app = await NestFactory.create(AppModule, { preview: true, logger: false })
+
+    routed = operationKeys(buildDocument(app, 'Routed surface'))
+    documents = new Map(
+      SWAGGER_CONFIG.map((config) => [
+        config.swaggerPath,
+        new Set(
+          operationKeys(
+            buildDocument(app, config.swaggerTitle, config.modules),
+          ),
+        ),
+      ]),
+    )
+    published = new Set([...documents.values()].flatMap((ops) => [...ops]))
   })
 
-  it('publishes every controller in the tree, or records why not', () => {
-    const published = new Set([...applicationDoc, ...internalDoc])
+  afterAll(async () => {
+    await app?.close()
+  })
 
-    const undocumented = [...declaredControllers()].filter(
-      (name) => !published.has(name) && !UNEXPOSED.has(name),
-    )
+  it('routes a substantial surface', () => {
+    // Sanity check on the document build itself — an empty routed set would
+    // make every assertion below vacuously true.
+    expect(routed.length).toBeGreaterThan(50)
+  })
+
+  it('publishes every routed operation, or records why not', () => {
+    const undocumented = routed
+      .filter((key) => !published.has(key) && !UNEXPOSED.has(key))
+      .sort()
 
     expect(undocumented).toEqual([])
   })
 
+  it('registers every documented aggregate in AppModule', () => {
+    // The mirror of the assertion above: an aggregate named only by
+    // SWAGGER_CONFIG would publish a client for operations nothing routes.
+    const registered = new Set(
+      (Reflect.getMetadata('imports', AppModule) ?? []) as unknown[],
+    )
+    const unregistered = SWAGGER_CONFIG.flatMap((config) =>
+      config.modules.filter((module) => !registered.has(module)),
+    ).map((module) => module.name)
+
+    expect(unregistered).toEqual([])
+  })
+
+  it('scopes every document to at least one module', () => {
+    // `createDocument` treats an empty `include` as "no filter" and publishes
+    // the entire container, so an aggregate list that ends up empty does not
+    // produce an empty document — it produces the admin surface on a
+    // public-facing path. Cheap to assert, silent and serious if it happens.
+    const unscoped = SWAGGER_CONFIG.filter(
+      (config) => config.modules.length === 0,
+    ).map((config) => config.swaggerPath)
+
+    expect(unscoped).toEqual([])
+  })
+
   it('serves the whole applicant surface from the application document', () => {
-    // Both share the `application/v1` prefix and the company-auth boundary;
-    // the draft controller is the one the application system depends on to
-    // hold report content it cannot store itself.
-    expect([...applicationDoc].sort()).toEqual([
-      'ApplicationController',
-      'ReportDraftController',
-    ])
+    // The draft-report flow is the one the application system depends on to
+    // hold report content it cannot store itself, and it is what went missing.
+    // Derived from the routed set rather than listed, so a new applicant
+    // endpoint is covered the moment it is routed.
+    const application = documentFor(APPLICATION_DOC)
+    const applicantOperations = routed.filter((key) =>
+      key.includes(' /application/'),
+    )
+
+    expect(applicantOperations.length).toBeGreaterThan(20)
+    expect(applicantOperations.filter((key) => !application.has(key))).toEqual(
+      [],
+    )
   })
 
   it('keeps the applicant and admin surfaces disjoint', () => {
-    // An admin-guarded controller leaking into the applicant document would
-    // publish reviewer-only operations to island.is.
-    const overlap = [...applicationDoc].filter((name) => internalDoc.has(name))
+    // An admin-guarded operation leaking into the applicant document would
+    // publish reviewer-only endpoints to island.is.
+    const internal = documentFor(INTERNAL_DOC)
+
+    const overlap = [...documentFor(APPLICATION_DOC)].filter((key) =>
+      internal.has(key),
+    )
 
     expect(overlap).toEqual([])
   })

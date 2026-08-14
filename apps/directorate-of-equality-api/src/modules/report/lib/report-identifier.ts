@@ -21,7 +21,7 @@ export const IDENTIFIER_ALLOCATION_ATTEMPTS = 5
  * bytes biases very slightly toward the first 22 letters, which is irrelevant
  * here: the identifier is a display handle, never a secret or a capability, and
  * is not relied on for unguessability. Uniqueness is enforced by the caller
- * (see `IReportDraftService.allocateIdentifier`), not by this function.
+ * (see `IReportIdentifierService`), not by this function.
  */
 export function generateReportIdentifier(
   length = REPORT_IDENTIFIER_LENGTH,
@@ -37,13 +37,16 @@ export function generateReportIdentifier(
  * sharing a code would make an admin identifier search ambiguous, so each
  * candidate is probed first.
  *
- * `isTaken` is supplied by the caller because the two creation paths reach the
- * report table through different services; keeping the retry policy here means
- * they cannot drift. There is no unique index on `report.identifier`, so this is
- * best-effort under true concurrency — a far smaller window than the unchecked
- * birthday probability it removes.
+ * `isTaken` is supplied by the caller so this stays a pure policy — the one
+ * caller that supplies it is `ReportIdentifierService`, which probes the report
+ * table. The probe is best-effort under true concurrency: it cannot see an
+ * insert another request has not committed, and under the request's CLS
+ * transaction it cannot see it at all. The partial unique index
+ * `report_identifier_unique_idx` is what makes a duplicate impossible; this loop
+ * exists to remove the far likelier birthday collision against committed rows
+ * without ever reaching that error path.
  *
- * Callers probe with `count`, not `findOne`: only existence matters, and the
+ * The caller probes with `count`, not `findOne`: only existence matters, and the
  * report row's `findOne` is already load-bearing for provider-tuple replay
  * lookups that assert on call order.
  */

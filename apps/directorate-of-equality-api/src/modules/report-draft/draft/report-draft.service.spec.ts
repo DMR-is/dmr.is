@@ -2,11 +2,7 @@ import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
 import { UniqueConstraintError } from 'sequelize'
 
-import {
-  ConflictException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { ConflictException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -88,7 +84,6 @@ describe('ReportDraftService', () => {
   let reportFindAll: jest.Mock
   let reportUpdate: jest.Mock
   let reportDestroy: jest.Mock
-  let reportCount: jest.Mock
   let employeeCount: jest.Mock
   let criterionCount: jest.Mock
   let outlierGroupCount: jest.Mock
@@ -107,7 +102,6 @@ describe('ReportDraftService', () => {
     reportFindAll = jest.fn().mockResolvedValue([])
     reportUpdate = jest.fn().mockResolvedValue([1])
     reportDestroy = jest.fn().mockResolvedValue(1)
-    reportCount = jest.fn().mockResolvedValue(0)
     employeeCount = jest.fn().mockResolvedValue(0)
     criterionCount = jest.fn().mockResolvedValue(0)
     outlierGroupCount = jest.fn().mockResolvedValue(0)
@@ -130,8 +124,6 @@ describe('ReportDraftService', () => {
             findAll: reportFindAll,
             update: reportUpdate,
             destroy: reportDestroy,
-            // Identifier-uniqueness probe: nothing taken by default.
-            count: reportCount,
           },
         },
         {
@@ -522,38 +514,15 @@ describe('ReportDraftService', () => {
     })
   })
 
-  describe('allocateIdentifier', () => {
-    it('mints a six-letter code and checks it is unused', async () => {
-      const identifier = await service.allocateIdentifier()
-
-      expect(identifier).toMatch(/^[A-Z]{6}$/)
-      expect(reportCount).toHaveBeenCalledWith({ where: { identifier } })
-    })
-
-    it('retries past a collision and returns a free code', async () => {
-      // 1st candidate is taken, 2nd is free.
-      reportCount.mockResolvedValueOnce(1).mockResolvedValueOnce(0)
-
-      const identifier = await service.allocateIdentifier()
-
-      expect(identifier).toMatch(/^[A-Z]{6}$/)
-      expect(reportCount).toHaveBeenCalledTimes(2)
-    })
-
-    it('gives up rather than issuing a duplicate when every candidate collides', async () => {
-      reportCount.mockResolvedValue(1)
-
-      await expect(service.allocateIdentifier()).rejects.toThrow(
-        InternalServerErrorException,
-      )
-    })
-  })
+  // Identifier minting moved to `ReportIdentifierService` — see
+  // report-identifier/report-identifier.service.spec.ts. It never belonged to
+  // drafts; both creation paths share it.
 
   describe('touchDraft', () => {
-    // The reaper keys off the report ROW's updated_at, but bulk sync writes
-    // only children — so sync calls this to register the activity. A plain
-    // no-column update would issue no query at all, hence the explicit
-    // timestamp.
+    // The reaper keys off the report ROW's updated_at, but bulk sync and
+    // workbook import write only children — so both call this to register the
+    // activity. A plain no-column update would issue no query at all, hence
+    // the explicit timestamp.
     it('bumps the report row updated_at without touching any other column', async () => {
       reportUpdate.mockResolvedValueOnce([1])
 

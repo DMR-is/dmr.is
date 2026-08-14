@@ -14,6 +14,11 @@ import { ReportDraftApiModule } from '../report-draft/report-draft.api.module'
  * published document from drifting apart: `AppModule` and `SWAGGER_CONFIG` both
  * name this module, so a new applicant-facing api module cannot be routed
  * without also being documented. `swagger-coverage.spec.ts` enforces that.
+ *
+ * A new api module has to be a **direct** entry in `imports` below. Swagger's
+ * `deepScanRoutes` descends exactly one level from a listed module, so an api
+ * module imported by `ApplicationApiModule` instead of by this one would answer
+ * at runtime and still be missing from the document.
  */
 @Module({
   imports: [ApplicationApiModule, ReportDraftApiModule],

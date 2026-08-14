@@ -17,6 +17,7 @@ import { ReportEmployeeModel } from '../../report-employee/models/report-employe
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../../report-result/report-result.service.interface'
 import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -39,6 +40,8 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     private readonly reportResultService: IReportResultService,
     @Inject(ICompanyService)
     private readonly companyService: ICompanyService,
+    @Inject(IReportIdentifierService)
+    private readonly reportIdentifierService: IReportIdentifierService,
     @InjectModel(ReportEmployeeModel)
     private readonly employeeModel: typeof ReportEmployeeModel,
     @InjectModel(ReportEmployeeOutlierModel)
@@ -107,7 +110,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       // reviewers can refer to a report without quoting a kennitala, and a
       // DRAFT is invisible to reviewers until this point. Drafts are also
       // reaped, so codes handed out earlier would be spent on nothing.
-      identifier: await this.reportDraftService.allocateIdentifier(),
+      identifier: await this.reportIdentifierService.allocate(),
       equalityReportId: input.equalityReportId ?? null,
       ...(salaryDataBasis ?? {}),
     })

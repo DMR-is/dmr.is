@@ -77,6 +77,7 @@ describe('ReportDraftSeedService', () => {
   let service: ReportDraftSeedService
   let findOwnedDraft: jest.Mock
   let clearDraftChildren: jest.Mock
+  let touchDraft: jest.Mock
   let getDraftDetail: jest.Mock
   let persistParsedChildren: jest.Mock
   let importWorkbook: jest.Mock
@@ -88,6 +89,7 @@ describe('ReportDraftSeedService', () => {
       .fn()
       .mockResolvedValue({ id: REPORT_ID, type: ReportTypeEnum.SALARY })
     clearDraftChildren = jest.fn().mockResolvedValue(undefined)
+    touchDraft = jest.fn().mockResolvedValue(undefined)
     getDraftDetail = jest.fn().mockResolvedValue({ id: REPORT_ID })
     persistParsedChildren = jest
       .fn()
@@ -105,7 +107,12 @@ describe('ReportDraftSeedService', () => {
         },
         {
           provide: IReportDraftService,
-          useValue: { findOwnedDraft, clearDraftChildren, getDraftDetail },
+          useValue: {
+            findOwnedDraft,
+            clearDraftChildren,
+            touchDraft,
+            getDraftDetail,
+          },
         },
         {
           provide: IReportContentService,
@@ -133,6 +140,14 @@ describe('ReportDraftSeedService', () => {
     )
   })
 
+  it('touches the report row so the reaper sees the import as activity', async () => {
+    // An import writes children only. Without the touch, a draft populated
+    // from a workbook ages toward hard deletion as if abandoned.
+    await service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY)
+
+    expect(touchDraft).toHaveBeenCalledWith(REPORT_ID)
+  })
+
   it('cleans up the staged object even if parsing fails', async () => {
     importWorkbook.mockRejectedValueOnce(new Error('bad workbook'))
 
@@ -141,6 +156,8 @@ describe('ReportDraftSeedService', () => {
     ).rejects.toThrow('bad workbook')
     expect(cleanup).toHaveBeenCalledWith(KEY)
     expect(persistParsedChildren).not.toHaveBeenCalled()
+    // Nothing was written, so nothing counts as activity.
+    expect(touchDraft).not.toHaveBeenCalled()
   })
 
   it('400s on an equality draft (no clearing/persisting)', async () => {

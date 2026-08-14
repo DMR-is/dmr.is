@@ -23,6 +23,7 @@ import { ReportEmployeeModel } from '../../report-employee/models/report-employe
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../../report-result/report-result.service.interface'
 import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -48,7 +49,7 @@ const COMPANY = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
 } as unknown as CompanyDto
 
-/** What the stubbed `allocateIdentifier` hands back. */
+/** What the stubbed `IReportIdentifierService.allocate` hands back. */
 const IDENTIFIER = 'KTPQZW'
 
 const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => ({
@@ -67,7 +68,7 @@ const salaryBody = (overrides: Partial<SubmitDraftDto> = {}): SubmitDraftDto => 
 describe('ReportDraftSubmitService', () => {
   let service: ReportDraftSubmitService
   let findOwnedDraft: jest.Mock
-  let allocateIdentifier: jest.Mock
+  let allocate: jest.Mock
   let reportUpdate: jest.Mock
   let persistScores: jest.Mock
   let getDetectedOutlierEmployeeIds: jest.Mock
@@ -107,7 +108,7 @@ describe('ReportDraftSubmitService', () => {
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn()
-    allocateIdentifier = jest.fn().mockResolvedValue(IDENTIFIER)
+    allocate = jest.fn().mockResolvedValue(IDENTIFIER)
     persistScores = jest.fn().mockResolvedValue(undefined)
     getDetectedOutlierEmployeeIds = jest.fn().mockResolvedValue(new Set())
     createForReport = jest.fn().mockResolvedValue({ id: 'result-1' })
@@ -130,7 +131,11 @@ describe('ReportDraftSubmitService', () => {
         },
         {
           provide: IReportDraftService,
-          useValue: { findOwnedDraft, allocateIdentifier },
+          useValue: { findOwnedDraft },
+        },
+        {
+          provide: IReportIdentifierService,
+          useValue: { allocate },
         },
         {
           provide: IReportDraftAnalysisService,
@@ -301,11 +306,11 @@ describe('ReportDraftSubmitService', () => {
   // draft-born report that submits without one is effectively unfindable.
   it('mints an identifier server-side and freezes it onto the report', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
-    allocateIdentifier.mockResolvedValueOnce('XYZWVU')
+    allocate.mockResolvedValueOnce('XYZWVU')
 
     await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
 
-    expect(allocateIdentifier).toHaveBeenCalledTimes(1)
+    expect(allocate).toHaveBeenCalledTimes(1)
     expect(reportUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ identifier: 'XYZWVU' }),
     )

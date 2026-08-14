@@ -95,8 +95,9 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'getApplicationSubCriterionCatalog',
     description:
-      "Jafnréttisstofa's catalog of standard sub-criteria (undirviðmið) — the same list the Excel template offers in its Undirviðmið dropdown, so the portal can present identical choices. Each entry carries its parent criterion, definition, step count and step wording, all of which the employer may overwrite; sub-criteria may also be registered as free text, so this is a starting point, not a closed set. Entries with a null `numSteps` ship with step 1 only and expect the employer to author the rest — `generalScale` gives the suggested generic wording for those. Static reference data: identical for every company and changes only when Jafnréttisstofa ships a new template.",
+      "Jafnréttisstofa's catalog of standard sub-criteria (undirviðmið) — the same list the Excel template offers in its Undirviðmið dropdown, so the portal can present identical choices. Each entry carries its parent criterion, definition, step count and step wording, all of which the employer may overwrite; sub-criteria may also be registered as free text, so this is a starting point, not a closed set. Entries with a null `numSteps` ship with step 1 only and expect the employer to author the rest — `generalScale` gives the suggested generic wording for those. Static reference data: identical for every company and changes only when Jafnréttisstofa ships a new template. Company-scoped only because the controller is, hence the 404 when the authenticated kennitala has no company row yet.",
     type: GetSubCriterionCatalogResponseDto,
+    include404: true,
   })
   getSubCriterionCatalog(): GetSubCriterionCatalogResponseDto {
     return this.applicationService.getSubCriterionCatalog()

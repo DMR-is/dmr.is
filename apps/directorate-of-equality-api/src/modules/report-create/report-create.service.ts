@@ -17,7 +17,6 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
-import { allocateReportIdentifier } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import {
   ReportModel,
@@ -29,6 +28,7 @@ import { IReportContentService } from '../report-content/report-content.service.
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -39,8 +39,9 @@ const LOGGING_CONTEXT = 'ReportCreateService'
 
 /**
  * Every report row is born here or in the draft-submit path, and both mint their
- * own identifier — it is a meaningless pseudonymous handle (used so reports can
- * be referred to without quoting a kennitala), so no caller ever supplies one.
+ * identifier through `IReportIdentifierService` — it is a meaningless
+ * pseudonymous handle (used so reports can be referred to without quoting a
+ * kennitala), so no caller ever supplies one.
  */
 
 @Injectable()
@@ -63,20 +64,9 @@ export class ReportCreateService implements IReportCreateService {
     private readonly finalizeService: IReportFinalizeService,
     @Inject(IConfigService)
     private readonly configService: IConfigService,
+    @Inject(IReportIdentifierService)
+    private readonly reportIdentifierService: IReportIdentifierService,
   ) {}
-
-  /** Mints an unused identifier for a report row about to be created. */
-  private allocateIdentifier(): Promise<string> {
-    return allocateReportIdentifier(
-      async (candidate) =>
-        (await this.reportModel.count({ where: { identifier: candidate } })) > 0,
-      (_candidate, attempt) =>
-        this.logger.warn('Report identifier collision — retrying', {
-          context: LOGGING_CONTEXT,
-          attempt,
-        }),
-    )
-  }
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
     return this.createSalaryReport(input)
@@ -141,7 +131,7 @@ export class ReportCreateService implements IReportCreateService {
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
       equalityReportId: input.equalityReportId,
-      identifier: await this.allocateIdentifier(),
+      identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
       providerId: input.providerId,
@@ -285,7 +275,7 @@ export class ReportCreateService implements IReportCreateService {
     const report = await this.reportModel.create({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
-      identifier: await this.allocateIdentifier(),
+      identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: false,
       providerType: input.providerType,
       providerId: input.providerId,

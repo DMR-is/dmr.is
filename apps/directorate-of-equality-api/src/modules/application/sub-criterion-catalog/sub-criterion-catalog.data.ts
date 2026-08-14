@@ -4,7 +4,7 @@
  * GENERATED FILE — do not edit by hand. Regenerate after updating the
  * workbook:
  *
- *   node scripts/refresh-doe-sub-criterion-catalog.js
+ *   node scripts/refresh-sub-criterion-catalog.js
  *
  * Source: the `Undirviðmiðalisti (Lýsigögn)` sheet of `template.xlsx`, which
  * is what feeds the Undirviðmið sheet's dropdown inside the workbook. The

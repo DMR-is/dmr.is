@@ -53,6 +53,10 @@ import { IReportResultService } from '../report-result/report-result.service.int
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
+import {
+  SUB_CRITERION_CATALOG,
+  SUB_CRITERION_GENERAL_SCALE,
+} from './sub-criterion-catalog/sub-criterion-catalog.data'
 import { ApplicationService } from './application.service'
 
 const mockLogger = {
@@ -269,6 +273,33 @@ describe('ApplicationService', () => {
       await expect(
         service.salaryAnalysis(makeRequest(), COMPANY),
       ).rejects.toThrow(InternalServerErrorException)
+    })
+  })
+
+  describe('getSubCriterionCatalog', () => {
+    it('returns every catalog entry and the generic step scale', () => {
+      const result = service.getSubCriterionCatalog()
+
+      expect(result.entries).toHaveLength(SUB_CRITERION_CATALOG.length)
+      expect(result.generalScale).toEqual([...SUB_CRITERION_GENERAL_SCALE])
+      expect(result.entries[0]).toEqual({ ...SUB_CRITERION_CATALOG[0] })
+    })
+
+    it('hands out copies, so a consumer cannot corrupt the shared catalog', () => {
+      // Not a pass-through: the constants are process-wide and served to every
+      // company, so the method deep-copies. A refactor to `{ ...entry }` would
+      // leave `steps` shared by reference and this is what would catch it.
+      const before = JSON.parse(JSON.stringify(SUB_CRITERION_CATALOG))
+      const beforeScale = [...SUB_CRITERION_GENERAL_SCALE]
+
+      const result = service.getSubCriterionCatalog()
+      result.entries[0].title = 'mutated'
+      result.entries[0].steps[0] = 'mutated'
+      result.entries.pop()
+      result.generalScale[0] = 'mutated'
+
+      expect(JSON.parse(JSON.stringify(SUB_CRITERION_CATALOG))).toEqual(before)
+      expect([...SUB_CRITERION_GENERAL_SCALE]).toEqual(beforeScale)
     })
   })
 

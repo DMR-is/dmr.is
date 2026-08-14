@@ -41,6 +41,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportFinalizeService } from '../report-finalize/report-finalize.service'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -58,6 +59,9 @@ const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const PARENT_COMPANY_ID = '00000000-0000-0000-0000-000000000c01'
 const SUBSIDIARY_COMPANY_ID = '00000000-0000-0000-0000-000000000c02'
 
+/** What the stubbed `IReportIdentifierService.allocate` hands back. */
+const IDENTIFIER = 'KTPQZW'
+
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -69,8 +73,8 @@ describe('ReportCreateService', () => {
   let service: ReportCreateService
   let reportCreate: jest.Mock
   let reportFindOne: jest.Mock
-  let reportCount: jest.Mock
   let reportFindAll: jest.Mock
+  let allocate: jest.Mock
   let reportUpdate: jest.Mock
   let reportEventCreate: jest.Mock
   let companyFindAll: jest.Mock
@@ -94,8 +98,8 @@ describe('ReportCreateService', () => {
   beforeEach(async () => {
     reportCreate = jest.fn().mockResolvedValue({ id: REPORT_ID })
     reportFindOne = jest.fn().mockResolvedValue({ id: EQUALITY_REPORT_ID })
-    reportCount = jest.fn().mockResolvedValue(0)
     reportFindAll = jest.fn().mockResolvedValue([])
+    allocate = jest.fn().mockResolvedValue(IDENTIFIER)
     reportUpdate = jest.fn().mockResolvedValue([0])
     reportEventCreate = jest.fn().mockResolvedValue({ id: 'event-1' })
     companyFindAll = jest
@@ -164,6 +168,7 @@ describe('ReportCreateService', () => {
       providers: [
         ReportCreateService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
+        { provide: IReportIdentifierService, useValue: { allocate } },
         {
           provide: getModelToken(ReportModel),
           useValue: {
@@ -171,8 +176,6 @@ describe('ReportCreateService', () => {
             findOne: reportFindOne,
             findAll: reportFindAll,
             update: reportUpdate,
-            // Identifier-uniqueness probe: nothing taken by default.
-            count: reportCount,
           },
         },
         {
@@ -765,7 +768,7 @@ describe('ReportCreateService', () => {
     })
   })
 
-it('propagates EQUALITY company_report failures before event creation', async () => {
+  it('propagates EQUALITY company_report failures before event creation', async () => {
     companyReportBulkCreate.mockRejectedValue(new Error('cr boom'))
 
     await expect(service.createEquality(makeEqualityInput())).rejects.toThrow(
@@ -774,6 +777,53 @@ it('propagates EQUALITY company_report failures before event creation', async ()
 
     expect(reportCreate).toHaveBeenCalled()
     expect(reportEventCreate).not.toHaveBeenCalled()
+  })
+
+  // Reviewers search reports by identifier and it prints on the PDF, so a row
+  // created without one is effectively unfindable. No caller supplies it — it
+  // is minted here — and nothing else in this suite pins that, since every
+  // other create assertion uses `objectContaining`.
+  describe('server-side identifier minting', () => {
+    it('SALARY: mints an identifier and writes it onto the report row', async () => {
+      await service.createSalary(makeInput())
+
+      expect(allocate).toHaveBeenCalledTimes(1)
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: IDENTIFIER }),
+      )
+    })
+
+    it('EQUALITY: mints an identifier and writes it onto the report row', async () => {
+      await service.createEquality(makeEqualityInput())
+
+      expect(allocate).toHaveBeenCalledTimes(1)
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ identifier: IDENTIFIER }),
+      )
+    })
+
+    it('does not burn a code on an idempotent replay', async () => {
+      // The tuple lookup short-circuits before the row is created, so a retry
+      // from upstream must not consume an identifier.
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.ISLAND_IS
+      input.providerId = 'island-is-application-uuid-replay'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: '00000000-0000-0000-0000-0000000000ee',
+        providerType: input.providerType,
+        providerId: input.providerId,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      await service.createSalary(input)
+
+      expect(allocate).not.toHaveBeenCalled()
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
   })
 
   describe('idempotent replay on (providerType, providerId)', () => {
