@@ -45,6 +45,34 @@ export const formatSalary = (v: number) =>
   new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
 
 /**
+ * Renders a config-stored percentage ("3.9") the Icelandic way ("3,9"). Config
+ * values arrive as free-form strings, so anything non-numeric is passed through
+ * untouched — a malformed entry stays visible instead of rendering as "NaN".
+ */
+export const formatPercentValue = (value: string) => {
+  const parsed = Number(value.trim())
+
+  return value.trim() === '' || !Number.isFinite(parsed)
+    ? value
+    : new Intl.NumberFormat('is-IS', { maximumFractionDigits: 2 }).format(
+        parsed,
+      )
+}
+
+/**
+ * Parses a percentage typed by a user, accepting the Icelandic decimal comma.
+ * Returns null when the input is not a usable positive number, which is the same
+ * rule the API enforces on the stored value.
+ */
+export const parsePercentInput = (value: string): number | null => {
+  const parsed = Number(value.trim().replace(',', '.'))
+
+  return value.trim() === '' || !Number.isFinite(parsed) || parsed <= 0
+    ? null
+    : parsed
+}
+
+/**
  * Matches the API's 409 message "Company already has a <TYPE> report in
  * status <STATUS> (providerId: ...). Resolve it before submitting another."
  * and returns the localized status label, or null for any other message.

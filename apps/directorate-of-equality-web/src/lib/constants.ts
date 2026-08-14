@@ -1,9 +1,22 @@
 export const NAV_PATHS = {
-  frontpage: { title: 'Forsíða', href: '/' },
-  heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit' },
-  fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki' },
-  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar' },
+  frontpage: { title: 'Forsíða', href: '/', adminOnly: false },
+  heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit', adminOnly: false },
+  fyrirtaeki: { title: 'Fyrirtæki', href: '/fyrirtaeki', adminOnly: false },
+  ritstjorn: { title: 'Ritstjórar', href: '/ritstjorar', adminOnly: true },
+  kerfisstillingar: {
+    title: 'Kerfisstillingar',
+    href: '/kerfisstillingar',
+    adminOnly: true,
+  },
 }
+
+/**
+ * Config key holding the annual gender base-salary difference threshold (%).
+ * Read-mostly: the Kerfisstillingar page is the only place it is written, and
+ * the API only ever lets it be lowered.
+ */
+export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
+  'salary_difference_threshold_percent'
 
 const IS_MONTHS = [
   'janúar',

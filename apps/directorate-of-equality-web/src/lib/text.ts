@@ -525,6 +525,44 @@ export const usersText = {
   },
 }
 
+export const systemSettingsText = {
+  heroTitle: 'Kerfisstillingar',
+  heroDescription:
+    'Hér má sjá stillingar sem gilda fyrir allt kerfið. Breytingar á þeim hafa áhrif á allar skýrslur sem eru reiknaðar eftir að breytingin er vistuð.',
+  heroImageAlt: 'Kerfisstillingar',
+  actionsHeading: 'Aðgerðir',
+  thresholdHeading: 'Leyfilegur launamunur',
+  thresholdLabel: 'Hámark á launamun karla og kvenna',
+  thresholdDescription:
+    'Hlutfallið er notað við sjálfvirka greiningu á grunnlaunum. Skýrslur eru mældar við helming hlutfallsins til hvorrar áttar frá reiknaðri viðmiðunarlínu.',
+  irreversibleTitle: 'Aðeins er hægt að lækka hlutfallið',
+  irreversibleMessage:
+    'Hlutfallið þrengist um hver áramót og verður aldrei rýmkað aftur. Þegar lækkun hefur verið vistuð er ekki hægt að hækka hlutfallið á ný.',
+  lowerButton: 'Lækka hlutfall',
+  historyHeading: 'Breytingaskrá',
+  historyNoData: 'Engar breytingar hafa verið gerðar',
+  historyValueLabel: 'Hlutfall',
+  historyPeriodLabel: 'Gildistími',
+  historyCurrent: 'Í gildi',
+  historyUntil: (date: string) => `Gilti til ${date}`,
+  modal: {
+    title: 'Lækka leyfilegan launamun',
+    currentLabel: 'Núgildandi hlutfall',
+    newValueLabel: 'Nýtt hlutfall (%)',
+    tooHigh: (current: string) =>
+      `Nýtt hlutfall verður að vera lægra en ${current}%`,
+    notANumber: 'Sláðu inn tölu hærri en 0',
+    continue: 'Halda áfram',
+    back: 'Til baka',
+    confirmTitle: 'Þessi breyting er óafturkræf',
+    confirmMessage: (current: string, next: string) =>
+      `Þú ert að lækka leyfilegan launamun úr ${current}% í ${next}%. Ekki er hægt að hækka hlutfallið aftur eftir að breytingin hefur verið vistuð.`,
+    confirmButton: 'Lækka hlutfall',
+    saveSuccess: 'Hlutfallið hefur verið lækkað',
+    saveError: 'Villa við vistun hlutfalls',
+  },
+}
+
 export const loginText = {
   heading: 'Innskráning',
   description:
