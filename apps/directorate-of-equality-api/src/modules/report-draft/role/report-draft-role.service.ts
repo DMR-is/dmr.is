@@ -14,8 +14,10 @@ import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeRoleDto } from '../../report-employee/dto/report-employee-role.dto'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
+import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { RoleChangeDataDto } from '../sync/dto/change-role.dto'
+import { DraftRoleWithStepsDto } from './dto/draft-role-with-steps.dto'
 import { IReportDraftRoleService } from './report-draft-role.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftRoleService'
@@ -30,6 +32,8 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
     private readonly roleModel: typeof ReportEmployeeRoleModel,
     @InjectModel(ReportEmployeeModel)
     private readonly employeeModel: typeof ReportEmployeeModel,
+    @InjectModel(ReportEmployeeRoleCriterionStepModel)
+    private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
   ) {}
 
   async listRoles(
@@ -47,6 +51,64 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
     })
 
     return rows.map((row) => ReportEmployeeRoleModel.fromModel(row))
+  }
+
+  /**
+   * Same list as `listRoles`, with each role's assigned step ids inlined —
+   * saves the portal one `GET …/draft/roles/:roleId/steps` per role. Two
+   * queries regardless of role count.
+   */
+  async listRolesWithSteps(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<DraftRoleWithStepsDto[]> {
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+
+    const rows = await this.roleModel.findAll({
+      where: { reportId: report.id },
+      order: [['title', 'ASC']],
+    })
+
+    const stepIdsByRoleId = await this.loadRoleStepIds(
+      rows.map((row) => row.id),
+    )
+
+    return rows.map((row) => ({
+      ...ReportEmployeeRoleModel.fromModel(row),
+      stepIds: stepIdsByRoleId.get(row.id) ?? [],
+    }))
+  }
+
+  /**
+   * Assigned step ids grouped by role id. Roles with no assignments are absent
+   * from the map (the caller defaults them to `[]`).
+   */
+  private async loadRoleStepIds(
+    roleIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const grouped = new Map<string, string[]>()
+    if (roleIds.length === 0) {
+      return grouped
+    }
+
+    const rows = await this.roleStepModel.findAll({
+      where: { reportEmployeeRoleId: roleIds },
+      attributes: ['reportEmployeeRoleId', 'reportSubCriterionStepId'],
+    })
+
+    for (const row of rows) {
+      const existing = grouped.get(row.reportEmployeeRoleId)
+      if (existing) {
+        existing.push(row.reportSubCriterionStepId)
+      } else {
+        grouped.set(row.reportEmployeeRoleId, [row.reportSubCriterionStepId])
+      }
+    }
+
+    return grouped
   }
 
   /**

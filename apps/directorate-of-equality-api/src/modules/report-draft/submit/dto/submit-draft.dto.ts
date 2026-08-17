@@ -1,5 +1,6 @@
 import {
   ApiDto,
+  ApiOptionalBoolean,
   ApiOptionalDtoArray,
   ApiOptionalUUID,
 } from '@dmr.is/decorators'
@@ -33,4 +34,10 @@ export class SubmitDraftDto {
       'Required for SALARY reports: the APPROVED equality report this salary submission is audited against.',
   })
   equalityReportId?: string | null
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, defers the outlier explanations on this SALARY report: any detected outlier not already assigned to an outlier group is placed in a default group with an empty explanation, and the report lands in POSTPONED for the applicant to resolve later via PUT /application/reports/{providerId}/outliers. Defaults to false. All-or-none — postponement applies to the whole report, not individual rows. Requires at least one detected outlier, and is rejected on an EQUALITY report. When every detected outlier is already assigned to a fully explained group there is nothing to defer and the report is SUBMITTED as normal.',
+  })
+  outliersPostponed?: boolean
 }

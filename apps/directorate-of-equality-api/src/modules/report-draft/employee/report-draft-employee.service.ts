@@ -22,7 +22,9 @@ import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { EmployeeChangeDataDto } from '../sync/dto/change-employee.dto'
+import { DraftEmployeeWithStepsDto } from './dto/draft-employee-with-steps.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
+import { GetDraftEmployeesWithStepsResponseDto } from './dto/get-draft-employees-with-steps-response.dto'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftEmployeeService'
@@ -92,6 +94,75 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     const paging = generatePaging(employees, query.page, query.pageSize, count)
 
     return { employees, paging }
+  }
+
+  /**
+   * Same page as `listEmployees`, with each employee's personal step
+   * assignments inlined. The step lookup is a single query scoped to the ids on
+   * the current page, so the query count is constant in the page size rather
+   * than one request per employee (which is what the portal was doing against
+   * `GET …/draft/employees/:employeeId/steps`).
+   */
+  async listEmployeesWithSteps(
+    providerId: string,
+    company: CompanyDto,
+    query: PagingQuery,
+  ): Promise<GetDraftEmployeesWithStepsResponseDto> {
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const { rows, count } = await this.employeeModel.findAndCountAll({
+      where: { reportId: report.id },
+      order: [['ordinal', 'ASC']],
+      limit,
+      offset,
+    })
+
+    const stepIdsByEmployeeId = await this.loadPersonalStepIds(
+      rows.map((row) => row.id),
+    )
+
+    const employees: DraftEmployeeWithStepsDto[] = rows.map((row) => ({
+      ...ReportEmployeeModel.fromModel(row),
+      stepIds: stepIdsByEmployeeId.get(row.id) ?? [],
+    }))
+    const paging = generatePaging(employees, query.page, query.pageSize, count)
+
+    return { employees, paging }
+  }
+
+  /**
+   * Personal step ids grouped by employee id, for the given employees only.
+   * Employees with no personal steps are absent from the map (the caller
+   * defaults them to `[]`).
+   */
+  private async loadPersonalStepIds(
+    employeeIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const grouped = new Map<string, string[]>()
+    if (employeeIds.length === 0) {
+      return grouped
+    }
+
+    const rows = await this.personalStepModel.findAll({
+      where: { reportEmployeeId: employeeIds },
+      attributes: ['reportEmployeeId', 'reportSubCriterionStepId'],
+    })
+
+    for (const row of rows) {
+      const existing = grouped.get(row.reportEmployeeId)
+      if (existing) {
+        existing.push(row.reportSubCriterionStepId)
+      } else {
+        grouped.set(row.reportEmployeeId, [row.reportSubCriterionStepId])
+      }
+    }
+
+    return grouped
   }
 
   /**

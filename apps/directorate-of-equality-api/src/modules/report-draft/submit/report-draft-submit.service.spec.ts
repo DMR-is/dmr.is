@@ -11,6 +11,7 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { DEFAULT_OUTLIER_GROUP_NAME } from '../../../core/constants'
 import { ICompanyService } from '../../company/company.service.interface'
 import { CompanyDto } from '../../company/dto/company.dto'
 import {
@@ -88,7 +89,9 @@ describe('ReportDraftSubmitService', () => {
   let emitWithdrawnEvents: jest.Mock
   let employeeFindAll: jest.Mock
   let outlierFindAll: jest.Mock
+  let outlierBulkCreate: jest.Mock
   let groupFindAll: jest.Mock
+  let groupCreate: jest.Mock
 
   // A salary draft carries a declared salary-data basis by default — the
   // applicant sets it during drafting via the header PATCH, and submit requires
@@ -127,7 +130,9 @@ describe('ReportDraftSubmitService', () => {
     emitWithdrawnEvents = jest.fn().mockResolvedValue(undefined)
     employeeFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
+    outlierBulkCreate = jest.fn().mockResolvedValue([])
     groupFindAll = jest.fn().mockResolvedValue([])
+    groupCreate = jest.fn().mockResolvedValue({ id: 'default-group-1' })
 
     const module = await Test.createTestingModule({
       providers: [
@@ -170,11 +175,11 @@ describe('ReportDraftSubmitService', () => {
         },
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
-          useValue: { findAll: outlierFindAll },
+          useValue: { findAll: outlierFindAll, bulkCreate: outlierBulkCreate },
         },
         {
           provide: getModelToken(ReportOutlierGroupModel),
-          useValue: { findAll: groupFindAll },
+          useValue: { findAll: groupFindAll, create: groupCreate },
         },
       ],
     }).compile()
@@ -397,5 +402,209 @@ describe('ReportDraftSubmitService', () => {
     expect(reportUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
     )
+  })
+
+  it('400s a mixed explained/unexplained set when postponement was not requested', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
+      new Set(['emp-1', 'emp-2']),
+    )
+    employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+    outlierFindAll.mockResolvedValueOnce([
+      { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+      { reportEmployeeId: 'emp-2', groupId: 'g-2' },
+    ])
+    groupFindAll.mockResolvedValueOnce([
+      { id: 'g-1', reason: 'explained' },
+      { id: 'g-2', reason: null },
+    ])
+
+    await expect(
+      service.submitDraft(PROVIDER_ID, COMPANY, salaryBody()),
+    ).rejects.toThrow(BadRequestException)
+  })
+
+  describe('outliersPostponed', () => {
+    // The reported bug: the portal offers a "postpone outliers" tick, the
+    // applicant uses it and never groups anybody, and submit died on the
+    // "must be assigned to an outlier group" guard. The API had nowhere to put
+    // the flag, so `whitelist: true` on the global ValidationPipe stripped it
+    // silently.
+    it('submits with nothing grouped, backfilling a default group (the reported failure)', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
+        new Set(['emp-1', 'emp-2']),
+      )
+      employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+      outlierFindAll
+        .mockResolvedValueOnce([]) // nothing grouped yet
+        .mockResolvedValueOnce([
+          { reportEmployeeId: 'emp-1', groupId: 'default-group-1' },
+          { reportEmployeeId: 'emp-2', groupId: 'default-group-1' },
+        ])
+      groupFindAll.mockResolvedValueOnce([
+        { id: 'default-group-1', reason: null },
+      ])
+
+      await service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ outliersPostponed: true }),
+      )
+
+      // One default group, explanation columns all NULL (the DB CHECK is
+      // all-or-none), covering exactly the detected outliers.
+      expect(groupCreate).toHaveBeenCalledWith({
+        reportId: REPORT_ID,
+        name: DEFAULT_OUTLIER_GROUP_NAME,
+        reason: null,
+        action: null,
+        signatureName: null,
+        signatureRole: null,
+      })
+      expect(outlierBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeId: 'emp-1', groupId: 'default-group-1' },
+        { reportEmployeeId: 'emp-2', groupId: 'default-group-1' },
+      ])
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
+      )
+    })
+
+    it('backfills only the outliers that are not already grouped', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
+        new Set(['emp-1', 'emp-2']),
+      )
+      employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+      outlierFindAll
+        .mockResolvedValueOnce([
+          { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+        ])
+        .mockResolvedValueOnce([
+          { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+          { reportEmployeeId: 'emp-2', groupId: 'default-group-1' },
+        ])
+      groupFindAll.mockResolvedValueOnce([
+        { id: 'g-1', reason: 'explained' },
+        { id: 'default-group-1', reason: null },
+      ])
+
+      await service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ outliersPostponed: true }),
+      )
+
+      // emp-1's existing group is left alone.
+      expect(outlierBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeId: 'emp-2', groupId: 'default-group-1' },
+      ])
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
+      )
+    })
+
+    // POSTPONED cannot be assigned (assign takes SUBMITTED/IN_REVIEW only) and
+    // so cannot be approved. If there is nothing left to defer, honouring the
+    // flag literally would strand the report where a reviewer could only deny
+    // it.
+    it('lands SUBMITTED when every detected outlier is already explained', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
+      employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }])
+      outlierFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+      ])
+      groupFindAll.mockResolvedValueOnce([{ id: 'g-1', reason: 'explained' }])
+
+      await service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ outliersPostponed: true }),
+      )
+
+      expect(groupCreate).not.toHaveBeenCalled()
+      expect(outlierBulkCreate).not.toHaveBeenCalled()
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+      )
+    })
+
+    // Same fixture as the "400s a mixed set" case above — the explicit flag is
+    // what turns the ambiguity into a decision.
+    it('lands POSTPONED on a mixed explained/unexplained set', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(
+        new Set(['emp-1', 'emp-2']),
+      )
+      employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+      outlierFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+        { reportEmployeeId: 'emp-2', groupId: 'g-2' },
+      ])
+      groupFindAll.mockResolvedValueOnce([
+        { id: 'g-1', reason: 'explained' },
+        { id: 'g-2', reason: null },
+      ])
+
+      await service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ outliersPostponed: true }),
+      )
+
+      expect(groupCreate).not.toHaveBeenCalled()
+      expect(reportUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
+      )
+    })
+
+    it('400s when there is nothing to postpone', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+
+      await expect(
+        service.submitDraft(
+          PROVIDER_ID,
+          COMPANY,
+          salaryBody({ outliersPostponed: true }),
+        ),
+      ).rejects.toThrow(BadRequestException)
+      expect(groupCreate).not.toHaveBeenCalled()
+    })
+
+    // A row for an employee who is no longer an outlier would never be
+    // re-pointed by the outliers edit endpoint and would block its group
+    // cleanup on the NOT NULL group_id FK.
+    it('400s a stale assignment to a no-longer-detected employee', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+      getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
+      employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+      outlierFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: 'emp-2', groupId: 'g-1' },
+      ])
+
+      await expect(
+        service.submitDraft(
+          PROVIDER_ID,
+          COMPANY,
+          salaryBody({ outliersPostponed: true }),
+        ),
+      ).rejects.toThrow(BadRequestException)
+      expect(groupCreate).not.toHaveBeenCalled()
+    })
+
+    it('400s on an equality draft, which has no outliers to defer', async () => {
+      findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.EQUALITY))
+
+      await expect(
+        service.submitDraft(PROVIDER_ID, COMPANY, {
+          company: salaryBody().company,
+          outliersPostponed: true,
+        }),
+      ).rejects.toThrow(BadRequestException)
+      expect(createCompanyReportSnapshots).not.toHaveBeenCalled()
+    })
   })
 })

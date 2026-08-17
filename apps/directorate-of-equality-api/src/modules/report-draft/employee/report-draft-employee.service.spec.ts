@@ -4,6 +4,12 @@ import { Test } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CompanyDto } from '../../company/dto/company.dto'
+import {
+  CompanyReportStatusEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../../company/models/company.enums'
 import { GenderEnum } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
@@ -17,6 +23,15 @@ import { ReportDraftEmployeeService } from './report-draft-employee.service'
 const REPORT_ID = 'report-id-1'
 const ROLE_ID = 'role-id-1'
 const EMPLOYEE_ID = 'employee-id-1'
+const PROVIDER_ID = 'island-is-application-uuid-draft'
+
+const COMPANY = {
+  id: 'company-1',
+  nationalId: '5500000000',
+  employeeCountCategory: CompanySizeEnum.LARGE,
+  status: CompanyStatusEnum.ACTIVE,
+  reportStatus: CompanyReportStatusEnum.SATISFACTORY,
+} as unknown as CompanyDto
 
 const report = { id: REPORT_ID } as ReportModel
 
@@ -50,6 +65,7 @@ describe('ReportDraftEmployeeService', () => {
   let employeeMax: jest.Mock
   let roleFindOne: jest.Mock
   let personalStepDestroy: jest.Mock
+  let personalStepFindAll: jest.Mock
   let outlierDestroy: jest.Mock
 
   beforeEach(async () => {
@@ -63,6 +79,7 @@ describe('ReportDraftEmployeeService', () => {
     employeeMax = jest.fn().mockResolvedValue(null)
     roleFindOne = jest.fn().mockResolvedValue({ id: ROLE_ID })
     personalStepDestroy = jest.fn().mockResolvedValue(0)
+    personalStepFindAll = jest.fn().mockResolvedValue([])
     outlierDestroy = jest.fn().mockResolvedValue(0)
 
     const module = await Test.createTestingModule({
@@ -86,7 +103,10 @@ describe('ReportDraftEmployeeService', () => {
         },
         {
           provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
-          useValue: { destroy: personalStepDestroy },
+          useValue: {
+            destroy: personalStepDestroy,
+            findAll: personalStepFindAll,
+          },
         },
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
@@ -96,6 +116,103 @@ describe('ReportDraftEmployeeService', () => {
     }).compile()
 
     service = module.get(ReportDraftEmployeeService)
+  })
+
+  describe('listEmployeesWithSteps', () => {
+    const employeeRow = (id: string, ordinal: number) => ({
+      id,
+      ordinal,
+      reportId: REPORT_ID,
+      reportEmployeeRoleId: ROLE_ID,
+      gender: GenderEnum.FEMALE,
+      startDate: '2020-01-01',
+      workRatio: 1,
+      baseSalary: 800000,
+      score: null,
+    })
+
+    it('inlines each employee\'s personal step ids in one step query', async () => {
+      employeeFindAndCountAll.mockResolvedValueOnce({
+        rows: [employeeRow(EMPLOYEE_ID, 1), employeeRow('employee-id-2', 2)],
+        count: 2,
+      })
+      personalStepFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: EMPLOYEE_ID, reportSubCriterionStepId: 'step-1' },
+        { reportEmployeeId: 'employee-id-2', reportSubCriterionStepId: 'step-2' },
+        { reportEmployeeId: EMPLOYEE_ID, reportSubCriterionStepId: 'step-3' },
+      ])
+
+      const result = await service.listEmployeesWithSteps(
+        PROVIDER_ID,
+        COMPANY,
+        { page: 1, pageSize: 10 },
+      )
+
+      expect(findOwnedDraft).toHaveBeenCalledWith(PROVIDER_ID, COMPANY)
+      expect(
+        result.employees.map((e) => ({ id: e.id, stepIds: e.stepIds })),
+      ).toEqual([
+        { id: EMPLOYEE_ID, stepIds: ['step-1', 'step-3'] },
+        { id: 'employee-id-2', stepIds: ['step-2'] },
+      ])
+      // Full employee payload is preserved alongside the join.
+      expect(result.employees[0]).toEqual(
+        expect.objectContaining({ ordinal: 1, baseSalary: 800000, score: null }),
+      )
+      expect(result.paging).toEqual(
+        expect.objectContaining({ totalItems: 2 }),
+      )
+    })
+
+    // The join must not widen the page: a request for page 2 looks up steps for
+    // page 2's ids only, never the whole report.
+    it('scopes the step lookup to the ids on the requested page', async () => {
+      employeeFindAndCountAll.mockResolvedValueOnce({
+        rows: [employeeRow('employee-id-3', 3)],
+        count: 30,
+      })
+
+      await service.listEmployeesWithSteps(PROVIDER_ID, COMPANY, {
+        page: 3,
+        pageSize: 1,
+      })
+
+      expect(personalStepFindAll).toHaveBeenCalledTimes(1)
+      expect(personalStepFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reportEmployeeId: ['employee-id-3'] },
+        }),
+      )
+    })
+
+    it('gives a role-scored employee an empty stepIds array', async () => {
+      employeeFindAndCountAll.mockResolvedValueOnce({
+        rows: [employeeRow(EMPLOYEE_ID, 1)],
+        count: 1,
+      })
+      personalStepFindAll.mockResolvedValueOnce([])
+
+      const result = await service.listEmployeesWithSteps(
+        PROVIDER_ID,
+        COMPANY,
+        { page: 1, pageSize: 10 },
+      )
+
+      expect(result.employees[0].stepIds).toEqual([])
+    })
+
+    it('skips the step query entirely on an empty page', async () => {
+      employeeFindAndCountAll.mockResolvedValueOnce({ rows: [], count: 0 })
+
+      const result = await service.listEmployeesWithSteps(
+        PROVIDER_ID,
+        COMPANY,
+        { page: 1, pageSize: 10 },
+      )
+
+      expect(result.employees).toEqual([])
+      expect(personalStepFindAll).not.toHaveBeenCalled()
+    })
   })
 
   describe('getMaxOrdinal', () => {
