@@ -8,7 +8,10 @@ TODO
 
 ## Start by running submodules checkout and install dependencies
 
+Node is pinned in `.nvmrc` — run `nvm use` (or the equivalent for your version manager) first.
+
 ```bash
+nvm use
 ./.gitscripts/checkout-submodules.sh
 brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman
 yarn

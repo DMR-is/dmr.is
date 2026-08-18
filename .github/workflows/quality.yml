@@ -22,10 +22,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -45,10 +45,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -73,10 +73,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -107,17 +107,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
         with:
           cache-install-state: true
           cache-node-modules: true
-
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -131,10 +130,10 @@ jobs:
           fetch-depth: 0
           submodules: true
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
@@ -161,10 +160,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ♻️ Use Node.js 20.x
+      - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.19.0
 
       - name: 📥 Monorepo install
         uses: ./.github/actions/yarn-install
