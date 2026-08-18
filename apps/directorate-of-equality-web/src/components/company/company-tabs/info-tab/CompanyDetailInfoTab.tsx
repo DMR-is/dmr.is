@@ -8,6 +8,7 @@ import { COMPANY_SIZE_LABEL, formatNationalId } from '../../../../lib/utils'
 import { InfoItems } from '../../../report/report-tabs/company-tab/InfoItems'
 import { CompanyTimeline } from '../../company-timeline/CompanyTimeline'
 import { CompanyEmailField } from './CompanyEmailField'
+import { CompanySectorField } from './CompanySectorField'
 
 const f = sharedText.form
 const d = reportText.detailFields
@@ -39,6 +40,11 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
           {
             label: d.address,
             children: company.address,
+          },
+
+          {
+            label: companiesText.detailView.sectorLabel,
+            children: <CompanySectorField company={company} />,
           },
 
           {

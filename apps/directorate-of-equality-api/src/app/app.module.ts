@@ -13,12 +13,12 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
-import { ApplicationApiModule } from '../modules/application/application.api.module'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
 import { CompanyEventModel } from '../modules/company/models/company-event.model'
 import { CompanyReportModel } from '../modules/company/models/company-report.model'
 import { IsatCategoryModel } from '../modules/company/models/isat-category.model'
+import { IsatSectionModel } from '../modules/company/models/isat-section.model'
 import { ConfigModel } from '../modules/config/models/config.model'
 import { PostcodeModel } from '../modules/location/models/postcode.model'
 import { RegionModel } from '../modules/location/models/region.model'
@@ -29,7 +29,6 @@ import { ReportCommentModel } from '../modules/report-comment/models/report-comm
 import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
-import { ReportDraftApiModule } from '../modules/report-draft/report-draft.api.module'
 import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
@@ -38,6 +37,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee
 import { ReportOutlierGroupModel } from '../modules/report-employee/models/report-outlier-group.model'
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
+import { DoeApplicationSwaggerModule } from '../modules/swagger/doe-application.swagger.module'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { TasksModule } from '../tasks/tasks.module'
@@ -64,6 +64,7 @@ import { HealthController } from './health.controller'
             UserModel,
             RegionModel,
             PostcodeModel,
+            IsatSectionModel,
             IsatCategoryModel,
             CompanyModel,
             ReportEmployeeRoleModel,
@@ -92,8 +93,10 @@ import { HealthController } from './health.controller'
         configService.createSequelizeOptions(),
       inject: [DMRSequelizeConfigService],
     }),
-    ApplicationApiModule,
-    ReportDraftApiModule,
+    // The two swagger aggregates are also the runtime registration points, so
+    // a controller can never be routed without appearing in a published
+    // document (enforced by swagger-coverage.spec.ts).
+    DoeApplicationSwaggerModule,
     DoeWebSwaggerModule,
     TasksModule,
   ],

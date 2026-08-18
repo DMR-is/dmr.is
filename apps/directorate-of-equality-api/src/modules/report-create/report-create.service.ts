@@ -1,3 +1,5 @@
+import { CreationAttributes } from 'sequelize'
+
 import {
   BadRequestException,
   ConflictException,
@@ -17,6 +19,8 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
+import { rethrowReportWriteError } from '../report/lib/report-identifier'
+import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import {
   ReportModel,
   ReportProviderEnum,
@@ -27,6 +31,7 @@ import { IReportContentService } from '../report-content/report-content.service.
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
+import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
@@ -34,6 +39,13 @@ import { CreateReportResponseDto } from './dto/create-report-response.dto'
 import { IReportCreateService } from './report-create.service.interface'
 
 const LOGGING_CONTEXT = 'ReportCreateService'
+
+/**
+ * Every report row is born here or in the draft-submit path, and both mint their
+ * identifier through `IReportIdentifierService` — it is a meaningless
+ * pseudonymous handle (used so reports can be referred to without quoting a
+ * kennitala), so no caller ever supplies one.
+ */
 
 @Injectable()
 export class ReportCreateService implements IReportCreateService {
@@ -55,7 +67,27 @@ export class ReportCreateService implements IReportCreateService {
     private readonly finalizeService: IReportFinalizeService,
     @Inject(IConfigService)
     private readonly configService: IConfigService,
+    @Inject(IReportIdentifierService)
+    private readonly reportIdentifierService: IReportIdentifierService,
   ) {}
+
+  /**
+   * Inserts the report row, mapping an identifier collision to a retryable error.
+   *
+   * The minted identifier is probed first, so reaching the index means two
+   * concurrent requests drew the same code — transient, and the caller should
+   * retry rather than be told its payload was bad. See
+   * `rethrowReportWriteError`.
+   */
+  private async createReportRow(
+    values: CreationAttributes<ReportModel>,
+  ): Promise<ReportModel> {
+    try {
+      return await this.reportModel.create(values)
+    } catch (error) {
+      rethrowReportWriteError(error)
+    }
+  }
 
   async createSalary(input: CreateReportDto): Promise<CreateReportResponseDto> {
     return this.createSalaryReport(input)
@@ -84,6 +116,10 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
+    // What period the figures describe — declared by the submittee, required on
+    // a salary report. MONTH must name its month; AVERAGE never carries one.
+    const salaryDataBasis = resolveSalaryDataBasis(input)
+
     const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
@@ -96,10 +132,11 @@ export class ReportCreateService implements IReportCreateService {
       input.equalityReportId,
     )
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.SALARY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.SALARY,
+      )
 
     const outliersPostponed = input.outliersPostponed ?? false
 
@@ -112,11 +149,11 @@ export class ReportCreateService implements IReportCreateService {
     const initialStatus = outliersPostponed
       ? ReportStatusEnum.POSTPONED
       : ReportStatusEnum.SUBMITTED
-    const report = await this.reportModel.create({
+    const report = await this.createReportRow({
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
       equalityReportId: input.equalityReportId,
-      identifier: input.identifier,
+      identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
       providerId: input.providerId,
@@ -131,6 +168,8 @@ export class ReportCreateService implements IReportCreateService {
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+      salaryDataBasis: salaryDataBasis.salaryDataBasis,
+      salaryDataPeriod: salaryDataBasis.salaryDataPeriod,
     })
 
     this.logger.info(`Created SALARY report row "${report.id}"`, {
@@ -226,7 +265,10 @@ export class ReportCreateService implements IReportCreateService {
 
     // 12. WITHDRAWN audit events — one per predecessor we just retired, each
     //     linked to the new report that replaced it.
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     return { reportId: report.id }
   }
@@ -250,15 +292,16 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.EQUALITY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.EQUALITY,
+      )
 
-    const report = await this.reportModel.create({
+    const report = await this.createReportRow({
       type: ReportTypeEnum.EQUALITY,
       status: ReportStatusEnum.SUBMITTED,
-      identifier: input.identifier,
+      identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: false,
       providerType: input.providerType,
       providerId: input.providerId,
@@ -298,7 +341,10 @@ export class ReportCreateService implements IReportCreateService {
       submittingCompany.companyId,
     )
 
-    await this.finalizeService.emitWithdrawnEvents(withdrawnReportIds, report.id)
+    await this.finalizeService.emitWithdrawnEvents(
+      withdrawnReportIds,
+      report.id,
+    )
 
     return { reportId: report.id }
   }

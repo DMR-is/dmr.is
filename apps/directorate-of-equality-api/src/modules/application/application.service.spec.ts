@@ -1,3 +1,6 @@
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+
 import {
   BadRequestException,
   ConflictException,
@@ -13,6 +16,7 @@ import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import {
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../company/models/company.enums'
@@ -25,6 +29,7 @@ import {
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import {
@@ -41,7 +46,6 @@ import { IReportCommentService } from '../report-comment/report-comment.service.
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
@@ -49,6 +53,10 @@ import { IReportResultService } from '../report-result/report-result.service.int
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
+import {
+  SUB_CRITERION_CATALOG,
+  SUB_CRITERION_GENERAL_SCALE,
+} from './sub-criterion-catalog/sub-criterion-catalog.data'
 import { ApplicationService } from './application.service'
 
 const mockLogger = {
@@ -74,6 +82,10 @@ const COMPANY: CompanyDto = {
   nextSalaryReportDueAt: null,
   isatCategoryCode: null,
   isatCategory: null,
+  sector: CompanySectorEnum.UNKNOWN,
+  sectorOverride: false,
+  legalFormId: null,
+  legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
@@ -264,6 +276,33 @@ describe('ApplicationService', () => {
     })
   })
 
+  describe('getSubCriterionCatalog', () => {
+    it('returns every catalog entry and the generic step scale', () => {
+      const result = service.getSubCriterionCatalog()
+
+      expect(result.entries).toHaveLength(SUB_CRITERION_CATALOG.length)
+      expect(result.generalScale).toEqual([...SUB_CRITERION_GENERAL_SCALE])
+      expect(result.entries[0]).toEqual({ ...SUB_CRITERION_CATALOG[0] })
+    })
+
+    it('hands out copies, so a consumer cannot corrupt the shared catalog', () => {
+      // Not a pass-through: the constants are process-wide and served to every
+      // company, so the method deep-copies. A refactor to `{ ...entry }` would
+      // leave `steps` shared by reference and this is what would catch it.
+      const before = JSON.parse(JSON.stringify(SUB_CRITERION_CATALOG))
+      const beforeScale = [...SUB_CRITERION_GENERAL_SCALE]
+
+      const result = service.getSubCriterionCatalog()
+      result.entries[0].title = 'mutated'
+      result.entries[0].steps[0] = 'mutated'
+      result.entries.pop()
+      result.generalScale[0] = 'mutated'
+
+      expect(JSON.parse(JSON.stringify(SUB_CRITERION_CATALOG))).toEqual(before)
+      expect([...SUB_CRITERION_GENERAL_SCALE]).toEqual(beforeScale)
+    })
+  })
+
   describe('getActiveEqualityReport', () => {
     it('returns the summary when one is found', async () => {
       const summary = {
@@ -298,7 +337,7 @@ describe('ApplicationService', () => {
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createSalary).toHaveBeenCalledWith({
         equalityReportId: input.equalityReportId,
-        identifier: input.identifier,
+        // No `identifier` — the creation service mints it.
         importedFromExcel: input.importedFromExcel,
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
@@ -312,6 +351,8 @@ describe('ApplicationService', () => {
         averageEmployeeMaleCount: input.averageEmployeeMaleCount,
         averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
         averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
+        salaryDataBasis: input.salaryDataBasis,
+        salaryDataPeriod: input.salaryDataPeriod ?? null,
         parsed: input.parsed,
         companies: [makeCompanySnapshot()],
         outliersPostponed: undefined,
@@ -485,7 +526,7 @@ describe('ApplicationService', () => {
 
       expect(getOrCreateSubsidiaryReportSnapshotSource).not.toHaveBeenCalled()
       expect(createEquality).toHaveBeenCalledWith({
-        identifier: input.identifier,
+        // No `identifier` — the creation service mints it.
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: input.providerId,
         companyAdminName: input.companyAdminName,
@@ -1586,7 +1627,6 @@ function makeEmployee({
     ordinal,
     identifier: `TVE-00${ordinal}`,
     roleTitle: 'Framkvaemdastjori',
-    education: EducationEnum.MASTER,
     gender,
     field: 'Mgmt',
     department: 'Mgmt',
@@ -1645,7 +1685,6 @@ function makeCompanySnapshotSource(
 function makeSubmitSalaryInput(): SubmitSalaryReportDto {
   return {
     equalityReportId: '00000000-0000-0000-0000-00000000eee1',
-    identifier: 'SAL-2026-001',
     importedFromExcel: true,
     providerId: 'salary-provider-1',
     companyAdminName: 'Anna Admin',
@@ -1658,6 +1697,9 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
     averageEmployeeMaleCount: 30,
     averageEmployeeFemaleCount: 40,
     averageEmployeeNeutralCount: 5,
+    salaryDataBasis: SalaryDataBasisEnum.MONTH,
+    // Inside the API's 36-month reporting window whenever the suite runs.
+    salaryDataPeriod: `${format(subMonths(new Date(), 1), 'yyyy-MM')}-01`,
     parsed: makeRequest().parsed,
     company: {
       name: 'Acme ehf.',
@@ -1672,7 +1714,6 @@ function makeSubmitSalaryInput(): SubmitSalaryReportDto {
 
 function makeSubmitEqualityInput(): SubmitEqualityReportDto {
   return {
-    identifier: 'EQ-2026-001',
     providerId: 'equality-provider-1',
     companyAdminName: 'Anna Admin',
     companyAdminTitle: 'Framkvæmdastjóri',

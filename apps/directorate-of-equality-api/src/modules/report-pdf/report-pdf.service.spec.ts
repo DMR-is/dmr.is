@@ -1,6 +1,11 @@
 import { BadRequestException } from '@nestjs/common'
 
-import { ReportTypeEnum } from '../report/models/report.enums'
+import { Paging } from '@dmr.is/shared-dto'
+
+import { GenderEnum, ReportTypeEnum } from '../report/models/report.enums'
+import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
+import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee-outlier.dto'
+import { SalaryByGenderAndScoreDto } from '../report-statistics/dto/salary-by-gender-and-score.dto'
 import { getBrowser } from './lib/browser'
 import { ReportPdfService } from './report-pdf.service'
 
@@ -28,9 +33,10 @@ const salaryReport = {
   equalityReport: { content: '<p>efni</p>' },
 }
 
-const statistics = {
+const statistics: SalaryByGenderAndScoreDto = {
   dataPoints: [],
   regressionLine: { slope: 0, intercept: 0 },
+  allowedDifferencePercent: 1.95,
   scoreBuckets: [],
   totals: {
     maleAverageSalary: 0,
@@ -45,14 +51,57 @@ const statistics = {
   },
 }
 
+function makePaging(overrides: Partial<Paging> = {}): Paging {
+  return {
+    page: 1,
+    pageSize: 200,
+    totalPages: 1,
+    totalItems: 0,
+    nextPage: null,
+    previousPage: null,
+    hasNextPage: false,
+    hasPreviousPage: false,
+    ...overrides,
+  }
+}
+
+function makeOutlier(
+  overrides: Partial<ReportEmployeeOutlierDto> = {},
+): ReportEmployeeOutlierDto {
+  return {
+    id: 'outlier-1',
+    reportEmployeeId: 'employee-1',
+    employeeOrdinal: 1,
+    gender: GenderEnum.FEMALE,
+    roleTitle: 'Sérfræðingur',
+    score: 500,
+    groupId: 'group-1',
+    groupName: 'Sérfræðingar',
+    reason: 'Skýring á mismun',
+    action: 'Úrbót fyrirhuguð',
+    signatureName: 'Jón J. Jónsson',
+    signatureRole: 'Framkvæmdastjóri',
+    adjustedBaseSalary: 900000,
+    predictedBaseSalary: 950000,
+    scoreBucketRangeFrom: 400,
+    scoreBucketRangeTo: 600,
+    direction: 'BELOW',
+    differencePercent: -5.26,
+    allowedDifferencePercent: 1.95,
+    ...overrides,
+  }
+}
+
 function makeService(reportOverrides = {}) {
   const logger = { debug: jest.fn(), warn: jest.fn() }
   const reportService = {
     getById: jest.fn(async () => ({ ...salaryReport, ...reportOverrides })),
-    getOutliers: jest.fn(async () => ({
-      outliers: [],
-      paging: { page: 1, pageSize: 200, totalPages: 1, totalItems: 0 },
-    })),
+    getOutliers: jest.fn(
+      async (): Promise<GetReportOutliersResponseDto> => ({
+        outliers: [],
+        paging: makePaging(),
+      }),
+    ),
   }
   const statisticsService = {
     getBaseSalaryByGenderAndScoreAll: jest.fn(async () => statistics),
@@ -119,12 +168,27 @@ describe('ReportPdfService', () => {
       const { service, reportService } = makeService()
       reportService.getOutliers
         .mockResolvedValueOnce({
-          outliers: new Array(200).fill({ employeeOrdinal: 1 }),
-          paging: { page: 1, pageSize: 200, totalPages: 2, totalItems: 250 },
+          outliers: Array.from({ length: 200 }, () =>
+            makeOutlier({ employeeOrdinal: 1 }),
+          ),
+          paging: makePaging({
+            totalPages: 2,
+            totalItems: 250,
+            nextPage: 2,
+            hasNextPage: true,
+          }),
         })
         .mockResolvedValueOnce({
-          outliers: new Array(50).fill({ employeeOrdinal: 2 }),
-          paging: { page: 2, pageSize: 200, totalPages: 2, totalItems: 250 },
+          outliers: Array.from({ length: 50 }, () =>
+            makeOutlier({ employeeOrdinal: 2 }),
+          ),
+          paging: makePaging({
+            page: 2,
+            totalPages: 2,
+            totalItems: 250,
+            previousPage: 1,
+            hasPreviousPage: true,
+          }),
         })
 
       await service.generateReportPdf('r1')

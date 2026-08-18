@@ -16,16 +16,15 @@ import {
 import { CompanyDto } from '../../company/dto/company.dto'
 import { GenderEnum } from '../../report/models/report.enums'
 import { ReportModel } from '../../report/models/report.model'
-import {
-  EducationEnum,
-  ReportEmployeeModel,
-} from '../../report-employee/models/report-employee.model'
+import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { EmployeeChangeDataDto } from '../sync/dto/change-employee.dto'
+import { DraftEmployeeWithStepsDto } from './dto/draft-employee-with-steps.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
+import { GetDraftEmployeesWithStepsResponseDto } from './dto/get-draft-employees-with-steps-response.dto'
 import { IReportDraftEmployeeService } from './report-draft-employee.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftEmployeeService'
@@ -33,7 +32,6 @@ const LOGGING_CONTEXT = 'ReportDraftEmployeeService'
 /** Editable employee columns — `ordinal`, `score`, `reportId` are never patched. */
 const EMPLOYEE_PATCH_KEYS = [
   'reportEmployeeRoleId',
-  'education',
   'gender',
   'field',
   'department',
@@ -51,10 +49,7 @@ const EMPLOYEE_PATCH_KEYS = [
 /** Fields an employee CREATE must supply (the non-nullable columns). */
 const EMPLOYEE_REQUIRED_KEYS = [
   'reportEmployeeRoleId',
-  'education',
   'gender',
-  'field',
-  'department',
   'startDate',
   'workRatio',
   'baseSalary',
@@ -99,6 +94,93 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     const paging = generatePaging(employees, query.page, query.pageSize, count)
 
     return { employees, paging }
+  }
+
+  /**
+   * Same page as `listEmployees`, with each employee's personal step
+   * assignments inlined. The step lookup is a single query scoped to the ids on
+   * the current page, so the query count is constant in the page size rather
+   * than one request per employee (which is what the portal was doing against
+   * `GET …/draft/employees/:employeeId/steps`).
+   */
+  async listEmployeesWithSteps(
+    providerId: string,
+    company: CompanyDto,
+    query: PagingQuery,
+  ): Promise<GetDraftEmployeesWithStepsResponseDto> {
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+
+    const { limit, offset } = getLimitAndOffset(query)
+
+    const { rows, count } = await this.employeeModel.findAndCountAll({
+      where: { reportId: report.id },
+      order: [['ordinal', 'ASC']],
+      limit,
+      offset,
+    })
+
+    const stepIdsByEmployeeId = await this.loadPersonalStepIds(
+      rows.map((row) => row.id),
+    )
+    const roleTitleById = await this.loadRoleTitles(report.id)
+
+    const employees: DraftEmployeeWithStepsDto[] = rows.map((row) => ({
+      ...ReportEmployeeModel.fromModel(row),
+      // reportEmployeeRoleId is a NOT NULL FK into this report's roles, so the
+      // lookup always resolves; the fallback only guards a torn read.
+      roleTitle: roleTitleById.get(row.reportEmployeeRoleId) ?? '',
+      stepIds: stepIdsByEmployeeId.get(row.id) ?? [],
+    }))
+    const paging = generatePaging(employees, query.page, query.pageSize, count)
+
+    return { employees, paging }
+  }
+
+  /**
+   * Personal step ids grouped by employee id, for the given employees only.
+   * Employees with no personal steps are absent from the map (the caller
+   * defaults them to `[]`).
+   */
+  private async loadPersonalStepIds(
+    employeeIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const grouped = new Map<string, string[]>()
+    if (employeeIds.length === 0) {
+      return grouped
+    }
+
+    const rows = await this.personalStepModel.findAll({
+      where: { reportEmployeeId: employeeIds },
+      attributes: ['reportEmployeeId', 'reportSubCriterionStepId'],
+    })
+
+    for (const row of rows) {
+      const existing = grouped.get(row.reportEmployeeId)
+      if (existing) {
+        existing.push(row.reportSubCriterionStepId)
+      } else {
+        grouped.set(row.reportEmployeeId, [row.reportSubCriterionStepId])
+      }
+    }
+
+    return grouped
+  }
+
+  /**
+   * Role titles of the report, keyed by role id. One bounded query — a report
+   * carries at most `MAX_ROLES` (100) of them — rather than an include on the
+   * paginated employee query, which keeps `findAndCountAll`'s count untouched.
+   */
+  private async loadRoleTitles(reportId: string): Promise<Map<string, string>> {
+    const rows = await this.roleModel.findAll({
+      where: { reportId },
+      attributes: ['id', 'title'],
+    })
+
+    return new Map(rows.map((row) => [row.id, row.title]))
   }
 
   /**
@@ -152,10 +234,9 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       ordinal,
       score: null,
       reportEmployeeRoleId: data.reportEmployeeRoleId as string,
-      education: data.education as EducationEnum,
       gender: data.gender as GenderEnum,
-      field: data.field as string,
-      department: data.department as string,
+      field: data.field ?? null,
+      department: data.department ?? null,
       startDate: data.startDate as string,
       workRatio: data.workRatio as number,
       baseSalary: data.baseSalary as number,

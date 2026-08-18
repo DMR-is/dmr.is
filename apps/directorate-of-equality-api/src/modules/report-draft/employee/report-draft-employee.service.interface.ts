@@ -4,6 +4,7 @@ import { CompanyDto } from '../../company/dto/company.dto'
 import { ReportModel } from '../../report/models/report.model'
 import { EmployeeChangeDataDto } from '../sync/dto/change-employee.dto'
 import { GetDraftEmployeesResponseDto } from './dto/get-draft-employees-response.dto'
+import { GetDraftEmployeesWithStepsResponseDto } from './dto/get-draft-employees-with-steps-response.dto'
 
 /**
  * Employees of a DRAFT report. Reads go through the draft ownership resolver;
@@ -18,6 +19,13 @@ export interface IReportDraftEmployeeService {
     company: CompanyDto,
     query: PagingQuery,
   ): Promise<GetDraftEmployeesResponseDto>
+
+  /** The same page as `listEmployees`, with personal step assignments inlined. */
+  listEmployeesWithSteps(
+    providerId: string,
+    company: CompanyDto,
+    query: PagingQuery,
+  ): Promise<GetDraftEmployeesWithStepsResponseDto>
 
   /** Highest ordinal currently in the report (0 if empty). */
   getMaxOrdinal(report: ReportModel): Promise<number>

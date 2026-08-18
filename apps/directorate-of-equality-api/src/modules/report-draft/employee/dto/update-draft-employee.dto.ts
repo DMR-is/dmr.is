@@ -6,7 +6,6 @@ import {
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../../report/models/report.enums'
-import { EducationEnum } from '../../../report-employee/models/report-employee.model'
 
 /**
  * Patch body for one draft employee. Every field optional (PATCH): omitted
@@ -17,9 +16,6 @@ import { EducationEnum } from '../../../report-employee/models/report-employee.m
 export class UpdateDraftEmployeeDto {
   @ApiOptionalUUID()
   reportEmployeeRoleId?: string
-
-  @ApiOptionalEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education?: EducationEnum
 
   @ApiOptionalEnum(GenderEnum, { enumName: 'GenderEnum' })
   gender?: GenderEnum

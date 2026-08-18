@@ -126,6 +126,149 @@ describe('ReportDraftCriterionService', () => {
     ])
   })
 
+  describe('listCriteriaTree', () => {
+    it('nests sub-criteria and steps under their parents in three queries', async () => {
+      criterionFindAll.mockResolvedValueOnce([
+        { id: CRITERION_ID, title: 'Ábyrgð', reportId: REPORT_ID },
+        { id: 'criterion-id-2', title: 'Álag', reportId: REPORT_ID },
+      ])
+      subFindAll.mockResolvedValueOnce([
+        { id: 'sub-1', title: 'Mannaforráð', reportCriterionId: CRITERION_ID },
+        { id: 'sub-2', title: 'Fjárhagsleg', reportCriterionId: CRITERION_ID },
+        { id: 'sub-3', title: 'Vinnuálag', reportCriterionId: 'criterion-id-2' },
+      ])
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-1', order: 1, reportSubCriterionId: 'sub-1', score: 10 },
+        { id: 'step-2', order: 2, reportSubCriterionId: 'sub-1', score: 20 },
+        { id: 'step-3', order: 1, reportSubCriterionId: 'sub-3', score: 5 },
+      ])
+
+      const result = await service.listCriteriaTree(PROVIDER_ID, COMPANY)
+
+      expect(findOwnedDraft).toHaveBeenCalledWith(PROVIDER_ID, COMPANY)
+      expect(
+        result.map((criterion) => ({
+          id: criterion.id,
+          subCriteria: criterion.subCriteria.map((sub) => ({
+            id: sub.id,
+            steps: sub.steps.map((step) => step.id),
+          })),
+        })),
+      ).toEqual([
+        {
+          id: CRITERION_ID,
+          subCriteria: [
+            { id: 'sub-1', steps: ['step-1', 'step-2'] },
+            { id: 'sub-2', steps: [] },
+          ],
+        },
+        {
+          id: 'criterion-id-2',
+          subCriteria: [{ id: 'sub-3', steps: ['step-3'] }],
+        },
+      ])
+
+      // One query per level, each scoped by the ids resolved from the level above.
+      expect(criterionFindAll).toHaveBeenCalledTimes(1)
+      expect(subFindAll).toHaveBeenCalledTimes(1)
+      expect(subFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reportCriterionId: [CRITERION_ID, 'criterion-id-2'] },
+        }),
+      )
+      expect(stepFindAll).toHaveBeenCalledTimes(1)
+      expect(stepFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reportSubCriterionId: ['sub-1', 'sub-2', 'sub-3'] },
+        }),
+      )
+    })
+
+    it('preserves the leaf payloads the per-parent reads return', async () => {
+      criterionFindAll.mockResolvedValueOnce([
+        {
+          id: CRITERION_ID,
+          title: 'Ábyrgð',
+          weight: 0.25,
+          description: 'd',
+          type: ReportCriterionTypeEnum.RESPONSIBILITY,
+          reportId: REPORT_ID,
+        },
+      ])
+      subFindAll.mockResolvedValueOnce([
+        {
+          id: 'sub-1',
+          title: 'Mannaforráð',
+          description: 'sd',
+          weight: 0.5,
+          reportCriterionId: CRITERION_ID,
+        },
+      ])
+      stepFindAll.mockResolvedValueOnce([
+        {
+          id: 'step-1',
+          order: 1,
+          description: 'std',
+          score: 10,
+          reportSubCriterionId: 'sub-1',
+        },
+      ])
+
+      const [criterion] = await service.listCriteriaTree(PROVIDER_ID, COMPANY)
+
+      expect(criterion).toEqual({
+        id: CRITERION_ID,
+        title: 'Ábyrgð',
+        weight: 0.25,
+        description: 'd',
+        type: ReportCriterionTypeEnum.RESPONSIBILITY,
+        reportId: REPORT_ID,
+        subCriteria: [
+          {
+            id: 'sub-1',
+            title: 'Mannaforráð',
+            description: 'sd',
+            weight: 0.5,
+            reportCriterionId: CRITERION_ID,
+            steps: [
+              {
+                id: 'step-1',
+                order: 1,
+                description: 'std',
+                score: 10,
+                reportSubCriterionId: 'sub-1',
+              },
+            ],
+          },
+        ],
+      })
+    })
+
+    it('returns a criterion with no sub-criteria as an empty array, skipping the step query', async () => {
+      criterionFindAll.mockResolvedValueOnce([
+        { id: CRITERION_ID, title: 'Ábyrgð', reportId: REPORT_ID },
+      ])
+      subFindAll.mockResolvedValueOnce([])
+
+      const result = await service.listCriteriaTree(PROVIDER_ID, COMPANY)
+
+      expect(result).toEqual([
+        expect.objectContaining({ id: CRITERION_ID, subCriteria: [] }),
+      ])
+      expect(stepFindAll).not.toHaveBeenCalled()
+    })
+
+    it('short-circuits both child queries on a draft with no criteria', async () => {
+      criterionFindAll.mockResolvedValueOnce([])
+
+      const result = await service.listCriteriaTree(PROVIDER_ID, COMPANY)
+
+      expect(result).toEqual([])
+      expect(subFindAll).not.toHaveBeenCalled()
+      expect(stepFindAll).not.toHaveBeenCalled()
+    })
+  })
+
   it('creates a criterion with the client-minted id, trimming the title', async () => {
     criterionFindByPk.mockResolvedValueOnce(null)
     const row: Record<string, unknown> = { save: jest.fn() }

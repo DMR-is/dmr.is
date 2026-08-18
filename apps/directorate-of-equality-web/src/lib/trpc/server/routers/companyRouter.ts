@@ -15,6 +15,8 @@ import {
   zUpdateCompanyFinesPath,
   zUpdateCompanyQuarantineBody,
   zUpdateCompanyQuarantinePath,
+  zUpdateCompanySectorBody,
+  zUpdateCompanySectorPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
@@ -40,6 +42,8 @@ const zGetCompaniesQuery = z.object({
   quarantined: z.boolean().optional(),
   overdue: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
+  isatSection: z.array(z.string()).optional(),
+  sector: z.array(z.enum(['UNKNOWN', 'PRIVATE', 'PUBLIC'])).optional(),
   regionCode: z.array(z.string()).optional(),
   postcode: z.array(z.string()).optional(),
   sortBy: z.enum(['name', 'employeeCount', 'nextReportDue']).optional(),
@@ -69,6 +73,11 @@ export const companyRouter = router({
     .query(({ ctx, input }) =>
       ctx.api.searchIsatCategories({ query: input as never }),
     ),
+
+  // Backs the premade industry filter — the 22 ÍSAT sections (bálkar) with
+  // labels, so "Opinber stjórnsýsla" is one choice instead of every leaf under
+  // division 84. Static reference data, no input.
+  isatSections: protectedProcedure.query(({ ctx }) => ctx.api.listIsatSections()),
 
   rskLookup: protectedProcedure
     .input(zRskLookupCompanyPath)
@@ -135,6 +144,18 @@ export const companyRouter = router({
       ctx.api.updateCompanyFines({
         path: { id: input.id },
         body: { finesStarted: input.finesStarted, reason: input.reason },
+      }),
+    ),
+
+  // Manual sector classification — the admin escape hatch for companies
+  // automatic RSK classification left UNKNOWN. PRIVATE/PUBLIC pins the value
+  // (sectorOverride); UNKNOWN hands it back to automatic classification.
+  updateSector: protectedProcedure
+    .input(zUpdateCompanySectorPath.extend(zUpdateCompanySectorBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateCompanySector({
+        path: { id: input.id },
+        body: { sector: input.sector },
       }),
     ),
 

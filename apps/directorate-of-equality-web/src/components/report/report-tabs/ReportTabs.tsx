@@ -95,6 +95,8 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
                     ? new Date(report.correctionDeadline)
                     : undefined
                 }
+                salaryDataBasis={report.salaryDataBasis}
+                salaryDataPeriod={report.salaryDataPeriod}
               />
             ),
           },

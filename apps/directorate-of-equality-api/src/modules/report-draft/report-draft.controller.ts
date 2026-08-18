@@ -30,17 +30,20 @@ import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.se
 import { DraftAssignmentDto } from './assignment/dto/draft-assignment.dto'
 import { IReportDraftAssignmentService } from './assignment/report-draft-assignment.service.interface'
 import { GetDraftCriteriaResponseDto } from './criterion/dto/get-draft-criteria-response.dto'
+import { GetDraftCriteriaTreeResponseDto } from './criterion/dto/get-draft-criteria-tree-response.dto'
 import { IReportDraftCriterionService } from './criterion/report-draft-criterion.service.interface'
 import { CreateDraftReportDto } from './draft/dto/create-draft-report.dto'
 import { DraftDetailDto } from './draft/dto/draft-detail.dto'
 import { UpdateDraftDto } from './draft/dto/update-draft.dto'
 import { IReportDraftService } from './draft/report-draft.service.interface'
 import { GetDraftEmployeesResponseDto } from './employee/dto/get-draft-employees-response.dto'
+import { GetDraftEmployeesWithStepsResponseDto } from './employee/dto/get-draft-employees-with-steps-response.dto'
 import { IReportDraftEmployeeService } from './employee/report-draft-employee.service.interface'
 import { EmployeeOutlierGroupDto } from './outlier-group/dto/employee-outlier-group.dto'
 import { GetDraftOutlierGroupsResponseDto } from './outlier-group/dto/get-draft-outlier-groups-response.dto'
 import { IReportDraftOutlierGroupService } from './outlier-group/report-draft-outlier-group.service.interface'
 import { GetDraftRolesResponseDto } from './role/dto/get-draft-roles-response.dto'
+import { GetDraftRolesWithStepsResponseDto } from './role/dto/get-draft-roles-with-steps-response.dto'
 import { IReportDraftRoleService } from './role/report-draft-role.service.interface'
 import { IReportDraftSeedService } from './seed/report-draft-seed.service.interface'
 import { GetDraftStepsResponseDto } from './step/dto/get-draft-steps-response.dto'
@@ -298,6 +301,26 @@ export class ReportDraftController {
     return { roles }
   }
 
+  @Get('reports/:providerId/draft/roles-with-steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftRolesWithSteps',
+    include404: true,
+    type: GetDraftRolesWithStepsResponseDto,
+    description:
+      'Lists the draft\'s employee roles with their assigned step ids inlined — the aggregate of GET …/draft/roles plus one GET …/draft/roles/:roleId/steps per role, so the portal does not have to stitch them together. Ordered by title. `stepIds` is empty for a role that has not been scored yet.',
+  })
+  async listRolesWithSteps(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftRolesWithStepsResponseDto> {
+    const roles = await this.reportDraftRoleService.listRolesWithSteps(
+      providerId,
+      company,
+    )
+    return { roles }
+  }
+
   // ── Reads: employees ───────────────────────────────────────────────────
 
   @Get('reports/:providerId/draft/employees')
@@ -321,6 +344,27 @@ export class ReportDraftController {
     )
   }
 
+  @Get('reports/:providerId/draft/employees-with-steps')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'listApplicationDraftEmployeesWithSteps',
+    include404: true,
+    type: GetDraftEmployeesWithStepsResponseDto,
+    description:
+      "Same page as GET …/draft/employees, with each employee's personal step ids inlined — the aggregate that replaces one GET …/draft/employees/:employeeId/steps per row. Paginated on the same terms (a report can carry thousands of employees); raise pageSize to fetch the whole set in one call. `stepIds` is empty for an employee scored purely through its role. Scores are NULL until the report is submitted.",
+  })
+  async listEmployeesWithSteps(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+    @Query() query: PagingQuery,
+  ): Promise<GetDraftEmployeesWithStepsResponseDto> {
+    return this.reportDraftEmployeeService.listEmployeesWithSteps(
+      providerId,
+      company,
+      query,
+    )
+  }
+
   // ── Reads: criteria ──────────────────────────────────────────────────────
 
   @Get('reports/:providerId/draft/criteria')
@@ -337,6 +381,26 @@ export class ReportDraftController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<GetDraftCriteriaResponseDto> {
     const criteria = await this.reportDraftCriterionService.listCriteria(
+      providerId,
+      company,
+    )
+    return { criteria }
+  }
+
+  @Get('reports/:providerId/draft/criteria-tree')
+  @ApiParam({ name: 'providerId', type: String })
+  @DoeResponse({
+    operationId: 'getApplicationDraftCriteriaTree',
+    include404: true,
+    type: GetDraftCriteriaTreeResponseDto,
+    description:
+      'The draft\'s complete criteria tree in one payload: every criterion, its sub-criteria, and each sub-criterion\'s scoring steps. Collapses the 1 + N + M fan-out over GET …/draft/criteria, …/criteria/:criterionId/sub-criteria and …/sub-criteria/:subCriterionId/steps. Unpaginated — the tree is capped by the workbook limits (5 criteria, 200 sub-criteria, 8 steps each). Criteria and sub-criteria come back in creation order, steps by `order` ascending; `subCriteria` and `steps` are empty arrays when nothing is defined yet.',
+  })
+  async getCriteriaTree(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetDraftCriteriaTreeResponseDto> {
+    const criteria = await this.reportDraftCriterionService.listCriteriaTree(
       providerId,
       company,
     )

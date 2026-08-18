@@ -3,7 +3,6 @@ import S3 from 'aws-sdk/clients/s3'
 import { exec } from 'child_process'
 import fs from 'fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'fs/promises'
-import fetch from 'node-fetch'
 import os from 'os'
 import path from 'path'
 
@@ -171,7 +170,21 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const cssPath = path.join(__dirname, 'RegulationPdf.css')
+// esbuild flattens the bundle, so in production the stylesheet ends up right
+// next to this module. Loaded unbundled (tests, scripts) it is still at its
+// source location in `src/`, one directory up. Try both rather than making
+// this module impossible to import outside the bundle — but still fail loudly
+// if the stylesheet is genuinely missing, since a PDF without it is broken.
+const cssCandidates = [
+  path.join(__dirname, 'RegulationPdf.css'),
+  path.join(__dirname, '..', 'RegulationPdf.css'),
+]
+const cssPath = cssCandidates.find((candidate) => fs.existsSync(candidate))
+if (!cssPath) {
+  throw new Error(
+    'RegulationPdf.css not found. Looked in: ' + cssCandidates.join(', '),
+  )
+}
 const CSS = fs.readFileSync(cssPath, 'utf8')
 
 const pdfTmplate = (
@@ -313,6 +326,32 @@ export const cleanupPdfTempDir = async () => {
   }
 }
 
+/**
+ * Logs the versions of the PDF render toolchain once, at startup.
+ *
+ * Neither Chromium (`apk add chromium`) nor pagedjs-cli (`npm install -g`) is
+ * version-pinned in the Dockerfile, so an image rebuild can silently swap the
+ * renderer with no code change — which is exactly how PDF rendering broke in
+ * July 2026 (Chromium 149 -> 150 between two releases). Recording the versions
+ * makes that drift visible in the logs instead of invisible.
+ */
+export const logRenderToolchain = () => {
+  const version = (label: string, cmd: string) =>
+    exec(cmd, (err, stdout) => {
+      console.info(
+        `PDF renderer ${label}:`,
+        err
+          ? `UNAVAILABLE (${err.message.split('\n')[0]})`
+          : // `npm ls` prints a small tree; the package is on the last line.
+            stdout.trim().split('\n').pop()?.replace(/^\W+/, ''),
+      )
+    })
+
+  // pagedjs-cli has no --version flag, so ask npm for the installed version.
+  version('chromium', `${process.env.PUPPETEER_EXECUTABLE_PATH} --version`)
+  version('pagedjs-cli', 'npm ls -g --depth=0 pagedjs-cli')
+}
+
 const makeRegulationPdf = (
   regulation?:
     | InputRegulation
@@ -356,12 +395,28 @@ const makeRegulationPdf = (
               `  --browserArgs --no-sandbox,--font-render-hinting=none,--user-data-dir=${userDataDir}` +
               `  --timeout ${90 * SECOND}` +
               `  --output ${outFile}`,
-            (err) => {
+            // pagedjs-cli reports render progress and Chromium reports crashes
+            // on stdout/stderr. `exec` buffers both and drops them unless the
+            // callback asks for them — without this a failed render logs only
+            // the command line, which is what made the July 2026 outage
+            // undiagnosable. 1MB (the default) is not enough for a chatty
+            // render, and overflowing it would itself fail the render.
+            { maxBuffer: 10 * 1024 * 1024 },
+            (err, stdout, stderr) => {
               // Always clean up the HTML input and the Chromium profile dir,
               // regardless of success/failure.
               tryUnlink(htmlFile)
               tryRmDir(userDataDir)
               if (err) {
+                console.error('pagedjs-cli failed', {
+                  // `signal` distinguishes a Chromium/Node abort (SIGABRT) from
+                  // a kernel OOM kill (SIGKILL) from a clean non-zero exit.
+                  code: err.code,
+                  signal: err.signal,
+                  killed: err.killed,
+                  stdout,
+                  stderr,
+                })
                 // pagedjs-cli may have written a partial/complete output file
                 // before failing; clean it up so it doesn't leak to disk.
                 tryUnlink(outFile)
@@ -442,24 +497,43 @@ const cleanUpRegulationBodyInput = (
 
 // ---------------------------------------------------------------------------
 
-const fetchPdf = (fileKey: string) =>
-  fetch(
-    `https://${AWS_BUCKET_NAME}.s3.${AWS_REGION_NAME}.amazonaws.com/${fileKey}`,
-  )
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`Error fetching '${res.url}' (${res.status})`)
-      }
-      return res.buffer().then((contents) => ({
-        contents: contents,
-        modifiedDate:
-          toISODateTime(res.headers.get('Last-Modified')) || ('' as const),
-      }))
-    })
-    .catch(() => ({ contents: false, modifiedDate: '' }) as const)
-
 const s3 = new S3({ region: AWS_REGION_NAME })
 const doLog = !!MEDIA_BUCKET_FOLDER
+
+/**
+ * Reads a cached PDF from S3.
+ *
+ * This used to be an unauthenticated `fetch()` against the bucket's public
+ * URL, which could never work: the bucket is private (it is a CloudFront
+ * origin), so anonymous reads get a 403 even for objects that exist. Going
+ * through the SDK signs the request with the task role, which already grants
+ * `s3:GetObject` on this bucket.
+ *
+ * A miss is normal and expected — it just means the PDF has to be rendered —
+ * so `NoSuchKey` stays quiet. Anything else means the cache is misconfigured
+ * rather than merely cold, and is worth surfacing: the previous version
+ * swallowed every error identically, which is why a completely dead cache went
+ * unnoticed.
+ */
+const fetchPdf = (fileKey: string) =>
+  s3
+    .getObject({ Bucket: AWS_BUCKET_NAME, Key: fileKey })
+    .promise()
+    .then(
+      (res) =>
+        ({
+          contents: res.Body as Buffer,
+          modifiedDate:
+            toISODateTime(res.LastModified?.toISOString()) || ('' as const),
+        }) as const,
+    )
+    .catch((error: unknown) => {
+      const code = (error as { code?: string })?.code
+      if (code !== 'NoSuchKey' && code !== 'NotFound') {
+        console.error('Unable to read cached PDF', fileKey, code ?? error)
+      }
+      return { contents: false, modifiedDate: '' } as const
+    })
 
 const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
   s3
@@ -474,8 +548,10 @@ const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
       doLog && console.info('🆗 Uploaded', data.Key)
     })
     .catch((error: unknown) => {
+      // Upload failures used to log at `console.info`, so an S3 client built
+      // with an empty region failed silently for months.
       const message = error instanceof Error ? error.message : error
-      console.info('⚠️ ', message)
+      console.error('Unable to cache PDF', fileKey, message)
     })
 
 type RegOpts = {

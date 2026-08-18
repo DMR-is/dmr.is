@@ -13,7 +13,12 @@ export type SetupSwaggerOptions = {
   autoTagControllers?: boolean
 }
 
-export const setupSwaggerDocument = (
+/**
+ * Builds the OpenAPI document without serving it. Kept separate from
+ * `setupSwaggerDocument` so the schema snapshot spec can assert on exactly the
+ * document production serves, without registering Swagger UI routes.
+ */
+export const buildSwaggerDocument = (
   app: INestApplication,
   options: SetupSwaggerOptions,
 ) => {
@@ -38,6 +43,15 @@ export const setupSwaggerDocument = (
       }
     })
   }
+
+  return document
+}
+
+export const setupSwaggerDocument = (
+  app: INestApplication,
+  options: SetupSwaggerOptions,
+) => {
+  const document = buildSwaggerDocument(app, options)
 
   SwaggerModule.setup(options.swaggerPath, app, document, {
     customSiteTitle: options.swaggerTitle,

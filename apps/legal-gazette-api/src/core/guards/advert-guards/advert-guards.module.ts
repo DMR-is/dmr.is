@@ -34,11 +34,23 @@ import { CanPublishBulkGuard } from './can-publish-bulk.guard'
  * export class MyModule {}
  * ```
  */
+/**
+ * Hoisted so the SAME dynamic-module object is both imported and exported.
+ *
+ * Nest 10 keys module deduplication on a hash of the module metadata, which lets
+ * `exports: [SequelizeModule]` resolve back to the inline `forFeature(...)` call
+ * above it. Nest 11 keys on object *reference*, so the bare class is a different
+ * module than the dynamic instance and the container refuses to boot with:
+ * "Nest cannot export a provider/module that is not a part of the currently
+ * processed module (AdvertGuardsModule)".
+ */
+const advertGuardModels = SequelizeModule.forFeature([
+  AdvertModel,
+  AdvertPublicationModel,
+])
+
 @Module({
-  imports: [
-    SequelizeModule.forFeature([AdvertModel, AdvertPublicationModel]),
-    LoggingModule,
-  ],
+  imports: [advertGuardModels, LoggingModule],
   providers: [
     AdvertGuardUtils,
     CanEditGuard,
@@ -47,8 +59,8 @@ import { CanPublishBulkGuard } from './can-publish-bulk.guard'
     CanEditOrPublishGuard,
   ],
   exports: [
-    // Re-export SequelizeModule so model providers are available to consumers
-    SequelizeModule,
+    // Re-export the imported instance so model providers reach consumers.
+    advertGuardModels,
     AdvertGuardUtils,
     CanEditGuard,
     CanPublishGuard,

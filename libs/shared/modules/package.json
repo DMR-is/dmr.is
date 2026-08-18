@@ -7,14 +7,14 @@
     "./guards/auth": "./src/lib/guards/auth/index.ts"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.4.19",
-    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/common": "^11.1.29",
+    "@nestjs/swagger": "^11.4.6",
     "sequelize": "6.37.3",
     "sequelize-typescript": "2.1.6"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.744.0",
-    "@aws-sdk/client-ses": "^3.758.0",
+    "@aws-sdk/client-sesv2": "^3.758.0",
     "@aws-sdk/credential-providers": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.744.0",
     "@dmr.is/constants": "*",
@@ -25,11 +25,11 @@
     "@dmr.is/utils-server": "*",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
-    "nodemailer": "^6.10.0"
+    "nodemailer": "^9.0.4"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9",
     "@types/multer": "^1.4.11",
-    "@types/nodemailer": "^6"
+    "@types/nodemailer": "^8"
   }
 }

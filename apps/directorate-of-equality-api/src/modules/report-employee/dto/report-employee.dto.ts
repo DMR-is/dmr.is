@@ -2,12 +2,12 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../report/models/report.model'
-import { EducationEnum } from '../models/report-employee.model'
 
 export class ReportEmployeeDto {
   @ApiUUId()
@@ -16,14 +16,11 @@ export class ReportEmployeeDto {
   @ApiNumber()
   ordinal!: number
 
-  @ApiEnum(EducationEnum, { enumName: 'EducationEnum' })
-  education!: EducationEnum
+  @ApiOptionalString({ nullable: true })
+  field!: string | null
 
-  @ApiString()
-  field!: string
-
-  @ApiString()
-  department!: string
+  @ApiOptionalString({ nullable: true })
+  department!: string | null
 
   @ApiString()
   startDate!: string

@@ -83,6 +83,8 @@ describe('SubscriberCreatedListener', () => {
       getChargeCategory: jest.fn().mockResolvedValue('RL1'),
       getPaymentData: jest.fn(),
       getEstimatedPriceForApplication: jest.fn(),
+      getEstimatedPrice: jest.fn(),
+      getApplicationAdvertPrice: jest.fn(),
     }
     // Default mock transaction record with update method for C-4 pattern
     const defaultMockTransactionRecord = {

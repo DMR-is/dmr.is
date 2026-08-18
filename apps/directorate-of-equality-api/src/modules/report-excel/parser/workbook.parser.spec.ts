@@ -5,7 +5,6 @@ import { BadRequestException } from '@nestjs/common'
 
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
-import { EducationEnum } from '../../report-employee/models/report-employee.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
 import { parseWorkbook } from './workbook.parser'
@@ -94,7 +93,6 @@ const writeEmployeeRow = (
     role: string
     gender: string
     workRatio: number
-    education: string
     baseSalary: number
     additionalFixedOvertime: number | null
     additionalFixedCarAllowance: number | null
@@ -107,24 +105,23 @@ const writeEmployeeRow = (
     startDate: Date
   },
 ) => {
-  const s = wb.getWorksheet('Starfsmenn')!
+  const s = wb.getWorksheet('Launagögn')!
   const r = 5 + ordinal
   s.getCell(`A${r}`).value = ordinal
   s.getCell(`B${r}`).value = values.name
   s.getCell(`C${r}`).value = values.role
   s.getCell(`D${r}`).value = values.gender
   s.getCell(`E${r}`).value = values.workRatio
-  s.getCell(`F${r}`).value = values.education
-  s.getCell(`G${r}`).value = values.field
-  s.getCell(`H${r}`).value = values.department
-  s.getCell(`I${r}`).value = values.startDate
-  s.getCell(`J${r}`).value = values.baseSalary
-  s.getCell(`K${r}`).value = values.additionalFixedOvertime
-  s.getCell(`L${r}`).value = values.additionalFixedCarAllowance
-  s.getCell(`M${r}`).value = values.bonusOccasionalCarAllowance
-  s.getCell(`N${r}`).value = values.bonusOccasionalOvertime
-  s.getCell(`O${r}`).value = values.bonusPayments
-  s.getCell(`P${r}`).value = values.bonusOther
+  s.getCell(`F${r}`).value = values.field
+  s.getCell(`G${r}`).value = values.department
+  s.getCell(`H${r}`).value = values.startDate
+  s.getCell(`I${r}`).value = values.baseSalary
+  s.getCell(`J${r}`).value = values.additionalFixedOvertime
+  s.getCell(`K${r}`).value = values.additionalFixedCarAllowance
+  s.getCell(`L${r}`).value = values.bonusOccasionalCarAllowance
+  s.getCell(`M${r}`).value = values.bonusOccasionalOvertime
+  s.getCell(`N${r}`).value = values.bonusPayments
+  s.getCell(`O${r}`).value = values.bonusOther
 }
 
 // Step-order inputs sit on every SECOND column (score column interleaved after
@@ -135,7 +132,7 @@ const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
 ) => {
-  const sheet = wb.getWorksheet('Flokkun starfa')!
+  const sheet = wb.getWorksheet('Starfsmat')!
   rolesInOrder.forEach((roleSteps, roleIdx) => {
     roleSteps.forEach((stepOrder, subIdx) => {
       sheet.getCell(11 + roleIdx, 7 + 2 * subIdx).value = stepOrder
@@ -147,7 +144,7 @@ const fillEmployeeClassification = (
   wb: ExcelJS.Workbook,
   empsInOrder: number[][],
 ) => {
-  const sheet = wb.getWorksheet('Flokkun starfsmanna')!
+  const sheet = wb.getWorksheet('Einstaklingsmat')!
   empsInOrder.forEach((empSteps, empIdx) => {
     empSteps.forEach((stepOrder, subIdx) => {
       sheet.getCell(7 + empIdx, 4 + 2 * subIdx).value = stepOrder
@@ -252,7 +249,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Forstöðumaður',
     gender: 'Kona',
     workRatio: 1,
-    education: 'BA/BS eða sambærilegt háskólanám',
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -269,7 +265,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Sérfræðingur',
     gender: 'Karl',
     workRatio: 1,
-    education: 'Háskólapróf á framhaldsstigi (MA/MS)',
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -286,7 +281,6 @@ const buildValidFilled = async (): Promise<Buffer> => {
     role: 'Verkstjóri',
     gender: 'Kona',
     workRatio: 0.8,
-    education: 'Styttra framhaldsnám (t.d. leikskóla-/félagsliði)',
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -364,7 +358,7 @@ describe('parseWorkbook', () => {
       ])
     })
 
-    it('derives 3 distinct roles from Starfsmenn in first-appearance order', () => {
+    it('derives 3 distinct roles from Launagögn in first-appearance order', () => {
       expect(report.roles.map((r) => r.title)).toEqual([
         'Forstöðumaður',
         'Sérfræðingur',
@@ -385,7 +379,6 @@ describe('parseWorkbook', () => {
           ordinal: 3,
           roleTitle: 'Verkstjóri',
           gender: GenderEnum.FEMALE,
-          education: EducationEnum.VOCATIONAL,
           workRatio: 0.8,
           baseSalary: 600000,
           startDate: '2022-03-15',
@@ -424,7 +417,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -479,7 +471,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -526,7 +517,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -543,7 +533,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Karl',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -559,7 +548,7 @@ describe('parseWorkbook', () => {
       // Mirror the shipped template: column A holds the auto-numbering formula,
       // NOT a literal. Before the row-position fix this made every non-empty
       // row fail with "Raðnúmer vantar".
-      const s = wb.getWorksheet('Starfsmenn')!
+      const s = wb.getWorksheet('Launagögn')!
       s.getCell('A6').value = { formula: 'ROW()-5', result: 1 }
       s.getCell('A7').value = { formula: 'ROW()-5', result: 2 }
 
@@ -582,7 +571,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -599,7 +587,7 @@ describe('parseWorkbook', () => {
       // stray value far below the data pushes sheet.rowCount into the tens of
       // thousands. The scan must break on the long blank run rather than
       // materialise a cell object for every row down to here (the OOM cause).
-      const s = wb.getWorksheet('Starfsmenn')!
+      const s = wb.getWorksheet('Launagögn')!
       s.getCell('B40000').value = 'stray'
       expect(s.rowCount).toBeGreaterThan(30000)
 
@@ -622,7 +610,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Other',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -646,39 +633,6 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects unknown education value', async () => {
-      const wb = await loadTemplate()
-      writeEmployeeRow(wb, 1, {
-        name: 'X',
-        role: 'R',
-        gender: 'Kona',
-        workRatio: 1,
-        education: 'Made-up degree',
-        baseSalary: 1,
-        additionalFixedOvertime: 0,
-        additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
-        bonusOccasionalOvertime: null,
-        bonusPayments: null,
-        bonusOther: null,
-        field: 'X',
-        department: 'X',
-        startDate: new Date('2024-01-01'),
-      })
-      fillCriteriaAndSubCriteria(wb)
-      fillRoleClassification(wb, [[1, 1, 1, 1]])
-      fillEmployeeClassification(wb, [[1]])
-
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
-      expect(
-        errors.some((e) =>
-          e.message.includes('Óþekkt menntunarstig „Made-up degree“'),
-        ),
-      ).toBe(true)
-    })
-
     it('rejects out-of-range workRatio', async () => {
       const wb = await loadTemplate()
       writeEmployeeRow(wb, 1, {
@@ -686,7 +640,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1.5,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -714,13 +667,13 @@ describe('parseWorkbook', () => {
 
     it('rejects required missing field with specific column reference', async () => {
       const wb = await loadTemplate()
-      // Only fill partial row — omit education
+      // Only fill partial row — omit role (Starf), which is still required.
+      // field (Svið) and department (Deild) are intentionally optional.
       writeEmployeeRow(wb, 1, {
         name: 'X',
-        role: 'R',
+        role: '',
         gender: 'Kona',
         workRatio: 1,
-        education: '',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -743,7 +696,7 @@ describe('parseWorkbook', () => {
         errors.some(
           (e) =>
             e.message.includes('Nauðsynlegan reit vantar') &&
-            e.message.includes('Menntun'),
+            e.message.includes('Starf'),
         ),
       ).toBe(true)
     })
@@ -755,7 +708,6 @@ describe('parseWorkbook', () => {
         role: 'R',
         gender: 'Kona',
         workRatio: 1,
-        education: 'BA/BS eða sambærilegt háskólanám',
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -795,7 +747,6 @@ describe('parseWorkbook', () => {
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
           workRatio: 1,
-          education: 'BA/BS eða sambærilegt háskólanám',
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,

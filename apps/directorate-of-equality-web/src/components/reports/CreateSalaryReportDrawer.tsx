@@ -1,6 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import format from 'date-fns/format'
+import subMonths from 'date-fns/subMonths'
+import { useMemo, useRef, useState } from 'react'
 
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
 import { Accordion } from '@dmr.is/ui/components/island-is/Accordion'
@@ -24,7 +26,9 @@ import {
   GenderEnum,
   type ParsedReportDto,
   type SalaryAnalysisOutlierDto,
+  SalaryDataBasisEnum,
 } from '../../gen/fetch/types.gen'
+import { formatMonthYearIS } from '../../lib/constants'
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
@@ -48,6 +52,19 @@ const GENDER_OPTIONS = [
   { label: s.genders.male, value: GenderEnum.MALE },
   { label: s.genders.female, value: GenderEnum.FEMALE },
   { label: s.genders.neutral, value: GenderEnum.NEUTRAL },
+]
+
+/**
+ * How far back the payroll-month picker reaches. Mirrors
+ * `SALARY_DATA_PERIOD_MONTHS_BACK` in the API's `salary-data-basis.ts`, which is
+ * the authoritative bound and 400s anything outside it — offering more here just
+ * produces a rejected submit, so the two must be changed together.
+ */
+const MONTH_OPTION_COUNT = 36
+
+const DATA_BASIS_OPTIONS = [
+  { label: t.dataBasisMonthOption, value: SalaryDataBasisEnum.MONTH },
+  { label: t.dataBasisAverageOption, value: SalaryDataBasisEnum.AVERAGE },
 ]
 
 const EMPTY_FORM = {
@@ -101,6 +118,12 @@ export const CreateSalaryReportDrawer = () => {
 
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  // What period the figures describe. Kept out of `form` because the month is
+  // only meaningful for a MONTH basis and is cleared when the basis changes.
+  const [salaryDataBasis, setSalaryDataBasis] =
+    useState<SalaryDataBasisEnum | null>(null)
+  /** `YYYY-MM` from the month picker; sent as the 1st of that month. */
+  const [salaryDataMonth, setSalaryDataMonth] = useState('')
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
   const [outliers, setOutliers] = useState<SalaryAnalysisOutlierDto[]>([])
   const [importErrors, setImportErrors] = useState<string[] | null>(null)
@@ -113,6 +136,18 @@ export const CreateSalaryReportDrawer = () => {
     setForm((prev) => ({ ...prev, [key]: value }))
 
   const nextGroup = () => makeGroup(`g${(groupIdCounter.current += 1)}`)
+
+  // Payroll months to choose from, newest first. A month list rather than a date
+  // picker: the value has month precision, so there is no day to get wrong.
+  const monthOptions = useMemo(() => {
+    const now = new Date()
+
+    return Array.from({ length: MONTH_OPTION_COUNT }, (_, offset) => {
+      const value = format(subMonths(now, offset), 'yyyy-MM')
+
+      return { label: formatMonthYearIS(`${value}-01`), value }
+    })
+  }, [])
 
   const companiesQuery = useQuery(
     trpc.company.list.queryOptions({ pageSize: 1000 }),
@@ -217,6 +252,8 @@ export const CreateSalaryReportDrawer = () => {
 
   const handleReset = () => {
     setForm(EMPTY_FORM)
+    setSalaryDataBasis(null)
+    setSalaryDataMonth('')
     setCompanyId(null)
     setParsedReport(null)
     resetDeviations()
@@ -264,7 +301,9 @@ export const CreateSalaryReportDrawer = () => {
     !hasOutliers || (postpone ? !!postponeReason.trim() : explanationsValid)
 
   const handleSubmit = async () => {
-    if (!companyId || !parsedReport) return
+    // `canSubmit` already gates the button on all three; repeated here so the
+    // basis narrows to the non-null enum the API requires.
+    if (!companyId || !parsedReport || !salaryDataBasis) return
 
     const body = {
       importedFromExcel: true,
@@ -280,6 +319,13 @@ export const CreateSalaryReportDrawer = () => {
       averageEmployeeMaleCount: Number(form.averageEmployeeMaleCount),
       averageEmployeeFemaleCount: Number(form.averageEmployeeFemaleCount),
       averageEmployeeNeutralCount: Number(form.averageEmployeeNeutralCount),
+      // The month picker yields `YYYY-MM`; the API takes a date and stores the
+      // 1st of that month.
+      salaryDataBasis,
+      salaryDataPeriod:
+        salaryDataBasis === SalaryDataBasisEnum.MONTH
+          ? `${salaryDataMonth}-01`
+          : null,
       parsed: parsedReport,
       postponed: hasOutliers ? postpone : false,
       postponeReason: hasOutliers && postpone ? postponeReason : undefined,
@@ -354,6 +400,9 @@ export const CreateSalaryReportDrawer = () => {
     !!form.averageEmployeeMaleCount &&
     !!form.averageEmployeeFemaleCount &&
     !!form.averageEmployeeNeutralCount &&
+    // A specific month must name which one; the average never carries a month.
+    (salaryDataBasis === SalaryDataBasisEnum.AVERAGE ||
+      (salaryDataBasis === SalaryDataBasisEnum.MONTH && !!salaryDataMonth)) &&
     outliersResolved
 
   return (
@@ -682,6 +731,51 @@ export const CreateSalaryReportDrawer = () => {
               disabled={!companyId}
             />
           </GridColumn>
+        </GridRow>
+        <GridRow rowGap={1} marginBottom={4}>
+          <GridColumn span="12/12">
+            <Text variant="h4" marginBottom={1}>
+              {t.dataBasisHeading}
+            </Text>
+          </GridColumn>
+          <GridColumn span={['12/12', '8/12']}>
+            <Select
+              name="salaryDataBasis"
+              label={t.dataBasisLabel}
+              options={DATA_BASIS_OPTIONS}
+              value={
+                DATA_BASIS_OPTIONS.find((o) => o.value === salaryDataBasis) ??
+                null
+              }
+              onChange={(opt) => {
+                setSalaryDataBasis(opt?.value ?? null)
+                // A twelve-month average has no single month — drop anything
+                // already picked so a switch cannot submit a stale month.
+                if (opt?.value !== SalaryDataBasisEnum.MONTH) {
+                  setSalaryDataMonth('')
+                }
+              }}
+              isDisabled={!companyId}
+              size="xs"
+              backgroundColor="blue"
+            />
+          </GridColumn>
+          {salaryDataBasis === SalaryDataBasisEnum.MONTH && (
+            <GridColumn span={['12/12', '4/12']}>
+              <Select
+                name="salaryDataMonth"
+                label={t.dataBasisMonthLabel}
+                options={monthOptions}
+                value={
+                  monthOptions.find((o) => o.value === salaryDataMonth) ?? null
+                }
+                onChange={(opt) => setSalaryDataMonth(opt?.value ?? '')}
+                isDisabled={!companyId}
+                size="xs"
+                backgroundColor="blue"
+              />
+            </GridColumn>
+          )}
         </GridRow>
         <GridRow rowGap={1} marginBottom={4}>
           <GridColumn span="12/12">

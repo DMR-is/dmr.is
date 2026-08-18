@@ -20,6 +20,7 @@ import { CreateCompanyModal } from '../../components/companies/CreateCompanyModa
 import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
+  CompanySectorEnum,
   CompanySizeEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -50,6 +51,8 @@ export const CompaniesContainer = () => {
     regionCode: filter.regionCode ?? [],
     postcode: filter.postcode ?? [],
     isatCategoryCode: filter.isatCategoryCode ?? [],
+    isatSection: filter.isatSection ?? [],
+    sector: (filter.sector ?? []) as CompanySectorEnum[],
   })
 
   const trpc = useTRPC()
@@ -136,6 +139,10 @@ export const CompaniesContainer = () => {
       setFilter({ postcode: val, page: 1 })
     } else if (key === 'isatCategoryCode') {
       setFilter({ isatCategoryCode: val, page: 1 })
+    } else if (key === 'isatSection') {
+      setFilter({ isatSection: val, page: 1 })
+    } else if (key === 'sector') {
+      setFilter({ sector: val as CompanySectorEnum[], page: 1 })
     } else {
       setFilter({ page: 1 })
     }
@@ -151,6 +158,8 @@ export const CompaniesContainer = () => {
       regionCode: [],
       postcode: [],
       isatCategoryCode: [],
+      isatSection: [],
+      sector: [],
     })
   }
 

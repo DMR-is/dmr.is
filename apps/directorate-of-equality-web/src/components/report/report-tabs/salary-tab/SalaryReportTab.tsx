@@ -5,6 +5,7 @@ import { Stack } from '@island.is/island-ui/core'
 import {
   ReportOutlierGroupDto,
   SalaryByGenderAndScoreDto,
+  SalaryDataBasisEnum,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
 import { formatSalary } from '../../../../lib/utils'
@@ -19,6 +20,8 @@ interface SalaryReportTabProps {
   groups: ReportOutlierGroupDto[]
   outlierDate?: Date
   outliersPostponed?: boolean
+  salaryDataBasis?: SalaryDataBasisEnum | null
+  salaryDataPeriod?: string | null
 }
 
 export const SalaryReportTab = ({
@@ -27,6 +30,8 @@ export const SalaryReportTab = ({
   groups,
   outliersPostponed,
   outlierDate,
+  salaryDataBasis,
+  salaryDataPeriod,
 }: SalaryReportTabProps) => {
   if (!data) {
     return (
@@ -44,6 +49,8 @@ export const SalaryReportTab = ({
         maleAverageSalary={formatSalary(data.totals.maleAverageSalary)}
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
         wageGapPercent={data.totals.wageGapPercent?.toString() ?? '0'}
+        salaryDataBasis={salaryDataBasis}
+        salaryDataPeriod={salaryDataPeriod}
       />
       {groups.length > 0 && (
         <Box marginBottom={4}>

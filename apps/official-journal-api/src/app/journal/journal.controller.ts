@@ -231,7 +231,11 @@ export class JournalController {
     return AdvertsToRss(adverts.adverts, id?.toLowerCase())
   }
 
-  @Get('/legacy-pdf/:id?')
+  // Two explicit paths rather than `'/legacy-pdf/:id?'`: path-to-regexp 8,
+  // which Express 5 uses, removed the optional-parameter suffix and throws
+  // `PathError: Unexpected ?` at boot. A path array resolves both URLs on
+  // Express 4 and Express 5. Measured in legacy-pdf-route.spec.ts.
+  @Get(['/legacy-pdf', '/legacy-pdf/:id'])
   @ApiExcludeEndpoint()
   @ApiOperation({ operationId: 'getLegacyPdfPath' })
   @ApiResponse({

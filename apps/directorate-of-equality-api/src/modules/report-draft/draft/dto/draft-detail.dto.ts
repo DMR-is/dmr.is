@@ -13,6 +13,7 @@ import {
   GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../../../report/models/report.enums'
 
 /** Row counts of the draft's child collections — full data via list endpoints. */
@@ -44,11 +45,21 @@ export class DraftDetailDto {
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   status!: ReportStatusEnum
 
-  @ApiOptionalString({ nullable: true })
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      "Short pseudonymous handle (`KTPQZW`) used to refer to the report without quoting the company's kennitala. Always null while the report is a DRAFT — the server mints it at submit.",
+  })
   identifier!: string | null
 
   @ApiOptionalString({ nullable: true })
   companyAdminName!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company executive.',
+  })
+  companyAdminTitle!: string | null
 
   @ApiOptionalString({ nullable: true })
   companyAdminEmail!: string | null
@@ -73,6 +84,21 @@ export class DraftDetailDto {
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeNeutralCount!: number | null
+
+  @ApiOptionalEnum(SalaryDataBasisEnum, {
+    nullable: true,
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Salary-only. Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Null until the applicant declares it; required to submit a salary report.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the salary data is based on (`YYYY-MM-01`). Set when `salaryDataBasis` is `MONTH`, always null for `AVERAGE`.',
+  })
+  salaryDataPeriod!: string | null
 
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null

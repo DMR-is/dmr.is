@@ -17,6 +17,7 @@ import { ReportEmployeeRoleCriterionStepModel } from '../report-employee/models/
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import { ReportFinalizeCoreModule } from '../report-finalize/report-finalize.core.module'
+import { ReportIdentifierCoreModule } from '../report-identifier/report-identifier.core.module'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ReportDraftAnalysisService } from './analysis/report-draft-analysis.service'
 import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
@@ -63,6 +64,7 @@ import { IReportDraftSyncService } from './sync/report-draft-sync.service.interf
     ReportResultCoreModule,
     ReportContentCoreModule,
     ReportExcelCoreModule,
+    ReportIdentifierCoreModule,
     ImportUploadCoreModule,
   ],
   providers: [

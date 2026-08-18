@@ -45,12 +45,35 @@ Companies carry an industry classification using the Icelandic ÍSAT2008 standar
 
 How we handle it:
 
-- **Leaf codes only.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes. A company is always classified at its own leaf — sections, divisions, groups, and classes are not stored. The 2-digit division is recoverable from the leaf prefix (`01110` → `01`); the section letter (`A`) is not numerically derivable and is intentionally dropped.
+- **Leaf codes only on the company.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes, and a company is always classified at its own leaf — groups and classes are not stored.
+- **Section and division are stored on the leaf, for rollup filtering.** `isat_category.division` is the 2-digit prefix (`01110` → `01`), and `isat_category.section` is the ÍSAT bálkur letter (`A`–`U`, or `X`), a FK into the 22-row `isat_section` reference table. Section is *not* arithmetic on the division but it is a **total function** of it, via the fixed NACE Rev. 2 division→section table encoded in the `isat_section_for_code()` SQL function — the single source of truth used both by the backfill and by `db/seeders/seed-isat-category.js`. A division outside NACE yields NULL and trips the `NOT NULL`, rather than silently misfiling the row. This mirrors `postcode → region`: the rollup is reached by joining and is never denormalized onto the company.
+  - **`X` (Óþekkt starfsemi) is the one exception to the division rule.** ÍSAT2008 adds it on the fifth digit and NACE has no equivalent, so division `99` holds both `99.00.0` (extraterritorial organisations → `U`) and `99.99.9` (unknown activity → `X`). `isat_section_for_code()` matches `99999` on the whole code, ahead of the division rules. Mapping it by division instead would file every company of unknown activity under `U` and surface them in the section filter as embassies.
+  - Icelandic section names in `isat_section` are verbatim from [Hagstofan's ÍSAT2008 handbook](https://hagstofa.is/media/49171/isat2008.pdf); English names are the official NACE Rev. 2 section titles. Don't reword them.
 - **Normalized code is the key.** `isat_category.code` is the normalized 5-digit form (`01110`). The dotted form (`01.11.0`) is kept alongside for display only. Company-level classification is always the normalized code.
 - **Admin-owned.** `company.isat_category_code` is set and kept current by DoE admins, in the same spirit as the `salary_report_required*` flags — not supplied by company admins at submission. It is refreshed by a **manual job run once a year** against an admin-uploaded company-info file.
 - **Snapshot independence.** `company.isat_category_code` and `company_report.isat_category` are unrelated. The latter is a free-text dotted code frozen at submission (a snapshot is just a snapshot); the former is the live admin-maintained classification. The submission flow never reads from or writes to the company-level value, and `company_report` is never updated when the company's classification changes.
 
 > **Subject to change.** This is an interim design while the feature is in development. The long-term intent is to source classification directly from the RSK API once we have access; until then, the annual admin-uploaded file is the source of truth. The stored format (normalized leaf code) and admin ownership may change when that integration lands.
+
+## Sector (private vs government/state)
+
+ÍSAT says what an entity **does**, not who owns it — a state-owned hospital and a private clinic both sit in `86xxx`, so section `O` (public administration) cannot answer "private vs government/state" on its own. `company.sector` is that separate axis, an enum of `UNKNOWN | PRIVATE | PUBLIC` derived from RSK's registered legal form (rekstrarform).
+
+- **The raw legal form is stored too.** `company.legal_form_id` and `legal_form_name` keep RSK's own values alongside the derived `sector`. The id→sector mapping is currently **inferred, not confirmed against live payloads**; keeping the raw id means a corrected mapping can be re-derived with one local `UPDATE` instead of re-sweeping RSK, which matters because the registry has **no bulk endpoint** — only `GET /{nationalId}`, one call per company.
+- **`UNKNOWN` is first-class and never collapsed into `PRIVATE`.** An admin filtering for private companies must not be silently shown companies we merely failed to classify. Unmapped legal-form ids stay `UNKNOWN` and are logged so the real vocabulary surfaces from production traffic.
+- **`sector_override` protects manual corrections**, exactly like `salary_report_required_override`: when an admin sets a sector by hand, any backfill must skip that row rather than reset it to `UNKNOWN`.
+- **Not owned by the annual import.** Unlike the other authoritative company fields, the annual `.xlsx` carries no legal form, so the company import must leave `sector`, `sector_override`, and both `legal_form_*` columns untouched — this one column set is RSK- and admin-owned, not file-owned.
+- **`MUNICIPAL`** (municipalities as distinct from central government) is a plausible future value; add it with `ALTER TYPE company_sector_enum ADD VALUE`.
+
+**How rows actually get classified.** The three creation paths differ, and the difference matters when reading `sector` data:
+
+- `CompanyService.create` (admin creates one company) — classified, from the same RSK call that supplies address/postcode/ÍSAT.
+- `getOrCreateByNationalId` / `getOrCreateSubsidiaryReportSnapshotSource` (auto-provision) — classified, via one extra RSK call for the legal form only. These create from the *national* registry, which carries no legal form. RSK's `status` is deliberately **not** taken here: a deregistered record would create the company `INACTIVE` and block the very submission that triggered the provisioning.
+- `CompanyImportService` (annual `.xlsx`) — **not classified.** Rows are born `UNKNOWN`.
+
+Most companies arrive through the import, so most of the register is `UNKNOWN` and stays that way until it is filled deliberately. That is a decision, not a gap: RSK has no bulk endpoint, the workbook carries no legal-form column, and `reconcile` runs for both preview and apply — so per-row lookups would mean thousands of HTTP calls, twice per import. **An automated RSK sweep was considered and ruled out.** Don't add one without revisiting that call.
+
+The backlog is instead planned to be filled by a one-off bulk SQL `UPDATE` (ÍSAT section `O` is the sensible basis: high precision for public administration, low recall — it misses state-owned companies like RÚV ohf. that sit in other sections by activity), with `PATCH /company/:id/sector` covering the tail. Any such pass must skip `sector_override = true`.
 
 ## Company import (annual register)
 
@@ -191,6 +214,20 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 **Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists *and the submitting company matches the existing row's parent*, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
+## Report identifier
+
+`report.identifier` is a six-uppercase-letter handle (`KTPQZW`) that exists so a report can be referred to — in a ticket, an email, a phone call — without quoting the company's kennitala. It carries no meaning and is derived from nothing about the report; that is the point. It is also what the admin report search matches on (`report/utils/filters.ts`), and it prints on the equality PDF.
+
+**Who assigns it.** The server, always. No request DTO carries an `identifier` field, and no caller may choose one. `ReportIdentifierService.allocate` mints it: `ReportCreateService` on insert (both the applicant direct-submit and the admin-created paths), `ReportDraftSubmitService` at submit for a draft-born report.
+
+**Why a DRAFT has none.** A draft is invisible to reviewers until it is submitted, and abandoned drafts are reaped after six months — a code handed out at draft-create would be spent on a row that may never exist. So `identifier` is NULL for the whole DRAFT phase and stamped once, at submit.
+
+**Uniqueness.** A partial unique index (`report_identifier_unique_idx`, `WHERE identifier IS NOT NULL`) guarantees no two reports share a code; NULL drafts coexist freely. `allocate` additionally probes with `count` before returning a candidate, which removes the birthday collision against committed rows (~17k reports for a 50% chance of some pair colliding) without ever reaching an error path. The probe cannot close the concurrent window — under the request's CLS transaction it cannot see another request's uncommitted insert at all — so the index is what actually enforces it, rejecting the write rather than storing an identifier the admin search would find twice.
+
+A rejected write is mapped to **503** by `rethrowReportWriteError`, not the 400 that `SequelizeExceptionFilter` gives every `UniqueConstraintError` by default. The distinction matters: the payload was fine and retrying succeeds, so a 400 would tell island.is a good submission was malformed and must not be retried. There is no in-place retry — probe and insert share the request's CLS transaction, so catching the violation leaves it aborted, and a `SAVEPOINT` on every report creation is not worth an event with a ~1-in-309M chance per concurrent pair.
+
+**Release coordination (#1406).** `identifier` used to be a field on every creation payload — `CreateReportDto`, `CreateEqualityReportDto`, `SubmitSalaryReportDto`, `SubmitEqualityReportDto` — and was removed when minting moved server-side. The global `ValidationPipe` runs `whitelist: true` with **no** `forbidNonWhitelisted`, so a caller still sending one gets no error: the field is silently stripped and a different code is minted. That failure is invisible on both sides — if island.is persists or displays the code it sent, the applicant quotes a handle the reviewer's identifier search (`report/utils/filters.ts`) will never match. **The island.is client must stop sending `identifier` and read it back from the report response instead** (`GET /application/reports/:providerId` → `ApplicationService.getReport`). No deploy ordering is required in either direction; the only requirement is that the client is updated.
+
 ## Audit timeline (events + comments)
 
 Two parallel streams capture what happens to a report after draft. The admin UI renders them as a unified, per-status-bucket timeline.
@@ -305,6 +342,17 @@ Application-side submit receives the parent as `company` and subsidiaries as `su
 
 The schema does **not** track which specific company paid which specific employee. Aggregate visibility (the list of participating companies) is sufficient for the audit.
 
+## Salary-data basis
+
+A salary report's figures come from one of two places, and which one it is changes how the numbers should be read — so the submittee declares it rather than us inferring it. `report.salary_data_basis` carries the declaration:
+
+- `MONTH` — the figures are one specific payroll month's. Which month is in `report.salary_data_period`, stored as a `date` on the 1st (the value has month precision; any day a client sends is normalised to the 1st).
+- `AVERAGE` — the figures are a twelve-month average. No single month applies, so `salary_data_period` stays `NULL`.
+
+Both columns are nullable at the DB level, because the same table holds `EQUALITY` rows (no salary data at all) and because a `SALARY` row starts as a `DRAFT` that is filled in field by field — the applicant may pick the basis in one PATCH and the month in the next. Requiredness is therefore a **submit-time** rule, enforced identically on all three submit paths (application portal, admin web, draft submit): the basis must be declared, and a `MONTH` basis must name its month, or the submit is rejected with 400. Reports submitted before the field existed are `NULL` on both columns.
+
+Two CHECK constraints hold the invariants that are true at every point in a draft's life, so they never block an in-progress edit: an `AVERAGE` basis never carries a month, and a stored month is always the 1st. Declaring `AVERAGE` clears any month already entered, so a basis switch cannot leave a stale month behind.
+
 ## Criteria scoring (how a report is evaluated)
 
 Each report is evaluated against a set of weighted criteria:
@@ -351,9 +399,9 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                      |
 | `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
 | `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
-| `EducationEnum`           | `COMPULSORY`, `UPPER_SECONDARY`, `VOCATIONAL`, `BACHELOR`, `MASTER`, `DOCTORATE`, `PROFESSIONAL` |
 | `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`   |
 | `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
+| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                               |
 | `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW` |
 | `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                   |
 | `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                             |
@@ -362,29 +410,6 @@ Bucket placement is informational only: the outlier flag is decided against the 
 | `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                   |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
-
-### `EducationEnum` — Iceland to Western mapping
-
-Salary equality reports can be submitted by both Icelandic-resident employees and foreign staff, so education levels are stored in a Western-generic enum rather than raw Icelandic school names. The mapping follows [UNESCO ISCED 2011](https://uis.unesco.org/en/topic/international-standard-classification-education-isced) (the international standard for classifying education levels) so translation to/from other countries is unambiguous.
-
-| Enum value        | ISCED                      | Icelandic                                    | English (approx.)                                                                                                                                  |
-| ----------------- | -------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `COMPULSORY`      | 1–2                        | grunnskóli                                   | Primary + lower secondary (compulsory, ages 6–16)                                                                                                  |
-| `UPPER_SECONDARY` | 3                          | menntaskóli / framhaldsskóli (general track) | Upper secondary / high school                                                                                                                      |
-| `VOCATIONAL`      | 3–4                        | iðnskóli / iðnnám / starfsnám                | Vocational or trade education (welder, electrician, hairdresser, etc.)                                                                             |
-| `BACHELOR`        | 6                          | háskóli (BA / BS / B.Ed)                     | University undergraduate degree                                                                                                                    |
-| `MASTER`          | 7                          | háskóli (MA / MS / M.Ed / integrated master) | University graduate degree                                                                                                                         |
-| `DOCTORATE`       | 8                          | háskóli (PhD / doktorsgráða)                 | Research doctorate                                                                                                                                 |
-| `PROFESSIONAL`    | post-6, non-ISCED-standard | sérfræðinám / sérnám                         | Specialized post-tertiary certification (medical specialty, chartered accounting, bar exam, etc.) — not a research degree but above bachelor level |
-
-Notes for reviewers mapping a CV:
-
-- A candidate who finished only grunnskóli (no further schooling) → `COMPULSORY`.
-- Someone who completed menntaskóli but not university → `UPPER_SECONDARY`.
-- A trained electrician / plumber / hairdresser who went through iðnnám → `VOCATIONAL`, even if they also attended menntaskóli alongside.
-- BA + MA as separate steps → use highest (`MASTER`). Integrated 5-year master's → `MASTER`.
-- MA followed by a specialist certification → use highest degree held. If the specialist certification is the top qualification (no MA), use `PROFESSIONAL`.
-- When in doubt between two values, pick the **higher** level the employee actually completed, not the one they're currently studying.
 
 ## Naming conventions
 
@@ -540,10 +565,12 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `average_employee_male_count`    | `decimal(10, 2)`                                                                                                               |
 | `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
 | `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
+| `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                     |
+| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
-| `identifier`                     | `text`                                                                                                                         |
+| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                   |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")          |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
@@ -589,7 +616,6 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | ------------------------- | --------------------------- |
 | `id`                      | `uuid` PK                   |
 | `ordinal`                 | `int`                       |
-| `education`               | `EducationEnum`             |
 | `field`                   | `text`                      |
 | `department`              | `text`                      |
 | `start_date`              | `date`                      |

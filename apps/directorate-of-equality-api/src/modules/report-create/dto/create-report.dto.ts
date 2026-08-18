@@ -18,6 +18,7 @@ import {
 import {
   GenderEnum,
   ReportProviderEnum,
+  SalaryDataBasisEnum,
 } from '../../report/models/report.enums'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 
@@ -99,6 +100,12 @@ export class CreateReportCompanySnapshotDto {
  * Request body for `POST /api/v1/reports/salary`. Combines submission
  * metadata that the application/auth context owns with the parsed workbook
  * payload that `POST /api/v1/reports/excel/import` returned earlier.
+ *
+ * The report identifier is not part of this payload: it is a meaningless
+ * pseudonymous handle, minted by `ReportCreateService` when the row is created.
+ *
+ * `identifier` was accepted here until #1406 — see db/README.md → "Report
+ * identifier" for the island.is client change that pairs with its removal.
  */
 export class CreateReportDto {
   @ApiUUID({
@@ -106,9 +113,6 @@ export class CreateReportDto {
       'FK to the approved EQUALITY report this salary was audited against.',
   })
   equalityReportId!: string
-
-  @ApiString()
-  identifier!: string
 
   @ApiBoolean()
   importedFromExcel!: boolean
@@ -151,6 +155,20 @@ export class CreateReportDto {
 
   @ApiNumber()
   averageEmployeeNeutralCount!: number
+
+  @ApiEnum(SalaryDataBasisEnum, {
+    enumName: 'SalaryDataBasisEnum',
+    description:
+      'Whether the salary data describes one specific payroll month (`MONTH`) or a twelve-month average (`AVERAGE`). Required — the submittee declares it.',
+  })
+  salaryDataBasis!: SalaryDataBasisEnum
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'The payroll month the data is based on, as an ISO date (`YYYY-MM-DD`; any day within the month is accepted and normalised to the 1st). Required when `salaryDataBasis` is `MONTH`, ignored (stored as null) for `AVERAGE`. Must name a month that has already happened, no earlier than 36 months ago.',
+  })
+  salaryDataPeriod?: string | null
 
   @ApiDto(ParsedReportDto, {
     description:

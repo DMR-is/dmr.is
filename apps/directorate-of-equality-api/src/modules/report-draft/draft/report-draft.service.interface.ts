@@ -29,6 +29,12 @@ export interface IReportDraftService {
   deleteDraft(providerId: string, company: CompanyDto): Promise<void>
 
   /**
+   * Bumps the report row's `updated_at` so child-only edits (bulk sync,
+   * workbook import) count as activity against the abandoned-draft reaper.
+   */
+  touchDraft(reportId: string): Promise<void>
+
+  /**
    * Hard-deletes every DRAFT untouched since `cutoff` (abandoned-draft reaper,
    * run by the prune cron). Not company-scoped. Returns the count pruned.
    */

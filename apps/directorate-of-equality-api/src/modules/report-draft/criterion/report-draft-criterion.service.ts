@@ -11,6 +11,8 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyDto } from '../../company/dto/company.dto'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportCriterionDto } from '../../report-criterion/dto/report-criterion.dto'
+import { ReportSubCriterionDto } from '../../report-criterion/dto/report-sub-criterion.dto'
+import { ReportSubCriterionStepDto } from '../../report-criterion/dto/report-sub-criterion-step.dto'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
@@ -18,6 +20,8 @@ import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { CriterionChangeDataDto } from '../sync/dto/change-criterion.dto'
+import { DraftCriterionWithSubCriteriaDto } from './dto/draft-criterion-with-sub-criteria.dto'
+import { DraftSubCriterionWithStepsDto } from './dto/draft-sub-criterion-with-steps.dto'
 import { IReportDraftCriterionService } from './report-draft-criterion.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftCriterionService'
@@ -57,6 +61,81 @@ export class ReportDraftCriterionService
     })
 
     return rows.map((row) => ReportCriterionModel.fromModel(row))
+  }
+
+  /**
+   * The draft's whole criteria tree — criteria → sub-criteria → steps — in one
+   * response, replacing the 1 + N + M fan-out over `listCriteria` /
+   * `listSubCriteria` / `listSteps` the portal needs to render a scoring screen.
+   *
+   * Three queries, one per level, each ordered by the same column its
+   * per-parent endpoint uses. Ordering the flat result set by that column and
+   * then grouping preserves each parent's relative child order, so the nesting
+   * is identical to what the per-parent reads return.
+   */
+  async listCriteriaTree(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<DraftCriterionWithSubCriteriaDto[]> {
+    const report = await this.reportDraftService.findOwnedDraft(
+      providerId,
+      company,
+    )
+
+    const criterionRows = await this.criterionModel.findAll({
+      where: { reportId: report.id },
+      order: [['createdAt', 'ASC']],
+    })
+    if (criterionRows.length === 0) {
+      return []
+    }
+
+    const subCriterionRows = await this.subCriterionModel.findAll({
+      where: { reportCriterionId: criterionRows.map((row) => row.id) },
+      order: [['createdAt', 'ASC']],
+    })
+
+    const stepRows = subCriterionRows.length
+      ? await this.stepModel.findAll({
+          where: {
+            reportSubCriterionId: subCriterionRows.map((row) => row.id),
+          },
+          order: [['order', 'ASC']],
+        })
+      : []
+
+    const stepsBySubCriterionId = new Map<string, ReportSubCriterionStepDto[]>()
+    for (const row of stepRows) {
+      const step = ReportSubCriterionStepModel.fromModel(row)
+      const existing = stepsBySubCriterionId.get(row.reportSubCriterionId)
+      if (existing) {
+        existing.push(step)
+      } else {
+        stepsBySubCriterionId.set(row.reportSubCriterionId, [step])
+      }
+    }
+
+    const subCriteriaByCriterionId = new Map<
+      string,
+      DraftSubCriterionWithStepsDto[]
+    >()
+    for (const row of subCriterionRows) {
+      const subCriterion: DraftSubCriterionWithStepsDto = {
+        ...(ReportSubCriterionModel.fromModel(row) as ReportSubCriterionDto),
+        steps: stepsBySubCriterionId.get(row.id) ?? [],
+      }
+      const existing = subCriteriaByCriterionId.get(row.reportCriterionId)
+      if (existing) {
+        existing.push(subCriterion)
+      } else {
+        subCriteriaByCriterionId.set(row.reportCriterionId, [subCriterion])
+      }
+    }
+
+    return criterionRows.map((row) => ({
+      ...ReportCriterionModel.fromModel(row),
+      subCriteria: subCriteriaByCriterionId.get(row.id) ?? [],
+    }))
   }
 
   /** Upserts a top-level criterion from a sync CREATE command. */

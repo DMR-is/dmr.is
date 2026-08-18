@@ -2,6 +2,7 @@ import { CompanyDto } from '../../company/dto/company.dto'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeRoleDto } from '../../report-employee/dto/report-employee-role.dto'
 import { RoleChangeDataDto } from '../sync/dto/change-role.dto'
+import { DraftRoleWithStepsDto } from './dto/draft-role-with-steps.dto'
 
 /**
  * Employee roles of a DRAFT report. Reads go through the draft ownership
@@ -13,6 +14,12 @@ export interface IReportDraftRoleService {
     providerId: string,
     company: CompanyDto,
   ): Promise<ReportEmployeeRoleDto[]>
+
+  /** The same list as `listRoles`, with assigned step ids inlined. */
+  listRolesWithSteps(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<DraftRoleWithStepsDto[]>
 
   /** Upsert a role from a sync CREATE command (client-minted id). */
   createRole(

@@ -335,14 +335,33 @@ export const fetchModifiedDate = async (
   name: RegName,
   date?: Date | 'current',
 ) => {
-  const reg = await getRegulationByName(name, ['id', 'publishedDate'])
+  // NOTE: `publisheddate`, not `publishedDate`. The model declares the column
+  // in lowercase, and Sequelize silently drops attributes it does not
+  // recognise — so the camelCase spelling returned `dataValues: { id }` only,
+  // leaving `reg.publisheddate` undefined and `regModified` the literal string
+  // 'undefinedT08:00:00'. That is truthy, and its leading 'u' sorts after every
+  // digit, so every staleness comparison below evaluated true and no cached PDF
+  // was ever usable.
+  const reg = await getRegulationByName(name, ['id', 'publisheddate'])
   if (!reg) {
     return
   }
+  // For a historic date we want the latest change up to that date; for
+  // `current` we want the latest change up to now (which is what
+  // `getLatestRegulationChange` defaults `beforeDate` to).
+  //
+  // `current` used to skip this lookup entirely and fall back to the original
+  // publication date. Since a PDF is always cached *after* the regulation was
+  // published, the staleness check `cachedDate < publishedDate` was then always
+  // false — so a cached current-version PDF was never regenerated when the
+  // regulation was amended, and served pre-amendment text indefinitely.
   const change =
     date &&
-    date !== 'current' &&
-    (await getLatestRegulationChange(reg.id, date, ['date']))
+    (await getLatestRegulationChange(
+      reg.id,
+      date === 'current' ? undefined : date,
+      ['date'],
+    ))
   // FIXME: The database should be updated to contain lastModified/created timestamps
   return ((change ? change.date : reg.publisheddate) +
     'T08:00:00') as ISODateTime

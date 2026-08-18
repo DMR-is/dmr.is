@@ -9,11 +9,11 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
   ApplicationModel,
   ApplicationStatusEnum,
-  UpdateApplicationDto,
 } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
 import { CategoryModel } from '../../models/category.model'
 import { IAdvertService } from '../advert/advert.service.interface'
+import { UpdateApplicationDto } from './dto/application-extra.dto'
 import { IRecallApplicationService } from './recall/recall-application.service.interface'
 import { ApplicationService } from './application.service'
 // Test user factory

@@ -5313,6 +5313,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertDto" }
           },
+          "canAddAdverts": { "type": "boolean" },
           "currentStep": { "type": "number" }
         },
         "required": [
@@ -5324,6 +5325,7 @@
           "status",
           "title",
           "type",
+          "canAddAdverts",
           "currentStep"
         ]
       },
@@ -5381,6 +5383,7 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/AdvertDto" }
           },
+          "canAddAdverts": { "type": "boolean" },
           "currentStep": { "type": "number" },
           "answers": { "type": "object", "default": {} }
         },
@@ -5393,6 +5396,7 @@
           "status",
           "title",
           "type",
+          "canAddAdverts",
           "currentStep",
           "answers"
         ]
@@ -5538,6 +5542,7 @@
         "properties": {
           "entity": {
             "nullable": true,
+            "type": "object",
             "allOf": [
               { "$ref": "#/components/schemas/NationalRegistryEntityDto" }
             ]
