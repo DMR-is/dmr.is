@@ -15,6 +15,10 @@ import {
  * PATCH; employees/criteria/outliers via CRUD). What is supplied here is the
  * company snapshot — frozen at submit — and, for a salary report, the approved
  * equality report it is audited against.
+ *
+ * The report identifier is NOT supplied: it is a meaningless pseudonymous
+ * handle, so the server mints it at submit and returns it on the draft/report
+ * reads.
  */
 export class SubmitDraftDto {
   @ApiDto(SubmitReportCompanyDto)

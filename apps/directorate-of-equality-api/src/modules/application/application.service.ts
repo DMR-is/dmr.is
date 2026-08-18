@@ -67,6 +67,7 @@ import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
+import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import type {
@@ -80,6 +81,10 @@ import {
   evaluateSalaryRenewalEligibility,
   SalaryReportEligibilityReasonEnum,
 } from './lib/salary-renewal-eligibility'
+import {
+  SUB_CRITERION_CATALOG,
+  SUB_CRITERION_GENERAL_SCALE,
+} from './sub-criterion-catalog/sub-criterion-catalog.data'
 import { IApplicationService } from './application.service.interface'
 
 const LOGGING_CONTEXT = 'ApplicationService'
@@ -143,7 +148,7 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Submitting salary report from application portal', {
       context: LOGGING_CONTEXT,
       companyId: company.id,
-      identifier: input.identifier,
+      providerId: input.providerId,
     })
 
     // Renewal-window gate: a company may only submit a salary report once its
@@ -206,7 +211,7 @@ export class ApplicationService implements IApplicationService {
     this.logger.info('Submitting equality report from application portal', {
       context: LOGGING_CONTEXT,
       companyId: company.id,
-      identifier: input.identifier,
+      providerId: input.providerId,
     })
 
     const createInput = await this.createEqualityReportInput(input, company)
@@ -235,6 +240,18 @@ export class ApplicationService implements IApplicationService {
 
   getEqualityTemplateDocx(): Buffer {
     return Buffer.from(EQUALITY_REPORT_TEMPLATE_BASE64, 'base64')
+  }
+
+  getSubCriterionCatalog(): GetSubCriterionCatalogResponseDto {
+    // Copied out of the readonly constants so a consumer mutating the response
+    // object can't corrupt the process-wide catalog.
+    return {
+      entries: SUB_CRITERION_CATALOG.map((entry) => ({
+        ...entry,
+        steps: [...entry.steps],
+      })),
+      generalScale: [...SUB_CRITERION_GENERAL_SCALE],
+    }
   }
 
   async getReport(
@@ -707,7 +724,6 @@ export class ApplicationService implements IApplicationService {
 
     return {
       equalityReportId: input.equalityReportId,
-      identifier: input.identifier,
       importedFromExcel: input.importedFromExcel,
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
@@ -737,7 +753,6 @@ export class ApplicationService implements IApplicationService {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      identifier: input.identifier,
       providerType: APPLICATION_REPORT_PROVIDER,
       providerId: input.providerId,
       companyAdminName: input.companyAdminName,

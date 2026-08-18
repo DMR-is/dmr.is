@@ -170,7 +170,21 @@ const getStatusText = (regulation: RegulationMaybeDiff): string => {
 
 console.log('Current working directory:', process.cwd())
 // ---------------------------------------------------------------------------
-const cssPath = path.join(__dirname, 'RegulationPdf.css')
+// esbuild flattens the bundle, so in production the stylesheet ends up right
+// next to this module. Loaded unbundled (tests, scripts) it is still at its
+// source location in `src/`, one directory up. Try both rather than making
+// this module impossible to import outside the bundle — but still fail loudly
+// if the stylesheet is genuinely missing, since a PDF without it is broken.
+const cssCandidates = [
+  path.join(__dirname, 'RegulationPdf.css'),
+  path.join(__dirname, '..', 'RegulationPdf.css'),
+]
+const cssPath = cssCandidates.find((candidate) => fs.existsSync(candidate))
+if (!cssPath) {
+  throw new Error(
+    'RegulationPdf.css not found. Looked in: ' + cssCandidates.join(', '),
+  )
+}
 const CSS = fs.readFileSync(cssPath, 'utf8')
 
 const pdfTmplate = (

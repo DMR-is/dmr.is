@@ -11,6 +11,7 @@ import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
 import { EditOutliersDto } from './dto/edit-outliers.dto'
 import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
+import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
@@ -65,6 +66,7 @@ export interface IApplicationService {
   withdraw(providerId: string, company: CompanyDto): Promise<void>
   getEqualityTemplateHtml(): string
   getEqualityTemplateDocx(): Buffer
+  getSubCriterionCatalog(): GetSubCriterionCatalogResponseDto
 }
 
 export const IApplicationService = Symbol('IApplicationService')

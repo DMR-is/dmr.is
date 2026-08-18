@@ -43,7 +43,7 @@ curl -o /tmp/doe-template.xlsx \
 ```
 
 Open in Excel or Numbers, fill out **Viðmið**, **Undirviðmið**,
-**Starfsmenn**, **Flokkun starfa**, **Flokkun starfsmanna**, save.
+**Launagögn**, **Starfsmat**, **Einstaklingsmat**, save.
 `Leiðbeiningar`, `Yfirlit`, and `Undirviðmiðalisti (Lýsigögn)` are ignored
 on parse.
 
@@ -61,11 +61,11 @@ On success you'll get a `ParsedReportDto` tree. On failure, `400` with:
 {
   "statusCode": 400,
   "message": [
-    "Starfsmenn (röð 7, dálkur D): Óþekkt kyn „Other“",
+    "Launagögn (röð 7, dálkur D): Óþekkt kyn „Other“",
     "Viðmið: Vægi viðmiða leggst saman í 95%, á að vera 100%"
   ],
   "errors": [
-    { "sheet": "Starfsmenn", "row": 7, "column": "D", "message": "Óþekkt kyn „Other“" },
+    { "sheet": "Launagögn", "row": 7, "column": "D", "message": "Óþekkt kyn „Other“" },
     { "sheet": "Viðmið", "row": null, "column": null, "message": "Vægi viðmiða leggst saman í 95%, á að vera 100%" }
   ]
 }
@@ -90,6 +90,19 @@ node scripts/refresh-template-data.js
 
 Commit both the updated xlsx and the regenerated `template-data.ts`.
 
+The `Undirviðmiðalisti (Lýsigögn)` sheet feeds a second generated file — the
+sub-criterion catalog the application portal reads — so a new workbook needs
+that regenerated too:
+
+```bash
+node scripts/refresh-sub-criterion-catalog.js
+```
+
+Both are committed, not built, and neither is run by the build, so a workbook
+shipped without re-running them leaves stale data being served. Review each
+diff; output is prettier-formatted, so no content change means no diff. See
+`modules/application/sub-criterion-catalog/`.
+
 ## Module layout
 
 ```
@@ -99,8 +112,8 @@ report-excel/
 │   ├── cell.ts                 Scalar extraction (string/number/date/rich-text)
 │   ├── errors.ts               ErrorBag — accumulate issues with sheet+row+col
 │   ├── criteria.parser.ts      Viðmið + Undirviðmið → nested tree, step scores
-│   ├── employees.parser.ts     Starfsmenn → employees + auto-derived roles
-│   ├── classifications.parser.ts  Flokkun sheets → step assignments by position
+│   ├── employees.parser.ts     Launagögn → employees + auto-derived roles
+│   ├── classifications.parser.ts  Matrix sheets → step assignments by position
 │   └── workbook.parser.ts      Orchestrator: chain the passes, run semantic validator
 ├── validators/
 │   └── semantic.validator.ts   Weights sum, mandatory criteria, completeness

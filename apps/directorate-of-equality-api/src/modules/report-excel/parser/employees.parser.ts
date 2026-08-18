@@ -1,5 +1,5 @@
 /**
- * Parses the Starfsmenn sheet into employee DTOs + the set of unique role
+ * Parses the Launagögn sheet into employee DTOs + the set of unique role
  * titles referenced.
  *
  * ## PII handling
@@ -18,9 +18,9 @@
  * ## Role auto-discovery
  *
  * There is no separate "Roles" sheet in the template — roles are implicit:
- * whichever distinct `Starf` values appear in Starfsmenn become the
+ * whichever distinct `Starf` values appear in Launagögn become the
  * `ParsedRoleDto[]`, in first-appearance order. This matches the
- * Flokkun starfa columns, which are also derived from Starfsmenn.
+ * Starfsmat columns, which are also derived from Launagögn.
  */
 
 import ExcelJS from 'exceljs'
@@ -35,7 +35,7 @@ import { readDate, readNumber, readString, toIsoDate } from './cell'
 import { ErrorBag } from './errors'
 
 /**
- * Column letters in the Starfsmenn sheet. These MUST match the hand-authored
+ * Column letters in the Launagögn sheet. These MUST match the hand-authored
  * `template.xlsx` layout — the parser reads cells positionally, not by header.
  *
  * Column A ("#" / Raðnúmer) is deliberately absent: the template auto-numbers
@@ -222,7 +222,7 @@ const buildEmployee = (
   if (!genderDisplay) missingField(COLS.gender, 'Kyn')
   if (workRatio == null) missingField(COLS.workRatio, 'Starfshlutfall')
   if (baseSalary == null) missingField(COLS.baseSalary, 'Grunnlaun')
-  if (!startDate) missingField(COLS.startDate, 'Ráðningardagur')
+  if (!startDate) missingField(COLS.startDate, 'Ráðningardagsetning')
 
   if (
     !ok ||

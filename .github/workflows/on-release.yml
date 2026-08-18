@@ -8,7 +8,7 @@ permissions:
   contents: write
 env:
   AWS_PROD_ACCOUNT_ID: 704383808130
-  AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID: "048844501286"
+  AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID: '048844501286'
   ENV: prod
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
     name: 🚀 Deploy Jafnréttisstofa to Prod
     runs-on: ubuntu-latest
     environment: production
-    needs: version-tag
+    needs: deploy
     steps:
       - name: 📁 Checkout
         uses: actions/checkout@v4
@@ -71,4 +71,3 @@ jobs:
           AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
-

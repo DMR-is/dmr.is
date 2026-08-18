@@ -21,7 +21,7 @@ const REPORT = { id: 'report-1' } as ReportModel
 
 describe('ReportDraftSyncService', () => {
   let service: ReportDraftSyncService
-  let reportDraft: { findOwnedDraft: jest.Mock }
+  let reportDraft: { findOwnedDraft: jest.Mock; touchDraft: jest.Mock }
   let analysis: { getDetectedOutlierEmployeeIds: jest.Mock }
   let criterion: Record<string, jest.Mock>
   let subCriterion: Record<string, jest.Mock>
@@ -32,7 +32,10 @@ describe('ReportDraftSyncService', () => {
   let outlierGroup: Record<string, jest.Mock>
 
   beforeEach(async () => {
-    reportDraft = { findOwnedDraft: jest.fn().mockResolvedValue(REPORT) }
+    reportDraft = {
+      findOwnedDraft: jest.fn().mockResolvedValue(REPORT),
+      touchDraft: jest.fn().mockResolvedValue(undefined),
+    }
     analysis = {
       getDetectedOutlierEmployeeIds: jest
         .fn()
@@ -183,6 +186,24 @@ describe('ReportDraftSyncService', () => {
       employees: [{ method: SyncMethodEnum.CREATE, id: 'e1', data: {} }],
     })
     expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
+  })
+
+  // Sync only ever writes children, so without this the abandoned-draft reaper
+  // would hard-delete a draft that is being actively edited.
+  it('touches the report row so child-only edits count as activity', async () => {
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [{ method: SyncMethodEnum.CREATE, id: 'e1', data: {} }],
+    })
+    expect(reportDraft.touchDraft).toHaveBeenCalledWith('report-1')
+  })
+
+  it('does not touch the report row when the batch is rejected', async () => {
+    await expect(
+      service.syncDraft('prov-1', COMPANY, {
+        employees: [{ method: SyncMethodEnum.CREATE, data: {} }],
+      }),
+    ).rejects.toThrow(BadRequestException)
+    expect(reportDraft.touchDraft).not.toHaveBeenCalled()
   })
 
   it('routes removals to the remove appliers', async () => {
