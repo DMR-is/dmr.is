@@ -41,6 +41,13 @@ TODO
 *.todo
 .env
 .env.*
+# varlock schemas (root + one per app) declare variable names, types and
+# sensitivity — never values — so they are tracked. No slash, so this
+# un-ignores apps/<app>/.env.schema too.
+!.env.schema
+# Generated from the schemas by varlock on every load. Not committed: nothing
+# imports them yet, and they would churn on every schema edit.
+env.ts
 .envrc.*
 !.envrc.git
 .node-version
