@@ -43,7 +43,7 @@
   },
   "engines": {
     "npm": "please-use-yarn",
-    "node": "20.15.0",
+    "node": "24.19.0",
     "yarn": "4.7"
   },
   "repository": {
@@ -112,7 +112,7 @@
     "@types/license-checker": "^25.0.6",
     "@types/multer": "^1.4.11",
     "@types/multer-s3-transform": "npm:@types/multer-s3@^2.7.10",
-    "@types/node": "20.19.9",
+    "@types/node": "24.13.3",
     "@types/node-fetch": "^2.6.11",
     "@types/pg": "^8.11.6",
     "@types/react": "18.3.28",
@@ -161,6 +161,7 @@
     "webpack": "^5.98.0"
   },
   "resolutions": {
+    "canvas": "3.2.3",
     "typescript": "5.8.3",
     "shell-quote": "^1.8.4",
     "@types/react": "19.2.14",
