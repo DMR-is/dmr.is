@@ -64,6 +64,7 @@ describe('ReportDraftEmployeeService', () => {
   let employeeBuild: jest.Mock
   let employeeMax: jest.Mock
   let roleFindOne: jest.Mock
+  let roleFindAll: jest.Mock
   let personalStepDestroy: jest.Mock
   let personalStepFindAll: jest.Mock
   let outlierDestroy: jest.Mock
@@ -78,6 +79,9 @@ describe('ReportDraftEmployeeService', () => {
     employeeBuild = jest.fn()
     employeeMax = jest.fn().mockResolvedValue(null)
     roleFindOne = jest.fn().mockResolvedValue({ id: ROLE_ID })
+    roleFindAll = jest
+      .fn()
+      .mockResolvedValue([{ id: ROLE_ID, title: 'Sérfræðingur' }])
     personalStepDestroy = jest.fn().mockResolvedValue(0)
     personalStepFindAll = jest.fn().mockResolvedValue([])
     outlierDestroy = jest.fn().mockResolvedValue(0)
@@ -99,7 +103,7 @@ describe('ReportDraftEmployeeService', () => {
         },
         {
           provide: getModelToken(ReportEmployeeRoleModel),
-          useValue: { findOne: roleFindOne },
+          useValue: { findOne: roleFindOne, findAll: roleFindAll },
         },
         {
           provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
@@ -157,7 +161,12 @@ describe('ReportDraftEmployeeService', () => {
       ])
       // Full employee payload is preserved alongside the join.
       expect(result.employees[0]).toEqual(
-        expect.objectContaining({ ordinal: 1, baseSalary: 800000, score: null }),
+        expect.objectContaining({
+          ordinal: 1,
+          baseSalary: 800000,
+          score: null,
+          roleTitle: 'Sérfræðingur',
+        }),
       )
       expect(result.paging).toEqual(
         expect.objectContaining({ totalItems: 2 }),
@@ -182,6 +191,39 @@ describe('ReportDraftEmployeeService', () => {
         expect.objectContaining({
           where: { reportEmployeeId: ['employee-id-3'] },
         }),
+      )
+    })
+
+    it('labels each employee with its own role title', async () => {
+      employeeFindAndCountAll.mockResolvedValueOnce({
+        rows: [
+          employeeRow(EMPLOYEE_ID, 1),
+          { ...employeeRow('employee-id-2', 2), reportEmployeeRoleId: 'role-id-2' },
+        ],
+        count: 2,
+      })
+      roleFindAll.mockResolvedValueOnce([
+        { id: ROLE_ID, title: 'Sérfræðingur' },
+        { id: 'role-id-2', title: 'Stjórnandi' },
+      ])
+
+      const result = await service.listEmployeesWithSteps(
+        PROVIDER_ID,
+        COMPANY,
+        { page: 1, pageSize: 10 },
+      )
+
+      expect(
+        result.employees.map((e) => ({ id: e.id, roleTitle: e.roleTitle })),
+      ).toEqual([
+        { id: EMPLOYEE_ID, roleTitle: 'Sérfræðingur' },
+        { id: 'employee-id-2', roleTitle: 'Stjórnandi' },
+      ])
+      // Roles are capped at 100 per report, so they are fetched whole rather
+      // than joined onto the paginated employee query.
+      expect(roleFindAll).toHaveBeenCalledTimes(1)
+      expect(roleFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { reportId: REPORT_ID } }),
       )
     })
 

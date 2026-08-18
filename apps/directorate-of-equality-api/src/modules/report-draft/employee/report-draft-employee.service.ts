@@ -125,9 +125,13 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     const stepIdsByEmployeeId = await this.loadPersonalStepIds(
       rows.map((row) => row.id),
     )
+    const roleTitleById = await this.loadRoleTitles(report.id)
 
     const employees: DraftEmployeeWithStepsDto[] = rows.map((row) => ({
       ...ReportEmployeeModel.fromModel(row),
+      // reportEmployeeRoleId is a NOT NULL FK into this report's roles, so the
+      // lookup always resolves; the fallback only guards a torn read.
+      roleTitle: roleTitleById.get(row.reportEmployeeRoleId) ?? '',
       stepIds: stepIdsByEmployeeId.get(row.id) ?? [],
     }))
     const paging = generatePaging(employees, query.page, query.pageSize, count)
@@ -163,6 +167,20 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     }
 
     return grouped
+  }
+
+  /**
+   * Role titles of the report, keyed by role id. One bounded query — a report
+   * carries at most `MAX_ROLES` (100) of them — rather than an include on the
+   * paginated employee query, which keeps `findAndCountAll`'s count untouched.
+   */
+  private async loadRoleTitles(reportId: string): Promise<Map<string, string>> {
+    const rows = await this.roleModel.findAll({
+      where: { reportId },
+      attributes: ['id', 'title'],
+    })
+
+    return new Map(rows.map((row) => [row.id, row.title]))
   }
 
   /**
