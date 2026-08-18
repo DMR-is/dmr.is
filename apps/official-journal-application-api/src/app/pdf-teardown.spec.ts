@@ -11,11 +11,9 @@ import { AppModule } from './app.module'
  * which closes the puppeteer browser it keeps alive between renders. Everything
  * else with a teardown hook here comes from a framework package.
  *
- * The generic ordering characterization lives in
- * `apps/legal-gazette-api/src/app/nest11-lifecycle-order.spec.ts`; this file
- * pins the real code, so that if the bump changes when the browser is closed --
- * or if a future change adds a teardown hook that DOES depend on ordering --
- * it is visible here.
+ * This file pins the real code, so that if a future bump changes when the
+ * browser is closed -- or if a change adds a teardown hook that DOES depend on
+ * ordering -- it is visible here.
  *
  * Expectations are labelled CHARACTERIZED (measured against Nest 10) or
  * SPECIFIED (a decision made now).

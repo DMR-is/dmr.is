@@ -121,8 +121,8 @@ const hitCountFor = async (
 describe('forRoutes wildcard spellings on the installed Express', () => {
   it('NEST 11 BASELINE: the installed Express is 5.x (path-to-regexp 8.x)', async () => {
     // The canary for this whole file. Express 4 defaulted `query parser` to
-    // `extended`, Express 5 to `simple` -- the same canary
-    // `apps/official-journal-admin-api/src/query-string-parsing.spec.ts` uses.
+    // `extended`, Express 5 to `simple`, so this asserts the wildcard
+    // spellings below are being measured against Express 5 and not 4.
     const app = await mountOn('*')
     try {
       const expressInstance = app.getHttpAdapter().getInstance()
