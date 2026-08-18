@@ -9,11 +9,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import {
-  AdvertModel,
-  GetAdvertsQueryDto,
-  UpdateAdvertDto,
-} from '../../models/advert.model'
+import { AdvertModel } from '../../models/advert.model'
 import { AdvertPublicationModel } from '../../models/advert-publication.model'
 import { ApplicationModel } from '../../models/application.model'
 import { CaseModel } from '../../models/case.model'
@@ -21,6 +17,7 @@ import { StatusIdEnum } from '../../models/status.model'
 import { UserModel } from '../../models/users.model'
 import { ILGNationalRegistryService } from '../national-registry/national-registry.service.interface'
 import { ITypeCategoriesService } from '../type-categories/type-categories.service.interface'
+import { UpdateAdvertDto } from './dto/advert.dto'
 import { AdvertService } from './advert.service'
 interface MockAdvert {
   id: string

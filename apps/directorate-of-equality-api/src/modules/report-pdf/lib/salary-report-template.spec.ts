@@ -48,6 +48,8 @@ function makeData(
       { score: 500, adjustedSalary: 900000, gender: GenderEnum.FEMALE },
     ],
     regressionLine: { slope: 1000, intercept: 400000 },
+    // Half of the 3.9% salary-difference threshold, as the DTO documents.
+    allowedDifferencePercent: 1.95,
     scoreBuckets: [],
     totals: {
       maleAverageSalary: 1065400,

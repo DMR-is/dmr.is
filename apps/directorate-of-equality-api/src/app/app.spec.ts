@@ -2,23 +2,24 @@ import { Sequelize } from 'sequelize-typescript'
 
 import { VersioningType } from '@nestjs/common'
 import { NestApplication } from '@nestjs/core'
-import { SwaggerModule } from '@nestjs/swagger'
 import { Test } from '@nestjs/testing'
 
-import { openApi } from '../openApi'
+import { buildSwaggerDocument } from '../setupSwaggerDocument'
+import { SWAGGER_CONFIG } from '../swagger.config'
 import { AppModule } from './app.module'
 
 /**
  * Smoke test: the real AppModule compiles and Swagger emits a document with
  * routes in it. This is what catches a module that no longer boots.
  *
- * Schema DRIFT is not gated here -- the committed clientConfig.json per web app
+ * Schema DRIFT is not gated here -- each web app's committed clientConfig.json
  * is the schema baseline, and it is the wire format the generators actually
- * consume. See PR #1405 for why the snapshot gate was removed.
+ * consume. See #1405 for why the snapshot gate was removed.
  *
- * The document is built from the real AppModule with the same DocumentBuilder
- * config, global prefix and versioning main.ts uses. Only the Sequelize
- * connection is stubbed -- Swagger needs route metadata, not a live database.
+ * The documents are built from the real AppModule through the same
+ * `buildSwaggerDocument` production uses, with the global prefix and versioning
+ * main.ts applies. Only the Sequelize connection is stubbed -- Swagger needs
+ * route metadata, not a live database.
  */
 describe('Swagger documentation', () => {
   let app: NestApplication
@@ -43,10 +44,10 @@ describe('Swagger documentation', () => {
     await app?.close()
   })
 
-  it('builds a non-empty OpenAPI document', () => {
-    const document = SwaggerModule.createDocument(app, openApi, {
-      autoTagControllers: false,
-    })
+  it.each(
+    SWAGGER_CONFIG.map((config) => [config.swaggerPath, config] as const),
+  )('builds a non-empty OpenAPI document for %s', (_swaggerPath, config) => {
+    const document = buildSwaggerDocument(app, config)
 
     expect(Object.keys(document.paths).length).toBeGreaterThan(0)
   })

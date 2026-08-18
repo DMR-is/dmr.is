@@ -9,7 +9,10 @@
       "executor": "nx:run-commands",
       "dependsOn": ["^codegen"],
       "options": {
-        "commands": ["tsc -p tsconfig.app.json --noEmit"],
+        "commands": [
+          "tsc -p tsconfig.app.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit"
+        ],
         "cwd": "apps/directorate-of-equality-api",
         "forwardAllArgs": false
       }
