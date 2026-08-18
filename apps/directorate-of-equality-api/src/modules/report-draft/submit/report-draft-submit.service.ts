@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { DEFAULT_OUTLIER_GROUP_NAME } from '../../../core/constants'
 import { ICompanyService } from '../../company/company.service.interface'
 import { CompanyDto } from '../../company/dto/company.dto'
 import { rethrowReportWriteError } from '../../report/lib/report-identifier'
@@ -68,6 +69,15 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       )
     }
 
+    // Outliers are a salary-only concept, so the flag has no meaning on an
+    // equality report. Rejecting rather than ignoring: a portal that sends it
+    // here believes it is deferring something.
+    if (!isSalary && input.outliersPostponed) {
+      throw new BadRequestException(
+        'outliersPostponed is only valid on a SALARY report',
+      )
+    }
+
     // The applicant must have declared what period the salary figures describe:
     // a specific payroll month (and which one) or a twelve-month average. Both
     // arrive during drafting via the header PATCH, which already normalised the
@@ -102,7 +112,10 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       // SUBMITTED vs POSTPONED from the outlier explanation state.
       await this.analysisService.persistScores(report.id)
       await this.reportResultService.createForReport(report.id)
-      status = await this.resolveSalaryOutlierStatus(report.id)
+      status = await this.resolveSalaryOutlierStatus(
+        report.id,
+        input.outliersPostponed ?? false,
+      )
     }
 
     try {
@@ -142,9 +155,19 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
    *  - referenced groups must be uniformly explained (→ SUBMITTED) or uniformly
    *    unexplained (→ POSTPONED); a mix is rejected.
    * No detected outliers → SUBMITTED.
+   *
+   * `outliersPostponed` is the applicant's explicit "defer the explanations"
+   * choice. It relaxes the first rule — unassigned detected outliers are
+   * backfilled into a default group instead of rejected — and the second, since
+   * an explicit choice leaves nothing to infer from a mixed set. It does NOT
+   * force POSTPONED: the status is still read off the resulting explanation
+   * state, because POSTPONED cannot be assigned (`ReportWorkflowService.assign`
+   * takes SUBMITTED/IN_REVIEW only) and therefore cannot be approved. Parking a
+   * fully-explained report there would leave a reviewer no move but denial.
    */
   private async resolveSalaryOutlierStatus(
     reportId: string,
+    outliersPostponed: boolean,
   ): Promise<ReportStatusEnum> {
     const detected =
       await this.analysisService.getDetectedOutlierEmployeeIds(reportId)
@@ -156,13 +179,39 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       })
     ).map((row) => row.id)
 
-    const memberships = employeeIds.length
-      ? await this.outlierModel.findAll({
-          where: { reportEmployeeId: employeeIds },
-          attributes: ['reportEmployeeId', 'groupId'],
-        })
-      : []
+    let memberships = await this.loadOutlierMemberships(employeeIds)
     const assignedIds = new Set(memberships.map((m) => m.reportEmployeeId))
+
+    if (outliersPostponed) {
+      if (detected.size === 0) {
+        throw new BadRequestException(
+          'Cannot postpone outlier explanations because this salary report has no detected outliers.',
+        )
+      }
+
+      // Stale assignments are rejected in this path too, not just below. A row
+      // for an employee who is no longer an outlier is referenced by no group
+      // the applicant will later submit through the outliers edit endpoint, so
+      // it never gets re-pointed and blocks that endpoint's group cleanup on the
+      // NOT NULL group_id FK.
+      const extra = [...assignedIds].filter((id) => !detected.has(id))
+      if (extra.length > 0) {
+        throw new BadRequestException(
+          `Only detected outliers may be assigned to outlier groups (${extra.length} non-outlier assignment(s))`,
+        )
+      }
+
+      const unassigned = [...detected].filter((id) => !assignedIds.has(id))
+      if (unassigned.length > 0) {
+        await this.createPostponedOutlierGroup(reportId, unassigned)
+        memberships = await this.loadOutlierMemberships(employeeIds)
+      }
+
+      const groups = await this.loadReferencedGroups(memberships)
+      return groups.some((group) => group.reason === null)
+        ? ReportStatusEnum.POSTPONED
+        : ReportStatusEnum.SUBMITTED
+    }
 
     const missing = [...detected].filter((id) => !assignedIds.has(id))
     if (missing.length > 0) {
@@ -181,11 +230,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       return ReportStatusEnum.SUBMITTED
     }
 
-    const groupIds = [...new Set(memberships.map((m) => m.groupId))]
-    const groups = await this.outlierGroupModel.findAll({
-      where: { id: groupIds },
-      attributes: ['id', 'reason'],
-    })
+    const groups = await this.loadReferencedGroups(memberships)
     const explained = groups.filter((g) => g.reason !== null).length
 
     if (explained === 0) {
@@ -197,6 +242,68 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     }
     throw new BadRequestException(
       'Outlier groups must be either all explained (submit) or all unexplained (postpone)',
+    )
+  }
+
+  /** Outlier-group memberships of the given employees (empty for no employees). */
+  private async loadOutlierMemberships(
+    employeeIds: string[],
+  ): Promise<ReportEmployeeOutlierModel[]> {
+    if (employeeIds.length === 0) {
+      return []
+    }
+    return this.outlierModel.findAll({
+      where: { reportEmployeeId: employeeIds },
+      attributes: ['reportEmployeeId', 'groupId'],
+    })
+  }
+
+  /** The distinct groups the given memberships point at, with their explanation. */
+  private async loadReferencedGroups(
+    memberships: ReportEmployeeOutlierModel[],
+  ): Promise<ReportOutlierGroupModel[]> {
+    const groupIds = [...new Set(memberships.map((m) => m.groupId))]
+    if (groupIds.length === 0) {
+      return []
+    }
+    return this.outlierGroupModel.findAll({
+      where: { id: groupIds },
+      attributes: ['id', 'reason'],
+    })
+  }
+
+  /**
+   * Places the given (detected, still unassigned) outliers in a single default
+   * group with an empty explanation. Mirrors the postponed branch of
+   * `ReportCreateService`, and is what keeps the invariant the outliers edit
+   * endpoint relies on: every detected outlier has a row, and every row points
+   * at a group (`group_id` is NOT NULL). Without it a postponed draft would be
+   * unresolvable — `ApplicationService.editOutliers` 500s on a detected
+   * ordinal that has no outlier row.
+   */
+  private async createPostponedOutlierGroup(
+    reportId: string,
+    employeeIds: string[],
+  ): Promise<void> {
+    const group = await this.outlierGroupModel.create({
+      reportId,
+      name: DEFAULT_OUTLIER_GROUP_NAME,
+      reason: null,
+      action: null,
+      signatureName: null,
+      signatureRole: null,
+    })
+
+    await this.outlierModel.bulkCreate(
+      employeeIds.map((employeeId) => ({
+        reportEmployeeId: employeeId,
+        groupId: group.id,
+      })),
+    )
+
+    this.logger.info(
+      `Postponed outlier explanations for draft report "${reportId}" — ${employeeIds.length} outlier(s) placed in a default group`,
+      { context: LOGGING_CONTEXT, reportId },
     )
   }
 

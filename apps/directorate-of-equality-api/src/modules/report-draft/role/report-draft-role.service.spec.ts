@@ -17,6 +17,7 @@ import {
 import { ReportModel } from '../../report/models/report.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
+import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { ReportDraftRoleService } from './report-draft-role.service'
 
@@ -49,6 +50,7 @@ describe('ReportDraftRoleService', () => {
   let roleFindByPk: jest.Mock
   let roleBuild: jest.Mock
   let employeeCount: jest.Mock
+  let roleStepFindAll: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
@@ -57,6 +59,7 @@ describe('ReportDraftRoleService', () => {
     roleFindByPk = jest.fn().mockResolvedValue(null)
     roleBuild = jest.fn()
     employeeCount = jest.fn().mockResolvedValue(0)
+    roleStepFindAll = jest.fn().mockResolvedValue([])
 
     const module = await Test.createTestingModule({
       providers: [
@@ -76,6 +79,10 @@ describe('ReportDraftRoleService', () => {
           provide: getModelToken(ReportEmployeeModel),
           useValue: { count: employeeCount },
         },
+        {
+          provide: getModelToken(ReportEmployeeRoleCriterionStepModel),
+          useValue: { findAll: roleStepFindAll },
+        },
       ],
     }).compile()
 
@@ -93,6 +100,72 @@ describe('ReportDraftRoleService', () => {
     expect(result).toEqual([
       { id: ROLE_ID, title: 'Sérfræðingur', reportId: REPORT_ID },
     ])
+  })
+
+  describe('listRolesWithSteps', () => {
+    it('inlines each role\'s assigned step ids in one step query', async () => {
+      roleFindAll.mockResolvedValueOnce([
+        { id: ROLE_ID, title: 'Sérfræðingur', reportId: REPORT_ID },
+        { id: 'role-id-2', title: 'Stjórnandi', reportId: REPORT_ID },
+      ])
+      roleStepFindAll.mockResolvedValueOnce([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-1' },
+        { reportEmployeeRoleId: 'role-id-2', reportSubCriterionStepId: 'step-2' },
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-3' },
+      ])
+
+      const result = await service.listRolesWithSteps(PROVIDER_ID, COMPANY)
+
+      expect(findOwnedDraft).toHaveBeenCalledWith(PROVIDER_ID, COMPANY)
+      expect(result).toEqual([
+        {
+          id: ROLE_ID,
+          title: 'Sérfræðingur',
+          reportId: REPORT_ID,
+          stepIds: ['step-1', 'step-3'],
+        },
+        {
+          id: 'role-id-2',
+          title: 'Stjórnandi',
+          reportId: REPORT_ID,
+          stepIds: ['step-2'],
+        },
+      ])
+      // One lookup for the whole set, scoped to the roles on the draft.
+      expect(roleStepFindAll).toHaveBeenCalledTimes(1)
+      expect(roleStepFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reportEmployeeRoleId: [ROLE_ID, 'role-id-2'] },
+        }),
+      )
+    })
+
+    it('gives an unscored role an empty stepIds array', async () => {
+      roleFindAll.mockResolvedValueOnce([
+        { id: ROLE_ID, title: 'Sérfræðingur', reportId: REPORT_ID },
+      ])
+      roleStepFindAll.mockResolvedValueOnce([])
+
+      const result = await service.listRolesWithSteps(PROVIDER_ID, COMPANY)
+
+      expect(result).toEqual([
+        {
+          id: ROLE_ID,
+          title: 'Sérfræðingur',
+          reportId: REPORT_ID,
+          stepIds: [],
+        },
+      ])
+    })
+
+    it('skips the step query entirely when the draft has no roles', async () => {
+      roleFindAll.mockResolvedValueOnce([])
+
+      const result = await service.listRolesWithSteps(PROVIDER_ID, COMPANY)
+
+      expect(result).toEqual([])
+      expect(roleStepFindAll).not.toHaveBeenCalled()
+    })
   })
 
   it('creates a role with the client-minted id, trimming the title', async () => {
