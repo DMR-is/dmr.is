@@ -20,6 +20,20 @@ import type { FastifyInstance } from 'fastify'
  * response IS the S3 object key.
  */
 
+/**
+ * Each test calls `build()`, which does `jest.resetModules()` and re-`require`s
+ * `../app` so the server picks up that test's env. That makes a full
+ * module-graph re-import the per-test cost -- ~430ms locally, but ~4s in CI
+ * where 35 projects' jest workers share a 2-core runner. Against jest's 5s
+ * default that leaves no margin: three tests here timed out on
+ * https://github.com/DMR-is/dmr.is/actions/runs/32127099827 with no assertion
+ * ever running, and the intrinsically slowest test in the file passed. The
+ * budget is set to match what the suite actually costs rather than left to
+ * chance.
+ */
+jest.setTimeout(30000)
+
+
 const API_KEYS = {
   FILE_UPLOAD_KEY_DRAFT: 'test-draft-key',
   FILE_UPLOAD_KEY_PUBLISH: 'test-publish-key',
