@@ -45,8 +45,7 @@ export class PostholfDocumentDto {
   type!: 'pdf'
 
   @ApiProperty({
-    description:
-      'Base64-encoded PDF. Empty string when includeDocument=false.',
+    description: 'Base64-encoded PDF. Empty string when includeDocument=false.',
   })
   content!: string
 

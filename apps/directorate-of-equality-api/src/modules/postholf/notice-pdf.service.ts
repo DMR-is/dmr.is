@@ -5,9 +5,7 @@ import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { getBrowser } from '../report-pdf/lib/browser'
 import { noticeStyles } from './templates/notice.css'
 import { buildNoticeHtml, NoticeInput } from './templates/notice.template'
-import {
-  INoticePdfService,
-} from './notice-pdf.service.interface'
+import { INoticePdfService } from './notice-pdf.service.interface'
 
 const LOGGING_CONTEXT = 'NoticePdfService'
 

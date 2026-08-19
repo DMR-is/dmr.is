@@ -5,7 +5,12 @@ import { CompanyReminderTierEnum } from '../company/models/company-event.model'
 import { ReportTypeEnum } from '../report/models/report.enums'
 import { NoticePdfService } from './notice-pdf.service'
 
-const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+}
 
 const OUT = process.env.NOTICE_PDF_OUT_DIR
 
@@ -20,8 +25,16 @@ maybe('NoticePdfService (manual render)', () => {
   jest.setTimeout(60_000)
 
   it.each([
-    ['aminning', CompanyReminderTierEnum.OVERDUE_NOTICE, ReportTypeEnum.EQUALITY],
-    ['undanfari-dagsekta', CompanyReminderTierEnum.FINES_PRECURSOR, ReportTypeEnum.SALARY],
+    [
+      'aminning',
+      CompanyReminderTierEnum.OVERDUE_NOTICE,
+      ReportTypeEnum.EQUALITY,
+    ],
+    [
+      'undanfari-dagsekta',
+      CompanyReminderTierEnum.FINES_PRECURSOR,
+      ReportTypeEnum.SALARY,
+    ],
   ])('renders %s', async (name, tier, reportType) => {
     const service = new NoticePdfService(mockLogger as never)
 

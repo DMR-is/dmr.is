@@ -93,10 +93,13 @@ export class PostholfCallbackGuard implements CanActivate {
     }
 
     if (!this.hasScope(payload, requiredScope)) {
-      this.logger.warn('Skjalaveita callback token is missing the required scope', {
-        context: LOGGING_CONTEXT,
-        requiredScope,
-      })
+      this.logger.warn(
+        'Skjalaveita callback token is missing the required scope',
+        {
+          context: LOGGING_CONTEXT,
+          requiredScope,
+        },
+      )
       throw new UnauthorizedException('Token is missing the required scope')
     }
 

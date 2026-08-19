@@ -89,9 +89,9 @@ describe('PostholfCallbackGuard', () => {
   it('accepts a token with a valid signature, issuer, audience and scope', async () => {
     const token = sign({ scope: SCOPE })
 
-    await expect(guard.canActivate(contextWith(`Bearer ${token}`))).resolves.toBe(
-      true,
-    )
+    await expect(
+      guard.canActivate(contextWith(`Bearer ${token}`)),
+    ).resolves.toBe(true)
   })
 
   it('looks the key up by the token’s kid', async () => {
@@ -188,11 +188,9 @@ describe('PostholfCallbackGuard', () => {
     })
 
     it('rejects an unsigned (alg: none) token', async () => {
-      const token = jwt.sign(
-        { scope: SCOPE, iss: ISSUER, aud: AUDIENCE },
-        '',
-        { algorithm: 'none' },
-      )
+      const token = jwt.sign({ scope: SCOPE, iss: ISSUER, aud: AUDIENCE }, '', {
+        algorithm: 'none',
+      })
 
       await expect(
         guard.canActivate(contextWith(`Bearer ${token}`)),

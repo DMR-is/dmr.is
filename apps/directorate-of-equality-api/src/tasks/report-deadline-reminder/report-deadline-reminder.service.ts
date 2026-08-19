@@ -98,7 +98,10 @@ const FINES_PRECURSOR_AFTER_DAYS = 60
 type Tier = {
   tier: CompanyReminderTierEnum
   dueRange: (now: Date) => WhereOptions
-} & ({ channel: 'EMAIL'; tier: EmailReminderTier } | { channel: 'MAILBOX'; tier: MailboxReminderTier })
+} & (
+  | { channel: 'EMAIL'; tier: EmailReminderTier }
+  | { channel: 'MAILBOX'; tier: MailboxReminderTier }
+)
 
 const TIERS: Tier[] = [
   {
@@ -142,7 +145,9 @@ const TIERS: Tier[] = [
     channel: 'MAILBOX',
     tier: CompanyReminderTierEnum.FINES_PRECURSOR,
     // No floor: see the note on Tier. `POSTHOLF_GO_LIVE_DATE` bounds this.
-    dueRange: (now) => ({ [Op.lte]: addDays(now, -FINES_PRECURSOR_AFTER_DAYS) }),
+    dueRange: (now) => ({
+      [Op.lte]: addDays(now, -FINES_PRECURSOR_AFTER_DAYS),
+    }),
   },
 ]
 

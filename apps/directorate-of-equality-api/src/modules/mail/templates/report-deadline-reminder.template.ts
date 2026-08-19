@@ -42,7 +42,8 @@ const formatDate = (date: Date): string => {
  * so it stays accurate without hard-coding a single offset.
  */
 const TIER_LEAD: Record<EmailReminderTier, string> = {
-  [CompanyReminderTierEnum.SIX_MONTHS]: 'Skilafrestur nálgast — innan sex mánaða.',
+  [CompanyReminderTierEnum.SIX_MONTHS]:
+    'Skilafrestur nálgast — innan sex mánaða.',
   [CompanyReminderTierEnum.TWO_MONTHS]:
     'Skilafrestur nálgast — innan tveggja mánaða.',
   [CompanyReminderTierEnum.TWO_WEEKS]: 'Skilafrestur er innan tveggja vikna.',

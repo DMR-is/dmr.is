@@ -131,9 +131,9 @@ describe('notice documentId', () => {
     })
 
     it('rejects a different company — the checklist’s core requirement', () => {
-      expect(
-        documentIdMatchesCompany(build(), OTHER_NATIONAL_ID, SECRET),
-      ).toBe(false)
+      expect(documentIdMatchesCompany(build(), OTHER_NATIONAL_ID, SECRET)).toBe(
+        false,
+      )
     })
 
     it('rejects when the secret differs, so ids cannot be forged', () => {

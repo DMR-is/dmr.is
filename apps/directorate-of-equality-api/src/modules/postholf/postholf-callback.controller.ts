@@ -1,4 +1,11 @@
-import { Controller, Get, Inject, Param, Query, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

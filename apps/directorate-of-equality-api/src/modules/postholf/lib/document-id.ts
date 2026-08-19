@@ -95,7 +95,10 @@ export const toDueDateYmd = (dueDate: Date): string =>
   dueDate.toISOString().slice(0, 10)
 
 const companyFingerprint = (nationalId: string, secret: string): string =>
-  createHmac('sha256', secret).update(nationalId).digest('hex').slice(0, HMAC_LENGTH)
+  createHmac('sha256', secret)
+    .update(nationalId)
+    .digest('hex')
+    .slice(0, HMAC_LENGTH)
 
 /**
  * Builds the `documentId` for one notice.

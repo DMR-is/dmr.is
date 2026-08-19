@@ -1,4 +1,7 @@
-import { BadGatewayException, InternalServerErrorException } from '@nestjs/common'
+import {
+  BadGatewayException,
+  InternalServerErrorException,
+} from '@nestjs/common'
 
 import { CompanyReminderTierEnum } from '../company/models/company-event.model'
 import { ReportTypeEnum } from '../report/models/report.enums'
@@ -123,9 +126,9 @@ describe('PostholfService', () => {
 
       // One token fetch, two registrations.
       expect(fetchMock).toHaveBeenCalledTimes(3)
-      expect(fetchMock.mock.calls.filter((c) => c[0] === TOKEN_URL)).toHaveLength(
-        1,
-      )
+      expect(
+        fetchMock.mock.calls.filter((c) => c[0] === TOKEN_URL),
+      ).toHaveLength(1)
     })
 
     it('refreshes once the token has expired', async () => {
@@ -139,9 +142,9 @@ describe('PostholfService', () => {
       await service.registerNotice(registerInput)
       await service.registerNotice(registerInput)
 
-      expect(fetchMock.mock.calls.filter((c) => c[0] === TOKEN_URL)).toHaveLength(
-        2,
-      )
+      expect(
+        fetchMock.mock.calls.filter((c) => c[0] === TOKEN_URL),
+      ).toHaveLength(2)
     })
 
     it('raises BadGateway when the token endpoint is unreachable', async () => {
@@ -242,9 +245,9 @@ describe('PostholfService', () => {
 
       // Failing before the POST matters: an over-long field would be rejected by
       // Pósthólf forever, so retrying it every night is pure noise.
-      expect(fetchMock.mock.calls.filter((c) => c[0] !== TOKEN_URL)).toHaveLength(
-        0,
-      )
+      expect(
+        fetchMock.mock.calls.filter((c) => c[0] !== TOKEN_URL),
+      ).toHaveLength(0)
     })
   })
 
@@ -255,9 +258,7 @@ describe('PostholfService', () => {
         .mockResolvedValueOnce(jsonResponse({ wantsPaper: true }))
 
       await expect(service.wantsPaper('5509876543')).resolves.toBe(true)
-      expect(fetchMock.mock.calls[1][0]).toBe(
-        `${BASE}/api/v1/5509876543/paper`,
-      )
+      expect(fetchMock.mock.calls[1][0]).toBe(`${BASE}/api/v1/5509876543/paper`)
     })
 
     it('throws rather than assuming "no paper" when the check fails', async () => {

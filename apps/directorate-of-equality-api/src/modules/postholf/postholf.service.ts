@@ -122,9 +122,17 @@ export class PostholfService implements IPostholfService {
 
     const subject = subjectBuilder(input.reportType)
 
-    this.assertWithinLimit('documentId', input.documentId, POSTHOLF_LIMITS.documentId)
+    this.assertWithinLimit(
+      'documentId',
+      input.documentId,
+      POSTHOLF_LIMITS.documentId,
+    )
     this.assertWithinLimit('subject', subject, POSTHOLF_LIMITS.subject)
-    this.assertWithinLimit('category', POSTHOLF_CATEGORY, POSTHOLF_LIMITS.category)
+    this.assertWithinLimit(
+      'category',
+      POSTHOLF_CATEGORY,
+      POSTHOLF_LIMITS.category,
+    )
     this.assertWithinLimit('type', POSTHOLF_TYPE, POSTHOLF_LIMITS.type)
 
     const senderKennitala = this.requireEnv('POSTHOLF_SENDER_NATIONAL_ID')
@@ -255,11 +263,7 @@ export class PostholfService implements IPostholfService {
     return this.requireEnv('POSTHOLF_BASE_PATH').replace(/\/+$/, '')
   }
 
-  private assertWithinLimit(
-    field: string,
-    value: string,
-    limit: number,
-  ): void {
+  private assertWithinLimit(field: string, value: string, limit: number): void {
     if (value.length > limit) {
       // Better to fail here than to have Pósthólf reject the item and leave the
       // reminder task retrying a payload that can never be accepted.
@@ -330,8 +334,7 @@ export class PostholfService implements IPostholfService {
    * credentials and we have not seen it yet.
    */
   private async refresh(): Promise<void> {
-    const scope =
-      process.env.POSTHOLF_SCOPE || `${this.baseUrl()}/.default`
+    const scope = process.env.POSTHOLF_SCOPE || `${this.baseUrl()}/.default`
 
     const body = new URLSearchParams({
       client_id: this.requireEnv('POSTHOLF_CLIENT_ID'),
