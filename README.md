@@ -17,6 +17,53 @@ brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman
 yarn
 ```
 
+## Local environment setup
+
+Environment variables are **declared** in `.env.schema` files — names, types and which values
+are sensitive, never the values themselves. There is one at the repo root holding everything
+shared, and one per app that imports only what that app actually reads:
+
+```text
+.env.schema                          shared across apps
+apps/<app>/.env.schema               app-specific + @import(../../, pick=[...])
+config/1password/.env.schema         local-only: where values come from
+```
+
+Values are **resolved** by [varlock](https://varlock.dev) from 1Password and exported into your
+shell by `direnv`. Deployed services never use 1Password — ECS task definitions fill the same
+variables — so local and deployed environments differ only in who populates `process.env`.
+
+One-time setup:
+
+```bash
+brew install direnv 1password-cli
+```
+
+1. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
+   Desktop-app auth needs the **beta** `op` CLI (v2.33.0+) for `op environment`; the stable
+   Homebrew build does not include it.
+2. Put the 1Password environment id in `.env.local` at the repo root (gitignored). It must resolve
+   before authentication, so it cannot itself come from 1Password:
+
+   ```bash
+   echo 'OP_DMR_ENVIRONMENT=<environment-id>' >> .env.local
+   ```
+
+3. `direnv allow`
+
+Check your setup with:
+
+```bash
+yarn varlock load --path config/1password --agent   # sensitive values redacted
+yarn varlock load --path apps/legal-gazette-api     # validate one app
+```
+
+If varlock is missing or 1Password is unavailable, `.envrc` prints the error and falls back to
+sourcing `.env.secret`, so an existing local setup keeps working.
+
+**When you add a `process.env.X` read, declare `X`** — in `apps/<app>/.env.schema` if only that app
+uses it, or in the root schema (and the app's `pick` list) if more than one does.
+
 ## Generate client and schemas for web app
 
 ```bash
