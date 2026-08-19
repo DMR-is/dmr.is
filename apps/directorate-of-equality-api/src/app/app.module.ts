@@ -38,6 +38,7 @@ import { ReportOutlierGroupModel } from '../modules/report-employee/models/repor
 import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { ReportRoleResultModel } from '../modules/report-result/models/report-role-result.model'
 import { DoeApplicationSwaggerModule } from '../modules/swagger/doe-application.swagger.module'
+import { DoePostholfSwaggerModule } from '../modules/swagger/doe-postholf.swagger.module'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
 import { UserModel } from '../modules/user/models/user.model'
 import { TasksModule } from '../tasks/tasks.module'
@@ -98,6 +99,7 @@ import { HealthController } from './health.controller'
     // document (enforced by swagger-coverage.spec.ts).
     DoeApplicationSwaggerModule,
     DoeWebSwaggerModule,
+    DoePostholfSwaggerModule,
     TasksModule,
   ],
   controllers: [HealthController],

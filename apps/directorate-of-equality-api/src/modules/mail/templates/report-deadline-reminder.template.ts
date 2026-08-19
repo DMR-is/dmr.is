@@ -1,11 +1,19 @@
-import { CompanyReminderTierEnum } from '../../company/models/company-event.model'
+import {
+  CompanyReminderTierEnum,
+  EmailReminderTier,
+} from '../../company/models/company-event.model'
 import { ReportTypeEnum } from '../../report/models/report.enums'
 
 export type ReportDeadlineReminderInput = {
   companyName: string
   reportType: ReportTypeEnum
-  /** Which milestone this reminder is for. */
-  tier: CompanyReminderTierEnum
+  /**
+   * Which milestone this reminder is for. Narrowed to the email tiers: the
+   * OVERDUE_NOTICE / FINES_PRECURSOR milestones are served into the island.is
+   * mailbox instead, and typing them out here is what stops a second channel
+   * being bolted on without the extra event types it would need.
+   */
+  tier: EmailReminderTier
   /** The deadline being reminded about. */
   dueDate: Date
 }
@@ -33,7 +41,7 @@ const formatDate = (date: Date): string => {
  * TWO_WEEKS tier only fires when the deadline is genuinely within two weeks),
  * so it stays accurate without hard-coding a single offset.
  */
-const TIER_LEAD: Record<CompanyReminderTierEnum, string> = {
+const TIER_LEAD: Record<EmailReminderTier, string> = {
   [CompanyReminderTierEnum.SIX_MONTHS]: 'Skilafrestur nálgast — innan sex mánaða.',
   [CompanyReminderTierEnum.TWO_MONTHS]:
     'Skilafrestur nálgast — innan tveggja mánaða.',
@@ -41,7 +49,7 @@ const TIER_LEAD: Record<CompanyReminderTierEnum, string> = {
   [CompanyReminderTierEnum.DUE]: 'Skiladagur er runninn upp.',
 }
 
-const subjectPrefix = (tier: CompanyReminderTierEnum): string =>
+const subjectPrefix = (tier: EmailReminderTier): string =>
   tier === CompanyReminderTierEnum.DUE ? 'Skilafrestur á lokadegi' : 'Áminning'
 
 export const buildReportDeadlineReminderSubject = (

@@ -71,6 +71,24 @@ export interface ICompanyEventService {
   ): Promise<boolean>
 
   /**
+   * True if a deadline event of `eventType` at `tier` was recorded for a due date
+   * falling on `dueDateYmd` (UTC `YYYY-MM-DD`).
+   *
+   * The date-only sibling of `hasDeadlineReminderEvent`, needed by the Skjalaveita
+   * callback: a `documentId` encodes the due date as `YYYYMMDD` (it has 50
+   * characters to work with), while `reason` holds the full
+   * `dueDate.toISOString()`. Matching on the ISO prefix is what bridges the two,
+   * and it is exact rather than fuzzy because `toISOString()` always renders
+   * `YYYY-MM-DD` first.
+   */
+  hasDeadlineReminderEventOnDate(
+    companyId: string,
+    eventType: CompanyDeadlineReminderEventType,
+    tier: CompanyReminderTierEnum,
+    dueDateYmd: string,
+  ): Promise<boolean>
+
+  /**
    * Records a deadline-reminder outcome for one milestone (`tier`) — either the
    * reminder being sent or there being no email on file (per `eventType`).
    * `dueDateIso` (stored in `reason`) is the due date being reminded about.
