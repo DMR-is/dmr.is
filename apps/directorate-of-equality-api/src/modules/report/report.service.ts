@@ -714,14 +714,19 @@ export class ReportService implements IReportService {
    * on the joined `report_employee` (and its `role`) are sortable — the
    * analysis-snapshot fields aren't part of the query, so they're not exposed
    * (enum-gated). A secondary `ordinal ASC` keeps paging deterministic when
-   * the primary sort column has ties. With no `sortBy`, falls back to the
-   * default ordinal-ascending order that matches the FE improvement-plan list.
+   * the primary sort column has ties. With no `sortBy`, falls back to role
+   * title then ordinal — the same grouped-by-role order the draft employee
+   * lists serve, so a row keeps its place as a report moves from draft to
+   * submitted.
    */
   private buildOutlierOrder(query: GetReportOutliersQueryDto): Order {
     const reportEmployee = { model: ReportEmployeeModel, as: 'reportEmployee' }
+    const role = { model: ReportEmployeeRoleModel, as: 'role' }
     const ordinalAsc: Order = [[reportEmployee, 'ordinal', 'ASC']]
 
-    if (!query.sortBy) return ordinalAsc
+    if (!query.sortBy) {
+      return [[reportEmployee, role, 'title', 'ASC'], ...ordinalAsc]
+    }
 
     const direction = query.direction === SortDirectionEnum.DESC ? 'DESC' : 'ASC'
 
@@ -733,15 +738,7 @@ export class ReportService implements IReportService {
       case ReportOutlierSortByEnum.SCORE:
         return [[reportEmployee, 'score', direction], ...ordinalAsc]
       case ReportOutlierSortByEnum.ROLE_TITLE:
-        return [
-          [
-            reportEmployee,
-            { model: ReportEmployeeRoleModel, as: 'role' },
-            'title',
-            direction,
-          ],
-          ...ordinalAsc,
-        ]
+        return [[reportEmployee, role, 'title', direction], ...ordinalAsc]
       default:
         return ordinalAsc
     }
