@@ -61,15 +61,41 @@ export const formatPercentValue = (value: string) => {
 
 /**
  * Parses a percentage typed by a user, accepting the Icelandic decimal comma.
- * Returns null when the input is not a usable positive number, which is the same
- * rule the API enforces on the stored value.
+ * Returns null when the input is not a usable positive number.
+ *
+ * Deliberately stricter than `Number`: the shape mirrors the API's own
+ * `THRESHOLD_VALUE_PATTERN`, so the client rejects the same inputs the server
+ * would rather than accepting `"1e0"` or `"0x2"` and failing on submit. The
+ * two-decimal cap is what keeps the confirmation step honest — `formatPercentValue`
+ * renders at most two decimals, so a value like `3,999` would otherwise be
+ * confirmed as "úr 4% í 4%" and saved as something else.
  */
-export const parsePercentInput = (value: string): number | null => {
-  const parsed = Number(value.trim().replace(',', '.'))
+const PERCENT_INPUT_PATTERN = /^\d+([.,]\d{1,2})?$/
 
-  return value.trim() === '' || !Number.isFinite(parsed) || parsed <= 0
-    ? null
-    : parsed
+export const parsePercentInput = (value: string): number | null => {
+  const trimmed = value.trim()
+
+  if (!PERCENT_INPUT_PATTERN.test(trimmed)) return null
+
+  const parsed = Number(trimmed.replace(',', '.'))
+
+  return parsed > 0 ? parsed : null
+}
+
+/**
+ * Reads the active config-stored percentage, returning null when the row is not
+ * a usable number. Mirrors `ConfigService.assertThresholdIsLowered` exactly —
+ * `Number`, not the laxer `parseFloat` the analysis readers use — so that a
+ * hand-edited row like `"3,9"` reads as broken on both sides rather than being
+ * compared against `3` here and rejected by the API on submit.
+ *
+ * Callers must treat null as "cannot be compared against", not as "no
+ * constraint": the API refuses the update outright in that state.
+ */
+export const parseStoredPercent = (value: string): number | null => {
+  const parsed = Number(value.trim())
+
+  return value.trim() !== '' && Number.isFinite(parsed) ? parsed : null
 }
 
 /**
@@ -82,9 +108,8 @@ export const parseInflightConflictStatus = (message: string): string | null => {
   if (!match) return null
   const status = match[1].toUpperCase()
   return (
-    sharedText.statusLabels[
-      status as keyof typeof sharedText.statusLabels
-    ] ?? status
+    sharedText.statusLabels[status as keyof typeof sharedText.statusLabels] ??
+    status
   )
 }
 

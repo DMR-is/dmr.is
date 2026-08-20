@@ -1,3 +1,4 @@
+import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY } from '../../config/config.constants'
 import {
   type DetectedOutlier,
   detectOutliers,
@@ -20,11 +21,11 @@ import {
 } from './build-chart'
 
 /**
- * Config key for the salary-difference threshold percent, shared by every
- * caller that runs outlier detection so preview and submit read the same knob.
+ * Re-exported from the config module, which owns the key. Kept here so the
+ * outlier-detection callers that already import it from this file keep working
+ * while there stays exactly one definition of the string.
  */
-export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
+export { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY }
 
 /**
  * Runs outlier detection + the gender/score chart over a parsed workbook

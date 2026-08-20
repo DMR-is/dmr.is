@@ -15,7 +15,11 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY } from '../../lib/constants'
 import { sharedText, systemSettingsText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatPercentValue, parsePercentInput } from '../../lib/utils'
+import {
+  formatPercentValue,
+  parsePercentInput,
+  parseStoredPercent,
+} from '../../lib/utils'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -70,25 +74,33 @@ export const LowerSalaryThresholdModal = ({
       onClose()
     },
     onError: (error) => {
-      const message =
-        error instanceof Error
-          ? `${t.saveError} - ${error.message}`
-          : t.saveError
-      toast.error(message, { autoClose: 5000 })
+      // `error.message` is the API's English developer message. The Icelandic
+      // one travels alongside it on `data.translatedMessage`, so prefer that —
+      // this is an Icelandic-only admin UI.
+      const translated = error.data?.translatedMessage
+      toast.error(translated ? `${t.saveError} - ${translated}` : t.saveError, {
+        autoClose: 5000,
+      })
     },
   })
 
-  const current = Number(currentValue)
+  // Read the active value the way the API does. A row nobody can parse is a
+  // broken threshold, not an absent one: the API refuses the update outright, so
+  // the form must not offer a lowering it knows will be rejected.
+  const current = parseStoredPercent(currentValue)
   const parsed = parsePercentInput(value)
   const isTouched = value.trim() !== ''
 
-  const errorMessage = !isTouched
-    ? undefined
-    : parsed === null
-      ? t.notANumber
-      : Number.isFinite(current) && parsed >= current
-        ? t.tooHigh(formatPercentValue(currentValue))
-        : undefined
+  const errorMessage =
+    current === null
+      ? t.currentValueMalformed
+      : !isTouched
+        ? undefined
+        : parsed === null
+          ? t.notANumber
+          : parsed >= current
+            ? t.tooHigh(formatPercentValue(currentValue))
+            : undefined
 
   const canContinue = parsed !== null && !errorMessage
 

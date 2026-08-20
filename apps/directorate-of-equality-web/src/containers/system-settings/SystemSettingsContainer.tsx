@@ -22,7 +22,7 @@ import { systemSettingsText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatPercentValue } from '../../lib/utils'
 
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useSuspenseQueries } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const t = systemSettingsText
@@ -60,17 +60,19 @@ export const SystemSettingsContainer = () => {
   const trpc = useTRPC()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const { data: threshold } = useSuspenseQuery(
-    trpc.config.getByKey.queryOptions({
-      key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
-    }),
-  )
-
-  const { data: history } = useSuspenseQuery(
-    trpc.config.getHistoryByKey.queryOptions({
-      key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
-    }),
-  )
+  // One `useSuspenseQueries` rather than two `useSuspenseQuery` calls: the
+  // second would not be issued until the first suspended and resumed, making the
+  // two independent reads of the same key a request waterfall.
+  const [{ data: threshold }, { data: history }] = useSuspenseQueries({
+    queries: [
+      trpc.config.getByKey.queryOptions({
+        key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      }),
+      trpc.config.getHistoryByKey.queryOptions({
+        key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      }),
+    ],
+  })
 
   return (
     <GridContainer>

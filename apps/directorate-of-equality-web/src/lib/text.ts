@@ -108,7 +108,8 @@ export const overviewText = {
     successToast: 'Skýrslugjöf send inn',
     deviations: {
       analyzing: 'Greini frávik…',
-      analyzeError: 'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
+      analyzeError:
+        'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
       none: 'Engin frávik fundust í gögnunum. Hægt er að senda skýrsluna beint inn.',
       intro:
         'Frávik fundust í launagreiningunni. Skráðu skýringar á þeim í frávikahópa eða frestaðu skilum þeirra.',
@@ -157,8 +158,7 @@ export const reportText = {
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
-    externalDisabledHint:
-      'Opnaðu samskipti til að senda innsendanda skilaboð.',
+    externalDisabledHint: 'Opnaðu samskipti til að senda innsendanda skilaboð.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
@@ -187,8 +187,7 @@ export const reportText = {
     description:
       'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
     warningTitle: 'Athugið',
-    warningMessage:
-      'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
+    warningMessage: 'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
     reasonLabel: 'Ástæða',
     submitButton: 'Senda í breytingar',
   },
@@ -551,7 +550,9 @@ export const systemSettingsText = {
     newValueLabel: 'Nýtt hlutfall (%)',
     tooHigh: (current: string) =>
       `Nýtt hlutfall verður að vera lægra en ${current}%`,
-    notANumber: 'Sláðu inn tölu hærri en 0',
+    notANumber: 'Sláðu inn tölu hærri en 0, með mest tveimur aukastöfum',
+    currentValueMalformed:
+      'Núgildandi hlutfall er ekki gild tala og því er ekki hægt að lækka það. Hafðu samband við kerfisstjóra.',
     continue: 'Halda áfram',
     back: 'Til baka',
     confirmTitle: 'Þessi breyting er óafturkræf',

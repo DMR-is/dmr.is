@@ -1,3 +1,14 @@
+export type NavPath = {
+  title: string
+  href: string
+  /**
+   * Route is ADMIN-only. Read by the nav (`ControlPanel`) to hide the entry and
+   * by `requireNavAccess` to refuse the page itself — both halves, so adding an
+   * entry here is all that is needed to protect a new admin route.
+   */
+  adminOnly: boolean
+}
+
 export const NAV_PATHS = {
   frontpage: { title: 'Forsíða', href: '/', adminOnly: false },
   heildarlisti: { title: 'Vinnslusvæði', href: '/yfirlit', adminOnly: false },
@@ -8,7 +19,7 @@ export const NAV_PATHS = {
     href: '/kerfisstillingar',
     adminOnly: true,
   },
-}
+} satisfies Record<string, NavPath>
 
 /**
  * Config key holding the annual gender base-salary difference threshold (%).
