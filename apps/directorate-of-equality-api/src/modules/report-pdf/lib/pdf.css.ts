@@ -140,6 +140,46 @@ export const pdfStyles = `
     margin: 16px 0 6px 0;
   }
 
+  /*
+   * A submitted plan follows the Jafnréttisstofa template, so its rich text
+   * carries the law quotes as blockquotes and one Markmið/Aðgerð/Ábyrgð/Verklok
+   * table per section. Neither carries a class name — the markup comes from the
+   * applicant's editor — so these are element selectors scoped to .rich-content.
+   */
+  .rich-content blockquote {
+    margin: 8px 0 12px 0;
+    padding: 6px 12px;
+    border-left: 3px solid #0061ff;
+    background: #f2f7ff;
+  }
+
+  .rich-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 16px 0;
+    /* Keep a section's table intact rather than splitting it across pages. */
+    page-break-inside: avoid;
+  }
+
+  .rich-content th,
+  .rich-content td {
+    border: 1px solid #ccdfff;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .rich-content th {
+    background: #f2f7ff;
+    font-weight: 600;
+  }
+
+  .rich-content ul,
+  .rich-content ol {
+    margin: 6px 0 12px 0;
+    padding-left: 20px;
+  }
+
   .empty-note {
     color: #8a8aa0;
     font-style: italic;
