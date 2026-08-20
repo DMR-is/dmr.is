@@ -28,8 +28,14 @@ COPY --from=deps /usr/src/app/.sequelizerc ./
 COPY --from=deps /usr/src/app/sequelize.config.js ./
 COPY ./apps/directorate-of-equality-api/dist .
 RUN npm install -g sequelize-cli
+# Validate the environment at container start. The image is built with an empty
+# environment and run with ECS supplying the values, so boot is the only moment
+# this can be checked. ./env is the flattened schema produced by the app's
+# flatten-env target -- the Dockerfile packages apps/<app>/dist only, and the
+# root .env.schema is not in there. Pinned from npm rather than curl | sh.
+RUN npm install -g varlock@1.16.1
 USER node
 EXPOSE 4100
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "sequelize-cli db:migrate && node main.js"]
+CMD ["varlock", "run", "--path", "./env", "--", "sh", "-c", "sequelize-cli db:migrate && node main.js"]
 

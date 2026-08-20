@@ -120,13 +120,21 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
           "load": true
         },
         "file": "apps/legal-gazette-web/Dockerfile"
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/legal-gazette-web",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env"
       }
     }
   }

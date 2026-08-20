@@ -13,6 +13,13 @@ COPY --from=deps /usr/src/app/package.json ./package.json
 COPY ./apps/directorate-of-equality-web/dist/.next/standalone/apps/directorate-of-equality-web ./
 COPY ./apps/directorate-of-equality-web/dist/public ./public
 COPY ./apps/directorate-of-equality-web/dist/.next/static ./dist/.next/static
+COPY ./apps/directorate-of-equality-web/dist/env ./env
+# Validate the environment at container start. The image is built with an empty
+# environment and run with ECS supplying the values, so boot is the only moment
+# this can be checked. ./env is the flattened schema produced by the app's
+# flatten-env target -- the Dockerfile packages apps/<app>/dist only, and the
+# root .env.schema is not in there. Pinned from npm rather than curl | sh.
+RUN npm install -g varlock@1.16.1
 
 ENV HOSTNAME="0.0.0.0"
-CMD ["node", "server.js"]
+CMD ["varlock", "run", "--path", "./env", "--", "node", "server.js"]

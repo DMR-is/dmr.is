@@ -67,7 +67,7 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
@@ -106,6 +106,14 @@
           "yarn nx run legal-gazette-api:seed"
         ],
         "parallel": false
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/legal-gazette-api",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env"
       }
     }
   }
