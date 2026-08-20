@@ -227,6 +227,26 @@ describe('ReportDraftEmployeeService', () => {
       )
     })
 
+    // The application system renders employees grouped by role, so the page has
+    // to arrive sorted by role title with the employee's own index breaking
+    // ties — and sorted by the query, or paging would slice an unordered set.
+    it('orders by role title, then by ordinal', async () => {
+      await service.listEmployeesWithSteps(PROVIDER_ID, COMPANY, {
+        page: 1,
+        pageSize: 10,
+      })
+
+      expect(employeeFindAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: [expect.objectContaining({ as: 'role', attributes: [] })],
+          order: [
+            [expect.objectContaining({ as: 'role' }), 'title', 'ASC'],
+            ['ordinal', 'ASC'],
+          ],
+        }),
+      )
+    })
+
     it('gives a role-scored employee an empty stepIds array', async () => {
       employeeFindAndCountAll.mockResolvedValueOnce({
         rows: [employeeRow(EMPLOYEE_ID, 1)],
@@ -254,6 +274,26 @@ describe('ReportDraftEmployeeService', () => {
 
       expect(result.employees).toEqual([])
       expect(personalStepFindAll).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('listEmployees', () => {
+    it('orders by role title, then by ordinal', async () => {
+      await service.listEmployees(PROVIDER_ID, COMPANY, {
+        page: 1,
+        pageSize: 10,
+      })
+
+      expect(employeeFindAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reportId: REPORT_ID },
+          include: [expect.objectContaining({ as: 'role', attributes: [] })],
+          order: [
+            [expect.objectContaining({ as: 'role' }), 'title', 'ASC'],
+            ['ordinal', 'ASC'],
+          ],
+        }),
+      )
     })
   })
 

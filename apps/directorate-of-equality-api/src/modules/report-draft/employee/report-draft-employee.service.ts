@@ -1,3 +1,5 @@
+import { Order } from 'sequelize'
+
 import {
   BadRequestException,
   Inject,
@@ -46,6 +48,31 @@ const EMPLOYEE_PATCH_KEYS = [
   'bonusOther',
 ] as const
 
+/**
+ * Employees are listed grouped by role: role title first, then the employee's
+ * ordinal within the report — which is what the "report identifier + index"
+ * printed on a row resolves to, the identifier being constant across a single
+ * report's employees. The sort has to happen in the query, not on the mapped
+ * page, or pagination would slice an unordered set.
+ */
+const EMPLOYEE_ORDER: Order = [
+  [{ model: ReportEmployeeRoleModel, as: 'role' }, 'title', 'ASC'],
+  ['ordinal', 'ASC'],
+]
+
+/**
+ * Joins the employee's role purely so `EMPLOYEE_ORDER` can sort on its title —
+ * no columns are selected, and the FK is NOT NULL so the inner join never
+ * drops a row (nor does it widen the `findAndCountAll` count, the relation
+ * being many-to-one).
+ */
+const EMPLOYEE_ROLE_ORDER_INCLUDE = {
+  model: ReportEmployeeRoleModel,
+  as: 'role',
+  attributes: [],
+  required: true,
+}
+
 /** Fields an employee CREATE must supply (the non-nullable columns). */
 const EMPLOYEE_REQUIRED_KEYS = [
   'reportEmployeeRoleId',
@@ -85,7 +112,8 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
 
     const { rows, count } = await this.employeeModel.findAndCountAll({
       where: { reportId: report.id },
-      order: [['ordinal', 'ASC']],
+      include: [EMPLOYEE_ROLE_ORDER_INCLUDE],
+      order: EMPLOYEE_ORDER,
       limit,
       offset,
     })
@@ -97,11 +125,11 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
   }
 
   /**
-   * Same page as `listEmployees`, with each employee's personal step
-   * assignments inlined. The step lookup is a single query scoped to the ids on
-   * the current page, so the query count is constant in the page size rather
-   * than one request per employee (which is what the portal was doing against
-   * `GET …/draft/employees/:employeeId/steps`).
+   * Same page as `listEmployees` — same ordering — with each employee's
+   * personal step assignments inlined. The step lookup is a single query scoped
+   * to the ids on the current page, so the query count is constant in the page
+   * size rather than one request per employee (which is what the portal was
+   * doing against `GET …/draft/employees/:employeeId/steps`).
    */
   async listEmployeesWithSteps(
     providerId: string,
@@ -117,7 +145,8 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
 
     const { rows, count } = await this.employeeModel.findAndCountAll({
       where: { reportId: report.id },
-      order: [['ordinal', 'ASC']],
+      include: [EMPLOYEE_ROLE_ORDER_INCLUDE],
+      order: EMPLOYEE_ORDER,
       limit,
       offset,
     })
@@ -171,8 +200,8 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
 
   /**
    * Role titles of the report, keyed by role id. One bounded query — a report
-   * carries at most `MAX_ROLES` (100) of them — rather than an include on the
-   * paginated employee query, which keeps `findAndCountAll`'s count untouched.
+   * carries at most `MAX_ROLES` (100) of them — rather than selecting the title
+   * through `EMPLOYEE_ROLE_ORDER_INCLUDE`, which joins for ordering only.
    */
   private async loadRoleTitles(reportId: string): Promise<Map<string, string>> {
     const rows = await this.roleModel.findAll({

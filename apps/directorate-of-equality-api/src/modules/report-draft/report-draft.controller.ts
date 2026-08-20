@@ -330,7 +330,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftEmployeesResponseDto,
     description:
-      "Paginated list of the draft's employees, ordered by ordinal. Scores are NULL until the report is submitted.",
+      "Paginated list of the draft's employees, ordered by role title and then by the employee's ordinal within the report. Scores are NULL until the report is submitted.",
   })
   async listEmployees(
     @Param('providerId') providerId: string,
@@ -351,7 +351,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftEmployeesWithStepsResponseDto,
     description:
-      "Same page as GET …/draft/employees, with each employee's personal step ids inlined — the aggregate that replaces one GET …/draft/employees/:employeeId/steps per row. Paginated on the same terms (a report can carry thousands of employees); raise pageSize to fetch the whole set in one call. `stepIds` is empty for an employee scored purely through its role. Scores are NULL until the report is submitted.",
+      "Same page as GET …/draft/employees (same role-title-then-ordinal ordering), with each employee's personal step ids inlined — the aggregate that replaces one GET …/draft/employees/:employeeId/steps per row. Paginated on the same terms (a report can carry thousands of employees); raise pageSize to fetch the whole set in one call. `stepIds` is empty for an employee scored purely through its role. Scores are NULL until the report is submitted.",
   })
   async listEmployeesWithSteps(
     @Param('providerId') providerId: string,
