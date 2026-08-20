@@ -80,7 +80,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   errorFormatter(opts) {
     const { shape, error } = opts
     const cause = error.cause as
-      | { name?: string; details?: string[] }
+      | { name?: string; details?: string[]; translatedMessage?: string }
       | undefined
 
     return {
@@ -90,6 +90,11 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
         ...shape.data,
         apiErrorName: cause?.name,
         validationErrors: cause?.details,
+        // `shape.message` is the API's English developer message. Error-message
+        // files ship a curated Icelandic string alongside it, which the HTTP
+        // filter puts on `translatedMessage`; forward it so UI callers can show
+        // it instead of leaking English into an Icelandic screen.
+        translatedMessage: cause?.translatedMessage,
       },
     }
   },

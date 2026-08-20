@@ -108,7 +108,8 @@ export const overviewText = {
     successToast: 'Skýrslugjöf send inn',
     deviations: {
       analyzing: 'Greini frávik…',
-      analyzeError: 'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
+      analyzeError:
+        'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
       none: 'Engin frávik fundust í gögnunum. Hægt er að senda skýrsluna beint inn.',
       intro:
         'Frávik fundust í launagreiningunni. Skráðu skýringar á þeim í frávikahópa eða frestaðu skilum þeirra.',
@@ -157,8 +158,7 @@ export const reportText = {
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
-    externalDisabledHint:
-      'Opnaðu samskipti til að senda innsendanda skilaboð.',
+    externalDisabledHint: 'Opnaðu samskipti til að senda innsendanda skilaboð.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
@@ -187,8 +187,7 @@ export const reportText = {
     description:
       'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
     warningTitle: 'Athugið',
-    warningMessage:
-      'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
+    warningMessage: 'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
     reasonLabel: 'Ástæða',
     submitButton: 'Senda í breytingar',
   },
@@ -522,6 +521,46 @@ export const usersText = {
     userAlreadyExists:
       'Notandi með þessari kennitölu er þegar til. Athugaðu hvort hann geti verið í listanum yfir óvirka notendur.',
     saveError: 'Villa við vistun breytinga',
+  },
+}
+
+export const systemSettingsText = {
+  heroTitle: 'Kerfisstillingar',
+  heroDescription:
+    'Hér má sjá stillingar sem gilda fyrir allt kerfið. Breytingar á þeim hafa áhrif á allar skýrslur sem eru reiknaðar eftir að breytingin er vistuð.',
+  heroImageAlt: 'Kerfisstillingar',
+  actionsHeading: 'Aðgerðir',
+  thresholdHeading: 'Leyfilegur launamunur',
+  thresholdLabel: 'Hámark á launamun karla og kvenna',
+  thresholdDescription:
+    'Hlutfallið er notað við sjálfvirka greiningu á grunnlaunum. Skýrslur eru mældar við helming hlutfallsins til hvorrar áttar frá reiknaðri viðmiðunarlínu.',
+  irreversibleTitle: 'Aðeins er hægt að lækka hlutfallið',
+  irreversibleMessage:
+    'Hlutfallið þrengist um hver áramót og verður aldrei rýmkað aftur. Þegar lækkun hefur verið vistuð er ekki hægt að hækka hlutfallið á ný.',
+  lowerButton: 'Lækka hlutfall',
+  historyHeading: 'Breytingaskrá',
+  historyNoData: 'Engar breytingar hafa verið gerðar',
+  historyValueLabel: 'Hlutfall',
+  historyPeriodLabel: 'Gildistími',
+  historyCurrent: 'Í gildi',
+  historyUntil: (date: string) => `Gilti til ${date}`,
+  modal: {
+    title: 'Lækka leyfilegan launamun',
+    currentLabel: 'Núgildandi hlutfall',
+    newValueLabel: 'Nýtt hlutfall (%)',
+    tooHigh: (current: string) =>
+      `Nýtt hlutfall verður að vera lægra en ${current}%`,
+    notANumber: 'Sláðu inn tölu hærri en 0, með mest tveimur aukastöfum',
+    currentValueMalformed:
+      'Núgildandi hlutfall er ekki gild tala og því er ekki hægt að lækka það. Hafðu samband við kerfisstjóra.',
+    continue: 'Halda áfram',
+    back: 'Til baka',
+    confirmTitle: 'Þessi breyting er óafturkræf',
+    confirmMessage: (current: string, next: string) =>
+      `Þú ert að lækka leyfilegan launamun úr ${current}% í ${next}%. Ekki er hægt að hækka hlutfallið aftur eftir að breytingin hefur verið vistuð.`,
+    confirmButton: 'Lækka hlutfall',
+    saveSuccess: 'Hlutfallið hefur verið lækkað',
+    saveError: 'Villa við vistun hlutfalls',
   },
 }
 
