@@ -93,7 +93,7 @@ export class ReportController {
     type: GetReportOutliersResponseDto,
     include404: true,
     description:
-      'Paginated list of a report\'s employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to `employeeOrdinal` ascending; override with `sortBy` + `direction`.',
+      'Paginated list of a report\'s employee outliers — the rows behind the Úrbótaáætlun table. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Defaults to role title ascending, then `employeeOrdinal` ascending — the same grouped-by-role order the draft employee lists serve; override with `sortBy` + `direction`.',
   })
   async getOutliers(
     @Param('id', ParseUUIDPipe) id: string,

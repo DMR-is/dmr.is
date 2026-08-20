@@ -265,7 +265,7 @@ export class ApplicationController {
     operationId: 'getApplicationReportOutliers',
     include404: true,
     description:
-      'Paginated list of the report\'s employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by `employeeOrdinal` ascending.',
+      "Paginated list of the report's employee outliers. Split out from the report-detail payload because a single salary report can carry hundreds of rows. Ordered by role title and then by the employee's ordinal within the report — the same grouped-by-role order the draft employee lists serve.",
     type: GetReportOutliersResponseDto,
   })
   async getReportOutliers(
