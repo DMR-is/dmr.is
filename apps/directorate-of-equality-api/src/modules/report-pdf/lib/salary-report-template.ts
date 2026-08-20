@@ -5,6 +5,7 @@ import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by
 import {
   escapeHtml,
   formatDate,
+  formatHourlyRate,
   formatNumber,
   formatPercent,
   genderLabel,
@@ -128,15 +129,15 @@ function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
     `<div class="chart-wrap">${chart}</div>
     <div class="stat-cards">
       <div class="stat-card">
-        <p class="stat-card__label">Meðallaun karla</p>
-        <p class="stat-card__value">${formatNumber(totals.maleAverageSalary)}</p>
+        <p class="stat-card__label">Meðaltímakaup karla</p>
+        <p class="stat-card__value">${formatHourlyRate(totals.maleAverageSalary)}</p>
       </div>
       <div class="stat-card">
-        <p class="stat-card__label">Meðallaun kvenna</p>
-        <p class="stat-card__value">${formatNumber(totals.femaleAverageSalary)}</p>
+        <p class="stat-card__label">Meðaltímakaup kvenna</p>
+        <p class="stat-card__value">${formatHourlyRate(totals.femaleAverageSalary)}</p>
       </div>
       <div class="stat-card stat-card--accent">
-        <p class="stat-card__label">Launamunur</p>
+        <p class="stat-card__label">Óleiðréttur launamunur</p>
         <p class="stat-card__value">${formatPercent(totals.wageGapPercent, { signed: true })}</p>
       </div>
     </div>`,

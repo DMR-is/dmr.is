@@ -114,7 +114,7 @@ export class ReportContentService implements IReportContentService {
         field: employee.field,
         department: employee.department,
         startDate: employee.startDate,
-        workRatio: employee.workRatio,
+        paidHours: employee.paidHours,
         baseSalary: employee.baseSalary,
         additionalFixedOvertime: employee.additionalFixedOvertime,
         additionalFixedCarAllowance: employee.additionalFixedCarAllowance,

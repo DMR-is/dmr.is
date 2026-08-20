@@ -279,7 +279,7 @@ COMMIT;
 function employeesSql() {
   // Scores from analysis.dataPoints (ordered by employee ordinal).
   const scoreByOrdinal = new Map()
-  analysis.baseSalaryByGenderAndScoreAll.dataPoints.forEach((dp, i) => {
+  analysis.regularHourlyWageByScoreAll.dataPoints.forEach((dp, i) => {
     scoreByOrdinal.set(i + 1, dp.score)
   })
 
@@ -298,7 +298,7 @@ function employeesSql() {
       return (
         `  (${escStr(empId)}, ${escStr(RICH_SAL)}, ${num(e.ordinal)}, ` +
         `${escStr(e.field)}, ${escStr(e.department)}, ` +
-        `${escStr(e.startDate)}, ${num(e.workRatio)}, ` +
+        `${escStr(e.startDate)}, ${num(e.paidHours)}, ` +
         `${num(Number(e.baseSalary).toFixed(2))}, ` +
         `${nullableSalary(e.additionalFixedOvertime)}, ${nullableSalary(e.additionalFixedCarAllowance)}, ` +
         `${nullableSalary(e.bonusOccasionalCarAllowance)}, ${nullableSalary(e.bonusOccasionalOvertime)}, ` +
@@ -330,7 +330,7 @@ function employeesSql() {
 BEGIN;
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
-  start_date, work_ratio, base_salary,
+  start_date, paid_hours, base_salary,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
@@ -346,17 +346,16 @@ COMMIT;
 // 7. report_result + per-role results ---------------------------------------
 function resultSql() {
   const resultId = newUid()
-  const agg = analysis.baseSalaryByGenderAndScoreAll
+  const agg = analysis.regularHourlyWageByScoreAll
 
-  const baseSnapshot = {
+  // One snapshot now, on reglulegt tímakaup — the base/full pair is gone
+  // (a base-pay-only numerator over hours that include overtime is incoherent).
+  const salarySnapshot = {
     genderPayGap: agg.totals.wageGapPercent,
     maleCount: agg.totals.maleCount,
     femaleCount: agg.totals.femaleCount,
     overallAverageSalary: agg.totals.overallAverageSalary,
-  }
-
-  const fullSnapshot = {
-    baseSalaryByGenderAndScoreAll: agg,
+    regularHourlyWageByScoreAll: agg,
     employeeCount: excel.employees.length,
     roleCount: excel.roles.length,
   }
@@ -380,7 +379,7 @@ function resultSql() {
     const avg = (arr) =>
       arr.length === 0
         ? 0
-        : arr.reduce((s, e) => s + Number(e.baseSalary) / e.workRatio, 0) /
+        : arr.reduce((s, e) => s + regularHourlyWage(e), 0) /
           arr.length
     const maleAvg = avg(males)
     const femaleAvg = avg(females)
@@ -421,9 +420,9 @@ function resultSql() {
 BEGIN;
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
-  calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
-VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 1.95, 'v1',
-  ${escJson(baseSnapshot)}, ${escJson(fullSnapshot)}, ${escJson(outlierSnapshot)});
+  calculation_version, salary_snapshot, outlier_analysis_snapshot)
+VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 1.95, 'v2',
+  ${escJson(salarySnapshot)}, ${escJson(outlierSnapshot)});
 
 INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
 ${roleResultValues};
@@ -547,4 +546,23 @@ DELETE FROM company             WHERE id = ${escStr(RICH_CID)};
 
 COMMIT;
   `
+}
+
+/**
+ * Reglulegt tímakaup for a seeded employee row — regluleg laun (all seven pay
+ * fields, unentered treated as 0) over greiddar stundir. Mirrors
+ * `getRegularHourlyWage` in the API; kept as a local copy because seeders are
+ * plain JS run by sequelize-cli and cannot import from `src`.
+ */
+function regularHourlyWage(e) {
+  const n = (v) => Number(v ?? 0)
+  const regularWages =
+    n(e.baseSalary) +
+    n(e.additionalFixedOvertime) +
+    n(e.additionalFixedCarAllowance) +
+    n(e.bonusOccasionalCarAllowance) +
+    n(e.bonusOccasionalOvertime) +
+    n(e.bonusPayments) +
+    n(e.bonusOther)
+  return regularWages / Number(e.paidHours)
 }

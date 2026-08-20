@@ -13,7 +13,7 @@ export class ScatterDataPointDto {
   score!: number
 
   @ApiNumber()
-  adjustedSalary!: number
+  regularHourlyWage!: number
 
   @ApiEnum(GenderEnum)
   gender!: GenderEnum

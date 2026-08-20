@@ -92,7 +92,7 @@ const writeEmployeeRow = (
     name: string
     role: string
     gender: string
-    workRatio: number
+    paidHours: number
     baseSalary: number
     additionalFixedOvertime: number | null
     additionalFixedCarAllowance: number | null
@@ -111,7 +111,7 @@ const writeEmployeeRow = (
   s.getCell(`B${r}`).value = values.name
   s.getCell(`C${r}`).value = values.role
   s.getCell(`D${r}`).value = values.gender
-  s.getCell(`E${r}`).value = values.workRatio
+  s.getCell(`E${r}`).value = values.paidHours
   s.getCell(`F${r}`).value = values.field
   s.getCell(`G${r}`).value = values.department
   s.getCell(`H${r}`).value = values.startDate
@@ -252,7 +252,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 1',
     role: 'Forstöðumaður',
     gender: 'Kona',
-    workRatio: 1,
+    paidHours: 1,
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -268,7 +268,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 2',
     role: 'Sérfræðingur',
     gender: 'Karl',
-    workRatio: 1,
+    paidHours: 1,
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -284,7 +284,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 3',
     role: 'Verkstjóri',
     gender: 'Kona',
-    workRatio: 0.8,
+    paidHours: 0.8,
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -376,14 +376,14 @@ describe('parseWorkbook', () => {
       expect(role?.stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
 
-    it('parses employees with Icelandic → enum translation + workRatio preserved as 0…1', () => {
+    it('parses employees with Icelandic → enum translation + paidHours preserved as 0…1', () => {
       const emp = report.employees.find((e) => e.ordinal === 3)
       expect(emp).toEqual(
         expect.objectContaining({
           ordinal: 3,
           roleTitle: 'Verkstjóri',
           gender: GenderEnum.FEMALE,
-          workRatio: 0.8,
+          paidHours: 0.8,
           baseSalary: 600000,
           startDate: '2022-03-15',
         }),
@@ -420,7 +420,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -474,7 +474,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -520,7 +520,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -536,7 +536,7 @@ describe('parseWorkbook', () => {
         name: 'B',
         role: 'R',
         gender: 'Karl',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -574,7 +574,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -613,7 +613,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Other',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -637,13 +637,15 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects out-of-range workRatio', async () => {
+    // 2080 is the mistake this bound exists for: the annual total entered
+    // where the 12-month basis asks for a monthly average.
+    it('rejects paid hours above the template bound', async () => {
       const wb = await loadTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1.5,
+        paidHours: 2080,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -664,7 +666,7 @@ describe('parseWorkbook', () => {
       )
       expect(
         errors.some((e) =>
-          e.message.includes('Starfshlutfall 1.5 er utan leyfilegs bils'),
+          e.message.includes('Greiddar stundir 2080 eru utan leyfilegs bils'),
         ),
       ).toBe(true)
     })
@@ -677,7 +679,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: '',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -711,7 +713,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 1,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -750,7 +752,7 @@ describe('parseWorkbook', () => {
           name: `Nafn ${i + 1}`,
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          workRatio: 1,
+          paidHours: 1,
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
@@ -794,7 +796,7 @@ describe('parseWorkbook', () => {
           name: `Nafn ${i}`,
           role: 'Hlutverk',
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          workRatio: 1,
+          paidHours: 1,
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,

@@ -4,6 +4,12 @@
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
 // Helper: pad a number into a UUID-shaped constant
+/** Greiddar stundir for every seeded employee — a standard Icelandic month.
+ * Constant on purpose: a uniform denominator scales every wage equally, so each
+ * scenario's intended outlier structure survives the move to an hourly basis
+ * unchanged. */
+const SEEDED_PAID_HOURS = 173.33
+
 const cid = (n) =>
   `c${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
 const eid = (n) =>
@@ -505,11 +511,12 @@ function salaryScaffoldSql(
       : ''
 
   const size = companyIdN === 18 ? 'MEDIUM' : 'LARGE'
+  // 850.000 kr over SEEDED_PAID_HOURS ≈ 4.904 kr./klst.; predicted ≈ 4.039.
   const outlierSnap = hasOutliers
-    ? '{"employees":[{"ordinal":1,"adjustedBaseSalary":850000,"predictedBaseSalary":700000,"direction":"ABOVE","differencePercent":21.43,"scoreBucketRangeFrom":null,"scoreBucketRangeTo":null,"allowedDifferencePercent":3.9}]}'
+    ? '{"employees":[{"ordinal":1,"regularHourlyWage":4904.52,"predictedHourlyWage":4038.54,"direction":"ABOVE","differencePercent":21.43,"scoreBucketRangeFrom":null,"scoreBucketRangeTo":null,"allowedDifferencePercent":3.9}]}'
     : '{"employees":[]}'
-  const baseSnap = hasOutliers ? '{"genderPayGap":9.1}' : '{"genderPayGap":0.8}'
-  const fullSnap = hasOutliers
+  // One snapshot, not base/full — see the paid-hours migration.
+  const salarySnap = hasOutliers
     ? '{"genderPayGap":9.1,"roles":3,"employees":6}'
     : '{"genderPayGap":0.8,"roles":3,"employees":6}'
 
@@ -563,20 +570,20 @@ INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, re
   ('${uid(base + 75)}', '${roleIds[2]}',  '${stepIds[3]}');
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
-  start_date, work_ratio, base_salary,
+  start_date, paid_hours, base_salary,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
-  ('${empIds[0]}','${reportId}',1,'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[1]}','${reportId}',2,'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[2]}','${reportId}',3,'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[3]}','${reportId}',4,'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[4]}','${reportId}',5,'Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00),
-  ('${empIds[5]}','${reportId}',6,'Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00);
+  ('${empIds[0]}','${reportId}',1,'Viðskiptafræði','Stjórnun', '2015-01-15',${SEEDED_PAID_HOURS},${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[1]}','${reportId}',2,'Viðskiptafræði','Stjórnun', '2017-03-01',${SEEDED_PAID_HOURS},703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
+  ('${empIds[2]}','${reportId}',3,'Tölvunarfræði', 'Þróun',    '2018-06-01',${SEEDED_PAID_HOURS},602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[3]}','${reportId}',4,'Tölvunarfræði', 'Þróun',    '2019-09-01',${SEEDED_PAID_HOURS},598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
+  ('${empIds[4]}','${reportId}',5,'Almenn námsbraut','Þjónusta','2020-01-01',${SEEDED_PAID_HOURS},502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00),
+  ('${empIds[5]}','${reportId}',6,'Almenn námsbraut','Þjónusta','2021-06-01',${SEEDED_PAID_HOURS},498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00);
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
-  calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
-VALUES ('${resultId}', '${reportId}', 3.90, 'v1', '${baseSnap}', '${fullSnap}', '${outlierSnap}');
+  calculation_version, salary_snapshot, outlier_analysis_snapshot)
+VALUES ('${resultId}', '${reportId}', 3.90, 'v2', '${salarySnap}', '${outlierSnap}');
 
 INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
   ('${roleResultIds[0]}','${resultId}','${roleIds[0]}','Verkefnastjóri','{"genderPayGap":${hasOutliers ? 9.1 : 0.6}}','{"employees":2}'),

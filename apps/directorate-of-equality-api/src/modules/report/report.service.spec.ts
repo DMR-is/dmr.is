@@ -934,8 +934,8 @@ describe('ReportService.getOutliers', () => {
           employees: [
             {
               ordinal: 1,
-              adjustedBaseSalary: 950000,
-              predictedBaseSalary: 1000000,
+              regularHourlyWage: 950000,
+              predictedHourlyWage: 1000000,
               scoreBucketRangeFrom: 500,
               scoreBucketRangeTo: 600,
               direction: 'BELOW',
@@ -972,8 +972,8 @@ describe('ReportService.getOutliers', () => {
     },
     fromModel(
       analysis: {
-        adjustedBaseSalary?: number
-        predictedBaseSalary?: number | null
+        regularHourlyWage?: number
+        predictedHourlyWage?: number | null
         scoreBucketRangeFrom?: number | null
         scoreBucketRangeTo?: number | null
         direction?: string | null
@@ -997,8 +997,8 @@ describe('ReportService.getOutliers', () => {
         action: group?.action ?? null,
         signatureName: group?.signatureName ?? null,
         signatureRole: group?.signatureRole ?? null,
-        adjustedBaseSalary: analysis?.adjustedBaseSalary ?? null,
-        predictedBaseSalary: analysis?.predictedBaseSalary ?? null,
+        regularHourlyWage: analysis?.regularHourlyWage ?? null,
+        predictedHourlyWage: analysis?.predictedHourlyWage ?? null,
         scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
         scoreBucketRangeTo: analysis?.scoreBucketRangeTo ?? null,
         direction: analysis?.direction ?? null,
@@ -1033,8 +1033,8 @@ describe('ReportService.getOutliers', () => {
         groupId: 'group-1',
         groupName: 'Tenure',
         reason: 'Tenure premium',
-        adjustedBaseSalary: 950000,
-        predictedBaseSalary: 1000000,
+        regularHourlyWage: 950000,
+        predictedHourlyWage: 1000000,
         scoreBucketRangeFrom: 500,
         scoreBucketRangeTo: 600,
         direction: 'BELOW',

@@ -112,16 +112,31 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
   }
 
   /**
-   * Absolute male/female base-pay gap percent from the persisted result
-   * snapshot. Absolute because the magnitude of the gap is what matters, not
-   * its direction. Null when no result row exists or the metric is uncomputable
-   * (e.g. a cohort is empty).
+   * Absolute male/female gap percent on reglulegt tímakaup, from the persisted
+   * result snapshot. Absolute because the magnitude of the gap is what matters,
+   * not its direction. Null when no result row exists or the metric is
+   * uncomputable (e.g. a cohort is empty).
+   *
+   * ⚠️ **Every access below is optional-chained, so a wrong path here reads as
+   * `null` and silently SKIPS the gap check in `decide()` rather than failing.**
+   * That would auto-approve reports which should route to `NEEDS_REVIEW` — and
+   * it is currently masked by `AUTO_REVIEW_ENFORCE = false`, so it would only
+   * surface in production the day enforcement is switched on. The rename from
+   * `baseSnapshot` to `salarySnapshot` turned that into a compile error once;
+   * it will not do so again if a future field is merely re-nested. There is a
+   * regression test asserting this returns non-null for a computable report —
+   * keep it.
+   *
+   * NB: this is the *unadjusted* cohort-mean gap, unchanged in meaning by the
+   * move to hourly. It is not the Oaxaca-Blinder unexplained term that the
+   * 3,9% benchmark will test — that arrives with the decomposition snapshot.
    */
   private async readGapPercent(reportId: string): Promise<number | null> {
     const result = await this.reportResultModel.findOne({
       where: { reportId },
     })
-    const maleFemale = result?.baseSnapshot?.totals?.salaryDifferences?.maleFemale
+    const maleFemale =
+      result?.salarySnapshot?.totals?.salaryDifferences?.maleFemale
     return maleFemale === null || maleFemale === undefined
       ? null
       : Math.abs(maleFemale)

@@ -8,7 +8,7 @@ describe('ReportResultController', () => {
       intercept: null,
       sampleCount: 0,
       scoreMean: null,
-      adjustedBaseSalaryMean: null,
+      hourlyWageMean: null,
       rSquared: null,
       scoreRangeFrom: null,
       scoreRangeTo: null,

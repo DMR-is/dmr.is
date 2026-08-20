@@ -49,7 +49,7 @@ const employee = (
   field: 'x',
   department: 'x',
   startDate: '2024-01-01',
-  workRatio: 1,
+  paidHours: 1,
   baseSalary: 1000,
   additionalFixedOvertime: 0,
   additionalFixedCarAllowance: null,

@@ -10,6 +10,14 @@ import {
   roundSalaryResultSnapshot,
 } from './compensation-aggregates'
 
+/**
+ * A full month with some overtime. Fixtures express pay as a monthly figure and
+ * divide by this, so `baseSalary / FIXTURE_PAID_HOURS` reads as a plausible
+ * kr./klst. rate. Using 1 here would make every assertion pass while asserting
+ * a 1.000.000 kr/hour wage.
+ */
+const FIXTURE_PAID_HOURS = 200
+
 describe('compensation-aggregates', () => {
   it('bundles NEUTRAL into FEMALE for cohort metrics and wage gaps', () => {
     const snapshot = computeSalaryAggregateSnapshot([
@@ -120,14 +128,20 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('computes report-level base/full snapshots with score buckets', () => {
+  // ONE snapshot, on reglulegt tímakaup. There is deliberately no base-pay-only
+  // counterpart: `baseSalary / paidHours` would divide base pay alone by a
+  // denominator that includes the overtime hours which earned the additional and
+  // bonus pay. Under the old FTE divisor both variants were coherent; under an
+  // hours divisor only the total-pay numerator is.
+  it('computes one report-level hourly-wage snapshot with score buckets', () => {
     const aggregates = computeCompensationAggregates({
       employees: [
         {
           reportEmployeeRoleId: 'role-b',
           score: 120,
           gender: GenderEnum.MALE,
-          workRatio: 1,
+          // 550.000 regluleg laun over 200 klst → 2.750 kr./klst.
+          paidHours: 200,
           baseSalary: 400000,
           additionalSalary: 100000,
           bonusSalary: 50000,
@@ -136,7 +150,9 @@ describe('compensation-aggregates', () => {
           reportEmployeeRoleId: 'role-a',
           score: 220,
           gender: GenderEnum.FEMALE,
-          workRatio: 0.5,
+          // Part-time: 350.000 over 100 klst → 3.500 kr./klst. Note the HIGHER
+          // hourly rate on the LOWER monthly pay — the whole point of the switch.
+          paidHours: 100,
           baseSalary: 300000,
           additionalSalary: 50000,
           bonusSalary: null,
@@ -144,15 +160,14 @@ describe('compensation-aggregates', () => {
       ],
     })
 
-    expect(aggregates.report.base.totals.overall.average).toBe(500000)
-    expect(aggregates.report.full.totals.overall.average).toBe(625000)
-    expect(aggregates.report.base.scoreBuckets).toEqual([
+    expect(aggregates.report.snapshot.totals.overall.average).toBe(3125)
+    expect(aggregates.report.snapshot.scoreBuckets).toEqual([
       expect.objectContaining({
         rangeFrom: 100,
         rangeTo: 200,
         counts: { overall: 1, male: 1, female: 0, neutral: 0 },
         totals: expect.objectContaining({
-          overall: expect.objectContaining({ average: 400000 }),
+          overall: expect.objectContaining({ average: 2750 }),
         }),
       }),
       expect.objectContaining({
@@ -160,10 +175,28 @@ describe('compensation-aggregates', () => {
         rangeTo: 300,
         counts: { overall: 1, male: 0, female: 1, neutral: 0 },
         totals: expect.objectContaining({
-          overall: expect.objectContaining({ average: 600000 }),
+          overall: expect.objectContaining({ average: 3500 }),
         }),
       }),
     ])
+  })
+
+  it('treats a null bonusSalary as zero in the hourly rate', () => {
+    const aggregates = computeCompensationAggregates({
+      employees: [
+        {
+          reportEmployeeRoleId: 'role-a',
+          score: 100,
+          gender: GenderEnum.MALE,
+          paidHours: 100,
+          baseSalary: 300000,
+          additionalSalary: 50000,
+          bonusSalary: null,
+        },
+      ],
+    })
+
+    expect(aggregates.report.snapshot.totals.overall.average).toBe(3500)
   })
 
   it('rounds result snapshots including bucket totals', () => {
@@ -266,7 +299,7 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('computes a regression analysis with predicted base salary per exact score', () => {
+  it('computes a regression analysis with a predicted hourly wage per exact score', () => {
     const analysis = computeSalaryOutlierAnalysis({
       thresholdPercent: 3.9,
       employees: [
@@ -276,13 +309,14 @@ describe('compensation-aggregates', () => {
       ],
     })
 
-    expect(analysis.regressions.overall.slope).toBeCloseTo(1000, 4)
-    expect(analysis.regressions.overall.intercept).toBeCloseTo(900000, 4)
+    // 5.000 / 5.500 / 6.000 kr./klst. over scores 100/200/300.
+    expect(analysis.regressions.overall.slope).toBeCloseTo(5, 4)
+    expect(analysis.regressions.overall.intercept).toBeCloseTo(4500, 4)
     expect(analysis.employees[1]).toMatchObject({
       ordinal: 2,
       score: 200,
-      adjustedBaseSalary: 1100000,
-      predictedBaseSalary: 1100000,
+      regularHourlyWage: 5500,
+      predictedHourlyWage: 5500,
       isOutlier: false,
     })
   })
@@ -319,11 +353,11 @@ describe('compensation-aggregates', () => {
     })
 
     expect(analysis.regressions.female.sampleCount).toBe(2)
-    expect(analysis.regressions.female.slope).toBeCloseTo(1000, 4)
+    expect(analysis.regressions.female.slope).toBeCloseTo(5, 4)
     expect(analysis.regressions.male.sampleCount).toBe(2)
-    expect(analysis.regressions.male.slope).toBeCloseTo(1000, 4)
-    expect(analysis.regressions.male.intercept).toBeCloseTo(900000, 4)
-    expect(analysis.regressions.female.intercept).toBeCloseTo(700000, 4)
+    expect(analysis.regressions.male.slope).toBeCloseTo(5, 4)
+    expect(analysis.regressions.male.intercept).toBeCloseTo(4500, 4)
+    expect(analysis.regressions.female.intercept).toBeCloseTo(3500, 4)
     expect(analysis.regressions.neutral.sampleCount).toBe(0)
     expect(analysis.regressions.neutral.slope).toBeNull()
   })
@@ -335,8 +369,10 @@ describe('compensation-aggregates', () => {
       ordinal: 0,
       score: 100,
       gender: GenderEnum.FEMALE,
-      workRatio: 1,
+      paidHours: FIXTURE_PAID_HOURS,
       baseSalary: 1000000,
+      additionalSalary: 0,
+      bonusSalary: null,
       ...overrides,
     })
 
@@ -350,7 +386,7 @@ describe('compensation-aggregates', () => {
       baseEmployee({ ordinal: 7, score: 700, baseSalary: 1500000 }),
     ]
 
-    it('returns employees whose adjusted base salary deviates beyond the half-threshold band around the regression prediction', () => {
+    it('returns employees whose hourly wage deviates beyond the half-threshold band around the regression prediction', () => {
       const outliers = detectOutliers({
         thresholdPercent: 3.9,
         employees: regressionEmployees(),
@@ -360,7 +396,7 @@ describe('compensation-aggregates', () => {
       expect(outliers[0]).toMatchObject({
         ordinal: 1,
         score: 100,
-        adjustedBaseSalary: 850000,
+        regularHourlyWage: 4250,
         assessment: {
           isOutlier: true,
           direction: 'BELOW',
@@ -369,32 +405,37 @@ describe('compensation-aggregates', () => {
         scoreBucketRangeFrom: 100,
         scoreBucketRangeTo: 200,
       })
-      expect(outliers[0].predictedBaseSalary).toBeCloseTo(876785.71, 2)
+      expect(outliers[0].predictedHourlyWage).toBeCloseTo(4383.93, 2)
       expect(outliers[0].assessment.differencePercent).toBeCloseTo(-3.055, 3)
     })
 
-    it('honours workRatio when adjusting base salary for detection', () => {
+    // The point of the whole switch: half the monthly pay for half the hours is
+    // the SAME hourly rate, so neither employee is an outlier relative to the
+    // other. Under the old FTE divisor this pair was also equal — but only
+    // because starfshlutfall happened to track hours, which is exactly the
+    // assumption that failed for overtime.
+    it('gives equal hourly wages for proportionally fewer hours', () => {
       const analysis = computeSalaryOutlierAnalysis({
         thresholdPercent: 3.9,
         employees: [
           baseEmployee({
             ordinal: 1,
             score: 250,
-            workRatio: 1,
+            paidHours: 200,
             baseSalary: 1000000,
           }),
           baseEmployee({
             ordinal: 2,
             score: 250,
-            workRatio: 0.5,
+            paidHours: 100,
             baseSalary: 500000,
           }),
         ],
       })
 
       expect(
-        analysis.employees.map((employee) => employee.adjustedBaseSalary),
-      ).toEqual([1000000, 1000000])
+        analysis.employees.map((employee) => employee.regularHourlyWage),
+      ).toEqual([5000, 5000])
       expect(
         analysis.employees.map((employee) => employee.scoreBucketRangeFrom),
       ).toEqual([200, 200])
@@ -453,8 +494,10 @@ function makeOutlierEmployee(
     ordinal: 0,
     score: 100,
     gender: GenderEnum.FEMALE,
-    workRatio: 1,
+    paidHours: FIXTURE_PAID_HOURS,
     baseSalary: 1000000,
+    additionalSalary: 0,
+    bonusSalary: null,
     ...overrides,
   }
 }

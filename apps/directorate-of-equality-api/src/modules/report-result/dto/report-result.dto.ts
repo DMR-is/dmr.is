@@ -1,9 +1,12 @@
 import {
+  ApiArray,
   ApiBoolean,
   ApiDto,
   ApiDtoArray,
   ApiEnum,
   ApiNumber,
+  ApiOptionalDto,
+  ApiOptionalEnum,
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
@@ -11,6 +14,14 @@ import {
 } from '@dmr.is/decorators'
 
 import { SalaryOutlierAnalysisMethodEnum } from '../../report/lib/compensation-aggregates'
+import {
+  PayStatusEnum,
+  PooledReferenceModeEnum,
+  WageGapBlockerEnum,
+  WageGapDecompositionMethodEnum,
+  WageGapDirectionEnum,
+  WageGapWarningEnum,
+} from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum } from '../../report/models/report.model'
 
 export class SalaryAggregateMetricsDto {
@@ -114,7 +125,7 @@ export class SalaryOutlierRegressionDto {
   scoreMean!: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  adjustedBaseSalaryMean!: number | null
+  hourlyWageMean!: number | null
 
   @ApiOptionalNumber({ nullable: true })
   rSquared!: number | null
@@ -151,10 +162,10 @@ export class SalaryOutlierAnalysisEmployeeDto {
   gender!: GenderEnum
 
   @ApiNumber()
-  adjustedBaseSalary!: number
+  regularHourlyWage!: number
 
   @ApiOptionalNumber({ nullable: true })
-  predictedBaseSalary!: number | null
+  predictedHourlyWage!: number | null
 
   @ApiOptionalNumber({ nullable: true })
   scoreBucketRangeFrom!: number | null
@@ -212,6 +223,259 @@ export class ReportRoleResultDto {
   full!: ReportSalaryResultSnapshotDto
 }
 
+// ─── Oaxaca-Blinder decomposition ──────────────────────────────────────────
+
+/**
+ * Per-employee attribution. Present for the audit trail — how the lágmarksmengi
+ * was derived — NOT as a table for the UI to render. The UI shows the
+ * lágmarksmengi above the benchmark and nothing individual below it.
+ */
+export class WageGapEmployeeDto {
+  @ApiNumber()
+  ordinal!: number
+
+  @ApiEnum(GenderEnum)
+  gender!: GenderEnum
+
+  @ApiNumber()
+  score!: number
+
+  @ApiNumber({ description: 'Raun reglulegt tímakaup (kr./klst.).' })
+  hourlyWage!: number
+
+  @ApiNumber({
+    description: 'Væntanlegt tímakaup at this score, from the pooled fit.',
+  })
+  expectedHourlyWage!: number
+
+  @ApiNumber({ description: 'frávik %: (raun − væntanlegt) / væntanlegt × 100.' })
+  deviationPercent!: number
+
+  @ApiNumber({ description: 'Residual in log points. Signed.' })
+  residualLog!: number
+
+  @ApiNumber({
+    description:
+      'This employee\'s contribution to óskýrt, in log points. Signed; sums exactly to oskyrtLog across all employees.',
+  })
+  contributionLog!: number
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'contributionLog / oskyrtLog × 100. Null when óskýrt is 0.',
+  })
+  contributionShare!: number | null
+
+  @ApiEnum(PayStatusEnum)
+  payStatus!: PayStatusEnum
+
+  @ApiBoolean({
+    description: 'Underpaid AND of the disadvantaged gender — i.e. liftable.',
+  })
+  isCorrectable!: boolean
+
+  @ApiBoolean({
+    description:
+      'Member of the lágmarksmengi: the fewest corrections that bring óskýrt under the benchmark.',
+  })
+  inMinimumSet!: boolean
+}
+
+export class WageGapTwofoldDto {
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'skýrt — the part explained by starfsmatsstig, log points.',
+  })
+  explained!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'óskýrt — the residual. Identical to oskyrtLog.',
+  })
+  unexplained!: number | null
+}
+
+export class WageGapCountsDto {
+  @ApiNumber()
+  male!: number
+
+  @ApiNumber()
+  female!: number
+
+  @ApiNumber({ description: 'Rows excluded for a non-positive hourly wage.' })
+  excluded!: number
+}
+
+export class WageGapPooledFitDto {
+  @ApiOptionalNumber({ nullable: true })
+  slope!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  intercept!: number | null
+
+  @ApiNumber()
+  sampleCount!: number
+
+  @ApiOptionalNumber({ nullable: true })
+  xMean!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  yMean!: number | null
+
+  @ApiNumber({
+    description:
+      'Σ(score − mean)². Zero means no slope is identifiable — test THIS, not slope !== null, because a degenerate fit returns slope 0.',
+  })
+  xSumSquares!: number
+
+  @ApiOptionalNumber({ nullable: true })
+  rSquared!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  xRangeFrom!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  xRangeTo!: number | null
+}
+
+/**
+ * Kynbundinn launamunur, decomposed.
+ *
+ * Two figures are displayed and they are NOT interchangeable:
+ *
+ * - `oskyrtPercent` — **leiðréttur launamunur**, the Oaxaca unexplained term.
+ *   This is the figure compared to the 3,9% benchmark.
+ * - `rawGapPercent` — **óleiðréttur launamunur**, the plain difference in mean
+ *   tímakaup. Informational; it has no compliance role.
+ *
+ * They use different averages by design (geometric vs arithmetic), so they do
+ * not decompose into one another, and leiðréttur can legitimately exceed
+ * óleiðréttur when the job-score mix favours the lower-paid group.
+ *
+ * Percentages are **magnitudes**; direction is carried separately so the
+ * benchmark test is direction-agnostic. Codes only — the web maps blockers and
+ * warnings to Icelandic copy.
+ */
+export class WageGapDecompositionDto {
+  @ApiEnum(WageGapDecompositionMethodEnum)
+  method!: WageGapDecompositionMethodEnum
+
+  @ApiEnum(PooledReferenceModeEnum)
+  pooledReferenceMode!: PooledReferenceModeEnum
+
+  @ApiBoolean()
+  rawGapAvailable!: boolean
+
+  @ApiArray({
+    enum: WageGapBlockerEnum,
+    isArray: true,
+    description:
+      'Codes only — the web maps these to Icelandic copy. Empty when the raw gap is available.',
+  })
+  rawGapBlockers!: WageGapBlockerEnum[]
+
+  @ApiBoolean()
+  oskyrtAvailable!: boolean
+
+  @ApiArray({
+    enum: WageGapBlockerEnum,
+    isArray: true,
+    description: 'Echoes the raw-tier blockers so consumers need not reason about tiers.',
+  })
+  oskyrtBlockers!: WageGapBlockerEnum[]
+
+  @ApiArray({
+    enum: WageGapWarningEnum,
+    isArray: true,
+    description:
+      'Soft: the figures ARE computed but must be shown caveated.',
+  })
+  warnings!: WageGapWarningEnum[]
+
+  @ApiDto(WageGapCountsDto, {
+    description:
+      'Always real numbers, even when the figures are unavailable — this is the actionable part of the message.',
+  })
+  counts!: WageGapCountsDto
+
+  @ApiOptionalDto(WageGapPooledFitDto, { nullable: true })
+  pooledFit!: WageGapPooledFitDto | null
+
+  @ApiOptionalNumber({ nullable: true, description: 'Δ in log points. Signed.' })
+  rawGapLog!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'óskýrt in log points. Signed. Source of truth for the benchmark test.',
+  })
+  oskyrtLog!: number | null
+
+  @ApiDto(WageGapTwofoldDto)
+  twofold!: WageGapTwofoldDto
+
+  @ApiOptionalNumber({ nullable: true, description: 'Arithmetic mean, kr./klst.' })
+  meanHourlyWageMale!: number | null
+
+  @ApiOptionalNumber({ nullable: true, description: 'Arithmetic mean, kr./klst.' })
+  meanHourlyWageFemale!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'ÓLEIÐRÉTTUR as displayed: (higher − lower) / higher on arithmetic means. Magnitude.',
+  })
+  rawGapPercent!: number | null
+
+  @ApiOptionalEnum(WageGapDirectionEnum, { nullable: true })
+  rawGapDirection!: WageGapDirectionEnum | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'Geometric equivalent of rawGapPercent. Stored for basis swaps.',
+  })
+  rawGapPercentGeometric!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'LEIÐRÉTTUR launamunur: 1 − exp(−|óskýrt|). Magnitude. THE figure tested against the benchmark.',
+  })
+  oskyrtPercent!: number | null
+
+  @ApiOptionalEnum(WageGapDirectionEnum, { nullable: true })
+  oskyrtDirection!: WageGapDirectionEnum | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'exp(|óskýrt|) − 1 — the lower-paid-group basis. Stored, not displayed.',
+  })
+  oskyrtPercentLowerBase!: number | null
+
+  @ApiOptionalEnum(WageGapDirectionEnum, { nullable: true })
+  disadvantagedGender!: WageGapDirectionEnum | null
+
+  @ApiDtoArray(WageGapEmployeeDto)
+  employees!: WageGapEmployeeDto[]
+
+  @ApiNumber({ description: 'All underpaid employees of the disadvantaged gender.' })
+  correctableCount!: number
+
+  @ApiNumber({ description: 'Size of the lágmarksmengi. 0 when already compliant.' })
+  minimumSetSize!: number
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'óskýrt in log points after correcting the lágmarksmengi.',
+  })
+  oskyrtLogAfterMinimumSet!: number | null
+
+  @ApiNumber({ description: 'The benchmark in log points: −log(1 − benchmark/100).' })
+  thresholdLog!: number
+
+  @ApiNumber({ description: 'The configured benchmark percent (e.g. 3.9).' })
+  benchmarkPercent!: number
+}
+
 export class ReportResultDto {
   @ApiUUId()
   id!: string
@@ -225,12 +489,15 @@ export class ReportResultDto {
   @ApiString()
   calculationVersion!: string
 
-  @ApiDto(ReportSalaryResultSnapshotDto)
-  base!: ReportSalaryResultSnapshotDto
-
-  @ApiDto(ReportSalaryResultSnapshotDto)
-  full!: ReportSalaryResultSnapshotDto
+  @ApiDto(ReportSalaryResultSnapshotDto, {
+    description:
+      'Frosin samantekt á reglulegu tímakaupi við innsendingu (heildartölur + stigabil).',
+  })
+  salary!: ReportSalaryResultSnapshotDto
 
   @ApiDto(SalaryOutlierAnalysisDto)
   outlierAnalysis!: SalaryOutlierAnalysisDto
+
+  @ApiDto(WageGapDecompositionDto)
+  wageGapDecomposition!: WageGapDecompositionDto
 }

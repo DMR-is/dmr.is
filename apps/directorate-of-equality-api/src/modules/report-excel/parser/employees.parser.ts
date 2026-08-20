@@ -10,10 +10,18 @@
  * as a display handle in the UI where a real name would normally appear.
  * The prefix is random per import and is not a stable key across imports.
  *
- * ## Starfshlutfall (work ratio)
+ * ## Greiddar stundir (paid hours)
  *
- * Stored as the `0…1` decimal the DB model uses (`1` → 100%, `0.85` → 85%).
- * Reject anything outside that range.
+ * All paid hours in the month, **overtime included** — the denominator of
+ * reglulegt tímakaup. Column E carried `Starfshlutfall (0–1)` until the
+ * template moved to an hourly basis; it now carries hours, so a value like
+ * `173.33` is normal and `0.85` is a leftover from the old sheet.
+ *
+ * Accepted range is `> 0` and `<= MAX_PAID_HOURS_PER_MONTH`, matching the
+ * template's own cell validation. The upper bound earns its keep: under
+ * `salary_data_basis = AVERAGE` a submitter who enters the annual total
+ * (~2 080) instead of the monthly average (~173) would otherwise produce a
+ * tímakaup 12× too low, with nothing else to catch it.
  *
  * ## Role auto-discovery
  *
@@ -25,6 +33,10 @@
 
 import ExcelJS from 'exceljs'
 
+import {
+  MAX_PAID_HOURS_PER_MONTH,
+  MIN_PAID_HOURS_PER_MONTH,
+} from '../../../core/constants'
 import { ParsedEmployeeDto, ParsedRoleDto } from '../dto/parsed-report.dto'
 import {
   GENDER_DISPLAY_TO_ENUM,
@@ -53,7 +65,7 @@ const COLS = {
   name: 'B',
   role: 'C',
   gender: 'D',
-  workRatio: 'E',
+  paidHours: 'E',
   field: 'F',
   department: 'G',
   startDate: 'H',
@@ -125,7 +137,7 @@ export type EmployeesParseResult = {
 type RawRow = {
   role: string | null
   genderDisplay: string | null
-  workRatio: number | null
+  paidHours: number | null
   baseSalary: number | null
   additionalFixedOvertime: number | null
   additionalFixedCarAllowance: number | null
@@ -141,7 +153,7 @@ type RawRow = {
 const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
   role: readString(sheet.getCell(`${COLS.role}${r}`)),
   genderDisplay: readString(sheet.getCell(`${COLS.gender}${r}`)),
-  workRatio: readNumber(sheet.getCell(`${COLS.workRatio}${r}`)),
+  paidHours: readNumber(sheet.getCell(`${COLS.paidHours}${r}`)),
   baseSalary: readNumber(sheet.getCell(`${COLS.baseSalary}${r}`)),
   additionalFixedOvertime: readNumber(
     sheet.getCell(`${COLS.additionalFixedOvertime}${r}`),
@@ -165,7 +177,7 @@ const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
 const isEmptyRow = (row: RawRow): boolean =>
   !row.role &&
   !row.genderDisplay &&
-  row.workRatio == null &&
+  row.paidHours == null &&
   row.baseSalary == null &&
   row.additionalFixedOvertime == null &&
   row.additionalFixedCarAllowance == null &&
@@ -193,7 +205,7 @@ const buildEmployee = (
   const {
     role,
     genderDisplay,
-    workRatio,
+    paidHours,
     baseSalary,
     additionalFixedOvertime,
     additionalFixedCarAllowance,
@@ -220,7 +232,7 @@ const buildEmployee = (
   // parents derive their sum as 0.
   if (!role) missingField(COLS.role, 'Starf')
   if (!genderDisplay) missingField(COLS.gender, 'Kyn')
-  if (workRatio == null) missingField(COLS.workRatio, 'Starfshlutfall')
+  if (paidHours == null) missingField(COLS.paidHours, 'Greiddar stundir')
   if (baseSalary == null) missingField(COLS.baseSalary, 'Grunnlaun')
   if (!startDate) missingField(COLS.startDate, 'Ráðningardagsetning')
 
@@ -228,7 +240,7 @@ const buildEmployee = (
     !ok ||
     role == null ||
     genderDisplay == null ||
-    workRatio == null ||
+    paidHours == null ||
     baseSalary == null ||
     startDate == null
   ) {
@@ -244,11 +256,17 @@ const buildEmployee = (
     return null
   }
 
-  if (workRatio < 0 || workRatio > 1) {
+  // The sheet allows 0 and sub-0.01 values; the database does not, and either
+  // would divide by (or round to) zero in reglulegt tímakaup. See the bounds'
+  // docblock in core/constants.
+  if (
+    paidHours < MIN_PAID_HOURS_PER_MONTH ||
+    paidHours > MAX_PAID_HOURS_PER_MONTH
+  ) {
     errors.add(
       SHEETS.EMPLOYEES,
-      `Starfshlutfall ${workRatio} er utan leyfilegs bils 0–1`,
-      { row: r, column: COLS.workRatio },
+      `Greiddar stundir ${paidHours} eru utan leyfilegs bils ${MIN_PAID_HOURS_PER_MONTH}–${MAX_PAID_HOURS_PER_MONTH}`,
+      { row: r, column: COLS.paidHours },
     )
     return null
   }
@@ -262,7 +280,7 @@ const buildEmployee = (
     field,
     department,
     startDate: toIsoDate(startDate),
-    workRatio,
+    paidHours,
     baseSalary,
     additionalFixedOvertime,
     additionalFixedCarAllowance,

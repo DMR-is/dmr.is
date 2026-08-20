@@ -8,8 +8,9 @@
  * - **log(kr./klst.) on starfsmatsstig** — the wage-gap decomposition,
  *
  * and a snapshot type naming one of those would lie about the other. (The
- * previous salary-specific version reported `adjustedBaseSalaryMean: -8.34`
- * when handed log wages, which is how this extraction came about.)
+ * previous salary-specific version would have reported an
+ * `adjustedBaseSalaryMean` of `-8.34` when handed log wages, which is how this
+ * extraction came about.)
  *
  * ## The identity everything downstream rests on
  *

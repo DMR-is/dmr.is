@@ -44,8 +44,8 @@ function makeData(
 
   const statistics: SalaryByGenderAndScoreDto = {
     dataPoints: [
-      { score: 200, adjustedSalary: 600000, gender: GenderEnum.MALE },
-      { score: 500, adjustedSalary: 900000, gender: GenderEnum.FEMALE },
+      { score: 200, regularHourlyWage: 600000, gender: GenderEnum.MALE },
+      { score: 500, regularHourlyWage: 900000, gender: GenderEnum.FEMALE },
     ],
     regressionLine: { slope: 1000, intercept: 400000 },
     // Half of the 3.9% salary-difference threshold, as the DTO documents.

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -11,8 +10,14 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyDto } from '../../company/dto/company.dto'
 import { IConfigService } from '../../config/config.service.interface'
 import {
+  CONFIG_KEYS,
+  parseNumericConfig,
+} from '../../config/lib/numeric-config'
+import {
   type DetectedOutlier,
   detectOutliers,
+  getRegularHourlyWage,
+  type RegularHourlyWageInput,
   resolveAllowedDifferencePercent,
 } from '../../report/lib/compensation-aggregates'
 import { GenderEnum } from '../../report/models/report.enums'
@@ -36,28 +41,21 @@ import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { IReportDraftAnalysisService } from './report-draft-analysis.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftAnalysisService'
-const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
-
 /** A draft employee with its on-the-fly derived score. */
 export type ScoredEmployee = {
   employeeId: string
   ordinal: number
   score: number
   gender: GenderEnum
-  workRatio: number
-  baseSalary: number
-}
+} & RegularHourlyWageInput
 
 /** The salary fields the scoring needs off each employee row. */
 type ScorableEmployee = {
   id: string
   ordinal: number
   gender: GenderEnum
-  workRatio: number
-  baseSalary: number
   reportEmployeeRoleId: string
-}
+} & RegularHourlyWageInput
 
 /**
  * Pure scoring: each employee's total = sum over the UNION of the steps
@@ -87,8 +85,10 @@ export function deriveEmployeeScores(
       ordinal: employee.ordinal,
       score,
       gender: employee.gender,
-      workRatio: employee.workRatio,
+      paidHours: employee.paidHours,
       baseSalary: employee.baseSalary,
+      additionalSalary: employee.additionalSalary,
+      bonusSalary: employee.bonusSalary,
     }
   })
 }
@@ -142,25 +142,27 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
         ordinal: e.ordinal,
         score: e.score,
         gender: e.gender,
-        workRatio: e.workRatio,
+        paidHours: e.paidHours,
         baseSalary: e.baseSalary,
+        additionalSalary: e.additionalSalary,
+        bonusSalary: e.bonusSalary,
       })),
       thresholdPercent,
     })
 
     const chartPoints: EmployeeDataPoint[] = scored.map((e) => ({
       score: e.score,
-      adjustedSalary: e.baseSalary / e.workRatio,
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
-    const baseSalaryByGenderAndScoreAll = buildChartFromEmployeePoints(
+    const regularHourlyWageByScoreAll = buildChartFromEmployeePoints(
       chartPoints,
       resolveAllowedDifferencePercent(thresholdPercent),
     )
 
     return {
       outliers: detected.map(toOutlierDto),
-      baseSalaryByGenderAndScoreAll,
+      regularHourlyWageByScoreAll,
     }
   }
 
@@ -175,8 +177,10 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
         ordinal: e.ordinal,
         score: e.score,
         gender: e.gender,
-        workRatio: e.workRatio,
+        paidHours: e.paidHours,
         baseSalary: e.baseSalary,
+        additionalSalary: e.additionalSalary,
+        bonusSalary: e.bonusSalary,
       })),
       thresholdPercent,
     })
@@ -281,17 +285,13 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" must be numeric`,
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 }
 
@@ -321,8 +321,8 @@ function toOutlierDto(detected: DetectedOutlier): SalaryAnalysisOutlierDto {
 
   return {
     employeeOrdinal: detected.ordinal,
-    adjustedBaseSalary: Math.round(detected.adjustedBaseSalary),
-    predictedBaseSalary: Math.round(detected.predictedBaseSalary),
+    regularHourlyWage: Math.round(detected.regularHourlyWage),
+    predictedHourlyWage: Math.round(detected.predictedHourlyWage),
     scoreBucketRangeFrom: detected.scoreBucketRangeFrom,
     scoreBucketRangeTo: detected.scoreBucketRangeTo,
     direction:

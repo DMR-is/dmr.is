@@ -5,7 +5,7 @@ export type CompensationEmployeeInput = {
   reportEmployeeRoleId: string
   score: number
   gender: GenderEnum
-  workRatio: number
+  paidHours: number
   baseSalary: number
   additionalSalary: number
   bonusSalary: number | null
@@ -75,13 +75,12 @@ export type SalaryOutlierAssessment = {
 
 export type CompensationAggregateResult = {
   report: {
-    base: SalaryResultSnapshot
-    full: SalaryResultSnapshot
+    snapshot: SalaryResultSnapshot
   }
 }
 
 export enum SalaryOutlierAnalysisMethodEnum {
-  BASE_SALARY_LINEAR_REGRESSION_BY_SCORE = 'BASE_SALARY_LINEAR_REGRESSION_BY_SCORE',
+  REGULAR_HOURLY_WAGE_LINEAR_REGRESSION_BY_SCORE = 'REGULAR_HOURLY_WAGE_LINEAR_REGRESSION_BY_SCORE',
 }
 
 export const SCORE_BUCKET_WIDTH = 100
@@ -91,7 +90,7 @@ export type SalaryRegressionSnapshot = {
   intercept: number | null
   sampleCount: number
   scoreMean: number | null
-  adjustedBaseSalaryMean: number | null
+  hourlyWageMean: number | null
   rSquared: number | null
   scoreRangeFrom: number | null
   scoreRangeTo: number | null
@@ -116,8 +115,8 @@ export type SalaryOutlierAnalysisEmployeeSnapshot = {
   ordinal: number
   score: number
   gender: GenderEnum
-  adjustedBaseSalary: number
-  predictedBaseSalary: number | null
+  regularHourlyWage: number
+  predictedHourlyWage: number | null
   scoreBucketRangeFrom: number | null
   scoreBucketRangeTo: number | null
   direction: SalaryOutlierDirection | null
@@ -142,27 +141,37 @@ type AggregateGroup = {
 }
 
 /**
- * The salary fields the adjusted-salary helpers actually read — deliberately
- * score-independent so they accept a `report_employee` row whose `score` may be
+ * The pay fields {@link getRegularHourlyWage} reads — deliberately
+ * score-independent so it accepts a `report_employee` row whose `score` may be
  * NULL (a draft) as well as a fully-formed `CompensationEmployeeInput`.
  */
-export type AdjustedSalaryInput = {
-  workRatio: number
+export type RegularHourlyWageInput = {
+  paidHours: number
   baseSalary: number
   additionalSalary: number
   bonusSalary: number | null
 }
 
-export function getAdjustedBaseSalary(employee: AdjustedSalaryInput): number {
-  return employee.baseSalary / employee.workRatio
-}
-
-export function getAdjustedFullSalary(employee: AdjustedSalaryInput): number {
+/**
+ * Reglulegt tímakaup — the single pay quantity every salary statistic is
+ * evaluated on, per the regulation's *"reglulegum launum, reiknuðum niður á
+ * tímakaup"*.
+ *
+ * Replaces the previous pair of adjusted-salary helpers. There is no
+ * base-pay-only counterpart **by construction**, not merely because nothing
+ * needed one: `baseSalary / paidHours` would divide a base-pay-only numerator
+ * by a denominator that includes the overtime hours which generated the
+ * additional and bonus pay. Under the old FTE divisor both variants were
+ * coherent; under an hours divisor only the total-pay numerator is.
+ */
+export function getRegularHourlyWage(
+  employee: RegularHourlyWageInput,
+): number {
   return (
     (employee.baseSalary +
       employee.additionalSalary +
       (employee.bonusSalary ?? 0)) /
-    employee.workRatio
+    employee.paidHours
   )
 }
 
@@ -182,21 +191,15 @@ export function computeCompensationAggregates(input: {
   employees: CompensationEmployeeInput[]
   bucketWidth?: number
 }): CompensationAggregateResult {
-  const baseSamples: SalaryScorePoint[] = input.employees.map((employee) => ({
+  const samples: SalaryScorePoint[] = input.employees.map((employee) => ({
     gender: employee.gender,
     score: employee.score,
-    salary: getAdjustedBaseSalary(employee),
-  }))
-  const fullSamples: SalaryScorePoint[] = input.employees.map((employee) => ({
-    gender: employee.gender,
-    score: employee.score,
-    salary: getAdjustedFullSalary(employee),
+    salary: getRegularHourlyWage(employee),
   }))
 
   return {
     report: {
-      base: computeSalaryResultSnapshot(baseSamples, input.bucketWidth),
-      full: computeSalaryResultSnapshot(fullSamples, input.bucketWidth),
+      snapshot: computeSalaryResultSnapshot(samples, input.bucketWidth),
     },
   }
 }
@@ -387,15 +390,13 @@ export type OutlierDetectionEmployee = {
   ordinal: number
   score: number
   gender: GenderEnum
-  workRatio: number
-  baseSalary: number
-}
+} & RegularHourlyWageInput
 
 export type DetectedOutlier = {
   ordinal: number
   score: number
-  adjustedBaseSalary: number
-  predictedBaseSalary: number
+  regularHourlyWage: number
+  predictedHourlyWage: number
   scoreBucketRangeFrom: number
   scoreBucketRangeTo: number
   assessment: SalaryOutlierAssessment
@@ -405,9 +406,9 @@ export type DetectedOutlier = {
  * Canonical outlier detection. Single source of truth for the
  * application-side preview endpoint and the submit-side guard:
  *
- * - Adjusts each employee's base salary (`baseSalary / workRatio`).
- * - Fits one regression line from score -> adjusted base salary.
- * - Assesses each employee against the predicted salary at their exact score.
+ * - Computes each employee's reglulegt tímakaup (regluleg laun / greiddar stundir).
+ * - Fits one regression line from score -> reglulegt tímakaup.
+ * - Assesses each employee against the predicted wage at their exact score.
  * - Returns only the rows where the assessment is an outlier.
  */
 export function detectOutliers(input: {
@@ -421,15 +422,15 @@ export function detectOutliers(input: {
   for (const employee of analysis.employees) {
     if (
       employee.isOutlier &&
-      employee.predictedBaseSalary !== null &&
+      employee.predictedHourlyWage !== null &&
       employee.scoreBucketRangeFrom !== null &&
       employee.scoreBucketRangeTo !== null
     ) {
       outliers.push({
         ordinal: employee.ordinal,
         score: employee.score,
-        adjustedBaseSalary: employee.adjustedBaseSalary,
-        predictedBaseSalary: employee.predictedBaseSalary,
+        regularHourlyWage: employee.regularHourlyWage,
+        predictedHourlyWage: employee.predictedHourlyWage,
         scoreBucketRangeFrom: employee.scoreBucketRangeFrom,
         scoreBucketRangeTo: employee.scoreBucketRangeTo,
         assessment: {
@@ -437,7 +438,7 @@ export function detectOutliers(input: {
           direction: employee.direction,
           differencePercent: employee.differencePercent,
           allowedDifferencePercent: employee.allowedDifferencePercent,
-          predictedSalary: employee.predictedBaseSalary,
+          predictedSalary: employee.predictedHourlyWage,
         },
       })
     }
@@ -465,7 +466,7 @@ export function detectOutliers(input: {
  *
  * Score-bucket placement (`scoreBucketRangeFrom/To`) is preserved per
  * employee so reviewers can still cross-reference the bucket-level
- * aggregates carried in `report_result.base_snapshot.scoreBuckets`. It does
+ * aggregates carried in `report_result.salary_snapshot.scoreBuckets`. It does
  * not influence the outlier flag either.
  */
 export function computeSalaryOutlierAnalysis(input: {
@@ -477,7 +478,7 @@ export function computeSalaryOutlierAnalysis(input: {
     ordinal: employee.ordinal,
     score: employee.score,
     gender: employee.gender,
-    adjustedBaseSalary: employee.baseSalary / employee.workRatio,
+    regularHourlyWage: getRegularHourlyWage(employee),
   }))
   const regressions = computeRegressionsByGender(adjustedEmployees)
   const overallRegression = regressions.overall
@@ -487,19 +488,19 @@ export function computeSalaryOutlierAnalysis(input: {
   )
 
   return {
-    method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
+    method: SalaryOutlierAnalysisMethodEnum.REGULAR_HOURLY_WAGE_LINEAR_REGRESSION_BY_SCORE,
     thresholdPercent: input.thresholdPercent,
     allowedDifferencePercent,
     regressions,
     employees: adjustedEmployees.map((employee) => {
-      const predictedBaseSalary = predictFromRegression(
+      const predictedHourlyWage = predictFromRegression(
         overallRegression,
         employee.score,
       )
       const bucketRangeFrom = bucketRangeFromScore(employee.score)
       const assessment = assessSalaryOutlierFromPrediction({
-        salary: employee.adjustedBaseSalary,
-        predictedSalary: predictedBaseSalary,
+        salary: employee.regularHourlyWage,
+        predictedSalary: predictedHourlyWage,
         allowedDifferencePercent,
       })
 
@@ -507,8 +508,8 @@ export function computeSalaryOutlierAnalysis(input: {
         ordinal: employee.ordinal,
         score: employee.score,
         gender: employee.gender,
-        adjustedBaseSalary: employee.adjustedBaseSalary,
-        predictedBaseSalary,
+        regularHourlyWage: employee.regularHourlyWage,
+        predictedHourlyWage,
         scoreBucketRangeFrom: bucketRangeFrom,
         scoreBucketRangeTo: bucketRangeFrom + SCORE_BUCKET_WIDTH,
         direction: assessment.direction,
@@ -538,7 +539,7 @@ function computeRegressionsByGender(
   samples: Array<{
     score: number
     gender: GenderEnum
-    adjustedBaseSalary: number
+    regularHourlyWage: number
   }>,
 ): SalaryRegressionsByGenderSnapshot {
   return {
@@ -571,17 +572,17 @@ function computeRegressionsByGender(
  * descriptive stats (means, ranges, r²) to render or interpret it.
  *
  * A naming adapter over {@link fitLinear} — the arithmetic lives there so the
- * same routine can fit log wages without reporting an `adjustedBaseSalaryMean`
+ * same routine can fit log wages without reporting an `hourlyWageMean`
  * of `-8.34`. `SalaryRegressionSnapshot` is persisted JSONB, so this shape is
  * deliberately unchanged; `xSumSquares` is dropped rather than added to it.
  * Callers needing the identifiability test (see {@link fitLinear}) should use
  * `fitLinear` directly.
  */
 export function computeSalaryRegression(
-  samples: Array<{ score: number; adjustedBaseSalary: number }>,
+  samples: Array<{ score: number; regularHourlyWage: number }>,
 ): SalaryRegressionSnapshot {
   const fit = fitLinear(
-    samples.map((sample) => ({ x: sample.score, y: sample.adjustedBaseSalary })),
+    samples.map((sample) => ({ x: sample.score, y: sample.regularHourlyWage })),
   )
 
   return {
@@ -589,7 +590,7 @@ export function computeSalaryRegression(
     intercept: fit.intercept,
     sampleCount: fit.sampleCount,
     scoreMean: fit.xMean,
-    adjustedBaseSalaryMean: fit.yMean,
+    hourlyWageMean: fit.yMean,
     rSquared: fit.rSquared,
     scoreRangeFrom: fit.xRangeFrom,
     scoreRangeTo: fit.xRangeTo,
@@ -608,8 +609,8 @@ export function roundSalaryOutlierAnalysisSnapshot(
     intercept: roundNullable(regression.intercept, salaryPrecision),
     sampleCount: regression.sampleCount,
     scoreMean: roundNullable(regression.scoreMean, salaryPrecision),
-    adjustedBaseSalaryMean: roundNullable(
-      regression.adjustedBaseSalaryMean,
+    hourlyWageMean: roundNullable(
+      regression.hourlyWageMean,
       salaryPrecision,
     ),
     rSquared: roundNullable(regression.rSquared, percentPrecision),
@@ -636,12 +637,12 @@ export function roundSalaryOutlierAnalysisSnapshot(
     employees: snapshot.employees.map((employee) => ({
       ...employee,
       score: roundNullable(employee.score, salaryPrecision) as number,
-      adjustedBaseSalary: roundNullable(
-        employee.adjustedBaseSalary,
+      regularHourlyWage: roundNullable(
+        employee.regularHourlyWage,
         salaryPrecision,
       ) as number,
-      predictedBaseSalary: roundNullable(
-        employee.predictedBaseSalary,
+      predictedHourlyWage: roundNullable(
+        employee.predictedHourlyWage,
         salaryPrecision,
       ),
       differencePercent: roundNullable(

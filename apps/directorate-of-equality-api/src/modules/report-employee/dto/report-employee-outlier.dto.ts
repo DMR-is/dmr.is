@@ -64,14 +64,14 @@ export class ReportEmployeeOutlierDto {
     description:
       "Employee's full-time-equivalent base salary at submission, projected from the matching `outlier_analysis_snapshot.employees` entry. Null if the snapshot has no matching ordinal.",
   })
-  adjustedBaseSalary!: number | null
+  regularHourlyWage!: number | null
 
   @ApiOptionalNumber({
     nullable: true,
     description:
       'Salary predicted by the regression line at the employee\'s exact score. Null when the regression had no slope (insufficient sample) or no matching snapshot entry exists.',
   })
-  predictedBaseSalary!: number | null
+  predictedHourlyWage!: number | null
 
   @ApiOptionalNumber({ nullable: true })
   scoreBucketRangeFrom!: number | null

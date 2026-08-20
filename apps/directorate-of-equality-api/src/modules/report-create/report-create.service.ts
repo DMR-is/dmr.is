@@ -5,7 +5,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -14,6 +13,10 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import {
+  CONFIG_KEYS,
+  parseNumericConfig,
+} from '../config/lib/numeric-config'
 import { detectOutliers } from '../report/lib/compensation-aggregates'
 import {
   assertParsedPayloadIntegrity,
@@ -28,6 +31,10 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import { IReportContentService } from '../report-content/report-content.service.interface'
+import {
+  computeAdditionalSalary,
+  computeBonusSalary,
+} from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
@@ -440,8 +447,10 @@ export class ReportCreateService implements IReportCreateService {
         ordinal: employee.ordinal,
         score: employeeScores[index],
         gender: employee.gender,
-        workRatio: employee.workRatio,
+        paidHours: employee.paidHours,
         baseSalary: employee.baseSalary,
+        additionalSalary: computeAdditionalSalary(employee),
+        bonusSalary: computeBonusSalary(employee),
       })),
       thresholdPercent,
     })
@@ -515,16 +524,12 @@ export class ReportCreateService implements IReportCreateService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      'salary_difference_threshold_percent',
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        'Config entry "salary_difference_threshold_percent" must be numeric',
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 }

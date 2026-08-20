@@ -3,20 +3,25 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CONFIG_KEYS, readNumericConfig } from '../config/lib/numeric-config'
 import { ConfigModel } from '../config/models/config.model'
 import {
   computeCompensationAggregates,
   computeSalaryOutlierAnalysis,
+  getRegularHourlyWage,
   roundSalaryOutlierAnalysisSnapshot,
   roundSalaryResultSnapshot,
 } from '../report/lib/compensation-aggregates'
+import {
+  computeWageGapDecomposition,
+  roundWageGapDecompositionSnapshot,
+} from '../report/lib/wage-gap-decomposition'
 import { ReportModel, ReportTypeEnum } from '../report/models/report.model'
 import {
   ReportEmployeeModel,
@@ -30,9 +35,13 @@ import {
 import { IReportResultService } from './report-result.service.interface'
 
 const LOGGING_CONTEXT = 'ReportResultService'
-const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
-const REPORT_RESULT_CALCULATION_VERSION = 'v1'
+/**
+ * `v2` = reglulegt tímakaup. `v1` evaluated FTE-adjusted monthly salary
+ * (`baseSalary / workRatio`) and stored separate base/full snapshots; the two
+ * are not comparable, and no v1 row survived the migration that introduced
+ * `paid_hours`.
+ */
+const REPORT_RESULT_CALCULATION_VERSION = 'v2'
 
 @Injectable()
 export class ReportResultService implements IReportResultService {
@@ -98,33 +107,17 @@ export class ReportResultService implements IReportResultService {
       throw new NotFoundException(`No employees found for report "${reportId}"`)
     }
 
-    const thresholdConfig = await this.configModel.findOne({
-      where: {
-        key: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
-        supersededAt: null,
-      },
-    })
-
-    if (!thresholdConfig) {
-      throw new NotFoundException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" not found`,
-      )
-    }
-
-    const threshold = parseFloat(thresholdConfig.value)
-
-    if (!Number.isFinite(threshold)) {
-      throw new InternalServerErrorException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" must be numeric`,
-      )
-    }
+    const threshold = await readNumericConfig(
+      this.configModel,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
 
     const aggregates = computeCompensationAggregates({
       employees: employees.map((employee) => ({
         reportEmployeeRoleId: employee.reportEmployeeRoleId,
         score: requireComputedScore(employee),
         gender: employee.gender,
-        workRatio: employee.workRatio,
+        paidHours: employee.paidHours,
         baseSalary: employee.baseSalary,
         additionalSalary: employee.additionalSalary,
         bonusSalary: employee.bonusSalary,
@@ -135,20 +128,36 @@ export class ReportResultService implements IReportResultService {
         ordinal: employee.ordinal,
         score: requireComputedScore(employee),
         gender: employee.gender,
-        workRatio: employee.workRatio,
+        paidHours: employee.paidHours,
         baseSalary: employee.baseSalary,
+        additionalSalary: employee.additionalSalary,
+        bonusSalary: employee.bonusSalary,
       })),
       thresholdPercent: threshold,
+    })
+
+    // The decomposition runs on the same employee rows as the aggregates, so
+    // the two figures a reviewer sees can never disagree about who was counted.
+    const wageGapDecomposition = computeWageGapDecomposition({
+      employees: employees.map((employee) => ({
+        ordinal: employee.ordinal,
+        gender: employee.gender,
+        score: requireComputedScore(employee),
+        hourlyWage: getRegularHourlyWage(employee),
+      })),
+      benchmarkPercent: threshold,
     })
 
     const resultValues = {
       reportId,
       salaryDifferenceThresholdPercent: threshold,
       calculationVersion: REPORT_RESULT_CALCULATION_VERSION,
-      baseSnapshot: roundSalaryResultSnapshot(aggregates.report.base, 2),
-      fullSnapshot: roundSalaryResultSnapshot(aggregates.report.full, 2),
+      salarySnapshot: roundSalaryResultSnapshot(aggregates.report.snapshot, 2),
       outlierAnalysisSnapshot:
         roundSalaryOutlierAnalysisSnapshot(outlierAnalysis),
+      wageGapDecompositionSnapshot: roundWageGapDecompositionSnapshot(
+        wageGapDecomposition,
+      ),
     } satisfies ReportResultCreateAttributes
 
     await this.reportResultModel.create(resultValues)

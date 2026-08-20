@@ -1,3 +1,5 @@
+import { Max, Min } from 'class-validator'
+
 import {
   ApiDtoArray,
   ApiEnum,
@@ -7,6 +9,10 @@ import {
   ApiString,
 } from '@dmr.is/decorators'
 
+import {
+  MAX_PAID_HOURS_PER_MONTH,
+  MIN_PAID_HOURS_PER_MONTH,
+} from '../../../core/constants'
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 
@@ -101,8 +107,15 @@ export class ParsedEmployeeDto {
   @ApiString()
   startDate!: string
 
-  @ApiNumber()
-  workRatio!: number
+  @ApiNumber({
+    description:
+      'Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.',
+    minimum: MIN_PAID_HOURS_PER_MONTH,
+    maximum: MAX_PAID_HOURS_PER_MONTH,
+  })
+  @Min(MIN_PAID_HOURS_PER_MONTH)
+  @Max(MAX_PAID_HOURS_PER_MONTH)
+  paidHours!: number
 
   @ApiNumber()
   baseSalary!: number

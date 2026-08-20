@@ -39,7 +39,7 @@ describe('deriveEmployeeScores', () => {
     id: 'emp-1',
     ordinal: 1,
     gender: GenderEnum.FEMALE,
-    workRatio: 1,
+    paidHours: 1,
     baseSalary: 100,
     reportEmployeeRoleId: 'role-1',
   }

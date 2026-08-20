@@ -18,7 +18,7 @@ import {
 
 export interface EmployeeDataPoint {
   score: number
-  adjustedSalary: number
+  regularHourlyWage: number
   gender: GenderEnum
 }
 
@@ -35,7 +35,10 @@ export function buildChartFromEmployeePoints(
 ): SalaryByGenderAndScoreDto {
   const dataPoints: ScatterDataPointDto[] = points.map((p) => ({
     score: p.score,
-    adjustedSalary: Math.round(p.adjustedSalary),
+    // 2dp, not whole krónur: rounding to 1 kr is 8×10⁻⁷ relative on a 650.000
+    // monthly salary but 2×10⁻⁴ on a ~4.900 kr./klst. rate, and the error
+    // compounds into every percentage derived from these figures.
+    regularHourlyWage: roundNullable(p.regularHourlyWage, 2) ?? 0,
     gender: p.gender,
   }))
 
@@ -54,7 +57,7 @@ function computeLinearRegression(
   const regression = computeSalaryRegression(
     points.map((p) => ({
       score: p.score,
-      adjustedBaseSalary: p.adjustedSalary,
+      regularHourlyWage: p.regularHourlyWage,
     })),
   )
 
@@ -68,7 +71,7 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
   const salaryPoints: SalaryScorePoint[] = points.map((point) => ({
     score: point.score,
     gender: point.gender,
-    salary: point.adjustedSalary,
+    salary: point.regularHourlyWage,
   }))
 
   return computeSalaryScoreBucketSnapshots(salaryPoints, SCORE_BUCKET_WIDTH).map(
@@ -80,22 +83,22 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
         rangeTo: bucket.rangeTo,
         maleAverageSalary:
           snapshot.male.average !== null
-            ? Math.round(snapshot.male.average)
+            ? roundNullable(snapshot.male.average, 2)
             : null,
         femaleAverageSalary:
           snapshot.female.average !== null
-            ? Math.round(snapshot.female.average)
+            ? roundNullable(snapshot.female.average, 2)
             : null,
-        overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
+        overallAverageSalary: roundNullable(snapshot.overall.average, 2) ?? 0,
         maleMedianSalary:
           snapshot.male.median !== null
-            ? Math.round(snapshot.male.median)
+            ? roundNullable(snapshot.male.median, 2)
             : null,
         femaleMedianSalary:
           snapshot.female.median !== null
-            ? Math.round(snapshot.female.median)
+            ? roundNullable(snapshot.female.median, 2)
             : null,
-        overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+        overallMedianSalary: roundNullable(snapshot.overall.median, 2) ?? 0,
         wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
         maleCount: bucket.counts.male,
         femaleCount: bucket.counts.female,
@@ -115,17 +118,17 @@ function computeTotals(points: EmployeeDataPoint[]): SalaryTotalsDto {
   const snapshot = computeSalaryAggregateSnapshot(
     points.map((point) => ({
       gender: point.gender,
-      salary: point.adjustedSalary,
+      salary: point.regularHourlyWage,
     })),
   )
 
   return {
-    maleAverageSalary: Math.round(snapshot.male.average ?? 0),
-    femaleAverageSalary: Math.round(snapshot.female.average ?? 0),
-    overallAverageSalary: Math.round(snapshot.overall.average ?? 0),
-    maleMedianSalary: Math.round(snapshot.male.median ?? 0),
-    femaleMedianSalary: Math.round(snapshot.female.median ?? 0),
-    overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
+    maleAverageSalary: roundNullable(snapshot.male.average, 2) ?? 0,
+    femaleAverageSalary: roundNullable(snapshot.female.average, 2) ?? 0,
+    overallAverageSalary: roundNullable(snapshot.overall.average, 2) ?? 0,
+    maleMedianSalary: roundNullable(snapshot.male.median, 2) ?? 0,
+    femaleMedianSalary: roundNullable(snapshot.female.median, 2) ?? 0,
+    overallMedianSalary: roundNullable(snapshot.overall.median, 2) ?? 0,
     wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
     maleCount: males.length,
     femaleCount: females.length,

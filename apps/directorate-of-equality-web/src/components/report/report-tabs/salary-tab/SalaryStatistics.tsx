@@ -10,7 +10,13 @@ import { SalaryDataBasis } from './SalaryDataBasis'
 interface SalaryStatisticsProps {
   maleAverageSalary: string
   femaleAverageSalary: string
-  wageGapPercent: string
+  /**
+   * `null` when the gap is genuinely not computable — e.g. only one gender is
+   * present in the report. Do NOT default this to '0': a company that cannot
+   * be measured is not a company with no pay gap, and rendering 0% states the
+   * opposite of what is known.
+   */
+  wageGapPercent: string | null
   salaryDataBasis?: SalaryDataBasisEnum | null
   salaryDataPeriod?: string | null
 }
@@ -46,7 +52,7 @@ export const SalaryStatistics = ({
           />
           <StatisticCard
             title={reportText.salaryTab.wageGapLabel}
-            content={wageGapPercent + '%'}
+            content={wageGapPercent === null ? '—' : `${wageGapPercent}%`}
             color="purple"
           />
         </Box>

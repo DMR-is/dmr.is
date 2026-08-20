@@ -368,7 +368,11 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds immutable report-level salary snapshots for both **adjusted base salary** (`baseSalary / workRatio`) and **adjusted full salary** (`(baseSalary + additionalSalary + bonusSalary) / workRatio`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns — see `report_employee`). The snapshots are stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL. Each salary family stores report-level totals and score-bucket breakdowns. The same row also snapshots the salary-outlier regression analysis: the fitted base-salary regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's adjusted base salary vs predicted base salary at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
+`report_result` holds one immutable report-level snapshot of **reglulegt tímakaup** — `(baseSalary + additionalSalary + bonusSalary) / paidHours`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns (see `report_employee`). It is stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL, and it carries report-level totals plus score-bucket breakdowns.
+
+There was previously a *second* snapshot for base pay alone (`baseSalary / workRatio`). It is gone, and not merely as a simplification: with an **hours** denominator, dividing a base-pay-only numerator by hours that include the overtime which earned the additional and bonus pay is arithmetically incoherent. Under the old full-time-equivalent divisor both variants were coherent; under this one, only the total-pay numerator is. The column is named `salary_snapshot` rather than reusing `base_snapshot` so the name cannot outlive the meaning.
+
+The same row also snapshots the salary-outlier regression analysis: the fitted hourly-wage regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's reglulegt tímakaup vs predicted hourly wage at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
 
 ### Gender bundling: NEUTRAL counts as FEMALE (M vs F+N)
 
@@ -619,7 +623,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `field`                   | `text`                      |
 | `department`              | `text`                      |
 | `start_date`              | `date`                      |
-| `work_ratio`              | `decimal(5, 4)`             |
+| `paid_hours`              | `decimal(6, 2)` CHECK > 0    |
 | `base_salary`             | `decimal(14, 2)`            |
 | `additional_fixed_overtime` | `decimal(14, 2)` (nullable) |
 | `additional_fixed_car_allowance` | `decimal(14, 2)` (nullable) |

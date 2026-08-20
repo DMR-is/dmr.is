@@ -38,7 +38,7 @@ const EMPLOYEE_PATCH_KEYS = [
   'field',
   'department',
   'startDate',
-  'workRatio',
+  'paidHours',
   'baseSalary',
   'additionalFixedOvertime',
   'additionalFixedCarAllowance',
@@ -78,7 +78,7 @@ const EMPLOYEE_REQUIRED_KEYS = [
   'reportEmployeeRoleId',
   'gender',
   'startDate',
-  'workRatio',
+  'paidHours',
   'baseSalary',
 ] as const
 
@@ -267,7 +267,7 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       field: data.field ?? null,
       department: data.department ?? null,
       startDate: data.startDate as string,
-      workRatio: data.workRatio as number,
+      paidHours: data.paidHours as number,
       baseSalary: data.baseSalary as number,
       additionalFixedOvertime: data.additionalFixedOvertime ?? null,
       additionalFixedCarAllowance: data.additionalFixedCarAllowance ?? null,

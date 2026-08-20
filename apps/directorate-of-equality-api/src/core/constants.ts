@@ -29,6 +29,29 @@ export enum DoeModels {
 }
 
 /**
+ * Accepted range for `report_employee.paid_hours` (greiddar stundir í
+ * mánuðinum, yfirvinnustundir meðtaldar) — the denominator of reglulegt
+ * tímakaup. Shared by every ingress: the Excel parser, the draft-employee
+ * endpoints and the sync batch. The Excel path is not the only way in, so a
+ * bound enforced only there would let the API accept what the sheet rejects.
+ *
+ * **Max — must match the template's own validation on column E** (`decimal
+ * between 0 and 750`). A parser stricter than the sheet rejects a value Excel
+ * accepted, leaving the submitter nothing to act on; looser, and it accepts
+ * what the sheet refuses. 750 is ~4× a full month, which still catches the
+ * likeliest data-entry error: entering the annual total (~2 080) where the
+ * 12-month basis asks for a monthly average (~173).
+ *
+ * **Min — 0.01, not "greater than 0".** The column is `DECIMAL(6, 2)`, so
+ * 0.01 is the smallest storable positive value. A `> 0` test would pass
+ * `0.004`, which Postgres then rounds to `0.00` and rejects against
+ * `CHECK (paid_hours > 0)` — turning a validation message into a 500. The
+ * template permits `0` outright, so rejecting it is the application's job.
+ */
+export const MIN_PAID_HOURS_PER_MONTH = 0.01
+export const MAX_PAID_HOURS_PER_MONTH = 750
+
+/**
  * Name assigned to the auto-created outlier group when the applicant submits a
  * salary report without explicitly grouping the detected outliers. `name` is
  * NOT NULL on `report_outlier_group`; this is the value used for the implicit

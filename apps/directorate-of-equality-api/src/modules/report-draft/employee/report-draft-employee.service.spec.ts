@@ -50,7 +50,7 @@ const changeData = (
   field: 'Engineering',
   department: 'R&D',
   startDate: '2020-01-01',
-  workRatio: 1,
+  paidHours: 1,
   baseSalary: 800000,
   ...overrides,
 })
@@ -130,7 +130,7 @@ describe('ReportDraftEmployeeService', () => {
       reportEmployeeRoleId: ROLE_ID,
       gender: GenderEnum.FEMALE,
       startDate: '2020-01-01',
-      workRatio: 1,
+      paidHours: 1,
       baseSalary: 800000,
       score: null,
     })

@@ -16,8 +16,8 @@ import { ReportOutlierGroupModel } from './report-outlier-group.model'
  * matching entry without an unsafe cast.
  */
 export type OutlierAnalysisEntry = {
-  adjustedBaseSalary: number
-  predictedBaseSalary: number | null
+  regularHourlyWage: number
+  predictedHourlyWage: number | null
   scoreBucketRangeFrom: number | null
   scoreBucketRangeTo: number | null
   direction: string | null
@@ -75,7 +75,7 @@ export class ReportEmployeeOutlierModel extends MutableModel<
    * `group` association loaded. While the report's outliers are still postponed
    * the group exists but its explanation fields are null.
    *
-   * The analysis numbers (`adjustedBaseSalary`, regression prediction, score
+   * The analysis numbers (`regularHourlyWage`, regression prediction, score
    * bucket, direction, etc.) live in `report_result.outlier_analysis_snapshot`
    * as the canonical "what the engine detected at submit time" — callers are
    * expected to look that up by the joined `reportEmployee.ordinal` and pass
@@ -99,8 +99,8 @@ export class ReportEmployeeOutlierModel extends MutableModel<
       action: model.group?.action ?? null,
       signatureName: model.group?.signatureName ?? null,
       signatureRole: model.group?.signatureRole ?? null,
-      adjustedBaseSalary: analysis?.adjustedBaseSalary ?? null,
-      predictedBaseSalary: analysis?.predictedBaseSalary ?? null,
+      regularHourlyWage: analysis?.regularHourlyWage ?? null,
+      predictedHourlyWage: analysis?.predictedHourlyWage ?? null,
       scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
       scoreBucketRangeTo: analysis?.scoreBucketRangeTo ?? null,
       direction: analysis?.direction ?? null,

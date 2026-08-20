@@ -13,7 +13,7 @@ export class SalaryAnalysisOutlierDto {
   employeeOrdinal!: number
 
   @ApiNumber()
-  adjustedBaseSalary!: number
+  regularHourlyWage!: number
 
   @ApiEnum(SalaryAnalysisOutlierDirectionEnum)
   direction!: SalaryAnalysisOutlierDirectionEnum
@@ -25,7 +25,7 @@ export class SalaryAnalysisOutlierDto {
   allowedDifferencePercent!: number
 
   @ApiNumber()
-  predictedBaseSalary!: number
+  predictedHourlyWage!: number
 
   @ApiNumber()
   scoreBucketRangeFrom!: number
@@ -39,5 +39,5 @@ export class SalaryAnalysisResponseDto {
   outliers!: SalaryAnalysisOutlierDto[]
 
   @ApiDto(SalaryByGenderAndScoreDto)
-  baseSalaryByGenderAndScoreAll!: SalaryByGenderAndScoreDto
+  regularHourlyWageByScoreAll!: SalaryByGenderAndScoreDto
 }

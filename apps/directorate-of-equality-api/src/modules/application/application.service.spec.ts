@@ -235,23 +235,24 @@ describe('ApplicationService', () => {
         'salary_difference_threshold_percent',
       )
 
-      // Ordinal 1 sits about 3% below its predicted salary on the regression
-      // line, past the 1.95% half-threshold band. The rest stay inside the band.
+      // Ordinal 1 sits about 2.7% below its predicted hourly wage on the
+      // regression line, past the 1.95% half-threshold band. The rest stay
+      // inside it. (4.750 kr./klst. = (850.000 + 100.000 föst yfirvinna) / 200.)
       expect(result.outliers).toHaveLength(1)
       expect(result.outliers[0]).toMatchObject({
         employeeOrdinal: 1,
-        adjustedBaseSalary: 850000,
+        regularHourlyWage: 4750,
         direction: 'BELOW',
-        predictedBaseSalary: 876786,
+        predictedHourlyWage: 4883.93,
         scoreBucketRangeFrom: 100,
         scoreBucketRangeTo: 200,
       })
-      expect(result.outliers[0].differencePercent).toBeCloseTo(-3.055, 3)
+      expect(result.outliers[0].differencePercent).toBeCloseTo(-2.742, 3)
       expect(result.outliers[0].allowedDifferencePercent).toBeCloseTo(1.95, 4)
 
-      expect(result.baseSalaryByGenderAndScoreAll.dataPoints).toHaveLength(7)
-      expect(result.baseSalaryByGenderAndScoreAll.totals.maleCount).toBe(6)
-      expect(result.baseSalaryByGenderAndScoreAll.totals.femaleCount).toBe(1)
+      expect(result.regularHourlyWageByScoreAll.dataPoints).toHaveLength(7)
+      expect(result.regularHourlyWageByScoreAll.totals.maleCount).toBe(6)
+      expect(result.regularHourlyWageByScoreAll.totals.femaleCount).toBe(1)
     })
 
     it('rejects malformed parsed payloads with a 400', async () => {
@@ -1631,7 +1632,9 @@ function makeEmployee({
     field: 'Mgmt',
     department: 'Mgmt',
     startDate: '2021-01-01',
-    workRatio: 1,
+    // A full month with overtime, so (baseSalary + 100.000) / 200 reads as a
+    // plausible kr./klst. rate rather than a per-hour monthly salary.
+    paidHours: 200,
     baseSalary,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -1876,8 +1879,8 @@ function makeReportResultDto(
         ordinal,
         score: 0,
         gender: GenderEnum.MALE,
-        adjustedBaseSalary: 0,
-        predictedBaseSalary: 0,
+        regularHourlyWage: 0,
+        predictedHourlyWage: 0,
         scoreBucketRangeFrom: null,
         scoreBucketRangeTo: null,
         direction: null,
@@ -1895,7 +1898,7 @@ function makeEmptyRegression() {
     intercept: null,
     sampleCount: 0,
     scoreMean: null,
-    adjustedBaseSalaryMean: null,
+    hourlyWageMean: null,
     rSquared: null,
     scoreRangeFrom: null,
     scoreRangeTo: null,

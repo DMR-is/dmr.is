@@ -3,20 +3,19 @@ import { Op } from 'sequelize'
 import {
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { CONFIG_KEYS, readNumericConfig } from '../config/lib/numeric-config'
 import { ConfigModel } from '../config/models/config.model'
 import {
   bundleNeutralIntoFemale,
   computeSalaryAggregateSnapshot,
   computeWageGapPercent,
-  getAdjustedBaseSalary,
-  getAdjustedFullSalary,
+  getRegularHourlyWage,
   resolveAllowedDifferencePercent,
   roundNullable,
 } from '../report/lib/compensation-aggregates'
@@ -67,7 +66,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     private readonly configModel: typeof ConfigModel,
   ) {}
 
-  async getBaseSalaryByGenderAndScoreAll(
+  async getRegularHourlyWageByScoreAll(
     reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
     this.logger.debug('Computing base salary by gender and total score', {
@@ -79,7 +78,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: requireComputedScore(e),
-      adjustedSalary: getAdjustedBaseSalary(e),
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
 
@@ -93,7 +92,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
     return buildChartFromEmployeePoints(points, allowedDifferencePercent)
   }
 
-  async getBaseSalaryByGenderAndScoreWork(
+  async getRegularHourlyWageByScoreWork(
     reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
     this.logger.debug(
@@ -121,7 +120,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
       return {
         score: workScore,
-        adjustedSalary: getAdjustedBaseSalary(e),
+        regularHourlyWage: getRegularHourlyWage(e),
         gender: e.gender,
       }
     })
@@ -129,29 +128,10 @@ export class ReportStatisticsService implements IReportStatisticsService {
     return buildChartFromEmployeePoints(points)
   }
 
-  async getFullSalaryByGenderAndScoreAll(
-    reportId: string,
-  ): Promise<SalaryByGenderAndScoreDto> {
-    this.logger.debug(
-      'Computing full salary (base + additional + bonus) by gender and total score',
-      { context: LOGGING_CONTEXT, reportId },
-    )
-
-    const employees = await this.fetchEmployees(reportId)
-
-    const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: requireComputedScore(e),
-      adjustedSalary: getAdjustedFullSalary(e),
-      gender: e.gender,
-    }))
-
-    return buildChartFromEmployeePoints(points)
-  }
-
-  async getBaseSalaryGenderWageGap(
+  async getRegularHourlyWageGenderWageGap(
     reportId: string,
   ): Promise<GenderWageGapDto> {
-    this.logger.debug('Computing base salary gender wage gap', {
+    this.logger.debug('Computing reglulegt tímakaup gender wage gap', {
       context: LOGGING_CONTEXT,
       reportId,
     })
@@ -160,26 +140,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: 0,
-      adjustedSalary: getAdjustedBaseSalary(e),
-      gender: e.gender,
-    }))
-
-    return buildWageGapResponse(points)
-  }
-
-  async getFullSalaryGenderWageGap(
-    reportId: string,
-  ): Promise<GenderWageGapDto> {
-    this.logger.debug(
-      'Computing full salary (base + additional + bonus) gender wage gap',
-      { context: LOGGING_CONTEXT, reportId },
-    )
-
-    const employees = await this.fetchEmployees(reportId)
-
-    const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: 0,
-      adjustedSalary: getAdjustedFullSalary(e),
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
 
@@ -250,19 +211,10 @@ export class ReportStatisticsService implements IReportStatisticsService {
   // ── Private helpers ─────────────────────────────────────────────
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
-    const config = await this.configModel.findOne({
-      where: { key: 'salary_difference_threshold_percent', supersededAt: null },
-    })
-
-    const parsed = config ? parseFloat(config.value) : NaN
-
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        'Config entry "salary_difference_threshold_percent" must be numeric',
-      )
-    }
-
-    return parsed
+    return readNumericConfig(
+      this.configModel,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 
   private async fetchEmployees(
@@ -397,7 +349,7 @@ function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
   const snapshot = computeSalaryAggregateSnapshot(
     points.map((point) => ({
       gender: point.gender,
-      salary: point.adjustedSalary,
+      salary: point.regularHourlyWage,
     })),
   )
 

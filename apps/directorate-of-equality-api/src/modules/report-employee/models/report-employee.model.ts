@@ -39,6 +39,57 @@ export const computeBonusSalary = (children: {
   (children.bonusOther ?? 0)
 
 /**
+ * The seven pay fields that compose **regluleg laun**, named once so the
+ * composition is stated in exactly one place.
+ */
+type RegularWageComponents = {
+  baseSalary: number
+  additionalFixedOvertime: number | null
+  additionalFixedCarAllowance: number | null
+  bonusOccasionalCarAllowance: number | null
+  bonusOccasionalOvertime: number | null
+  bonusPayments: number | null
+  bonusOther: number | null
+}
+
+/**
+ * Regluleg laun = grunnlaun + viðbótarlaun + hlunnindi — every collected pay
+ * field, each unentered child treated as `0`.
+ *
+ * ⚠️ **The wide reading is deliberate. Do not narrow it.** Hagstofa's published
+ * definition of *regluleg laun* is *"greidd mánaðarlaun fyrir umsaminn
+ * vinnutíma … hvers konar álags- og bónusgreiðslur"*, which read strictly
+ * excludes tilfallandi yfirvinna and does not clearly cover hlunnindi. The
+ * Directorate approved this wider formula regardless, "until further notice",
+ * and it is what the Excel template's own `Regluleg laun` column computes. A
+ * later reader who narrows this to match Hagstofa's wording would silently move
+ * every company's tímakaup and every published gap figure — so the discrepancy
+ * is recorded here rather than left to be discovered and "fixed".
+ */
+export const computeRegularWages = (employee: RegularWageComponents): number =>
+  employee.baseSalary +
+  computeAdditionalSalary(employee) +
+  computeBonusSalary(employee)
+
+/**
+ * Reglulegt tímakaup — the quantity every salary statistic is evaluated on,
+ * mandated by the regulation: *"reglulegum launum, **reiknuðum niður á
+ * tímakaup**"*.
+ *
+ * ⚠️ **Never divide by a starfshlutfall as well.** Paid hours already normalise
+ * for working time, and more precisely than an FTE proxy does; applying both
+ * would double-count part-time. That is why `work_ratio` was dropped rather
+ * than kept alongside `paid_hours`.
+ *
+ * `paidHours` is `NOT NULL CHECK (paid_hours > 0)` in the database and rejected
+ * at `<= 0` by every ingress path, so this cannot divide by zero on persisted
+ * data. Callers working with unvalidated input must guard first.
+ */
+export const computeRegularHourlyWage = (
+  employee: RegularWageComponents & { paidHours: number },
+): number => computeRegularWages(employee) / employee.paidHours
+
+/**
  * Asserts an employee's score has been computed. A draft's employee scores are
  * NULL until the report is submitted; the submit-time snapshot and the
  * reviewer-facing chart/aggregate paths only ever run on submitted reports, so
@@ -61,7 +112,7 @@ type ReportEmployeeAttributes = {
   field: string | null
   department: string | null
   startDate: string
-  workRatio: number
+  paidHours: number
   baseSalary: number
   additionalFixedOvertime: number | null
   additionalFixedCarAllowance: number | null
@@ -82,7 +133,7 @@ type ReportEmployeeCreateAttributes = {
   field?: string | null
   department?: string | null
   startDate: string
-  workRatio: number
+  paidHours: number
   baseSalary: number
   additionalFixedOvertime?: number | null
   additionalFixedCarAllowance?: number | null
@@ -113,18 +164,24 @@ export class ReportEmployeeModel extends MutableModel<
   @Column({ type: DataType.DATEONLY, allowNull: false, field: 'start_date' })
   startDate!: string
 
+  /**
+   * Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar — the denominator
+   * of reglulegt tímakaup. `NOT NULL CHECK (paid_hours > 0)`, so never zero on
+   * persisted data. Replaced `work_ratio`; see {@link computeRegularHourlyWage}
+   * for why the two must not coexist.
+   */
   @Column({
-    type: DataType.DECIMAL(5, 4),
+    type: DataType.DECIMAL(6, 2),
     allowNull: false,
-    field: 'work_ratio',
+    field: 'paid_hours',
     get() {
-      const value = this.getDataValue('workRatio')
+      const value = this.getDataValue('paidHours')
       return value !== null && value !== undefined
         ? parseFloat(value as unknown as string)
         : null
     },
   })
-  workRatio!: number
+  paidHours!: number
 
   @Column({
     type: DataType.DECIMAL(14, 2),
@@ -265,7 +322,7 @@ export class ReportEmployeeModel extends MutableModel<
       field: model.field,
       department: model.department,
       startDate: model.startDate,
-      workRatio: model.workRatio,
+      paidHours: model.paidHours,
       baseSalary: model.baseSalary,
       additionalFixedOvertime: model.additionalFixedOvertime,
       additionalFixedCarAllowance: model.additionalFixedCarAllowance,

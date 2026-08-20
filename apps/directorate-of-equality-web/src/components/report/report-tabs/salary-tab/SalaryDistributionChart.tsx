@@ -26,6 +26,32 @@ function formatSalary(v: number) {
     .replaceAll(',', '.')
 }
 
+/**
+ * Y-axis upper bound, derived from the data's own magnitude.
+ *
+ * ⚠️ **Deliberate copy of `niceAxisMax` in the API's
+ * `report-statistics/lib/axis-scale.ts` — change both together.** The PDF
+ * renderer and this component must agree, or the same report shows two
+ * different axes depending on where you look at it. There is no shared lib
+ * between the two apps, and this component's axis logic was already mirrored by
+ * hand before.
+ *
+ * Replaces a fixed round-up to the nearest 100.000, which was fine for
+ * FTE-adjusted monthly salaries but put every reglulegt tímakaup (~4.900
+ * kr./klst.) in the bottom 5% of a single band, with ticks reading
+ * 0 / 25.000 / … / 100.000.
+ */
+const NICE_AXIS_STEPS = [1, 1.5, 2, 2.5, 3, 4, 5, 7.5, 10]
+
+function niceAxisMax(dataMax: number) {
+  if (!Number.isFinite(dataMax) || dataMax <= 0) return 1
+  const magnitude = 10 ** Math.floor(Math.log10(dataMax))
+  const normalised = dataMax / magnitude
+  const step = NICE_AXIS_STEPS.find((c) => normalised <= c) ?? 10
+  return step * magnitude
+}
+
+
 type Props = {
   data: SalaryByGenderAndScoreDto | null | undefined
 }
@@ -57,8 +83,8 @@ export function SalaryDistributionChart({ data }: Props) {
   const malePoints = data.dataPoints.filter((p) => p.gender === 'MALE')
   const femalePoints = data.dataPoints.filter((p) => p.gender !== 'MALE')
 
-  const allY = data.dataPoints.map((p) => p.adjustedSalary)
-  const yMax = Math.ceil(Math.max(...allY, 1) / 100000) * 100000
+  const allY = data.dataPoints.map((p) => p.regularHourlyWage)
+  const yMax = niceAxisMax(Math.max(...allY, 1))
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(yMax * f))
 
   const xAxisMax =
@@ -125,7 +151,7 @@ export function SalaryDistributionChart({ data }: Props) {
 
           <YAxis
             type="number"
-            dataKey="adjustedSalary"
+            dataKey="regularHourlyWage"
             domain={[0, yMax]}
             ticks={yTicks}
             tickFormatter={formatSalary}
@@ -207,7 +233,7 @@ export function SalaryDistributionChart({ data }: Props) {
             data={regressionData}
             type="linear"
             dataKey="salary"
-            name="Áætluð laun eftir stigum"
+            name="Spáð tímakaup eftir stigum"
             stroke={theme.color.roseTinted400}
             strokeWidth={2.5}
             dot={false}

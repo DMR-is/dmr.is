@@ -1,6 +1,7 @@
 import {
   type DetectedOutlier,
   detectOutliers,
+  getRegularHourlyWage,
   type OutlierDetectionEmployee,
   resolveAllowedDifferencePercent,
 } from '../../report/lib/compensation-aggregates'
@@ -8,6 +9,10 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../../report/lib/employee-scores'
+import {
+  computeAdditionalSalary,
+  computeBonusSalary,
+} from '../../report-employee/models/report-employee.model'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import {
   SalaryAnalysisOutlierDirectionEnum,
@@ -18,13 +23,6 @@ import {
   buildChartFromEmployeePoints,
   type EmployeeDataPoint,
 } from './build-chart'
-
-/**
- * Config key for the salary-difference threshold percent, shared by every
- * caller that runs outlier detection so preview and submit read the same knob.
- */
-export const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
 
 /**
  * Runs outlier detection + the gender/score chart over a parsed workbook
@@ -53,8 +51,10 @@ export function analyzeSalaryPayload(
       ordinal: employee.ordinal,
       score: employeeScores[index],
       gender: employee.gender,
-      workRatio: employee.workRatio,
+      paidHours: employee.paidHours,
       baseSalary: employee.baseSalary,
+      additionalSalary: computeAdditionalSalary(employee),
+      bonusSalary: computeBonusSalary(employee),
     }),
   )
 
@@ -65,22 +65,22 @@ export function analyzeSalaryPayload(
   })
 
   // 5. Build the chart half of the response from the same employee/score
-  //    mapping the reviewer-side getBaseSalaryByGenderAndScoreAll uses.
+  //    mapping the reviewer-side getRegularHourlyWageByScoreAll uses.
   const chartPoints: EmployeeDataPoint[] = detectionEmployees.map(
     (employee) => ({
       score: employee.score,
-      adjustedSalary: employee.baseSalary / employee.workRatio,
+      regularHourlyWage: getRegularHourlyWage(employee),
       gender: employee.gender,
     }),
   )
-  const baseSalaryByGenderAndScoreAll = buildChartFromEmployeePoints(
+  const regularHourlyWageByScoreAll = buildChartFromEmployeePoints(
     chartPoints,
     resolveAllowedDifferencePercent(thresholdPercent),
   )
 
   return {
     outliers: detected.map(toOutlierDto),
-    baseSalaryByGenderAndScoreAll,
+    regularHourlyWageByScoreAll,
   }
 }
 
@@ -90,10 +90,15 @@ function toOutlierDto(detected: DetectedOutlier): SalaryAnalysisOutlierDto {
   // in compensation-aggregates.ts).
   const { assessment } = detected
 
+  // 2dp, not whole krónur. Rounding to 1 kr is 8×10⁻⁷ relative on a 650.000
+  // monthly salary but 2×10⁻⁴ on a ~4.000 kr./klst. rate, and the error
+  // compounds when percentages are derived from already-rounded figures.
+  const round2 = (value: number): number => Math.round(value * 100) / 100
+
   return {
     employeeOrdinal: detected.ordinal,
-    adjustedBaseSalary: Math.round(detected.adjustedBaseSalary),
-    predictedBaseSalary: Math.round(detected.predictedBaseSalary),
+    regularHourlyWage: round2(detected.regularHourlyWage),
+    predictedHourlyWage: round2(detected.predictedHourlyWage),
     scoreBucketRangeFrom: detected.scoreBucketRangeFrom,
     scoreBucketRangeTo: detected.scoreBucketRangeTo,
     direction:

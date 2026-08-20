@@ -1,6 +1,11 @@
 import { BadRequestException } from '@nestjs/common'
 
+import {
+  MAX_PAID_HOURS_PER_MONTH,
+  MIN_PAID_HOURS_PER_MONTH,
+} from '../../../core/constants'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
+import { computeRegularWages } from '../../report-employee/models/report-employee.model'
 import {
   ParsedReportDto,
   ParsedRoleDto,
@@ -25,7 +30,8 @@ export const stepKey = (
 /**
  * Pre-flight integrity checks on the parsed payload — surfaces malformed
  * input as a 400 before any DB writes. Catches duplicate titles/employee
- * ordinals, invalid work ratios, sub-criteria whose step count falls outside
+ * ordinals, unusable paid hours or regluleg laun (either would make reglulegt
+ * tímakaup undefined), sub-criteria whose step count falls outside
  * the allowed MIN_STEPS–MAX_STEPS range, unknown role references in
  * employees, and step assignments that don't resolve to a node in the parsed
  * criteria tree. Also enforces the report capacity ceilings (criteria, roles,
@@ -157,9 +163,23 @@ export function assertParsedPayloadIntegrity(
     }
     employeeOrdinals.add(employee.ordinal)
 
-    if (!Number.isFinite(employee.workRatio) || employee.workRatio <= 0) {
+    // Two guards where there was one, because reglulegt tímakaup has two ways
+    // to be undefined: no denominator, or nothing in the numerator. Both would
+    // otherwise reach the regression as NaN / Infinity and silently poison every
+    // downstream statistic rather than failing here.
+    if (
+      !Number.isFinite(employee.paidHours) ||
+      employee.paidHours < MIN_PAID_HOURS_PER_MONTH ||
+      employee.paidHours > MAX_PAID_HOURS_PER_MONTH
+    ) {
       throw new BadRequestException(
-        `Starfsmaður með raðnúmer ${employee.ordinal} er með ógilt starfshlutfall ${employee.workRatio}; gildið verður að vera stærra en 0`,
+        `Starfsmaður með raðnúmer ${employee.ordinal} er með ógildar greiddar stundir ${employee.paidHours}; gildið verður að vera á bilinu ${MIN_PAID_HOURS_PER_MONTH}–${MAX_PAID_HOURS_PER_MONTH}`,
+      )
+    }
+
+    if (computeRegularWages(employee) <= 0) {
+      throw new BadRequestException(
+        `Starfsmaður með raðnúmer ${employee.ordinal} er með engin regluleg laun; grunnlaun, viðbótarlaun og hlunnindi mega ekki vera 0 samanlagt`,
       )
     }
 

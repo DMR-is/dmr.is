@@ -39,20 +39,46 @@ describe('employee-scores', () => {
       },
     )
 
-    it.each([0, -0.25])(
-      'rejects a non-positive employee work ratio of %p',
-      (workRatio) => {
+    // 0.004 is the interesting case: it passes a naive `> 0` test, then rounds
+    // to 0.00 in DECIMAL(6,2) and violates the DB CHECK — a 500 where a 400
+    // belongs. 800 is above the template's own cell validation.
+    it.each([0, -0.25, 0.004, 800])(
+      'rejects unusable paid hours of %p',
+      (paidHours) => {
         const parsed = makeParsedReport()
-        parsed.employees[0].workRatio = workRatio
+        parsed.employees[0].paidHours = paidHours
 
         const run = () => assertParsedPayloadIntegrity(parsed)
 
         expect(run).toThrow(BadRequestException)
         expect(run).toThrow(
-          /Starfsmaður með raðnúmer 1 er með ógilt starfshlutfall .* gildið verður að vera stærra en 0/,
+          /Starfsmaður með raðnúmer 1 er með ógildar greiddar stundir .* gildið verður að vera á bilinu/,
         )
       },
     )
+
+    // The other way reglulegt tímakaup can be undefined: a real denominator
+    // but nothing in the numerator. Guarded separately so the message says
+    // which half is wrong.
+    it('rejects an employee whose regluleg laun sum to zero', () => {
+      const parsed = makeParsedReport()
+      const employee = parsed.employees[0]
+      employee.paidHours = 173.33
+      employee.baseSalary = 0
+      employee.additionalFixedOvertime = 0
+      employee.additionalFixedCarAllowance = 0
+      employee.bonusOccasionalCarAllowance = 0
+      employee.bonusOccasionalOvertime = 0
+      employee.bonusPayments = 0
+      employee.bonusOther = 0
+
+      const run = () => assertParsedPayloadIntegrity(parsed)
+
+      expect(run).toThrow(BadRequestException)
+      expect(run).toThrow(
+        /Starfsmaður með raðnúmer 1 er með engin regluleg laun/,
+      )
+    })
   })
 
   describe('capacity limits', () => {
@@ -208,7 +234,7 @@ function makeEmployee(
     field: 'Management',
     department: 'Operations',
     startDate: '2021-01-01',
-    workRatio: 1,
+    paidHours: 1,
     baseSalary: 1000000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,

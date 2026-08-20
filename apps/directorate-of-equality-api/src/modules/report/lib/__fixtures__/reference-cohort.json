@@ -1,0 +1,722 @@
+[
+ {
+  "ordinal": 1,
+  "gender": "FEMALE",
+  "score": 9.0,
+  "hourlyWage": 2128.455285
+ },
+ {
+  "ordinal": 2,
+  "gender": "MALE",
+  "score": 12.0,
+  "hourlyWage": 2812.121212
+ },
+ {
+  "ordinal": 3,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2677.325581
+ },
+ {
+  "ordinal": 4,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2547.674419
+ },
+ {
+  "ordinal": 5,
+  "gender": "MALE",
+  "score": 4.0,
+  "hourlyWage": 2835.227273
+ },
+ {
+  "ordinal": 6,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 1381.981982
+ },
+ {
+  "ordinal": 7,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2935.260116
+ },
+ {
+  "ordinal": 8,
+  "gender": "FEMALE",
+  "score": 10.0,
+  "hourlyWage": 4011.333333
+ },
+ {
+  "ordinal": 9,
+  "gender": "MALE",
+  "score": 6.0,
+  "hourlyWage": 3118.243243
+ },
+ {
+  "ordinal": 10,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 2338.011696
+ },
+ {
+  "ordinal": 11,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 3087.654321
+ },
+ {
+  "ordinal": 12,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2907.051282
+ },
+ {
+  "ordinal": 13,
+  "gender": "FEMALE",
+  "score": 11.0,
+  "hourlyWage": 3069.879518
+ },
+ {
+  "ordinal": 14,
+  "gender": "FEMALE",
+  "score": 4.0,
+  "hourlyWage": 2469.811321
+ },
+ {
+  "ordinal": 15,
+  "gender": "MALE",
+  "score": 10.0,
+  "hourlyWage": 2447.560976
+ },
+ {
+  "ordinal": 16,
+  "gender": "FEMALE",
+  "score": 13.0,
+  "hourlyWage": 2717.647059
+ },
+ {
+  "ordinal": 17,
+  "gender": "MALE",
+  "score": 6.0,
+  "hourlyWage": 1992.125984
+ },
+ {
+  "ordinal": 18,
+  "gender": "MALE",
+  "score": 6.0,
+  "hourlyWage": 2810.674157
+ },
+ {
+  "ordinal": 19,
+  "gender": "FEMALE",
+  "score": 3.0,
+  "hourlyWage": 1789.74359
+ },
+ {
+  "ordinal": 20,
+  "gender": "MALE",
+  "score": 4.0,
+  "hourlyWage": 2235.220126
+ },
+ {
+  "ordinal": 21,
+  "gender": "MALE",
+  "score": 4.0,
+  "hourlyWage": 1912.21374
+ },
+ {
+  "ordinal": 22,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2807.407407
+ },
+ {
+  "ordinal": 23,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2026.708075
+ },
+ {
+  "ordinal": 24,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 3298.319328
+ },
+ {
+  "ordinal": 25,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2769.918699
+ },
+ {
+  "ordinal": 26,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2542.307692
+ },
+ {
+  "ordinal": 27,
+  "gender": "MALE",
+  "score": 3.0,
+  "hourlyWage": 1675.581395
+ },
+ {
+  "ordinal": 28,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2641.317365
+ },
+ {
+  "ordinal": 29,
+  "gender": "FEMALE",
+  "score": 9.0,
+  "hourlyWage": 2674.705882
+ },
+ {
+  "ordinal": 30,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 2771.005917
+ },
+ {
+  "ordinal": 31,
+  "gender": "FEMALE",
+  "score": 4.0,
+  "hourlyWage": 2210.465116
+ },
+ {
+  "ordinal": 32,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2544.642857
+ },
+ {
+  "ordinal": 33,
+  "gender": "FEMALE",
+  "score": 6.0,
+  "hourlyWage": 2312.0
+ },
+ {
+  "ordinal": 34,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 2315.789474
+ },
+ {
+  "ordinal": 35,
+  "gender": "MALE",
+  "score": 12.0,
+  "hourlyWage": 3945.882353
+ },
+ {
+  "ordinal": 36,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 1474.117647
+ },
+ {
+  "ordinal": 37,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2868.553459
+ },
+ {
+  "ordinal": 38,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3226.946108
+ },
+ {
+  "ordinal": 39,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 1523.493976
+ },
+ {
+  "ordinal": 40,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 3588.157895
+ },
+ {
+  "ordinal": 41,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2957.5
+ },
+ {
+  "ordinal": 42,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 2498.876404
+ },
+ {
+  "ordinal": 43,
+  "gender": "MALE",
+  "score": 6.0,
+  "hourlyWage": 2412.426036
+ },
+ {
+  "ordinal": 44,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2907.453416
+ },
+ {
+  "ordinal": 45,
+  "gender": "FEMALE",
+  "score": 14.0,
+  "hourlyWage": 4053.389831
+ },
+ {
+  "ordinal": 46,
+  "gender": "FEMALE",
+  "score": 4.0,
+  "hourlyWage": 1941.566265
+ },
+ {
+  "ordinal": 47,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3691.616766
+ },
+ {
+  "ordinal": 48,
+  "gender": "MALE",
+  "score": 13.0,
+  "hourlyWage": 3094.512195
+ },
+ {
+  "ordinal": 49,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 2681.656805
+ },
+ {
+  "ordinal": 50,
+  "gender": "FEMALE",
+  "score": 13.0,
+  "hourlyWage": 3765.853659
+ },
+ {
+  "ordinal": 51,
+  "gender": "MALE",
+  "score": 10.0,
+  "hourlyWage": 3090.833333
+ },
+ {
+  "ordinal": 52,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 1959.756098
+ },
+ {
+  "ordinal": 53,
+  "gender": "FEMALE",
+  "score": 10.0,
+  "hourlyWage": 3279.207921
+ },
+ {
+  "ordinal": 54,
+  "gender": "FEMALE",
+  "score": 12.0,
+  "hourlyWage": 3050.0
+ },
+ {
+  "ordinal": 55,
+  "gender": "FEMALE",
+  "score": 6.0,
+  "hourlyWage": 3106.666667
+ },
+ {
+  "ordinal": 56,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2924.074074
+ },
+ {
+  "ordinal": 57,
+  "gender": "MALE",
+  "score": 12.0,
+  "hourlyWage": 2588.484848
+ },
+ {
+  "ordinal": 58,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3610.429448
+ },
+ {
+  "ordinal": 59,
+  "gender": "MALE",
+  "score": 14.0,
+  "hourlyWage": 3486.705202
+ },
+ {
+  "ordinal": 60,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2508.074534
+ },
+ {
+  "ordinal": 61,
+  "gender": "MALE",
+  "score": 11.0,
+  "hourlyWage": 3463.030303
+ },
+ {
+  "ordinal": 62,
+  "gender": "MALE",
+  "score": 6.0,
+  "hourlyWage": 2751.785714
+ },
+ {
+  "ordinal": 63,
+  "gender": "FEMALE",
+  "score": 10.0,
+  "hourlyWage": 3911.340206
+ },
+ {
+  "ordinal": 64,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2057.894737
+ },
+ {
+  "ordinal": 65,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 3188.484848
+ },
+ {
+  "ordinal": 66,
+  "gender": "MALE",
+  "score": 12.0,
+  "hourlyWage": 2970.967742
+ },
+ {
+  "ordinal": 67,
+  "gender": "MALE",
+  "score": 13.0,
+  "hourlyWage": 3810.062893
+ },
+ {
+  "ordinal": 68,
+  "gender": "FEMALE",
+  "score": 12.0,
+  "hourlyWage": 3565.656566
+ },
+ {
+  "ordinal": 69,
+  "gender": "MALE",
+  "score": 4.0,
+  "hourlyWage": 1981.065089
+ },
+ {
+  "ordinal": 70,
+  "gender": "MALE",
+  "score": 3.0,
+  "hourlyWage": 2112.57485
+ },
+ {
+  "ordinal": 71,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3865.605096
+ },
+ {
+  "ordinal": 72,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 1891.919192
+ },
+ {
+  "ordinal": 73,
+  "gender": "MALE",
+  "score": 7.0,
+  "hourlyWage": 2732.947977
+ },
+ {
+  "ordinal": 74,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2636.842105
+ },
+ {
+  "ordinal": 75,
+  "gender": "MALE",
+  "score": 12.0,
+  "hourlyWage": 4327.97619
+ },
+ {
+  "ordinal": 76,
+  "gender": "MALE",
+  "score": 11.0,
+  "hourlyWage": 3176.530612
+ },
+ {
+  "ordinal": 77,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2564.07767
+ },
+ {
+  "ordinal": 78,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 2881.818182
+ },
+ {
+  "ordinal": 79,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2141.614907
+ },
+ {
+  "ordinal": 80,
+  "gender": "MALE",
+  "score": 15.0,
+  "hourlyWage": 4006.748466
+ },
+ {
+  "ordinal": 81,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2445.19774
+ },
+ {
+  "ordinal": 82,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2759.663866
+ },
+ {
+  "ordinal": 83,
+  "gender": "MALE",
+  "score": 13.0,
+  "hourlyWage": 2841.904762
+ },
+ {
+  "ordinal": 84,
+  "gender": "FEMALE",
+  "score": 9.0,
+  "hourlyWage": 2452.727273
+ },
+ {
+  "ordinal": 85,
+  "gender": "FEMALE",
+  "score": 11.0,
+  "hourlyWage": 2945.384615
+ },
+ {
+  "ordinal": 86,
+  "gender": "FEMALE",
+  "score": 6.0,
+  "hourlyWage": 2274.324324
+ },
+ {
+  "ordinal": 87,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2529.94012
+ },
+ {
+  "ordinal": 88,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2443.715847
+ },
+ {
+  "ordinal": 89,
+  "gender": "FEMALE",
+  "score": 13.0,
+  "hourlyWage": 3947.976879
+ },
+ {
+  "ordinal": 90,
+  "gender": "FEMALE",
+  "score": 12.0,
+  "hourlyWage": 2417.575758
+ },
+ {
+  "ordinal": 91,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3021.556886
+ },
+ {
+  "ordinal": 92,
+  "gender": "FEMALE",
+  "score": 12.0,
+  "hourlyWage": 2991.764706
+ },
+ {
+  "ordinal": 93,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2684.571429
+ },
+ {
+  "ordinal": 94,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3788.484848
+ },
+ {
+  "ordinal": 95,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 3080.379747
+ },
+ {
+  "ordinal": 96,
+  "gender": "MALE",
+  "score": 10.0,
+  "hourlyWage": 3106.626506
+ },
+ {
+  "ordinal": 97,
+  "gender": "FEMALE",
+  "score": 6.0,
+  "hourlyWage": 2197.029703
+ },
+ {
+  "ordinal": 98,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2790.532544
+ },
+ {
+  "ordinal": 99,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 1760.227273
+ },
+ {
+  "ordinal": 100,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 1702.614379
+ },
+ {
+  "ordinal": 101,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2531.213873
+ },
+ {
+  "ordinal": 102,
+  "gender": "FEMALE",
+  "score": 5.0,
+  "hourlyWage": 2427.950311
+ },
+ {
+  "ordinal": 103,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 3577.68595
+ },
+ {
+  "ordinal": 104,
+  "gender": "FEMALE",
+  "score": 15.0,
+  "hourlyWage": 3966.850829
+ },
+ {
+  "ordinal": 105,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2327.16763
+ },
+ {
+  "ordinal": 106,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2568.235294
+ },
+ {
+  "ordinal": 107,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2350.657895
+ },
+ {
+  "ordinal": 108,
+  "gender": "MALE",
+  "score": 11.0,
+  "hourlyWage": 3158.659218
+ },
+ {
+  "ordinal": 109,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 2507.407407
+ },
+ {
+  "ordinal": 110,
+  "gender": "FEMALE",
+  "score": 7.0,
+  "hourlyWage": 3356.886228
+ },
+ {
+  "ordinal": 111,
+  "gender": "MALE",
+  "score": 10.0,
+  "hourlyWage": 3132.163743
+ },
+ {
+  "ordinal": 112,
+  "gender": "FEMALE",
+  "score": 9.0,
+  "hourlyWage": 2279.710145
+ },
+ {
+  "ordinal": 113,
+  "gender": "FEMALE",
+  "score": 6.0,
+  "hourlyWage": 2741.212121
+ },
+ {
+  "ordinal": 114,
+  "gender": "MALE",
+  "score": 8.0,
+  "hourlyWage": 2716.470588
+ },
+ {
+  "ordinal": 115,
+  "gender": "MALE",
+  "score": 11.0,
+  "hourlyWage": 2649.39759
+ },
+ {
+  "ordinal": 116,
+  "gender": "MALE",
+  "score": 4.0,
+  "hourlyWage": 2230.177515
+ },
+ {
+  "ordinal": 117,
+  "gender": "MALE",
+  "score": 9.0,
+  "hourlyWage": 3201.197605
+ },
+ {
+  "ordinal": 118,
+  "gender": "MALE",
+  "score": 5.0,
+  "hourlyWage": 2398.757764
+ },
+ {
+  "ordinal": 119,
+  "gender": "MALE",
+  "score": 13.0,
+  "hourlyWage": 3278.571429
+ },
+ {
+  "ordinal": 120,
+  "gender": "FEMALE",
+  "score": 8.0,
+  "hourlyWage": 2540.229885
+ }
+]

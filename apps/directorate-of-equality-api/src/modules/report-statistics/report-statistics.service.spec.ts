@@ -26,7 +26,7 @@ const mockLogger = {
 const makeEmployee = (
   score: number,
   baseSalary: number,
-  workRatio: number,
+  paidHours: number,
   gender: GenderEnum,
   overrides?: {
     id?: string
@@ -38,7 +38,7 @@ const makeEmployee = (
   ({
     score,
     baseSalary,
-    workRatio,
+    paidHours,
     gender,
     additionalSalary: overrides?.additionalSalary ?? 0,
     bonusSalary: overrides?.bonusSalary ?? null,
@@ -137,14 +137,14 @@ describe('ReportStatisticsService', () => {
     service = module.get(ReportStatisticsService)
   })
 
-  // ── getBaseSalaryByGenderAndScoreAll ──────────────────────────────
+  // ── getRegularHourlyWageByScoreAll ──────────────────────────────
 
-  describe('getBaseSalaryByGenderAndScoreAll', () => {
+  describe('getRegularHourlyWageByScoreAll', () => {
     it('throws NotFoundException when no employees exist', async () => {
       employeeFindAll.mockResolvedValue([])
 
       await expect(
-        service.getBaseSalaryByGenderAndScoreAll(REPORT_ID),
+        service.getRegularHourlyWageByScoreAll(REPORT_ID),
       ).rejects.toThrow(NotFoundException)
     })
 
@@ -154,21 +154,21 @@ describe('ReportStatisticsService', () => {
         makeEmployee(300, 1000000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.allowedDifferencePercent).toBe(1.95)
     })
 
-    it('computes adjusted base salary as baseSalary / workRatio', async () => {
+    it('computes adjusted base salary as baseSalary / paidHours', async () => {
       // 1,000,000 kr base salary at 80% work ratio → 1,250,000 kr full-time equivalent
       employeeFindAll.mockResolvedValue([
         makeEmployee(300, 1000000, 0.8, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.dataPoints).toHaveLength(1)
-      expect(result.dataPoints[0].adjustedSalary).toBe(1250000)
+      expect(result.dataPoints[0].regularHourlyWage).toBe(1250000)
     })
 
     it('assigns employees to correct 100-point score buckets', async () => {
@@ -178,7 +178,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(310, 600000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets).toHaveLength(3)
       expect(result.scoreBuckets[0]).toMatchObject({
@@ -201,7 +201,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(450, 600000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets).toHaveLength(2)
       expect(result.scoreBuckets[0].rangeFrom).toBe(100)
@@ -215,7 +215,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(360, 200000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
       const bucket = result.scoreBuckets[0]
 
       // Averages
@@ -240,7 +240,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(370, 400000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets[0].maleMedianSalary).toBe(400000)
       expect(result.totals.maleMedianSalary).toBe(400000)
@@ -254,7 +254,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(360, 200000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets[0].wageGapPercent).toBe(42.9)
     })
@@ -265,7 +265,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(360, 700000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets[0].wageGapPercent).toBeLessThan(0)
     })
@@ -275,7 +275,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(350, 600000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets[0].wageGapPercent).toBeNull()
       expect(result.scoreBuckets[0].femaleAverageSalary).toBeNull()
@@ -288,7 +288,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(300, 500000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.totals.maleAverageSalary).toBe(500000)
       expect(result.totals.femaleAverageSalary).toBe(500000)
@@ -307,7 +307,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(300, 300000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.regressionLine.slope).toBe(1000)
       expect(result.regressionLine.intercept).toBe(0)
@@ -318,7 +318,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(300, 500000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.regressionLine.slope).toBe(0)
       expect(result.regressionLine.intercept).toBe(500000)
@@ -331,7 +331,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(300, 500000, 1, GenderEnum.MALE),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreAll(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreAll(REPORT_ID)
 
       expect(result.scoreBuckets).toHaveLength(1)
       expect(result.scoreBuckets[0].rangeFrom).toBe(300)
@@ -339,9 +339,9 @@ describe('ReportStatisticsService', () => {
     })
   })
 
-  // ── getBaseSalaryByGenderAndScoreWork ─────────────────────────────
+  // ── getRegularHourlyWageByScoreWork ─────────────────────────────
 
-  describe('getBaseSalaryByGenderAndScoreWork', () => {
+  describe('getRegularHourlyWageByScoreWork', () => {
     /**
      * Wires up the criterion chain mocks so that:
      * - CRITERION_WORK (RESPONSIBILITY) → SUB_CRIT_WORK → STEP_WORK_A (score 200), STEP_WORK_B (score 300)
@@ -380,11 +380,11 @@ describe('ReportStatisticsService', () => {
       ])
       personalStepFindAll.mockResolvedValue([])
 
-      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreWork(REPORT_ID)
 
       expect(result.dataPoints).toHaveLength(1)
       expect(result.dataPoints[0].score).toBe(500) // 200 + 300
-      expect(result.dataPoints[0].adjustedSalary).toBe(600000)
+      expect(result.dataPoints[0].regularHourlyWage).toBe(600000)
     })
 
     it('excludes PERSONAL-criterion steps from work score', async () => {
@@ -404,7 +404,7 @@ describe('ReportStatisticsService', () => {
       ])
       personalStepFindAll.mockResolvedValue([])
 
-      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreWork(REPORT_ID)
 
       // Only STEP_WORK_A counts (score 200), STEP_PERSONAL is excluded
       expect(result.dataPoints[0].score).toBe(200)
@@ -428,7 +428,7 @@ describe('ReportStatisticsService', () => {
         makePersonalStepLink('emp-1', STEP_WORK_B),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreWork(REPORT_ID)
 
       // 200 (role) + 300 (personal, but work-type) = 500
       expect(result.dataPoints[0].score).toBe(500)
@@ -452,7 +452,7 @@ describe('ReportStatisticsService', () => {
         makePersonalStepLink('emp-1', STEP_WORK_A),
       ])
 
-      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreWork(REPORT_ID)
 
       // Step A (200) counted once, not twice
       expect(result.dataPoints[0].score).toBe(200)
@@ -471,71 +471,21 @@ describe('ReportStatisticsService', () => {
       roleStepFindAll.mockResolvedValue([])
       personalStepFindAll.mockResolvedValue([])
 
-      const result = await service.getBaseSalaryByGenderAndScoreWork(REPORT_ID)
+      const result = await service.getRegularHourlyWageByScoreWork(REPORT_ID)
 
       expect(result.dataPoints[0].score).toBe(0)
     })
   })
 
-  // ── getFullSalaryByGenderAndScoreAll ──────────────────────────────
 
-  describe('getFullSalaryByGenderAndScoreAll', () => {
-    it('computes adjusted full salary as (base + additional + bonus) / workRatio', async () => {
-      // base 800,000 + additional 150,000 + bonus 50,000 = 1,000,000
-      // at 80% work ratio → 1,250,000
-      employeeFindAll.mockResolvedValue([
-        makeEmployee(300, 800000, 0.8, GenderEnum.MALE, {
-          additionalSalary: 150000,
-          bonusSalary: 50000,
-        }),
-      ])
-
-      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
-
-      expect(result.dataPoints).toHaveLength(1)
-      expect(result.dataPoints[0].adjustedSalary).toBe(1250000)
-      // The outlier band only applies to the base-salary-by-total-score chart.
-      expect(result.allowedDifferencePercent).toBeNull()
-    })
-
-    it('treats null bonusSalary as zero', async () => {
-      // base 600,000 + additional 400,000 + bonus null = 1,000,000
-      // at 100% work ratio → 1,000,000
-      employeeFindAll.mockResolvedValue([
-        makeEmployee(300, 600000, 1, GenderEnum.FEMALE, {
-          additionalSalary: 400000,
-          bonusSalary: null,
-        }),
-      ])
-
-      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
-
-      expect(result.dataPoints[0].adjustedSalary).toBe(1000000)
-    })
-
-    it('uses total employee score (not work score) for X-axis', async () => {
-      employeeFindAll.mockResolvedValue([
-        makeEmployee(450, 500000, 1, GenderEnum.MALE, {
-          additionalSalary: 100000,
-        }),
-      ])
-
-      const result = await service.getFullSalaryByGenderAndScoreAll(REPORT_ID)
-
-      expect(result.dataPoints[0].score).toBe(450)
-    })
-  })
-
-  // ── getBaseSalaryGenderWageGap ────────────────────────────────────
-
-  describe('getBaseSalaryGenderWageGap', () => {
+  describe('getRegularHourlyWageGenderWageGap', () => {
     it('returns average and median base salary per gender with wage gap', async () => {
       employeeFindAll.mockResolvedValue([
         makeEmployee(0, 700000, 1, GenderEnum.MALE),
         makeEmployee(0, 800000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryGenderWageGap(REPORT_ID)
+      const result = await service.getRegularHourlyWageGenderWageGap(REPORT_ID)
 
       expect(result.maleAverageSalary).toBe(700000)
       expect(result.femaleAverageSalary).toBe(800000)
@@ -554,7 +504,7 @@ describe('ReportStatisticsService', () => {
         makeEmployee(0, 804248, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryGenderWageGap(REPORT_ID)
+      const result = await service.getRegularHourlyWageGenderWageGap(REPORT_ID)
 
       expect(result.averageWageGapPercent).toBeLessThan(0)
     })
@@ -566,58 +516,13 @@ describe('ReportStatisticsService', () => {
         makeEmployee(0, 600000, 1, GenderEnum.FEMALE),
       ])
 
-      const result = await service.getBaseSalaryGenderWageGap(REPORT_ID)
+      const result = await service.getRegularHourlyWageGenderWageGap(REPORT_ID)
 
       expect(result.maleAverageSalary).toBe(625000)
       expect(result.femaleAverageSalary).toBe(600000)
     })
   })
 
-  // ── getFullSalaryGenderWageGap ────────────────────────────────────
-
-  describe('getFullSalaryGenderWageGap', () => {
-    it('uses base + additional + bonus for full salary', async () => {
-      // male: 500k + 200k + 50k = 750k at 100%
-      // female: 600k + 250k + 100k = 950k at 100%
-      employeeFindAll.mockResolvedValue([
-        makeEmployee(0, 500000, 1, GenderEnum.MALE, {
-          additionalSalary: 200000,
-          bonusSalary: 50000,
-        }),
-        makeEmployee(0, 600000, 1, GenderEnum.FEMALE, {
-          additionalSalary: 250000,
-          bonusSalary: 100000,
-        }),
-      ])
-
-      const result = await service.getFullSalaryGenderWageGap(REPORT_ID)
-
-      expect(result.maleAverageSalary).toBe(750000)
-      expect(result.femaleAverageSalary).toBe(950000)
-      expect(result.averageWageGapPercent).toBeLessThan(0)
-    })
-
-    it('provides both average and median wage gap percentages', async () => {
-      // 3 males: 400k, 500k, 900k → avg 600k, median 500k
-      // 2 females: 600k, 800k → avg 700k, median 700k
-      employeeFindAll.mockResolvedValue([
-        makeEmployee(0, 400000, 1, GenderEnum.MALE),
-        makeEmployee(0, 500000, 1, GenderEnum.MALE),
-        makeEmployee(0, 900000, 1, GenderEnum.MALE),
-        makeEmployee(0, 600000, 1, GenderEnum.FEMALE),
-        makeEmployee(0, 800000, 1, GenderEnum.FEMALE),
-      ])
-
-      const result = await service.getFullSalaryGenderWageGap(REPORT_ID)
-
-      // avg gap = (600k - 700k) / 600k * 100 = -16.7
-      expect(result.averageWageGapPercent).toBeCloseTo(-16.7, 0)
-      // median gap = (500k - 700k) / 500k * 100 = -40.0
-      expect(result.medianWageGapPercent).toBe(-40)
-    })
-  })
-
-  // ── getBenefitsBreakdown ──────────────────────────────────────────
 
   describe('getBenefitsBreakdown', () => {
     it('returns average bonus and additional per gender (raw, no work ratio adjustment)', async () => {

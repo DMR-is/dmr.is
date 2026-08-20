@@ -21,10 +21,15 @@ const mockLogger = {
 const REPORT_ID = 'report-1'
 const PREVIOUS_REPORT_ID = 'report-0'
 
-// Builds a persisted-result row exposing just the male/female base-pay gap the
-// evaluator reads.
+// Builds a persisted-result row exposing just the male/female gap on reglulegt
+// tímakaup that the evaluator reads.
+//
+// ⚠️ The path below must match `readGapPercent` exactly. Every hop there is
+// optional-chained, so a stale path yields `null`, which SKIPS the gap check
+// instead of failing it — see the non-null regression test at the end of this
+// file, which exists to catch precisely that.
 const resultWithGap = (maleFemale: number | null) => ({
-  baseSnapshot: { totals: { salaryDifferences: { maleFemale } } },
+  salarySnapshot: { totals: { salaryDifferences: { maleFemale } } },
 })
 
 describe('ReportAutoReviewService', () => {
@@ -177,5 +182,32 @@ describe('ReportAutoReviewService', () => {
     expect(verdict.decision).toBe(AutoReviewDecisionEnum.AUTO_APPROVE)
     expect(verdict.signals.gapImproved).toBe(true)
     expect(verdict.signals.previousGapPercent).toBe(5)
+  })
+
+  /**
+   * Guards a failure mode that is invisible by construction.
+   *
+   * `readGapPercent` walks `result.salarySnapshot.totals.salaryDifferences
+   * .maleFemale` with optional chaining at every hop. If that path ever goes
+   * stale — a renamed column, a re-nested snapshot — it returns `null`, and
+   * `decide()` *skips* the gap condition rather than reporting a problem. The
+   * report then auto-approves on a number nobody read.
+   *
+   * Nothing else catches it: the type is `number | null`, `null` is a legitimate
+   * value (an empty cohort has no gap), and every other assertion in this file
+   * would still pass. It is masked in production today only because
+   * `AUTO_REVIEW_ENFORCE` is false — meaning it would first bite on the day
+   * enforcement is switched on, which is exactly when the wage-gap benchmark
+   * lands.
+   *
+   * So: assert the value is actually read, not merely that a decision came back.
+   */
+  it('reads a real gap percent rather than silently skipping the check', async () => {
+    arrangeSalary({ total: 20, outliers: 1, gap: 3 })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.signals.gapPercent).not.toBeNull()
+    expect(verdict.signals.gapPercent).toBe(3)
   })
 })
