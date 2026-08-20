@@ -2,7 +2,7 @@
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
-import { Select } from '@dmr.is/ui/components/island-is/Select'
+import { InlineSelect } from '@dmr.is/ui/components/island-is/InlineSelect'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
@@ -70,28 +70,25 @@ export const ReportReviewerSelect = ({
     value: u.id,
   }))
 
-  const value = options.find((o) => o.value === reviewerId) ?? null
-
   return (
     // The table navigates to the report on any cell click, which would tear the
-    // dropdown down mid-interaction — the click has to stop here.
+    // dropdown down mid-interaction — the click has to stop here. (The menu
+    // itself is portaled out of the table, so it never bubbles into the row.)
     <Box
       onClick={(e: React.MouseEvent) => e.stopPropagation()}
       style={{ cursor: 'auto' }}
     >
-      <Select
+      <InlineSelect
         name={`report-reviewer-${reportId}`}
-        size="xs"
+        aria-label={overviewText.filter.reviewerLabel}
         options={options}
-        value={value}
+        value={reviewerId}
         placeholder={overviewText.reviewerSelect.placeholder}
         // Clearing means "back to the queue", which the API only allows once the
         // report is in review.
         isClearable={status === ReportStatusEnum.IN_REVIEW}
         isLoading={isLoadingUsers || assign.isPending}
-        onChange={(opt) =>
-          assign.mutate({ reportId, userId: opt?.value ?? null })
-        }
+        onChange={(userId) => assign.mutate({ reportId, userId })}
       />
     </Box>
   )
