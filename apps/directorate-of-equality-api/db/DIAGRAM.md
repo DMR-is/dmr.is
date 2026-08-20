@@ -71,6 +71,7 @@ erDiagram
         uuid report_id FK
         uuid report_employee_role_id FK
         GenderEnum gender
+        decimal paid_hours "greiddar stundir, CHECK > 0"
         decimal score "nullable, NULL until submit"
     }
     report_employee_role {
@@ -106,18 +107,9 @@ erDiagram
         uuid id PK
         uuid report_id FK
         decimal salary_difference_threshold_percent
-        text calculation_version
-        jsonb base_snapshot
-        jsonb full_snapshot
-        jsonb outlier_analysis_snapshot
-    }
-    report_role_result {
-        uuid id PK
-        uuid report_result_id FK
-        uuid report_employee_role_id FK
-        text role_title "snapshot"
-        jsonb base_snapshot
-        jsonb full_snapshot
+        text calculation_version "v2 = reglulegt tímakaup"
+        jsonb salary_snapshot
+        jsonb wage_gap_decomposition_snapshot
     }
     public_report {
         uuid id PK
@@ -200,8 +192,6 @@ erDiagram
     report_sub_criterion_step ||--o{ report_employee_personal_criterion_step : "report_sub_criterion_step_id"
 
     report ||--|| report_result : "report_id"
-    report_result ||--o{ report_role_result : "report_result_id"
-    report_employee_role ||--o{ report_role_result : "report_employee_role_id"
 
     report ||--o| public_report : "source_report_id"
 

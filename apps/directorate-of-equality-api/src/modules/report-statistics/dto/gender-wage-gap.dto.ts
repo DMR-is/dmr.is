@@ -22,9 +22,6 @@ export class GenderWageGapDto {
   @ApiOptionalNumber({ nullable: true })
   averageWageGapPercent!: number | null
 
-  @ApiOptionalNumber({ nullable: true })
-  medianWageGapPercent!: number | null
-
   @ApiNumber()
   maleCount!: number
 

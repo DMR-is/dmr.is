@@ -364,10 +364,6 @@ function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
       snapshot.salaryDifferences.maleFemale,
       1,
     ),
-    medianWageGapPercent: roundNullable(
-      computeWageGapPercent(snapshot.male.median, snapshot.female.median),
-      1,
-    ),
     maleCount: males.length,
     femaleCount: females.length,
   }
