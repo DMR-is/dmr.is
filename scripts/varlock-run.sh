@@ -69,15 +69,46 @@ if ! keys="$(node "$root/scripts/varlock-declared-keys.mjs" "$app")"; then
   exit 2
 fi
 
+# NEVER-SCRUB LIST
+#
+# A declared key is normally the app's to decide, never the shell's. These are
+# the exception: they are ambient SESSION IDENTITY, not app configuration. In a
+# container they come from the ECS task role; on a laptop they come from the
+# developer's AWS session. No secret store holds them in either world -- the
+# infra repo sets AWS_REGION on none of the services.
+#
+# Scrubbing them does not fail loudly, which is why this list exists. See
+# libs/shared/modules/src/lib/aws/aws.service.ts: a missing AWS_CREDENTIALS_SOURCE
+# silently switches the S3 and SES clients from fromIni(profile) to the SDK
+# default chain, and a missing AWS_REGION silently falls back to a hardcoded
+# 'eu-west-1'. Both boot cleanly and talk to the wrong place.
+#
+# They stay declared in the schemas so varlock still type-checks them. They are
+# exempt from the scrub only, and must never be marked @required.
+#
+# Note for whoever migrates regulations-api: that app declares all three rungs
+# of its own region fallback ladder -- AWS_REGION picked from the root schema,
+# plus AWS_DEFAULT_REGION and AWS_REGION_NAME of its own -- so without this list
+# the scrub would knock out the entire ladder at once.
+never_scrub=" AWS_REGION AWS_DEFAULT_REGION AWS_REGION_NAME AWS_CREDENTIALS_SOURCE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_PROFILE "
+
 scrub=""
 while IFS= read -r key; do
-  [ -n "$key" ] && scrub="$scrub -u $key"
+  [ -z "$key" ] && continue
+  case "$never_scrub" in
+    *" $key "*) continue ;;
+  esac
+  scrub="$scrub -u $key"
 done <<< "$keys"
 
-# 1Password lookups are cached for an hour (see cacheTtl in the app's config),
-# which keeps Touch ID out of every app launch but means an edit made in
-# 1Password does NOT show up here until the cache expires. That reads exactly
-# like "my change did nothing" -- it has already cost two debugging sessions.
+# varlock's value cache is ENCRYPTED, so every read costs a decrypt, and the
+# decrypt asks for biometric unless the encryption daemon happens to be holding
+# a session. cacheTtl therefore does the opposite of what it looks like it does:
+# set to 1h it made EVERY app launch prompt. No config sets it -- see the note
+# in config/1password/README.md -- and each app resolves fresh instead.
+#
+# The cache is still written, and it caches failed and empty results too, so an
+# edit made in 1Password can still look like "my change did nothing":
 #
 #   VARLOCK_FRESH=1 yarn nx serve <app>
 #
