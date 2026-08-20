@@ -100,7 +100,7 @@ export const CaseTable = ({
           <T.Row>
             {loading && (
               <TableHeadCell size="tiny">
-                <LoadingDots large={false} />
+                <LoadingDots />
               </TableHeadCell>
             )}
             {columns.map((column, index) => (

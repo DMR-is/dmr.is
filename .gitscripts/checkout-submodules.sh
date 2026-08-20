@@ -18,6 +18,23 @@ while read -r submodule; do
   # is regenerated at the end of this script.
   rm -f "${SUBMODULE_PATH}/tsconfig.base.json"
 
+  # The submodule is vendored code pinned to an exact commit, so its working
+  # tree should always BE that commit. Anything modified in it is either
+  # generated or accidental - prettier has silently reformatted these files
+  # before, invisible in `git status` because .gitmodules sets `ignore = dirty`.
+  #
+  # Reset it, but say what was discarded. Without this, a stale island-is
+  # patch left applied blocks `checkout <sha>` with "local changes would be
+  # overwritten" and wedges every future bump.
+  if [ -e "${SUBMODULE_PATH}/.git" ]; then
+    DIRTY=$(git -C "${SUBMODULE_PATH}" status --porcelain | wc -l | tr -d ' ')
+    if [ "${DIRTY}" != "0" ]; then
+      echo "ℹ️  ${NAME}: discarding ${DIRTY} local modification(s) in the submodule:" >&2
+      git -C "${SUBMODULE_PATH}" status --porcelain | sed 's/^/     /' >&2
+      git -C "${SUBMODULE_PATH}" checkout --quiet -- .
+    fi
+  fi
+
   # Quietly ensure submodule is initialized and updated
   git submodule update --init --quiet "${SUBMODULE_PATH}"
 
