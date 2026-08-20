@@ -55,21 +55,16 @@ export const ModalBase: FC<ModalBaseProps> = ({
   const [open, setOpen] = useState(initialVisibility)
   const isFirstRender = useRef(true)
 
-  const showModal = useCallback(() => {
-    const dialog = dialogRef.current
-    if (dialog && !dialog.open) {
-      dialog.showModal()
-    }
-    setOpen(true)
-  }, [])
+  // The portal below cannot render during SSR or on the first client render,
+  // so nothing may touch `document` or `dialogRef` until after mount.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
-  const closeModal = useCallback(() => {
-    const dialog = dialogRef.current
-    if (dialog?.open) {
-      dialog.close()
-    }
-    setOpen(false)
-  }, [])
+  // These only move state. Calling dialog.showModal() here would silently do
+  // nothing whenever the ref is not attached yet, which is every call that
+  // happens on mount.
+  const showModal = useCallback(() => setOpen(true), [])
+  const closeModal = useCallback(() => setOpen(false), [])
 
   // Fire onVisibilityChange after state changes (skip first render)
   useEffect(() => {
@@ -96,12 +91,18 @@ export const ModalBase: FC<ModalBaseProps> = ({
     }
   }, [toggleClose])
 
-  // Initial visibility
+  // Drive the native <dialog> from `open`, keyed on `mounted` so it also runs
+  // for the initial render once the portal exists. This covers initialVisibility
+  // and an isVisible that is already true at mount.
   useEffect(() => {
-    if (initialVisibility) {
-      showModal()
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (open && !dialog.open) {
+      dialog.showModal()
+    } else if (!open && dialog.open) {
+      dialog.close()
     }
-  }, [])
+  }, [open, mounted])
 
   // Handle native dialog cancel event (Escape key)
   useEffect(() => {
@@ -118,7 +119,7 @@ export const ModalBase: FC<ModalBaseProps> = ({
 
     dialog.addEventListener('cancel', handleCancel)
     return () => dialog.removeEventListener('cancel', handleCancel)
-  }, [hideOnEsc])
+  }, [hideOnEsc, mounted])
 
   // Handle click outside (click on backdrop)
   useEffect(() => {
@@ -133,7 +134,7 @@ export const ModalBase: FC<ModalBaseProps> = ({
 
     dialog.addEventListener('click', handleClick)
     return () => dialog.removeEventListener('click', handleClick)
-  }, [hideOnClickOutside, closeModal])
+  }, [hideOnClickOutside, closeModal, mounted])
 
   // Body scroll lock
   useEffect(() => {
@@ -161,7 +162,8 @@ export const ModalBase: FC<ModalBaseProps> = ({
           'aria-controls': baseId,
         })}
 
-      {renderModal &&
+      {mounted &&
+        renderModal &&
         createPortal(
           <dialog
             ref={dialogRef}
