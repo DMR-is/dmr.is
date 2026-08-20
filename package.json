@@ -150,7 +150,7 @@
     "nx": "22.7.8",
     "open-next": "^2.3.7",
     "prettier": "^3.5.3",
-    "react-select": "5.8.0",
+    "react-select": "5.10.2",
     "sass": "1.62.1",
     "supertest": "7.2.2",
     "swc-loader": "0.2.7",
@@ -212,6 +212,7 @@
     "@vanilla-extract/webpack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/webpack-plugin@edaedbb"
   },
   "dependencies": {
-    "@tanstack/react-table": "8.21.3"
+    "@tanstack/react-table": "8.21.3",
+    "react-swipeable": "7.0.2"
   }
 }

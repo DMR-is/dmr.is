@@ -33,7 +33,7 @@
     "nuqs": "2.5.0",
     "oidc-client-ts": "2.0.3",
     "react": "19.2.4",
-    "react-datepicker": "^4.10.0",
+    "react-datepicker": "9.1.0",
     "react-dom": "19.2.4",
     "react-dropzone": "^11.7.1",
     "react-error-boundary": "6.1.0",
@@ -46,7 +46,6 @@
     "zod": "4.1.11"
   },
   "devDependencies": {
-    "@types/react-datepicker": "^4.10.0",
     "@vanilla-extract/next-plugin": "^2.4.14",
     "webpack-bundle-analyzer": "^4.10.2"
   }
