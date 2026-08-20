@@ -23,11 +23,15 @@ type Props = {
  * Reviewer assignment straight from the overview table, so the admin does not
  * have to open a report just to hand it to someone.
  *
- * The API only accepts assignment on SUBMITTED (assign, which also moves the
- * report to IN_REVIEW) and IN_REVIEW (reassign, or clear to push it back to the
- * queue). Every other status — POSTPONED included, which the first tab shows
- * when "sýna frestaðar" is on — would 400, so those rows render the plain name
- * instead of a select that is guaranteed to fail.
+ * Assigns with `updateStatus: false`: handing a report to a colleague from the
+ * list is not the same as that colleague picking it up, so the report keeps its
+ * status and stays on whichever tab it was on. Moving it into review is the
+ * explicit "Færa í vinnslu" action on the report itself.
+ *
+ * The API only accepts assignment on SUBMITTED and IN_REVIEW. Every other
+ * status — POSTPONED included, which the first tab shows when "sýna frestaðar"
+ * is on — would 400, so those rows render the plain name instead of a select
+ * that is guaranteed to fail.
  */
 export const ReportReviewerSelect = ({
   reportId,
@@ -84,11 +88,11 @@ export const ReportReviewerSelect = ({
         options={options}
         value={reviewerId}
         placeholder={overviewText.reviewerSelect.placeholder}
-        // Clearing means "back to the queue", which the API only allows once the
-        // report is in review.
-        isClearable={status === ReportStatusEnum.IN_REVIEW}
+        isClearable
         isLoading={isLoadingUsers || assign.isPending}
-        onChange={(userId) => assign.mutate({ reportId, userId })}
+        onChange={(userId) =>
+          assign.mutate({ reportId, userId, updateStatus: false })
+        }
       />
     </Box>
   )
