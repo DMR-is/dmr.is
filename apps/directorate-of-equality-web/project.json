@@ -30,6 +30,12 @@
       }
     },
     "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh directorate-of-equality-web nx run directorate-of-equality-web:serve-raw"
+      }
+    },
+    "serve-raw": {
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {

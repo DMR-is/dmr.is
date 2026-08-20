@@ -35,6 +35,12 @@
       }
     },
     "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh legal-gazette-api nx run legal-gazette-api:serve-raw"
+      }
+    },
+    "serve-raw": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
       "options": {
@@ -80,14 +86,14 @@
     "migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:migrate",
+        "command": "../../scripts/varlock-run.sh legal-gazette-api sequelize-cli db:migrate",
         "cwd": "apps/legal-gazette-api"
       }
     },
     "seed": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "sequelize-cli db:seed:all",
+        "command": "../../scripts/varlock-run.sh legal-gazette-api sequelize-cli db:seed:all",
         "cwd": "apps/legal-gazette-api"
       }
     },
