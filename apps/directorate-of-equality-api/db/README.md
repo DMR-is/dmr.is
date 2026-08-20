@@ -150,6 +150,63 @@ State-by-state:
   - **Auto-withdrawn on sibling resubmission.** When a company submits a new report of a given `type`, `report-create.service.ts` silently withdraws any still-`SUBMITTED` predecessor of the same type for that company (`withdrawOrRejectInflightSibling()`): the old row flips to `WITHDRAWN` and a `WITHDRAWN` `report_event` is emitted on it with `related_report_id` pointing at the new replacing report (mirroring `SUPERSEDED`). A prior report in `IN_REVIEW` or `POSTPONED` is **not** auto-withdrawn — those flows are active, so the new submission is rejected with 409 instead.
   - **Applicant-withdrawn.** `application.withdraw()` (`POST` on the application surface) sets a report to `WITHDRAWN` when the applicant deleted the originating island.is application upstream, emitting a `STATUS_CHANGED` event. Allowed only before a terminal state (`APPROVED`/`DENIED`/`SUPERSEDED`); idempotent on an already-`WITHDRAWN` report.
 
+## What counts as an outlier (the compliance rule)
+
+Read this before "Outlier deadlines" below — those deadlines hang off the definition here.
+
+**Compliance is decided company-wide, on one figure.** The report's **óskýrður (leiðréttur)
+launamunur** — the Oaxaca-Blinder unexplained term on `log(reglulegt tímakaup)`, frozen at submit in
+`report_result.wage_gap_decomposition_snapshot.oskyrtPercent` — is compared to the statutory
+benchmark in `config.salary_difference_threshold_percent` (3,9%). Above it, the company owes an
+**áætlun um úrbætur**. Nothing is ever auto-rejected; every rejection is a human decision.
+
+**The employees that plan must account for are the `lágmarksmengi`:** the *fewest* underpaid members
+of the disadvantaged gender whose correction brings óskýrt under the benchmark. Membership is flagged
+per employee in the same snapshot (`employees[].inMinimumSet`) and persisted as
+`report_employee_outlier` rows.
+
+Three properties of that set are easy to get wrong:
+
+- **It is lift-only.** Candidates are underpaid members of the *disadvantaged* gender only, so the
+  set can never propose cutting anyone's pay — and an employee paid **above** the line is never a
+  member, however far above.
+- **It is single-gender**, whichever gender the gap disfavours. That follows from the arithmetic:
+  residuals sum to zero, so if one group's mean residual is higher the other's must be negative.
+- ⚠️ **Membership is a property of the SET, not of the person.** It comes from a greedy walk down the
+  correctable employees ordered by their contribution, stopping the moment the running gap drops under
+  the benchmark. Two employees on near-identical pay and score can land on opposite sides of the cut,
+  and the honest answer to *"why me and not my colleague?"* is "you carried more of the gap and N
+  corrections were enough" — not anything about that person alone.
+
+**An empty set and a compliant gap are the same fact.** `minimumSetSize === 0` ⟺ óskýrt is within the
+benchmark, because the greedy walk's exit condition *is* that comparison. Prefer reading the set:
+it uses the unrounded log figure, whereas comparing rounded percentages disagrees at the boundary
+(óskýrt of `0,03978087001184605` against a threshold of `0,0397808700118446` puts one employee in the
+set while the displayed percent rounds to exactly 3,9). Both the auto-review rule and the reviewer UI
+read the set for this reason.
+
+### Retiring the ±band
+
+Until 2026-08 compliance was decided **per employee**: fit a gender-blind line through
+(starfsmatsstig, tímakaup) and flag anyone further than *half* the statutory threshold (±1,95%) from
+it. That rule is gone, along with `report_result.outlier_analysis_snapshot` which stored its verdicts
+and the tolerance corridor both chart renderers used to shade.
+
+Two consequences worth knowing when reading older code or data:
+
+- **It changed *which* employees are flagged, not just how many.** The band caught deviation in
+  either direction, so it flagged overpaid staff too; the lágmarksmengi flags the underpaid side. On
+  the same six-employee cohort the band flagged the overpaid man and the lágmarksmengi flags the two
+  underpaid women.
+- **The set is far smaller, and that is not a proxy for severity.** It is *minimal by construction*,
+  so a small set can mean a concentrated problem rather than a mild one. On a 100-employee reference
+  cohort the band flagged 100; the lágmarksmengi is 6.
+
+**Naming is deliberately unchanged.** `report_employee_outlier`, `report_outlier_group`, the
+`/outliers` endpoints and the úrbótaáætlun UI all keep the word "outlier". Renaming the flow would
+churn the schema, every endpoint and the web for vocabulary; what changed is the membership rule, not
+the plumbing.
+
 ## Outlier deadlines
 
 > **Status:** this section describes the intended domain model. It is **subject to change** and largely **not yet implemented** — see "Implementation status" at the end. The single `report.correction_deadline` column exists today but is never written, and the email / fine actions below do not exist yet.
@@ -396,7 +453,7 @@ The same chart shape that `buildChartFromEmployeePoints` produces for the applic
 - **Scatter points** — `wage_gap_decomposition_snapshot.employees[*]` carries `score`, `gender` and `hourlyWage` per employee.
 - **Expected-pay curve** — each employee's `expectedHourlyWage` is `exp(fitted)` from `pooledFit`, so in krónur space the model is a curve rather than a straight line. The live chart endpoint additionally returns a `regressionLine` fitted in level space; that line is descriptive only and is **not** the model any decision rests on.
 - **Score-bucket overlay** — bucket-level aggregates (median, average, gender breakdowns, counts) live in `salary_snapshot.scoreBuckets`. Join on the bucket range when an overlay is needed. Per-employee bucket placement is no longer stored: it existed for the retired band.
-- **No tolerance band.** The chart used to shade `predicted × (1 ± allowedDifferencePercent / 100)` and call points outside it outliers. That rule is gone — see "Retiring the ±band" — and nothing shades a corridor now, because a corridor that decides nothing while looking exactly as it did would read as a finding.
+- **No tolerance band.** The chart used to shade `predicted × (1 ± allowedDifferencePercent / 100)` and call points outside it outliers. That rule is gone — see "Retiring the ±band" under "What counts as an outlier" — and nothing shades a corridor now, because a corridor that decides nothing while looking exactly as it did would read as a finding.
 - **Highlighting** — mark `inMinimumSet` employees if the chart needs to show who the úrbótaáætlun covers.
 
 Bucket placement is informational only, and always was. Compliance is decided by the company-wide óskýrt figure against the benchmark — never by an individual's distance from any line, bucket median or otherwise.
