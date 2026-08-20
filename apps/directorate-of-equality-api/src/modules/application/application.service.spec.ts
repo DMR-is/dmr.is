@@ -898,6 +898,43 @@ describe('ApplicationService', () => {
     })
   })
 
+  describe('getReportOutliers', () => {
+    const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
+    const PROVIDER_ID = 'island-is-application-aa'
+
+    // The portal renders the improvement plan grouped by role, so the page has
+    // to arrive sorted by role title with the employee's ordinal breaking ties
+    // — the same order the draft employee lists serve, so a row keeps its place
+    // as the report moves from draft to submitted. Sorted by the query, not the
+    // mapped page, or paging would slice an unordered set.
+    it('orders by role title, then by employee ordinal', async () => {
+      reportFindOne.mockResolvedValueOnce(
+        makeReportRow({ id: REPORT_ID, providerId: PROVIDER_ID }),
+      )
+      companyReportFindAll.mockResolvedValueOnce([
+        makeCompanyReportRow({ reportId: REPORT_ID }),
+      ])
+
+      await service.getReportOutliers(PROVIDER_ID, COMPANY, {
+        page: 1,
+        pageSize: 10,
+      })
+
+      const order = outlierFindAndCountAll.mock.calls[0][0].order as Array<
+        Array<{ as?: string } | string>
+      >
+
+      expect(order).toHaveLength(2)
+      expect((order[0][0] as { as: string }).as).toBe('reportEmployee')
+      expect((order[0][1] as { as: string }).as).toBe('role')
+      expect(order[0][2]).toBe('title')
+      expect(order[0][3]).toBe('ASC')
+      expect((order[1][0] as { as: string }).as).toBe('reportEmployee')
+      expect(order[1][1]).toBe('ordinal')
+      expect(order[1][2]).toBe('ASC')
+    })
+  })
+
   describe('getReportComments', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'

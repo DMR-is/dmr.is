@@ -130,6 +130,9 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+      - name: 🌱 Apply submodule sparse-checkout
+        run: ./.gitscripts/checkout-submodules.sh
+
       - name: ♻️ Use Node.js 24
         uses: actions/setup-node@v4
         with:
@@ -142,9 +145,6 @@ jobs:
           cache-node-modules: true
 
       - uses: nrwl/nx-set-shas@v4
-
-      - name: patch submodules
-        run: yarn run postinstall
 
       - name: tsc
         run: yarn run nx affected -t tsc

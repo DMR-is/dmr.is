@@ -9,6 +9,7 @@
     "sourceMap": true,
     "importHelpers": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "moduleDetection": "force",

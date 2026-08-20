@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Order } from 'sequelize'
 
 import {
   BadRequestException,
@@ -98,6 +98,23 @@ const LOGGING_CONTEXT = 'ApplicationService'
  * branch within this one.
  */
 const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
+
+/**
+ * Outliers are listed grouped by role — role title first, then the employee's
+ * ordinal within the report — matching the draft employee lists, so a row keeps
+ * its place as the report moves from draft to submitted. The sort has to happen
+ * in the query, not on the mapped page, or pagination would slice an unordered
+ * set.
+ */
+const OUTLIER_ORDER: Order = [
+  [
+    { model: ReportEmployeeModel, as: 'reportEmployee' },
+    { model: ReportEmployeeRoleModel, as: 'role' },
+    'title',
+    'ASC',
+  ],
+  [{ model: ReportEmployeeModel, as: 'reportEmployee' }, 'ordinal', 'ASC'],
+]
 
 @Injectable()
 export class ApplicationService implements IApplicationService {
@@ -947,13 +964,7 @@ export class ApplicationService implements IApplicationService {
             required: true,
           },
         ],
-        order: [
-          [
-            { model: ReportEmployeeModel, as: 'reportEmployee' },
-            'ordinal',
-            'ASC',
-          ],
-        ],
+        order: OUTLIER_ORDER,
         limit,
         offset,
         distinct: true,

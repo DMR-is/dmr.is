@@ -31,6 +31,12 @@ import { toMinimumSetDtos } from './minimum-set'
  * One decomposition drives everything returned here: the two gap figures, and
  * the lágmarksmengi that the úrbótaáætlun is built from. There is no separate
  * per-employee outlier rule any more — see `selectMinimumSet`.
+ *
+ * ⚠️ This file used to re-export `SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY` for
+ * the outlier-detection callers that imported it from here. Those callers are
+ * gone with the band, and the key now has one home in
+ * `config/config.constants.ts` — reach for it there, or for a validated read,
+ * `readNumericConfig` in `config/lib/numeric-config.ts`.
  */
 export function analyzeSalaryPayload(
   parsed: ParsedReportDto,

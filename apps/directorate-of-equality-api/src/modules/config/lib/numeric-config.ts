@@ -3,6 +3,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
+import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY } from '../config.constants'
 import { ConfigModel } from '../models/config.model'
 
 /**
@@ -12,6 +13,12 @@ import { ConfigModel } from '../models/config.model'
  * `supersededAt: null` to get the current row rather than an old one. Getting
  * that wrong silently returns a stale threshold, which is why the read lives
  * here instead of being written out at each call site.
+ *
+ * ⚠️ The key *strings* are owned by `config.constants.ts`, not by this map —
+ * that file's copy is what gates the lowering-only ratchet in
+ * `ConfigService.updateByKey`, so a second literal here could silently read one
+ * row while the write path guarded another. This map exists for the typed read
+ * helpers below; it does not define names.
  */
 export const CONFIG_KEYS = {
   /**
@@ -26,7 +33,7 @@ export const CONFIG_KEYS = {
    * seed two values that must be kept equal by hand, with nothing enforcing it.
    * Split it when there is a reason to, not in anticipation of one.
    */
-  SALARY_DIFFERENCE_THRESHOLD_PERCENT: 'salary_difference_threshold_percent',
+  SALARY_DIFFERENCE_THRESHOLD_PERCENT: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
 } as const
 
 export type NumericConfigKey =

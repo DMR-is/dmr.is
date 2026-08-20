@@ -13,6 +13,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
 import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
 import { IConfigService } from './config.service.interface'
 
@@ -55,7 +56,14 @@ export class ConfigController {
     return this.configService.getHistoryByKey(key)
   }
 
+  /**
+   * Writing config is ADMIN-only. The class-level `AdminGuard` proves no more
+   * than "active DoE reviewer", and lowering the salary threshold is
+   * irreversible, so the route carries its own role guard — matching
+   * `UserController`. Reads stay open to any reviewer.
+   */
   @Patch(':key')
+  @UseGuards(RequireAdminRoleGuard)
   @DoeResponse({
     operationId: 'updateConfigByKey',
     type: ConfigDto,

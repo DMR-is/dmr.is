@@ -1,3 +1,6 @@
 # Readmes in parent folders
 **/README.md
 .github/**/*.md
+
+# island.is submodule - vendored source, never a set of Nx projects
+submodules/island.is

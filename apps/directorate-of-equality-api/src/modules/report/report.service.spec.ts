@@ -1041,13 +1041,21 @@ describe('ReportService.getOutliers', () => {
     >
   }
 
-  it('defaults to employee ordinal ascending when no sort is given', async () => {
+  // The FE renders outliers grouped by role, so the page has to arrive sorted
+  // by role title with the employee's ordinal breaking ties — the same order
+  // the draft employee lists serve, so a row keeps its place as the report
+  // moves from draft to submitted.
+  it('defaults to role title then employee ordinal when no sort is given', async () => {
     const order = await captureOrder({ page: 1, pageSize: 10 })
 
-    expect(order).toHaveLength(1)
+    expect(order).toHaveLength(2)
     expect((order[0][0] as { as: string }).as).toBe('reportEmployee')
-    expect(order[0][1]).toBe('ordinal')
-    expect(order[0][2]).toBe('ASC')
+    expect((order[0][1] as { as: string }).as).toBe('role')
+    expect(order[0][2]).toBe('title')
+    expect(order[0][3]).toBe('ASC')
+    expect((order[1][0] as { as: string }).as).toBe('reportEmployee')
+    expect(order[1][1]).toBe('ordinal')
+    expect(order[1][2]).toBe('ASC')
   })
 
   it('sorts by a direct employee column with an ordinal tiebreaker', async () => {

@@ -20,8 +20,10 @@ export enum ReportOutlierSortByEnum {
 
 /**
  * Query for the report-outliers list. Extends paging with an optional sort.
- * When `sortBy` is omitted the list keeps its default `employeeOrdinal`
- * ascending order (matching the FE improvement-plan numbering).
+ * When `sortBy` is omitted the list keeps its default role-title-then-ordinal
+ * order, matching how the draft employee lists are served — the FE renders
+ * outliers grouped by role, and the numbering the improvement plan prints is
+ * the employee's ordinal within the report.
  */
 export class GetReportOutliersQueryDto extends PagingQuery {
   @ApiOptionalUuid({

@@ -108,7 +108,8 @@ export const overviewText = {
     successToast: 'Skýrslugjöf send inn',
     deviations: {
       analyzing: 'Greini frávik…',
-      analyzeError: 'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
+      analyzeError:
+        'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
       none: 'Óskýrður launamunur er undir viðmiði. Engar úrbætur nauðsynlegar — hægt er að senda skýrsluna beint inn.',
       intro:
         'Óskýrður launamunur er yfir viðmiði. Launahækkun þessara starfsmanna færir hann undir viðmiðið. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
@@ -157,8 +158,7 @@ export const reportText = {
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
     sendToApplicant: 'Senda á innsendanda',
-    externalDisabledHint:
-      'Opnaðu samskipti til að senda innsendanda skilaboð.',
+    externalDisabledHint: 'Opnaðu samskipti til að senda innsendanda skilaboð.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
@@ -187,8 +187,7 @@ export const reportText = {
     description:
       'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
     warningTitle: 'Athugið',
-    warningMessage:
-      'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
+    warningMessage: 'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
     reasonLabel: 'Ástæða',
     submitButton: 'Senda í breytingar',
   },
@@ -630,6 +629,54 @@ export const usersText = {
     userAlreadyExists:
       'Notandi með þessari kennitölu er þegar til. Athugaðu hvort hann geti verið í listanum yfir óvirka notendur.',
     saveError: 'Villa við vistun breytinga',
+  },
+}
+
+export const systemSettingsText = {
+  heroTitle: 'Kerfisstillingar',
+  heroDescription:
+    'Hér má sjá stillingar sem gilda fyrir allt kerfið. Breytingar á þeim hafa áhrif á allar skýrslur sem eru reiknaðar eftir að breytingin er vistuð.',
+  heroImageAlt: 'Kerfisstillingar',
+  actionsHeading: 'Aðgerðir',
+  thresholdHeading: 'Leyfilegur launamunur',
+  thresholdLabel: 'Hámark á launamun karla og kvenna',
+  // ⚠️ Rewritten when the ±band was retired. This used to read "sjálfvirka
+  // greiningu á grunnlaunum … helming hlutfallsins til hvorrar áttar frá
+  // reiknaðri viðmiðunarlínu", which described all three retired mechanics at
+  // once: base salary rather than tímakaup, the halving, and a two-sided band
+  // around a fitted line. Nothing halves the ratio any more and no per-employee
+  // band exists — the figure is compared whole, once, per workplace. Keep this
+  // string in step with `report-auto-review.constants.ts`; an admin lowers this
+  // number irreversibly, so it must say what it actually controls.
+  thresholdDescription:
+    'Hlutfallið er viðmiðið sem óskýrður launamunur hvers vinnustaðar er mældur við. Fari óskýrður launamunur yfir hlutfallið þarf vinnustaðurinn að skila áætlun um úrbætur.',
+  irreversibleTitle: 'Aðeins er hægt að lækka hlutfallið',
+  irreversibleMessage:
+    'Hlutfallið þrengist um hver áramót og verður aldrei rýmkað aftur. Þegar lækkun hefur verið vistuð er ekki hægt að hækka hlutfallið á ný.',
+  lowerButton: 'Lækka hlutfall',
+  historyHeading: 'Breytingaskrá',
+  historyNoData: 'Engar breytingar hafa verið gerðar',
+  historyValueLabel: 'Hlutfall',
+  historyPeriodLabel: 'Gildistími',
+  historyCurrent: 'Í gildi',
+  historyUntil: (date: string) => `Gilti til ${date}`,
+  modal: {
+    title: 'Lækka leyfilegan launamun',
+    currentLabel: 'Núgildandi hlutfall',
+    newValueLabel: 'Nýtt hlutfall (%)',
+    tooHigh: (current: string) =>
+      `Nýtt hlutfall verður að vera lægra en ${current}%`,
+    notANumber: 'Sláðu inn tölu hærri en 0, með mest tveimur aukastöfum',
+    currentValueMalformed:
+      'Núgildandi hlutfall er ekki gild tala og því er ekki hægt að lækka það. Hafðu samband við kerfisstjóra.',
+    continue: 'Halda áfram',
+    back: 'Til baka',
+    confirmTitle: 'Þessi breyting er óafturkræf',
+    confirmMessage: (current: string, next: string) =>
+      `Þú ert að lækka leyfilegan launamun úr ${current}% í ${next}%. Ekki er hægt að hækka hlutfallið aftur eftir að breytingin hefur verið vistuð.`,
+    confirmButton: 'Lækka hlutfall',
+    saveSuccess: 'Hlutfallið hefur verið lækkað',
+    saveError: 'Villa við vistun hlutfalls',
   },
 }
 

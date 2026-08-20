@@ -61,6 +61,12 @@ export const formatHourlyRate = (v: number | null | undefined) =>
  * Mirrors the API's `formatPercent` in `report-pdf/lib/format.ts`
  * character-for-character — same decimal count, same comma, same ASCII sign — so
  * the PDF and the web cannot print two different renderings of one number.
+ *
+ * ⚠️ Not interchangeable with `formatPercentValue` below, which they sit beside:
+ * this one renders a *computed* number for display, that one echoes a
+ * *config-stored string* and deliberately passes malformed input through
+ * untouched. Reaching for the wrong one turns a broken config row into a
+ * confident `0,0%`.
  */
 export const formatPercent = (
   v: number | null | undefined,
@@ -73,6 +79,60 @@ export const formatPercent = (
 }
 
 /**
+ * Renders a config-stored percentage ("3.9") the Icelandic way ("3,9"). Config
+ * values arrive as free-form strings, so anything non-numeric is passed through
+ * untouched — a malformed entry stays visible instead of rendering as "NaN".
+ */
+export const formatPercentValue = (value: string) => {
+  const parsed = Number(value.trim())
+
+  return value.trim() === '' || !Number.isFinite(parsed)
+    ? value
+    : new Intl.NumberFormat('is-IS', { maximumFractionDigits: 2 }).format(
+        parsed,
+      )
+}
+
+/**
+ * Parses a percentage typed by a user, accepting the Icelandic decimal comma.
+ * Returns null when the input is not a usable positive number.
+ *
+ * Deliberately stricter than `Number`: the shape mirrors the API's own
+ * `THRESHOLD_VALUE_PATTERN`, so the client rejects the same inputs the server
+ * would rather than accepting `"1e0"` or `"0x2"` and failing on submit. The
+ * two-decimal cap is what keeps the confirmation step honest — `formatPercentValue`
+ * renders at most two decimals, so a value like `3,999` would otherwise be
+ * confirmed as "úr 4% í 4%" and saved as something else.
+ */
+const PERCENT_INPUT_PATTERN = /^\d+([.,]\d{1,2})?$/
+
+export const parsePercentInput = (value: string): number | null => {
+  const trimmed = value.trim()
+
+  if (!PERCENT_INPUT_PATTERN.test(trimmed)) return null
+
+  const parsed = Number(trimmed.replace(',', '.'))
+
+  return parsed > 0 ? parsed : null
+}
+
+/**
+ * Reads the active config-stored percentage, returning null when the row is not
+ * a usable number. Mirrors `ConfigService.assertThresholdIsLowered` exactly —
+ * `Number`, not the laxer `parseFloat` the analysis readers use — so that a
+ * hand-edited row like `"3,9"` reads as broken on both sides rather than being
+ * compared against `3` here and rejected by the API on submit.
+ *
+ * Callers must treat null as "cannot be compared against", not as "no
+ * constraint": the API refuses the update outright in that state.
+ */
+export const parseStoredPercent = (value: string): number | null => {
+  const parsed = Number(value.trim())
+
+  return value.trim() !== '' && Number.isFinite(parsed) ? parsed : null
+}
+
+/**
  * Matches the API's 409 message "Company already has a <TYPE> report in
  * status <STATUS> (providerId: ...). Resolve it before submitting another."
  * and returns the localized status label, or null for any other message.
@@ -82,9 +142,8 @@ export const parseInflightConflictStatus = (message: string): string | null => {
   if (!match) return null
   const status = match[1].toUpperCase()
   return (
-    sharedText.statusLabels[
-      status as keyof typeof sharedText.statusLabels
-    ] ?? status
+    sharedText.statusLabels[status as keyof typeof sharedText.statusLabels] ??
+    status
   )
 }
 
