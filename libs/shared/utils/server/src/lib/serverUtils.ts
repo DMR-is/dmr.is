@@ -141,6 +141,22 @@ export const getDoeImportsBucket = () => {
 }
 
 /**
+ * Bucket holding the PDF notices served into the island.is mailbox (Pósthólf).
+ *
+ * Throws if unset for the same reason as `getDoeImportsBucket` — but note the
+ * lifecycle difference: import uploads are transient staging, whereas a notice is
+ * the artefact of record for a legal instrument. This bucket must not carry a
+ * short expiry policy; island.is may request the document long after issuance.
+ */
+export const getDoeNoticesBucket = () => {
+  const bucket = process.env.AWS_DOE_NOTICES_BUCKET
+  if (!bucket) {
+    throw new Error('AWS_DOE_NOTICES_BUCKET is not set')
+  }
+  return bucket
+}
+
+/**
  * Creates the key for the application file
  * @param applicationId string
  * @param isOriginal boolean

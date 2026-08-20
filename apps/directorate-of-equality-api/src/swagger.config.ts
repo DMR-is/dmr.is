@@ -1,4 +1,5 @@
 import { DoeApplicationSwaggerModule } from './modules/swagger/doe-application.swagger.module'
+import { DoePostholfSwaggerModule } from './modules/swagger/doe-postholf.swagger.module'
 import { DoeWebSwaggerModule } from './modules/swagger/doe-web.swagger.module'
 import { SetupSwaggerOptions } from './setupSwaggerDocument'
 
@@ -28,6 +29,20 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
       'Consumed by the island.is application system on behalf of employers.',
     tag: 'Application API',
     modules: [DoeApplicationSwaggerModule],
+    autoTagControllers: true,
+  },
+  {
+    swaggerPath: 'swagger/postholf',
+    swaggerTitle: 'Directorate of Equality — island.is Mailbox (Skjalaveita)',
+    swaggerDescription:
+      'The Skjalaveita callback interface island.is calls to retrieve a notice a ' +
+      'company has opened in its island.is mailbox (Pósthólfið). Machine-to-machine ' +
+      'only: the caller is the island.is mailbox backend, authenticated with a ' +
+      'bearer token validated for issuer, audience and scope. Not consumed by any ' +
+      'DoE web application. Published as its own document because Stafrænt Ísland ' +
+      'reviews this endpoint against their interface specification.',
+    tag: 'Pósthólf',
+    modules: [DoePostholfSwaggerModule],
     autoTagControllers: true,
   },
 ]
