@@ -3,7 +3,15 @@
     {
       "name": "island.is",
       "sha": "6a3744a",
-      "sparseCheckoutPaths": ["libs/shared"]
+      "sparseCheckoutPaths": [
+        "libs/shared",
+        "libs/cache",
+        "libs/island-ui",
+        "libs/regulations",
+        "libs/auth-nest-tools"
+      ],
+      "sparseCheckoutExcludes": ["project.json"],
+      "canaryPath": "libs/island-ui/core/src/index.ts"
     }
   ]
 }

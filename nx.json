@@ -176,7 +176,8 @@
     "sharedGlobals": [
       "{workspaceRoot}/eslint-local-rules.js",
       "{workspaceRoot}/nx.json",
-      "{workspaceRoot}/tsconfig.base.json"
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/submodules/config.json"
     ],
     "production": [
       "default",
