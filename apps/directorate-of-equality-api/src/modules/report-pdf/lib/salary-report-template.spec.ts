@@ -47,9 +47,7 @@ function makeData(
       { score: 200, regularHourlyWage: 600000, gender: GenderEnum.MALE },
       { score: 500, regularHourlyWage: 900000, gender: GenderEnum.FEMALE },
     ],
-    regressionLine: { slope: 1000, intercept: 400000 },
-    // Half of the 3.9% salary-difference threshold, as the DTO documents.
-    allowedDifferencePercent: 1.95,
+    regressionLine: { slope: 1000, intercept: 400000, rSquared: 1 },
     scoreBuckets: [],
     totals: {
       maleAverageSalary: 1065400,
@@ -94,20 +92,29 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('<svg')
   })
 
-  it('shows empty notes when there are no subsidiaries or outliers', () => {
+  // An empty lágmarksmengi is a FINDING, not an absence: it means óskýrt is
+  // already under the benchmark. The old copy ("Engin frávik skráð") read as
+  // "nothing was recorded", which is the opposite impression.
+  it('states that no corrections are needed when the lágmarksmengi is empty', () => {
     const html = buildSalaryReportHtml(makeData())
 
     expect(html).toContain('Engin dótturfyrirtæki skráð.')
-    expect(html).toContain('Engin frávik skráð.')
+    expect(html).toContain(
+      'Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.',
+    )
   })
 
-  it('renders outlier rows when present', () => {
+  it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {
     const outliers = [
       {
         employeeOrdinal: 3,
         roleTitle: 'Sérfræðingur',
-        gender: GenderEnum.MALE,
-        differencePercent: 19.7,
+        gender: GenderEnum.FEMALE,
+        regularHourlyWage: 4750,
+        expectedHourlyWage: 5000,
+        deviationPercent: -5,
+        payStatus: 'UNDERPAID',
+        contributionShare: 42.5,
       },
     ] as unknown as ReportEmployeeOutlierDto[]
 
@@ -115,7 +122,13 @@ describe('buildSalaryReportHtml', () => {
 
     expect(html).toContain('Starfsmaður 3')
     expect(html).toContain('Sérfræðingur')
-    expect(html).toContain('+19,7%')
-    expect(html).not.toContain('Engin frávik skráð.')
+    // Units on the rates, not bare numbers — 4.750 alone reads as a monthly
+    // salary two orders of magnitude too low.
+    expect(html).toContain('4.750 kr./klst.')
+    expect(html).toContain('5.000 kr./klst.')
+    expect(html).toContain('-5,0%')
+    expect(html).toContain('42,5%')
+    expect(html).toContain('Hlutur af óskýrðu')
+    expect(html).not.toContain('Engar úrbætur nauðsynlegar')
   })
 })

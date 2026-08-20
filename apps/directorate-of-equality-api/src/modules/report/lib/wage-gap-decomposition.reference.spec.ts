@@ -17,7 +17,7 @@
  * fields this module reads.
  *
  * ⚠️ It is **old simulated data on a different data model** (separate vaktaálag
- * columns, no hlunnindi, two genders, three `Hæfni 1–5` covariates rather than
+ * columns, no aukagreiðslur, two genders, three `Hæfni 1–5` covariates rather than
  * one summed starfsmatsstig). It validates *algebra*, and none of its constants
  * should be treated as product decisions. `score` here is the SUM of the three
  * Hæfni columns, matching DOE's single summed starfsmatsstig — fitting the three

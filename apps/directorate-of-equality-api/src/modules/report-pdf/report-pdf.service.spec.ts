@@ -35,8 +35,7 @@ const salaryReport = {
 
 const statistics: SalaryByGenderAndScoreDto = {
   dataPoints: [],
-  regressionLine: { slope: 0, intercept: 0 },
-  allowedDifferencePercent: 1.95,
+  regressionLine: { slope: 0, intercept: 0, rSquared: 1 },
   scoreBuckets: [],
   totals: {
     maleAverageSalary: 0,
@@ -81,13 +80,11 @@ function makeOutlier(
     action: 'Úrbót fyrirhuguð',
     signatureName: 'Jón J. Jónsson',
     signatureRole: 'Framkvæmdastjóri',
-    regularHourlyWage: 900000,
-    predictedHourlyWage: 950000,
-    scoreBucketRangeFrom: 400,
-    scoreBucketRangeTo: 600,
-    direction: 'BELOW',
-    differencePercent: -5.26,
-    allowedDifferencePercent: 1.95,
+    regularHourlyWage: 4750,
+    expectedHourlyWage: 5000,
+    deviationPercent: -5,
+    payStatus: 'UNDERPAID',
+    contributionShare: 42.5,
     ...overrides,
   }
 }

@@ -8,21 +8,24 @@ import { ReportEmployeeModel } from './report-employee.model'
 import { ReportOutlierGroupModel } from './report-outlier-group.model'
 
 /**
- * Shape of the per-employee entry on the canonical outlier analysis. Defined
- * structurally rather than re-using `SalaryOutlierAnalysisEmployeeSnapshot`
- * directly so both call paths — admin (reads the raw model snapshot with the
- * strict `'ABOVE' | 'BELOW' | 'EQUAL'` union) and application (reads the
- * DTO-projected variant with `direction: string | null`) — can pass their
- * matching entry without an unsafe cast.
+ * Shape of the per-employee entry on the frozen decomposition. Defined
+ * structurally rather than re-using `WageGapEmployeeSnapshot` directly so both
+ * call paths — admin (reads the raw model snapshot, with `payStatus` as the
+ * `PayStatusEnum`) and application (reads the DTO-projected variant, with
+ * `payStatus: string`) — can pass their matching entry without an unsafe cast.
+ *
+ * ⚠️ Previously read `report_result.outlier_analysis_snapshot`, which carried a
+ * per-employee ±1,95% verdict. That snapshot is gone: the numbers below come
+ * from `wage_gap_decomposition_snapshot.employees`, and the reason a row is
+ * present at all is now company-wide (see `selectMinimumSet`), not a tolerance
+ * on the individual.
  */
 export type OutlierAnalysisEntry = {
-  regularHourlyWage: number
-  predictedHourlyWage: number | null
-  scoreBucketRangeFrom: number | null
-  scoreBucketRangeTo: number | null
-  direction: string | null
-  differencePercent: number | null
-  allowedDifferencePercent: number
+  hourlyWage: number
+  expectedHourlyWage: number
+  deviationPercent: number
+  payStatus: string
+  contributionShare: number | null
 }
 
 type ReportEmployeeOutlierAttributes = {
@@ -75,12 +78,13 @@ export class ReportEmployeeOutlierModel extends MutableModel<
    * `group` association loaded. While the report's outliers are still postponed
    * the group exists but its explanation fields are null.
    *
-   * The analysis numbers (`regularHourlyWage`, regression prediction, score
-   * bucket, direction, etc.) live in `report_result.outlier_analysis_snapshot`
-   * as the canonical "what the engine detected at submit time" — callers are
-   * expected to look that up by the joined `reportEmployee.ordinal` and pass
-   * the matching entry in via `analysis`. Pass `null` when the matching entry
-   * is unavailable; the analysis-derived fields then surface as null.
+   * The analysis numbers (`regularHourlyWage`, the expected wage from the pooled
+   * fit, the deviation and the employee's share of óskýrt) live in
+   * `report_result.wage_gap_decomposition_snapshot.employees` as the canonical
+   * "what the engine computed at submit time" — callers are expected to look
+   * that up by the joined `reportEmployee.ordinal` and pass the matching entry
+   * in via `analysis`. Pass `null` when the matching entry is unavailable; the
+   * analysis-derived fields then surface as null.
    */
   static fromModel(
     model: ReportEmployeeOutlierModel,
@@ -99,13 +103,11 @@ export class ReportEmployeeOutlierModel extends MutableModel<
       action: model.group?.action ?? null,
       signatureName: model.group?.signatureName ?? null,
       signatureRole: model.group?.signatureRole ?? null,
-      regularHourlyWage: analysis?.regularHourlyWage ?? null,
-      predictedHourlyWage: analysis?.predictedHourlyWage ?? null,
-      scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
-      scoreBucketRangeTo: analysis?.scoreBucketRangeTo ?? null,
-      direction: analysis?.direction ?? null,
-      differencePercent: analysis?.differencePercent ?? null,
-      allowedDifferencePercent: analysis?.allowedDifferencePercent ?? null,
+      regularHourlyWage: analysis?.hourlyWage ?? null,
+      expectedHourlyWage: analysis?.expectedHourlyWage ?? null,
+      deviationPercent: analysis?.deviationPercent ?? null,
+      payStatus: analysis?.payStatus ?? null,
+      contributionShare: analysis?.contributionShare ?? null,
     }
   }
 

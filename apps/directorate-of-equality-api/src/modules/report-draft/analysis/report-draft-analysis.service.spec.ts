@@ -11,6 +11,7 @@ import {
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
 import { IConfigService } from '../../config/config.service.interface'
+import { WageGapBlockerEnum } from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum, ReportTypeEnum } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../../report-criterion/models/report-sub-criterion.model'
@@ -35,12 +36,17 @@ const COMPANY = {
 } as unknown as CompanyDto
 
 describe('deriveEmployeeScores', () => {
+  // Only the scoring is under test here, but `ScorableEmployee` carries the pay
+  // fields too, so they must be present — omitting them silently passed
+  // `undefined` into the wage components until the spec project was typechecked.
   const employee = {
     id: 'emp-1',
     ordinal: 1,
     gender: GenderEnum.FEMALE,
-    paidHours: 1,
-    baseSalary: 100,
+    paidHours: 200,
+    baseSalary: 800000,
+    additionalSalary: 0,
+    bonusSalary: null,
     reportEmployeeRoleId: 'role-1',
   }
   const stepScoreById = new Map([
@@ -150,5 +156,33 @@ describe('ReportDraftAnalysisService', () => {
     const result = await service.analyzeDraft(PROVIDER_ID, COMPANY)
 
     expect(result.outliers).toEqual([])
+  })
+
+  // The "always return the shape" contract, on the emptiest possible draft.
+  // An absent `wageGapDecomposition` would reach the web as `undefined` and
+  // render as a confident 0% — the exact failure `available: false` exists to
+  // prevent.
+  it('still returns a decomposition, blocked and counted, for an empty draft', async () => {
+    findOwnedDraft.mockResolvedValueOnce({
+      id: 'report-1',
+      type: ReportTypeEnum.SALARY,
+    })
+
+    const { wageGapDecomposition: gap } = await service.analyzeDraft(
+      PROVIDER_ID,
+      COMPANY,
+    )
+
+    expect(gap.rawGapAvailable).toBe(false)
+    expect(gap.oskyrtAvailable).toBe(false)
+    expect(gap.rawGapBlockers).toEqual(
+      expect.arrayContaining([
+        WageGapBlockerEnum.EMPTY_MALE_COHORT,
+        WageGapBlockerEnum.EMPTY_FEMALE_COHORT,
+      ]),
+    )
+    expect(gap.oskyrtPercent).toBeNull()
+    expect(gap.counts).toEqual({ male: 0, female: 0, excluded: 0 })
+    expect(gap.benchmarkPercent).toBe(3.9)
   })
 })

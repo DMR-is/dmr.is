@@ -122,7 +122,6 @@ const makeService = () => {
   // Teammate-owned models — stubbed to empty result sets so equality-report
   // paths don't touch them and salary paths return predictable zero-value
   // outputs unless a test overrides.
-  const roleResultFindAll = jest.fn().mockResolvedValue([])
   const outlierFindAll = jest.fn().mockResolvedValue([])
   const outlierFindAndCountAll = jest
     .fn()
@@ -132,9 +131,6 @@ const makeService = () => {
   const reportEventModel = {
     findAll: jest.fn().mockResolvedValue([]),
   } as unknown as typeof import('./models/report-event.model').ReportEventModel
-  const reportRoleResultModel = {
-    findAll: roleResultFindAll,
-  } as unknown as typeof import('../report-result/models/report-role-result.model').ReportRoleResultModel
   const reportEmployeeOutlierModel = {
     findAll: outlierFindAll,
     findAndCountAll: outlierFindAndCountAll,
@@ -153,7 +149,6 @@ const makeService = () => {
     logger,
     reportModel,
     reportEventModel,
-    reportRoleResultModel,
     reportEmployeeOutlierModel,
     companyReportModel,
     reportOutlierGroupModel,
@@ -164,7 +159,6 @@ const makeService = () => {
     scope: reportModel.scope,
     findByPkOrThrow,
     findOne,
-    roleResultFindAll,
     outlierFindAll,
     outlierFindAndCountAll,
     outlierCount,
@@ -785,7 +779,6 @@ describe('ReportService.getById', () => {
       const {
         service,
         findByPkOrThrow,
-        roleResultFindAll,
         outlierCount,
       } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
@@ -798,9 +791,7 @@ describe('ReportService.getById', () => {
       const detail = await service.getById(baseReport.id)
 
       expect(detail.result).toBeNull()
-      expect(detail.roleResults).toEqual([])
       expect(detail.includesImprovementPlan).toBe(false)
-      expect(roleResultFindAll).not.toHaveBeenCalled()
       expect(outlierCount).not.toHaveBeenCalled()
     })
 
@@ -808,7 +799,6 @@ describe('ReportService.getById', () => {
       const {
         service,
         findByPkOrThrow,
-        roleResultFindAll,
         outlierCount,
       } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
@@ -829,17 +819,14 @@ describe('ReportService.getById', () => {
       const detail = await service.getById(baseReport.id)
 
       expect(detail.result).toBeNull()
-      expect(detail.roleResults).toEqual([])
       expect(detail.includesImprovementPlan).toBe(false)
-      expect(roleResultFindAll).not.toHaveBeenCalled()
       expect(outlierCount).not.toHaveBeenCalled()
     })
 
-    it('loads role results and flags includesImprovementPlan when outliers exist on salary report', async () => {
+    it('flags includesImprovementPlan when outliers exist on a salary report', async () => {
       const {
         service,
         findByPkOrThrow,
-        roleResultFindAll,
         outlierCount,
       } = makeService()
 
@@ -881,25 +868,6 @@ describe('ReportService.getById', () => {
         }),
       )
 
-      const roleResultRow = withFromModel({
-        id: 'rr1',
-        reportResultId: resultId,
-        reportEmployeeRoleId: 'role1',
-        averageSalary: 1000,
-        minimumSalary: 500,
-        maximumSalary: 1500,
-        medianSalary: 1000,
-        averageMaleSalary: 1100,
-        averageFemaleSalary: 900,
-        averageNeutralSalary: 0,
-        minimumMaleSalary: 600,
-        minimumFemaleSalary: 500,
-        minimumNeutralSalary: 0,
-        maximumMaleSalary: 1500,
-        maximumFemaleSalary: 1200,
-        maximumNeutralSalary: 0,
-      })
-      roleResultFindAll.mockResolvedValueOnce([roleResultRow])
       outlierCount.mockResolvedValueOnce(3)
 
       const detail = await service.getById(baseReport.id)
@@ -907,16 +875,8 @@ describe('ReportService.getById', () => {
       expect(detail.result).toEqual(
         expect.objectContaining({ id: resultId, averageSalary: 950 }),
       )
-      expect(detail.roleResults).toHaveLength(1)
-      expect(detail.roleResults[0]).toEqual(
-        expect.objectContaining({ reportResultId: resultId }),
-      )
       expect(detail.includesImprovementPlan).toBe(true)
       expect(outlierCount).toHaveBeenCalledTimes(1)
-
-      expect(roleResultFindAll).toHaveBeenCalledWith({
-        where: { reportResultId: resultId },
-      })
     })
   })
 })
@@ -930,18 +890,16 @@ describe('ReportService.getOutliers', () => {
       type: ReportTypeEnum.SALARY,
       status: ReportStatusEnum.SUBMITTED,
       result: {
-        outlierAnalysisSnapshot: {
+        wageGapDecompositionSnapshot: {
           employees: [
             {
               ordinal: 1,
-              regularHourlyWage: 950000,
-              predictedHourlyWage: 1000000,
-              scoreBucketRangeFrom: 500,
-              scoreBucketRangeTo: 600,
-              direction: 'BELOW',
-              differencePercent: -5,
-              allowedDifferencePercent: 1.95,
-              isOutlier: true,
+              hourlyWage: 4750,
+              expectedHourlyWage: 5000,
+              deviationPercent: -5,
+              payStatus: 'UNDERPAID',
+              contributionShare: 42.5,
+              inMinimumSet: true,
             },
           ],
         },
@@ -972,13 +930,11 @@ describe('ReportService.getOutliers', () => {
     },
     fromModel(
       analysis: {
-        regularHourlyWage?: number
-        predictedHourlyWage?: number | null
-        scoreBucketRangeFrom?: number | null
-        scoreBucketRangeTo?: number | null
-        direction?: string | null
-        differencePercent?: number | null
-        allowedDifferencePercent?: number
+        hourlyWage?: number
+        expectedHourlyWage?: number
+        deviationPercent?: number
+        payStatus?: string
+        contributionShare?: number | null
       } | null = null,
     ) {
       const r = this as unknown as Record<string, unknown>
@@ -997,13 +953,11 @@ describe('ReportService.getOutliers', () => {
         action: group?.action ?? null,
         signatureName: group?.signatureName ?? null,
         signatureRole: group?.signatureRole ?? null,
-        regularHourlyWage: analysis?.regularHourlyWage ?? null,
-        predictedHourlyWage: analysis?.predictedHourlyWage ?? null,
-        scoreBucketRangeFrom: analysis?.scoreBucketRangeFrom ?? null,
-        scoreBucketRangeTo: analysis?.scoreBucketRangeTo ?? null,
-        direction: analysis?.direction ?? null,
-        differencePercent: analysis?.differencePercent ?? null,
-        allowedDifferencePercent: analysis?.allowedDifferencePercent ?? null,
+        regularHourlyWage: analysis?.hourlyWage ?? null,
+        expectedHourlyWage: analysis?.expectedHourlyWage ?? null,
+        deviationPercent: analysis?.deviationPercent ?? null,
+        payStatus: analysis?.payStatus ?? null,
+        contributionShare: analysis?.contributionShare ?? null,
       }
     },
     ...overrides,
@@ -1033,12 +987,11 @@ describe('ReportService.getOutliers', () => {
         groupId: 'group-1',
         groupName: 'Tenure',
         reason: 'Tenure premium',
-        regularHourlyWage: 950000,
-        predictedHourlyWage: 1000000,
-        scoreBucketRangeFrom: 500,
-        scoreBucketRangeTo: 600,
-        direction: 'BELOW',
-        allowedDifferencePercent: 1.95,
+        regularHourlyWage: 4750,
+        expectedHourlyWage: 5000,
+        deviationPercent: -5,
+        payStatus: 'UNDERPAID',
+        contributionShare: 42.5,
       }),
     )
     expect(result.paging).toEqual(

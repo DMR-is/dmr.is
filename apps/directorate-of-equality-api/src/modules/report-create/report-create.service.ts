@@ -17,13 +17,14 @@ import {
   CONFIG_KEYS,
   parseNumericConfig,
 } from '../config/lib/numeric-config'
-import { detectOutliers } from '../report/lib/compensation-aggregates'
+import { getRegularHourlyWage } from '../report/lib/compensation-aggregates'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
+import { computeWageGapDecomposition } from '../report/lib/wage-gap-decomposition'
 import {
   ReportModel,
   ReportProviderEnum,
@@ -40,6 +41,7 @@ import { ReportOutlierGroupModel } from '../report-employee/models/report-outlie
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
 import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
+import { minimumSetOrdinals } from '../report-statistics/lib/minimum-set'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
@@ -430,32 +432,40 @@ export class ReportCreateService implements IReportCreateService {
   }
 
   /**
-   * Recompute the canonical detected outlier set with `detectOutliers` (the
-   * same helper the application-side preview uses) and return the detected
-   * ordinals. Threshold is re-read from `config` here, so a tiny drift between
-   * preview and submit is possible — a downstream rejection in that case just
-   * means "re-run preview".
+   * Recompute the lágmarksmengi — the employees the úrbótaáætlun must account
+   * for — and return their ordinals. Same decomposition the application-side
+   * preview runs, so the two agree.
+   *
+   * Benchmark is re-read from `config` here, so a tiny drift between preview and
+   * submit is possible — a downstream rejection in that case just means "re-run
+   * preview".
+   *
+   * ⚠️ Was the ±1,95% band around a fitted line. See `selectMinimumSet`: the set
+   * is lift-only, and an already-compliant company yields an EMPTY set, which
+   * makes `assertOutlierGroupsMatchDetected` below require no groups at all.
    */
   private async computeDetectedOutlierOrdinals(
     input: CreateReportDto,
     employeeScores: number[],
   ): Promise<number[]> {
-    const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
+    const benchmarkPercent = await this.getSalaryDifferenceThresholdPercent()
 
-    const detected = detectOutliers({
+    const decomposition = computeWageGapDecomposition({
       employees: input.parsed.employees.map((employee, index) => ({
         ordinal: employee.ordinal,
         score: employeeScores[index],
         gender: employee.gender,
-        paidHours: employee.paidHours,
-        baseSalary: employee.baseSalary,
-        additionalSalary: computeAdditionalSalary(employee),
-        bonusSalary: computeBonusSalary(employee),
+        hourlyWage: getRegularHourlyWage({
+          paidHours: employee.paidHours,
+          baseSalary: employee.baseSalary,
+          additionalSalary: computeAdditionalSalary(employee),
+          bonusSalary: computeBonusSalary(employee),
+        }),
       })),
-      thresholdPercent,
+      benchmarkPercent,
     })
 
-    return detected.map((d) => d.ordinal)
+    return minimumSetOrdinals(decomposition)
   }
 
   /**

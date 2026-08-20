@@ -9,7 +9,6 @@ import { Test } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ConfigModel } from '../config/models/config.model'
-import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
 import {
   GenderEnum,
   ReportModel,
@@ -86,7 +85,6 @@ describe('ReportResultService', () => {
           totals: { overall: { average: 3125 } },
           scoreBuckets: [],
         },
-        outlierAnalysis: makeOutlierAnalysis(),
       }),
     })
     employeeFindAll.mockResolvedValue([
@@ -137,53 +135,6 @@ describe('ReportResultService', () => {
               rangeFrom: 200,
               rangeTo: 300,
               counts: expect.objectContaining({ male: 0, female: 1 }),
-            }),
-          ]),
-        }),
-        outlierAnalysisSnapshot: expect.objectContaining({
-          method:
-            SalaryOutlierAnalysisMethodEnum.REGULAR_HOURLY_WAGE_LINEAR_REGRESSION_BY_SCORE,
-          thresholdPercent: 3.9,
-          allowedDifferencePercent: 1.95,
-          regressions: expect.objectContaining({
-            overall: expect.objectContaining({
-              sampleCount: 2,
-              slope: 7.5,
-              intercept: 1850,
-            }),
-            male: expect.objectContaining({
-              sampleCount: 1,
-              intercept: 2750,
-            }),
-            female: expect.objectContaining({
-              sampleCount: 1,
-              intercept: 3500,
-            }),
-            neutral: expect.objectContaining({
-              sampleCount: 0,
-              slope: null,
-            }),
-          }),
-          employees: expect.arrayContaining([
-            expect.objectContaining({
-              ordinal: 1,
-              score: 120,
-              gender: GenderEnum.MALE,
-              regularHourlyWage: 2750,
-              predictedHourlyWage: 2750,
-              scoreBucketRangeFrom: 100,
-              scoreBucketRangeTo: 200,
-              isOutlier: false,
-            }),
-            expect.objectContaining({
-              ordinal: 2,
-              score: 220,
-              gender: GenderEnum.FEMALE,
-              regularHourlyWage: 3500,
-              predictedHourlyWage: 3500,
-              scoreBucketRangeFrom: 200,
-              scoreBucketRangeTo: 300,
-              isOutlier: false,
             }),
           ]),
         }),
@@ -310,7 +261,6 @@ describe('ReportResultService', () => {
           totals: { overall: { average: 3125 } },
           scoreBuckets: [],
         },
-        outlierAnalysis: makeOutlierAnalysis(),
       }),
     })
 
@@ -350,41 +300,4 @@ function makeEmployee(
     bonusPayments: null,
     bonusOther: null,
   } as unknown as ReportEmployeeModel
-}
-
-function makeOutlierAnalysis() {
-  return {
-    method: SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
-    thresholdPercent: 3.9,
-    allowedDifferencePercent: 1.95,
-    regressions: {
-      overall: {
-        slope: 2000,
-        intercept: 160000,
-        sampleCount: 2,
-        scoreMean: 170,
-        hourlyWageMean: 500000,
-        rSquared: 1,
-        scoreRangeFrom: 120,
-        scoreRangeTo: 220,
-      },
-      male: makeEmptyRegression(1, 400000),
-      female: makeEmptyRegression(1, 600000),
-      neutral: makeEmptyRegression(0, null),
-    },
-    employees: [],
-  }
-}
-
-function makeEmptyRegression(sampleCount: number, mean: number | null) {
-  return {
-    slope: sampleCount > 0 ? 0 : null,
-    intercept: mean,
-    sampleCount,
-    scoreMean: sampleCount > 0 ? 0 : null,
-    hourlyWageMean: mean,
-    rSquared: null,
-    scoreRangeFrom: sampleCount > 0 ? 0 : null,
-    scoreRangeTo: sampleCount > 0 ? 0 : null,
-  }
 }

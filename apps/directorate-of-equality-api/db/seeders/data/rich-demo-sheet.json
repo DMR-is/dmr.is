@@ -1,4 +1,6 @@
 {
+  "__generated": "scripts/refresh-wage-gap-fixtures.ts — do not edit by hand; re-run the script",
+  "payCutPercent": 10,
   "criteria": [
     {
       "type": "RESPONSIBILITY",
@@ -789,12 +791,12 @@
       "department": "Framkvæmdastjórn",
       "startDate": "2021-04-27",
       "paidHours": 173.33,
-      "baseSalary": 2258000,
-      "additionalFixedOvertime": 222000,
+      "baseSalary": 2032200,
+      "additionalFixedOvertime": 199800,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 42000,
+      "bonusPayments": 37800,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -887,12 +889,12 @@
       "department": "Sala",
       "startDate": "2015-12-03",
       "paidHours": 173.33,
-      "baseSalary": 873000,
-      "additionalFixedOvertime": 98000,
+      "baseSalary": 785700,
+      "additionalFixedOvertime": 88200,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 21000,
+      "bonusPayments": 18900,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -936,12 +938,12 @@
       "department": "Kerfisstjórn",
       "startDate": "2019-09-26",
       "paidHours": 208,
-      "baseSalary": 1029620,
-      "additionalFixedOvertime": 103202,
+      "baseSalary": 926658,
+      "additionalFixedOvertime": 92882,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "bonusPayments": 1800,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -985,12 +987,12 @@
       "department": "Eignaumsjón",
       "startDate": "2011-09-10",
       "paidHours": 173.33,
-      "baseSalary": 743000,
-      "additionalFixedOvertime": 40000,
+      "baseSalary": 668700,
+      "additionalFixedOvertime": 36000,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 6000,
+      "bonusPayments": 5400,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1132,12 +1134,12 @@
       "department": "Eignaumsjón",
       "startDate": "2017-04-08",
       "paidHours": 173.33,
-      "baseSalary": 663000,
-      "additionalFixedOvertime": 17000,
+      "baseSalary": 596700,
+      "additionalFixedOvertime": 15300,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 9000,
+      "bonusPayments": 8100,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1230,12 +1232,12 @@
       "department": "Innkaup",
       "startDate": "2020-10-10",
       "paidHours": 160,
-      "baseSalary": 696013,
-      "additionalFixedOvertime": 100617,
+      "baseSalary": 626412,
+      "additionalFixedOvertime": 90555,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 18000,
+      "bonusPayments": 16200,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1279,12 +1281,12 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2017-03-12",
       "paidHours": 216,
-      "baseSalary": 1006912,
-      "additionalFixedOvertime": 114648,
+      "baseSalary": 906221,
+      "additionalFixedOvertime": 103183,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "bonusPayments": 900,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1328,12 +1330,12 @@
       "department": "Framleiðsla A",
       "startDate": "2016-04-14",
       "paidHours": 173.33,
-      "baseSalary": 515000,
-      "additionalFixedOvertime": 13000,
+      "baseSalary": 463500,
+      "additionalFixedOvertime": 11700,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "bonusPayments": 6300,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1377,8 +1379,8 @@
       "department": "Fjárhagsdeild",
       "startDate": "2017-02-09",
       "paidHours": 130,
-      "baseSalary": 527260,
-      "additionalFixedOvertime": 38251,
+      "baseSalary": 474534,
+      "additionalFixedOvertime": 34426,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1622,8 +1624,8 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2015-12-12",
       "paidHours": 173.33,
-      "baseSalary": 817000,
-      "additionalFixedOvertime": 80000,
+      "baseSalary": 735300,
+      "additionalFixedOvertime": 72000,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1769,8 +1771,8 @@
       "department": "Framleiðsla B",
       "startDate": "2012-01-01",
       "paidHours": 173.33,
-      "baseSalary": 619000,
-      "additionalFixedOvertime": 18000,
+      "baseSalary": 557100,
+      "additionalFixedOvertime": 16200,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1818,8 +1820,8 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2018-09-29",
       "paidHours": 180,
-      "baseSalary": 739399,
-      "additionalFixedOvertime": 28039,
+      "baseSalary": 665459,
+      "additionalFixedOvertime": 25235,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1867,12 +1869,12 @@
       "department": "Innkaup",
       "startDate": "2025-06-01",
       "paidHours": 173.33,
-      "baseSalary": 629000,
-      "additionalFixedOvertime": 17000,
+      "baseSalary": 566100,
+      "additionalFixedOvertime": 15300,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "bonusPayments": 900,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1916,12 +1918,12 @@
       "department": "Vöruþróun",
       "startDate": "2013-09-01",
       "paidHours": 208,
-      "baseSalary": 1032020,
-      "additionalFixedOvertime": 114002,
+      "baseSalary": 928818,
+      "additionalFixedOvertime": 102602,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 17000,
+      "bonusPayments": 15300,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1965,8 +1967,8 @@
       "department": "Framleiðsla B",
       "startDate": "2018-10-10",
       "paidHours": 173.33,
-      "baseSalary": 521000,
-      "additionalFixedOvertime": 5000,
+      "baseSalary": 468900,
+      "additionalFixedOvertime": 4500,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2014,8 +2016,8 @@
       "department": "Fjárhagsdeild",
       "startDate": "2015-11-26",
       "paidHours": 104,
-      "baseSalary": 717014,
-      "additionalFixedOvertime": 65401,
+      "baseSalary": 645313,
+      "additionalFixedOvertime": 58861,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2112,12 +2114,12 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2012-11-04",
       "paidHours": 173.33,
-      "baseSalary": 948000,
-      "additionalFixedOvertime": 73000,
+      "baseSalary": 853200,
+      "additionalFixedOvertime": 65700,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 8000,
+      "bonusPayments": 7200,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2210,8 +2212,8 @@
       "department": "Skjalasvið",
       "startDate": "2014-11-07",
       "paidHours": 160,
-      "baseSalary": 1079098,
-      "additionalFixedOvertime": 166157,
+      "baseSalary": 971188,
+      "additionalFixedOvertime": 149541,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2259,8 +2261,8 @@
       "department": "Innkaup",
       "startDate": "2013-06-17",
       "paidHours": 216,
-      "baseSalary": 781353,
-      "additionalFixedOvertime": 26170,
+      "baseSalary": 703218,
+      "additionalFixedOvertime": 23553,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2406,8 +2408,8 @@
       "department": "Stuðningur",
       "startDate": "2016-01-05",
       "paidHours": 173.33,
-      "baseSalary": 711000,
-      "additionalFixedOvertime": 71000,
+      "baseSalary": 639900,
+      "additionalFixedOvertime": 63900,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2553,12 +2555,12 @@
       "department": "Launadeild",
       "startDate": "2020-05-30",
       "paidHours": 87,
-      "baseSalary": 406064,
-      "additionalFixedOvertime": 55213,
+      "baseSalary": 365458,
+      "additionalFixedOvertime": 49692,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 5000,
+      "bonusPayments": 4500,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2602,12 +2604,12 @@
       "department": "Launadeild",
       "startDate": "2018-09-10",
       "paidHours": 173.33,
-      "baseSalary": 581000,
-      "additionalFixedOvertime": 8000,
+      "baseSalary": 522900,
+      "additionalFixedOvertime": 7200,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "bonusPayments": 3600,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2994,8 +2996,8 @@
       "department": "Innkaup",
       "startDate": "2012-08-09",
       "paidHours": 104,
-      "baseSalary": 491409,
-      "additionalFixedOvertime": 43201,
+      "baseSalary": 442268,
+      "additionalFixedOvertime": 38881,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3043,8 +3045,8 @@
       "department": "Innkaup",
       "startDate": "2021-10-11",
       "paidHours": 190,
-      "baseSalary": 656609,
-      "additionalFixedOvertime": 19731,
+      "baseSalary": 590948,
+      "additionalFixedOvertime": 17758,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3239,12 +3241,12 @@
       "department": "Gæðaeftirlit",
       "startDate": "2021-06-20",
       "paidHours": 216,
-      "baseSalary": 719045,
-      "additionalFixedOvertime": 12462,
+      "baseSalary": 647141,
+      "additionalFixedOvertime": 11216,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 5000,
+      "bonusPayments": 4500,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3337,12 +3339,12 @@
       "department": "Launadeild",
       "startDate": "2011-05-02",
       "paidHours": 130,
-      "baseSalary": 528010,
-      "additionalFixedOvertime": 38251,
+      "baseSalary": 475209,
+      "additionalFixedOvertime": 34426,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 12000,
+      "bonusPayments": 10800,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3386,8 +3388,8 @@
       "department": "Markaðsmál",
       "startDate": "2020-08-02",
       "paidHours": 173.33,
-      "baseSalary": 934000,
-      "additionalFixedOvertime": 95000,
+      "baseSalary": 840600,
+      "additionalFixedOvertime": 85500,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3484,12 +3486,12 @@
       "department": "Launadeild",
       "startDate": "2025-03-16",
       "paidHours": 173.33,
-      "baseSalary": 792000,
-      "additionalFixedOvertime": 62000,
+      "baseSalary": 712800,
+      "additionalFixedOvertime": 55800,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 17000,
+      "bonusPayments": 15300,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3533,12 +3535,12 @@
       "department": "Framleiðsla C",
       "startDate": "2022-02-02",
       "paidHours": 87,
-      "baseSalary": 277569,
-      "additionalFixedOvertime": 18070,
+      "baseSalary": 249812,
+      "additionalFixedOvertime": 16263,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "bonusPayments": 6300,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3582,8 +3584,8 @@
       "department": "Kerfisstjórn",
       "startDate": "2022-11-17",
       "paidHours": 173.33,
-      "baseSalary": 568000,
-      "additionalFixedOvertime": 36000,
+      "baseSalary": 511200,
+      "additionalFixedOvertime": 32400,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3631,12 +3633,12 @@
       "department": "Eignaumsjón",
       "startDate": "2016-08-10",
       "paidHours": 202,
-      "baseSalary": 625824,
-      "additionalFixedOvertime": 18647,
+      "baseSalary": 563242,
+      "additionalFixedOvertime": 16782,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "bonusPayments": 6300,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3778,12 +3780,12 @@
       "department": "Framleiðsla C",
       "startDate": "2023-01-13",
       "paidHours": 180,
-      "baseSalary": 550395,
-      "additionalFixedOvertime": 13500,
+      "baseSalary": 495356,
+      "additionalFixedOvertime": 12150,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 3000,
+      "bonusPayments": 2700,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3876,8 +3878,8 @@
       "department": "Stuðningur",
       "startDate": "2024-03-05",
       "paidHours": 208,
-      "baseSalary": 588011,
-      "additionalFixedOvertime": 15600,
+      "baseSalary": 529210,
+      "additionalFixedOvertime": 14040,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4219,12 +4221,12 @@
       "department": "Ráðning og þjálfun",
       "startDate": "2015-12-25",
       "paidHours": 216,
-      "baseSalary": 1096636,
-      "additionalFixedOvertime": 92217,
+      "baseSalary": 986972,
+      "additionalFixedOvertime": 82995,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 15000,
+      "bonusPayments": 13500,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4268,8 +4270,8 @@
       "department": "Innkaup",
       "startDate": "2014-11-02",
       "paidHours": 173.33,
-      "baseSalary": 497000,
-      "additionalFixedOvertime": 8000,
+      "baseSalary": 447300,
+      "additionalFixedOvertime": 7200,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4415,8 +4417,8 @@
       "department": "Framleiðsla C",
       "startDate": "2023-12-22",
       "paidHours": 195,
-      "baseSalary": 582761,
-      "additionalFixedOvertime": 16875,
+      "baseSalary": 524485,
+      "additionalFixedOvertime": 15188,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4464,12 +4466,12 @@
       "department": "Þjónustuver",
       "startDate": "2017-04-23",
       "paidHours": 173.33,
-      "baseSalary": 922000,
-      "additionalFixedOvertime": 59000,
+      "baseSalary": 829800,
+      "additionalFixedOvertime": 53100,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 8000,
+      "bonusPayments": 7200,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4513,8 +4515,8 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2020-12-16",
       "paidHours": 87,
-      "baseSalary": 465292,
-      "additionalFixedOvertime": 51197,
+      "baseSalary": 418763,
+      "additionalFixedOvertime": 46077,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4562,12 +4564,12 @@
       "department": "Framleiðsla A",
       "startDate": "2018-12-13",
       "paidHours": 173.33,
-      "baseSalary": 505000,
-      "additionalFixedOvertime": 14000,
+      "baseSalary": 454500,
+      "additionalFixedOvertime": 12600,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "bonusPayments": 3600,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4611,12 +4613,12 @@
       "department": "Eignaumsjón",
       "startDate": "2020-10-28",
       "paidHours": 202,
-      "baseSalary": 613004,
-      "additionalFixedOvertime": 5827,
+      "baseSalary": 551704,
+      "additionalFixedOvertime": 5244,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 9000,
+      "bonusPayments": 8100,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4807,8 +4809,8 @@
       "department": "Framleiðsla B",
       "startDate": "2011-12-12",
       "paidHours": 173.33,
-      "baseSalary": 623000,
-      "additionalFixedOvertime": 14000,
+      "baseSalary": 560700,
+      "additionalFixedOvertime": 12600,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5003,12 +5005,12 @@
       "department": "Vöruþróun",
       "startDate": "2014-03-11",
       "paidHours": 190,
-      "baseSalary": 1042462,
-      "additionalFixedOvertime": 132637,
+      "baseSalary": 938216,
+      "additionalFixedOvertime": 119373,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 22000,
+      "bonusPayments": 19800,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5395,8 +5397,8 @@
       "department": "Hugbúnaðarþróun",
       "startDate": "2023-04-09",
       "paidHours": 195,
-      "baseSalary": 1111521,
-      "additionalFixedOvertime": 92252,
+      "baseSalary": 1000369,
+      "additionalFixedOvertime": 83027,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5542,12 +5544,12 @@
       "department": "Þjónustuver",
       "startDate": "2022-11-24",
       "paidHours": 173.33,
-      "baseSalary": 825000,
-      "additionalFixedOvertime": 96000,
+      "baseSalary": 742500,
+      "additionalFixedOvertime": 86400,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "bonusPayments": 1800,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5680,5 +5682,694 @@
         }
       ]
     }
-  ]
+  ],
+  "scores": [
+    732,
+    606,
+    608,
+    512,
+    594,
+    526,
+    446,
+    332,
+    496,
+    486,
+    492,
+    462,
+    490,
+    594,
+    454,
+    532,
+    520,
+    490,
+    530,
+    446,
+    522,
+    520,
+    338,
+    616,
+    452,
+    612,
+    498,
+    496,
+    496,
+    598,
+    354,
+    496,
+    530,
+    496,
+    496,
+    604,
+    484,
+    344,
+    498,
+    610,
+    500,
+    522,
+    602,
+    644,
+    452,
+    490,
+    330,
+    588,
+    540,
+    492,
+    436,
+    632,
+    488,
+    624,
+    622,
+    486,
+    534,
+    524,
+    448,
+    494,
+    338,
+    462,
+    336,
+    450,
+    460,
+    490,
+    524,
+    520,
+    338,
+    728,
+    488,
+    446,
+    516,
+    492,
+    456,
+    486,
+    516,
+    442,
+    454,
+    608,
+    446,
+    488,
+    524,
+    538,
+    608,
+    520,
+    616,
+    454,
+    530,
+    498,
+    452,
+    498,
+    630,
+    614,
+    644,
+    524,
+    522,
+    494,
+    480,
+    590
+  ],
+  "chart": {
+    "dataPoints": [
+      {
+        "score": 732,
+        "regularHourlyWage": 13095.25,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 606,
+        "regularHourlyWage": 8784.36,
+        "gender": "MALE"
+      },
+      {
+        "score": 608,
+        "regularHourlyWage": 5150.87,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 512,
+        "regularHourlyWage": 4910.29,
+        "gender": "NEUTRAL"
+      },
+      {
+        "score": 594,
+        "regularHourlyWage": 4096.81,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 526,
+        "regularHourlyWage": 3830.84,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "regularHourlyWage": 3184.67,
+        "gender": "MALE"
+      },
+      {
+        "score": 332,
+        "regularHourlyWage": 3577.57,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 4327.01,
+        "gender": "MALE"
+      },
+      {
+        "score": 486,
+        "regularHourlyWage": 4582.29,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 492,
+        "regularHourlyWage": 4677.33,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 462,
+        "regularHourlyWage": 2777.94,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 490,
+        "regularHourlyWage": 3915.08,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 594,
+        "regularHourlyWage": 4482.78,
+        "gender": "MALE"
+      },
+      {
+        "score": 454,
+        "regularHourlyWage": 3236.6,
+        "gender": "MALE"
+      },
+      {
+        "score": 532,
+        "regularHourlyWage": 3450.07,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "regularHourlyWage": 3438.53,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "regularHourlyWage": 4657.59,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 530,
+        "regularHourlyWage": 3605.84,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "regularHourlyWage": 3548.15,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "regularHourlyWage": 3307.56,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 520,
+        "regularHourlyWage": 3837.19,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 338,
+        "regularHourlyWage": 3359.49,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 616,
+        "regularHourlyWage": 5032.31,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 452,
+        "regularHourlyWage": 2731.21,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 612,
+        "regularHourlyWage": 6770.9,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 498,
+        "regularHourlyWage": 4955.86,
+        "gender": "MALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 5342.99,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 5261.64,
+        "gender": "MALE"
+      },
+      {
+        "score": 598,
+        "regularHourlyWage": 7004.56,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 354,
+        "regularHourlyWage": 3364.68,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 5330.87,
+        "gender": "MALE"
+      },
+      {
+        "score": 530,
+        "regularHourlyWage": 4315.47,
+        "gender": "MALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 4060.46,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 496,
+        "regularHourlyWage": 5036.64,
+        "gender": "MALE"
+      },
+      {
+        "score": 604,
+        "regularHourlyWage": 7569.38,
+        "gender": "MALE"
+      },
+      {
+        "score": 484,
+        "regularHourlyWage": 4823.56,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 344,
+        "regularHourlyWage": 3079.1,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 498,
+        "regularHourlyWage": 5400.1,
+        "gender": "MALE"
+      },
+      {
+        "score": 610,
+        "regularHourlyWage": 8354.01,
+        "gender": "MALE"
+      },
+      {
+        "score": 500,
+        "regularHourlyWage": 6080.89,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "regularHourlyWage": 4315.47,
+        "gender": "MALE"
+      },
+      {
+        "score": 602,
+        "regularHourlyWage": 5105.87,
+        "gender": "MALE"
+      },
+      {
+        "score": 644,
+        "regularHourlyWage": 5953.96,
+        "gender": "MALE"
+      },
+      {
+        "score": 452,
+        "regularHourlyWage": 2982.75,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "regularHourlyWage": 4626.43,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 330,
+        "regularHourlyWage": 3203.72,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 588,
+        "regularHourlyWage": 4846.25,
+        "gender": "MALE"
+      },
+      {
+        "score": 540,
+        "regularHourlyWage": 3998.15,
+        "gender": "MALE"
+      },
+      {
+        "score": 492,
+        "regularHourlyWage": 5524.14,
+        "gender": "MALE"
+      },
+      {
+        "score": 436,
+        "regularHourlyWage": 3068.78,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 632,
+        "regularHourlyWage": 6098.19,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "regularHourlyWage": 4003.35,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 624,
+        "regularHourlyWage": 5342.99,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 622,
+        "regularHourlyWage": 6907.18,
+        "gender": "MALE"
+      },
+      {
+        "score": 486,
+        "regularHourlyWage": 4522.59,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 534,
+        "regularHourlyWage": 3130.75,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 524,
+        "regularHourlyWage": 3136.21,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 448,
+        "regularHourlyWage": 2902.59,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 494,
+        "regularHourlyWage": 5815.5,
+        "gender": "MALE"
+      },
+      {
+        "score": 338,
+        "regularHourlyWage": 3813.53,
+        "gender": "MALE"
+      },
+      {
+        "score": 462,
+        "regularHourlyWage": 2834.48,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 336,
+        "regularHourlyWage": 4009.69,
+        "gender": "MALE"
+      },
+      {
+        "score": 450,
+        "regularHourlyWage": 2611.78,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 460,
+        "regularHourlyWage": 3276.99,
+        "gender": "MALE"
+      },
+      {
+        "score": 490,
+        "regularHourlyWage": 5827.03,
+        "gender": "MALE"
+      },
+      {
+        "score": 524,
+        "regularHourlyWage": 4003.92,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "regularHourlyWage": 3928.92,
+        "gender": "MALE"
+      },
+      {
+        "score": 338,
+        "regularHourlyWage": 3121.21,
+        "gender": "MALE"
+      },
+      {
+        "score": 728,
+        "regularHourlyWage": 14514.21,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "regularHourlyWage": 5016.05,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 446,
+        "regularHourlyWage": 2622.17,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 516,
+        "regularHourlyWage": 4205.85,
+        "gender": "MALE"
+      },
+      {
+        "score": 492,
+        "regularHourlyWage": 4759.71,
+        "gender": "MALE"
+      },
+      {
+        "score": 456,
+        "regularHourlyWage": 2767.55,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 486,
+        "regularHourlyWage": 5135.29,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 516,
+        "regularHourlyWage": 5342.99,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 442,
+        "regularHourlyWage": 2715.63,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 454,
+        "regularHourlyWage": 2797.27,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 608,
+        "regularHourlyWage": 8077.08,
+        "gender": "MALE"
+      },
+      {
+        "score": 446,
+        "regularHourlyWage": 3461.61,
+        "gender": "MALE"
+      },
+      {
+        "score": 488,
+        "regularHourlyWage": 5582.16,
+        "gender": "MALE"
+      },
+      {
+        "score": 524,
+        "regularHourlyWage": 3307.56,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 538,
+        "regularHourlyWage": 4223.16,
+        "gender": "MALE"
+      },
+      {
+        "score": 608,
+        "regularHourlyWage": 4707.78,
+        "gender": "MALE"
+      },
+      {
+        "score": 520,
+        "regularHourlyWage": 3986.62,
+        "gender": "MALE"
+      },
+      {
+        "score": 616,
+        "regularHourlyWage": 5670.47,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 454,
+        "regularHourlyWage": 3444.3,
+        "gender": "MALE"
+      },
+      {
+        "score": 530,
+        "regularHourlyWage": 3496.22,
+        "gender": "MALE"
+      },
+      {
+        "score": 498,
+        "regularHourlyWage": 5095.29,
+        "gender": "MALE"
+      },
+      {
+        "score": 452,
+        "regularHourlyWage": 3618.59,
+        "gender": "MALE"
+      },
+      {
+        "score": 498,
+        "regularHourlyWage": 5209.72,
+        "gender": "MALE"
+      },
+      {
+        "score": 630,
+        "regularHourlyWage": 5977.04,
+        "gender": "MALE"
+      },
+      {
+        "score": 614,
+        "regularHourlyWage": 6813.59,
+        "gender": "MALE"
+      },
+      {
+        "score": 644,
+        "regularHourlyWage": 5555.88,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 524,
+        "regularHourlyWage": 3294.29,
+        "gender": "MALE"
+      },
+      {
+        "score": 522,
+        "regularHourlyWage": 3836.16,
+        "gender": "MALE"
+      },
+      {
+        "score": 494,
+        "regularHourlyWage": 4792.59,
+        "gender": "FEMALE"
+      },
+      {
+        "score": 480,
+        "regularHourlyWage": 5025.1,
+        "gender": "MALE"
+      },
+      {
+        "score": 590,
+        "regularHourlyWage": 5123.18,
+        "gender": "MALE"
+      }
+    ],
+    "regressionLine": {
+      "slope": 15.796,
+      "intercept": -3393.64,
+      "rSquared": 0.4713
+    },
+    "scoreBuckets": [
+      {
+        "rangeFrom": 300,
+        "rangeTo": 400,
+        "maleAverageSalary": 3648.15,
+        "femaleAverageSalary": 3316.91,
+        "overallAverageSalary": 3441.12,
+        "maleMedianSalary": 3813.53,
+        "femaleMedianSalary": 3359.49,
+        "overallMedianSalary": 3362.08,
+        "wageGapPercent": 9.1,
+        "maleCount": 3,
+        "femaleCount": 5
+      },
+      {
+        "rangeFrom": 400,
+        "rangeTo": 500,
+        "maleAverageSalary": 4541.11,
+        "femaleAverageSalary": 3825.43,
+        "overallAverageSalary": 4175.32,
+        "maleMedianSalary": 4990.48,
+        "femaleMedianSalary": 4003.35,
+        "overallMedianSalary": 4522.59,
+        "wageGapPercent": 15.8,
+        "maleCount": 22,
+        "femaleCount": 23
+      },
+      {
+        "rangeFrom": 500,
+        "rangeTo": 600,
+        "maleAverageSalary": 4129.61,
+        "femaleAverageSalary": 4230.44,
+        "overallAverageSalary": 4162.02,
+        "maleMedianSalary": 3998.15,
+        "femaleMedianSalary": 3837.19,
+        "overallMedianSalary": 3992.38,
+        "wageGapPercent": -2.4,
+        "maleCount": 19,
+        "femaleCount": 9
+      },
+      {
+        "rangeFrom": 600,
+        "rangeTo": 700,
+        "maleAverageSalary": 6758.95,
+        "femaleAverageSalary": 5587.24,
+        "overallAverageSalary": 6345.4,
+        "maleMedianSalary": 6813.59,
+        "femaleMedianSalary": 5449.43,
+        "overallMedianSalary": 5977.04,
+        "wageGapPercent": 17.3,
+        "maleCount": 11,
+        "femaleCount": 6
+      },
+      {
+        "rangeFrom": 700,
+        "rangeTo": 800,
+        "maleAverageSalary": 14514.21,
+        "femaleAverageSalary": 13095.25,
+        "overallAverageSalary": 13804.73,
+        "maleMedianSalary": 14514.21,
+        "femaleMedianSalary": 13095.25,
+        "overallMedianSalary": 13804.73,
+        "wageGapPercent": 9.8,
+        "maleCount": 1,
+        "femaleCount": 1
+      }
+    ],
+    "totals": {
+      "maleAverageSalary": 4967.39,
+      "femaleAverageSalary": 4301.41,
+      "overallAverageSalary": 4674.36,
+      "maleMedianSalary": 4595.28,
+      "femaleMedianSalary": 4031.9,
+      "overallMedianSalary": 4321.24,
+      "wageGapPercent": 13.4,
+      "maleCount": 56,
+      "femaleCount": 44
+    }
+  }
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
   Legend,
@@ -73,13 +72,24 @@ export function SalaryDistributionChart({ data }: Props) {
     )
   }
 
-  const { slope, intercept } = data.regressionLine
-  const allowed = data.allowedDifferencePercent
-  const predict = (score: number) => slope * score + intercept
+  // ⚠️ Nullable, and not defaulted to 0. A null fit used to be coerced to
+  // `slope: 0`, drawing a flat line that reads as "pay does not rise with score
+  // at all" — a finding rather than absent data. `hasFit` gates both the drawn
+  // line and the printed figures below. `slope === 0` is a DIFFERENT case: a
+  // real degenerate fit from identical scores, which does draw.
+  const { slope, intercept, rSquared } = data.regressionLine
+  const hasFit = slope != null && intercept != null
+  const predict = (score: number) =>
+    hasFit ? slope * score + intercept : 0
 
-  // NEUTRAL is bundled into the female series (M vs F+N). Outliers are not
-  // marked on the chart — the tolerance band shows the pattern and the outlier
-  // table carries the exact list.
+  // NEUTRAL is bundled into the female series (M vs F+N).
+  //
+  // ⚠️ There is deliberately NO tolerance band. This chart used to shade a
+  // ±1,95% wedge around the line, which was the old per-employee outlier rule.
+  // Compliance is now decided by the company-wide óskýrt figure against 3,9%,
+  // so a shaded corridor here would decide nothing while looking exactly like
+  // it did — a reviewer would read points outside it as findings. The line stays
+  // as orientation; the úrbótaáætlun table carries the actual list.
   const malePoints = data.dataPoints.filter((p) => p.gender === 'MALE')
   const femalePoints = data.dataPoints.filter((p) => p.gender !== 'MALE')
 
@@ -92,27 +102,14 @@ export function SalaryDistributionChart({ data }: Props) {
       (Math.max(...data.scoreBuckets.map((b) => b.rangeTo)) + 100) / 250,
     ) * 250
 
-  const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
-  const regressionData = [
-    { score: xStart, salary: predict(xStart) },
-    { score: xAxisMax, salary: predict(xAxisMax) },
-  ]
-
-  // Tolerance wedge: predicted +/- allowed%, drawn as a shaded band between
-  // the lower and upper bound lines. Only the base-salary chart carries a band.
-  const bandData =
-    allowed != null
-      ? [xStart, xAxisMax].map((score) => {
-          const predicted = predict(score)
-          return {
-            score,
-            band: [
-              predicted * (1 - allowed / 100),
-              predicted * (1 + allowed / 100),
-            ] as [number, number],
-          }
-        })
-      : []
+  const xStart =
+    hasFit && slope !== 0 ? Math.max(0, -intercept / slope) : 0
+  const regressionData = hasFit
+    ? [
+        { score: xStart, salary: predict(xStart) },
+        { score: xAxisMax, salary: predict(xAxisMax) },
+      ]
+    : []
 
   return (
     <Box display="flex" flexDirection="column" rowGap={2} marginY={4}>
@@ -193,22 +190,6 @@ export function SalaryDistributionChart({ data }: Props) {
             }}
           />
 
-          {bandData.length > 0 && (
-            <Area
-              data={bandData}
-              dataKey="band"
-              type="linear"
-              name={`Vikmörk (±${allowed}%)`}
-              stroke="none"
-              fill={theme.color.blue300}
-              fillOpacity={0.32}
-              legendType="rect"
-              tooltipType="none"
-              isAnimationActive={false}
-              activeDot={false}
-            />
-          )}
-
           {malePoints.length > 0 && (
             <Scatter
               name="Karl"
@@ -229,19 +210,88 @@ export function SalaryDistributionChart({ data }: Props) {
             />
           )}
 
-          <Line
-            data={regressionData}
-            type="linear"
-            dataKey="salary"
-            name="Spáð tímakaup eftir stigum"
-            stroke={theme.color.roseTinted400}
-            strokeWidth={2.5}
-            dot={false}
-            legendType="plainline"
-            isAnimationActive={true}
-          />
+          {regressionData.length > 0 && (
+            <Line
+              data={regressionData}
+              type="linear"
+              dataKey="salary"
+              name={reportText.salaryTab.chartRegressionSeries}
+              stroke={theme.color.roseTinted400}
+              strokeWidth={2.5}
+              dot={false}
+              legendType="plainline"
+              isAnimationActive={true}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
+
+      <RegressionReadout
+        slope={slope}
+        intercept={intercept}
+        rSquared={rSquared}
+      />
+    </Box>
+  )
+}
+
+/**
+ * The fitted line, in words.
+ *
+ * Requested so a reviewer can see the model rather than only its picture. R² is
+ * the load-bearing one: it says how much of the pay variation the starfsmatsstig
+ * actually explain — i.e. how much the line deserves to be trusted — which
+ * matters more than the intercept does.
+ *
+ * ⚠️ Every value renders `—` when null. `Hallatala: 0` would read as a genuine
+ * finding ("pay does not rise with score"), which is why these fields became
+ * nullable on the API rather than being coerced to zero.
+ *
+ * Note skurðpunktur is predicted pay at score 0, a job no company has, so its
+ * hint stays deliberately vague about what it means.
+ */
+function RegressionReadout({
+  slope,
+  intercept,
+  rSquared,
+}: {
+  slope?: number | null
+  intercept?: number | null
+  rSquared?: number | null
+}) {
+  const t = reportText.salaryTab
+  const num = (v: number | null | undefined, digits: number) =>
+    v == null
+      ? '—'
+      : v.toLocaleString('is-IS', {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        })
+
+  const rows = [
+    { label: t.slopeLabel, value: `${num(slope, 3)} ${t.slopeUnit}`, hint: t.slopeHint },
+    {
+      label: t.interceptLabel,
+      value: intercept == null ? '—' : `${formatSalary(intercept)} ${t.hourlyUnit}`,
+      hint: t.interceptHint,
+    },
+    { label: t.rSquaredLabel, value: num(rSquared, 2), hint: t.rSquaredHint },
+  ]
+
+  return (
+    <Box marginTop={2}>
+      <Text variant="h5">{t.regressionHeading}</Text>
+      {rows.map((row) => (
+        <Box key={row.label} display="flex" columnGap={2} marginTop={1}>
+          <Text variant="small" fontWeight="semiBold">
+            {row.label}
+          </Text>
+          <Text variant="small">{row.value}</Text>
+          <Text variant="small" color="dark300">
+            {row.hint}
+          </Text>
+        </Box>
+      ))}
     </Box>
   )
 }

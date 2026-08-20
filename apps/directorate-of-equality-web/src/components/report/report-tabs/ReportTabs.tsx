@@ -35,6 +35,16 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
     enabled: isSalary && report.includesImprovementPlan,
   })
 
+  // Viðbótarlaun / aukagreiðslur per gender. Its own endpoint rather than part
+  // of the chart payload because these are monthly krónur, not rates — see
+  // PayComponentsTable.
+  const { data: componentsData } = useQuery({
+    ...trpc.reportStatistics.benefitsBreakdown.queryOptions({
+      reportId: report.id,
+    }),
+    enabled: isSalary,
+  })
+
   const jafnrettisaetlun = {
     id: 'jafnrettisaetlun',
     label: reportText.tabEquality,
@@ -85,6 +95,8 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
             content: (
               <SalaryReportTab
                 data={salaryStats}
+                decomposition={report.result?.wageGapDecomposition}
+                payComponents={componentsData}
                 reportId={report.id}
                 groups={groupsData?.groups ?? []}
                 outliersPostponed={

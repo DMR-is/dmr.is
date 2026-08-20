@@ -33,8 +33,9 @@ import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
+  formatHourlyRate,
   formatNationalId,
-  formatSalary,
+  formatPercent,
   parseInflightConflictStatus,
 } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
@@ -910,18 +911,25 @@ const OutlierEditor = ({
     {
       id: 'salary',
       header: d.tableSalary,
-      cell: ({ row }) => `${formatSalary(row.original.adjustedBaseSalary)} kr.`,
+      cell: ({ row }) => formatHourlyRate(row.original.regularHourlyWage),
+    },
+    {
+      id: 'expected',
+      header: d.tableExpected,
+      cell: ({ row }) => formatHourlyRate(row.original.expectedHourlyWage),
     },
     {
       id: 'difference',
       header: d.tableDifference,
-      cell: ({ row }) => {
-        const o = row.original
-        const below = o.differencePercent < 0
-        return `${Math.abs(o.differencePercent).toFixed(1)}% ${
-          below ? d.directionBelow : d.directionAbove
-        }`
-      },
+      // No direction suffix: the lágmarksmengi is lift-only, so every row here
+      // is underpaid. "undir viðmiði" on all of them told the reader nothing.
+      cell: ({ row }) =>
+        formatPercent(row.original.deviationPercent, { signed: true }),
+    },
+    {
+      id: 'contribution',
+      header: d.tableContribution,
+      cell: ({ row }) => formatPercent(row.original.contributionShare),
     },
   ]
 

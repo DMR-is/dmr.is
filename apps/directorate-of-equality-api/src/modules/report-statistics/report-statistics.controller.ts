@@ -28,7 +28,7 @@ export class ReportStatisticsController {
     operationId: 'getRegularHourlyWageByScoreAll',
     include404: true,
     description:
-      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
+      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
     type: SalaryByGenderAndScoreDto,
   })
   async getRegularHourlyWageByScoreAll(
@@ -44,7 +44,7 @@ export class ReportStatisticsController {
     operationId: 'getRegularHourlyWageByScoreWork',
     include404: true,
     description:
-      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
+      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
     type: SalaryByGenderAndScoreDto,
   })
   async getRegularHourlyWageByScoreWork(
@@ -60,7 +60,7 @@ export class ReportStatisticsController {
     operationId: 'getRegularHourlyWageGenderWageGap',
     include404: true,
     description:
-      'Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir). ' +
+      'Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir). ' +
       'Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.',
     type: GenderWageGapDto,
   })

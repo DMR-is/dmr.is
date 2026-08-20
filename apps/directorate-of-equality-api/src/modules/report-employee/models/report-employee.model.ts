@@ -53,13 +53,13 @@ type RegularWageComponents = {
 }
 
 /**
- * Regluleg laun = grunnlaun + viðbótarlaun + hlunnindi — every collected pay
+ * Regluleg laun = grunnlaun + viðbótarlaun + aukagreiðslur — every collected pay
  * field, each unentered child treated as `0`.
  *
  * ⚠️ **The wide reading is deliberate. Do not narrow it.** Hagstofa's published
  * definition of *regluleg laun* is *"greidd mánaðarlaun fyrir umsaminn
  * vinnutíma … hvers konar álags- og bónusgreiðslur"*, which read strictly
- * excludes tilfallandi yfirvinna and does not clearly cover hlunnindi. The
+ * excludes tilfallandi yfirvinna and does not clearly cover aukagreiðslur. The
  * Directorate approved this wider formula regardless, "until further notice",
  * and it is what the Excel template's own `Regluleg laun` column computes. A
  * later reader who narrows this to match Hagstofa's wording would silently move

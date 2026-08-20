@@ -144,13 +144,25 @@ function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
   )
 }
 
+/**
+ * Úrbótaáætlun — the lágmarksmengi and its explanations.
+ *
+ * The empty state is a **finding, not an absence**: an empty set means óskýrt is
+ * already under the benchmark, so the copy says so rather than implying nothing
+ * was measured.
+ *
+ * Each row carries actual, expected and deviation together. Showing the
+ * deviation alone (as this did) invites reading it as the reason the employee is
+ * listed — but the reason is the company-wide figure; `Hlutur af óskýrðu` is the
+ * column that actually explains the selection.
+ */
 function improvementPlanSection(
   outliers: ReportEmployeeOutlierDto[],
 ): string {
   if (!outliers || outliers.length === 0) {
     return section(
       'Úrbótaáætlun',
-      `<p class="empty-note">Engin frávik skráð.</p>`,
+      `<p class="empty-note">Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.</p>`,
     )
   }
 
@@ -161,7 +173,10 @@ function improvementPlanSection(
           <td>${o.employeeOrdinal !== null ? `Starfsmaður ${o.employeeOrdinal}` : '—'}</td>
           <td>${orDash(o.roleTitle)}</td>
           <td>${genderLabel(o.gender)}</td>
-          <td>${formatPercent(o.differencePercent, { signed: true })}</td>
+          <td>${formatHourlyRate(o.regularHourlyWage)}</td>
+          <td>${formatHourlyRate(o.expectedHourlyWage)}</td>
+          <td>${formatPercent(o.deviationPercent, { signed: true })}</td>
+          <td>${formatPercent(o.contributionShare)}</td>
         </tr>`,
     )
     .join('')
@@ -169,7 +184,7 @@ function improvementPlanSection(
   return section(
     'Úrbótaáætlun',
     `<table class="data-table">
-      <thead><tr><th>Starfsmaður</th><th>Starf</th><th>Kyn</th><th>Launafrávik</th></tr></thead>
+      <thead><tr><th>Starfsmaður</th><th>Starf</th><th>Kyn</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Hlutur af óskýrðu</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`,
   )

@@ -91,13 +91,25 @@ export function buildSalaryChartSvg(
     .join('')
 
   // Regression line, clipped to the plot area.
+  //
+  // ⚠️ Drawn only when the fit exists. `slope`/`intercept` became nullable when
+  // they started being printed as figures: the old code coerced a null fit to 0
+  // and drew a flat line across the chart, which looked like a finding ("pay
+  // does not rise with score at all") rather than like absent data. No line is
+  // the honest rendering. Note `slope === 0` is NOT the same case — that is a
+  // real degenerate fit from identical scores, and it does get drawn.
   const { slope, intercept } = regressionLine
-  const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
-  const x1 = xScale(xStart)
-  const y1 = yScale(slope * xStart + intercept)
-  const x2 = xScale(xMax)
-  const y2 = yScale(slope * xMax + intercept)
-  const regression = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.regression}" stroke-width="2.5" clip-path="url(#plot-clip)" />`
+  const regression =
+    slope === null || intercept === null
+      ? ''
+      : (() => {
+          const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
+          const x1 = xScale(xStart)
+          const y1 = yScale(slope * xStart + intercept)
+          const x2 = xScale(xMax)
+          const y2 = yScale(slope * xMax + intercept)
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.regression}" stroke-width="2.5" clip-path="url(#plot-clip)" />`
+        })()
 
   // Legend below the x-axis.
   const legendY = MARGIN.top + PLOT_H + 46

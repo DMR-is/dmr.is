@@ -179,7 +179,7 @@ export function assertParsedPayloadIntegrity(
 
     if (computeRegularWages(employee) <= 0) {
       throw new BadRequestException(
-        `Starfsmaður með raðnúmer ${employee.ordinal} er með engin regluleg laun; grunnlaun, viðbótarlaun og hlunnindi mega ekki vera 0 samanlagt`,
+        `Starfsmaður með raðnúmer ${employee.ordinal} er með engin regluleg laun; grunnlaun, viðbótarlaun og aukagreiðslur mega ekki vera 0 samanlagt`,
       )
     }
 

@@ -16,7 +16,6 @@ import { ReportEmployeeOutlierModel } from '../report-employee/models/report-emp
 import { ReportResultModel } from '../report-result/models/report-result.model'
 import {
   AUTO_REVIEW_LOGGING_CONTEXT,
-  AUTO_REVIEW_THRESHOLDS,
 } from './report-auto-review.constants'
 import {
   AutoReviewSignals,
@@ -25,8 +24,6 @@ import {
 } from './report-auto-review.service.interface'
 
 const LOGGING_CONTEXT = AUTO_REVIEW_LOGGING_CONTEXT
-
-const fmtPercent = (value: number): string => `${Math.round(value * 10) / 10}%`
 
 @Injectable()
 export class ReportAutoReviewService implements IReportAutoReviewService {
@@ -91,6 +88,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
 
     const gapPercent = await this.readGapPercent(report.id)
     const previousGapPercent = await this.readPreviousGapPercent(report)
+    const decomposition = await this.readDecomposition(report.id)
 
     const outlierRatio =
       totalEmployees > 0 ? outlierEmployees / totalEmployees : null
@@ -108,7 +106,20 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       gapPercent,
       previousGapPercent,
       gapImproved,
+      oskyrtAvailable: decomposition?.oskyrtAvailable ?? null,
+      adjustedGapPercent: decomposition?.oskyrtPercent ?? null,
     }
+  }
+
+  /**
+   * The frozen decomposition, or null when the report has no result row.
+   *
+   * Read as a whole rather than through a narrow accessor because two of its
+   * fields are needed and one of them — `oskyrtAvailable` — decides an outcome.
+   */
+  private async readDecomposition(reportId: string) {
+    const result = await this.reportResultModel.findOne({ where: { reportId } })
+    return result?.wageGapDecompositionSnapshot ?? null
   }
 
   /**
@@ -170,46 +181,59 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
    * report; otherwise it is routed to manual review with the failing reasons.
    * Replace this body (not its callers) when the real criteria land.
    */
+  /**
+   * The decision rule.
+   *
+   * Three branches, and the middle one carries all the weight:
+   * `outlierEmployees === 0` **is** "óskýrður launamunur is within the statutory
+   * benchmark". The lágmarksmengi is built by a greedy walk that stops the moment
+   * the running gap drops under the threshold, so an empty set and a compliant
+   * gap are the same fact — measured on the unrounded log figure rather than a
+   * rounded percentage, which matters at the boundary.
+   *
+   * ⚠️ **This deliberately no longer consults `outlierRatio`, `gapPercent` or
+   * `gapImproved`.** All three are still collected for the audit trail, and they
+   * are useful context for a reviewer, but as *decision inputs* they overrode a
+   * correct answer with a wrong one:
+   *
+   * - `outlierRatio` measured severity under the ±band. The lágmarksmengi is
+   *   minimal by construction, so a small set can mean a CONCENTRATED problem
+   *   rather than a small one. A cohort 49% over the benchmark passed at 4/200.
+   * - `gapPercent` is the unadjusted cohort-mean gap, which has no compliance
+   *   role and moves independently of óskýrt in both directions.
+   * - `gapImproved` asked whether last year was worse. Irrelevant when
+   *   corrections are outstanding now.
+   *
+   * The consequence of exceeding is **NEEDS_REVIEW**, never rejection: the
+   * regulation obliges an *áætlun um úrbætur*, and every rejection stays manual.
+   * `AUTO_REVIEW_ENFORCE` gates whether any of this acts at all.
+   */
   private decide(signals: AutoReviewSignals): AutoReviewVerdict {
-    const { maxOutlierRatio, maxGapPercent } = AUTO_REVIEW_THRESHOLDS
-
-    if (signals.outlierEmployees === 0) {
+    // Fail closed on an unmeasurable gap. MUST precede the zero-outlier branch:
+    // a single-gender company has an empty lágmarksmengi, so that branch would
+    // auto-approve it — approving a company BECAUSE its gap could not be
+    // measured.
+    if (signals.oskyrtAvailable === false) {
       return {
-        decision: AutoReviewDecisionEnum.AUTO_APPROVE,
-        reason: 'Engin frávik greind — uppfyllir skilyrði sjálfvirkrar samþykktar.',
+        decision: AutoReviewDecisionEnum.NEEDS_REVIEW,
+        reason:
+          'Ekki var unnt að reikna óskýrðan launamun — krefst handvirkrar yfirferðar.',
         signals,
       }
     }
 
-    const failures: string[] = []
-
-    if (signals.outlierRatio !== null && signals.outlierRatio > maxOutlierRatio) {
-      failures.push(
-        `hlutfall frávika ${fmtPercent(signals.outlierRatio * 100)} yfir mörkum (${fmtPercent(maxOutlierRatio * 100)})`,
-      )
-    }
-
-    if (signals.gapPercent !== null && signals.gapPercent > maxGapPercent) {
-      failures.push(
-        `launamunur ${fmtPercent(signals.gapPercent)} yfir mörkum (${fmtPercent(maxGapPercent)})`,
-      )
-    }
-
-    if (signals.gapImproved === false) {
-      failures.push('launamunur jókst frá síðustu samþykktri skýrslu')
-    }
-
-    if (failures.length > 0) {
+    if (signals.outlierEmployees === 0) {
       return {
-        decision: AutoReviewDecisionEnum.NEEDS_REVIEW,
-        reason: `Krefst yfirferðar: ${failures.join('; ')}.`,
+        decision: AutoReviewDecisionEnum.AUTO_APPROVE,
+        reason:
+          'Óskýrður launamunur er undir viðmiði — engar úrbætur nauðsynlegar.',
         signals,
       }
     }
 
     return {
-      decision: AutoReviewDecisionEnum.AUTO_APPROVE,
-      reason: 'Frávik innan marka — uppfyllir skilyrði sjálfvirkrar samþykktar.',
+      decision: AutoReviewDecisionEnum.NEEDS_REVIEW,
+      reason: `Óskýrður launamunur er yfir viðmiði — ${signals.outlierEmployees} starfsmaður/starfsmenn í úrbótaáætlun krefjast yfirferðar.`,
       signals,
     }
   }
@@ -229,6 +253,10 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
         gapPercent: null,
         previousGapPercent: null,
         gapImproved: null,
+        // `null`, not `false`: abstaining means the question was never asked, so
+        // this must not read as "we tried and could not measure it".
+        oskyrtAvailable: null,
+        adjustedGapPercent: null,
       },
     }
   }

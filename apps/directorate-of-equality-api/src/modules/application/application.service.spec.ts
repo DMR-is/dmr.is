@@ -22,7 +22,6 @@ import {
 } from '../company/models/company.enums'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
-import { SalaryOutlierAnalysisMethodEnum } from '../report/lib/compensation-aggregates'
 import {
   CommunicationStatusEnum,
   GenderEnum,
@@ -235,20 +234,35 @@ describe('ApplicationService', () => {
         'salary_difference_threshold_percent',
       )
 
-      // Ordinal 1 sits about 2.7% below its predicted hourly wage on the
-      // regression line, past the 1.95% half-threshold band. The rest stay
-      // inside it. (4.750 kr./klst. = (850.000 + 100.000 föst yfirvinna) / 200.)
+      // ⚠️ Instructive: ordinal 1 is still the only flagged employee, but for a
+      // completely different reason than before. The retired band flagged her
+      // because she sat 2,7% below the fitted line — a fact about her alone.
+      // She is now flagged because óskýrt is 4,97% (over 3,9%), konur are the
+      // disadvantaged group, and she is the only underpaid woman in the cohort,
+      // so lifting her is the whole úrbótaáætlun. Same answer, different rule.
+      const gap = result.wageGapDecomposition
+      expect(gap.counts).toEqual({ male: 6, female: 1, excluded: 0 })
+      expect(gap.oskyrtPercent).toBeCloseTo(4.9711, 4)
+      expect(gap.disadvantagedGender).toBe('FEMALE')
+      expect(gap.correctableCount).toBe(1)
+      expect(gap.minimumSetSize).toBe(1)
+
       expect(result.outliers).toHaveLength(1)
       expect(result.outliers[0]).toMatchObject({
         employeeOrdinal: 1,
+        // 4.750 kr./klst. = (850.000 + 100.000 föst yfirvinna) / 200.
         regularHourlyWage: 4750,
-        direction: 'BELOW',
-        predictedHourlyWage: 4883.93,
-        scoreBucketRangeFrom: 100,
-        scoreBucketRangeTo: 200,
+        payStatus: 'UNDERPAID',
       })
-      expect(result.outliers[0].differencePercent).toBeCloseTo(-2.742, 3)
-      expect(result.outliers[0].allowedDifferencePercent).toBeCloseTo(1.95, 4)
+      // 85,71% = exactly 6/7, and the arithmetic is worth following because the
+      // number looks arbitrary. Contributions are gender-normalised: a man
+      // contributes residual/6, she contributes −residual/1. Residuals sum to
+      // zero over the whole cohort, so the men's residuals total −r where r is
+      // hers. Óskýrt = −r/6 + (−r) = −r·7/6, and her share is −r ÷ (−r·7/6) =
+      // 6/7. The remaining 1/7 is carried jointly by the six men sitting above
+      // the line — which is why her share is under 100% even though she is the
+      // only correctable employee.
+      expect(result.outliers[0].contributionShare).toBeCloseTo(85.71, 2)
 
       expect(result.regularHourlyWageByScoreAll.dataPoints).toHaveLength(7)
       expect(result.regularHourlyWageByScoreAll.totals.maleCount).toBe(6)
@@ -1861,46 +1875,28 @@ function makeReportResultDto(
     id: 'report-result-1',
     reportId,
     salaryDifferenceThresholdPercent: 3.9,
-    calculationVersion: 'v1',
-    base: snapshot,
-    full: snapshot,
-    outlierAnalysis: {
-      method:
-        SalaryOutlierAnalysisMethodEnum.BASE_SALARY_LINEAR_REGRESSION_BY_SCORE,
-      thresholdPercent: 3.9,
-      allowedDifferencePercent: 1.95,
-      regressions: {
-        overall: makeEmptyRegression(),
-        male: makeEmptyRegression(),
-        female: makeEmptyRegression(),
-        neutral: makeEmptyRegression(),
-      },
+    calculationVersion: 'v2',
+    salary: snapshot,
+    // `detectedOrdinals` are now the LÁGMARKSMENGI, flagged by `inMinimumSet`
+    // rather than by a per-employee band. `editOutliers` reads this to check the
+    // submitted groups cover exactly the flagged set.
+    wageGapDecomposition: {
+      oskyrtAvailable: true,
+      oskyrtPercent: 5.5,
+      benchmarkPercent: 3.9,
+      minimumSetSize: detectedOrdinals.length,
       employees: detectedOrdinals.map((ordinal) => ({
         ordinal,
         score: 0,
-        gender: GenderEnum.MALE,
-        regularHourlyWage: 0,
-        predictedHourlyWage: 0,
-        scoreBucketRangeFrom: null,
-        scoreBucketRangeTo: null,
-        direction: null,
-        differencePercent: null,
-        allowedDifferencePercent: 1.95,
-        isOutlier: true,
+        gender: GenderEnum.FEMALE,
+        hourlyWage: 4750,
+        expectedHourlyWage: 5000,
+        deviationPercent: -5,
+        payStatus: 'UNDERPAID',
+        contributionShare: 100 / Math.max(detectedOrdinals.length, 1),
+        isCorrectable: true,
+        inMinimumSet: true,
       })),
     },
-  }
-}
-
-function makeEmptyRegression() {
-  return {
-    slope: null,
-    intercept: null,
-    sampleCount: 0,
-    scoreMean: null,
-    hourlyWageMean: null,
-    rSquared: null,
-    scoreRangeFrom: null,
-    scoreRangeTo: null,
   }
 }

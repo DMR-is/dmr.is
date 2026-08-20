@@ -109,15 +109,15 @@ export const overviewText = {
     deviations: {
       analyzing: 'Greini frávik…',
       analyzeError: 'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
-      none: 'Engin frávik fundust í gögnunum. Hægt er að senda skýrsluna beint inn.',
+      none: 'Óskýrður launamunur er undir viðmiði. Engar úrbætur nauðsynlegar — hægt er að senda skýrsluna beint inn.',
       intro:
-        'Frávik fundust í launagreiningunni. Skráðu skýringar á þeim í frávikahópa eða frestaðu skilum þeirra.',
+        'Óskýrður launamunur er yfir viðmiði. Launahækkun þessara starfsmanna færir hann undir viðmiðið. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
       postponeOption: 'Fresta skilum frávika',
       tableEmployee: 'Starfsmaður',
-      tableSalary: 'Grunnlaun',
+      tableSalary: 'Tímakaup',
+      tableExpected: 'Væntanlegt tímakaup',
       tableDifference: 'Frávik',
-      directionAbove: 'yfir viðmiði',
-      directionBelow: 'undir viðmiði',
+      tableContribution: 'Hlutur af óskýrðu',
       createGroup: 'Búa til frávikahóp úr völdum',
       groupHeading: 'Frávikahópur',
       groupMembers: 'Starfsmenn',
@@ -246,12 +246,84 @@ export const reportText = {
     avgSalaryMale: 'Meðaltímakaup karla',
     avgSalaryFemale: 'Meðaltímakaup kvenna',
     wageGapLabel: 'Óleiðréttur launamunur',
+
+    /**
+     * ── The two gap figures ──────────────────────────────────────────────────
+     *
+     * Deliberately in SEPARATE groups, not side by side. Óleiðréttur sits with
+     * the two meðaltímakaup figures it is computed from, which makes it
+     * self-verifying: subtract the two averages and you get it. Leiðréttur sits
+     * alone as the compliance figure.
+     *
+     * Keeping them apart matters because they do NOT nest — leiðréttur can
+     * legitimately exceed óleiðréttur when the job-score mix favours the
+     * lower-paid group — so putting them adjacent invites a comparison that
+     * does not hold.
+     */
+    unadjustedGroupHeading: 'Meðaltímakaup og hrátt bil',
+    adjustedGroupHeading: 'Leiðréttur launamunur',
+    adjustedLabel: 'Leiðréttur launamunur',
+    adjustedDescription:
+      'Sá hluti launamunar sem starfsmatsstig skýra ekki. Þetta er talan sem borin er við viðmiðið.',
+    benchmarkLabel: 'Viðmið',
+    benchmarkWithin: 'Undir viðmiði',
+    benchmarkExceeded: 'Yfir viðmiði',
+    disfavourFemale: 'í óhag kvenna',
+    disfavourMale: 'í óhag karla',
+    disfavourNone: 'engin átt',
+    minimumSetLabel: 'Starfsmenn í úrbótaáætlun',
+    minimumSetNone: 'Engir',
+    cohortCountsLabel: 'Fjöldi í greiningu',
+    cohortMale: 'karlar',
+    cohortFemale: 'konur',
+
+    /**
+     * ── Unavailable states ───────────────────────────────────────────────────
+     *
+     * The API sends enum codes only, never Icelandic, so the mapping lives
+     * here. `cannotCompute` is the heading; the blocker keys explain why.
+     *
+     * ⚠️ Never render 0% for an unavailable gap. A company that cannot be
+     * measured is not a company without a pay gap, and "0%" states the opposite
+     * of what is known.
+     */
+    cannotCompute: 'Ekki hægt að reikna',
+    blockers: {
+      EMPTY_MALE_COHORT:
+        'Engir karlar í skýrslunni, því er ekki unnt að reikna launamun milli kynja.',
+      EMPTY_FEMALE_COHORT:
+        'Engar konur í skýrslunni, því er ekki unnt að reikna launamun milli kynja.',
+    },
+    warnings: {
+      ROWS_EXCLUDED_NON_POSITIVE_WAGE:
+        'Starfsmenn með ógilt tímakaup voru undanskildir útreikningi.',
+      NO_SCORE_OVERLAP:
+        'Starfsmatsstig kynjanna skarast ekki. Það er raunveruleg niðurstaða — algjör kynjaskipting starfa — en leiðrétta talan byggir þá á framreikningi utan gagnasviðs.',
+      NO_SCORE_VARIATION:
+        'Öll starfsmatsstig eru eins, því er ekki unnt að greina hvað stig skýra.',
+    },
+
+    /**
+     * ── Chart annotations ────────────────────────────────────────────────────
+     *
+     * The fitted line printed in words. Skurðpunktur is predicted pay at score
+     * 0, which no real job has, so the label stays deliberately vague about it.
+     */
+    regressionHeading: 'Aðfallslína',
+    slopeLabel: 'Hallatala',
+    slopeUnit: 'kr./klst. á stig',
+    slopeHint: 'Hversu mikið tímakaupið hækkar fyrir hvert viðbótarstig',
+    interceptLabel: 'Skurðpunktur',
+    interceptHint: 'Hvar línan byrjar',
+    rSquaredLabel: 'R²',
+    rSquaredHint: 'Hve mikið af launabreytileikanum stigin skýra',
     noDataMessage: 'Engin launagögn til að birta',
     chartTitle: 'Stig á móti reglulegu tímakaupi',
     chartDescription:
       'Hér má sjá línulega aðfallsgreiningu á reglulegu tímakaupi á milli kynja.',
     chartScaleScore: 'stig',
     chartScaleCurrency: 'kr./klst.',
+    chartRegressionSeries: 'Spáð tímakaup eftir stigum',
     chartTooltipScore: 'Stig',
     chartTooltipSalary: 'Tímakaup',
     hourlyUnit: 'kr./klst.',
@@ -268,7 +340,44 @@ export const reportText = {
       signatureRoleLabel: 'Hlutverk undirritanda',
       points: 'Stig',
       salary: 'Tímakaup',
-      predictedSalary: 'Spáð tímakaup',
+      predictedSalary: 'Væntanlegt tímakaup',
+      /**
+       * The column that actually explains why a row is listed. The deviation is
+       * about the individual; this is their share of the company-wide óskýrt
+       * figure, which is what the lágmarksmengi is selected on.
+       */
+      contributionShareHeader: 'Hlutur af óskýrðu',
+      emptyMinimumSet:
+        'Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.',
+    },
+    /**
+     * ── Pay-component split by gender ────────────────────────────────────────
+     *
+     * ⚠️ `Aukagreiðslur`, NOT `hlunnindi`. The template's own computed columns
+     * are P "Viðbótarlaun" (`=SUM(J:K)`) and Q "Aukagreiðslur" (`=SUM(L:O)`), so
+     * that is the submitter-facing vocabulary. "Hlunnindi" had crept into the
+     * formula docs and was corrected out 2026-08-20.
+     */
+    components: {
+      heading: 'Viðbótarlaun og aukagreiðslur',
+      description:
+        'Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum.',
+      genderHeader: 'Kyn',
+      additionalHeader: 'Viðbótarlaun',
+      bonusHeader: 'Aukagreiðslur',
+      totalHeader: 'Samtals',
+      male: 'Karl',
+      female: 'Kona',
+      overall: 'Allir',
+      /**
+       * The screenshot's "Launamunur kynjanna" row. This is the ÓLEIÐRÉTTI
+       * gap per component — a plain difference of means, with no Oaxaca
+       * decomposition and no compliance role.
+       */
+      gapRow: 'Óleiðréttur launamunur',
+      gapHint:
+        'Hlutfallslegur munur á meðaltali karla og kvenna fyrir hvern lið. Ekki leiðrétt fyrir starfsmatsstigum og ekki borið við viðmið.',
+      empty: 'Engar viðbótarlaunagreiðslur skráðar',
     },
     remedyDeadlineLabel: 'Frestur til úrbóta',
     remedyDeadlinePlaceholder: 'Valin dagsetning fyrir úrbótafrest',

@@ -12,7 +12,7 @@ module.exports = {
     -- Pay is now evaluated on REGLULEGT TÍMAKAUP, per the regulation:
     -- "reglulegum launum, reiknuðum niður á tímakaup".
     --
-    --   Regluleg laun      = grunnlaun + viðbótarlaun + hlunnindi
+    --   Regluleg laun      = grunnlaun + viðbótarlaun + aukagreiðslur
     --   Reglulegt tímakaup = regluleg laun / greiddar stundir
     --
     -- work_ratio goes rather than joining it: dividing by BOTH a

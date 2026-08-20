@@ -313,7 +313,7 @@ const emptySnapshot = (
 
 /**
  * The benchmark in log points: `−log(1 − p)`, the inverse of the
- * higher-paid-base conversion. 3,9% → 0,039779.
+ * higher-paid-base conversion. 3,9% → 0,0397809.
  */
 export function thresholdLogFor(benchmarkPercent: number): number {
   return -Math.log(1 - benchmarkPercent / 100)

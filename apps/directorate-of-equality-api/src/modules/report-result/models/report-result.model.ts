@@ -3,10 +3,7 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
-import type {
-  SalaryOutlierAnalysisSnapshot,
-  SalaryResultSnapshot,
-} from '../../report/lib/compensation-aggregates'
+import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
 import { type WageGapDecompositionSnapshot } from '../../report/lib/wage-gap-decomposition'
 import { ReportModel } from '../../report/models/report.model'
 import type { ReportResultDto } from '../dto/report-result.dto'
@@ -19,7 +16,6 @@ export type ReportResultAttributes = {
   salaryDifferenceThresholdPercent: number | null
   calculationVersion: string
   salarySnapshot: SalaryResultSnapshot
-  outlierAnalysisSnapshot: SalaryOutlierAnalysisSnapshot
   wageGapDecompositionSnapshot: WageGapDecompositionSnapshot
 }
 
@@ -75,13 +71,6 @@ export class ReportResultModel extends MutableModel<
   })
   salarySnapshot!: SalaryResultSnapshot
 
-  @Column({
-    type: DataType.JSONB,
-    allowNull: false,
-    field: 'outlier_analysis_snapshot',
-  })
-  outlierAnalysisSnapshot!: SalaryOutlierAnalysisSnapshot
-
   /**
    * Frozen Oaxaca-Blinder decomposition. Always present — a company that cannot
    * be measured (only one gender) still gets a snapshot carrying
@@ -110,7 +99,6 @@ export class ReportResultModel extends MutableModel<
       salaryDifferenceThresholdPercent: model.salaryDifferenceThresholdPercent,
       calculationVersion: model.calculationVersion,
       salary: model.salarySnapshot,
-      outlierAnalysis: model.outlierAnalysisSnapshot,
       wageGapDecomposition: model.wageGapDecompositionSnapshot,
     }
   }

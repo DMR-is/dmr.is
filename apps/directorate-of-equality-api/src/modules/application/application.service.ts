@@ -524,8 +524,8 @@ export class ApplicationService implements IApplicationService {
    *
    * The union of every group's `employeeOrdinals` must match the canonical
    * detected outliers on the report (read from
-   * `report_result.outlierAnalysisSnapshot.employees` filtered to
-   * `isOutlier = true`) — every detected ordinal covered exactly once, no
+   * `report_result.wageGapDecompositionSnapshot.employees` filtered to
+   * `inMinimumSet = true`) — every detected ordinal covered exactly once, no
    * extras, no missing, no ordinal in two groups. The report's existing groups
    * are replaced wholesale: the outlier rows are re-pointed at freshly created
    * groups and the old groups are deleted.
@@ -580,8 +580,8 @@ export class ApplicationService implements IApplicationService {
     // 2. Canonical detected set, frozen at submit time on the report_result.
     const reportResult = await this.reportResultService.getByReportId(report.id)
     const detectedOrdinals = new Set(
-      reportResult.outlierAnalysis.employees
-        .filter((employee) => employee.isOutlier)
+      reportResult.wageGapDecomposition.employees
+        .filter((employee) => employee.inMinimumSet)
         .map((employee) => employee.ordinal),
     )
 
@@ -962,7 +962,7 @@ export class ApplicationService implements IApplicationService {
     ])
 
     const analysisByOrdinal = new Map(
-      result?.outlierAnalysis.employees.map((employee) => [
+      result?.wageGapDecomposition.employees.map((employee) => [
         employee.ordinal,
         employee,
       ]) ?? [],

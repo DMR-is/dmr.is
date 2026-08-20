@@ -15,7 +15,7 @@ import {
 } from '../../../../gen/fetch'
 import { reportText as r, sharedText } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
-import { formatSalary } from '../../../../lib/utils'
+import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
 
 import { keepPreviousData } from '@tanstack/react-query'
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
@@ -54,13 +54,20 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     enableSorting: true,
   },
   {
-    id: 'score',
+    id: 'deviationPercent',
     header: o.deviationHeader,
-    accessorFn: (row) => row.score ?? 0,
+    accessorFn: (row) => row.deviationPercent ?? 0,
     cell: ({ row }) =>
-      row.original.differencePercent == null
-        ? dash
-        : `${row.original.differencePercent.toLocaleString('is-IS')}%`,
+      formatPercent(row.original.deviationPercent, { signed: true }),
+    enableSorting: true,
+  },
+  {
+    // The column that explains the selection. Sorted descending by default is
+    // the useful order: the biggest carriers of óskýrt first.
+    id: 'contributionShare',
+    header: o.contributionShareHeader,
+    accessorFn: (row) => row.contributionShare ?? 0,
+    cell: ({ row }) => formatPercent(row.original.contributionShare),
     enableSorting: true,
   },
 ]
@@ -102,12 +109,10 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
     <LabelValueRows
       rows={[
         { label: o.points, value: row.score },
+        { label: o.salary, value: formatHourlyRate(row.regularHourlyWage) },
         {
-          label: o.salary,
-          value:
-            row.predictedBaseSalary != null
-              ? `${formatSalary(row.predictedBaseSalary)} kr.`
-              : null,
+          label: o.predictedSalary,
+          value: formatHourlyRate(row.expectedHourlyWage),
         },
       ]}
     />

@@ -13,9 +13,7 @@ import { CONFIG_KEYS, readNumericConfig } from '../config/lib/numeric-config'
 import { ConfigModel } from '../config/models/config.model'
 import {
   computeCompensationAggregates,
-  computeSalaryOutlierAnalysis,
   getRegularHourlyWage,
-  roundSalaryOutlierAnalysisSnapshot,
   roundSalaryResultSnapshot,
 } from '../report/lib/compensation-aggregates'
 import {
@@ -123,19 +121,6 @@ export class ReportResultService implements IReportResultService {
         bonusSalary: employee.bonusSalary,
       })),
     })
-    const outlierAnalysis = computeSalaryOutlierAnalysis({
-      employees: employees.map((employee) => ({
-        ordinal: employee.ordinal,
-        score: requireComputedScore(employee),
-        gender: employee.gender,
-        paidHours: employee.paidHours,
-        baseSalary: employee.baseSalary,
-        additionalSalary: employee.additionalSalary,
-        bonusSalary: employee.bonusSalary,
-      })),
-      thresholdPercent: threshold,
-    })
-
     // The decomposition runs on the same employee rows as the aggregates, so
     // the two figures a reviewer sees can never disagree about who was counted.
     const wageGapDecomposition = computeWageGapDecomposition({
@@ -153,8 +138,6 @@ export class ReportResultService implements IReportResultService {
       salaryDifferenceThresholdPercent: threshold,
       calculationVersion: REPORT_RESULT_CALCULATION_VERSION,
       salarySnapshot: roundSalaryResultSnapshot(aggregates.report.snapshot, 2),
-      outlierAnalysisSnapshot:
-        roundSalaryOutlierAnalysisSnapshot(outlierAnalysis),
       wageGapDecompositionSnapshot: roundWageGapDecompositionSnapshot(
         wageGapDecomposition,
       ),

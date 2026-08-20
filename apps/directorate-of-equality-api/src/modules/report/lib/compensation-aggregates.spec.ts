@@ -1,22 +1,12 @@
 import { GenderEnum } from '../models/report.model'
 import {
-  assessSalaryOutlierFromPrediction,
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
-  computeSalaryOutlierAnalysis,
-  detectOutliers,
-  type OutlierDetectionEmployee,
+  computeSalaryRegression,
+  getRegularHourlyWage,
   roundSalaryAggregateSnapshot,
   roundSalaryResultSnapshot,
 } from './compensation-aggregates'
-
-/**
- * A full month with some overtime. Fixtures express pay as a monthly figure and
- * divide by this, so `baseSalary / FIXTURE_PAID_HOURS` reads as a plausible
- * kr./klst. rate. Using 1 here would make every assertion pass while asserting
- * a 1.000.000 kr/hour wage.
- */
-const FIXTURE_PAID_HOURS = 200
 
 describe('compensation-aggregates', () => {
   it('bundles NEUTRAL into FEMALE for cohort metrics and wage gaps', () => {
@@ -272,232 +262,69 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  it('marks salaries outside half the threshold from a prediction as outliers', () => {
-    expect(
-      assessSalaryOutlierFromPrediction({
-        salary: 102000,
-        predictedSalary: 100000,
-        allowedDifferencePercent: 1.95,
-      }),
-    ).toMatchObject({
-      isOutlier: true,
-      direction: 'ABOVE',
-      allowedDifferencePercent: 1.95,
-      predictedSalary: 100000,
-    })
-
-    expect(
-      assessSalaryOutlierFromPrediction({
-        salary: 98100,
-        predictedSalary: 100000,
-        allowedDifferencePercent: 1.95,
-      }),
-    ).toMatchObject({
-      isOutlier: false,
-      direction: 'BELOW',
-      allowedDifferencePercent: 1.95,
-    })
-  })
-
-  it('computes a regression analysis with a predicted hourly wage per exact score', () => {
-    const analysis = computeSalaryOutlierAnalysis({
-      thresholdPercent: 3.9,
-      employees: [
-        makeOutlierEmployee({ ordinal: 1, score: 100, baseSalary: 1000000 }),
-        makeOutlierEmployee({ ordinal: 2, score: 200, baseSalary: 1100000 }),
-        makeOutlierEmployee({ ordinal: 3, score: 300, baseSalary: 1200000 }),
-      ],
-    })
-
-    // 5.000 / 5.500 / 6.000 kr./klst. over scores 100/200/300.
-    expect(analysis.regressions.overall.slope).toBeCloseTo(5, 4)
-    expect(analysis.regressions.overall.intercept).toBeCloseTo(4500, 4)
-    expect(analysis.employees[1]).toMatchObject({
-      ordinal: 2,
-      score: 200,
-      regularHourlyWage: 5500,
-      predictedHourlyWage: 5500,
-      isOutlier: false,
-    })
-  })
-
-  it('snapshots per-gender regressions for visualisation', () => {
-    const analysis = computeSalaryOutlierAnalysis({
-      thresholdPercent: 3.9,
-      employees: [
-        makeOutlierEmployee({
-          ordinal: 1,
-          score: 100,
-          gender: GenderEnum.FEMALE,
-          baseSalary: 800000,
-        }),
-        makeOutlierEmployee({
-          ordinal: 2,
-          score: 200,
-          gender: GenderEnum.FEMALE,
-          baseSalary: 900000,
-        }),
-        makeOutlierEmployee({
-          ordinal: 3,
-          score: 100,
-          gender: GenderEnum.MALE,
-          baseSalary: 1000000,
-        }),
-        makeOutlierEmployee({
-          ordinal: 4,
-          score: 200,
-          gender: GenderEnum.MALE,
-          baseSalary: 1100000,
-        }),
-      ],
-    })
-
-    expect(analysis.regressions.female.sampleCount).toBe(2)
-    expect(analysis.regressions.female.slope).toBeCloseTo(5, 4)
-    expect(analysis.regressions.male.sampleCount).toBe(2)
-    expect(analysis.regressions.male.slope).toBeCloseTo(5, 4)
-    expect(analysis.regressions.male.intercept).toBeCloseTo(4500, 4)
-    expect(analysis.regressions.female.intercept).toBeCloseTo(3500, 4)
-    expect(analysis.regressions.neutral.sampleCount).toBe(0)
-    expect(analysis.regressions.neutral.slope).toBeNull()
-  })
-
-  describe('detectOutliers', () => {
-    const baseEmployee = (
-      overrides: Partial<OutlierDetectionEmployee>,
-    ): OutlierDetectionEmployee => ({
-      ordinal: 0,
-      score: 100,
-      gender: GenderEnum.FEMALE,
-      paidHours: FIXTURE_PAID_HOURS,
+  // The point of the whole switch to hourly: half the monthly pay for half the
+  // hours is the SAME hourly rate. Under the old FTE divisor this pair was also
+  // equal — but only because starfshlutfall happened to track hours, which is
+  // exactly the assumption that failed for overtime.
+  it('gives equal hourly wages for proportionally fewer hours', () => {
+    const full = getRegularHourlyWage({
+      paidHours: 200,
       baseSalary: 1000000,
       additionalSalary: 0,
       bonusSalary: null,
-      ...overrides,
+    })
+    const half = getRegularHourlyWage({
+      paidHours: 100,
+      baseSalary: 500000,
+      additionalSalary: 0,
+      bonusSalary: null,
     })
 
-    const regressionEmployees = () => [
-      baseEmployee({ ordinal: 1, score: 100, baseSalary: 850000 }),
-      baseEmployee({ ordinal: 2, score: 200, baseSalary: 1000000 }),
-      baseEmployee({ ordinal: 3, score: 300, baseSalary: 1100000 }),
-      baseEmployee({ ordinal: 4, score: 400, baseSalary: 1200000 }),
-      baseEmployee({ ordinal: 5, score: 500, baseSalary: 1300000 }),
-      baseEmployee({ ordinal: 6, score: 600, baseSalary: 1400000 }),
-      baseEmployee({ ordinal: 7, score: 700, baseSalary: 1500000 }),
-    ]
+    expect(full).toBe(5000)
+    expect(half).toBe(5000)
+  })
 
-    it('returns employees whose hourly wage deviates beyond the half-threshold band around the regression prediction', () => {
-      const outliers = detectOutliers({
-        thresholdPercent: 3.9,
-        employees: regressionEmployees(),
-      })
-
-      expect(outliers).toHaveLength(1)
-      expect(outliers[0]).toMatchObject({
-        ordinal: 1,
-        score: 100,
-        regularHourlyWage: 4250,
-        assessment: {
-          isOutlier: true,
-          direction: 'BELOW',
-          predictedSalary: expect.any(Number),
-        },
-        scoreBucketRangeFrom: 100,
-        scoreBucketRangeTo: 200,
-      })
-      expect(outliers[0].predictedHourlyWage).toBeCloseTo(4383.93, 2)
-      expect(outliers[0].assessment.differencePercent).toBeCloseTo(-3.055, 3)
-    })
-
-    // The point of the whole switch: half the monthly pay for half the hours is
-    // the SAME hourly rate, so neither employee is an outlier relative to the
-    // other. Under the old FTE divisor this pair was also equal — but only
-    // because starfshlutfall happened to track hours, which is exactly the
-    // assumption that failed for overtime.
-    it('gives equal hourly wages for proportionally fewer hours', () => {
-      const analysis = computeSalaryOutlierAnalysis({
-        thresholdPercent: 3.9,
-        employees: [
-          baseEmployee({
-            ordinal: 1,
-            score: 250,
-            paidHours: 200,
-            baseSalary: 1000000,
-          }),
-          baseEmployee({
-            ordinal: 2,
-            score: 250,
-            paidHours: 100,
-            baseSalary: 500000,
-          }),
-        ],
-      })
-
-      expect(
-        analysis.employees.map((employee) => employee.regularHourlyWage),
-      ).toEqual([5000, 5000])
-      expect(
-        analysis.employees.map((employee) => employee.scoreBucketRangeFrom),
-      ).toEqual([200, 200])
-      expect(analysis.employees.map((employee) => employee.isOutlier)).toEqual([
-        false,
-        false,
+  describe('computeSalaryRegression', () => {
+    // The chart's line, and the ONLY fit left in this module. Previously only
+    // covered indirectly through the retired outlier analysis, so it kept its
+    // coverage by accident — it now has its own.
+    it('fits a level-space line through score vs hourly wage', () => {
+      // 5.000 / 5.500 / 6.000 kr./klst. over scores 100/200/300.
+      const regression = computeSalaryRegression([
+        { score: 100, regularHourlyWage: 5000 },
+        { score: 200, regularHourlyWage: 5500 },
+        { score: 300, regularHourlyWage: 6000 },
       ])
+
+      expect(regression.slope).toBeCloseTo(5, 4)
+      expect(regression.intercept).toBeCloseTo(4500, 4)
+      expect(regression.sampleCount).toBe(3)
+      expect(regression.scoreMean).toBeCloseTo(200, 4)
+      expect(regression.hourlyWageMean).toBeCloseTo(5500, 4)
+      expect(regression.rSquared).toBeCloseTo(1, 6)
+      expect(regression.scoreRangeFrom).toBe(100)
+      expect(regression.scoreRangeTo).toBe(300)
     })
 
-    it('returns an empty array when no employees deviate beyond the band', () => {
-      const outliers = detectOutliers({
-        thresholdPercent: 3.9,
-        employees: [
-          baseEmployee({ ordinal: 1, score: 100, baseSalary: 1000000 }),
-          baseEmployee({ ordinal: 2, score: 200, baseSalary: 1100000 }),
-          baseEmployee({ ordinal: 3, score: 300, baseSalary: 1200000 }),
-        ],
-      })
+    it('reports no line for an empty sample', () => {
+      const regression = computeSalaryRegression([])
 
-      expect(outliers).toEqual([])
+      expect(regression.slope).toBeNull()
+      expect(regression.intercept).toBeNull()
+      expect(regression.sampleCount).toBe(0)
     })
 
-    it('returns an empty array on empty input', () => {
-      expect(detectOutliers({ thresholdPercent: 3.9, employees: [] })).toEqual(
-        [],
-      )
-    })
+    // ⚠️ The trap that made `xSumSquares` necessary: identical scores give a
+    // degenerate fit, and this returns slope 0 — NOT null. Anything testing
+    // identifiability must use `fitLinear().xSumSquares`, not `slope !== null`.
+    it('returns slope 0, not null, when every score is identical', () => {
+      const regression = computeSalaryRegression([
+        { score: 250, regularHourlyWage: 5000 },
+        { score: 250, regularHourlyWage: 6000 },
+      ])
 
-    it('uses the full threshold when useHalfThreshold is false', () => {
-      // Ordinal 1 deviates by about 3% from the regression prediction.
-      // Half-threshold (1.95%)
-      // would flag it; full threshold (3.9%) wouldn't.
-      const employees = regressionEmployees()
-
-      expect(
-        detectOutliers({ thresholdPercent: 3.9, employees }).map(
-          (o) => o.ordinal,
-        ),
-      ).toEqual([1])
-
-      expect(
-        detectOutliers({
-          thresholdPercent: 3.9,
-          employees,
-          useHalfThreshold: false,
-        }),
-      ).toEqual([])
+      expect(regression.slope).toBe(0)
+      expect(regression.intercept).toBeCloseTo(5500, 4)
     })
   })
 })
-
-function makeOutlierEmployee(
-  overrides: Partial<OutlierDetectionEmployee>,
-): OutlierDetectionEmployee {
-  return {
-    ordinal: 0,
-    score: 100,
-    gender: GenderEnum.FEMALE,
-    paidHours: FIXTURE_PAID_HOURS,
-    baseSalary: 1000000,
-    additionalSalary: 0,
-    bonusSalary: null,
-    ...overrides,
-  }
-}

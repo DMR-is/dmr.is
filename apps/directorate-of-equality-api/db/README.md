@@ -324,7 +324,7 @@ The `application` module is the company-admin API surface. It reuses reviewer-si
 In-place edits are exposed for the two narrow corrections the applicant flow needs after submission. Both are authenticated against the upstream `(provider_type, provider_id)` tuple (same ownership check as the GET, with `providerType` defaulting to `ISLAND_IS`) and emit an `EDITED` `report_event` row on success.
 
 - `PUT /api/v1/application/reports/:providerId/equality-content` — replaces the narrative body of an `EQUALITY` report. Allowed only when `status = IN_REVIEW` (i.e. the reviewer has picked the report up and asked for changes via comment). Status is preserved on success.
-- `PUT /api/v1/application/reports/:providerId/outliers` — replaces outlier explanations on a `SALARY` report. All-or-none: the submitted set must match the canonical detected outliers exactly (read from `report_result.outlier_analysis_snapshot.employees` filtered to `isOutlier = true`); duplicates, extras, or missing rows all reject 400. Allowed in two statuses:
+- `PUT /api/v1/application/reports/:providerId/outliers` — replaces outlier explanations on a `SALARY` report. All-or-none: the submitted set must match the lágmarksmengi exactly (read from `report_result.wage_gap_decomposition_snapshot.employees` filtered to `inMinimumSet = true`); duplicates, extras, or missing rows all reject 400. Allowed in two statuses:
   - `POSTPONED` — primary path. The submitted body must include all four explanation fields per row (`reason`, `action`, `signatureName`, `signatureRole`). On success the row's explanation columns are filled and status transitions `POSTPONED → SUBMITTED`, emitting both an `EDITED` and a `STATUS_CHANGED` event.
   - `IN_REVIEW` — correction path. Reviewer asked for outlier-row corrections via comment; the applicant edits without changing status. Only `EDITED` is emitted.
 
@@ -372,7 +372,11 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 There was previously a *second* snapshot for base pay alone (`baseSalary / workRatio`). It is gone, and not merely as a simplification: with an **hours** denominator, dividing a base-pay-only numerator by hours that include the overtime which earned the additional and bonus pay is arithmetically incoherent. Under the old full-time-equivalent divisor both variants were coherent; under this one, only the total-pay numerator is. The column is named `salary_snapshot` rather than reusing `base_snapshot` so the name cannot outlive the meaning.
 
-The same row also snapshots the salary-outlier regression analysis: the fitted hourly-wage regression lines (gender-blind `regressions.overall`, plus per-cohort `regressions.male/female/neutral` for visualisation), the configured threshold, and each employee's reglulegt tímakaup vs predicted hourly wage at their exact score. `report_role_result` is kept as the reserved home for a future role-level breakdown and snapshots the role title used at calculation time. Both tables are write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. They are not edited by humans, and the approval transition does not recompute them. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
+The same row also snapshots the **Oaxaca-Blinder decomposition** (`wage_gap_decomposition_snapshot`): the two displayed gap figures, the pooled fit on `log(tímakaup)`, each employee's contribution to the unexplained term, and the lágmarksmengi derived from it. `oskyrtPercent` there is the figure the statutory benchmark tests — *not* `salary_snapshot.totals.salaryDifferences.maleFemale`, which is the unadjusted cohort-mean gap; the two land on opposite sides of the line on real data.
+
+There was previously a third snapshot, `outlier_analysis_snapshot`, holding a per-employee ±1,95% verdict against a fitted line plus four level-space regressions. It retired with the band: compliance is decided company-wide now, and the employees an úrbótaáætlun must account for are the lágmarksmengi. Its regression block was read by nothing — the chart computes its own line at request time. `report_role_result` was dropped in the same batch: written by no code path since it was created, and the last holder of the retired base/full pair.
+
+The row is write-once at submission — computed in the same transaction that persists the report, so reviewers can read the aggregates as soon as they pick the report up. It is not edited by humans, and the approval transition does not recompute it. (Contrast with `public_report`, which is published only on the `APPROVED` transition.)
 
 ### Gender bundling: NEUTRAL counts as FEMALE (M vs F+N)
 
@@ -389,12 +393,13 @@ This is a **reclassification at computation/display time only** — raw `report_
 
 The same chart shape that `buildChartFromEmployeePoints` produces for the application-side preview can be rebuilt from a persisted `report_result` row:
 
-- **Scatter points** — `outlier_analysis_snapshot.employees[*]` carries `score`, `gender`, and `adjustedBaseSalary` per employee.
-- **Regression line(s)** — `outlier_analysis_snapshot.regressions.overall` is the gender-blind line that drives the outlier flag. `regressions.male/female` are per-cohort lines available for visualisation only; `female` includes neutral and `regressions.neutral` is empty (see "Gender bundling" above).
-- **Score-bucket overlay** — the per-employee `scoreBucketRangeFrom/To` is preserved on each row, but the bucket-level aggregates (median, average, gender breakdowns, counts) live in `base_snapshot.scoreBuckets`. Render the chart by joining on the bucket range when an overlay is needed.
-- **Tolerance band** — the chart shades a wedge of `predicted × (1 ± allowedDifferencePercent / 100)` around the regression line; a point outside it is an outlier. The live base-salary chart endpoint returns `allowedDifferencePercent` directly on `SalaryByGenderAndScoreDto`; from a stored result it is `outlier_analysis_snapshot.allowedDifferencePercent` (half the threshold). Outlier dots are highlighted on the chart (computed from the same rule), so the scatter matches the outlier table.
+- **Scatter points** — `wage_gap_decomposition_snapshot.employees[*]` carries `score`, `gender` and `hourlyWage` per employee.
+- **Expected-pay curve** — each employee's `expectedHourlyWage` is `exp(fitted)` from `pooledFit`, so in krónur space the model is a curve rather than a straight line. The live chart endpoint additionally returns a `regressionLine` fitted in level space; that line is descriptive only and is **not** the model any decision rests on.
+- **Score-bucket overlay** — bucket-level aggregates (median, average, gender breakdowns, counts) live in `salary_snapshot.scoreBuckets`. Join on the bucket range when an overlay is needed. Per-employee bucket placement is no longer stored: it existed for the retired band.
+- **No tolerance band.** The chart used to shade `predicted × (1 ± allowedDifferencePercent / 100)` and call points outside it outliers. That rule is gone — see "Retiring the ±band" — and nothing shades a corridor now, because a corridor that decides nothing while looking exactly as it did would read as a finding.
+- **Highlighting** — mark `inMinimumSet` employees if the chart needs to show who the úrbótaáætlun covers.
 
-Bucket placement is informational only: the outlier flag is decided against the regression prediction at the employee's exact score, not the bucket median.
+Bucket placement is informational only, and always was. Compliance is decided by the company-wide óskýrt figure against the benchmark — never by an individual's distance from any line, bucket median or otherwise.
 
 ## Enums
 
@@ -726,12 +731,11 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 | `id`                                  | `uuid` PK                                                                     |
 | `report_id`                           | `fk → report` (unique)                                                        |
 | `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation |
-| `calculation_version`                 | `text` (default `v1`)                                                         |
-| `base_snapshot`                       | `jsonb` adjusted base salary snapshot                                         |
-| `full_snapshot`                       | `jsonb` adjusted full salary snapshot                                         |
-| `outlier_analysis_snapshot`           | `jsonb` regression-based salary outlier analysis snapshot                     |
+| `calculation_version`                 | `text` (default `v2` — `v1` evaluated FTE-adjusted monthly pay and is not comparable) |
+| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                 |
+| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                |
 
-`base_snapshot` and `full_snapshot` share the same shape:
+`salary_snapshot` holds:
 
 - `totals`
   - `overall`, `male`, `female`, `neutral` — each contains `average`, `median`, `minimum`, `maximum`. Note: `neutral` is bundled into `female` and is therefore always empty — see "Gender bundling" under Results aggregation.
@@ -741,29 +745,17 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
   - `totals` with the same aggregate shape as above
   - `counts` for `overall`, `male`, `female`, `neutral` (`neutral` always `0`)
 
-`outlier_analysis_snapshot` stores:
+`wage_gap_decomposition_snapshot` stores:
 
-- `method` — currently `BASE_SALARY_LINEAR_REGRESSION_BY_SCORE`.
-- `thresholdPercent` and `allowedDifferencePercent` — the configured threshold and the half-threshold band used for detection.
-- `regression` — slope/intercept and basic fit metadata for adjusted base salary by score.
-- `employees[]` — per employee ordinal: score, gender, adjusted base salary, predicted base salary at that exact score, score-bucket range, percent difference, direction, and `isOutlier`.
+- `method` and `pooledReferenceMode` — `OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE` under the pooled-OLS (Neumark) reference.
+- `rawGapAvailable` / `oskyrtAvailable` with `rawGapBlockers` / `oskyrtBlockers` / `warnings` — enum codes only, no Icelandic. `counts` is always real numbers even when the figures are not computable, because "you have 4 women" is the actionable part of the message.
+- `rawGapPercent` — **óleiðréttur**, on arithmetic means, so it reproduces from the two `meanHourlyWage*` figures printed beside it. Informational; no compliance role.
+- `oskyrtPercent` — **leiðréttur**, the Oaxaca unexplained term. **This is the figure the statutory benchmark tests.** Direction is carried separately (`oskyrtDirection`) so the test stays direction-agnostic; percentages are magnitudes.
+- `pooledFit` — the fit on `log(tímakaup)` vs stig. `xSumSquares` is the identifiability test, not `slope !== null`: a degenerate fit returns slope `0`.
+- `employees[]` — per ordinal: score, gender, actual and expected tímakaup, deviation, residual, `contributionLog` (sums exactly to `oskyrtLog`), `contributionShare`, `payStatus`, `isCorrectable`, `inMinimumSet`.
+- `correctableCount`, `minimumSetSize`, `oskyrtLogAfterMinimumSet`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest underpaid members of the disadvantaged gender whose correction brings óskýrt under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for.
 
 Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
-
-### `report_role_result`
-
-Reserved table for salary stats broken down per role. Role title is snapshotted because result rows must not change if the role table is later edited. This table is intentionally not part of the first report-result read response while score-bucket breakdowns are the primary requirement.
-
-| Column                    | Type                                  |
-| ------------------------- | ------------------------------------- |
-| `id`                      | `uuid` PK                             |
-| `report_result_id`        | `fk → report_result`                  |
-| `report_employee_role_id` | `fk → report_employee_role`           |
-| `role_title`              | `text` snapshot at calculation time   |
-| `base_snapshot`           | `jsonb` adjusted base salary snapshot |
-| `full_snapshot`           | `jsonb` adjusted full salary snapshot |
-
-Unique constraint: `(report_result_id, report_employee_role_id)`.
 
 ### `public_report`
 
@@ -870,7 +862,7 @@ No FKs, no relationships. Standalone bookkeeping table.
 - `report_employee` 1:N `report_employee_outlier` N:1 `report_outlier_group`; `report` 1:N `report_outlier_group` (the group owns the shared explanation/signature fields).
 - `report_employee_role` ⟷ `report_sub_criterion_step` via `report_employee_role_criterion_step`.
 - `report_employee` ⟷ `report_sub_criterion_step` via `report_employee_personal_criterion_step`.
-- `report` 1:1 `report_result`; optional future role snapshots are `report_result` 1:N `report_role_result` N:1 `report_employee_role`.
+- `report` 1:1 `report_result`.
 - `report` 1:N `public_report` (one public snapshot per approval; new approvals insert new rows).
 - `report` → `report` self-ref via `equality_report_id` (salary row points to the approved equality row it was audited against).
 - `report` N:1 `doe_user` via `reviewer_user_id` (DoE reviewer who accepted/denied).

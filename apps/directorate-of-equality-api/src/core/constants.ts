@@ -19,7 +19,6 @@ export enum DoeModels {
   REPORT_EMPLOYEE_ROLE_CRITERION_STEP = 'report_employee_role_criterion_step',
   REPORT_EMPLOYEE_PERSONAL_CRITERION_STEP = 'report_employee_personal_criterion_step',
   REPORT_RESULT = 'report_result',
-  REPORT_ROLE_RESULT = 'report_role_result',
   PUBLIC_REPORT = 'public_report',
   REPORT_EVENT = 'report_event',
   REPORT_COMMENT = 'report_comment',
