@@ -1,10 +1,7 @@
 import type { Client } from '../../gen/fetch/client'
 import { createClient, createConfig } from '../../gen/fetch/client'
 
-export const getBaseUrl = () => {
-  if (process.env.NODE_ENV !== 'production') return 'http://localhost:5100'
-  return process.env.DOE_API_BASE_PATH as string
-}
+export const getBaseUrl = () => process.env.DOE_API_BASE_PATH as string
 
 export const getDoEClient = (token: string): Client => {
   return createClient(
