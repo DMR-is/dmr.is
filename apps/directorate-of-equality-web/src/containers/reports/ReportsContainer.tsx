@@ -23,6 +23,7 @@ import {
   type FilterOption,
   ReportFilter,
 } from '../../components/reports/filter/ReportFilter'
+import { ReportReviewerSelect } from '../../components/reports/ReportReviewerSelect'
 import { TabContent } from '../../components/reports/tabs/TabContent'
 import {
   CommunicationStatusEnum,
@@ -116,7 +117,9 @@ function mapReportToCase(report: ReportListItemDto): Case {
       sharedText.statusLabels[
         report.status as keyof typeof sharedText.statusLabels
       ] ?? report.status,
+    rawStatus: report.status,
     reviewer,
+    reviewerId: report.reviewer?.id ?? null,
     companyAdmin: report.companyAdminName ?? unknown,
     companyAdminGender: report.companyAdminGender ?? unknown,
     email: report.companyAdminEmail ?? unknown,
@@ -174,6 +177,24 @@ const companyStatusColumn: ColumnDef<Case> = {
       </Box>
     )
   },
+}
+
+/**
+ * Reviewer as an inline select, so a report can be handed to someone without
+ * opening it. Keeps `COLUMN_REVIEWER`'s accessor so the column still sorts by
+ * the assigned name.
+ */
+const reviewerSelectColumn: ColumnDef<Case> = {
+  ...COLUMN_REVIEWER,
+  size: 200,
+  cell: ({ row }) => (
+    <ReportReviewerSelect
+      reportId={row.original.id}
+      status={row.original.rawStatus}
+      reviewerId={row.original.reviewerId}
+      reviewerName={row.original.reviewer}
+    />
+  ),
 }
 
 const statusColumn: ColumnDef<Case> = {
@@ -252,8 +273,10 @@ export const ReportsContainer = () => {
   }
 
   const leadingColumns: ColumnDef<Case>[] = []
+  // Assignment is only a valid action while a report is still being worked, so
+  // the processed tab keeps its columns as they were.
   const middleColumns: ColumnDef<Case>[] =
-    activeTab === 'i-vinnslu' ? [COLUMN_REVIEWER] : []
+    activeTab === 'afgreitt' ? [] : [reviewerSelectColumn]
   const trailingColumns: ColumnDef<Case>[] =
     activeTab === 'innsendingar'
       ? [companyStatusColumn]
