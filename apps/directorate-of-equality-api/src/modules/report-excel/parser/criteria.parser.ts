@@ -48,10 +48,10 @@ import { ErrorBag } from './errors'
 const SUB_CRITERIA_COLS = {
   parent: 'B',
   title: 'C',
-  description: 'D',
-  weight: 'E',
-  numSteps: 'F',
-  // Cols G/H/I are computed formulas (Tegund, Hámarksstig, Samsumma OK?).
+  description: 'E',
+  weight: 'F',
+  numSteps: 'G',
+  // Cols D/H/I are computed formulas (Tegund, Hámarksstig, Samsumma OK?).
   // Þrep 1 is column J = 1-based index 10; Þrep N is column J+N−1.
   firstStepCol: 10,
 } as const

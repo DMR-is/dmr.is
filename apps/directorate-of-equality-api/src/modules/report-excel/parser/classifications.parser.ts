@@ -24,11 +24,20 @@
  *
  * The row/column geometry of each step-input region is read from the
  * `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
- * {@link readStepInputGrid}) rather than hard-coded — capacity is bounded by
- * what the template provisions and grows with it.
+ * {@link readStepInputGrid}) rather than hard-coded.
  *
- * Blank cells mean "no assignment" and are skipped. The semantic validator
- * (separate pass) enforces completeness — wrong place to do it here.
+ * ⚠️ **Rows are provisioning, columns are capacity.** Einstaklingsmat ships
+ * with 500 employee rows, but an employer with more is expected to extend the
+ * sheet — the per-row formulas pull from Launagögn, which spans 10 000. So the
+ * employee bound is `MAX_EMPLOYEES`, not the named range's row extent. The
+ * COLUMN extent *is* a real bound: widening the matrix means inserting
+ * interleaved Þrep/Stig pairs, which an employer is not expected to do.
+ *
+ * Blank cells mean "no assignment" and are skipped, so a short Einstaklingsmat
+ * would silently understate scores rather than fail. Nothing downstream catches
+ * that — `assertParsedPayloadIntegrity` validates the assignments that ARE
+ * present, never that every employee has one — so this parser checks that the
+ * sheet reaches every employee before reading it.
  */
 
 import ExcelJS from 'exceljs'
@@ -51,9 +60,13 @@ import { ErrorBag } from './errors'
  * Step-order inputs occupy every SECOND column (a computed score column is
  * interleaved after each), starting at `firstCol` on `firstRow`. So input
  * column slot N lives at column `firstCol + 2·N`. Reading the geometry from
- * the named range means the supported role / employee / subcriterion counts
- * are bounded by what the template physically provisions, and grow if the
- * template does — no code change.
+ * the named range means the sub-criterion counts are bounded by what the
+ * template physically provisions, and grow if the template does — no code
+ * change.
+ *
+ * `rowCapacity` is a real bound for **roles** (Starfsmat provisions 100, which
+ * is also `MAX_ROLES`) but only provisioning for **employees** — see the file
+ * docblock.
  */
 type StepInputGrid = {
   firstRow: number
@@ -234,6 +247,11 @@ export const parseEmployeeClassifications = (
 
   const { personal } = flattenSubRefs(criteria)
 
+  // No personal sub-criteria ⇒ nothing on this sheet is read, so its geometry
+  // is irrelevant. Returning early matters: the row check below would otherwise
+  // reject a large submission over a sheet it never needed to touch.
+  if (personal.length === 0) return
+
   const grid = readStepInputGrid(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
   if (!grid) {
     errors.add(
@@ -243,18 +261,36 @@ export const parseEmployeeClassifications = (
     return
   }
 
-  if (employees.length > grid.rowCapacity) {
-    errors.add(
-      SHEETS.EMPLOYEE_CLASSIFICATION,
-      `Að hámarki ${grid.rowCapacity} starfsmenn eru studdir; fjöldi var ${employees.length}`,
-    )
-    return
-  }
-
   if (personal.length > grid.columnPairCapacity) {
     errors.add(
       SHEETS.EMPLOYEE_CLASSIFICATION,
       `Að hámarki ${grid.columnPairCapacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
+    )
+    return
+  }
+
+  // The named range's ROW extent is what the template SHIPS with, not a limit:
+  // Einstaklingsmat provisions 500 employee rows, and a larger employer is
+  // expected to extend the sheet itself (the per-row formulas pull from
+  // Launagögn, which spans 10 000). So rows are bounded by `MAX_EMPLOYEES` and
+  // by how far the uploaded sheet actually reaches — never by `grid.rowCapacity`.
+  //
+  // The column extent IS a real bound (checked above): widening the matrix means
+  // inserting interleaved Þrep/Stig column pairs, not copying a row down.
+  const lastReachableRow = sheet.rowCount
+  const reachableEmployees = Math.max(lastReachableRow - grid.firstRow + 1, 0)
+
+  // Reading past the sheet's extent would return blanks, and blank means "no
+  // assignment" (see docblock) — so an employer who added employees to
+  // Launagögn without extending Einstaklingsmat would get silently incomplete
+  // scores rather than an error. Nothing downstream catches that:
+  // `assertParsedPayloadIntegrity` validates the assignments that ARE present,
+  // never that every employee has one. Hence an explicit, actionable error.
+  if (employees.length > reachableEmployees) {
+    errors.add(
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      `Einstaklingsmat nær aðeins til ${reachableEmployees} starfsmanna en skýrslan er með ${employees.length}; ` +
+        `bættu við röðum á blaðið svo hver starfsmaður hafi sína röð`,
     )
     return
   }

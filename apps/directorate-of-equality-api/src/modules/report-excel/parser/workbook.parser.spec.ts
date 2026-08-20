@@ -126,8 +126,10 @@ const writeEmployeeRow = (
 
 // Step-order inputs sit on every SECOND column (score column interleaved after
 // each): role rows start at row 11 and job-sub columns start at G (col 7);
-// employee rows start at row 7 and personal-sub columns start at D (col 4).
-// Written by numeric coordinate so helpers follow the named-range geometry.
+// employee rows start at row 11 and personal-sub columns start at F (col 6).
+// Written by numeric coordinate so helpers follow the named-range geometry
+// (`ROLE_STEP_INPUTS` = Starfsmat!G11:GX110, `EMP_STEP_INPUTS` =
+// Einstaklingsmat!F11:BC510).
 const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
@@ -147,7 +149,7 @@ const fillEmployeeClassification = (
   const sheet = wb.getWorksheet('Einstaklingsmat')!
   empsInOrder.forEach((empSteps, empIdx) => {
     empSteps.forEach((stepOrder, subIdx) => {
-      sheet.getCell(7 + empIdx, 4 + 2 * subIdx).value = stepOrder
+      sheet.getCell(11 + empIdx, 6 + 2 * subIdx).value = stepOrder
     })
   })
 }
@@ -188,9 +190,11 @@ const addSubCriterion = (
   const s = wb.getWorksheet('Undirviðmið')!
   s.getCell(`B${undirviðmiðRow}`).value = parentTitle
   s.getCell(`C${undirviðmiðRow}`).value = subTitle
-  s.getCell(`D${undirviðmiðRow}`).value = `${subTitle} description`
-  s.getCell(`E${undirviðmiðRow}`).value = weightPct
-  s.getCell(`F${undirviðmiðRow}`).value = stepDescriptions.length
+  // D is the computed `Tegund (sjálfvirkt)` column — deliberately not written.
+  // E/F/G are Skilgreining / Vægi (%) / Fjöldi þrepa.
+  s.getCell(`E${undirviðmiðRow}`).value = `${subTitle} description`
+  s.getCell(`F${undirviðmiðRow}`).value = weightPct
+  s.getCell(`G${undirviðmiðRow}`).value = stepDescriptions.length
   // Step descriptions live in columns J…Q (Þrep 1…8). Col index 10 = J.
   stepDescriptions.forEach((desc, i) => {
     s.getCell(undirviðmiðRow, 10 + i).value = desc
@@ -431,11 +435,11 @@ describe('parseWorkbook', () => {
       fillCriteriaAndSubCriteria(wb)
 
       const s = wb.getWorksheet('Undirviðmið')!
-      s.getCell('D6').value = {
+      s.getCell('E6').value = {
         formula: 'CATALOG_DESC()',
         result: 'Cached description',
       } as ExcelJS.CellValue
-      s.getCell('F6').value = {
+      s.getCell('G6').value = {
         formula: 'CATALOG_STEPS()',
         result: 2,
       } as ExcelJS.CellValue
@@ -776,6 +780,78 @@ describe('parseWorkbook', () => {
       expect(report.roles).toHaveLength(9)
       expect(report.roles[8].title).toBe('Hlutverk 9')
       expect(report.roles[8].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+
+    // Einstaklingsmat ships 500 employee rows (EMP_STEP_INPUTS = F11:BC510).
+    // That is provisioning, not capacity: an employer with more staff copies
+    // rows down, so the parser must never treat 500 as a ceiling. The domain
+    // ceiling is MAX_EMPLOYEES (10 000), enforced elsewhere.
+    const EMPLOYEES_PAST_PROVISIONED_ROWS = 502
+
+    const writeManyEmployees = (wb: ExcelJS.Workbook, count: number) => {
+      for (let i = 1; i <= count; i++) {
+        writeEmployeeRow(wb, i, {
+          name: `Nafn ${i}`,
+          role: 'Hlutverk',
+          gender: i % 2 === 0 ? 'Kona' : 'Karl',
+          workRatio: 1,
+          baseSalary: 500000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'Svið',
+          department: 'Deild',
+          startDate: new Date('2023-01-01'),
+        })
+      }
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+    }
+
+    it('parses more employees than Einstaklingsmat provisions rows for, once the employer extends the sheet', async () => {
+      const wb = await loadTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The employer's own extension: one personal step per employee, running
+      // past the shipped row 510.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: EMPLOYEES_PAST_PROVISIONED_ROWS }, () => [1]),
+      )
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      expect(report.employees).toHaveLength(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The tail employees are the ones the old 500-row cap rejected outright.
+      const last = report.employees[EMPLOYEES_PAST_PROVISIONED_ROWS - 1]
+      expect(last.ordinal).toBe(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      expect(last.personalStepAssignments).toHaveLength(1)
+    })
+
+    it('rejects when Einstaklingsmat is shorter than the employee list rather than silently dropping steps', async () => {
+      const wb = await loadTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // Employer extended Launagögn but NOT Einstaklingsmat: blanks would read
+      // as "no assignment" and understate every tail employee's score.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: 500 }, () => [1]),
+      )
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Einstaklingsmat',
+            message: expect.stringContaining('nær aðeins til'),
+          }),
+        ]),
+      )
     })
   })
 

@@ -60,10 +60,18 @@ export const MAX_STEPS = 8
  * how many rows/columns the Excel template physically provisions:
  *
  * - Roles → rows on Starfsmat (100 provisioned).
- * - Personal sub-criteria → columns on Einstaklingsmat (100 provisioned).
+ * - Personal sub-criteria → column pairs on Einstaklingsmat (25 provisioned).
  * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows).
  * - Criteria → Viðmið rows (4 mandatory job-based + 1 personal).
- * - Employees → Launagögn rows (10 000, auto-extending table).
+ * - Employees → Launagögn rows (500 provisioned, extended by the employer).
+ *
+ * ⚠️ `MAX_PERSONAL_SUB_CRITERIA` (100) deliberately EXCEEDS what the template
+ * provisions (25 pairs, cols F–BC). The two limits mean different things: this
+ * is the domain ceiling, while the parser separately rejects more pairs than
+ * the uploaded sheet physically carries, with a message naming that number.
+ * Likewise `MAX_EMPLOYEES` (10 000) exceeds the 500 rows the template ships —
+ * employers with more staff extend the sheets themselves, so the shipped row
+ * count is provisioning, never capacity. See `classifications.parser.ts`.
  *
  * Enforced centrally in `assertParsedPayloadIntegrity` so both the Excel
  * import path and the application submit path share one source of truth. The

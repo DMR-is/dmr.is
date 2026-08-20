@@ -1,4 +1,5 @@
 import { GenderEnum } from '../models/report.model'
+import { fitLinear } from './linear-fit'
 
 export type CompensationEmployeeInput = {
   reportEmployeeRoleId: string
@@ -568,80 +569,30 @@ function computeRegressionsByGender(
  * outlier detection, the gender-vs-score chart, and any future analytics
  * that needs to fit a salary-vs-score line. Returns the line plus enough
  * descriptive stats (means, ranges, r²) to render or interpret it.
+ *
+ * A naming adapter over {@link fitLinear} — the arithmetic lives there so the
+ * same routine can fit log wages without reporting an `adjustedBaseSalaryMean`
+ * of `-8.34`. `SalaryRegressionSnapshot` is persisted JSONB, so this shape is
+ * deliberately unchanged; `xSumSquares` is dropped rather than added to it.
+ * Callers needing the identifiability test (see {@link fitLinear}) should use
+ * `fitLinear` directly.
  */
 export function computeSalaryRegression(
   samples: Array<{ score: number; adjustedBaseSalary: number }>,
 ): SalaryRegressionSnapshot {
-  if (samples.length === 0) {
-    return {
-      slope: null,
-      intercept: null,
-      sampleCount: 0,
-      scoreMean: null,
-      adjustedBaseSalaryMean: null,
-      rSquared: null,
-      scoreRangeFrom: null,
-      scoreRangeTo: null,
-    }
-  }
-
-  let sumScore = 0
-  let sumSalary = 0
-  let scoreMin = samples[0].score
-  let scoreMax = samples[0].score
-  for (const sample of samples) {
-    sumScore += sample.score
-    sumSalary += sample.adjustedBaseSalary
-    if (sample.score < scoreMin) scoreMin = sample.score
-    if (sample.score > scoreMax) scoreMax = sample.score
-  }
-
-  const scoreMean = sumScore / samples.length
-  const adjustedBaseSalaryMean = sumSalary / samples.length
-
-  let denominator = 0
-  let numerator = 0
-  let totalSquares = 0
-  for (const sample of samples) {
-    const dx = sample.score - scoreMean
-    const dy = sample.adjustedBaseSalary - adjustedBaseSalaryMean
-    denominator += dx * dx
-    numerator += dx * dy
-    totalSquares += dy * dy
-  }
-
-  if (denominator === 0) {
-    return {
-      slope: 0,
-      intercept: adjustedBaseSalaryMean,
-      sampleCount: samples.length,
-      scoreMean,
-      adjustedBaseSalaryMean,
-      rSquared: null,
-      scoreRangeFrom: scoreMin,
-      scoreRangeTo: scoreMax,
-    }
-  }
-
-  const slope = numerator / denominator
-  const intercept = adjustedBaseSalaryMean - slope * scoreMean
-
-  let residualSquares = 0
-  for (const sample of samples) {
-    const predicted = slope * sample.score + intercept
-    const residual = sample.adjustedBaseSalary - predicted
-    residualSquares += residual * residual
-  }
+  const fit = fitLinear(
+    samples.map((sample) => ({ x: sample.score, y: sample.adjustedBaseSalary })),
+  )
 
   return {
-    slope,
-    intercept,
-    sampleCount: samples.length,
-    scoreMean,
-    adjustedBaseSalaryMean,
-    rSquared: totalSquares === 0 ? null : 1 - residualSquares / totalSquares,
-    scoreRangeFrom: scoreMin,
-    scoreRangeTo: scoreMax,
+    slope: fit.slope,
+    intercept: fit.intercept,
+    sampleCount: fit.sampleCount,
+    scoreMean: fit.xMean,
+    adjustedBaseSalaryMean: fit.yMean,
+    rSquared: fit.rSquared,
+    scoreRangeFrom: fit.xRangeFrom,
+    scoreRangeTo: fit.xRangeTo,
   }
 }
 
