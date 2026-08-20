@@ -10,6 +10,14 @@ while read -r submodule; do
   SUBMODULE_PATH="${GIT_ROOT}/submodules/${NAME}"
   SHA=$(echo "${submodule}" | jq -r '.sha')
 
+  # patch-submodules.sh generates a tsconfig.base.json stub over a file that IS
+  # tracked upstream, which leaves the submodule permanently dirty. Every command
+  # below that moves the working tree - `submodule update`, `checkout <sha>`,
+  # `sparse-checkout set` - refuses to clobber it, so a bump would fail with
+  # "local changes would be overwritten by checkout". Drop it up front; the stub
+  # is regenerated at the end of this script.
+  rm -f "${SUBMODULE_PATH}/tsconfig.base.json"
+
   # Quietly ensure submodule is initialized and updated
   git submodule update --init --quiet "${SUBMODULE_PATH}"
 
@@ -41,10 +49,6 @@ while read -r submodule; do
   #
   # --no-cone because cone mode cannot express the `!project.json` negation.
   # Patterns are gitignore-style and the LAST match wins, so negations go last.
-  #
-  # The generated tsconfig.base.json stub would be "not up to date" and block
-  # its own removal; patch-submodules.sh recreates it at the end of this script.
-  rm -f "${SUBMODULE_PATH}/tsconfig.base.json"
   {
     echo "${submodule}" | jq -r '.sparseCheckoutPaths[]'
     echo "${submodule}" | jq -r '(.sparseCheckoutExcludes // [])[] | "!" + .'
@@ -61,7 +65,8 @@ while read -r submodule; do
 
   # The gitlink and config.json must move in lockstep, otherwise Nx hashes a SHA
   # that does not match the code on disk (config.json is in nx.json sharedGlobals).
-  GITLINK=$(git -C "${GIT_ROOT}" rev-parse "HEAD:submodules/${NAME}" 2>/dev/null || echo '')
+  # Read the index, not HEAD, so a staged-but-uncommitted bump does not warn.
+  GITLINK=$(git -C "${GIT_ROOT}" rev-parse ":submodules/${NAME}" 2>/dev/null || echo '')
   if [ -n "${GITLINK}" ] && [ "${GITLINK#"${SHA}"}" = "${GITLINK}" ]; then
     echo "⚠️  ${NAME}: submodules/config.json pins ${SHA} but the gitlink is ${GITLINK}." >&2
   fi
