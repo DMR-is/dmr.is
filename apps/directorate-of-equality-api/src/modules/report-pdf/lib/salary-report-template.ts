@@ -1,6 +1,7 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
+import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   escapeHtml,
@@ -12,8 +13,6 @@ import {
   orDash,
 } from './format'
 import { buildSalaryChartSvg } from './salary-chart-svg'
-
-import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
 
 export interface SalaryReportPdfData {
   report: ReportDetailDto

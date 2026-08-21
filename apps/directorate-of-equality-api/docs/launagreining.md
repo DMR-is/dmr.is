@@ -70,7 +70,15 @@ the two mean figures printed beside it and is comparable to Hagstofa's national
 number. It is _not_ the regulation's test.
 
 **Leiðréttur** comes from a twofold Oaxaca-Blinder decomposition on
-`log(tímakaup)` with a pooled (Neumark) reference:
+`log(tímakaup)` with a pooled **Neumark** reference — a pooled fit with no gender
+dummy. That is the only convention implemented, and it is the one the
+Directorate's own R reference publishes (`group.weight = -1 -> sameiginlegt
+líkan (Neumark); oftast birt`). Which reference produced a figure is recorded on
+every snapshot, because that is part of what the number means.
+
+Note the R reference prints several conventions side by side (`group.weight` 0, 1,
+0.5 and −1). Only the last is ours, so a figure read off one of the other rows
+will not match.
 
 ```
 Δ (hrátt bil) = ȳ_M − ȳ_W
@@ -82,11 +90,22 @@ skýrt         = (s̄_M − s̄_W) · β*₁      ← what job value explains
 invariant rather than a tautology of the fit — it catches sign errors and
 wrong-reference bugs, and the specs assert it on unrounded values.
 
-Percentages are magnitudes, converted as `1 − exp(−|Δ|)`, with direction carried
-separately in `oskyrtDirection`. Converting `|Δ|` rather than taking the absolute
-value of a converted percentage is deliberate: only the former is symmetric, and
-an asymmetric measure would trip the benchmark in one direction but not the other
-for the same inequality.
+### Both figures are shown the same way
+
+Each is a **magnitude with an explicit direction** — `3,9% í óhag kvenna`, never
+`−3,9%`. The conversions differ because the figures do (`1 − exp(−|Δ|)` from the
+log gap for leiðréttur; `(hærri − lægri) / hærri` on arithmetic means for
+óleiðréttur), but the presentation does not, on screen or in the PDF.
+
+Converting `|Δ|` rather than taking the absolute value of a converted percentage
+is deliberate: only the former is symmetric, and an asymmetric measure would trip
+the benchmark in one direction but not the other for the same inequality.
+
+The same reasoning is why óleiðréttur uses the higher-paid group as denominator.
+A signed `(karlar − konur) / karlar` was considered and rejected: with the
+denominator fixed to men, a 100/96 split reads 4,00% one way and 4,17% the other
+— the same inequality, two magnitudes. The two coincide in every company where
+men are paid more, and diverge only where women out-earn men.
 
 ## 3. What we gate on
 
@@ -144,15 +163,19 @@ disadvantaged gender, ordered by `|contributionLog|`. Add one, apply the
 counterfactual lift, **refit, and re-measure**. Stop when the recomputed óskýrt
 is within the benchmark.
 
-⚠️ **The refit is the point.** This was once a running subtraction —
-`running -= |contributionLog|` over a list ordered once. That holds the pooled fit
-fixed, but β\*₁ is estimated from the very wages the counterfactual changes, so
-lifting anyone moves the line and every other residual with it. The omitted term
-is `−(s̄_M − s̄_W)·(xᵢ − x̄)·Δy / SSx`, zero only when both genders happen to share a
-mean score. It was wrong in **both** directions — claiming compliance for cohorts
-still over the benchmark, and elsewhere padding the set with members it did not
-need — so it was not even conservative. Because it scales as `1/SSx`, it hid on
-the 120-row reference fixture (0,01pp) and bit at the sizes that actually file.
+⚠️ **The refit is the point, and it is where we differ from the R reference.**
+That script subtracts each contribution from a fit it never recomputes
+(`d_run <- d_run - framlag[i]`). But β\*₁ is estimated from the very wages the
+counterfactual changes, so lifting anyone moves the line and every other residual
+with it. The omitted term is `−(s̄_M − s̄_W)·(xᵢ − x̄)·Δy / SSx`, zero only when both
+genders happen to share a mean score.
+
+Subtracting is wrong in **both** directions — it can report compliance for a
+cohort still over the benchmark, and elsewhere pad the set with members it does
+not need — so it is not even a conservative approximation. Because the error
+scales as `1/SSx` it is invisible on a 120-row cohort (0,01pp) and material at the
+sizes that actually file these reports. Expect our figure for the gap after
+correction to differ slightly from the R script's for this reason.
 
 **Lift targets come from the original fit**, i.e. the `expectedHourlyWage` the
 snapshot publishes. That makes the reported figure reproducible: take the set,
@@ -421,5 +444,6 @@ frozen. The headline regulatory figure is never recomputed on read, so a
 published number cannot drift when the engine changes.
 
 The applicant preview runs the _same_ function with the same rounding, so what a
-company sees before submitting is byte-identical to what gets frozen — provided
-the sheet's figures are already at the 2dp the column stores.
+company sees before submitting is byte-identical to what gets frozen. Both paths
+derive tímakaup at the two decimal places the columns store, so a database
+round-trip cannot move a figure — asserted by a spec.
