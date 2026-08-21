@@ -17,7 +17,7 @@ export const reportWorkflowRouter = router({
     .mutation(async ({ ctx, input }) => {
       await ctx.api.assignReport({
         path: { reportId: input.reportId },
-        body: { userId: input.userId },
+        body: { userId: input.userId, updateStatus: input.updateStatus },
       })
     }),
 

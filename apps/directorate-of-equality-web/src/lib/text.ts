@@ -58,6 +58,9 @@ export const overviewText = {
   companyQuarantined: 'Fyrirtæki er í vari',
   companyFinesStarted: 'Fyrirtæki er í dagsektarferli',
   openAdmin: 'Opna ritjstjórn',
+  reviewerSelect: {
+    placeholder: 'Óúthlutað',
+  },
   filter: {
     heading: 'Leit og síun',
     placeholder: 'Sláðu inn leitarorð',

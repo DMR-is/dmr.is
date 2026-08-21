@@ -35,10 +35,16 @@ export class ReportEventService implements IReportEventService {
     })
   }
 
+  /**
+   * `reportStatus` is the status the report is left in, which the caller has to
+   * supply: assignment no longer implies a transition, so it is only IN_REVIEW
+   * when this assignment was also the reviewer taking the report on.
+   */
   async emitAssigned(
     reportId: string,
     actorUserId: string,
     assignedUserId: string,
+    reportStatus: ReportStatusEnum,
   ): Promise<void> {
     this.logger.info(`Emitting ASSIGNED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
@@ -49,7 +55,7 @@ export class ReportEventService implements IReportEventService {
       reportId,
       eventType: ReportEventTypeEnum.ASSIGNED,
       actorUserId,
-      reportStatus: ReportStatusEnum.IN_REVIEW,
+      reportStatus,
       assignedUserId,
     })
   }
@@ -58,6 +64,7 @@ export class ReportEventService implements IReportEventService {
     reportId: string,
     actorUserId: string,
     previousAssigneeUserId: string | null,
+    reportStatus: ReportStatusEnum,
   ): Promise<void> {
     this.logger.info(`Emitting UNASSIGNED event for report ${reportId}`, {
       context: LOGGING_CONTEXT,
@@ -68,7 +75,7 @@ export class ReportEventService implements IReportEventService {
       reportId,
       eventType: ReportEventTypeEnum.UNASSIGNED,
       actorUserId,
-      reportStatus: ReportStatusEnum.SUBMITTED,
+      reportStatus,
       assignedUserId: previousAssigneeUserId,
     })
   }

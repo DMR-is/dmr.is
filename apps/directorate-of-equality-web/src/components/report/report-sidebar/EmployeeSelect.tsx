@@ -27,12 +27,18 @@ export const EmployeeSelect = ({
     trpc.user.list.queryOptions(),
   )
 
+  // `updateStatus: false` — picking a reviewer here is bookkeeping, not the
+  // report being taken on. The "Færa í vinnslu" button in `ReportStatusSelect`
+  // owns the SUBMITTED → IN_REVIEW transition, and it would be surprising for a
+  // dropdown labelled "Starfsmaður" to move the report through the pipeline as
+  // a side effect.
   const assign = useMutation({
     ...trpc.reportWorkflow.assign.mutationOptions(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
+      queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
       toast.success(reportText.employeeSelect.successToast)
     },
 
@@ -57,10 +63,13 @@ export const EmployeeSelect = ({
       isClearable
       isLoading={isLoadingUsers || assign.isPending}
       isDisabled={disabled}
-      onChange={(opt) => {
-        if (!opt) assign.mutate({ reportId, userId: null })
-        else assign.mutate({ reportId, userId: opt.value })
-      }}
+      onChange={(opt) =>
+        assign.mutate({
+          reportId,
+          userId: opt?.value ?? null,
+          updateStatus: false,
+        })
+      }
     />
   )
 }

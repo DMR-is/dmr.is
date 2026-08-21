@@ -96,7 +96,11 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
             disabled={disabled || isLoading}
             loading={assign.isPending}
             icon="arrowForward"
-            onClick={() => assign.mutate({ reportId })}
+            // The one assignment that *is* a status change: no userId assigns
+            // the caller, and `updateStatus` moves SUBMITTED → IN_REVIEW.
+            onClick={() =>
+              assign.mutate({ reportId, updateStatus: true })
+            }
           >
             <Text color="white" variant="small" fontWeight="semiBold">
               {reportText.statusSelect.assignButton}
