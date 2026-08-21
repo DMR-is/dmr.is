@@ -5,6 +5,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import { ApiKeyModel } from '@dmr.is/doe-shared'
 import { LoggingModule } from '@dmr.is/logging'
 import {
   GlobalExceptionFilter,
@@ -67,6 +68,7 @@ import { HealthController } from './health.controller'
             IsatSectionModel,
             IsatCategoryModel,
             CompanyModel,
+            ApiKeyModel,
             ReportEmployeeRoleModel,
             ReportModel,
             CompanyReportModel,
