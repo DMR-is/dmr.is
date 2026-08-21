@@ -252,7 +252,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 1',
     role: 'Forstöðumaður',
     gender: 'Kona',
-    paidHours: 1,
+    paidHours: 173.33,
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -268,7 +268,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 2',
     role: 'Sérfræðingur',
     gender: 'Karl',
-    paidHours: 1,
+    paidHours: 173.33,
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -284,7 +284,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 3',
     role: 'Verkstjóri',
     gender: 'Kona',
-    paidHours: 0.8,
+    paidHours: 173.33,
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -383,7 +383,7 @@ describe('parseWorkbook', () => {
           ordinal: 3,
           roleTitle: 'Verkstjóri',
           gender: GenderEnum.FEMALE,
-          paidHours: 0.8,
+          paidHours: 173.33,
           baseSalary: 600000,
           startDate: '2022-03-15',
         }),
@@ -420,7 +420,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -474,7 +474,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -520,7 +520,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -536,7 +536,7 @@ describe('parseWorkbook', () => {
         name: 'B',
         role: 'R',
         gender: 'Karl',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -574,7 +574,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -613,7 +613,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Other',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -636,6 +636,53 @@ describe('parseWorkbook', () => {
         true,
       )
     })
+
+    /**
+     * The mirror of the 2080 case: column E previously held
+     * `Starfshlutfall (0–1)`, so a value carried over from an older sheet — or
+     * from a submitter filling in the field they remember — is a plain positive
+     * number that inflates reglulegt tímakaup by up to ~173×.
+     *
+     * `1` is the important one. It is the most common starfshlutfall there is,
+     * and a `>= 1` floor (the bound the Directorate's R reference uses) would
+     * admit it. Both must be rejected.
+     */
+    it.each([0.8, 1])(
+      'rejects a carried-over starfshlutfall of %s as paid hours',
+      async (paidHours) => {
+        const wb = await loadTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await serialize(wb)),
+        )
+        expect(
+          errors.some((e) =>
+            e.message.includes(
+              `Greiddar stundir ${paidHours} eru utan leyfilegs bils`,
+            ),
+          ),
+        ).toBe(true)
+      },
+    )
 
     // 2080 is the mistake this bound exists for: the annual total entered
     // where the 12-month basis asks for a monthly average.
@@ -679,7 +726,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: '',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -713,7 +760,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        paidHours: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -752,7 +799,7 @@ describe('parseWorkbook', () => {
           name: `Nafn ${i + 1}`,
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          paidHours: 1,
+          paidHours: 173.33,
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
@@ -796,7 +843,7 @@ describe('parseWorkbook', () => {
           name: `Nafn ${i}`,
           role: 'Hlutverk',
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          paidHours: 1,
+          paidHours: 173.33,
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,

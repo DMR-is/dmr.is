@@ -64,7 +64,14 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     accessorFn: (row) => row.deviationPercent ?? 0,
     cell: ({ row }) =>
       formatPercent(row.original.deviationPercent, { signed: true }),
-    enableSorting: true,
+    // ⚠️ NOT sortable, and it cannot be. `report_employee_outlier` has exactly
+    // two real columns (`report_employee_id`, `group_id`); this value is
+    // injected from `wage_gap_decomposition_snapshot.employees` when the DTO is
+    // projected, so there is nothing for SQL to ORDER BY. The list is paged, so
+    // sorting the page in memory would look sorted while being wrong across
+    // pages — worse than not offering it. Sorting this would mean
+    // denormalising the snapshot onto the table.
+    enableSorting: false,
     meta: { fit: true },
   },
   {
@@ -74,7 +81,8 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     header: o.contributionShareHeader,
     accessorFn: (row) => row.contributionShare ?? 0,
     cell: ({ row }) => formatPercent(row.original.contributionShare),
-    enableSorting: true,
+    // Same as `deviationPercent` above: snapshot-backed, not a column.
+    enableSorting: false,
     meta: { fit: true },
   },
 ]
@@ -157,8 +165,20 @@ export const OutlierGroupTable = ({
     setPage(1)
   }, [reportId, group.id])
 
-  const sortBy = sorting[0]?.id as ReportOutlierSortByEnum | undefined
-  const direction = sorting[0]
+  // ⚠️ Explicit map, NOT `as ReportOutlierSortByEnum`. The cast this replaces
+  // silently sent any column id to an endpoint whose zod schema accepts only
+  // these four, so marking a snapshot-backed column sortable produced a runtime
+  // error that `tsc` could not see. An id missing from this map now sends no
+  // sort rather than an invalid one, and adding a sortable column means adding
+  // it here — where the enum has to have a member for it.
+  const SORTABLE: Record<string, ReportOutlierSortByEnum> = {
+    employeeOrdinal: ReportOutlierSortByEnum.EMPLOYEE_ORDINAL,
+    gender: ReportOutlierSortByEnum.GENDER,
+    roleTitle: ReportOutlierSortByEnum.ROLE_TITLE,
+  }
+  const sortId = sorting[0]?.id
+  const sortBy = sortId ? SORTABLE[sortId] : undefined
+  const direction = sortBy
     ? sorting[0].desc
       ? SortDirectionEnum.DESC
       : SortDirectionEnum.ASC

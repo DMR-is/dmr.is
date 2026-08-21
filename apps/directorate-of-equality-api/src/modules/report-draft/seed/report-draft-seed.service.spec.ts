@@ -60,7 +60,7 @@ const validParsed = () => ({
       field: 'Eng',
       department: 'R&D',
       startDate: '2020-01-01',
-      paidHours: 1,
+      paidHours: 173.33,
       baseSalary: 800000,
       additionalFixedOvertime: null,
       additionalFixedCarAllowance: null,

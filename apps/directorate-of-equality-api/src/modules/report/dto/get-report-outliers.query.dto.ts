@@ -6,10 +6,20 @@ import { SortDirectionEnum } from './get-reports.query.dto'
 /**
  * Columns the outliers list may be sorted by. Deliberately limited to
  * DB-backed fields on `report_employee` (and its `role`) so paging stays
- * correct at the SQL level — the analysis-snapshot fields (salary, difference,
- * etc.) live on `report_result.outlier_analysis_snapshot` and aren't part of
- * the queried table, so they can't be ordered here. Enum-gated to prevent
- * sorting by arbitrary columns.
+ * correct at the SQL level. Enum-gated to prevent sorting by arbitrary columns.
+ *
+ * ⚠️ **Every other column the úrbótaáætlun table displays is unsortable by
+ * construction, not by omission.** `report_employee_outlier` has exactly two
+ * real columns — `report_employee_id` and `group_id`. Tímakaup, væntanlegt
+ * tímakaup, launafrávik, hlutur af óskýrðu and payStatus are all injected from
+ * `wage_gap_decomposition_snapshot.employees` when the DTO is projected, so
+ * there is no column for SQL to ORDER BY. Because the list is paged, sorting
+ * in memory would order one page and look global — do not add these here
+ * without first denormalising them onto the table.
+ *
+ * (The earlier version of this note pointed at
+ * `report_result.outlier_analysis_snapshot`, which no longer exists; the
+ * constraint is unchanged, only the source of the figures.)
  */
 export enum ReportOutlierSortByEnum {
   EMPLOYEE_ORDINAL = 'employeeOrdinal',

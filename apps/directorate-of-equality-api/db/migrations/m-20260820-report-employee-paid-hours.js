@@ -1,8 +1,66 @@
 'use strict'
 
+/**
+ * Override for the destructive guard below. Set it to `true` only when you have
+ * decided that wiping every report in the target database is what you want.
+ *
+ *   DOE_ALLOW_DESTRUCTIVE_MIGRATION=true yarn nx run directorate-of-equality-api:migrate
+ */
+const OVERRIDE_ENV = 'DOE_ALLOW_DESTRUCTIVE_MIGRATION'
+
+/**
+ * Refuses to run when `report` has rows, unless explicitly overridden.
+ *
+ * ⚠️ **Why this exists.** Both directions of this migration `TRUNCATE report
+ * CASCADE`, and nothing about the deployment restricts where that happens:
+ * `Dockerfile` runs `sequelize-cli db:migrate` in the container's start command,
+ * and `sequelize.config.js` has a `production` block. So the only thing standing
+ * between this statement and a populated database was a comment asserting
+ * "nothing is on production" — true when written, and not enforced by anything.
+ *
+ * The guard also settles the narrower worry that this wipes EQUALITY reports as
+ * collateral: it cannot now run anywhere that has reports to lose, so scoping
+ * the delete to `type = 'SALARY'` would buy nothing. That scoping is not free
+ * either — no FK in the report graph declares `ON DELETE CASCADE`, so it would
+ * mean hand-ordering deletes across ~14 tables, including two traps
+ * (`report_event.related_report_id` pointing at a deleted report from a
+ * surviving one, and the nullable `report_employee_role.report_id`). A provably
+ * complete `TRUNCATE ... CASCADE` behind a guard beats a hand-ordered delete
+ * that might miss a table.
+ */
+async function assertSafeToWipe(queryInterface, direction) {
+  const [row] = await queryInterface.sequelize.query(
+    'SELECT count(*)::int AS count FROM report',
+    { type: queryInterface.sequelize.QueryTypes.SELECT },
+  )
+  const count = row ? row.count : 0
+
+  if (count === 0) return
+  if (process.env[OVERRIDE_ENV] === 'true') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[${direction}] ${OVERRIDE_ENV}=true — wiping ${count} report(s) on purpose.`,
+    )
+    return
+  }
+
+  throw new Error(
+    [
+      `Refusing to run: "report" has ${count} row(s) and this migration (${direction}) truncates`,
+      'every report, of every type, along with report_*, company_report and public_report.',
+      '',
+      'paid_hours is NOT NULL with no default and was never collected, so there is no honest',
+      'value to backfill — which is why the reversal empties rather than invents.',
+      '',
+      `If losing those rows is genuinely intended, re-run with ${OVERRIDE_ENV}=true.`,
+    ].join('\n'),
+  )
+}
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface) {
+    await assertSafeToWipe(queryInterface, 'up')
     return await queryInterface.sequelize.query(`
     BEGIN;
 
@@ -78,6 +136,7 @@ module.exports = {
   },
 
   async down(queryInterface) {
+    await assertSafeToWipe(queryInterface, 'down')
     return await queryInterface.sequelize.query(`
     BEGIN;
 

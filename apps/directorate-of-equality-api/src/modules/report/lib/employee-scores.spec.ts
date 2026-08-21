@@ -16,9 +16,7 @@ describe('employee-scores', () => {
       const run = () => assertParsedPayloadIntegrity(parsed)
 
       expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
-        /Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/,
-      )
+      expect(run).toThrow(/Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/)
     })
 
     it.each([1, 9])(
@@ -156,9 +154,7 @@ describe('employee-scores', () => {
 })
 
 /** A report with only criteria — no roles/employees — to isolate criteria caps. */
-function onlyCriteria(
-  criteria: ParsedReportDto['criteria'],
-): ParsedReportDto {
+function onlyCriteria(criteria: ParsedReportDto['criteria']): ParsedReportDto {
   return { criteria, roles: [], employees: [] }
 }
 
@@ -234,7 +230,7 @@ function makeEmployee(
     field: 'Management',
     department: 'Operations',
     startDate: '2021-01-01',
-    paidHours: 1,
+    paidHours: 173.33,
     baseSalary: 1000000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,

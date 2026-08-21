@@ -50,7 +50,7 @@ const changeData = (
   field: 'Engineering',
   department: 'R&D',
   startDate: '2020-01-01',
-  paidHours: 1,
+  paidHours: 173.33,
   baseSalary: 800000,
   ...overrides,
 })
@@ -130,19 +130,22 @@ describe('ReportDraftEmployeeService', () => {
       reportEmployeeRoleId: ROLE_ID,
       gender: GenderEnum.FEMALE,
       startDate: '2020-01-01',
-      paidHours: 1,
+      paidHours: 173.33,
       baseSalary: 800000,
       score: null,
     })
 
-    it('inlines each employee\'s personal step ids in one step query', async () => {
+    it("inlines each employee's personal step ids in one step query", async () => {
       employeeFindAndCountAll.mockResolvedValueOnce({
         rows: [employeeRow(EMPLOYEE_ID, 1), employeeRow('employee-id-2', 2)],
         count: 2,
       })
       personalStepFindAll.mockResolvedValueOnce([
         { reportEmployeeId: EMPLOYEE_ID, reportSubCriterionStepId: 'step-1' },
-        { reportEmployeeId: 'employee-id-2', reportSubCriterionStepId: 'step-2' },
+        {
+          reportEmployeeId: 'employee-id-2',
+          reportSubCriterionStepId: 'step-2',
+        },
         { reportEmployeeId: EMPLOYEE_ID, reportSubCriterionStepId: 'step-3' },
       ])
 
@@ -168,9 +171,7 @@ describe('ReportDraftEmployeeService', () => {
           roleTitle: 'Sérfræðingur',
         }),
       )
-      expect(result.paging).toEqual(
-        expect.objectContaining({ totalItems: 2 }),
-      )
+      expect(result.paging).toEqual(expect.objectContaining({ totalItems: 2 }))
     })
 
     // The join must not widen the page: a request for page 2 looks up steps for
@@ -198,7 +199,10 @@ describe('ReportDraftEmployeeService', () => {
       employeeFindAndCountAll.mockResolvedValueOnce({
         rows: [
           employeeRow(EMPLOYEE_ID, 1),
-          { ...employeeRow('employee-id-2', 2), reportEmployeeRoleId: 'role-id-2' },
+          {
+            ...employeeRow('employee-id-2', 2),
+            reportEmployeeRoleId: 'role-id-2',
+          },
         ],
         count: 2,
       })
@@ -460,9 +464,9 @@ describe('ReportDraftEmployeeService', () => {
     it('404s removing an employee not in the draft', async () => {
       employeeFindOne.mockResolvedValueOnce(null)
 
-      await expect(
-        service.removeEmployee(report, EMPLOYEE_ID),
-      ).rejects.toThrow(NotFoundException)
+      await expect(service.removeEmployee(report, EMPLOYEE_ID)).rejects.toThrow(
+        NotFoundException,
+      )
       expect(personalStepDestroy).not.toHaveBeenCalled()
       expect(outlierDestroy).not.toHaveBeenCalled()
     })

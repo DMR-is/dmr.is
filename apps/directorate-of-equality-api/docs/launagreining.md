@@ -23,6 +23,35 @@ Reglulegt tímakaup = regluleg laun / greiddar stundir
 It replaced `starfshlutfall`: an FTE ratio is a _proxy_ for time worked, and
 dividing by both it and actual hours double-counts the part-time correction.
 
+### What counts as a valid `greiddar stundir`
+
+The denominator decides everything above it, so it is bounded at every point the
+data enters — the parser, the draft edit paths and the submit path all apply the
+same range. Accepted: **4 to 750 hours**.
+
+Both bounds catch a specific data-entry error rather than describing what the
+column can hold:
+
+- **The lower bound exists because column E used to be `Starfshlutfall (0–1)`.**
+  A ratio carried over from an older sheet, or entered by a submitter filling in
+  the field they remember, is a perfectly ordinary positive number that inflates
+  reglulegt tímakaup by up to ~173×. Since a starfshlutfall can never exceed `1`,
+  a floor of 4 rejects the entire range. It is deliberately not higher: 4 hours is
+  about an hour a week, and someone who worked a single 8-hour shift in the
+  reference month has a genuinely correct tímakaup that a higher floor would
+  reject.
+- **The upper bound catches the annual total.** Under the twelve-month basis a
+  submitter may enter ~2 080 where the monthly average (~173) is asked for, which
+  would understate tímakaup by a factor of twelve.
+
+⚠️ **What no bound on this field can catch** is hours that are wrong _relative to
+salary_: 4 hours against a full monthly salary is arithmetically valid and wildly
+wrong. Because one extreme denominator dominates a log-space fit, a single such
+row can move the company-wide figure on its own. Detecting it needs a leverage
+check against the rest of the cohort, reported as a caveat rather than a
+rejection. That does not exist yet and is the known remaining gap in input
+validation.
+
 **NEUTRAL is bundled with FEMALE** for every computation and every display — the
 comparison is M vs F+N. The raw three-way value survives untouched in
 `report_employee.gender` and in the snapshot's `employees[]`, so anyone returning
@@ -351,17 +380,18 @@ The list would have to carry direction, because the two cases are not the same
 question and should not share one prompt. `payStatus` already records it per
 employee, so the data is in place.
 
-### The question for stakeholders
+### What needs deciding
 
-Not whether reducing pay is lawful — we would not be proposing it. The question
-is narrower:
+Not whether reducing pay is lawful — that is not what would be proposed. The
+question is narrower:
 
 > **Is it acceptable to name an individual employee in a report as being paid
 > materially above what their starfsmatsstig imply, and require the employer to
 > explain it?**
 
-That is a statement about an identifiable person, and it is Jafnréttisstofa's call
-rather than an engineering one. Everything else is ready.
+That is a statement about an identifiable person, so it is a policy judgement
+rather than an engineering one. Everything on the technical side is ready either
+way.
 
 Two smaller points worth putting alongside it:
 

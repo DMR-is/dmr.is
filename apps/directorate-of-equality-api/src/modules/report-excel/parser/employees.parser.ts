@@ -17,11 +17,13 @@
  * template moved to an hourly basis; it now carries hours, so a value like
  * `173.33` is normal and `0.85` is a leftover from the old sheet.
  *
- * Accepted range is `> 0` and `<= MAX_PAID_HOURS_PER_MONTH`, matching the
- * template's own cell validation. The upper bound earns its keep: under
- * `salary_data_basis = AVERAGE` a submitter who enters the annual total
- * (~2 080) instead of the monthly average (~173) would otherwise produce a
- * tímakaup 12× too low, with nothing else to catch it.
+ * Accepted range is `MIN_PAID_HOURS_PER_MONTH`–`MAX_PAID_HOURS_PER_MONTH`.
+ * Both bounds catch a specific data-entry error rather than merely describing
+ * what the column can store — the LOWER one rejects a `Starfshlutfall (0–1)`
+ * value carried over from the column this field replaced. The upper bound earns
+ * its keep: under `salary_data_basis = AVERAGE` a submitter who enters the
+ * annual total (~2 080) instead of the monthly average (~173) would otherwise
+ * produce a tímakaup 12× too low, with nothing else to catch it.
  *
  * ## Role auto-discovery
  *

@@ -13,7 +13,7 @@ const THRESHOLD_PERCENT = 3.9
 
 /**
  * Hours that make the fixture figures readable: 600.000 / 173,33 ≈ 3.462 kr./klst.
- * Fixtures using `paidHours: 1` produce million-króna hourly rates, which pass
+ * Fixtures using `paidHours: 173.33` produce million-króna hourly rates, which pass
  * every assertion while describing nothing real.
  */
 const PAID_HOURS = 173.33
@@ -124,9 +124,7 @@ describe('analyzeSalaryPayload', () => {
       // actionable half of the message ("you have 0 women, we need at least 1").
       expect(gap.counts).toEqual({ male: 8, female: 0, excluded: 0 })
       // ...and the rest of the analysis is unaffected by the gate.
-      expect(
-        result.regularHourlyWageByScoreAll.dataPoints,
-      ).toHaveLength(8)
+      expect(result.regularHourlyWageByScoreAll.dataPoints).toHaveLength(8)
     })
   })
 
