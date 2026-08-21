@@ -118,15 +118,20 @@ export const PayComponentsTable = ({
       // Signed: the direction carries the meaning here, and unlike the
       // leiðréttur figure this one is never compared to a benchmark, so there is
       // no reason to strip it to a magnitude.
-      additional: formatPercent(data.additionalWageGapPercent, { signed: true }),
+      additional: formatPercent(data.additionalWageGapPercent, {
+        signed: true,
+      }),
       bonus: formatPercent(data.bonusWageGapPercent, { signed: true }),
       total: formatPercent(data.totalWageGapPercent, { signed: true }),
       isGap: true,
     },
   ]
 
+  // No marginTop: the parent `Stack space={6}` already spaces this section, and
+  // adding to it produced a visibly larger gap here than between any other two
+  // blocks on the page.
   return (
-    <Box marginTop={4}>
+    <Box>
       <Stack space={2}>
         <Text variant="h4">{t.heading}</Text>
         <Text variant="default">{t.description}</Text>

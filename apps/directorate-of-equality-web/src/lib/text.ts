@@ -270,6 +270,9 @@ export const reportText = {
     disfavourFemale: 'í óhag kvenna',
     disfavourMale: 'í óhag karla',
     disfavourNone: 'engin átt',
+    // No longer a StatisticCard: it is a count of rows in the table below, not
+    // a figure to be read against the other two, so it reads as a subtitle on
+    // the Úrbótaáætlun heading instead.
     minimumSetLabel: 'Starfsmenn í úrbótaáætlun',
     minimumSetNone: 'Engir',
     cohortCountsLabel: 'Fjöldi í greiningu',
@@ -308,21 +311,34 @@ export const reportText = {
      * The fitted line printed in words. Skurðpunktur is predicted pay at score
      * 0, which no real job has, so the label stays deliberately vague about it.
      */
-    regressionHeading: 'Aðfallslína',
-    slopeLabel: 'Hallatala',
-    slopeUnit: 'kr./klst. á stig',
-    slopeHint: 'Hversu mikið tímakaupið hækkar fyrir hvert viðbótarstig',
-    interceptLabel: 'Skurðpunktur',
-    interceptHint: 'Hvar línan byrjar',
+    // The readout describes the POOLED LOG CURVE now drawn on the chart, not
+    // the old level-space straight line. `Hallatala`/`Skurðpunktur` are gone
+    // with it: a log-space slope is not kr./klst. per stig, and printing it
+    // under that label would be a unit error on a government page.
+    regressionHeading: 'Viðmiðslína',
+    curveGrowthLabel: 'Hækkun á hver 100 stig',
+    curveGrowthHint: 'Hlutfallsleg hækkun á væntanlegu tímakaupi',
+    curveUnavailable: 'Viðmiðslína ekki reiknanleg fyrir þessi gögn',
     rSquaredLabel: 'R²',
     rSquaredHint: 'Hve mikið af launabreytileikanum stigin skýra',
     noDataMessage: 'Engin launagögn til að birta',
+    cohort: {
+      label: 'Starfsmenn í greiningu',
+      male: 'karlar',
+      female: 'konur',
+      separator: ' · ',
+      // The counts split men against women-and-kynsegin, exactly as every
+      // figure on this page does. Stated rather than assumed: a reviewer
+      // counting heads against the company's own records needs to know which
+      // convention produced the two numbers.
+      hint: 'Kynsegin og hlutlaus skráning kyns eru talin með konum, eins og í öllum útreikningum á síðunni.',
+    },
     chartTitle: 'Stig á móti reglulegu tímakaupi',
     chartDescription:
-      'Hér má sjá línulega aðfallsgreiningu á reglulegu tímakaupi á milli kynja.',
+      'Viðmiðslínan er væntanlegt tímakaup eftir stigum. Launafrávik hvers starfsmanns er mælt frá henni, og starfsmenn undir línunni eru þeir sem úrbótaáætlun getur tekið til.',
     chartScaleScore: 'stig',
     chartScaleCurrency: 'kr./klst.',
-    chartRegressionSeries: 'Spáð tímakaup eftir stigum',
+    chartRegressionSeries: 'Væntanlegt tímakaup',
     chartTooltipScore: 'Stig',
     chartTooltipSalary: 'Tímakaup',
     hourlyUnit: 'kr./klst.',

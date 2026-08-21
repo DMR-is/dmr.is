@@ -57,7 +57,7 @@ export const SalaryReportTab = ({
 
   return (
     <Stack space={6}>
-      <SalaryDistributionChart data={data} />
+      <SalaryDistributionChart data={data} decomposition={decomposition} />
       {/* Below the chart, as its own section — monthly krónur, so it is kept
           clear of the tímakaup figures rather than mixed among them. */}
       <PayComponentsTable data={payComponents} />
@@ -74,6 +74,7 @@ export const SalaryReportTab = ({
           <OutlierPlanTable
             reportId={reportId}
             groups={groups}
+            minimumSetSize={decomposition?.minimumSetSize}
             outliersPostponed={outliersPostponed}
             outlierDate={outlierDate}
           />

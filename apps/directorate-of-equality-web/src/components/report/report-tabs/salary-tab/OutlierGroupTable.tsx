@@ -38,12 +38,16 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     header: o.numberHeader,
     cell: ({ getValue }) => getValue<number | null>() ?? dash,
     enableSorting: true,
+    meta: { fit: true },
   },
   {
     id: 'roleTitle',
     header: o.roleHeader,
     cell: ({ row }) => row.original.roleTitle ?? dash,
     enableSorting: true,
+    // The only column whose content varies in length, so it takes the slack the
+    // others leave rather than every column sharing the width equally.
+    meta: { grow: true },
   },
   {
     id: 'gender',
@@ -52,6 +56,7 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     cell: ({ row }) =>
       row.original.gender ? (genderMap[row.original.gender] ?? dash) : dash,
     enableSorting: true,
+    meta: { fit: true },
   },
   {
     id: 'deviationPercent',
@@ -60,6 +65,7 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     cell: ({ row }) =>
       formatPercent(row.original.deviationPercent, { signed: true }),
     enableSorting: true,
+    meta: { fit: true },
   },
   {
     // The column that explains the selection. Sorted descending by default is
@@ -69,6 +75,7 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     accessorFn: (row) => row.contributionShare ?? 0,
     cell: ({ row }) => formatPercent(row.original.contributionShare),
     enableSorting: true,
+    meta: { fit: true },
   },
 ]
 
@@ -179,7 +186,17 @@ export const OutlierGroupTable = ({
       <Text variant="h5" marginBottom={2}>
         {group.name}
       </Text>
+      {/*
+        `layout="auto"` with the `fit`/`grow` meta above, rather than the default
+        `fixed`. Fixed layout gave all six columns (five plus the expander) an
+        equal share of 100% width, so `Kyn` — three characters — got as much room
+        as `Hlutur af óskýrðu`, whose header then wrapped to two lines and still
+        pushed the table past its container. Every table sits in an
+        `overflow: auto` wrapper from island-ui, so the surplus showed up as a
+        horizontal scrollbar on five short columns of data.
+      */}
       <Table
+        layout="auto"
         columns={columns}
         data={data?.outliers ?? []}
         getRowExpanded={(row) => <ExpandedRow row={row} />}

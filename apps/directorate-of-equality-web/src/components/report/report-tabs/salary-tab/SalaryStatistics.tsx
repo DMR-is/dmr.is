@@ -66,7 +66,10 @@ export const SalaryStatistics = ({
             marginTop={1}
             flexDirection={['column', 'column', 'column', 'row']}
           >
-            <StatisticCard title={t.avgSalaryMale} content={maleAverageSalary} />
+            <StatisticCard
+              title={t.avgSalaryMale}
+              content={maleAverageSalary}
+            />
             <StatisticCard
               title={t.avgSalaryFemale}
               content={femaleAverageSalary}
@@ -176,14 +179,12 @@ const AdjustedGapContent = ({
             exceeded ? t.benchmarkExceeded : t.benchmarkWithin
           }`}
         />
-        <StatisticCard
-          title={t.minimumSetLabel}
-          content={
-            d.minimumSetSize === 0
-              ? t.minimumSetNone
-              : String(d.minimumSetSize)
-          }
-        />
+        {/*
+          The lágmarksmengi count is NOT a card here. It counts rows in the
+          úrbótaáætlun table further down the page, so it belongs on that
+          heading; sitting beside the two figures above invited reading it as a
+          third measurement of the same thing.
+        */}
       </Box>
 
       {/* Soft caveats: the figures ARE computed, but must be shown qualified. */}
