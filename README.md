@@ -19,19 +19,35 @@ yarn
 
 ## Local environment setup
 
-Environment variables are **declared** in `.env.schema` files — names, types and which values
-are sensitive, never the values themselves. There is one at the repo root holding everything
-shared, and one per app that imports only what that app actually reads:
+Environment variables are **declared** in `.env.schema` files — names, types and which values are
+sensitive, never the values themselves. There is one at the repo root holding everything shared, one
+per app that imports only the names that app actually reads, and, for a migrated app, one saying
+where its values come from:
 
 ```text
-.env.schema                          shared across apps
-apps/<app>/.env.schema               app-specific + @import(../../, pick=[...])
-config/1password/.env.schema         local-only: where values come from
+.env.schema                        shared names, imported by the app schemas
+apps/<app>/.env.schema             app-specific, imports the root schema with a pick list
+config/1password/<app>/.env.schema local-only: which 1Password environments to resolve from
 ```
 
-Values are **resolved** by [varlock](https://varlock.dev) from 1Password and exported into your
-shell by `direnv`. Deployed services never use 1Password — ECS task definitions fill the same
-variables — so local and deployed environments differ only in who populates `process.env`.
+Values are **resolved** per app, inside that app's own process, by [varlock](https://varlock.dev).
+Nothing is exported into your shell. `scripts/varlock-run.sh` is the entry point, and the `serve`,
+`migrate` and `seed` targets of every migrated app already go through it:
+
+```bash
+scripts/varlock-run.sh <app> <command>   # e.g. nx serve <app>, sequelize-cli db:migrate
+```
+
+Because nothing lands in the shell, ad-hoc commands need the same wrapper — `echo $DB_NAME` in your
+terminal returns nothing for a migrated app.
+
+An app is migrated once it has a directory under `config/1password/`. Four do today:
+`legal-gazette-api`, `legal-gazette-web`, `directorate-of-equality-api` and
+`directorate-of-equality-web`. Everything else still reads the gitignored secrets file out of the
+shell via `direnv`, and keeps working unchanged.
+
+Deployed services never use 1Password — ECS task definitions fill the same variables — so local and
+deployed environments differ only in who populates `process.env`.
 
 One-time setup:
 
@@ -40,26 +56,35 @@ brew install direnv 1password-cli
 ```
 
 1. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
-   Desktop-app auth needs the **beta** `op` CLI (v2.33.0+) for `op environment`; the stable
-   Homebrew build does not include it.
-2. Put the 1Password environment id in `.env.local` at the repo root (gitignored). It must resolve
-   before authentication, so it cannot itself come from 1Password:
+   That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
+   every launch.
+2. Put a scoped 1Password service-account token in the macOS Keychain to authorise per *session*
+   instead. The account name is pinned rather than defaulted, because varlock otherwise derives it
+   from the current directory name — a token stored in the main checkout would not resolve in a
+   worktree:
 
    ```bash
-   echo 'OP_DMR_ENVIRONMENT=<environment-id>' >> .env.local
+   varlock keychain set        OP_TOKEN --account dmr.is:local:OP_TOKEN
+   varlock keychain fix-access          --account dmr.is:local:OP_TOKEN
    ```
 
+   `fix-access` is not optional — without it macOS asks for your login password on every read. The
+   token needs read access to every environment it resolves: the shared one plus each app's.
 3. `direnv allow`
 
-Check your setup with:
+Check resolution by asking for a single value:
 
 ```bash
-yarn varlock load --path config/1password --agent   # sensitive values redacted
-yarn varlock load --path apps/legal-gazette-api     # validate one app
+scripts/varlock-run.sh legal-gazette-api printenv DB_NAME
 ```
 
-If varlock is missing or 1Password is unavailable, `.envrc` prints the error and falls back to
-sourcing `.env.secret`, so an existing local setup keeps working.
+Do **not** use `varlock load` for this. It reports values already present in your shell, which is
+exactly what the wrapper scrubs before resolving.
+
+The 1Password environment ids are committed on purpose (`OP_SHARED_ENVIRONMENT`,
+`OP_APP_ENVIRONMENT`) — an id is an identifier, not a credential, and is useless without
+authentication. See [config/1password/README.md](config/1password/README.md) for the model: which
+keys are shared, which belong to a single app, and how to migrate the next one.
 
 **When you add a `process.env.X` read, declare `X`** — in `apps/<app>/.env.schema` if only that app
 uses it, or in the root schema (and the app's `pick` list) if more than one does.
