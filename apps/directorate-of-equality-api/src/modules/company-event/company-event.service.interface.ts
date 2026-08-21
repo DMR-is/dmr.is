@@ -54,6 +54,34 @@ export interface ICompanyEventService {
     reason?: string | null,
   ): Promise<void>
 
+  /**
+   * Records an API key being minted for the company.
+   *
+   * `actorUserId` is the issuing reviewer on the admin path and null on the
+   * island.is self-service path — there is no `doe_user` row for a company's own
+   * representative, and `company_event.actor_user_id` is a `doe_user` FK. The
+   * person behind a self-service issuance is recorded on the key row instead
+   * (`doe_api_key.created_by_national_id`); see db/README.md → "API keys".
+   *
+   * `keyId` goes into `reason` so the timeline entry names which key, the same
+   * way reminder events carry their due date there.
+   */
+  emitApiKeyIssued(
+    companyId: string,
+    status: CompanyStatusEnum,
+    keyId: string,
+    actorUserId?: string | null,
+  ): Promise<void>
+
+  /** Records an API key being revoked. `keyId` is carried in `reason`. */
+  emitApiKeyRevoked(
+    companyId: string,
+    status: CompanyStatusEnum,
+    keyId: string,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void>
+
   /** All events for a company, oldest first — used to build the timeline. */
   getByCompanyId(companyId: string): Promise<CompanyEventDto[]>
 

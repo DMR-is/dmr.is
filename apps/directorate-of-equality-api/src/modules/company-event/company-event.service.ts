@@ -145,6 +145,47 @@ export class CompanyEventService implements ICompanyEventService {
     })
   }
 
+  async emitApiKeyIssued(
+    companyId: string,
+    status: CompanyStatusEnum,
+    keyId: string,
+    actorUserId?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting API_KEY_ISSUED event for company ${companyId} (key ${keyId})`,
+      { context: LOGGING_CONTEXT, companyId, keyId },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.API_KEY_ISSUED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: keyId,
+    })
+  }
+
+  async emitApiKeyRevoked(
+    companyId: string,
+    status: CompanyStatusEnum,
+    keyId: string,
+    actorUserId?: string | null,
+    reason?: string | null,
+  ): Promise<void> {
+    this.logger.info(
+      `Emitting API_KEY_REVOKED event for company ${companyId} (key ${keyId})`,
+      { context: LOGGING_CONTEXT, companyId, keyId },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType: CompanyEventTypeEnum.API_KEY_REVOKED,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: reason ? `${keyId} — ${reason}` : keyId,
+    })
+  }
+
   async getByCompanyId(companyId: string): Promise<CompanyEventDto[]> {
     const events = await this.companyEventModel.findAll({
       where: { companyId },
