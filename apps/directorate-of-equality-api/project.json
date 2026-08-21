@@ -57,6 +57,7 @@
       }
     },
     "serve": {
+      "continuous": true,
       "executor": "nx:run-commands",
       "options": {
         "command": "./scripts/varlock-run.sh directorate-of-equality-api nx run directorate-of-equality-api:serve-raw"
@@ -131,7 +132,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "apps/directorate-of-equality-api",
-        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env"
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }

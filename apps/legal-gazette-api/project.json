@@ -113,7 +113,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "apps/legal-gazette-api",
-        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env"
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }

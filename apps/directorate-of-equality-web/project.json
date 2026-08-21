@@ -115,7 +115,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "apps/directorate-of-equality-web",
-        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env"
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }
