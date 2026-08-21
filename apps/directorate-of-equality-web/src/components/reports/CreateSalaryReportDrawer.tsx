@@ -33,8 +33,9 @@ import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
+  formatHourlyRate,
   formatNationalId,
-  formatSalary,
+  formatPercent,
   parseInflightConflictStatus,
 } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
@@ -126,6 +127,14 @@ export const CreateSalaryReportDrawer = () => {
   const [salaryDataMonth, setSalaryDataMonth] = useState('')
   const [parsedReport, setParsedReport] = useState<ParsedReportDto | null>(null)
   const [outliers, setOutliers] = useState<SalaryAnalysisOutlierDto[]>([])
+  /**
+   * Null until analysed, and null for a report with no computable gap. False
+   * means the listed employees do not account for the whole óskýrt — see the
+   * caveat rendered in `OutlierEditor`.
+   */
+  const [minimumSetClosesGap, setMinimumSetClosesGap] = useState<
+    boolean | null
+  >(null)
   const [importErrors, setImportErrors] = useState<string[] | null>(null)
   const [postpone, setPostpone] = useState(false)
   const [postponeReason, setPostponeReason] = useState('')
@@ -176,6 +185,9 @@ export const CreateSalaryReportDrawer = () => {
     ...trpc.adminReport.analyzeSalary.mutationOptions(),
     onSuccess: (data) => {
       setOutliers(data.outliers)
+      setMinimumSetClosesGap(
+        data.wageGapDecomposition?.minimumSetClosesGap ?? null,
+      )
       // Groups start empty; the admin builds them by selecting rows in the
       // outlier table and clicking "create group".
       setGroups([])
@@ -262,9 +274,7 @@ export const CreateSalaryReportDrawer = () => {
   }
 
   const updateGroup = (id: string, patch: Partial<OutlierGroupForm>) =>
-    setGroups((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, ...patch } : g)),
-    )
+    setGroups((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch } : g)))
 
   const removeGroup = (id: string) =>
     setGroups((prev) => prev.filter((g) => g.id !== id))
@@ -580,6 +590,7 @@ export const CreateSalaryReportDrawer = () => {
               ) : (
                 <OutlierEditor
                   outliers={outliers}
+                  minimumSetClosesGap={minimumSetClosesGap}
                   identifierForOrdinal={identifierForOrdinal}
                   postpone={postpone}
                   setPostpone={setPostpone}
@@ -801,6 +812,8 @@ export const CreateSalaryReportDrawer = () => {
 
 type OutlierEditorProps = {
   outliers: SalaryAnalysisOutlierDto[]
+  /** False → the list does not account for the whole gap; render the caveat. */
+  minimumSetClosesGap: boolean | null
   identifierForOrdinal: (ordinal: number) => string
   postpone: boolean
   setPostpone: (v: boolean) => void
@@ -817,6 +830,7 @@ type OutlierEditorProps = {
 
 const OutlierEditor = ({
   outliers,
+  minimumSetClosesGap,
   identifierForOrdinal,
   postpone,
   setPostpone,
@@ -910,18 +924,25 @@ const OutlierEditor = ({
     {
       id: 'salary',
       header: d.tableSalary,
-      cell: ({ row }) => `${formatSalary(row.original.adjustedBaseSalary)} kr.`,
+      cell: ({ row }) => formatHourlyRate(row.original.regularHourlyWage),
+    },
+    {
+      id: 'expected',
+      header: d.tableExpected,
+      cell: ({ row }) => formatHourlyRate(row.original.expectedHourlyWage),
     },
     {
       id: 'difference',
       header: d.tableDifference,
-      cell: ({ row }) => {
-        const o = row.original
-        const below = o.differencePercent < 0
-        return `${Math.abs(o.differencePercent).toFixed(1)}% ${
-          below ? d.directionBelow : d.directionAbove
-        }`
-      },
+      // No direction suffix: the lágmarksmengi is lift-only, so every row here
+      // is underpaid. "undir viðmiði" on all of them told the reader nothing.
+      cell: ({ row }) =>
+        formatPercent(row.original.deviationPercent, { signed: true }),
+    },
+    {
+      id: 'contribution',
+      header: d.tableContribution,
+      cell: ({ row }) => formatPercent(row.original.contributionShare),
     },
   ]
 
@@ -930,6 +951,19 @@ const OutlierEditor = ({
       <Box marginBottom={2}>
         <Text variant="small">{d.intro}</Text>
       </Box>
+
+      {/*
+        Only when the engine says so. `false` is the meaningful case; `null`
+        means no computable gap, and rendering the caveat then would assert
+        something about a figure that does not exist.
+      */}
+      {minimumSetClosesGap === false && (
+        <Box marginBottom={2}>
+          <Text variant="small" color="dark300">
+            {d.introDoesNotClose}
+          </Text>
+        </Box>
+      )}
 
       <Checkbox
         label={d.postponeOption}

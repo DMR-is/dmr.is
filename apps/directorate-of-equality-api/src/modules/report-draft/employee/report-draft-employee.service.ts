@@ -38,7 +38,7 @@ const EMPLOYEE_PATCH_KEYS = [
   'field',
   'department',
   'startDate',
-  'workRatio',
+  'paidHours',
   'baseSalary',
   'additionalFixedOvertime',
   'additionalFixedCarAllowance',
@@ -78,7 +78,7 @@ const EMPLOYEE_REQUIRED_KEYS = [
   'reportEmployeeRoleId',
   'gender',
   'startDate',
-  'workRatio',
+  'paidHours',
   'baseSalary',
 ] as const
 
@@ -237,12 +237,13 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
   ): Promise<void> {
     for (const key of EMPLOYEE_REQUIRED_KEYS) {
       if (data[key] === undefined || data[key] === null) {
-        throw new BadRequestException(
-          `Employee CREATE requires "${key}"`,
-        )
+        throw new BadRequestException(`Employee CREATE requires "${key}"`)
       }
     }
-    await this.assertRoleInReport(report.id, data.reportEmployeeRoleId as string)
+    await this.assertRoleInReport(
+      report.id,
+      data.reportEmployeeRoleId as string,
+    )
 
     const existing = await this.employeeModel.findByPk(id)
     if (existing) {
@@ -267,7 +268,7 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       field: data.field ?? null,
       department: data.department ?? null,
       startDate: data.startDate as string,
-      workRatio: data.workRatio as number,
+      paidHours: data.paidHours as number,
       baseSalary: data.baseSalary as number,
       additionalFixedOvertime: data.additionalFixedOvertime ?? null,
       additionalFixedCarAllowance: data.additionalFixedCarAllowance ?? null,
@@ -317,7 +318,9 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
   }
 
   /** Builds a Sequelize patch of the editable columns present in `data`. */
-  private buildColumnPatch(data: EmployeeChangeDataDto): Record<string, unknown> {
+  private buildColumnPatch(
+    data: EmployeeChangeDataDto,
+  ): Record<string, unknown> {
     const patch: Record<string, unknown> = {}
     for (const key of EMPLOYEE_PATCH_KEYS) {
       if (data[key] !== undefined) {

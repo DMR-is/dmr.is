@@ -1,5 +1,5 @@
 import { CompanySizeEnum } from '../gen/fetch'
-import { sharedText } from './text'
+import { reportText, sharedText } from './text'
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export const getBaseUrlFromServerSide = (includePrefix = false): string => {
@@ -38,6 +38,40 @@ export const EMPLOYEE_RANGES = [
 
 export const formatSalary = (v: number) =>
   new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
+
+/**
+ * A pay rate with its unit attached. Always prefer this to bare `formatSalary`
+ * for tímakaup: `4.884` under a label like "Meðallaun" reads as a monthly salary
+ * two orders of magnitude too low, and nothing on the page corrects the
+ * impression. Mirrors the API's `formatHourlyRate` in
+ * `report-pdf/lib/format.ts` so the web and the PDF cannot drift.
+ */
+export const formatHourlyRate = (v: number | null | undefined) =>
+  v == null ? '—' : `${formatSalary(v)} ${reportText.salaryTab.hourlyUnit}`
+
+/**
+ * A percentage to one decimal, or an em dash when not computable. `signed` adds
+ * an explicit `+` to positives; negatives always carry their own minus.
+ *
+ * Mirrors the API's `formatPercent` in `report-pdf/lib/format.ts`
+ * character-for-character — same decimal count, same comma, same ASCII sign — so
+ * the PDF and the web cannot print two different renderings of one number.
+ *
+ * ⚠️ Not interchangeable with `formatPercentValue` below, which they sit beside:
+ * this one renders a *computed* number for display, that one echoes a
+ * *config-stored string* and deliberately passes malformed input through
+ * untouched. Reaching for the wrong one turns a broken config row into a
+ * confident `0,0%`.
+ */
+export const formatPercent = (
+  v: number | null | undefined,
+  { signed = false }: { signed?: boolean } = {},
+) => {
+  if (v == null) return '—'
+  const formatted = v.toFixed(1).replace('.', ',')
+  const sign = signed && v > 0 ? '+' : ''
+  return `${sign}${formatted}%`
+}
 
 /**
  * Renders a config-stored percentage ("3.9") the Icelandic way ("3,9"). Config

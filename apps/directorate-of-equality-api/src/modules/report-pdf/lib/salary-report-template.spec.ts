@@ -40,16 +40,23 @@ function makeData(
       isatCategory: '62010 Hugbúnaðargerð',
     },
     subsidiaries: [],
+    // The óleiðréttur card reads the frozen decomposition, not
+    // `totals.wageGapPercent`. Values below are consistent with the averages in
+    // `statistics`: (1.065.400 − 983.100) / 1.065.400 = 7,72%, women lower.
+    result: {
+      wageGapDecomposition: {
+        rawGapPercent: 7.72,
+        rawGapDirection: 'FEMALE',
+      },
+    },
   } as unknown as ReportDetailDto
 
   const statistics: SalaryByGenderAndScoreDto = {
     dataPoints: [
-      { score: 200, adjustedSalary: 600000, gender: GenderEnum.MALE },
-      { score: 500, adjustedSalary: 900000, gender: GenderEnum.FEMALE },
+      { score: 200, regularHourlyWage: 600000, gender: GenderEnum.MALE },
+      { score: 500, regularHourlyWage: 900000, gender: GenderEnum.FEMALE },
     ],
-    regressionLine: { slope: 1000, intercept: 400000 },
-    // Half of the 3.9% salary-difference threshold, as the DTO documents.
-    allowedDifferencePercent: 1.95,
+    regressionLine: { slope: 1000, intercept: 400000, rSquared: 1 },
     scoreBuckets: [],
     totals: {
       maleAverageSalary: 1065400,
@@ -58,6 +65,9 @@ function makeData(
       maleMedianSalary: 1000000,
       femaleMedianSalary: 950000,
       overallMedianSalary: 975000,
+      // Deliberately NOT what the card renders — kept only to show that the
+      // asymmetric `(male − female) / male` figure is no longer read for
+      // display. It also never agreed with the averages above (6,33 vs 7,72).
       wageGapPercent: 6.33,
       maleCount: 1,
       femaleCount: 1,
@@ -84,30 +94,48 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('Frestur til úrbóta')
   })
 
-  it('renders the salary stat cards with is-IS formatting and signed gap', () => {
+  /**
+   * The óleiðréttur figure is a MAGNITUDE with an explicit direction, matching
+   * the web card. A signed percentage was considered and rejected: with the
+   * denominator fixed to men, the same inequality yields a different magnitude
+   * depending on which gender is ahead.
+   */
+  it('renders the salary stat cards with is-IS formatting and a directional gap', () => {
     const html = buildSalaryReportHtml(makeData())
 
     expect(html).toContain('1.065.400')
     expect(html).toContain('983.100')
-    expect(html).toContain('+6,3%')
+    expect(html).toContain('7,7%')
+    expect(html).toContain('í óhag kvenna')
+    // The rejected form must not appear.
+    expect(html).not.toContain('+6,3%')
     expect(html).toContain('21.05.2026')
     expect(html).toContain('<svg')
   })
 
-  it('shows empty notes when there are no subsidiaries or outliers', () => {
+  // An empty lágmarksmengi is a FINDING, not an absence: it means óskýrt is
+  // already under the benchmark. The old copy ("Engin frávik skráð") read as
+  // "nothing was recorded", which is the opposite impression.
+  it('states that no corrections are needed when the lágmarksmengi is empty', () => {
     const html = buildSalaryReportHtml(makeData())
 
     expect(html).toContain('Engin dótturfyrirtæki skráð.')
-    expect(html).toContain('Engin frávik skráð.')
+    expect(html).toContain(
+      'Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.',
+    )
   })
 
-  it('renders outlier rows when present', () => {
+  it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {
     const outliers = [
       {
         employeeOrdinal: 3,
         roleTitle: 'Sérfræðingur',
-        gender: GenderEnum.MALE,
-        differencePercent: 19.7,
+        gender: GenderEnum.FEMALE,
+        regularHourlyWage: 4750,
+        expectedHourlyWage: 5000,
+        deviationPercent: -5,
+        payStatus: 'UNDERPAID',
+        contributionShare: 42.5,
       },
     ] as unknown as ReportEmployeeOutlierDto[]
 
@@ -115,7 +143,13 @@ describe('buildSalaryReportHtml', () => {
 
     expect(html).toContain('Starfsmaður 3')
     expect(html).toContain('Sérfræðingur')
-    expect(html).toContain('+19,7%')
-    expect(html).not.toContain('Engin frávik skráð.')
+    // Units on the rates, not bare numbers — 4.750 alone reads as a monthly
+    // salary two orders of magnitude too low.
+    expect(html).toContain('4.750 kr./klst.')
+    expect(html).toContain('5.000 kr./klst.')
+    expect(html).toContain('-5,0%')
+    expect(html).toContain('42,5%')
+    expect(html).toContain('Hlutur af óskýrðu')
+    expect(html).not.toContain('Engar úrbætur nauðsynlegar')
   })
 })

@@ -98,11 +98,56 @@
         "cwd": "apps/directorate-of-equality-api"
       }
     },
+    "refresh-reference-company": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/refresh-reference-company.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "refresh-wage-gap-fixtures": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/refresh-wage-gap-fixtures.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "migrate/generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli migration:generate --name $(whoami)",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "migrate/undo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:migrate:undo",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
     "seed": {
       "executor": "nx:run-commands",
       "options": {
         "command": "../../scripts/varlock-run.sh directorate-of-equality-api sequelize-cli db:seed:all",
         "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "seed/undo": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "sequelize-cli db:seed:undo:all",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
+    "reseed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "yarn nx run directorate-of-equality-api:seed/undo",
+          "yarn nx run directorate-of-equality-api:seed"
+        ],
+        "parallel": false
       }
     },
     "dev-init": {

@@ -3,10 +3,8 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../../core/constants'
-import type {
-  SalaryOutlierAnalysisSnapshot,
-  SalaryResultSnapshot,
-} from '../../report/lib/compensation-aggregates'
+import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
+import { type WageGapDecompositionSnapshot } from '../../report/lib/wage-gap-decomposition'
 import { ReportModel } from '../../report/models/report.model'
 import type { ReportResultDto } from '../dto/report-result.dto'
 
@@ -17,9 +15,8 @@ export type ReportResultAttributes = {
   reportId: string
   salaryDifferenceThresholdPercent: number | null
   calculationVersion: string
-  baseSnapshot: SalaryResultSnapshot
-  fullSnapshot: SalaryResultSnapshot
-  outlierAnalysisSnapshot: SalaryOutlierAnalysisSnapshot
+  salarySnapshot: SalaryResultSnapshot
+  wageGapDecompositionSnapshot: WageGapDecompositionSnapshot
 }
 
 export type ReportResultCreateAttributes = Omit<
@@ -61,26 +58,36 @@ export class ReportResultModel extends MutableModel<
   })
   calculationVersion!: string
 
+  /**
+   * Frozen-at-submit summary of reglulegt tímakaup. One snapshot, not the
+   * former base/full pair: a base-pay-only numerator over an hours denominator
+   * that includes overtime hours is incoherent, so there is nothing for a
+   * second variant to hold.
+   */
   @Column({
     type: DataType.JSONB,
     allowNull: false,
-    field: 'base_snapshot',
+    field: 'salary_snapshot',
   })
-  baseSnapshot!: SalaryResultSnapshot
+  salarySnapshot!: SalaryResultSnapshot
 
+  /**
+   * Frozen Oaxaca-Blinder decomposition. Always present — a company that cannot
+   * be measured (only one gender) still gets a snapshot carrying
+   * `oskyrtAvailable: false`, its blockers and real cohort counts, because
+   * "not computable" is a state of a valid report rather than a missing value.
+   *
+   * `oskyrtPercent` here is the figure the 3,9% benchmark tests — NOT
+   * `salarySnapshot.totals.salaryDifferences.maleFemale`, which is the
+   * unadjusted cohort-mean gap. The two are not interchangeable and land on
+   * opposite sides of the line on real data.
+   */
   @Column({
     type: DataType.JSONB,
     allowNull: false,
-    field: 'full_snapshot',
+    field: 'wage_gap_decomposition_snapshot',
   })
-  fullSnapshot!: SalaryResultSnapshot
-
-  @Column({
-    type: DataType.JSONB,
-    allowNull: false,
-    field: 'outlier_analysis_snapshot',
-  })
-  outlierAnalysisSnapshot!: SalaryOutlierAnalysisSnapshot
+  wageGapDecompositionSnapshot!: WageGapDecompositionSnapshot
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
@@ -91,9 +98,8 @@ export class ReportResultModel extends MutableModel<
       reportId: model.reportId,
       salaryDifferenceThresholdPercent: model.salaryDifferenceThresholdPercent,
       calculationVersion: model.calculationVersion,
-      base: model.baseSnapshot,
-      full: model.fullSnapshot,
-      outlierAnalysis: model.outlierAnalysisSnapshot,
+      salary: model.salarySnapshot,
+      wageGapDecomposition: model.wageGapDecompositionSnapshot,
     }
   }
 

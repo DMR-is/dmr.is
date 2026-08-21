@@ -1,5 +1,13 @@
 'use strict'
 
+const {
+  ASSISTANT_TOTAL_SCORE,
+  MANAGER_TOTAL_SCORE,
+  scenarioEmployees,
+  SPECIALIST_TOTAL_SCORE,
+} = require('../lib/scenario-cohort')
+const wageGapFixtures = require('./data/wage-gap-fixtures.json')
+
 // Existing reviewer (from initial seed)
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
@@ -34,6 +42,10 @@ function companiesSql() {
   return `
 BEGIN;
 
+-- ON CONFLICT: company survives the TRUNCATE report CASCADE in
+-- m-20260820-report-employee-paid-hours, and no seederStorage is configured, so
+-- db:seed:all re-runs this on every dev-init. Without this the second run dies
+-- on a duplicate primary key.
 INSERT INTO company (id, name, national_id, employee_count_category, salary_report_required_override)
 VALUES
   -- Scenario companies
@@ -66,7 +78,8 @@ VALUES
   ('${cid(25)}', 'Auð large fjögur ehf.',              '5001010025', 'LARGE',  FALSE),
   ('${cid(26)}', 'Auð large fimm sf.',                 '5001010026', 'LARGE',  FALSE),
   ('${cid(27)}', 'Auð large sex hf.',                  '5001010027', 'LARGE',  FALSE),
-  ('${cid(28)}', 'Auð large sjö ehf.',                 '5001010028', 'LARGE',  FALSE);
+  ('${cid(28)}', 'Auð large sjö ehf.',                 '5001010028', 'LARGE',  FALSE)
+ON CONFLICT (id) DO NOTHING;
 
 COMMIT;
   `
@@ -464,9 +477,10 @@ function salaryScaffoldSql(
     EDUCATION_STEPS,
     EDUCATION_WEIGHT,
   )
-  const MANAGER_TOTAL_SCORE = MANAGEMENT_HIGH_SCORE + EDUCATION_HIGH_SCORE
-  const SPECIALIST_TOTAL_SCORE = MANAGEMENT_LOW_SCORE + EDUCATION_HIGH_SCORE
-  const ASSISTANT_TOTAL_SCORE = MANAGEMENT_LOW_SCORE + EDUCATION_LOW_SCORE
+  // MANAGER / SPECIALIST / ASSISTANT totals are imported from
+  // `db/lib/scenario-cohort`, which is also what the frozen snapshots are
+  // generated from. The step scores above stay local because they seed the
+  // criteria tree, and `scenario-cohort` asserts the same arithmetic.
 
   const critIds = [uid(base + 10), uid(base + 11)]
   const scrtIds = [uid(base + 20), uid(base + 21)]
@@ -481,7 +495,6 @@ function salaryScaffoldSql(
   ]
   const empIds = Array.from({ length: 6 }, (_, i) => uid(base + 40 + i))
   const resultId = uid(base + 50)
-  const roleResultIds = [uid(base + 51), uid(base + 52), uid(base + 53)]
   // Roles are report-scoped children (see m-20260630 migration), so each
   // report gets its own role rows rather than sharing global ones.
   const roleIds = [uid(base + 76), uid(base + 77), uid(base + 78)]
@@ -505,15 +518,31 @@ function salaryScaffoldSql(
       : ''
 
   const size = companyIdN === 18 ? 'MEDIUM' : 'LARGE'
-  const outlierSnap = hasOutliers
-    ? '{"employees":[{"ordinal":1,"adjustedBaseSalary":850000,"predictedBaseSalary":700000,"direction":"ABOVE","differencePercent":21.43,"scoreBucketRangeFrom":null,"scoreBucketRangeTo":null,"allowedDifferencePercent":3.9}]}'
-    : '{"employees":[]}'
-  const baseSnap = hasOutliers ? '{"genderPayGap":9.1}' : '{"genderPayGap":0.8}'
-  const fullSnap = hasOutliers
+  // The frozen decomposition, computed from THESE SIX EMPLOYEES by the real
+  // engine — see scripts/refresh-wage-gap-fixtures.ts. Both flavours share the
+  // cohort in db/lib/scenario-cohort.js and differ only in ordinal 1's base pay,
+  // so the pair demonstrates both sides of the rule:
+  //   hasOutliers  → óskýrt 6,80% í óhag kvenna, lágmarksmengi of 2
+  //   !hasOutliers → óskýrt 1,88%, under the benchmark, lágmarksmengi empty
+  const wageGapSnap = JSON.stringify(
+    hasOutliers
+      ? wageGapFixtures.scenarioWithOutliers
+      : wageGapFixtures.scenarioWithoutOutliers,
+  )
+  // One snapshot, not base/full — see the paid-hours migration.
+  const salarySnap = hasOutliers
     ? '{"genderPayGap":9.1,"roles":3,"employees":6}'
     : '{"genderPayGap":0.8,"roles":3,"employees":6}'
 
-  const emp1Salary = hasOutliers ? 850000 : 707000
+  // ⚠️ The six employee rows come from `scenarioEmployees`, the SAME definition
+  // `scripts/refresh-wage-gap-fixtures.ts` feeds through the real engine to
+  // produce the `wage_gap_decomposition_snapshot` written below. Before this,
+  // the rows were hardcoded here with one flat `paid_hours` for all six while
+  // the snapshot described contract-varied hours — so a seeded report's frozen
+  // figures did not describe its own employee list, which is precisely the
+  // divergence that shared module exists to prevent.
+  const cohort = scenarioEmployees(hasOutliers)
+  const money = (value) => (value === null ? 'NULL' : `${value}.00`)
 
   let sql = `
 -- Salary report: company ${companyN} ${companyName} status=${status}
@@ -563,25 +592,23 @@ INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, re
   ('${uid(base + 75)}', '${roleIds[2]}',  '${stepIds[3]}');
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
-  start_date, work_ratio, base_salary,
+  start_date, paid_hours, base_salary,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
-  ('${empIds[0]}','${reportId}',1,'Viðskiptafræði','Stjórnun', '2015-01-15',1.0000,${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[1]}','${reportId}',2,'Viðskiptafræði','Stjórnun', '2017-03-01',1.0000,703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[2]}','${reportId}',3,'Tölvunarfræði', 'Þróun',    '2018-06-01',1.0000,602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[3]}','${reportId}',4,'Tölvunarfræði', 'Þróun',    '2019-09-01',1.0000,598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[4]}','${reportId}',5,'Almenn námsbraut','Þjónusta','2020-01-01',1.0000,502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00),
-  ('${empIds[5]}','${reportId}',6,'Almenn námsbraut','Þjónusta','2021-06-01',1.0000,498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00);
+${cohort
+  .map(
+    (e, i) =>
+      `  ('${empIds[i]}','${reportId}',${e.ordinal},'${e.field}','${e.department}','${e.startDate}',` +
+      `${e.paidHours},${money(e.baseSalary)},${money(e.additionalFixedOvertime)},NULL,NULL,NULL,` +
+      `${money(e.bonusPayments)},NULL,'${e.gender}','${roleIds[e.roleIndex]}',${e.score}.00)`,
+  )
+  .join(',\n')};
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
-  calculation_version, base_snapshot, full_snapshot, outlier_analysis_snapshot)
-VALUES ('${resultId}', '${reportId}', 3.90, 'v1', '${baseSnap}', '${fullSnap}', '${outlierSnap}');
+  calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
+VALUES ('${resultId}', '${reportId}', 3.90, 'v2', '${salarySnap}', '${wageGapSnap}');
 
-INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, role_title, base_snapshot, full_snapshot) VALUES
-  ('${roleResultIds[0]}','${resultId}','${roleIds[0]}','Verkefnastjóri','{"genderPayGap":${hasOutliers ? 9.1 : 0.6}}','{"employees":2}'),
-  ('${roleResultIds[1]}','${resultId}','${roleIds[1]}', 'Sérfræðingur', '{"genderPayGap":0.7}',                        '{"employees":2}'),
-  ('${roleResultIds[2]}','${resultId}','${roleIds[2]}', 'Aðstoðarmaður','{"genderPayGap":0.4}',                        '{"employees":2}');
 `
 
   if (hasOutliers) {
@@ -589,12 +616,30 @@ INSERT INTO report_role_result (id, report_result_id, report_employee_role_id, r
     const exp = outliersExplained
       ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
       : `NULL, NULL, NULL, NULL`
+    // ⚠️ Membership is derived from the snapshot's `inMinimumSet`, NOT hardcoded.
+    // It used to insert one row for empIds[0] — ordinal 1, the man paid ABOVE the
+    // line — because the retired ±band flagged whoever deviated most in either
+    // direction. The lágmarksmengi is lift-only, so it is ordinals 2 and 4: the
+    // underpaid women whose raises close the gap. The membership did not just
+    // change size, it changed PEOPLE, and hardcoding it would have put the
+    // wrong employee under an úrbótaáætlun.
+    const minimumSetOrdinals = wageGapFixtures.scenarioWithOutliers.employees
+      .filter((e) => e.inMinimumSet)
+      .map((e) => e.ordinal)
+
+    const outlierRows = minimumSetOrdinals
+      .map(
+        (ordinal, i) =>
+          `  ('${uid(base + 82 + i)}', '${empIds[ordinal - 1]}', '${groupId}')`,
+      )
+      .join(',\n')
+
     sql += `
 INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
 VALUES ('${groupId}', '${reportId}', 'Útlagar', ${exp});
 
-INSERT INTO report_employee_outlier (id, report_employee_id, group_id)
-VALUES ('${uid(base + 80)}', '${empIds[0]}', '${groupId}');
+INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES
+${outlierRows};
 `
   }
 
@@ -894,12 +939,6 @@ DELETE FROM report_employee_role_criterion_step
     WHERE r.company_national_id LIKE '500101%'
   );
 DELETE FROM report_employee     WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
-DELETE FROM report_role_result
-  WHERE report_result_id IN (
-    SELECT rr.id FROM report_result rr
-    JOIN report r ON r.id = rr.report_id
-    WHERE r.company_national_id LIKE '500101%'
-  );
 DELETE FROM report_employee_role
   WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
 DELETE FROM report_result       WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');

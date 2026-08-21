@@ -1,4 +1,4 @@
-import { IsUUID } from 'class-validator'
+import { IsUUID, Max, Min } from 'class-validator'
 
 import {
   ApiEnum,
@@ -10,13 +10,17 @@ import {
   ApiOptionalUUID,
 } from '@dmr.is/decorators'
 
+import {
+  MAX_PAID_HOURS_PER_MONTH,
+  MIN_PAID_HOURS_PER_MONTH,
+} from '../../../../core/constants'
 import { GenderEnum } from '../../../report/models/report.enums'
 import { SyncMethodEnum } from '../sync-method.enum'
 
 /**
  * Editable fields of an employee in a sync batch. All optional (flat command
- * DTO); the CREATE-required fields (role, education, gender, startDate,
- * workRatio, baseSalary) are validated server-side — `field` and `department`
+ * DTO); the CREATE-required fields (role, gender, startDate,
+ * paidHours, baseSalary) are validated server-side — `field` and `department`
  * are optional and may be left unset. `ordinal` and `score` are never
  * client-set — ordinal is server-assigned, score derived at submit.
  *
@@ -40,8 +44,15 @@ export class EmployeeChangeDataDto {
   @ApiOptionalString({ description: 'Employment start date (YYYY-MM-DD).' })
   startDate?: string
 
-  @ApiOptionalNumber()
-  workRatio?: number
+  @ApiOptionalNumber({
+    description:
+      'Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.',
+    minimum: MIN_PAID_HOURS_PER_MONTH,
+    maximum: MAX_PAID_HOURS_PER_MONTH,
+  })
+  @Min(MIN_PAID_HOURS_PER_MONTH)
+  @Max(MAX_PAID_HOURS_PER_MONTH)
+  paidHours?: number
 
   @ApiOptionalNumber()
   baseSalary?: number

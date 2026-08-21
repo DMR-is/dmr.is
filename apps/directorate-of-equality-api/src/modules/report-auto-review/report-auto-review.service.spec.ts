@@ -21,11 +21,46 @@ const mockLogger = {
 const REPORT_ID = 'report-1'
 const PREVIOUS_REPORT_ID = 'report-0'
 
-// Builds a persisted-result row exposing just the male/female base-pay gap the
-// evaluator reads.
-const resultWithGap = (maleFemale: number | null) => ({
-  baseSnapshot: { totals: { salaryDifferences: { maleFemale } } },
-})
+// Builds a persisted-result row exposing just the male/female gap on reglulegt
+// tímakaup that the evaluator reads.
+//
+// ⚠️ The path below must match `readGapPercent` exactly. Every hop there is
+// optional-chained, so a stale path yields `null`, which SKIPS the gap check
+// instead of failing it — see the non-null regression test at the end of this
+// file, which exists to catch precisely that.
+/**
+ * A `report_result` row as the service reads it: the unadjusted cohort-mean gap
+ * off `salarySnapshot`, plus the frozen decomposition.
+ *
+ * `oskyrtAvailable` defaults to `true` because that is the ordinary case; the
+ * fail-closed tests pass `false` explicitly. Note it must be a real boolean and
+ * not left absent — `undefined` reads as `null`, which means "never asked" and
+ * deliberately does NOT trip the gate.
+ */
+const resultRow = (
+  maleFemale: number | null,
+  decomposition: {
+    oskyrtAvailable?: boolean
+    oskyrtPercent?: number | null
+    minimumSetSize?: number
+    minimumSetClosesGap?: boolean
+  } = {},
+) => {
+  const minimumSetSize = decomposition.minimumSetSize ?? 0
+  return {
+    salarySnapshot: { totals: { salaryDifferences: { maleFemale } } },
+    wageGapDecompositionSnapshot: {
+      oskyrtAvailable: decomposition.oskyrtAvailable ?? true,
+      oskyrtPercent: decomposition.oskyrtPercent ?? 2.5,
+      minimumSetSize,
+      // An empty set is the ordinary compliant case, so it defaults to closing
+      // the gap. The exhaustion case — empty set that does NOT close it — is
+      // passed explicitly, because it is the one that used to auto-approve.
+      minimumSetClosesGap:
+        decomposition.minimumSetClosesGap ?? minimumSetSize === 0,
+    },
+  }
+}
 
 describe('ReportAutoReviewService', () => {
   let service: ReportAutoReviewService
@@ -44,7 +79,10 @@ describe('ReportAutoReviewService', () => {
       providers: [
         ReportAutoReviewService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        { provide: getModelToken(ReportModel), useValue: { findOne: reportFindOne } },
+        {
+          provide: getModelToken(ReportModel),
+          useValue: { findOne: reportFindOne },
+        },
         {
           provide: getModelToken(ReportResultModel),
           useValue: { findOne: resultFindOne },
@@ -70,6 +108,15 @@ describe('ReportAutoReviewService', () => {
     outliers: number
     gap: number | null
     previousGap?: number | null
+    /** Fail-closed gate input. Omit for the ordinary computable case. */
+    oskyrtAvailable?: boolean
+    /**
+     * The FROZEN set size, which is what the decision reads. Defaults to
+     * `outliers` so a test saying "N outliers" still means "a set of N"; pass it
+     * explicitly to make the row count and the snapshot disagree on purpose.
+     */
+    minimumSetSize?: number
+    minimumSetClosesGap?: boolean
   }) => {
     reportFindOne.mockResolvedValueOnce({
       id: REPORT_ID,
@@ -79,15 +126,31 @@ describe('ReportAutoReviewService', () => {
     employeeCount.mockResolvedValue(opts.total)
     outlierCount.mockResolvedValue(opts.outliers)
 
-    // First result lookup = current report's gap.
-    resultFindOne.mockResolvedValueOnce(resultWithGap(opts.gap))
+    // ⚠️ Keyed on reportId, NOT on call order. The service reads `report_result`
+    // more than once per decision (the gap, the previous report's gap, the
+    // decomposition), and `mockResolvedValueOnce` chains silently returned
+    // `undefined` for any read added later — which is how the decomposition went
+    // untested when it was first wired in.
+    const current = resultRow(opts.gap, {
+      oskyrtAvailable: opts.oskyrtAvailable,
+      minimumSetSize: opts.minimumSetSize ?? opts.outliers,
+      minimumSetClosesGap: opts.minimumSetClosesGap,
+    })
+    const previous =
+      opts.previousGap === undefined ? null : resultRow(opts.previousGap)
+
+    resultFindOne.mockImplementation(
+      ({ where }: { where: { reportId: string } }) =>
+        Promise.resolve(
+          where.reportId === PREVIOUS_REPORT_ID ? previous : current,
+        ),
+    )
 
     if (opts.previousGap === undefined) {
       // No previous approved report.
       reportFindOne.mockResolvedValueOnce(null)
     } else {
       reportFindOne.mockResolvedValueOnce({ id: PREVIOUS_REPORT_ID })
-      resultFindOne.mockResolvedValueOnce(resultWithGap(opts.previousGap))
     }
   }
 
@@ -122,60 +185,202 @@ describe('ReportAutoReviewService', () => {
     expect(verdict.signals.outlierEmployees).toBe(0)
   })
 
-  it('auto-approves outliers within bounds when there is no prior report', async () => {
+  // ── The rule is now: any outstanding correction needs a human ─────────────
+  //
+  // These replace six tests that exercised `maxOutlierRatio` / `maxGapPercent` /
+  // `gapImproved`. Two of those would still have PASSED against this rule while
+  // asserting the wrong reason — they set `outliers: 1`, which routes to review
+  // regardless of any gap threshold — so they are rewritten rather than deleted.
+
+  it('routes to review whenever the lágmarksmengi is non-empty', async () => {
+    // One correction outstanding is enough: a non-empty set IS "óskýrt exceeds
+    // the benchmark", so an úrbótaáætlun is owed and a human judges it.
     arrangeSalary({ total: 20, outliers: 1, gap: 3 })
 
     const verdict = await service.evaluate(REPORT_ID)
 
-    expect(verdict.decision).toBe(AutoReviewDecisionEnum.AUTO_APPROVE)
-    expect(verdict.signals.outlierRatio).toBeCloseTo(0.05)
-    expect(verdict.signals.gapImproved).toBeNull()
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.reason).toMatch(/Óskýrður launamunur er yfir viðmiði/)
   })
 
-  it('routes to review when the outlier share exceeds the threshold', async () => {
-    arrangeSalary({ total: 10, outliers: 3, gap: 2 })
+  // ⚠️ The regression this rule exists to prevent. Under the retired thresholds
+  // a company far over the benchmark auto-approved whenever the gap was carried
+  // by few enough people — the lágmarksmengi is MINIMAL by construction, so a
+  // small set means a concentrated problem, not a small one. 4 of 200 passed a
+  // 10% ratio test comfortably.
+  it('routes to review even when the flagged share is tiny', async () => {
+    arrangeSalary({ total: 200, outliers: 4, gap: 4.5 })
 
     const verdict = await service.evaluate(REPORT_ID)
 
     expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
-    expect(verdict.reason).toContain('hlutfall frávika')
+    expect(verdict.signals.outlierRatio).toBeCloseTo(0.02)
   })
 
-  it('routes to review when the pay gap exceeds the threshold', async () => {
-    arrangeSalary({ total: 20, outliers: 1, gap: 8 })
+  // ⚠️ The other half: the unadjusted cohort-mean gap has NO compliance role and
+  // moves independently of óskýrt. It must not be able to force review on its
+  // own, nor to excuse it.
+  it('ignores the unadjusted gap entirely', async () => {
+    // A large raw gap with nothing outstanding still auto-approves...
+    arrangeSalary({ total: 20, outliers: 0, gap: 20 })
+    expect((await service.evaluate(REPORT_ID)).decision).toBe(
+      AutoReviewDecisionEnum.AUTO_APPROVE,
+    )
 
-    const verdict = await service.evaluate(REPORT_ID)
-
-    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
-    expect(verdict.reason).toContain('launamunur')
+    // ...and a tiny raw gap with something outstanding still needs review.
+    arrangeSalary({ total: 20, outliers: 1, gap: 0.1 })
+    expect((await service.evaluate(REPORT_ID)).decision).toBe(
+      AutoReviewDecisionEnum.NEEDS_REVIEW,
+    )
   })
 
-  it('uses the absolute gap so a large negative gap still trips the threshold', async () => {
-    arrangeSalary({ total: 20, outliers: 1, gap: -8 })
-
-    const verdict = await service.evaluate(REPORT_ID)
-
-    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
-    expect(verdict.signals.gapPercent).toBe(8)
-  })
-
-  it('routes to review when the gap worsened versus the previous approved report', async () => {
-    arrangeSalary({ total: 20, outliers: 1, gap: 3, previousGap: 2 })
-
-    const verdict = await service.evaluate(REPORT_ID)
-
-    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
-    expect(verdict.signals.gapImproved).toBe(false)
-    expect(verdict.reason).toContain('jókst')
-  })
-
-  it('auto-approves when the gap improved versus the previous approved report', async () => {
+  // `gapImproved` is still recorded for the audit trail, but no longer decides:
+  // last year being worse does not discharge corrections owed now.
+  it('records gapImproved without letting it decide', async () => {
     arrangeSalary({ total: 20, outliers: 1, gap: 3, previousGap: 5 })
 
     const verdict = await service.evaluate(REPORT_ID)
 
-    expect(verdict.decision).toBe(AutoReviewDecisionEnum.AUTO_APPROVE)
     expect(verdict.signals.gapImproved).toBe(true)
     expect(verdict.signals.previousGapPercent).toBe(5)
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+  })
+
+  it('still records the absolute unadjusted gap in the signals', async () => {
+    arrangeSalary({ total: 20, outliers: 1, gap: -8 })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.signals.gapPercent).toBe(8)
+  })
+
+  /**
+   * Guards a failure mode that is invisible by construction.
+   *
+   * `readGapPercent` walks `result.salarySnapshot.totals.salaryDifferences
+   * .maleFemale` with optional chaining at every hop. If that path ever goes
+   * stale — a renamed column, a re-nested snapshot — it returns `null`, and
+   * `decide()` *skips* the gap condition rather than reporting a problem. The
+   * report then auto-approves on a number nobody read.
+   *
+   * Nothing else catches it: the type is `number | null`, `null` is a legitimate
+   * value (an empty cohort has no gap), and every other assertion in this file
+   * would still pass. It is masked in production today only because
+   * `AUTO_REVIEW_ENFORCE` is false — meaning it would first bite on the day
+   * enforcement is switched on, which is exactly when the wage-gap benchmark
+   * lands.
+   *
+   * So: assert the value is actually read, not merely that a decision came back.
+   */
+  // ── Fail-closed gate ──────────────────────────────────────────────────────
+  //
+  // Confirmed with Þórður 2026-08-20: an unmeasurable gap goes to a human.
+
+  /**
+   * The exhaustion case. An empty lágmarksmengi has two completely different
+   * causes — already inside the benchmark, or nobody on the disadvantaged side
+   * is underpaid so there was nothing to lift — and only the first is
+   * compliance. This used to auto-approve the second.
+   */
+  it('routes to review for an empty set that does not close the gap', async () => {
+    arrangeSalary({
+      total: 20,
+      outliers: 0,
+      gap: 2,
+      minimumSetSize: 0,
+      minimumSetClosesGap: false,
+    })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.signals.minimumSetSize).toBe(0)
+    expect(verdict.signals.minimumSetClosesGap).toBe(false)
+  })
+
+  /**
+   * The decision must follow the FROZEN snapshot, not the
+   * `report_employee_outlier` row count. The two are computed from different
+   * inputs — unrounded payload floats on the create path versus DECIMAL-rounded
+   * rows for the snapshot — so they can disagree, and the reviewer's card reads
+   * the snapshot. Keying on the row count let the verdict and the displayed
+   * figure diverge.
+   */
+  it('follows the snapshot, not the outlier row count, when they disagree', async () => {
+    // Row count says clean; the frozen snapshot says three must be accounted for.
+    arrangeSalary({
+      total: 20,
+      outliers: 0,
+      gap: 2,
+      minimumSetSize: 3,
+      minimumSetClosesGap: true,
+    })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.signals.outlierEmployees).toBe(0)
+    expect(verdict.signals.minimumSetSize).toBe(3)
+  })
+
+  it('routes to review when óskýrt could not be computed, even with zero outliers', async () => {
+    // ⚠️ THE ordering test. A single-gender company has an empty lágmarksmengi,
+    // so `outlierEmployees` is 0 — and the zero-outlier branch would
+    // auto-approve it. That would approve a company BECAUSE its gap could not be
+    // measured. The gate must be evaluated first, so this asserts the outcome
+    // that only holds if it is.
+    arrangeSalary({ total: 20, outliers: 0, gap: null, oskyrtAvailable: false })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.reason).toMatch(/Ekki var unnt að reikna óskýrðan launamun/)
+    expect(verdict.signals.outlierEmployees).toBe(0)
+    expect(verdict.signals.oskyrtAvailable).toBe(false)
+  })
+
+  it('does not trip the gate when óskýrt is computable', async () => {
+    arrangeSalary({ total: 20, outliers: 0, gap: 1, oskyrtAvailable: true })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.AUTO_APPROVE)
+    expect(verdict.signals.oskyrtAvailable).toBe(true)
+  })
+
+  // `null` means "never asked" — an EQUALITY report, or no result row yet — and
+  // must NOT read as "we tried and failed". Abstention already routes those to a
+  // human via its own path, with its own reason.
+  it('abstains with a null availability rather than citing the gap gate', async () => {
+    reportFindOne.mockResolvedValueOnce({
+      id: REPORT_ID,
+      type: ReportTypeEnum.EQUALITY,
+    })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.signals.oskyrtAvailable).toBeNull()
+    expect(verdict.reason).not.toMatch(/óskýrðan launamun/)
+  })
+
+  it('records leiðréttur launamunur in the audit signals', async () => {
+    arrangeSalary({ total: 20, outliers: 0, gap: 1 })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    // Recorded but NOT yet a decision input — the thresholds still carry
+    // band-era values. Wiring it is Phase 2.1.
+    expect(verdict.signals.adjustedGapPercent).toBe(2.5)
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.AUTO_APPROVE)
+  })
+
+  it('reads a real gap percent rather than silently skipping the check', async () => {
+    arrangeSalary({ total: 20, outliers: 1, gap: 3 })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.signals.gapPercent).not.toBeNull()
+    expect(verdict.signals.gapPercent).toBe(3)
   })
 })

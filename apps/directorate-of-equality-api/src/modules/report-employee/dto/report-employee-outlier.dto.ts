@@ -17,7 +17,7 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalNumber({
     nullable: true,
     description:
-      "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.outlier_analysis_snapshot.employees`.",
+      "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.wage_gap_decomposition_snapshot.employees`.",
   })
   employeeOrdinal!: number | null
 
@@ -62,41 +62,35 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalNumber({
     nullable: true,
     description:
-      "Employee's full-time-equivalent base salary at submission, projected from the matching `outlier_analysis_snapshot.employees` entry. Null if the snapshot has no matching ordinal.",
+      'Reglulegt tímakaup (kr./klst.) at submission, projected from the matching `wage_gap_decomposition_snapshot.employees` entry. Null if the snapshot has no matching ordinal.',
   })
-  adjustedBaseSalary!: number | null
+  regularHourlyWage!: number | null
 
   @ApiOptionalNumber({
     nullable: true,
     description:
-      'Salary predicted by the regression line at the employee\'s exact score. Null when the regression had no slope (insufficient sample) or no matching snapshot entry exists.',
+      "Væntanlegt tímakaup at this employee's score, from the pooled log fit. Null when no matching snapshot entry exists.",
   })
-  predictedBaseSalary!: number | null
+  expectedHourlyWage!: number | null
 
-  @ApiOptionalNumber({ nullable: true })
-  scoreBucketRangeFrom!: number | null
-
-  @ApiOptionalNumber({ nullable: true })
-  scoreBucketRangeTo!: number | null
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'Signed percent deviation of the actual tímakaup from the expected one.',
+  })
+  deviationPercent!: number | null
 
   @ApiOptionalString({
     nullable: true,
     description:
-      "Sign of the deviation from the predicted salary: 'ABOVE' | 'BELOW' | 'EQUAL'. Null when no prediction was available.",
+      "'UNDERPAID' | 'OVERPAID' | 'ON_LINE' relative to the pooled fit. Members of the lágmarksmengi are always UNDERPAID — the set is lift-only.",
   })
-  direction!: string | null
+  payStatus!: string | null
 
   @ApiOptionalNumber({
     nullable: true,
     description:
-      "Signed percent deviation of the employee's adjusted base salary from the predicted salary.",
+      'Share of the company-wide óskýrt figure this employee carries, in percent. This — not any individual tolerance — is why the row is on the list.',
   })
-  differencePercent!: number | null
-
-  @ApiOptionalNumber({
-    nullable: true,
-    description:
-      'Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time.',
-  })
-  allowedDifferencePercent!: number | null
+  contributionShare!: number | null
 }

@@ -1,10 +1,12 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
+import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   escapeHtml,
   formatDate,
+  formatHourlyRate,
   formatNumber,
   formatPercent,
   genderLabel,
@@ -116,7 +118,23 @@ function subsidiariesSection(report: ReportDetailDto): string {
   )
 }
 
-function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
+/**
+ * Magnitude + explicit direction, never a signed percentage — the same
+ * convention the web uses, so one figure cannot read two ways depending on
+ * where it is shown.
+ */
+function disfavourLabel(
+  direction: WageGapDecompositionDto['rawGapDirection'],
+): string {
+  if (direction === 'FEMALE') return 'í óhag kvenna'
+  if (direction === 'MALE') return 'í óhag karla'
+  return ''
+}
+
+function salaryAnalysisSection(
+  statistics: SalaryByGenderAndScoreDto,
+  decomposition?: WageGapDecompositionDto | null,
+): string {
   const { totals } = statistics
   const chart = buildSalaryChartSvg(
     statistics.dataPoints,
@@ -128,28 +146,42 @@ function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
     `<div class="chart-wrap">${chart}</div>
     <div class="stat-cards">
       <div class="stat-card">
-        <p class="stat-card__label">Meðallaun karla</p>
-        <p class="stat-card__value">${formatNumber(totals.maleAverageSalary)}</p>
+        <p class="stat-card__label">Meðaltímakaup karla</p>
+        <p class="stat-card__value">${formatHourlyRate(totals.maleAverageSalary)}</p>
       </div>
       <div class="stat-card">
-        <p class="stat-card__label">Meðallaun kvenna</p>
-        <p class="stat-card__value">${formatNumber(totals.femaleAverageSalary)}</p>
+        <p class="stat-card__label">Meðaltímakaup kvenna</p>
+        <p class="stat-card__value">${formatHourlyRate(totals.femaleAverageSalary)}</p>
       </div>
       <div class="stat-card stat-card--accent">
-        <p class="stat-card__label">Launamunur</p>
-        <p class="stat-card__value">${formatPercent(totals.wageGapPercent, { signed: true })}</p>
+        <p class="stat-card__label">Óleiðréttur launamunur</p>
+        <p class="stat-card__value">${
+          decomposition?.rawGapPercent == null
+            ? '—'
+            : `${formatPercent(decomposition.rawGapPercent)} ${disfavourLabel(decomposition.rawGapDirection)}`.trim()
+        }</p>
       </div>
     </div>`,
   )
 }
 
-function improvementPlanSection(
-  outliers: ReportEmployeeOutlierDto[],
-): string {
+/**
+ * Úrbótaáætlun — the lágmarksmengi and its explanations.
+ *
+ * The empty state is a **finding, not an absence**: an empty set means óskýrt is
+ * already under the benchmark, so the copy says so rather than implying nothing
+ * was measured.
+ *
+ * Each row carries actual, expected and deviation together. Showing the
+ * deviation alone (as this did) invites reading it as the reason the employee is
+ * listed — but the reason is the company-wide figure; `Hlutur af óskýrðu` is the
+ * column that actually explains the selection.
+ */
+function improvementPlanSection(outliers: ReportEmployeeOutlierDto[]): string {
   if (!outliers || outliers.length === 0) {
     return section(
       'Úrbótaáætlun',
-      `<p class="empty-note">Engin frávik skráð.</p>`,
+      `<p class="empty-note">Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.</p>`,
     )
   }
 
@@ -160,7 +192,10 @@ function improvementPlanSection(
           <td>${o.employeeOrdinal !== null ? `Starfsmaður ${o.employeeOrdinal}` : '—'}</td>
           <td>${orDash(o.roleTitle)}</td>
           <td>${genderLabel(o.gender)}</td>
-          <td>${formatPercent(o.differencePercent, { signed: true })}</td>
+          <td>${formatHourlyRate(o.regularHourlyWage)}</td>
+          <td>${formatHourlyRate(o.expectedHourlyWage)}</td>
+          <td>${formatPercent(o.deviationPercent, { signed: true })}</td>
+          <td>${formatPercent(o.contributionShare)}</td>
         </tr>`,
     )
     .join('')
@@ -168,7 +203,7 @@ function improvementPlanSection(
   return section(
     'Úrbótaáætlun',
     `<table class="data-table">
-      <thead><tr><th>Starfsmaður</th><th>Starf</th><th>Kyn</th><th>Launafrávik</th></tr></thead>
+      <thead><tr><th>Starfsmaður</th><th>Starf</th><th>Kyn</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Hlutur af óskýrðu</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`,
   )
@@ -203,7 +238,7 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     ${contactSection(report)}
     ${averageEmployeesSection(report)}
     ${subsidiariesSection(report)}
-    ${salaryAnalysisSection(statistics)}
+    ${salaryAnalysisSection(statistics, report.result?.wageGapDecomposition)}
     ${improvementPlanSection(outliers)}
     ${deadlineSection(report)}
   </body>

@@ -13,6 +13,14 @@ interface OutlierPlanTableProps {
   groups: ReportOutlierGroupDto[]
   outliersPostponed?: boolean
   outlierDate?: Date
+  /**
+   * Size of the lágmarksmengi — the employees this plan must account for.
+   * Rendered as a subtitle rather than as a StatisticCard beside the gap
+   * figures, because it counts rows in the table below rather than measuring
+   * anything. Undefined for a report with no computed result, which renders no
+   * subtitle rather than a zero.
+   */
+  minimumSetSize?: number
 }
 
 const o = reportText.salaryTab.outlierTable
@@ -22,12 +30,23 @@ export const OutlierPlanTable = ({
   groups,
   outliersPostponed,
   outlierDate,
+  minimumSetSize,
 }: OutlierPlanTableProps) => {
+  const t = reportText.salaryTab
   return (
     <>
-      <Text variant="h4" marginBottom={4}>
+      <Text variant="h4" marginBottom={minimumSetSize == null ? 4 : 1}>
         {o.heading}
       </Text>
+      {minimumSetSize != null && (
+        <Box marginBottom={4}>
+          <Text variant="small" color="dark300">
+            {`${t.minimumSetLabel}: ${
+              minimumSetSize === 0 ? t.minimumSetNone : minimumSetSize
+            }`}
+          </Text>
+        </Box>
+      )}
       {outliersPostponed && (
         <Box marginBottom={2}>
           <Stack space={2}>

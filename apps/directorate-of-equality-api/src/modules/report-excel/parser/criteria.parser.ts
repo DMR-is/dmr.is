@@ -48,10 +48,10 @@ import { ErrorBag } from './errors'
 const SUB_CRITERIA_COLS = {
   parent: 'B',
   title: 'C',
-  description: 'D',
-  weight: 'E',
-  numSteps: 'F',
-  // Cols G/H/I are computed formulas (Tegund, Hámarksstig, Samsumma OK?).
+  description: 'E',
+  weight: 'F',
+  numSteps: 'G',
+  // Cols D/H/I are computed formulas (Tegund, Hámarksstig, Samsumma OK?).
   // Þrep 1 is column J = 1-based index 10; Þrep N is column J+N−1.
   firstStepCol: 10,
 } as const
@@ -75,9 +75,7 @@ type RectangularRange = {
 
 /** `'AB'` → 28. */
 const colToNum = (letters: string): number =>
-  letters
-    .split('')
-    .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
+  letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
 /** 28 → `'AB'`. */
 const numToCol = (n: number): string => {
@@ -173,13 +171,9 @@ const parseCriteriaSheet = (
     if (tegund === CRITERION_TEGUND.PERSONAL && !title) continue
 
     if (!title || !description) {
-      errors.add(
-        SHEETS.CRITERIA,
-        'Röð vantar heiti eða lýsingu',
-        {
-          row: r,
-        },
-      )
+      errors.add(SHEETS.CRITERIA, 'Röð vantar heiti eða lýsingu', {
+        row: r,
+      })
       continue
     }
 
@@ -391,10 +385,7 @@ export const parseCriteriaTree = (
   const viðmiðSheet = workbook.getWorksheet(SHEETS.CRITERIA)
   const undirviðmiðSheet = workbook.getWorksheet(SHEETS.SUB_CRITERIA)
   if (!viðmiðSheet) {
-    errors.add(
-      SHEETS.CRITERIA,
-      `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`,
-    )
+    errors.add(SHEETS.CRITERIA, `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`)
     return []
   }
   if (!undirviðmiðSheet) {

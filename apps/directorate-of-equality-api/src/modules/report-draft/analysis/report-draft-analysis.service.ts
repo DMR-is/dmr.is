@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -11,10 +6,19 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyDto } from '../../company/dto/company.dto'
 import { IConfigService } from '../../config/config.service.interface'
 import {
-  type DetectedOutlier,
-  detectOutliers,
-  resolveAllowedDifferencePercent,
+  CONFIG_KEYS,
+  parseNumericConfig,
+} from '../../config/lib/numeric-config'
+import {
+  getRegularHourlyWage,
+  type RegularHourlyWageInput,
 } from '../../report/lib/compensation-aggregates'
+import {
+  computeWageGapDecomposition,
+  roundWageGapDecompositionSnapshot,
+  type WageGapDecompositionSnapshot,
+  type WageGapEmployeeInput,
+} from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum } from '../../report/models/report.enums'
 import { ReportTypeEnum } from '../../report/models/report.model'
 import { ReportCriterionModel } from '../../report-criterion/models/report-criterion.model'
@@ -23,41 +27,34 @@ import { ReportSubCriterionStepModel } from '../../report-criterion/models/repor
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
-import {
-  SalaryAnalysisOutlierDirectionEnum,
-  SalaryAnalysisOutlierDto,
-  SalaryAnalysisResponseDto,
-} from '../../report-statistics/dto/salary-analysis.response.dto'
+import { SalaryAnalysisResponseDto } from '../../report-statistics/dto/salary-analysis.response.dto'
 import {
   buildChartFromEmployeePoints,
   type EmployeeDataPoint,
 } from '../../report-statistics/lib/build-chart'
+import {
+  selectMinimumSet,
+  toMinimumSetDtos,
+} from '../../report-statistics/lib/minimum-set'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { IReportDraftAnalysisService } from './report-draft-analysis.service.interface'
 
 const LOGGING_CONTEXT = 'ReportDraftAnalysisService'
-const SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY =
-  'salary_difference_threshold_percent'
-
 /** A draft employee with its on-the-fly derived score. */
 export type ScoredEmployee = {
   employeeId: string
   ordinal: number
   score: number
   gender: GenderEnum
-  workRatio: number
-  baseSalary: number
-}
+} & RegularHourlyWageInput
 
 /** The salary fields the scoring needs off each employee row. */
 type ScorableEmployee = {
   id: string
   ordinal: number
   gender: GenderEnum
-  workRatio: number
-  baseSalary: number
   reportEmployeeRoleId: string
-}
+} & RegularHourlyWageInput
 
 /**
  * Pure scoring: each employee's total = sum over the UNION of the steps
@@ -87,8 +84,10 @@ export function deriveEmployeeScores(
       ordinal: employee.ordinal,
       score,
       gender: employee.gender,
-      workRatio: employee.workRatio,
+      paidHours: employee.paidHours,
       baseSalary: employee.baseSalary,
+      additionalSalary: employee.additionalSalary,
+      bonusSalary: employee.bonusSalary,
     }
   })
 }
@@ -134,58 +133,43 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
       reportId: report.id,
     })
 
-    const scored = await this.deriveScoredEmployees(report.id)
-    const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
+    const { scored, decomposition } = await this.decomposeDraft(report.id)
 
-    const detected = detectOutliers({
-      employees: scored.map((e) => ({
-        ordinal: e.ordinal,
-        score: e.score,
-        gender: e.gender,
-        workRatio: e.workRatio,
-        baseSalary: e.baseSalary,
-      })),
-      thresholdPercent,
-    })
-
+    // The chart, from the same rows. Descriptive only — no tolerance band,
+    // because no per-employee band decides anything now.
     const chartPoints: EmployeeDataPoint[] = scored.map((e) => ({
       score: e.score,
-      adjustedSalary: e.baseSalary / e.workRatio,
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
-    const baseSalaryByGenderAndScoreAll = buildChartFromEmployeePoints(
-      chartPoints,
-      resolveAllowedDifferencePercent(thresholdPercent),
-    )
 
     return {
-      outliers: detected.map(toOutlierDto),
-      baseSalaryByGenderAndScoreAll,
+      outliers: toMinimumSetDtos(decomposition),
+      regularHourlyWageByScoreAll: buildChartFromEmployeePoints(chartPoints),
+      wageGapDecomposition: decomposition,
     }
   }
 
-  async getDetectedOutlierEmployeeIds(
-    reportId: string,
-  ): Promise<Set<string>> {
-    const scored = await this.deriveScoredEmployees(reportId)
-    const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
-
-    const detected = detectOutliers({
-      employees: scored.map((e) => ({
-        ordinal: e.ordinal,
-        score: e.score,
-        gender: e.gender,
-        workRatio: e.workRatio,
-        baseSalary: e.baseSalary,
-      })),
-      thresholdPercent,
-    })
-    const detectedOrdinals = new Set(detected.map((d) => d.ordinal))
+  /**
+   * The employees the úrbótaáætlun must account for: the **lágmarksmengi**.
+   *
+   * ⚠️ This used to be the ±1,95% band around a fitted line, evaluated per
+   * employee. It is now membership of the smallest set of corrections that
+   * brings óskýrt under the benchmark — see `selectMinimumSet` for why that is
+   * a property of the set rather than of the person, and why it is lift-only.
+   *
+   * Consequences for the callers (submit and sync), neither of which changes:
+   * an already-compliant company returns an EMPTY set and so needs no
+   * úrbótaáætlun at all, and overpaid employees are never returned.
+   */
+  async getDetectedOutlierEmployeeIds(reportId: string): Promise<Set<string>> {
+    const { scored, decomposition } = await this.decomposeDraft(reportId)
+    const flagged = new Set(
+      selectMinimumSet(decomposition).map((e) => e.ordinal),
+    )
 
     return new Set(
-      scored
-        .filter((e) => detectedOrdinals.has(e.ordinal))
-        .map((e) => e.employeeId),
+      scored.filter((e) => flagged.has(e.ordinal)).map((e) => e.employeeId),
     )
   }
 
@@ -205,6 +189,37 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
       context: LOGGING_CONTEXT,
       reportId,
     })
+  }
+
+  /**
+   * Scores the draft's employees and decomposes the gap over them, in one place
+   * so `analyzeDraft` (what the applicant sees) and
+   * `getDetectedOutlierEmployeeIds` (what submit enforces) can never disagree
+   * about who is in the lágmarksmengi.
+   *
+   * Rounded with the persistence defaults, matching `report-result.service.ts`,
+   * so the previewed figure is the one frozen at submit.
+   */
+  private async decomposeDraft(reportId: string): Promise<{
+    scored: ScoredEmployee[]
+    decomposition: WageGapDecompositionSnapshot
+  }> {
+    const scored = await this.deriveScoredEmployees(reportId)
+    const benchmarkPercent = await this.getSalaryDifferenceThresholdPercent()
+
+    const employees: WageGapEmployeeInput[] = scored.map((e) => ({
+      ordinal: e.ordinal,
+      score: e.score,
+      gender: e.gender,
+      hourlyWage: getRegularHourlyWage(e),
+    }))
+
+    return {
+      scored,
+      decomposition: roundWageGapDecompositionSnapshot(
+        computeWageGapDecomposition({ employees, benchmarkPercent }),
+      ),
+    }
   }
 
   /**
@@ -246,9 +261,7 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
     const stepScoreById = new Map(steps.map((s) => [s.id, s.score]))
 
     // role id → assigned step ids
-    const roleIds = [
-      ...new Set(employees.map((e) => e.reportEmployeeRoleId)),
-    ]
+    const roleIds = [...new Set(employees.map((e) => e.reportEmployeeRoleId))]
     const roleStepRows = roleIds.length
       ? await this.roleStepModel.findAll({
           where: { reportEmployeeRoleId: roleIds },
@@ -281,17 +294,13 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" must be numeric`,
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 }
 
@@ -312,23 +321,4 @@ function groupBy<T, K, V>(
     }
   }
   return map
-}
-
-function toOutlierDto(detected: DetectedOutlier): SalaryAnalysisOutlierDto {
-  // detectOutliers only emits rows where isOutlier=true, guaranteeing a
-  // non-null direction and differencePercent.
-  const { assessment } = detected
-
-  return {
-    employeeOrdinal: detected.ordinal,
-    adjustedBaseSalary: Math.round(detected.adjustedBaseSalary),
-    predictedBaseSalary: Math.round(detected.predictedBaseSalary),
-    scoreBucketRangeFrom: detected.scoreBucketRangeFrom,
-    scoreBucketRangeTo: detected.scoreBucketRangeTo,
-    direction:
-      (assessment.direction as SalaryAnalysisOutlierDirectionEnum | null) ??
-      SalaryAnalysisOutlierDirectionEnum.EQUAL,
-    differencePercent: assessment.differencePercent ?? 0,
-    allowedDifferencePercent: assessment.allowedDifferencePercent,
-  }
 }

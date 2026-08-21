@@ -3,6 +3,7 @@ import {
   RegressionLineDto,
   ScatterDataPointDto,
 } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
+import { niceAxisMax } from '../../report-statistics/lib/axis-scale'
 
 /**
  * Colors mirror the admin `SalaryDistributionChart` (island-ui theme):
@@ -41,15 +42,16 @@ function pointColor(gender: GenderEnum): string {
  * standalone inline `<svg>` string for embedding in the PDF HTML. Pure — takes
  * the already-computed chart payload from `IReportStatisticsService`.
  *
- * Mirrors the axis/scaling logic of the admin Recharts component:
- * y rounded up to the nearest 100k, x to the nearest 250.
+ * Mirrors the axis/scaling logic of the admin Recharts component: y to a
+ * magnitude-derived nice number (see {@link niceAxisMax} — the web component
+ * carries a deliberate copy, change both together), x to the nearest 250.
  */
 export function buildSalaryChartSvg(
   dataPoints: ScatterDataPointDto[],
   regressionLine: RegressionLineDto,
 ): string {
-  const yValues = dataPoints.map((p) => p.adjustedSalary)
-  const yMax = Math.ceil(Math.max(...yValues, 1) / 100_000) * 100_000
+  const yValues = dataPoints.map((p) => p.regularHourlyWage)
+  const yMax = niceAxisMax(Math.max(...yValues, 1))
   const xMax =
     Math.ceil((Math.max(...dataPoints.map((p) => p.score), 1) + 100) / 250) *
     250
@@ -84,18 +86,30 @@ export function buildSalaryChartSvg(
   const circles = dataPoints
     .map(
       (p) =>
-        `<circle cx="${xScale(p.score)}" cy="${yScale(p.adjustedSalary)}" r="4" fill="${pointColor(p.gender)}" fill-opacity="0.8" />`,
+        `<circle cx="${xScale(p.score)}" cy="${yScale(p.regularHourlyWage)}" r="4" fill="${pointColor(p.gender)}" fill-opacity="0.8" />`,
     )
     .join('')
 
   // Regression line, clipped to the plot area.
+  //
+  // ⚠️ Drawn only when the fit exists. `slope`/`intercept` became nullable when
+  // they started being printed as figures: the old code coerced a null fit to 0
+  // and drew a flat line across the chart, which looked like a finding ("pay
+  // does not rise with score at all") rather than like absent data. No line is
+  // the honest rendering. Note `slope === 0` is NOT the same case — that is a
+  // real degenerate fit from identical scores, and it does get drawn.
   const { slope, intercept } = regressionLine
-  const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
-  const x1 = xScale(xStart)
-  const y1 = yScale(slope * xStart + intercept)
-  const x2 = xScale(xMax)
-  const y2 = yScale(slope * xMax + intercept)
-  const regression = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.regression}" stroke-width="2.5" clip-path="url(#plot-clip)" />`
+  const regression =
+    slope === null || intercept === null
+      ? ''
+      : (() => {
+          const xStart = slope !== 0 ? Math.max(0, -intercept / slope) : 0
+          const x1 = xScale(xStart)
+          const y1 = yScale(slope * xStart + intercept)
+          const x2 = xScale(xMax)
+          const y2 = yScale(slope * xMax + intercept)
+          return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${COLORS.regression}" stroke-width="2.5" clip-path="url(#plot-clip)" />`
+        })()
 
   // Legend below the x-axis.
   const legendY = MARGIN.top + PLOT_H + 46
@@ -120,7 +134,7 @@ export function buildSalaryChartSvg(
     <line x1="${MARGIN.left}" y1="${MARGIN.top + PLOT_H}" x2="${MARGIN.left + PLOT_W}" y2="${MARGIN.top + PLOT_H}" stroke="${COLORS.grid}" stroke-width="1" />
     ${xLabels}
     <text x="${MARGIN.left + PLOT_W}" y="${MARGIN.top + PLOT_H + 38}" text-anchor="end" font-size="13" font-weight="bold" fill="${COLORS.text}">stig</text>
-    <text x="${MARGIN.left}" y="${MARGIN.top - 8}" text-anchor="start" font-size="13" font-weight="bold" fill="${COLORS.text}">kr.</text>
+    <text x="${MARGIN.left}" y="${MARGIN.top - 8}" text-anchor="start" font-size="13" font-weight="bold" fill="${COLORS.text}">kr./klst.</text>
     ${regression}
     ${circles}
     ${legend}

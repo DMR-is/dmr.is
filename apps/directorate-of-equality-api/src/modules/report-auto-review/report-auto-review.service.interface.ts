@@ -21,6 +21,35 @@ export type AutoReviewSignals = {
   previousGapPercent: number | null
   /** Whether the gap shrank vs the previous report; null when no prior report. */
   gapImproved: boolean | null
+  /**
+   * Whether the Oaxaca-Blinder unexplained term could be computed at all.
+   *
+   * ⚠️ **This is a fail-closed gate, not an informational flag.** `false` means
+   * a human must look — see `decide()`. It is read from the frozen
+   * decomposition, and `null` only when no result row exists yet.
+   */
+  oskyrtAvailable: boolean | null
+  /**
+   * Size of the frozen lágmarksmengi. Read off the SNAPSHOT, unlike
+   * `outlierEmployees`, which is a row count from the create-path decomposition
+   * and can disagree with it.
+   */
+  minimumSetSize: number | null
+  /**
+   * Whether the frozen set's correction would bring óskýrt within the benchmark.
+   *
+   * ⚠️ Required alongside `minimumSetSize` because an empty set does NOT imply
+   * compliance: when nobody on the disadvantaged side is underpaid, there is
+   * nothing to lift and the walk returns an empty set with `closesGap: false`.
+   */
+  minimumSetClosesGap: boolean | null
+  /**
+   * LEIÐRÉTTUR launamunur — the figure the statutory benchmark tests, as a
+   * magnitude. Recorded for the audit trail; **not yet a decision input**,
+   * because `AUTO_REVIEW_THRESHOLDS` still carries values calibrated against the
+   * retired ±band and the FTE-monthly gap. Wiring it is Phase 2.1.
+   */
+  adjustedGapPercent: number | null
 }
 
 export type AutoReviewVerdict = {

@@ -10,12 +10,27 @@ export function formatCurrency(value: number | null | undefined): string {
     .replaceAll(',', '.')} kr.`
 }
 
+/**
+ * Reglulegt tímakaup, with the unit attached — `5.980 kr./klst.`
+ *
+ * Every pay figure in a salary report is now an hourly rate, and a bare
+ * `4.884` next to a label like "Meðallaun karla" reads as a monthly salary two
+ * orders of magnitude too low. The unit is not decoration: it is the only thing
+ * distinguishing a plausible hourly rate from an implausible monthly one.
+ *
+ * Rounded to whole krónur for display only — the stored figure keeps 2dp.
+ */
+export function formatHourlyRate(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—'
+  return `${new Intl.NumberFormat('is-IS')
+    .format(Math.round(value))
+    .replaceAll(',', '.')} kr./klst.`
+}
+
 /** Plain integer with is-IS grouping (no currency suffix). */
 export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('is-IS')
-    .format(value)
-    .replaceAll(',', '.')
+  return new Intl.NumberFormat('is-IS').format(value).replaceAll(',', '.')
 }
 
 /** Signed percent with one decimal (e.g. +6,3% / -12,0%). */

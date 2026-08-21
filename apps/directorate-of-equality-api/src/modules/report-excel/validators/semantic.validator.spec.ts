@@ -49,7 +49,7 @@ const employee = (
   field: 'x',
   department: 'x',
   startDate: '2024-01-01',
-  workRatio: 1,
+  paidHours: 173.33,
   baseSalary: 1000,
   additionalFixedOvertime: 0,
   additionalFixedCarAllowance: null,
@@ -165,7 +165,9 @@ describe('validateSemantics', () => {
       report.criteria[0].weight = 25 // now sums to 95
       const errors = runValidator(report)
       expect(
-        errors.some((e) => e.message.includes('Vægi viðmiða leggst saman í 95')),
+        errors.some((e) =>
+          e.message.includes('Vægi viðmiða leggst saman í 95'),
+        ),
       ).toBe(true)
     })
 
@@ -240,9 +242,7 @@ describe('validateSemantics', () => {
       report.employees[0].roleTitle = 'Ghost'
       const errors = runValidator(report)
       expect(
-        errors.some((e) =>
-          e.message.includes('vísar í óþekkt starf „Ghost“'),
-        ),
+        errors.some((e) => e.message.includes('vísar í óþekkt starf „Ghost“')),
       ).toBe(true)
     })
   })
@@ -279,8 +279,7 @@ describe('validateSemantics', () => {
       expect(
         errors.some(
           (e) =>
-            e.message.includes('vantar úthlutun') &&
-            e.message.includes('#1'),
+            e.message.includes('vantar úthlutun') && e.message.includes('#1'),
         ),
       ).toBe(true)
     })

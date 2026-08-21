@@ -42,7 +42,7 @@ describe('AdminReportService.analyzeSalary', () => {
   })
 
   it('reads the threshold config and delegates to the shared analyzer', async () => {
-    const analysis = { outliers: [], baseSalaryByGenderAndScoreAll: {} }
+    const analysis = { outliers: [], regularHourlyWageByScoreAll: {} }
     analyzeSalaryPayloadMock.mockReturnValue(analysis)
 
     const result = await service.analyzeSalary('company-id', request)

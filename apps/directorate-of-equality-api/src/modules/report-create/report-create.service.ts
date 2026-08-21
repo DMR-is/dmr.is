@@ -5,7 +5,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -14,13 +13,14 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
-import { detectOutliers } from '../report/lib/compensation-aggregates'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
+import { computeWageGapDecomposition } from '../report/lib/wage-gap-decomposition'
 import {
   ReportModel,
   ReportProviderEnum,
@@ -28,11 +28,13 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import { IReportContentService } from '../report-content/report-content.service.interface'
+import { parsedRegularHourlyWage } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
 import { IReportIdentifierService } from '../report-identifier/report-identifier.service.interface'
 import { IReportResultService } from '../report-result/report-result.service.interface'
+import { minimumSetOrdinals } from '../report-statistics/lib/minimum-set'
 import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
 import { CreateReportDto } from './dto/create-report.dto'
 import { CreateReportResponseDto } from './dto/create-report-response.dto'
@@ -423,30 +425,37 @@ export class ReportCreateService implements IReportCreateService {
   }
 
   /**
-   * Recompute the canonical detected outlier set with `detectOutliers` (the
-   * same helper the application-side preview uses) and return the detected
-   * ordinals. Threshold is re-read from `config` here, so a tiny drift between
-   * preview and submit is possible — a downstream rejection in that case just
-   * means "re-run preview".
+   * Recompute the lágmarksmengi — the employees the úrbótaáætlun must account
+   * for — and return their ordinals. Same decomposition the application-side
+   * preview runs, so the two agree.
+   *
+   * Benchmark is re-read from `config` here, so a tiny drift between preview and
+   * submit is possible — a downstream rejection in that case just means "re-run
+   * preview".
+   *
+   * ⚠️ Was the ±1,95% band around a fitted line. See `selectMinimumSet`: the set
+   * is lift-only, and an already-compliant company yields an EMPTY set, which
+   * makes `assertOutlierGroupsMatchDetected` below require no groups at all.
    */
   private async computeDetectedOutlierOrdinals(
     input: CreateReportDto,
     employeeScores: number[],
   ): Promise<number[]> {
-    const thresholdPercent = await this.getSalaryDifferenceThresholdPercent()
+    const benchmarkPercent = await this.getSalaryDifferenceThresholdPercent()
 
-    const detected = detectOutliers({
+    const decomposition = computeWageGapDecomposition({
       employees: input.parsed.employees.map((employee, index) => ({
         ordinal: employee.ordinal,
         score: employeeScores[index],
         gender: employee.gender,
-        workRatio: employee.workRatio,
-        baseSalary: employee.baseSalary,
+        // Storage precision, so this agrees with the frozen snapshot the
+        // reviewer sees — see `parsedRegularHourlyWage`.
+        hourlyWage: parsedRegularHourlyWage(employee),
       })),
-      thresholdPercent,
+      benchmarkPercent,
     })
 
-    return detected.map((d) => d.ordinal)
+    return minimumSetOrdinals(decomposition)
   }
 
   /**
@@ -515,16 +524,12 @@ export class ReportCreateService implements IReportCreateService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      'salary_difference_threshold_percent',
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        'Config entry "salary_difference_threshold_percent" must be numeric',
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 }

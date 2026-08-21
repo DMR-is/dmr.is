@@ -258,9 +258,9 @@
     },
     {
       "type": "PERSONAL",
-      "title": "Sérhæfing",
-      "description": "Sérstök sérhæfing sem starfsmaður býr yfir.",
-      "weight": 5,
+      "title": "Einstaklingsbundnir þættir",
+      "description": "Einstaklingsbundnir þættir: sérhæfing, verkefnastjórnun og frumkvæði. Sameinuð úr þremur viðmiðum svo skjalið standist hámarksfjölda viðmiða.",
+      "weight": 15,
       "subCriteria": [
         {
           "title": "Tungumálakunnátta",
@@ -325,15 +325,7 @@
               "score": 20
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "PERSONAL",
-      "title": "Meiri sérhæfing",
-      "description": "Viðbótarsérhæfing umfram grunnkröfur starfsins.",
-      "weight": 5,
-      "subCriteria": [
+        },
         {
           "title": "Verkefnastjórnun",
           "description": "Metur sérhæfða verkefnastjórnunarreynslu.",
@@ -397,15 +389,7 @@
               "score": 20
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "PERSONAL",
-      "title": "Frumkvæði og nýsköpun",
-      "description": "Metur sjálfstætt frumkvæði, nýsköpunarhugsun og þróunarframlag starfsmanns umfram grunnkröfur starfs.",
-      "weight": 5,
-      "subCriteria": [
+        },
         {
           "title": "Frumkvæði í verkefnum",
           "description": "Metur hversu mikið frumkvæði starfsmaður sýnir við lausn verkefna og úrlausn vandamála.",
@@ -800,12 +784,11 @@
       "ordinal": 1,
       "identifier": "MWH-001",
       "roleTitle": "Framkvæmdastjóri",
-      "education": "DOCTORATE",
       "gender": "FEMALE",
       "field": "Framkvæmdastjórn",
       "department": "Framkvæmdastjórn",
       "startDate": "2021-04-27",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 2258000,
       "additionalFixedOvertime": 222000,
       "additionalFixedCarAllowance": null,
@@ -815,32 +798,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -850,14 +833,13 @@
       "ordinal": 2,
       "identifier": "MWH-002",
       "roleTitle": "Forstöðumaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2022-08-24",
-      "workRatio": 1,
-      "baseSalary": 1279000,
-      "additionalFixedOvertime": 207000,
+      "paidHours": 180,
+      "baseSalary": 1328218,
+      "additionalFixedOvertime": 214966,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -865,32 +847,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -900,12 +882,11 @@
       "ordinal": 3,
       "identifier": "MWH-003",
       "roleTitle": "Verkefnastjóri",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Sala og markaðsmál",
       "department": "Sala",
       "startDate": "2015-12-03",
-      "workRatio": 0.7,
+      "paidHours": 173.33,
       "baseSalary": 873000,
       "additionalFixedOvertime": 98000,
       "additionalFixedCarAllowance": null,
@@ -915,32 +896,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -950,14 +931,13 @@
       "ordinal": 4,
       "identifier": "MWH-004",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "NEUTRAL",
       "field": "Tæknisvið",
       "department": "Kerfisstjórn",
       "startDate": "2019-09-26",
-      "workRatio": 1,
-      "baseSalary": 858000,
-      "additionalFixedOvertime": 86000,
+      "paidHours": 208,
+      "baseSalary": 1029620,
+      "additionalFixedOvertime": 103202,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -965,32 +945,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -1000,12 +980,11 @@
       "ordinal": 5,
       "identifier": "MWH-005",
       "roleTitle": "Verkstjóri",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2011-09-10",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 743000,
       "additionalFixedOvertime": 40000,
       "additionalFixedCarAllowance": null,
@@ -1015,32 +994,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -1050,14 +1029,13 @@
       "ordinal": 6,
       "identifier": "MWH-006",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Vöruþróun",
       "startDate": "2024-12-20",
-      "workRatio": 0.8,
-      "baseSalary": 647000,
-      "additionalFixedOvertime": 17000,
+      "paidHours": 104,
+      "baseSalary": 388207,
+      "additionalFixedOvertime": 10200,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1065,32 +1043,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1100,14 +1078,13 @@
       "ordinal": 7,
       "identifier": "MWH-007",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Stuðningur",
       "startDate": "2011-07-11",
-      "workRatio": 1,
-      "baseSalary": 534000,
-      "additionalFixedOvertime": 18000,
+      "paidHours": 190,
+      "baseSalary": 585357,
+      "additionalFixedOvertime": 19731,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1115,32 +1092,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1150,12 +1127,11 @@
       "ordinal": 8,
       "identifier": "MWH-008",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2017-04-08",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 663000,
       "additionalFixedOvertime": 17000,
       "additionalFixedCarAllowance": null,
@@ -1165,32 +1141,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -1200,12 +1176,11 @@
       "ordinal": 9,
       "identifier": "MWH-009",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Kerfisstjórn",
       "startDate": "2024-09-17",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 701000,
       "additionalFixedOvertime": 49000,
       "additionalFixedCarAllowance": null,
@@ -1215,32 +1190,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1250,14 +1225,13 @@
       "ordinal": 10,
       "identifier": "MWH-010",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2020-10-10",
-      "workRatio": 1,
-      "baseSalary": 754000,
-      "additionalFixedOvertime": 109000,
+      "paidHours": 160,
+      "baseSalary": 696013,
+      "additionalFixedOvertime": 100617,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1265,32 +1239,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1300,14 +1274,13 @@
       "ordinal": 11,
       "identifier": "MWH-011",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2017-03-12",
-      "workRatio": 1,
-      "baseSalary": 808000,
-      "additionalFixedOvertime": 92000,
+      "paidHours": 216,
+      "baseSalary": 1006912,
+      "additionalFixedOvertime": 114648,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1315,32 +1288,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1350,12 +1323,11 @@
       "ordinal": 12,
       "identifier": "MWH-012",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla A",
       "startDate": "2016-04-14",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 515000,
       "additionalFixedOvertime": 13000,
       "additionalFixedCarAllowance": null,
@@ -1365,32 +1337,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -1400,14 +1372,13 @@
       "ordinal": 13,
       "identifier": "MWH-013",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Fjárhagsdeild",
       "startDate": "2017-02-09",
-      "workRatio": 1,
-      "baseSalary": 703000,
-      "additionalFixedOvertime": 51000,
+      "paidHours": 130,
+      "baseSalary": 527260,
+      "additionalFixedOvertime": 38251,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1415,32 +1386,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1450,12 +1421,11 @@
       "ordinal": 14,
       "identifier": "MWH-014",
       "roleTitle": "Verkstjóri",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2019-10-30",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 747000,
       "additionalFixedOvertime": 30000,
       "additionalFixedCarAllowance": null,
@@ -1465,32 +1435,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1500,14 +1470,13 @@
       "ordinal": 15,
       "identifier": "MWH-015",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2024-12-10",
-      "workRatio": 0.8,
-      "baseSalary": 555000,
-      "additionalFixedOvertime": 6000,
+      "paidHours": 195,
+      "baseSalary": 624387,
+      "additionalFixedOvertime": 6750,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1515,32 +1484,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1550,12 +1519,11 @@
       "ordinal": 16,
       "identifier": "MWH-016",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2020-12-13",
-      "workRatio": 0.6,
+      "paidHours": 173.33,
       "baseSalary": 564000,
       "additionalFixedOvertime": 32000,
       "additionalFixedCarAllowance": null,
@@ -1565,32 +1533,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1600,14 +1568,13 @@
       "ordinal": 17,
       "identifier": "MWH-017",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2021-08-23",
-      "workRatio": 1,
-      "baseSalary": 570000,
-      "additionalFixedOvertime": 26000,
+      "paidHours": 87,
+      "baseSalary": 286102,
+      "additionalFixedOvertime": 13050,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1615,32 +1582,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1650,12 +1617,11 @@
       "ordinal": 18,
       "identifier": "MWH-018",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2015-12-12",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 817000,
       "additionalFixedOvertime": 80000,
       "additionalFixedCarAllowance": null,
@@ -1665,32 +1631,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1700,14 +1666,13 @@
       "ordinal": 19,
       "identifier": "MWH-019",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Kerfisstjórn",
       "startDate": "2017-12-08",
-      "workRatio": 1,
-      "baseSalary": 617000,
-      "additionalFixedOvertime": 8000,
+      "paidHours": 202,
+      "baseSalary": 719056,
+      "additionalFixedOvertime": 9323,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1715,32 +1680,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -1750,12 +1715,11 @@
       "ordinal": 20,
       "identifier": "MWH-020",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2023-11-26",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 615000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": null,
@@ -1765,32 +1729,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -1800,12 +1764,11 @@
       "ordinal": 21,
       "identifier": "MWH-021",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2012-01-01",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 619000,
       "additionalFixedOvertime": 18000,
       "additionalFixedCarAllowance": null,
@@ -1815,32 +1778,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -1850,14 +1813,13 @@
       "ordinal": 22,
       "identifier": "MWH-022",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2018-09-29",
-      "workRatio": 0.6,
-      "baseSalary": 712000,
-      "additionalFixedOvertime": 27000,
+      "paidHours": 180,
+      "baseSalary": 739399,
+      "additionalFixedOvertime": 28039,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1865,32 +1827,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -1900,12 +1862,11 @@
       "ordinal": 23,
       "identifier": "MWH-023",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Innkaup",
       "startDate": "2025-06-01",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 629000,
       "additionalFixedOvertime": 17000,
       "additionalFixedCarAllowance": null,
@@ -1915,32 +1876,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -1950,14 +1911,13 @@
       "ordinal": 24,
       "identifier": "MWH-024",
       "roleTitle": "Verkefnastjóri",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Vöruþróun",
       "startDate": "2013-09-01",
-      "workRatio": 1,
-      "baseSalary": 860000,
-      "additionalFixedOvertime": 95000,
+      "paidHours": 208,
+      "baseSalary": 1032020,
+      "additionalFixedOvertime": 114002,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -1965,32 +1925,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -2000,12 +1960,11 @@
       "ordinal": 25,
       "identifier": "MWH-025",
       "roleTitle": "Almennur starfsmaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2018-10-10",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 521000,
       "additionalFixedOvertime": 5000,
       "additionalFixedCarAllowance": null,
@@ -2015,32 +1974,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -2050,14 +2009,13 @@
       "ordinal": 26,
       "identifier": "MWH-026",
       "roleTitle": "Forstöðumaður",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Fjárhagsdeild",
       "startDate": "2015-11-26",
-      "workRatio": 1,
-      "baseSalary": 1195000,
-      "additionalFixedOvertime": 109000,
+      "paidHours": 104,
+      "baseSalary": 717014,
+      "additionalFixedOvertime": 65401,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2065,32 +2023,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2100,14 +2058,13 @@
       "ordinal": 27,
       "identifier": "MWH-027",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Markaðsmál",
       "startDate": "2011-11-02",
-      "workRatio": 1,
-      "baseSalary": 784000,
-      "additionalFixedOvertime": 75000,
+      "paidHours": 190,
+      "baseSalary": 859401,
+      "additionalFixedOvertime": 82213,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2115,32 +2072,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -2150,12 +2107,11 @@
       "ordinal": 28,
       "identifier": "MWH-028",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2012-11-04",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 948000,
       "additionalFixedOvertime": 73000,
       "additionalFixedCarAllowance": null,
@@ -2165,32 +2121,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -2200,12 +2156,11 @@
       "ordinal": 29,
       "identifier": "MWH-029",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Mannauðssvið",
       "department": "Ráðning og þjálfun",
       "startDate": "2014-07-25",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 798000,
       "additionalFixedOvertime": 113000,
       "additionalFixedCarAllowance": null,
@@ -2215,32 +2170,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2250,14 +2205,13 @@
       "ordinal": 30,
       "identifier": "MWH-030",
       "roleTitle": "Forstöðumaður",
-      "education": "PROFESSIONAL",
       "gender": "FEMALE",
       "field": "Framkvæmdastjórn",
       "department": "Skjalasvið",
       "startDate": "2014-11-07",
-      "workRatio": 1,
-      "baseSalary": 1169000,
-      "additionalFixedOvertime": 180000,
+      "paidHours": 160,
+      "baseSalary": 1079098,
+      "additionalFixedOvertime": 166157,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2265,32 +2219,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2300,14 +2254,13 @@
       "ordinal": 31,
       "identifier": "MWH-031",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Innkaup",
       "startDate": "2013-06-17",
-      "workRatio": 1,
-      "baseSalary": 627000,
-      "additionalFixedOvertime": 21000,
+      "paidHours": 216,
+      "baseSalary": 781353,
+      "additionalFixedOvertime": 26170,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2315,32 +2268,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -2350,12 +2303,11 @@
       "ordinal": 32,
       "identifier": "MWH-032",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Markaðsmál",
       "startDate": "2016-04-25",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 810000,
       "additionalFixedOvertime": 114000,
       "additionalFixedCarAllowance": null,
@@ -2365,32 +2317,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2400,14 +2352,13 @@
       "ordinal": 33,
       "identifier": "MWH-033",
       "roleTitle": "Tæknimaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2024-02-17",
-      "workRatio": 1,
-      "baseSalary": 738000,
-      "additionalFixedOvertime": 10000,
+      "paidHours": 130,
+      "baseSalary": 553511,
+      "additionalFixedOvertime": 7500,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2415,32 +2366,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -2450,12 +2401,11 @@
       "ordinal": 34,
       "identifier": "MWH-034",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Stuðningur",
       "startDate": "2016-01-05",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 711000,
       "additionalFixedOvertime": 71000,
       "additionalFixedCarAllowance": null,
@@ -2465,32 +2415,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2500,14 +2450,13 @@
       "ordinal": 35,
       "identifier": "MWH-035",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Gæðaeftirlit",
       "startDate": "2021-04-26",
-      "workRatio": 1,
-      "baseSalary": 802000,
-      "additionalFixedOvertime": 71000,
+      "paidHours": 195,
+      "baseSalary": 902267,
+      "additionalFixedOvertime": 79877,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2515,32 +2464,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2550,12 +2499,11 @@
       "ordinal": 36,
       "identifier": "MWH-036",
       "roleTitle": "Forstöðumaður",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Mannauðssvið",
       "department": "Starfsmannaþjónusta",
       "startDate": "2013-09-09",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 1062000,
       "additionalFixedOvertime": 216000,
       "additionalFixedCarAllowance": null,
@@ -2565,32 +2513,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2600,14 +2548,13 @@
       "ordinal": 37,
       "identifier": "MWH-037",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Mannauðssvið",
       "department": "Launadeild",
       "startDate": "2020-05-30",
-      "workRatio": 0.8,
-      "baseSalary": 809000,
-      "additionalFixedOvertime": 110000,
+      "paidHours": 87,
+      "baseSalary": 406064,
+      "additionalFixedOvertime": 55213,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2615,32 +2562,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2650,12 +2597,11 @@
       "ordinal": 38,
       "identifier": "MWH-038",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Launadeild",
       "startDate": "2018-09-10",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 581000,
       "additionalFixedOvertime": 8000,
       "additionalFixedCarAllowance": null,
@@ -2665,32 +2611,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -2700,14 +2646,13 @@
       "ordinal": 39,
       "identifier": "MWH-039",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Gæðaeftirlit",
       "startDate": "2017-01-30",
-      "workRatio": 1,
-      "baseSalary": 877000,
-      "additionalFixedOvertime": 59000,
+      "paidHours": 202,
+      "baseSalary": 1022062,
+      "additionalFixedOvertime": 68759,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2715,32 +2660,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -2750,12 +2695,11 @@
       "ordinal": 40,
       "identifier": "MWH-040",
       "roleTitle": "Forstöðumaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Framkvæmdastjórn",
       "department": "Skjalasvið",
       "startDate": "2015-07-12",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 1199000,
       "additionalFixedOvertime": 249000,
       "additionalFixedCarAllowance": null,
@@ -2765,32 +2709,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2800,12 +2744,11 @@
       "ordinal": 41,
       "identifier": "MWH-041",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Stuðningur",
       "startDate": "2015-04-11",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 944000,
       "additionalFixedOvertime": 93000,
       "additionalFixedCarAllowance": null,
@@ -2815,32 +2758,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2850,14 +2793,13 @@
       "ordinal": 42,
       "identifier": "MWH-042",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2012-04-08",
-      "workRatio": 1,
-      "baseSalary": 723000,
-      "additionalFixedOvertime": 25000,
+      "paidHours": 180,
+      "baseSalary": 750822,
+      "additionalFixedOvertime": 25962,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2865,32 +2807,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2900,12 +2842,11 @@
       "ordinal": 43,
       "identifier": "MWH-043",
       "roleTitle": "Verkstjóri",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla A",
       "startDate": "2020-05-22",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 814000,
       "additionalFixedOvertime": 57000,
       "additionalFixedCarAllowance": null,
@@ -2915,32 +2856,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -2950,14 +2891,13 @@
       "ordinal": 44,
       "identifier": "MWH-044",
       "roleTitle": "Verkefnastjóri",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2024-05-22",
-      "workRatio": 1,
-      "baseSalary": 947000,
-      "additionalFixedOvertime": 85000,
+      "paidHours": 208,
+      "baseSalary": 1136422,
+      "additionalFixedOvertime": 102002,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -2965,32 +2905,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -3000,12 +2940,11 @@
       "ordinal": 45,
       "identifier": "MWH-045",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2025-10-08",
-      "workRatio": 0.5,
+      "paidHours": 173.33,
       "baseSalary": 497000,
       "additionalFixedOvertime": 20000,
       "additionalFixedCarAllowance": null,
@@ -3015,32 +2954,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -3050,14 +2989,13 @@
       "ordinal": 46,
       "identifier": "MWH-046",
       "roleTitle": "Sérfræðingur",
-      "education": "PROFESSIONAL",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Innkaup",
       "startDate": "2012-08-09",
-      "workRatio": 1,
-      "baseSalary": 819000,
-      "additionalFixedOvertime": 72000,
+      "paidHours": 104,
+      "baseSalary": 491409,
+      "additionalFixedOvertime": 43201,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3065,32 +3003,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -3100,14 +3038,13 @@
       "ordinal": 47,
       "identifier": "MWH-047",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2021-10-11",
-      "workRatio": 1,
-      "baseSalary": 599000,
-      "additionalFixedOvertime": 18000,
+      "paidHours": 190,
+      "baseSalary": 656609,
+      "additionalFixedOvertime": 19731,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3115,32 +3052,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -3150,12 +3087,11 @@
       "ordinal": 48,
       "identifier": "MWH-048",
       "roleTitle": "Verkstjóri",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2014-04-11",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 803000,
       "additionalFixedOvertime": 37000,
       "additionalFixedCarAllowance": null,
@@ -3165,32 +3101,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3200,12 +3136,11 @@
       "ordinal": 49,
       "identifier": "MWH-049",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2016-06-16",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 657000,
       "additionalFixedOvertime": 31000,
       "additionalFixedCarAllowance": null,
@@ -3215,32 +3150,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3250,14 +3185,13 @@
       "ordinal": 50,
       "identifier": "MWH-050",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Markaðsmál",
       "startDate": "2020-09-19",
-      "workRatio": 1,
-      "baseSalary": 837000,
-      "additionalFixedOvertime": 101000,
+      "paidHours": 160,
+      "baseSalary": 772630,
+      "additionalFixedOvertime": 93233,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3265,32 +3199,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3300,14 +3234,13 @@
       "ordinal": 51,
       "identifier": "MWH-051",
       "roleTitle": "Almennur starfsmaður",
-      "education": "COMPULSORY",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2021-06-20",
-      "workRatio": 0.8,
-      "baseSalary": 577000,
-      "additionalFixedOvertime": 10000,
+      "paidHours": 216,
+      "baseSalary": 719045,
+      "additionalFixedOvertime": 12462,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3315,32 +3248,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -3350,12 +3283,11 @@
       "ordinal": 52,
       "identifier": "MWH-052",
       "roleTitle": "Verkefnastjóri",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Kerfisstjórn",
       "startDate": "2017-02-09",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 920000,
       "additionalFixedOvertime": 121000,
       "additionalFixedCarAllowance": null,
@@ -3365,32 +3297,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -3400,14 +3332,13 @@
       "ordinal": 53,
       "identifier": "MWH-053",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Launadeild",
       "startDate": "2011-05-02",
-      "workRatio": 1,
-      "baseSalary": 704000,
-      "additionalFixedOvertime": 51000,
+      "paidHours": 130,
+      "baseSalary": 528010,
+      "additionalFixedOvertime": 38251,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3415,32 +3346,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3450,12 +3381,11 @@
       "ordinal": 54,
       "identifier": "MWH-054",
       "roleTitle": "Verkefnastjóri",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Sala og markaðsmál",
       "department": "Markaðsmál",
       "startDate": "2020-08-02",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 934000,
       "additionalFixedOvertime": 95000,
       "additionalFixedCarAllowance": null,
@@ -3465,32 +3395,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3500,14 +3430,13 @@
       "ordinal": 55,
       "identifier": "MWH-055",
       "roleTitle": "Verkefnastjóri",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2013-01-01",
-      "workRatio": 1,
-      "baseSalary": 1045000,
-      "additionalFixedOvertime": 138000,
+      "paidHours": 195,
+      "baseSalary": 1175648,
+      "additionalFixedOvertime": 155253,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3515,32 +3444,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3550,12 +3479,11 @@
       "ordinal": 56,
       "identifier": "MWH-056",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Fjármál",
       "department": "Launadeild",
       "startDate": "2025-03-16",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 792000,
       "additionalFixedOvertime": 62000,
       "additionalFixedCarAllowance": null,
@@ -3565,32 +3493,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -3600,14 +3528,13 @@
       "ordinal": 57,
       "identifier": "MWH-057",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2022-02-02",
-      "workRatio": 0.6,
-      "baseSalary": 553000,
-      "additionalFixedOvertime": 36000,
+      "paidHours": 87,
+      "baseSalary": 277569,
+      "additionalFixedOvertime": 18070,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3615,32 +3542,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -3650,12 +3577,11 @@
       "ordinal": 58,
       "identifier": "MWH-058",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Kerfisstjórn",
       "startDate": "2022-11-17",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 568000,
       "additionalFixedOvertime": 36000,
       "additionalFixedCarAllowance": null,
@@ -3665,32 +3591,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3700,14 +3626,13 @@
       "ordinal": 59,
       "identifier": "MWH-059",
       "roleTitle": "Almennur starfsmaður",
-      "education": "COMPULSORY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2016-08-10",
-      "workRatio": 1,
-      "baseSalary": 537000,
-      "additionalFixedOvertime": 16000,
+      "paidHours": 202,
+      "baseSalary": 625824,
+      "additionalFixedOvertime": 18647,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3715,32 +3640,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -3750,12 +3675,11 @@
       "ordinal": 60,
       "identifier": "MWH-060",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Þjónustuver",
       "startDate": "2024-05-27",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 942000,
       "additionalFixedOvertime": 66000,
       "additionalFixedCarAllowance": null,
@@ -3765,32 +3689,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -3800,12 +3724,11 @@
       "ordinal": 61,
       "identifier": "MWH-061",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framkvæmdastjórn",
       "department": "Framkvæmdastjórn",
       "startDate": "2019-10-06",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 635000,
       "additionalFixedOvertime": 22000,
       "additionalFixedCarAllowance": null,
@@ -3815,32 +3738,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -3850,14 +3773,13 @@
       "ordinal": 62,
       "identifier": "MWH-062",
       "roleTitle": "Almennur starfsmaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2023-01-13",
-      "workRatio": 0.8,
-      "baseSalary": 530000,
-      "additionalFixedOvertime": 13000,
+      "paidHours": 180,
+      "baseSalary": 550395,
+      "additionalFixedOvertime": 13500,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3865,32 +3787,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -3900,12 +3822,11 @@
       "ordinal": 63,
       "identifier": "MWH-063",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2019-05-28",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 665000,
       "additionalFixedOvertime": 29000,
       "additionalFixedCarAllowance": null,
@@ -3915,32 +3836,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -3950,14 +3871,13 @@
       "ordinal": 64,
       "identifier": "MWH-064",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Stuðningur",
       "startDate": "2024-03-05",
-      "workRatio": 1,
-      "baseSalary": 490000,
-      "additionalFixedOvertime": 13000,
+      "paidHours": 208,
+      "baseSalary": 588011,
+      "additionalFixedOvertime": 15600,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -3965,32 +3885,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4000,12 +3920,11 @@
       "ordinal": 65,
       "identifier": "MWH-065",
       "roleTitle": "Almennur starfsmaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2011-08-12",
-      "workRatio": 0.5,
+      "paidHours": 173.33,
       "baseSalary": 548000,
       "additionalFixedOvertime": 18000,
       "additionalFixedCarAllowance": null,
@@ -4015,32 +3934,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4050,14 +3969,13 @@
       "ordinal": 66,
       "identifier": "MWH-066",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Mannauðssvið",
       "department": "Launadeild",
       "startDate": "2017-01-24",
-      "workRatio": 0.7,
-      "baseSalary": 908000,
-      "additionalFixedOvertime": 102000,
+      "paidHours": 104,
+      "baseSalary": 544810,
+      "additionalFixedOvertime": 61201,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4065,32 +3983,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4100,14 +4018,13 @@
       "ordinal": 67,
       "identifier": "MWH-067",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla A",
       "startDate": "2016-01-10",
-      "workRatio": 1,
-      "baseSalary": 676000,
-      "additionalFixedOvertime": 18000,
+      "paidHours": 190,
+      "baseSalary": 741014,
+      "additionalFixedOvertime": 19731,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4115,32 +4032,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4150,12 +4067,11 @@
       "ordinal": 68,
       "identifier": "MWH-068",
       "roleTitle": "Tæknimaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2025-01-03",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 681000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": null,
@@ -4165,32 +4081,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -4200,12 +4116,11 @@
       "ordinal": 69,
       "identifier": "MWH-069",
       "roleTitle": "Skrifstofustarfsmaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Mannauðssvið",
       "department": "Launadeild",
       "startDate": "2015-05-10",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 533000,
       "additionalFixedOvertime": 6000,
       "additionalFixedCarAllowance": null,
@@ -4215,32 +4130,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4250,14 +4165,13 @@
       "ordinal": 70,
       "identifier": "MWH-070",
       "roleTitle": "Framkvæmdastjóri",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Framkvæmdastjórn",
       "department": "Framkvæmdastjórn",
       "startDate": "2015-11-16",
-      "workRatio": 1,
-      "baseSalary": 2264000,
-      "additionalFixedOvertime": 203000,
+      "paidHours": 160,
+      "baseSalary": 2089886,
+      "additionalFixedOvertime": 187388,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4265,32 +4179,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -4300,14 +4214,13 @@
       "ordinal": 71,
       "identifier": "MWH-071",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Mannauðssvið",
       "department": "Ráðning og þjálfun",
       "startDate": "2015-12-25",
-      "workRatio": 0.8,
-      "baseSalary": 880000,
-      "additionalFixedOvertime": 74000,
+      "paidHours": 216,
+      "baseSalary": 1096636,
+      "additionalFixedOvertime": 92217,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4315,32 +4228,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4350,12 +4263,11 @@
       "ordinal": 72,
       "identifier": "MWH-072",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2014-11-02",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 497000,
       "additionalFixedOvertime": 8000,
       "additionalFixedCarAllowance": null,
@@ -4365,32 +4277,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4400,14 +4312,13 @@
       "ordinal": 73,
       "identifier": "MWH-073",
       "roleTitle": "Tæknimaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2018-06-26",
-      "workRatio": 0.8,
-      "baseSalary": 698000,
-      "additionalFixedOvertime": 31000,
+      "paidHours": 130,
+      "baseSalary": 523510,
+      "additionalFixedOvertime": 23250,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4415,32 +4326,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -4450,12 +4361,11 @@
       "ordinal": 74,
       "identifier": "MWH-074",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Mannauðssvið",
       "department": "Ráðning og þjálfun",
       "startDate": "2019-02-02",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 748000,
       "additionalFixedOvertime": 70000,
       "additionalFixedCarAllowance": null,
@@ -4465,32 +4375,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -4500,14 +4410,13 @@
       "ordinal": 75,
       "identifier": "MWH-075",
       "roleTitle": "Almennur starfsmaður",
-      "education": "COMPULSORY",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2023-12-22",
-      "workRatio": 0.5,
-      "baseSalary": 518000,
-      "additionalFixedOvertime": 15000,
+      "paidHours": 195,
+      "baseSalary": 582761,
+      "additionalFixedOvertime": 16875,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4515,32 +4424,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4550,12 +4459,11 @@
       "ordinal": 76,
       "identifier": "MWH-076",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Sala og markaðsmál",
       "department": "Þjónustuver",
       "startDate": "2017-04-23",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 922000,
       "additionalFixedOvertime": 59000,
       "additionalFixedCarAllowance": null,
@@ -4565,32 +4473,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4600,14 +4508,13 @@
       "ordinal": 77,
       "identifier": "MWH-077",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2020-12-16",
-      "workRatio": 0.7,
-      "baseSalary": 927000,
-      "additionalFixedOvertime": 102000,
+      "paidHours": 87,
+      "baseSalary": 465292,
+      "additionalFixedOvertime": 51197,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4615,32 +4522,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -4650,12 +4557,11 @@
       "ordinal": 78,
       "identifier": "MWH-078",
       "roleTitle": "Almennur starfsmaður",
-      "education": "VOCATIONAL",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla A",
       "startDate": "2018-12-13",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 505000,
       "additionalFixedOvertime": 14000,
       "additionalFixedCarAllowance": null,
@@ -4665,32 +4571,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4700,14 +4606,13 @@
       "ordinal": 79,
       "identifier": "MWH-079",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Rekstur",
       "department": "Eignaumsjón",
       "startDate": "2020-10-28",
-      "workRatio": 1,
-      "baseSalary": 526000,
-      "additionalFixedOvertime": 5000,
+      "paidHours": 202,
+      "baseSalary": 613004,
+      "additionalFixedOvertime": 5827,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4715,32 +4620,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4750,12 +4655,11 @@
       "ordinal": 80,
       "identifier": "MWH-080",
       "roleTitle": "Forstöðumaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2013-12-19",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 1235000,
       "additionalFixedOvertime": 165000,
       "additionalFixedCarAllowance": null,
@@ -4765,32 +4669,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -4800,12 +4704,11 @@
       "ordinal": 81,
       "identifier": "MWH-081",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2015-05-22",
-      "workRatio": 0.5,
+      "paidHours": 173.33,
       "baseSalary": 588000,
       "additionalFixedOvertime": 8000,
       "additionalFixedCarAllowance": null,
@@ -4815,32 +4718,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -4850,14 +4753,13 @@
       "ordinal": 82,
       "identifier": "MWH-082",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Sala",
       "startDate": "2013-07-13",
-      "workRatio": 1,
-      "baseSalary": 879000,
-      "additionalFixedOvertime": 77000,
+      "paidHours": 180,
+      "baseSalary": 912825,
+      "additionalFixedOvertime": 79963,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4865,32 +4767,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -4900,12 +4802,11 @@
       "ordinal": 83,
       "identifier": "MWH-083",
       "roleTitle": "Tæknimaður",
-      "education": "UPPER_SECONDARY",
       "gender": "FEMALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2011-12-12",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 623000,
       "additionalFixedOvertime": 14000,
       "additionalFixedCarAllowance": null,
@@ -4915,32 +4816,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -4950,14 +4851,13 @@
       "ordinal": 84,
       "identifier": "MWH-084",
       "roleTitle": "Tæknimaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Vöruþróun",
       "startDate": "2016-05-03",
-      "workRatio": 0.8,
-      "baseSalary": 724000,
-      "additionalFixedOvertime": 8000,
+      "paidHours": 208,
+      "baseSalary": 868817,
+      "additionalFixedOvertime": 9600,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -4965,32 +4865,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5000,12 +4900,11 @@
       "ordinal": 85,
       "identifier": "MWH-085",
       "roleTitle": "Verkstjóri",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2014-04-27",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 733000,
       "additionalFixedOvertime": 77000,
       "additionalFixedCarAllowance": null,
@@ -5015,32 +4914,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -5050,14 +4949,13 @@
       "ordinal": 86,
       "identifier": "MWH-086",
       "roleTitle": "Tæknimaður",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla A",
       "startDate": "2015-09-21",
-      "workRatio": 1,
-      "baseSalary": 673000,
-      "additionalFixedOvertime": 18000,
+      "paidHours": 104,
+      "baseSalary": 403808,
+      "additionalFixedOvertime": 10800,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5065,32 +4963,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5100,14 +4998,13 @@
       "ordinal": 87,
       "identifier": "MWH-087",
       "roleTitle": "Verkefnastjóri",
-      "education": "BACHELOR",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Vöruþróun",
       "startDate": "2014-03-11",
-      "workRatio": 1,
-      "baseSalary": 951000,
-      "additionalFixedOvertime": 121000,
+      "paidHours": 190,
+      "baseSalary": 1042462,
+      "additionalFixedOvertime": 132637,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5115,32 +5012,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -5150,12 +5047,11 @@
       "ordinal": 88,
       "identifier": "MWH-088",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla B",
       "startDate": "2015-08-26",
-      "workRatio": 0.8,
+      "paidHours": 173.33,
       "baseSalary": 577000,
       "additionalFixedOvertime": 20000,
       "additionalFixedCarAllowance": null,
@@ -5165,32 +5061,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -5200,12 +5096,11 @@
       "ordinal": 89,
       "identifier": "MWH-089",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2023-08-11",
-      "workRatio": 0.6,
+      "paidHours": 173.33,
       "baseSalary": 566000,
       "additionalFixedOvertime": 40000,
       "additionalFixedCarAllowance": null,
@@ -5215,32 +5110,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5250,14 +5145,13 @@
       "ordinal": 90,
       "identifier": "MWH-090",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Þjónustuver",
       "startDate": "2014-02-09",
-      "workRatio": 0.7,
-      "baseSalary": 760000,
-      "additionalFixedOvertime": 108000,
+      "paidHours": 160,
+      "baseSalary": 701552,
+      "additionalFixedOvertime": 99694,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5265,32 +5159,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5300,14 +5194,13 @@
       "ordinal": 91,
       "identifier": "MWH-091",
       "roleTitle": "Almennur starfsmaður",
-      "education": "UPPER_SECONDARY",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2021-05-09",
-      "workRatio": 1,
-      "baseSalary": 605000,
-      "additionalFixedOvertime": 19000,
+      "paidHours": 216,
+      "baseSalary": 753938,
+      "additionalFixedOvertime": 23677,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5315,32 +5208,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 1
         }
@@ -5350,12 +5243,11 @@
       "ordinal": 92,
       "identifier": "MWH-092",
       "roleTitle": "Sérfræðingur",
-      "education": "PROFESSIONAL",
       "gender": "MALE",
       "field": "Sala og markaðsmál",
       "department": "Sala",
       "startDate": "2017-04-18",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 794000,
       "additionalFixedOvertime": 109000,
       "additionalFixedCarAllowance": null,
@@ -5365,32 +5257,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5400,14 +5292,13 @@
       "ordinal": 93,
       "identifier": "MWH-093",
       "roleTitle": "Verkefnastjóri",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2018-09-29",
-      "workRatio": 0.8,
-      "baseSalary": 904000,
-      "additionalFixedOvertime": 132000,
+      "paidHours": 130,
+      "baseSalary": 678013,
+      "additionalFixedOvertime": 99002,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5415,32 +5306,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }
@@ -5450,12 +5341,11 @@
       "ordinal": 94,
       "identifier": "MWH-094",
       "roleTitle": "Verkefnastjóri",
-      "education": "MASTER",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Framleiðsla C",
       "startDate": "2022-12-01",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 1045000,
       "additionalFixedOvertime": 120000,
       "additionalFixedCarAllowance": null,
@@ -5465,32 +5355,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -5500,14 +5390,13 @@
       "ordinal": 95,
       "identifier": "MWH-095",
       "roleTitle": "Verkefnastjóri",
-      "education": "PROFESSIONAL",
       "gender": "FEMALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2023-04-09",
-      "workRatio": 0.7,
-      "baseSalary": 988000,
-      "additionalFixedOvertime": 82000,
+      "paidHours": 195,
+      "baseSalary": 1111521,
+      "additionalFixedOvertime": 92252,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5515,32 +5404,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 5
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -5550,12 +5439,11 @@
       "ordinal": 96,
       "identifier": "MWH-096",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Tæknisvið",
       "department": "Hugbúnaðarþróun",
       "startDate": "2015-07-18",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 563000,
       "additionalFixedOvertime": 8000,
       "additionalFixedCarAllowance": null,
@@ -5565,32 +5453,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 4
         }
@@ -5600,14 +5488,13 @@
       "ordinal": 97,
       "identifier": "MWH-097",
       "roleTitle": "Tæknimaður",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2011-10-18",
-      "workRatio": 1,
-      "baseSalary": 606000,
-      "additionalFixedOvertime": 39000,
+      "paidHours": 87,
+      "baseSalary": 304171,
+      "additionalFixedOvertime": 19575,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5615,32 +5502,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5650,12 +5537,11 @@
       "ordinal": 98,
       "identifier": "MWH-098",
       "roleTitle": "Sérfræðingur",
-      "education": "MASTER",
       "gender": "FEMALE",
       "field": "Sala og markaðsmál",
       "department": "Þjónustuver",
       "startDate": "2022-11-24",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 825000,
       "additionalFixedOvertime": 96000,
       "additionalFixedCarAllowance": null,
@@ -5665,32 +5551,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 4
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5700,14 +5586,13 @@
       "ordinal": 99,
       "identifier": "MWH-099",
       "roleTitle": "Sérfræðingur",
-      "education": "BACHELOR",
       "gender": "MALE",
       "field": "Rekstur",
       "department": "Innkaup",
       "startDate": "2016-01-19",
-      "workRatio": 1,
-      "baseSalary": 783000,
-      "additionalFixedOvertime": 88000,
+      "paidHours": 202,
+      "baseSalary": 912514,
+      "additionalFixedOvertime": 102556,
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
@@ -5715,32 +5600,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 3
         }
@@ -5750,12 +5635,11 @@
       "ordinal": 100,
       "identifier": "MWH-100",
       "roleTitle": "Verkstjóri",
-      "education": "VOCATIONAL",
       "gender": "MALE",
       "field": "Framleiðsla",
       "department": "Gæðaeftirlit",
       "startDate": "2016-02-05",
-      "workRatio": 1,
+      "paidHours": 173.33,
       "baseSalary": 817000,
       "additionalFixedOvertime": 71000,
       "additionalFixedCarAllowance": null,
@@ -5765,32 +5649,32 @@
       "bonusOther": null,
       "personalStepAssignments": [
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tungumálakunnátta",
           "stepOrder": 1
         },
         {
-          "criterionTitle": "Sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Tækniþekking",
           "stepOrder": 2
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Verkefnastjórnun",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Meiri sérhæfing",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Þvervirk samvinna",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Frumkvæði í verkefnum",
           "stepOrder": 3
         },
         {
-          "criterionTitle": "Frumkvæði og nýsköpun",
+          "criterionTitle": "Einstaklingsbundnir þættir",
           "subTitle": "Nýsköpun og þróun",
           "stepOrder": 2
         }

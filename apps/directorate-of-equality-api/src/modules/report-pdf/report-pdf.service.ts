@@ -56,7 +56,7 @@ export class ReportPdfService implements IReportPdfService {
 
   private async buildSalaryReportPdf(report: ReportDetailDto): Promise<Buffer> {
     const [statistics, outliers] = await Promise.all([
-      this.reportStatisticsService.getBaseSalaryByGenderAndScoreAll(report.id),
+      this.reportStatisticsService.getRegularHourlyWageByScoreAll(report.id),
       this.fetchAllOutliers(report.id),
     ])
 

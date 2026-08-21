@@ -1,22 +1,15 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { IConfigService } from '../config/config.service.interface'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { IReportService } from '../report/report.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import {
-  analyzeSalaryPayload,
-  SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
-} from '../report-statistics/lib/salary-analysis'
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
 import { IAdminReportService } from './admin-report.service.interface'
@@ -51,17 +44,13 @@ export class AdminReportService implements IAdminReportService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" must be numeric`,
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 
   async submitEquality(

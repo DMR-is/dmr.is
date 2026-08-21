@@ -22,6 +22,7 @@ import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
   CommunicationStatusEnum,
@@ -58,10 +59,7 @@ import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import {
-  analyzeSalaryPayload,
-  SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
-} from '../report-statistics/lib/salary-analysis'
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
@@ -538,8 +536,8 @@ export class ApplicationService implements IApplicationService {
    *
    * The union of every group's `employeeOrdinals` must match the canonical
    * detected outliers on the report (read from
-   * `report_result.outlierAnalysisSnapshot.employees` filtered to
-   * `isOutlier = true`) — every detected ordinal covered exactly once, no
+   * `report_result.wageGapDecompositionSnapshot.employees` filtered to
+   * `inMinimumSet = true`) — every detected ordinal covered exactly once, no
    * extras, no missing, no ordinal in two groups. The report's existing groups
    * are replaced wholesale: the outlier rows are re-pointed at freshly created
    * groups and the old groups are deleted.
@@ -594,8 +592,8 @@ export class ApplicationService implements IApplicationService {
     // 2. Canonical detected set, frozen at submit time on the report_result.
     const reportResult = await this.reportResultService.getByReportId(report.id)
     const detectedOrdinals = new Set(
-      reportResult.outlierAnalysis.employees
-        .filter((employee) => employee.isOutlier)
+      reportResult.wageGapDecomposition.employees
+        .filter((employee) => employee.inMinimumSet)
         .map((employee) => employee.ordinal),
     )
 
@@ -855,17 +853,13 @@ export class ApplicationService implements IApplicationService {
 
   private async getSalaryDifferenceThresholdPercent(): Promise<number> {
     const config = await this.configService.getByKey(
-      SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
     )
-    const parsed = parseFloat(config.value)
 
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        `Config entry "${SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY}" must be numeric`,
-      )
-    }
-
-    return parsed
+    return parseNumericConfig(
+      config.value,
+      CONFIG_KEYS.SALARY_DIFFERENCE_THRESHOLD_PERCENT,
+    )
   }
 
   private createCompanyReportContext(
@@ -974,7 +968,7 @@ export class ApplicationService implements IApplicationService {
     ])
 
     const analysisByOrdinal = new Map(
-      result?.outlierAnalysis.employees.map((employee) => [
+      result?.wageGapDecomposition.employees.map((employee) => [
         employee.ordinal,
         employee,
       ]) ?? [],

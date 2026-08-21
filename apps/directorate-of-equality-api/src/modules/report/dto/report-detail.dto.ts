@@ -7,7 +7,6 @@ import {
 
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
 import { ReportResultDto } from '../../report-result/dto/report-result.dto'
-import { ReportRoleResultDto } from '../../report-result/dto/report-role-result.dto'
 import { EqualityReportDto } from './equality-report.dto'
 import { ReportDto } from './report.dto'
 import { ReportTimelineItemDto } from './report-timeline-item.dto'
@@ -63,9 +62,6 @@ export class ReportDetailDto extends ReportDto {
 
   @ApiOptionalDto(ReportResultDto, { nullable: true })
   result!: ReportResultDto | null
-
-  @ApiDtoArray(ReportRoleResultDto)
-  roleResults!: ReportRoleResultDto[]
 
   @ApiBoolean({
     description:

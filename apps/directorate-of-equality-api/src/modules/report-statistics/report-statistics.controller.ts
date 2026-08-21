@@ -23,85 +23,51 @@ export class ReportStatisticsController {
     private readonly reportStatisticsService: IReportStatisticsService,
   ) {}
 
-  @Get('base-salary-by-gender-and-score-all')
+  @Get('regular-hourly-wage-by-score-all')
   @DoeResponse({
-    operationId: 'getBaseSalaryByGenderAndScoreAll',
+    operationId: 'getRegularHourlyWageByScoreAll',
     include404: true,
     description:
-      'Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). ' +
-      'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
+      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
     type: SalaryByGenderAndScoreDto,
   })
-  async getBaseSalaryByGenderAndScoreAll(
+  async getRegularHourlyWageByScoreAll(
     @Param('reportId') reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
-    return this.reportStatisticsService.getBaseSalaryByGenderAndScoreAll(
+    return this.reportStatisticsService.getRegularHourlyWageByScoreAll(reportId)
+  }
+
+  @Get('regular-hourly-wage-by-score-work')
+  @DoeResponse({
+    operationId: 'getRegularHourlyWageByScoreWork',
+    include404: true,
+    description:
+      'Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
+    type: SalaryByGenderAndScoreDto,
+  })
+  async getRegularHourlyWageByScoreWork(
+    @Param('reportId') reportId: string,
+  ): Promise<SalaryByGenderAndScoreDto> {
+    return this.reportStatisticsService.getRegularHourlyWageByScoreWork(
       reportId,
     )
   }
 
-  @Get('base-salary-by-gender-and-score-work')
+  @Get('regular-hourly-wage-gender-wage-gap')
   @DoeResponse({
-    operationId: 'getBaseSalaryByGenderAndScoreWork',
+    operationId: 'getRegularHourlyWageGenderWageGap',
     include404: true,
     description:
-      'Adjusted base salary (baseSalary / workRatio) by gender and work score (mandatory criteria only, excludes PERSONAL). ' +
-      'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
-    type: SalaryByGenderAndScoreDto,
-  })
-  async getBaseSalaryByGenderAndScoreWork(
-    @Param('reportId') reportId: string,
-  ): Promise<SalaryByGenderAndScoreDto> {
-    return this.reportStatisticsService.getBaseSalaryByGenderAndScoreWork(
-      reportId,
-    )
-  }
-
-  @Get('full-salary-by-gender-and-score-all')
-  @DoeResponse({
-    operationId: 'getFullSalaryByGenderAndScoreAll',
-    include404: true,
-    description:
-      'Adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio) by gender and total score (all criteria). ' +
-      'Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.',
-    type: SalaryByGenderAndScoreDto,
-  })
-  async getFullSalaryByGenderAndScoreAll(
-    @Param('reportId') reportId: string,
-  ): Promise<SalaryByGenderAndScoreDto> {
-    return this.reportStatisticsService.getFullSalaryByGenderAndScoreAll(
-      reportId,
-    )
-  }
-
-  @Get('base-salary-gender-wage-gap')
-  @DoeResponse({
-    operationId: 'getBaseSalaryGenderWageGap',
-    include404: true,
-    description:
-      'Gender wage gap for adjusted base salary (baseSalary / workRatio). ' +
-      'Returns average and median salaries per gender with both average-based and median-based wage gap percentages.',
+      'Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir). ' +
+      'Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.',
     type: GenderWageGapDto,
   })
-  async getBaseSalaryGenderWageGap(
+  async getRegularHourlyWageGenderWageGap(
     @Param('reportId') reportId: string,
   ): Promise<GenderWageGapDto> {
-    return this.reportStatisticsService.getBaseSalaryGenderWageGap(reportId)
-  }
-
-  @Get('full-salary-gender-wage-gap')
-  @DoeResponse({
-    operationId: 'getFullSalaryGenderWageGap',
-    include404: true,
-    description:
-      'Gender wage gap for adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio). ' +
-      'Returns average and median salaries per gender with both average-based and median-based wage gap percentages.',
-    type: GenderWageGapDto,
-  })
-  async getFullSalaryGenderWageGap(
-    @Param('reportId') reportId: string,
-  ): Promise<GenderWageGapDto> {
-    return this.reportStatisticsService.getFullSalaryGenderWageGap(reportId)
+    return this.reportStatisticsService.getRegularHourlyWageGenderWageGap(
+      reportId,
+    )
   }
 
   @Get('benefits-breakdown')
@@ -110,7 +76,7 @@ export class ReportStatisticsController {
     include404: true,
     description:
       'Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. ' +
-      'Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.',
+      'Raw monthly component sums, NOT converted to an hourly rate — they do not sit on the same scale as the reglulegt tímakaup figures. Returns per-gender breakdown with wage gap for each component and total.',
     type: BenefitsBreakdownDto,
   })
   async getBenefitsBreakdown(

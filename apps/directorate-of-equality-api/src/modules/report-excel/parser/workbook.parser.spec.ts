@@ -92,7 +92,7 @@ const writeEmployeeRow = (
     name: string
     role: string
     gender: string
-    workRatio: number
+    paidHours: number
     baseSalary: number
     additionalFixedOvertime: number | null
     additionalFixedCarAllowance: number | null
@@ -111,7 +111,7 @@ const writeEmployeeRow = (
   s.getCell(`B${r}`).value = values.name
   s.getCell(`C${r}`).value = values.role
   s.getCell(`D${r}`).value = values.gender
-  s.getCell(`E${r}`).value = values.workRatio
+  s.getCell(`E${r}`).value = values.paidHours
   s.getCell(`F${r}`).value = values.field
   s.getCell(`G${r}`).value = values.department
   s.getCell(`H${r}`).value = values.startDate
@@ -126,8 +126,10 @@ const writeEmployeeRow = (
 
 // Step-order inputs sit on every SECOND column (score column interleaved after
 // each): role rows start at row 11 and job-sub columns start at G (col 7);
-// employee rows start at row 7 and personal-sub columns start at D (col 4).
-// Written by numeric coordinate so helpers follow the named-range geometry.
+// employee rows start at row 11 and personal-sub columns start at F (col 6).
+// Written by numeric coordinate so helpers follow the named-range geometry
+// (`ROLE_STEP_INPUTS` = Starfsmat!G11:GX110, `EMP_STEP_INPUTS` =
+// Einstaklingsmat!F11:BC510).
 const fillRoleClassification = (
   wb: ExcelJS.Workbook,
   rolesInOrder: number[][],
@@ -147,7 +149,7 @@ const fillEmployeeClassification = (
   const sheet = wb.getWorksheet('Einstaklingsmat')!
   empsInOrder.forEach((empSteps, empIdx) => {
     empSteps.forEach((stepOrder, subIdx) => {
-      sheet.getCell(7 + empIdx, 4 + 2 * subIdx).value = stepOrder
+      sheet.getCell(11 + empIdx, 6 + 2 * subIdx).value = stepOrder
     })
   })
 }
@@ -188,9 +190,11 @@ const addSubCriterion = (
   const s = wb.getWorksheet('Undirviðmið')!
   s.getCell(`B${undirviðmiðRow}`).value = parentTitle
   s.getCell(`C${undirviðmiðRow}`).value = subTitle
-  s.getCell(`D${undirviðmiðRow}`).value = `${subTitle} description`
-  s.getCell(`E${undirviðmiðRow}`).value = weightPct
-  s.getCell(`F${undirviðmiðRow}`).value = stepDescriptions.length
+  // D is the computed `Tegund (sjálfvirkt)` column — deliberately not written.
+  // E/F/G are Skilgreining / Vægi (%) / Fjöldi þrepa.
+  s.getCell(`E${undirviðmiðRow}`).value = `${subTitle} description`
+  s.getCell(`F${undirviðmiðRow}`).value = weightPct
+  s.getCell(`G${undirviðmiðRow}`).value = stepDescriptions.length
   // Step descriptions live in columns J…Q (Þrep 1…8). Col index 10 = J.
   stepDescriptions.forEach((desc, i) => {
     s.getCell(undirviðmiðRow, 10 + i).value = desc
@@ -248,7 +252,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 1',
     role: 'Forstöðumaður',
     gender: 'Kona',
-    workRatio: 1,
+    paidHours: 173.33,
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
@@ -264,7 +268,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 2',
     role: 'Sérfræðingur',
     gender: 'Karl',
-    workRatio: 1,
+    paidHours: 173.33,
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
@@ -280,7 +284,7 @@ const buildValidFilled = async (): Promise<Buffer> => {
     name: 'Nafn 3',
     role: 'Verkstjóri',
     gender: 'Kona',
-    workRatio: 0.8,
+    paidHours: 173.33,
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
@@ -372,14 +376,14 @@ describe('parseWorkbook', () => {
       expect(role?.stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
 
-    it('parses employees with Icelandic → enum translation + workRatio preserved as 0…1', () => {
+    it('parses employees with Icelandic → enum translation + paidHours preserved as 0…1', () => {
       const emp = report.employees.find((e) => e.ordinal === 3)
       expect(emp).toEqual(
         expect.objectContaining({
           ordinal: 3,
           roleTitle: 'Verkstjóri',
           gender: GenderEnum.FEMALE,
-          workRatio: 0.8,
+          paidHours: 173.33,
           baseSalary: 600000,
           startDate: '2022-03-15',
         }),
@@ -416,7 +420,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -431,11 +435,11 @@ describe('parseWorkbook', () => {
       fillCriteriaAndSubCriteria(wb)
 
       const s = wb.getWorksheet('Undirviðmið')!
-      s.getCell('D6').value = {
+      s.getCell('E6').value = {
         formula: 'CATALOG_DESC()',
         result: 'Cached description',
       } as ExcelJS.CellValue
-      s.getCell('F6').value = {
+      s.getCell('G6').value = {
         formula: 'CATALOG_STEPS()',
         result: 2,
       } as ExcelJS.CellValue
@@ -470,7 +474,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -516,7 +520,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -532,7 +536,7 @@ describe('parseWorkbook', () => {
         name: 'B',
         role: 'R',
         gender: 'Karl',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -570,7 +574,7 @@ describe('parseWorkbook', () => {
         name: 'A',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -609,7 +613,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Other',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -633,13 +637,123 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects out-of-range workRatio', async () => {
+    /**
+     * The layout gate. Column letters are hard-coded in every table parser, so
+     * an older template silently feeds each one the wrong field — and the
+     * resulting per-row errors blame the submitter's data. This asserts the
+     * upload is rejected once, on the header, naming the stale sheet.
+     */
+    describe('workbook layout', () => {
+      it('accepts the shipped template', async () => {
+        // The positive case matters as much as the negative one: an assertion
+        // that is too strict would reject every real upload.
+        const wb = await loadTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours: 173.33,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        await expect(parseWorkbook(await serialize(wb))).resolves.toBeDefined()
+      })
+
+      it.each([
+        ['Launagögn', 'E', 'Starfshlutfall (0-1)'],
+        ['Undirviðmið', 'G', 'Hámarksstig'],
+      ])(
+        'rejects a stale %s layout at %s and says so once',
+        async (sheetName, column, staleHeader) => {
+          const wb = await loadTemplate()
+          const sheet = wb.getWorksheet(sheetName)
+          if (!sheet) throw new Error(`no ${sheetName} sheet`)
+          // Reproduce the pre-shift header without touching any data row.
+          sheet.getCell(`${column}5`).value = staleHeader
+
+          const { errors } = await expectBadRequest(
+            parseWorkbook(await serialize(wb)),
+          )
+
+          expect(
+            errors.some((e) =>
+              e.message.includes('Sniðmátið er af eldri útgáfu'),
+            ),
+          ).toBe(true)
+          // The point of bailing early: no per-row noise about the data.
+          expect(errors.every((e) => e.row === 5)).toBe(true)
+        },
+      )
+    })
+
+    /**
+     * The mirror of the 2080 case: column E previously held
+     * `Starfshlutfall (0–1)`, so a value carried over from an older sheet — or
+     * from a submitter filling in the field they remember — is a plain positive
+     * number that inflates reglulegt tímakaup by up to ~173×.
+     *
+     * `1` is the important one. It is the most common starfshlutfall there is,
+     * and a `>= 1` floor (the bound the Directorate's R reference uses) would
+     * admit it. Both must be rejected.
+     */
+    it.each([0.8, 1])(
+      'rejects a carried-over starfshlutfall of %s as paid hours',
+      async (paidHours) => {
+        const wb = await loadTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await serialize(wb)),
+        )
+        expect(
+          errors.some((e) =>
+            e.message.includes(
+              `Greiddar stundir ${paidHours} eru utan leyfilegs bils`,
+            ),
+          ),
+        ).toBe(true)
+      },
+    )
+
+    // 2080 is the mistake this bound exists for: the annual total entered
+    // where the 12-month basis asks for a monthly average.
+    it('rejects paid hours above the template bound', async () => {
       const wb = await loadTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1.5,
+        paidHours: 2080,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -660,7 +774,7 @@ describe('parseWorkbook', () => {
       )
       expect(
         errors.some((e) =>
-          e.message.includes('Starfshlutfall 1.5 er utan leyfilegs bils'),
+          e.message.includes('Greiddar stundir 2080 eru utan leyfilegs bils'),
         ),
       ).toBe(true)
     })
@@ -673,7 +787,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: '',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -707,7 +821,7 @@ describe('parseWorkbook', () => {
         name: 'X',
         role: 'R',
         gender: 'Kona',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
@@ -746,7 +860,7 @@ describe('parseWorkbook', () => {
           name: `Nafn ${i + 1}`,
           role,
           gender: i % 2 === 0 ? 'Kona' : 'Karl',
-          workRatio: 1,
+          paidHours: 173.33,
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
@@ -776,6 +890,78 @@ describe('parseWorkbook', () => {
       expect(report.roles).toHaveLength(9)
       expect(report.roles[8].title).toBe('Hlutverk 9')
       expect(report.roles[8].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+
+    // Einstaklingsmat ships 500 employee rows (EMP_STEP_INPUTS = F11:BC510).
+    // That is provisioning, not capacity: an employer with more staff copies
+    // rows down, so the parser must never treat 500 as a ceiling. The domain
+    // ceiling is MAX_EMPLOYEES (10 000), enforced elsewhere.
+    const EMPLOYEES_PAST_PROVISIONED_ROWS = 502
+
+    const writeManyEmployees = (wb: ExcelJS.Workbook, count: number) => {
+      for (let i = 1; i <= count; i++) {
+        writeEmployeeRow(wb, i, {
+          name: `Nafn ${i}`,
+          role: 'Hlutverk',
+          gender: i % 2 === 0 ? 'Kona' : 'Karl',
+          paidHours: 173.33,
+          baseSalary: 500000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'Svið',
+          department: 'Deild',
+          startDate: new Date('2023-01-01'),
+        })
+      }
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+    }
+
+    it('parses more employees than Einstaklingsmat provisions rows for, once the employer extends the sheet', async () => {
+      const wb = await loadTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The employer's own extension: one personal step per employee, running
+      // past the shipped row 510.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: EMPLOYEES_PAST_PROVISIONED_ROWS }, () => [1]),
+      )
+
+      const report = await parseWorkbook(await serialize(wb))
+
+      expect(report.employees).toHaveLength(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // The tail employees are the ones the old 500-row cap rejected outright.
+      const last = report.employees[EMPLOYEES_PAST_PROVISIONED_ROWS - 1]
+      expect(last.ordinal).toBe(EMPLOYEES_PAST_PROVISIONED_ROWS)
+      expect(last.personalStepAssignments).toHaveLength(1)
+    })
+
+    it('rejects when Einstaklingsmat is shorter than the employee list rather than silently dropping steps', async () => {
+      const wb = await loadTemplate()
+      writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
+      // Employer extended Launagögn but NOT Einstaklingsmat: blanks would read
+      // as "no assignment" and understate every tail employee's score.
+      fillEmployeeClassification(
+        wb,
+        Array.from({ length: 500 }, () => [1]),
+      )
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Einstaklingsmat',
+            message: expect.stringContaining('nær aðeins til'),
+          }),
+        ]),
+      )
     })
   })
 

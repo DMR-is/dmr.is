@@ -186,7 +186,7 @@ function makeParsed(): ParsedReportDto {
         field: 'Mgmt',
         department: 'Mgmt',
         startDate: '2021-01-01',
-        workRatio: 1,
+        paidHours: 173.33,
         baseSalary: 1000000,
         additionalFixedOvertime: 100000,
         additionalFixedCarAllowance: null,

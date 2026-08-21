@@ -35,8 +35,7 @@ const salaryReport = {
 
 const statistics: SalaryByGenderAndScoreDto = {
   dataPoints: [],
-  regressionLine: { slope: 0, intercept: 0 },
-  allowedDifferencePercent: 1.95,
+  regressionLine: { slope: 0, intercept: 0, rSquared: 1 },
   scoreBuckets: [],
   totals: {
     maleAverageSalary: 0,
@@ -81,13 +80,11 @@ function makeOutlier(
     action: 'Úrbót fyrirhuguð',
     signatureName: 'Jón J. Jónsson',
     signatureRole: 'Framkvæmdastjóri',
-    adjustedBaseSalary: 900000,
-    predictedBaseSalary: 950000,
-    scoreBucketRangeFrom: 400,
-    scoreBucketRangeTo: 600,
-    direction: 'BELOW',
-    differencePercent: -5.26,
-    allowedDifferencePercent: 1.95,
+    regularHourlyWage: 4750,
+    expectedHourlyWage: 5000,
+    deviationPercent: -5,
+    payStatus: 'UNDERPAID',
+    contributionShare: 42.5,
     ...overrides,
   }
 }
@@ -104,7 +101,7 @@ function makeService(reportOverrides = {}) {
     ),
   }
   const statisticsService = {
-    getBaseSalaryByGenderAndScoreAll: jest.fn(async () => statistics),
+    getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
   }
 
   const service = new ReportPdfService(
@@ -135,7 +132,7 @@ describe('ReportPdfService', () => {
       expect(result.fileName).toBe('launagreining-r1.pdf')
       expect(reportService.getById).toHaveBeenCalledWith('r1')
       expect(
-        statisticsService.getBaseSalaryByGenderAndScoreAll,
+        statisticsService.getRegularHourlyWageByScoreAll,
       ).toHaveBeenCalledWith('r1')
       expect(reportService.getOutliers).toHaveBeenCalled()
       expect(closeMock).toHaveBeenCalled()
@@ -151,7 +148,7 @@ describe('ReportPdfService', () => {
       expect(Buffer.isBuffer(result.pdf)).toBe(true)
       expect(result.fileName).toBe('jafnrettisaaetlun-r1.pdf')
       expect(
-        statisticsService.getBaseSalaryByGenderAndScoreAll,
+        statisticsService.getRegularHourlyWageByScoreAll,
       ).not.toHaveBeenCalled()
       expect(reportService.getOutliers).not.toHaveBeenCalled()
     })

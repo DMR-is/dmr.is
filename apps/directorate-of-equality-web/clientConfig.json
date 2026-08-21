@@ -3677,10 +3677,10 @@
         "tags": ["Report Workflow"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-all": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-all": {
       "get": {
-        "description": "Adjusted base salary (baseSalary / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getBaseSalaryByGenderAndScoreAll",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getRegularHourlyWageByScoreAll",
         "parameters": [
           {
             "name": "reportId",
@@ -3746,10 +3746,10 @@
         "tags": ["Report Statistics"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/base-salary-by-gender-and-score-work": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-work": {
       "get": {
-        "description": "Adjusted base salary (baseSalary / workRatio) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getBaseSalaryByGenderAndScoreWork",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "operationId": "getRegularHourlyWageByScoreWork",
         "parameters": [
           {
             "name": "reportId",
@@ -3815,146 +3815,10 @@
         "tags": ["Report Statistics"]
       }
     },
-    "/api/v1/reports/{reportId}/statistics/full-salary-by-gender-and-score-all": {
+    "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-gender-wage-gap": {
       "get": {
-        "description": "Adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
-        "operationId": "getFullSalaryByGenderAndScoreAll",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Statistics"]
-      }
-    },
-    "/api/v1/reports/{reportId}/statistics/base-salary-gender-wage-gap": {
-      "get": {
-        "description": "Gender wage gap for adjusted base salary (baseSalary / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
-        "operationId": "getBaseSalaryGenderWageGap",
-        "parameters": [
-          {
-            "name": "reportId",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GenderWageGapDto" }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "401": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "403": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "404": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          },
-          "500": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "bearer": [] }],
-        "summary": "",
-        "tags": ["Report Statistics"]
-      }
-    },
-    "/api/v1/reports/{reportId}/statistics/full-salary-gender-wage-gap": {
-      "get": {
-        "description": "Gender wage gap for adjusted full salary ((baseSalary + additionalSalary + bonusSalary) / workRatio). Returns average and median salaries per gender with both average-based and median-based wage gap percentages.",
-        "operationId": "getFullSalaryGenderWageGap",
+        "description": "Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir). Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.",
+        "operationId": "getRegularHourlyWageGenderWageGap",
         "parameters": [
           {
             "name": "reportId",
@@ -4020,7 +3884,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/benefits-breakdown": {
       "get": {
-        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw values, not adjusted for work ratio. Returns per-gender breakdown with wage gap for each component and total.",
+        "description": "Average bonus salary (aukagreiðslur) and additional salary (viðbótarlaun) by gender. Raw monthly component sums, NOT converted to an hourly rate — they do not sit on the same scale as the reglulegt tímakaup figures. Returns per-gender breakdown with wage gap for each component and total.",
         "operationId": "getBenefitsBreakdown",
         "parameters": [
           {
@@ -4298,7 +4162,12 @@
           "field": { "type": "string", "nullable": true },
           "department": { "type": "string", "nullable": true },
           "startDate": { "type": "string" },
-          "workRatio": { "type": "number" },
+          "paidHours": {
+            "type": "number",
+            "description": "Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.",
+            "minimum": 4,
+            "maximum": 750
+          },
           "baseSalary": { "type": "number" },
           "additionalFixedOvertime": { "type": "number", "nullable": true },
           "additionalFixedCarAllowance": { "type": "number", "nullable": true },
@@ -4317,7 +4186,7 @@
           "roleTitle",
           "gender",
           "startDate",
-          "workRatio",
+          "paidHours",
           "baseSalary",
           "personalStepAssignments"
         ]
@@ -4354,44 +4223,68 @@
         "type": "object",
         "properties": {
           "employeeOrdinal": { "type": "number" },
-          "adjustedBaseSalary": { "type": "number" },
-          "direction": {
-            "type": "string",
-            "enum": ["ABOVE", "BELOW", "EQUAL"]
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "score": { "type": "number" },
+          "regularHourlyWage": {
+            "type": "number",
+            "description": "Raun reglulegt tímakaup (kr./klst.)."
           },
-          "differencePercent": { "type": "number" },
-          "allowedDifferencePercent": { "type": "number" },
-          "predictedBaseSalary": { "type": "number" },
-          "scoreBucketRangeFrom": { "type": "number" },
-          "scoreBucketRangeTo": { "type": "number" }
+          "expectedHourlyWage": {
+            "type": "number",
+            "description": "Væntanlegt tímakaup at this score, from the pooled log fit — exp(fitted), so a curve in krónur space, not the chart line."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "description": "frávik %: (raun − væntanlegt) / væntanlegt × 100. Signed."
+          },
+          "payStatus": {
+            "type": "string",
+            "enum": ["UNDERPAID", "OVERPAID", "ON_LINE"]
+          },
+          "contributionShare": {
+            "type": "number",
+            "nullable": true,
+            "description": "Share of óskýrt this employee carries, in percent. Null when óskýrt is 0."
+          }
         },
         "required": [
           "employeeOrdinal",
-          "adjustedBaseSalary",
-          "direction",
-          "differencePercent",
-          "allowedDifferencePercent",
-          "predictedBaseSalary",
-          "scoreBucketRangeFrom",
-          "scoreBucketRangeTo"
+          "gender",
+          "score",
+          "regularHourlyWage",
+          "expectedHourlyWage",
+          "deviationPercent",
+          "payStatus"
         ]
       },
       "ScatterDataPointDto": {
         "type": "object",
         "properties": {
           "score": { "type": "number" },
-          "adjustedSalary": { "type": "number" },
+          "regularHourlyWage": { "type": "number" },
           "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] }
         },
-        "required": ["score", "adjustedSalary", "gender"]
+        "required": ["score", "regularHourlyWage", "gender"]
       },
       "RegressionLineDto": {
         "type": "object",
         "properties": {
-          "slope": { "type": "number" },
-          "intercept": { "type": "number" }
-        },
-        "required": ["slope", "intercept"]
+          "slope": {
+            "type": "number",
+            "nullable": true,
+            "description": "kr./klst. per stig. 3dp — the slope dropped from ~1.000 kr/month-per-stig to ~8 kr./klst.-per-stig with the hourly switch, so 2dp would leave only two significant figures."
+          },
+          "intercept": {
+            "type": "number",
+            "nullable": true,
+            "description": "kr./klst. at score 0 — predicted pay for a job no company has, so treat it as \"where the line starts\" rather than as a wage."
+          },
+          "rSquared": {
+            "type": "number",
+            "nullable": true,
+            "description": "How much of the pay variation the starfsmatsstig actually explain — i.e. how much the line deserves to be trusted. Null when there is no variation to explain."
+          }
+        }
       },
       "ScoreBucketDto": {
         "type": "object",
@@ -4455,10 +4348,263 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/ScoreBucketDto" }
           },
-          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" },
-          "allowedDifferencePercent": { "type": "number", "nullable": true }
+          "totals": { "$ref": "#/components/schemas/SalaryTotalsDto" }
         },
         "required": ["dataPoints", "regressionLine", "scoreBuckets", "totals"]
+      },
+      "WageGapCountsDto": {
+        "type": "object",
+        "properties": {
+          "male": { "type": "number" },
+          "female": { "type": "number" },
+          "excluded": {
+            "type": "number",
+            "description": "Rows excluded for a non-positive hourly wage."
+          }
+        },
+        "required": ["male", "female", "excluded"]
+      },
+      "WageGapPooledFitDto": {
+        "type": "object",
+        "properties": {
+          "slope": { "type": "number", "nullable": true },
+          "intercept": { "type": "number", "nullable": true },
+          "sampleCount": { "type": "number" },
+          "xMean": { "type": "number", "nullable": true },
+          "yMean": { "type": "number", "nullable": true },
+          "xSumSquares": {
+            "type": "number",
+            "description": "Σ(score − mean)². Zero means no slope is identifiable — test THIS, not slope !== null, because a degenerate fit returns slope 0."
+          },
+          "rSquared": { "type": "number", "nullable": true },
+          "xRangeFrom": { "type": "number", "nullable": true },
+          "xRangeTo": { "type": "number", "nullable": true }
+        },
+        "required": ["sampleCount", "xSumSquares"]
+      },
+      "WageGapTwofoldDto": {
+        "type": "object",
+        "properties": {
+          "explained": {
+            "type": "number",
+            "nullable": true,
+            "description": "skýrt — the part explained by starfsmatsstig, log points."
+          },
+          "unexplained": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt — the residual. Identical to oskyrtLog."
+          }
+        }
+      },
+      "WageGapEmployeeDto": {
+        "type": "object",
+        "properties": {
+          "ordinal": { "type": "number" },
+          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "score": { "type": "number" },
+          "hourlyWage": {
+            "type": "number",
+            "description": "Raun reglulegt tímakaup (kr./klst.)."
+          },
+          "expectedHourlyWage": {
+            "type": "number",
+            "description": "Væntanlegt tímakaup at this score, from the pooled fit."
+          },
+          "deviationPercent": {
+            "type": "number",
+            "description": "frávik %: (raun − væntanlegt) / væntanlegt × 100."
+          },
+          "residualLog": {
+            "type": "number",
+            "description": "Residual in log points. Signed."
+          },
+          "contributionLog": {
+            "type": "number",
+            "description": "This employee's contribution to óskýrt, in log points. Signed; sums exactly to oskyrtLog across all employees."
+          },
+          "contributionShare": {
+            "type": "number",
+            "nullable": true,
+            "description": "contributionLog / oskyrtLog × 100. Null when óskýrt is 0."
+          },
+          "payStatus": {
+            "type": "string",
+            "enum": ["UNDERPAID", "OVERPAID", "ON_LINE"]
+          },
+          "isCorrectable": {
+            "type": "boolean",
+            "description": "Underpaid AND of the disadvantaged gender — i.e. liftable."
+          },
+          "inMinimumSet": {
+            "type": "boolean",
+            "description": "Member of the lágmarksmengi: the fewest corrections that bring óskýrt under the benchmark."
+          }
+        },
+        "required": [
+          "ordinal",
+          "gender",
+          "score",
+          "hourlyWage",
+          "expectedHourlyWage",
+          "deviationPercent",
+          "residualLog",
+          "contributionLog",
+          "payStatus",
+          "isCorrectable",
+          "inMinimumSet"
+        ]
+      },
+      "WageGapDecompositionDto": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE"]
+          },
+          "pooledReferenceMode": { "type": "string", "enum": ["POOLED_OLS"] },
+          "rawGapAvailable": { "type": "boolean" },
+          "rawGapBlockers": {
+            "type": "array",
+            "description": "Codes only — the web maps these to Icelandic copy. Empty when the raw gap is available.",
+            "items": {
+              "type": "string",
+              "enum": ["EMPTY_MALE_COHORT", "EMPTY_FEMALE_COHORT"]
+            }
+          },
+          "oskyrtAvailable": { "type": "boolean" },
+          "oskyrtBlockers": {
+            "type": "array",
+            "description": "Echoes the raw-tier blockers so consumers need not reason about tiers.",
+            "items": {
+              "type": "string",
+              "enum": ["EMPTY_MALE_COHORT", "EMPTY_FEMALE_COHORT"]
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "description": "Soft: the figures ARE computed but must be shown caveated.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ROWS_EXCLUDED_NON_POSITIVE_WAGE",
+                "NO_SCORE_OVERLAP",
+                "NO_SCORE_VARIATION"
+              ]
+            }
+          },
+          "counts": {
+            "description": "Always real numbers, even when the figures are unavailable — this is the actionable part of the message.",
+            "allOf": [{ "$ref": "#/components/schemas/WageGapCountsDto" }]
+          },
+          "pooledFit": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/WageGapPooledFitDto" }]
+          },
+          "rawGapLog": {
+            "type": "number",
+            "nullable": true,
+            "description": "Δ in log points. Signed."
+          },
+          "oskyrtLog": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt in log points. Signed. Source of truth for the benchmark test."
+          },
+          "twofold": { "$ref": "#/components/schemas/WageGapTwofoldDto" },
+          "meanHourlyWageMale": {
+            "type": "number",
+            "nullable": true,
+            "description": "Arithmetic mean, kr./klst."
+          },
+          "meanHourlyWageFemale": {
+            "type": "number",
+            "nullable": true,
+            "description": "Arithmetic mean, kr./klst."
+          },
+          "rawGapPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "ÓLEIÐRÉTTUR as displayed: (higher − lower) / higher on arithmetic means. Magnitude."
+          },
+          "rawGapDirection": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "rawGapPercentGeometric": {
+            "type": "number",
+            "nullable": true,
+            "description": "Geometric equivalent of rawGapPercent. Stored for basis swaps."
+          },
+          "oskyrtPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "LEIÐRÉTTUR launamunur: 1 − exp(−|óskýrt|). Magnitude. THE figure tested against the benchmark."
+          },
+          "oskyrtDirection": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "oskyrtPercentLowerBase": {
+            "type": "number",
+            "nullable": true,
+            "description": "exp(|óskýrt|) − 1 — the lower-paid-group basis. Stored, not displayed."
+          },
+          "disadvantagedGender": {
+            "type": "string",
+            "enum": ["FEMALE", "MALE", "NONE"],
+            "nullable": true
+          },
+          "employees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WageGapEmployeeDto" }
+          },
+          "correctableCount": {
+            "type": "number",
+            "description": "All underpaid employees of the disadvantaged gender."
+          },
+          "minimumSetSize": {
+            "type": "number",
+            "description": "Size of the lágmarksmengi — the fewest employees who must be accounted for in the úrbótaáætlun. 0 when already within the benchmark. The counterfactual correction used to pick them is a SELECTION device, not a prescribed raise."
+          },
+          "oskyrtLogAfterMinimumSet": {
+            "type": "number",
+            "nullable": true,
+            "description": "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude."
+          },
+          "minimumSetClosesGap": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether correcting the set would bring óskýrt within the benchmark. False means the walk ran out of people to lift — the gap is carried by the advantaged group sitting above the line, so the list must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog."
+          },
+          "thresholdLog": {
+            "type": "number",
+            "description": "The benchmark in log points: −log(1 − benchmark/100)."
+          },
+          "benchmarkPercent": {
+            "type": "number",
+            "description": "The configured benchmark percent (e.g. 3.9)."
+          }
+        },
+        "required": [
+          "method",
+          "pooledReferenceMode",
+          "rawGapAvailable",
+          "rawGapBlockers",
+          "oskyrtAvailable",
+          "oskyrtBlockers",
+          "warnings",
+          "counts",
+          "twofold",
+          "employees",
+          "correctableCount",
+          "minimumSetSize",
+          "thresholdLog",
+          "benchmarkPercent"
+        ]
       },
       "SalaryAnalysisResponseDto": {
         "type": "object",
@@ -4467,11 +4613,18 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/SalaryAnalysisOutlierDto" }
           },
-          "baseSalaryByGenderAndScoreAll": {
+          "regularHourlyWageByScoreAll": {
             "$ref": "#/components/schemas/SalaryByGenderAndScoreDto"
+          },
+          "wageGapDecomposition": {
+            "$ref": "#/components/schemas/WageGapDecompositionDto"
           }
         },
-        "required": ["outliers", "baseSalaryByGenderAndScoreAll"]
+        "required": [
+          "outliers",
+          "regularHourlyWageByScoreAll",
+          "wageGapDecomposition"
+        ]
       },
       "SalaryDataBasisEnum": {
         "type": "string",
@@ -5878,87 +6031,6 @@
         },
         "required": ["totals", "scoreBuckets"]
       },
-      "SalaryOutlierRegressionDto": {
-        "type": "object",
-        "properties": {
-          "slope": { "type": "number", "nullable": true },
-          "intercept": { "type": "number", "nullable": true },
-          "sampleCount": { "type": "number" },
-          "scoreMean": { "type": "number", "nullable": true },
-          "adjustedBaseSalaryMean": { "type": "number", "nullable": true },
-          "rSquared": { "type": "number", "nullable": true },
-          "scoreRangeFrom": { "type": "number", "nullable": true },
-          "scoreRangeTo": { "type": "number", "nullable": true }
-        },
-        "required": ["sampleCount"]
-      },
-      "SalaryOutlierRegressionsDto": {
-        "type": "object",
-        "properties": {
-          "overall": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          },
-          "male": { "$ref": "#/components/schemas/SalaryOutlierRegressionDto" },
-          "female": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          },
-          "neutral": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionDto"
-          }
-        },
-        "required": ["overall", "male", "female", "neutral"]
-      },
-      "SalaryOutlierAnalysisEmployeeDto": {
-        "type": "object",
-        "properties": {
-          "ordinal": { "type": "number" },
-          "score": { "type": "number" },
-          "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
-          "adjustedBaseSalary": { "type": "number" },
-          "predictedBaseSalary": { "type": "number", "nullable": true },
-          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
-          "scoreBucketRangeTo": { "type": "number", "nullable": true },
-          "direction": { "type": "string", "nullable": true },
-          "differencePercent": { "type": "number", "nullable": true },
-          "allowedDifferencePercent": { "type": "number" },
-          "isOutlier": { "type": "boolean" }
-        },
-        "required": [
-          "ordinal",
-          "score",
-          "gender",
-          "adjustedBaseSalary",
-          "allowedDifferencePercent",
-          "isOutlier"
-        ]
-      },
-      "SalaryOutlierAnalysisDto": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": ["BASE_SALARY_LINEAR_REGRESSION_BY_SCORE"]
-          },
-          "thresholdPercent": { "type": "number" },
-          "allowedDifferencePercent": { "type": "number" },
-          "regressions": {
-            "$ref": "#/components/schemas/SalaryOutlierRegressionsDto"
-          },
-          "employees": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SalaryOutlierAnalysisEmployeeDto"
-            }
-          }
-        },
-        "required": [
-          "method",
-          "thresholdPercent",
-          "allowedDifferencePercent",
-          "regressions",
-          "employees"
-        ]
-      },
       "ReportResultDto": {
         "type": "object",
         "properties": {
@@ -5969,46 +6041,22 @@
             "nullable": true
           },
           "calculationVersion": { "type": "string" },
-          "base": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
+          "salary": {
+            "description": "Frosin samantekt á reglulegu tímakaupi við innsendingu (heildartölur + stigabil).",
+            "allOf": [
+              { "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto" }
+            ]
           },
-          "full": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
-          },
-          "outlierAnalysis": {
-            "$ref": "#/components/schemas/SalaryOutlierAnalysisDto"
+          "wageGapDecomposition": {
+            "$ref": "#/components/schemas/WageGapDecompositionDto"
           }
         },
         "required": [
           "id",
           "reportId",
           "calculationVersion",
-          "base",
-          "full",
-          "outlierAnalysis"
-        ]
-      },
-      "ReportRoleResultDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "reportResultId": { "type": "string", "format": "uuid" },
-          "reportEmployeeRoleId": { "type": "string", "format": "uuid" },
-          "roleTitle": { "type": "string" },
-          "base": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
-          },
-          "full": {
-            "$ref": "#/components/schemas/ReportSalaryResultSnapshotDto"
-          }
-        },
-        "required": [
-          "id",
-          "reportResultId",
-          "reportEmployeeRoleId",
-          "roleTitle",
-          "base",
-          "full"
+          "salary",
+          "wageGapDecomposition"
         ]
       },
       "ReportDetailDto": {
@@ -6122,10 +6170,6 @@
             "type": "object",
             "allOf": [{ "$ref": "#/components/schemas/ReportResultDto" }]
           },
-          "roleResults": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ReportRoleResultDto" }
-          },
           "companyFinesStarted": {
             "type": "boolean",
             "description": "Daily-fines flag. `true` means the company is currently in the daily-fines process."
@@ -6150,7 +6194,6 @@
           "subsidiaries",
           "equalityReport",
           "timeline",
-          "roleResults",
           "companyFinesStarted",
           "companyQuarantined",
           "includesImprovementPlan"
@@ -6168,7 +6211,7 @@
           "employeeOrdinal": {
             "type": "number",
             "nullable": true,
-            "description": "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.outlier_analysis_snapshot.employees`."
+            "description": "1-indexed ordinal of the outlier employee in the report's parsed employee list. Mirrors `report_employee.ordinal` — used to cross-reference the canonical detected set on `report_result.wage_gap_decomposition_snapshot.employees`."
           },
           "gender": {
             "nullable": true,
@@ -6194,32 +6237,30 @@
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
           "signatureRole": { "type": "string", "nullable": true },
-          "adjustedBaseSalary": {
+          "regularHourlyWage": {
             "type": "number",
             "nullable": true,
-            "description": "Employee's full-time-equivalent base salary at submission, projected from the matching `outlier_analysis_snapshot.employees` entry. Null if the snapshot has no matching ordinal."
+            "description": "Reglulegt tímakaup (kr./klst.) at submission, projected from the matching `wage_gap_decomposition_snapshot.employees` entry. Null if the snapshot has no matching ordinal."
           },
-          "predictedBaseSalary": {
+          "expectedHourlyWage": {
             "type": "number",
             "nullable": true,
-            "description": "Salary predicted by the regression line at the employee's exact score. Null when the regression had no slope (insufficient sample) or no matching snapshot entry exists."
+            "description": "Væntanlegt tímakaup at this employee's score, from the pooled log fit. Null when no matching snapshot entry exists."
           },
-          "scoreBucketRangeFrom": { "type": "number", "nullable": true },
-          "scoreBucketRangeTo": { "type": "number", "nullable": true },
-          "direction": {
+          "deviationPercent": {
+            "type": "number",
+            "nullable": true,
+            "description": "Signed percent deviation of the actual tímakaup from the expected one."
+          },
+          "payStatus": {
             "type": "string",
             "nullable": true,
-            "description": "Sign of the deviation from the predicted salary: 'ABOVE' | 'BELOW' | 'EQUAL'. Null when no prediction was available."
+            "description": "'UNDERPAID' | 'OVERPAID' | 'ON_LINE' relative to the pooled fit. Members of the lágmarksmengi are always UNDERPAID — the set is lift-only."
           },
-          "differencePercent": {
+          "contributionShare": {
             "type": "number",
             "nullable": true,
-            "description": "Signed percent deviation of the employee's adjusted base salary from the predicted salary."
-          },
-          "allowedDifferencePercent": {
-            "type": "number",
-            "nullable": true,
-            "description": "Half-threshold band (in percent) used to flag this row as an outlier — i.e. the report-wide allowed deviation at submission time."
+            "description": "Share of the company-wide óskýrt figure this employee carries, in percent. This — not any individual tolerance — is why the row is on the list."
           }
         },
         "required": ["id", "reportEmployeeId", "groupId"]
@@ -6306,7 +6347,6 @@
           "femaleMedianSalary": { "type": "number" },
           "overallMedianSalary": { "type": "number" },
           "averageWageGapPercent": { "type": "number", "nullable": true },
-          "medianWageGapPercent": { "type": "number", "nullable": true },
           "maleCount": { "type": "number" },
           "femaleCount": { "type": "number" }
         },

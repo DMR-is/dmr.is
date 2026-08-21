@@ -13,18 +13,46 @@ export class ScatterDataPointDto {
   score!: number
 
   @ApiNumber()
-  adjustedSalary!: number
+  regularHourlyWage!: number
 
   @ApiEnum(GenderEnum)
   gender!: GenderEnum
 }
 
+/**
+ * The fitted level-space line, for drawing and for printing beside the chart.
+ *
+ * ⚠️ **All three are nullable, and that matters more now than it used to.** The
+ * chart previously coerced a null fit to `0`, which produced a visibly wrong
+ * flat line — bad, but self-evidently broken. These figures are now *printed*,
+ * and `Hallatala: 0 kr./klst. á stig` reads as a real finding rather than as
+ * missing data. Render `—`, never a zero.
+ *
+ * A fit is null when there are no samples. Note it is NOT null when every score
+ * is identical — that returns `slope: 0`, which is a genuine value for a
+ * degenerate fit and must not be conflated with "no line".
+ */
 export class RegressionLineDto {
-  @ApiNumber()
-  slope!: number
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'kr./klst. per stig. 3dp — the slope dropped from ~1.000 kr/month-per-stig to ~8 kr./klst.-per-stig with the hourly switch, so 2dp would leave only two significant figures.',
+  })
+  slope!: number | null
 
-  @ApiNumber()
-  intercept!: number
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'kr./klst. at score 0 — predicted pay for a job no company has, so treat it as "where the line starts" rather than as a wage.',
+  })
+  intercept!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'How much of the pay variation the starfsmatsstig actually explain — i.e. how much the line deserves to be trusted. Null when there is no variation to explain.',
+  })
+  rSquared!: number | null
 }
 
 export class ScoreBucketDto {
@@ -103,13 +131,4 @@ export class SalaryByGenderAndScoreDto {
 
   @ApiDto(SalaryTotalsDto)
   totals!: SalaryTotalsDto
-
-  /**
-   * Half the configured salary-difference threshold (e.g. 1.95 for a 3.9%
-   * threshold) — the allowed +/- band around the regression prediction that
-   * defines an outlier. Only populated for the base-salary-by-total-score
-   * chart, where the outlier rule applies; `null` for the other charts.
-   */
-  @ApiOptionalNumber({ nullable: true })
-  allowedDifferencePercent!: number | null
 }

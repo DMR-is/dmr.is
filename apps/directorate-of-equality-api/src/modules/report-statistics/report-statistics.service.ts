@@ -1,23 +1,15 @@
 import { Op } from 'sequelize'
 
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { ConfigModel } from '../config/models/config.model'
 import {
   bundleNeutralIntoFemale,
   computeSalaryAggregateSnapshot,
   computeWageGapPercent,
-  getAdjustedBaseSalary,
-  getAdjustedFullSalary,
-  resolveAllowedDifferencePercent,
+  getRegularHourlyWage,
   roundNullable,
 } from '../report/lib/compensation-aggregates'
 import { GenderEnum } from '../report/models/report.model'
@@ -63,11 +55,9 @@ export class ReportStatisticsService implements IReportStatisticsService {
     private readonly roleStepModel: typeof ReportEmployeeRoleCriterionStepModel,
     @InjectModel(ReportEmployeePersonalCriterionStepModel)
     private readonly personalStepModel: typeof ReportEmployeePersonalCriterionStepModel,
-    @InjectModel(ConfigModel)
-    private readonly configModel: typeof ConfigModel,
   ) {}
 
-  async getBaseSalaryByGenderAndScoreAll(
+  async getRegularHourlyWageByScoreAll(
     reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
     this.logger.debug('Computing base salary by gender and total score', {
@@ -79,21 +69,16 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: requireComputedScore(e),
-      adjustedSalary: getAdjustedBaseSalary(e),
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
 
-    // Base salary by total score is the chart the outlier rule applies to, so
-    // it carries the allowed +/- band (half the configured threshold) for the
-    // tolerance overlay on the chart.
-    const allowedDifferencePercent = resolveAllowedDifferencePercent(
-      await this.getSalaryDifferenceThresholdPercent(),
-    )
-
-    return buildChartFromEmployeePoints(points, allowedDifferencePercent)
+    // No tolerance overlay: the ±band it used to shade was the old outlier rule,
+    // which no longer decides anything. See `buildChartFromEmployeePoints`.
+    return buildChartFromEmployeePoints(points)
   }
 
-  async getBaseSalaryByGenderAndScoreWork(
+  async getRegularHourlyWageByScoreWork(
     reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
     this.logger.debug(
@@ -121,7 +106,7 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
       return {
         score: workScore,
-        adjustedSalary: getAdjustedBaseSalary(e),
+        regularHourlyWage: getRegularHourlyWage(e),
         gender: e.gender,
       }
     })
@@ -129,29 +114,10 @@ export class ReportStatisticsService implements IReportStatisticsService {
     return buildChartFromEmployeePoints(points)
   }
 
-  async getFullSalaryByGenderAndScoreAll(
-    reportId: string,
-  ): Promise<SalaryByGenderAndScoreDto> {
-    this.logger.debug(
-      'Computing full salary (base + additional + bonus) by gender and total score',
-      { context: LOGGING_CONTEXT, reportId },
-    )
-
-    const employees = await this.fetchEmployees(reportId)
-
-    const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: requireComputedScore(e),
-      adjustedSalary: getAdjustedFullSalary(e),
-      gender: e.gender,
-    }))
-
-    return buildChartFromEmployeePoints(points)
-  }
-
-  async getBaseSalaryGenderWageGap(
+  async getRegularHourlyWageGenderWageGap(
     reportId: string,
   ): Promise<GenderWageGapDto> {
-    this.logger.debug('Computing base salary gender wage gap', {
+    this.logger.debug('Computing reglulegt tímakaup gender wage gap', {
       context: LOGGING_CONTEXT,
       reportId,
     })
@@ -160,32 +126,30 @@ export class ReportStatisticsService implements IReportStatisticsService {
 
     const points: EmployeeDataPoint[] = employees.map((e) => ({
       score: 0,
-      adjustedSalary: getAdjustedBaseSalary(e),
+      regularHourlyWage: getRegularHourlyWage(e),
       gender: e.gender,
     }))
 
     return buildWageGapResponse(points)
   }
 
-  async getFullSalaryGenderWageGap(
-    reportId: string,
-  ): Promise<GenderWageGapDto> {
-    this.logger.debug(
-      'Computing full salary (base + additional + bonus) gender wage gap',
-      { context: LOGGING_CONTEXT, reportId },
-    )
-
-    const employees = await this.fetchEmployees(reportId)
-
-    const points: EmployeeDataPoint[] = employees.map((e) => ({
-      score: 0,
-      adjustedSalary: getAdjustedFullSalary(e),
-      gender: e.gender,
-    }))
-
-    return buildWageGapResponse(points)
-  }
-
+  /**
+   * Viðbótarlaun and aukagreiðslur per gender — **monthly krónur, deliberately
+   * NOT divided by greiddar stundir.**
+   *
+   * ⚠️ An hourly version was written and reverted 2026-08-20. Dividing by hours
+   * is right for total pay and wrong for these two components: viðbótarlaun is
+   * föst yfirvinna plus bifreiðahlunnindi, and aukagreiðslur are occasional
+   * payments. **A fixed car allowance is not earned per hour** — divide it by
+   * hours and you get a figure that is not a rate of anything, and that simply
+   * falls as someone works more.
+   *
+   * The question this block answers is "how does the extra pay compare between
+   * the genders", as amounts, independent of hours worked — the same comparison
+   * the Excel report makes independent of starfshlutfall. An hourly split would
+   * answer a different question (decompose the tímakaup into its parts), which
+   * has its own appeal but is not this.
+   */
   async getBenefitsBreakdown(reportId: string): Promise<BenefitsBreakdownDto> {
     this.logger.debug(
       'Computing benefits breakdown (additional + bonus) by gender',
@@ -248,22 +212,6 @@ export class ReportStatisticsService implements IReportStatisticsService {
   }
 
   // ── Private helpers ─────────────────────────────────────────────
-
-  private async getSalaryDifferenceThresholdPercent(): Promise<number> {
-    const config = await this.configModel.findOne({
-      where: { key: 'salary_difference_threshold_percent', supersededAt: null },
-    })
-
-    const parsed = config ? parseFloat(config.value) : NaN
-
-    if (!Number.isFinite(parsed)) {
-      throw new InternalServerErrorException(
-        'Config entry "salary_difference_threshold_percent" must be numeric',
-      )
-    }
-
-    return parsed
-  }
 
   private async fetchEmployees(
     reportId: string,
@@ -397,7 +345,7 @@ function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
   const snapshot = computeSalaryAggregateSnapshot(
     points.map((point) => ({
       gender: point.gender,
-      salary: point.adjustedSalary,
+      salary: point.regularHourlyWage,
     })),
   )
 
@@ -410,10 +358,6 @@ function buildWageGapResponse(points: EmployeeDataPoint[]): GenderWageGapDto {
     overallMedianSalary: Math.round(snapshot.overall.median ?? 0),
     averageWageGapPercent: roundNullable(
       snapshot.salaryDifferences.maleFemale,
-      1,
-    ),
-    medianWageGapPercent: roundNullable(
-      computeWageGapPercent(snapshot.male.median, snapshot.female.median),
       1,
     ),
     maleCount: males.length,
