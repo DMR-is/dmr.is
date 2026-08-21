@@ -4,11 +4,12 @@ import IdentityServer4 from 'next-auth/providers/identity-server4'
 
 import { decodeJwt } from 'jose'
 
-import { identityServerId } from '@dmr.is/auth/identityProvider'
 import { getLogger } from '@dmr.is/logging-next'
 
 import { getMyUser } from '../../gen/fetch/sdk.gen'
 import { getDoEClient } from '../api/createClient'
+import { identityServerConfig } from './identityServerConfig'
+import { setLogoutHint } from './logoutHint'
 
 const SESSION_TIMEOUT = 60 * 60 * 8 + 30
 const LOGGING_CATEGORY = 'next-auth'
@@ -16,15 +17,6 @@ const LOGGING_CATEGORY = 'next-auth'
 type ErrorWithPotentialReqRes = Error & {
   request?: unknown
   response?: unknown
-}
-
-export const identityServerConfig = {
-  id: identityServerId,
-  name: 'Iceland authentication service',
-  scope: `openid offline_access profile`,
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  clientId: process.env.DOE_WEB_CLIENT_ID!,
-  clientSecret: process.env.DOE_WEB_CLIENT_SECRET ?? '',
 }
 
 async function authorize(nationalId?: string, idToken?: string) {
@@ -124,7 +116,13 @@ export const authOptions: AuthOptions = {
         if (!authMember) {
           // IDS authenticated but user is not registered in our system (getMyUser non-200).
           // Terminate the IDS upstream session and wipe any NextAuth flow cookies.
-          return `/api/auth/access-denied?id_token=${account.id_token}`
+          // The id_token travels in an HttpOnly cookie rather than the query string:
+          // sign-in is refused before a session exists, so there is nothing for the
+          // route to read, and a query parameter would land in our access logs and
+          // the browser history.
+          await setLogoutHint(account.id_token)
+
+          return '/api/auth/access-denied'
         }
 
         user.nationalId = nationalId

@@ -8,7 +8,7 @@ import {
 } from '@dmr.is/auth/middleware-helpers'
 import { isExpired } from '@dmr.is/auth/token-service'
 
-import { identityServerConfig } from './lib/auth/authOptions'
+import { identityServerConfig } from './lib/auth/identityServerConfig'
 
 export default withAuth(
   async function middleware(req: NextRequestWithAuth) {
