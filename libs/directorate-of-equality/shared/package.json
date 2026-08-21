@@ -1,0 +1,18 @@
+{
+  "name": "@dmr.is/doe-shared",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.29",
+    "@nestjs/swagger": "^11.4.6",
+    "sequelize": "6.37.3",
+    "sequelize-typescript": "2.1.6"
+  },
+  "dependencies": {
+    "@dmr.is/decorators": "*",
+    "@dmr.is/shared-models-base": "*"
+  }
+}
