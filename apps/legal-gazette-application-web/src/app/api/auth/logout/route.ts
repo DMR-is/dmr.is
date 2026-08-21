@@ -1,18 +1,17 @@
+import { NextRequest } from 'next/server'
+
+import { endSessionHandler } from '@dmr.is/auth/logoutHandler'
+
 export const dynamic = 'force-dynamic'
 
-function handler(request: Request) {
-  const url = new URL(request.url)
-  const idToken = url.searchParams.get('id_token')
+const handler = (request: NextRequest) => {
+  const postLogoutRedirectUri = (
+    process.env.NODE_ENV !== 'production'
+      ? process.env.LG_APPLICATION_WEB_URL
+      : process.env.IDENTITY_SERVER_LOGOUT_URL
+  ) as string
 
-  if (process.env.NODE_ENV !== 'production') {
-    return Response.redirect(
-      `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${process.env.LG_APPLICATION_WEB_URL}`,
-    )
-  }
-
-  return Response.redirect(
-    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${process.env.IDENTITY_SERVER_LOGOUT_URL}`,
-  )
+  return endSessionHandler(request, postLogoutRedirectUri)
 }
 
-export { handler as GET, handler as POST }
+export { handler as POST }

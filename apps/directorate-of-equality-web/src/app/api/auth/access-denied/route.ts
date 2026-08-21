@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import {
+  LOGOUT_HINT_COOKIE,
+  LOGOUT_HINT_COOKIE_PATH,
+} from '../../../../lib/auth/logoutHint'
+
 export const dynamic = 'force-dynamic'
 
 const NEXT_AUTH_COOKIE_PREFIXES = [
@@ -9,22 +14,33 @@ const NEXT_AUTH_COOKIE_PREFIXES = [
 ]
 
 function handler(request: NextRequest) {
-  const url = new URL(request.url)
-  const idToken = url.searchParams.get('id_token')
+  const idToken = request.cookies.get(LOGOUT_HINT_COOKIE)?.value
 
-  const postLogoutRedirectUri = process.env.BASE_URL as string
+  const params = new URLSearchParams({
+    post_logout_redirect_uri: process.env.BASE_URL as string,
+  })
 
-  const endSessionUrl = `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(
-    postLogoutRedirectUri,
-  )}`
+  if (idToken) {
+    params.set('id_token_hint', idToken)
+  }
+  // else: the handoff cookie is missing or expired. Degrade to an end-session
+  // request without the hint rather than sending the literal string "null" -
+  // IDS may show its own logout prompt in that case.
 
-  const response = NextResponse.redirect(endSessionUrl)
+  const response = NextResponse.redirect(
+    `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?${params.toString()}`,
+  )
 
   for (const cookie of request.cookies.getAll()) {
     if (NEXT_AUTH_COOKIE_PREFIXES.some((p) => cookie.name.startsWith(p))) {
       response.cookies.delete(cookie.name)
     }
   }
+
+  response.cookies.set(LOGOUT_HINT_COOKIE, '', {
+    path: LOGOUT_HINT_COOKIE_PATH,
+    maxAge: 0,
+  })
 
   response.cookies.set('doe.signin_error', '1', {
     path: '/',
