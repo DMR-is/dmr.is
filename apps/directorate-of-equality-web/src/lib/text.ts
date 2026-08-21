@@ -111,8 +111,22 @@ export const overviewText = {
       analyzeError:
         'Ekki tókst að greina frávik. Reyndu að flytja skrána inn aftur.',
       none: 'Óskýrður launamunur er undir viðmiði. Engar úrbætur nauðsynlegar — hægt er að senda skýrsluna beint inn.',
+      // ⚠️ Remedy-NEUTRAL by design. This used to read "Launahækkun þessara
+      // starfsmanna færir hann undir viðmiðið" — naming a specific remedy (a
+      // pay rise) and asserting an arithmetic outcome, neither of which the
+      // process requires: the company files a reason and an action per listed
+      // employee, and improvement is demonstrated at company level at the next
+      // report. It was also simply false whenever the set cannot close the gap.
+      // State the observation and the obligation; say nothing about the fix.
       intro:
-        'Óskýrður launamunur er yfir viðmiði. Launahækkun þessara starfsmanna færir hann undir viðmiðið. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
+        'Laun þessara starfsmanna eru lægri en starfsmatsstig þeirra gefa til kynna — skráðu ástæður og aðgerðir. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
+      /**
+       * Added when `minimumSetClosesGap === false`: the listed employees do not
+       * account for the whole gap. No figures — quantifying it would imply the
+       * exact raises the process never asks for.
+       */
+      introDoesNotClose:
+        'Athugið: þessir starfsmenn skýra ekki allan óskýrðan launamun fyrirtækisins. Hann er að hluta til vegna launa sem eru hærri en starfsmatsstig gefa til kynna.',
       postponeOption: 'Fresta skilum frávika',
       tableEmployee: 'Starfsmaður',
       tableSalary: 'Tímakaup',

@@ -30,6 +30,20 @@ export type AutoReviewSignals = {
    */
   oskyrtAvailable: boolean | null
   /**
+   * Size of the frozen lágmarksmengi. Read off the SNAPSHOT, unlike
+   * `outlierEmployees`, which is a row count from the create-path decomposition
+   * and can disagree with it.
+   */
+  minimumSetSize: number | null
+  /**
+   * Whether the frozen set's correction would bring óskýrt within the benchmark.
+   *
+   * ⚠️ Required alongside `minimumSetSize` because an empty set does NOT imply
+   * compliance: when nobody on the disadvantaged side is underpaid, there is
+   * nothing to lift and the walk returns an empty set with `closesGap: false`.
+   */
+  minimumSetClosesGap: boolean | null
+  /**
    * LEIÐRÉTTUR launamunur — the figure the statutory benchmark tests, as a
    * magnitude. Recorded for the audit trail; **not yet a decision input**,
    * because `AUTO_REVIEW_THRESHOLDS` still carries values calibrated against the

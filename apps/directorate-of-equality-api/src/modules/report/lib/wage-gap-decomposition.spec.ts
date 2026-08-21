@@ -133,7 +133,9 @@ describe('wage-gap-decomposition', () => {
         rows.reduce((t, e) => t + e.residualLog, 0) / rows.length
 
       expect(
-        Math.abs(meanRes(side(true)) - meanRes(side(false)) - (s.oskyrtLog ?? 0)),
+        Math.abs(
+          meanRes(side(true)) - meanRes(side(false)) - (s.oskyrtLog ?? 0),
+        ),
       ).toBeLessThan(1e-9)
     })
   })
@@ -189,7 +191,104 @@ describe('wage-gap-decomposition', () => {
   })
 
   describe('the lágmarksmengi', () => {
-    it('reaches compliance and is drawn only from the underpaid disadvantaged side', () => {
+    /**
+     * The two defects the recompute walk fixes. Both were reachable while the
+     * walk subtracted contributions from a fit it never recomputed, and neither
+     * was covered: the single hand-built fixture below happened to avoid both.
+     */
+    describe('sufficiency is reported, not assumed', () => {
+      /**
+       * Every man exactly +0.04 log points above the pooled line, every woman
+       * exactly −0.04 below, with real score variation so the fit is not
+       * degenerate. Lifting EVERY underpaid woman to the line removes only
+       * A/n_W = 0.04 while óskýrt is (A−B)(1/n_M + 1/n_W) = 0.08, so the walk
+       * runs out of people before reaching the 0.0398 threshold.
+       *
+       * This is not an exotic shape: it is what a workforce looks like when the
+       * advantaged group is small and sits well above the line.
+       */
+      const symmetricallySplitCohort = (): WageGapEmployeeInput[] => {
+        const rows: WageGapEmployeeInput[] = []
+        let ordinal = 1
+        for (let i = 1; i <= 10; i++) {
+          const base = Math.log(3000) + 0.001 * (i * 100)
+          rows.push({
+            ordinal: ordinal++,
+            score: i * 100,
+            gender: GenderEnum.MALE,
+            hourlyWage: Math.exp(base + 0.04),
+          })
+          rows.push({
+            ordinal: ordinal++,
+            score: i * 100,
+            gender: GenderEnum.FEMALE,
+            hourlyWage: Math.exp(base - 0.04),
+          })
+        }
+        return rows
+      }
+
+      it('flags an unclosable gap instead of reporting the set as sufficient', () => {
+        const s = run(symmetricallySplitCohort())
+
+        // The whole correctable side is taken and it still is not enough.
+        expect(s.minimumSetSize).toBe(s.correctableCount)
+        expect(s.minimumSetClosesGap).toBe(false)
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.oskyrtLogAfterMinimumSet).toBeGreaterThan(s.thresholdLog)
+      })
+
+      it('never claims closure while the recomputed gap is still over', () => {
+        const s = run(symmetricallySplitCohort())
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.minimumSetClosesGap).toBe(
+          s.oskyrtLogAfterMinimumSet <= s.thresholdLog,
+        )
+      })
+
+      /**
+       * The refit invariant: the reported "after" figure must be what the engine
+       * actually returns once the counterfactual lifts are applied. Under the old
+       * linear subtraction these two diverged — measurably, and in both
+       * directions, so the estimate was not even conservative.
+       */
+      it('reports an after-figure that survives re-running the engine', () => {
+        const rows = mixedCompany()
+        const s = run(rows)
+        expect(s.minimumSetSize).toBeGreaterThan(0)
+
+        const lifted = new Map(
+          s.employees
+            .filter((e) => e.inMinimumSet)
+            .map((e) => [e.ordinal, e.expectedHourlyWage]),
+        )
+        const after = run(
+          rows.map((row) => ({
+            ...row,
+            hourlyWage: lifted.get(row.ordinal) ?? row.hourlyWage,
+          })),
+        )
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        assertNumber(after.oskyrtLog)
+        // Same quantity, so they must agree to floating-point noise. A linear
+        // estimate would sit visibly off.
+        expect(s.oskyrtLogAfterMinimumSet).toBeCloseTo(
+          Math.abs(after.oskyrtLog),
+          9,
+        )
+      })
+
+      it('closes the gap for real when it says it does', () => {
+        const s = run(mixedCompany())
+        expect(s.minimumSetClosesGap).toBe(true)
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
+      })
+    })
+
+    it('is drawn only from the underpaid disadvantaged side', () => {
       const s = run(mixedCompany())
 
       expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
@@ -264,7 +363,10 @@ describe('wage-gap-decomposition', () => {
       // −log(1 − 0,039) = 0,0397809. (The plan quotes 0,039779, which is wrong
       // in the 6th decimal — the round-trip below is the property that matters.)
       expect(thresholdLogFor(3.9)).toBeCloseTo(0.0397809, 7)
-      expect(gapPercentFromLog(thresholdLogFor(3.9)).percent).toBeCloseTo(3.9, 9)
+      expect(gapPercentFromLog(thresholdLogFor(3.9)).percent).toBeCloseTo(
+        3.9,
+        9,
+      )
     })
   })
 
@@ -277,9 +379,7 @@ describe('wage-gap-decomposition', () => {
 
       expect(s.rawGapAvailable).toBe(false)
       expect(s.oskyrtAvailable).toBe(false)
-      expect(s.oskyrtBlockers).toContain(
-        WageGapBlockerEnum.EMPTY_FEMALE_COHORT,
-      )
+      expect(s.oskyrtBlockers).toContain(WageGapBlockerEnum.EMPTY_FEMALE_COHORT)
       expect(s.oskyrtPercent).toBeNull()
       // ⚠️ counts stay real — they are the actionable half of the message.
       expect(s.counts).toEqual({ male: 2, female: 0, excluded: 0 })
@@ -364,7 +464,6 @@ describe('wage-gap-decomposition', () => {
     })
   })
 
-
   /**
    * Men and women are treated identically by construction. This block is the
    * proof: mirror every gender in a company and nothing about the MAGNITUDE may
@@ -387,31 +486,36 @@ describe('wage-gap-decomposition', () => {
     it.each([
       ['a mixed company', mixedCompany],
       ['a segregated company', segregatedCompany],
-    ])('reports identical magnitudes with the direction flipped (%s)', (_, build) => {
-      const forward = run(build())
-      const mirrored = run(mirror(build()))
+    ])(
+      'reports identical magnitudes with the direction flipped (%s)',
+      (_, build) => {
+        const forward = run(build())
+        const mirrored = run(mirror(build()))
 
-      assertNumber(forward.oskyrtPercent)
-      assertNumber(mirrored.oskyrtPercent)
-      assertNumber(forward.rawGapPercent)
-      assertNumber(mirrored.rawGapPercent)
+        assertNumber(forward.oskyrtPercent)
+        assertNumber(mirrored.oskyrtPercent)
+        assertNumber(forward.rawGapPercent)
+        assertNumber(mirrored.rawGapPercent)
 
-      // Magnitudes: bit-for-bit equal, not merely close.
-      expect(mirrored.oskyrtPercent).toBeCloseTo(forward.oskyrtPercent, 12)
-      expect(mirrored.rawGapPercent).toBeCloseTo(forward.rawGapPercent, 12)
-      expect(mirrored.rawGapPercentGeometric).toBeCloseTo(
-        forward.rawGapPercentGeometric ?? 0,
-        12,
-      )
+        // Magnitudes: bit-for-bit equal, not merely close.
+        expect(mirrored.oskyrtPercent).toBeCloseTo(forward.oskyrtPercent, 12)
+        expect(mirrored.rawGapPercent).toBeCloseTo(forward.rawGapPercent, 12)
+        expect(mirrored.rawGapPercentGeometric).toBeCloseTo(
+          forward.rawGapPercentGeometric ?? 0,
+          12,
+        )
 
-      // Direction, and only direction, inverts.
-      expect(mirrored.oskyrtDirection).not.toBe(forward.oskyrtDirection)
-      expect(mirrored.disadvantagedGender).not.toBe(forward.disadvantagedGender)
+        // Direction, and only direction, inverts.
+        expect(mirrored.oskyrtDirection).not.toBe(forward.oskyrtDirection)
+        expect(mirrored.disadvantagedGender).not.toBe(
+          forward.disadvantagedGender,
+        )
 
-      // The remedy is the same size, drawn from the other side.
-      expect(mirrored.minimumSetSize).toBe(forward.minimumSetSize)
-      expect(mirrored.correctableCount).toBe(forward.correctableCount)
-    })
+        // The remedy is the same size, drawn from the other side.
+        expect(mirrored.minimumSetSize).toBe(forward.minimumSetSize)
+        expect(mirrored.correctableCount).toBe(forward.correctableCount)
+      },
+    )
 
     it('mirrors the signed log gap exactly', () => {
       const forward = run(segregatedCompany())

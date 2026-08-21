@@ -39,14 +39,28 @@ const PREVIOUS_REPORT_ID = 'report-0'
  */
 const resultRow = (
   maleFemale: number | null,
-  decomposition: { oskyrtAvailable?: boolean; oskyrtPercent?: number | null } = {},
-) => ({
-  salarySnapshot: { totals: { salaryDifferences: { maleFemale } } },
-  wageGapDecompositionSnapshot: {
-    oskyrtAvailable: decomposition.oskyrtAvailable ?? true,
-    oskyrtPercent: decomposition.oskyrtPercent ?? 2.5,
-  },
-})
+  decomposition: {
+    oskyrtAvailable?: boolean
+    oskyrtPercent?: number | null
+    minimumSetSize?: number
+    minimumSetClosesGap?: boolean
+  } = {},
+) => {
+  const minimumSetSize = decomposition.minimumSetSize ?? 0
+  return {
+    salarySnapshot: { totals: { salaryDifferences: { maleFemale } } },
+    wageGapDecompositionSnapshot: {
+      oskyrtAvailable: decomposition.oskyrtAvailable ?? true,
+      oskyrtPercent: decomposition.oskyrtPercent ?? 2.5,
+      minimumSetSize,
+      // An empty set is the ordinary compliant case, so it defaults to closing
+      // the gap. The exhaustion case — empty set that does NOT close it — is
+      // passed explicitly, because it is the one that used to auto-approve.
+      minimumSetClosesGap:
+        decomposition.minimumSetClosesGap ?? minimumSetSize === 0,
+    },
+  }
+}
 
 describe('ReportAutoReviewService', () => {
   let service: ReportAutoReviewService
@@ -65,7 +79,10 @@ describe('ReportAutoReviewService', () => {
       providers: [
         ReportAutoReviewService,
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        { provide: getModelToken(ReportModel), useValue: { findOne: reportFindOne } },
+        {
+          provide: getModelToken(ReportModel),
+          useValue: { findOne: reportFindOne },
+        },
         {
           provide: getModelToken(ReportResultModel),
           useValue: { findOne: resultFindOne },
@@ -93,6 +110,13 @@ describe('ReportAutoReviewService', () => {
     previousGap?: number | null
     /** Fail-closed gate input. Omit for the ordinary computable case. */
     oskyrtAvailable?: boolean
+    /**
+     * The FROZEN set size, which is what the decision reads. Defaults to
+     * `outliers` so a test saying "N outliers" still means "a set of N"; pass it
+     * explicitly to make the row count and the snapshot disagree on purpose.
+     */
+    minimumSetSize?: number
+    minimumSetClosesGap?: boolean
   }) => {
     reportFindOne.mockResolvedValueOnce({
       id: REPORT_ID,
@@ -109,6 +133,8 @@ describe('ReportAutoReviewService', () => {
     // untested when it was first wired in.
     const current = resultRow(opts.gap, {
       oskyrtAvailable: opts.oskyrtAvailable,
+      minimumSetSize: opts.minimumSetSize ?? opts.outliers,
+      minimumSetClosesGap: opts.minimumSetClosesGap,
     })
     const previous =
       opts.previousGap === undefined ? null : resultRow(opts.previousGap)
@@ -249,6 +275,53 @@ describe('ReportAutoReviewService', () => {
   // ── Fail-closed gate ──────────────────────────────────────────────────────
   //
   // Confirmed with Þórður 2026-08-20: an unmeasurable gap goes to a human.
+
+  /**
+   * The exhaustion case. An empty lágmarksmengi has two completely different
+   * causes — already inside the benchmark, or nobody on the disadvantaged side
+   * is underpaid so there was nothing to lift — and only the first is
+   * compliance. This used to auto-approve the second.
+   */
+  it('routes to review for an empty set that does not close the gap', async () => {
+    arrangeSalary({
+      total: 20,
+      outliers: 0,
+      gap: 2,
+      minimumSetSize: 0,
+      minimumSetClosesGap: false,
+    })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.signals.minimumSetSize).toBe(0)
+    expect(verdict.signals.minimumSetClosesGap).toBe(false)
+  })
+
+  /**
+   * The decision must follow the FROZEN snapshot, not the
+   * `report_employee_outlier` row count. The two are computed from different
+   * inputs — unrounded payload floats on the create path versus DECIMAL-rounded
+   * rows for the snapshot — so they can disagree, and the reviewer's card reads
+   * the snapshot. Keying on the row count let the verdict and the displayed
+   * figure diverge.
+   */
+  it('follows the snapshot, not the outlier row count, when they disagree', async () => {
+    // Row count says clean; the frozen snapshot says three must be accounted for.
+    arrangeSalary({
+      total: 20,
+      outliers: 0,
+      gap: 2,
+      minimumSetSize: 3,
+      minimumSetClosesGap: true,
+    })
+
+    const verdict = await service.evaluate(REPORT_ID)
+
+    expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
+    expect(verdict.signals.outlierEmployees).toBe(0)
+    expect(verdict.signals.minimumSetSize).toBe(3)
+  })
 
   it('routes to review when óskýrt could not be computed, even with zero outliers', async () => {
     // ⚠️ THE ordering test. A single-gender company has an empty lágmarksmengi,

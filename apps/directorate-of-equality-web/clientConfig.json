@@ -3679,7 +3679,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-all": {
       "get": {
-        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and total score (all criteria). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
         "operationId": "getRegularHourlyWageByScoreAll",
         "parameters": [
           {
@@ -3748,7 +3748,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-by-score-work": {
       "get": {
-        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
+        "description": "Reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir) by gender and work score (mandatory criteria only, excludes PERSONAL). Returns scatter data points, a linear regression line, score-bucket averages with wage gap, and overall totals.",
         "operationId": "getRegularHourlyWageByScoreWork",
         "parameters": [
           {
@@ -3817,7 +3817,7 @@
     },
     "/api/v1/reports/{reportId}/statistics/regular-hourly-wage-gender-wage-gap": {
       "get": {
-        "description": "Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + hlunnindi) / greiddar stundir). Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.",
+        "description": "Gender wage gap for reglulegt tímakaup ((grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir). Returns average and median hourly wages per gender with both average-based and median-based wage gap percentages.",
         "operationId": "getRegularHourlyWageGenderWageGap",
         "parameters": [
           {
@@ -4571,12 +4571,17 @@
           },
           "minimumSetSize": {
             "type": "number",
-            "description": "Size of the lágmarksmengi. 0 when already compliant."
+            "description": "Size of the lágmarksmengi — the fewest employees who must be accounted for in the úrbótaáætlun. 0 when already within the benchmark. The counterfactual correction used to pick them is a SELECTION device, not a prescribed raise."
           },
           "oskyrtLogAfterMinimumSet": {
             "type": "number",
             "nullable": true,
-            "description": "óskýrt in log points after correcting the lágmarksmengi."
+            "description": "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude."
+          },
+          "minimumSetClosesGap": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether correcting the set would bring óskýrt within the benchmark. False means the walk ran out of people to lift — the gap is carried by the advantaged group sitting above the line, so the list must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog."
           },
           "thresholdLog": {
             "type": "number",
@@ -6345,7 +6350,6 @@
           "femaleMedianSalary": { "type": "number" },
           "overallMedianSalary": { "type": "number" },
           "averageWageGapPercent": { "type": "number", "nullable": true },
-          "medianWageGapPercent": { "type": "number", "nullable": true },
           "maleCount": { "type": "number" },
           "femaleCount": { "type": "number" }
         },

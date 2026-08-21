@@ -14,9 +14,7 @@ import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportResultModel } from '../report-result/models/report-result.model'
-import {
-  AUTO_REVIEW_LOGGING_CONTEXT,
-} from './report-auto-review.constants'
+import { AUTO_REVIEW_LOGGING_CONTEXT } from './report-auto-review.constants'
 import {
   AutoReviewSignals,
   AutoReviewVerdict,
@@ -108,6 +106,8 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       gapImproved,
       oskyrtAvailable: decomposition?.oskyrtAvailable ?? null,
       adjustedGapPercent: decomposition?.oskyrtPercent ?? null,
+      minimumSetSize: decomposition?.minimumSetSize ?? null,
+      minimumSetClosesGap: decomposition?.minimumSetClosesGap ?? null,
     }
   }
 
@@ -184,12 +184,26 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
   /**
    * The decision rule.
    *
-   * Three branches, and the middle one carries all the weight:
-   * `outlierEmployees === 0` **is** "óskýrður launamunur is within the statutory
-   * benchmark". The lágmarksmengi is built by a greedy walk that stops the moment
-   * the running gap drops under the threshold, so an empty set and a compliant
-   * gap are the same fact — measured on the unrounded log figure rather than a
-   * rounded percentage, which matters at the boundary.
+   * Three branches, and the middle one carries all the weight: the report is
+   * compliant iff the frozen snapshot says the gap was ALREADY within the
+   * benchmark — an empty lágmarksmengi that also closes the gap.
+   *
+   * ⚠️ **Tests the FLAG, not just the size.** They coincide today, but only as a
+   * consequence of the reference being a least-squares fit through the whole
+   * workforce: óskýrt ≠ 0 forces the disadvantaged cohort's residuals to sum
+   * against it, so at least one member sits below the line and the candidate pool
+   * is never empty (measured: zero occurrences in 20.000 synthetic cohorts). That
+   * is a property of the fit, not of this rule, and it would break silently if the
+   * reference ever changed. The size also cannot say WHY the walk stopped —
+   * reaching the benchmark and exhausting the candidates look identical.
+   * `minimumSetClosesGap` separates them.
+   *
+   * ⚠️ **Read off the SNAPSHOT, not `outlierEmployees`.** That signal is a
+   * `COUNT(*)` over `report_employee_outlier` rows written by the create-path
+   * decomposition, which is computed from unrounded payload floats while the
+   * snapshot is computed from `DECIMAL`-rounded rows. The two can disagree, and
+   * the reviewer's card reads the snapshot — so keying the decision on the row
+   * count let the decision and the displayed figure diverge.
    *
    * ⚠️ **This deliberately no longer consults `outlierRatio`, `gapPercent` or
    * `gapImproved`.** All three are still collected for the audit trail, and they
@@ -222,7 +236,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       }
     }
 
-    if (signals.outlierEmployees === 0) {
+    if (signals.minimumSetSize === 0 && signals.minimumSetClosesGap === true) {
       return {
         decision: AutoReviewDecisionEnum.AUTO_APPROVE,
         reason:
@@ -233,7 +247,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
 
     return {
       decision: AutoReviewDecisionEnum.NEEDS_REVIEW,
-      reason: `Óskýrður launamunur er yfir viðmiði — ${signals.outlierEmployees} starfsmaður/starfsmenn í úrbótaáætlun krefjast yfirferðar.`,
+      reason: `Óskýrður launamunur er yfir viðmiði — ${signals.minimumSetSize ?? 0} starfsmaður/starfsmenn í úrbótaáætlun krefjast yfirferðar.`,
       signals,
     }
   }
@@ -250,6 +264,8 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
         totalEmployees: 0,
         outlierEmployees: 0,
         outlierRatio: null,
+        minimumSetSize: null,
+        minimumSetClosesGap: null,
         gapPercent: null,
         previousGapPercent: null,
         gapImproved: null,

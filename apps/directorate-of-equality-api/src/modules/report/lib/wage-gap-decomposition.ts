@@ -112,8 +112,6 @@ export enum WageGapDirectionEnum {
   NONE = 'NONE',
 }
 
-
-
 export type WageGapEmployeeSnapshot = {
   ordinal: number
   gender: GenderEnum
@@ -176,7 +174,24 @@ export type WageGapDecompositionSnapshot = {
   employees: WageGapEmployeeSnapshot[]
   correctableCount: number
   minimumSetSize: number
+  /**
+   * óskýrt after the set's counterfactual correction, RECOMPUTED — a refitted
+   * figure, not `|óskýrt| − Σ|framlag|`. Magnitude.
+   */
   oskyrtLogAfterMinimumSet: number | null
+  /**
+   * Whether correcting the set would actually bring óskýrt within the benchmark.
+   *
+   * `false` means the walk ran out of people to lift: the gap is carried by the
+   * advantaged group sitting above the line, and no set of raises on the
+   * disadvantaged side reaches the benchmark. The list is still the right list
+   * to account for — it just must not be presented as closing the gap. Null when
+   * there is no computable gap at all.
+   *
+   * ⚠️ Do NOT re-derive this by comparing `oskyrtLogAfterMinimumSet` to
+   * `thresholdLog` and expecting agreement at the boundary; read this flag.
+   */
+  minimumSetClosesGap: boolean | null
   thresholdLog: number
   benchmarkPercent: number
 }
@@ -195,8 +210,7 @@ export type WageGapEmployeeInput = {
  * columns. (Today `fitLinear` takes one x, so a second covariate means moving
  * to a multivariate fit; the point is that callers do not change.)
  */
-const buildDesign = (employee: WageGapEmployeeInput): number =>
-  employee.score
+const buildDesign = (employee: WageGapEmployeeInput): number => employee.score
 
 /**
  * LEIÐRÉTTUR, and the geometric óleiðréttur: magnitude from the ABSOLUTE log
@@ -307,6 +321,7 @@ const emptySnapshot = (
   correctableCount: 0,
   minimumSetSize: 0,
   oskyrtLogAfterMinimumSet: null,
+  minimumSetClosesGap: null,
   thresholdLog: thresholdLogFor(benchmarkPercent),
   benchmarkPercent,
 })
@@ -317,6 +332,216 @@ const emptySnapshot = (
  */
 export function thresholdLogFor(benchmarkPercent: number): number {
   return -Math.log(1 - benchmarkPercent / 100)
+}
+
+/** One fit's worth of output: the gap, its split, and each employee's part. */
+type GapAttribution = {
+  pooledFit: LinearFit
+  rawGapLog: number
+  explained: number
+  oskyrtLog: number
+  disadvantagedGender: WageGapDirectionEnum
+  employees: WageGapEmployeeSnapshot[]
+}
+
+/**
+ * One pooled fit over the wages handed in, plus every employee's contribution.
+ *
+ * Extracted from {@link computeWageGapDecomposition} for one reason: the
+ * lágmarksmengi walk has to ask "what would óskýrt be if this person were paid
+ * differently", and the only honest way to answer is to fit again. Everything
+ * here is a pure function of `usable`, so calling it with one wage changed gives
+ * the genuinely refitted answer.
+ */
+function attributeGap(
+  usable: WageGapEmployeeInput[],
+  isMale: (employee: WageGapEmployeeInput) => boolean,
+  pooledReferenceMode: PooledReferenceModeEnum,
+): GapAttribution {
+  const logWage = (employee: WageGapEmployeeInput) =>
+    Math.log(employee.hourlyWage)
+  const men = usable.filter(isMale)
+  const women = usable.filter((employee) => !isMale(employee))
+
+  const pooledFit = fitLinear(
+    usable.map((employee) => ({
+      x: buildDesign(employee),
+      y: logWage(employee),
+    })),
+  )
+
+  const rawGapLog = mean(men.map(logWage)) - mean(women.map(logWage))
+
+  // skýrt = (s̄_M − s̄_W) · β*₁. β*₀ cancels out of the twofold split entirely
+  // (it appears as −β*₀ + β*₀), so only the pooled SLOPE is ever needed.
+  const pooledSlope = resolvePooledSlope(
+    pooledReferenceMode,
+    pooledFit,
+    men,
+    women,
+    buildDesign,
+    logWage,
+  )
+  const explained =
+    (mean(men.map(buildDesign)) - mean(women.map(buildDesign))) * pooledSlope
+  const oskyrtLog = rawGapLog - explained
+
+  // ⚠️ The sign rule is fixed by GENDER, not by which gender turns out to be
+  // advantaged: men contribute +leif/n_M and women −leif/n_W, so
+  // Σ framlag ≡ m_M − m_W ≡ oskyrtLog with its sign intact, in both directions.
+  const disadvantagedGender: WageGapDirectionEnum =
+    oskyrtLog > 0
+      ? WageGapDirectionEnum.FEMALE
+      : oskyrtLog < 0
+        ? WageGapDirectionEnum.MALE
+        : WageGapDirectionEnum.NONE
+
+  const employees: WageGapEmployeeSnapshot[] = usable.map((employee) => {
+    const fitted =
+      (pooledFit.intercept ?? 0) +
+      (pooledFit.slope ?? 0) * buildDesign(employee)
+    const residualLog = logWage(employee) - fitted
+    const male = isMale(employee)
+    const contributionLog = male
+      ? residualLog / men.length
+      : -residualLog / women.length
+
+    const payStatus =
+      residualLog < 0
+        ? PayStatusEnum.UNDERPAID
+        : residualLog > 0
+          ? PayStatusEnum.OVERPAID
+          : PayStatusEnum.ON_LINE
+
+    const employeeGenderSide = male
+      ? WageGapDirectionEnum.MALE
+      : WageGapDirectionEnum.FEMALE
+
+    return {
+      ordinal: employee.ordinal,
+      gender: employee.gender,
+      score: employee.score,
+      hourlyWage: employee.hourlyWage,
+      expectedHourlyWage: Math.exp(fitted),
+      deviationPercent: (Math.exp(residualLog) - 1) * 100,
+      residualLog,
+      contributionLog,
+      contributionShare:
+        oskyrtLog === 0 ? null : (contributionLog / oskyrtLog) * 100,
+      payStatus,
+      isCorrectable:
+        payStatus === PayStatusEnum.UNDERPAID &&
+        employeeGenderSide === disadvantagedGender,
+      inMinimumSet: false,
+    }
+  })
+
+  return {
+    pooledFit,
+    rawGapLog,
+    explained,
+    oskyrtLog,
+    disadvantagedGender,
+    employees,
+  }
+}
+
+/**
+ * The lágmarksmengi: the fewest employees who have to be accounted for.
+ *
+ * ⚠️ **A SELECTION device, not a prescription.** The counterfactual lift below
+ * is how the list is chosen; it is not a raise anyone is being told to give. The
+ * úrbótaáætlun asks the company for a reason and an action per listed employee,
+ * and improvement is demonstrated at company level at the next report — so the
+ * only thing that matters here is that the list be minimal and defensible.
+ * Naming a person carries a burden, and naming two more than necessary is a real
+ * unfairness even though no money is prescribed.
+ *
+ * ⚠️ **Refits after every pick, and that is the whole point.** This used to be
+ * `running -= |contributionLog|` over a candidate list sorted once — arithmetic
+ * on a fit that was never recomputed. But óskýrt is
+ * `rawGapLog − (s̄_M − s̄_W)·β*₁`, and β*₁ is fitted to the very wages being
+ * changed: raising one person moves the line and every other residual with it.
+ * The omitted term is `−(s̄_M − s̄_W)·(xᵢ − x̄)·Δy / SSx`, zero only when the two
+ * genders happen to share a mean score. Measured over synthetic cohorts, the
+ * old estimate put the set at 16 where a refit needs 14, and elsewhere claimed
+ * compliance at cohorts that were still over the benchmark after correction —
+ * wrong in both directions, so not even conservative.
+ *
+ * There is no new constant and no tolerance: the loop stops when the RECOMPUTED
+ * gap is within the same statutory `thresholdLog`, or when the side runs out.
+ *
+ * ⚠️ Identity is by `ordinal`, which `assertParsedPayloadIntegrity` guarantees
+ * unique upstream. Duplicated ordinals would lift more than one row per pick.
+ */
+function selectMinimumSet(
+  usable: WageGapEmployeeInput[],
+  isMale: (employee: WageGapEmployeeInput) => boolean,
+  pooledReferenceMode: PooledReferenceModeEnum,
+  thresholdLog: number,
+  initial: GapAttribution,
+): { chosen: Set<number>; oskyrtLogAfter: number; closesGap: boolean } {
+  const gapWith = (rows: WageGapEmployeeInput[]) =>
+    Math.abs(attributeGap(rows, isMale, pooledReferenceMode).oskyrtLog)
+
+  const initialGap = Math.abs(initial.oskyrtLog)
+  if (initialGap <= thresholdLog) {
+    return { chosen: new Set(), oskyrtLogAfter: initialGap, closesGap: true }
+  }
+
+  // ⚠️ Lift targets come from the ORIGINAL fit — the very
+  // `expectedHourlyWage` the snapshot publishes for each employee and the
+  // úrbótaáætlun table prints as `Væntanlegt tímakaup`. That is deliberate and
+  // it is the reason this is not a step-by-step refit of the lift AMOUNTS: a
+  // reviewer must be able to take the published set, raise each member to the
+  // published figure, re-run the engine and land on exactly
+  // `oskyrtLogAfterMinimumSet`. Re-deriving targets from intermediate fits gave
+  // a marginally different number that appeared nowhere in the snapshot and so
+  // could not be audited or reproduced.
+  const targets = new Map(
+    initial.employees.map((employee) => [
+      employee.ordinal,
+      employee.expectedHourlyWage,
+    ]),
+  )
+
+  // Ordered once, biggest carrier of óskýrt first. Greedy, so "fewest" is an
+  // approximation rather than a proven optimum — as it was before — but the
+  // STOPPING TEST is now a real refit instead of a running subtraction.
+  const candidates = initial.employees
+    .filter((employee) => employee.isCorrectable)
+    .sort((a, b) => Math.abs(b.contributionLog) - Math.abs(a.contributionLog))
+
+  const chosen = new Set<number>()
+  let gap = initialGap
+  for (const candidate of candidates) {
+    chosen.add(candidate.ordinal)
+    gap = gapWith(
+      usable.map((employee) =>
+        chosen.has(employee.ordinal)
+          ? {
+              ...employee,
+              hourlyWage: targets.get(employee.ordinal) ?? employee.hourlyWage,
+            }
+          : employee,
+      ),
+    )
+    if (gap <= thresholdLog) {
+      return { chosen, oskyrtLogAfter: gap, closesGap: true }
+    }
+  }
+
+  // Exhausted. The gap is carried by people this side cannot reach — most often
+  // a small, well-paid advantaged group sitting above the line — so no set of
+  // raises here closes it. The list still stands as the employees to account
+  // for; it simply must not be presented as closing the gap.
+  //
+  // ⚠️ `chosen` is empty here only if the pool was empty to begin with, which an
+  // OLS reference makes unreachable: óskýrt ≠ 0 forces the disadvantaged
+  // cohort's residuals to sum against it, so at least one member is strictly
+  // below the line. Kept as a defensive branch — non-emptiness is guaranteed by
+  // the fit, not by this function.
+  return { chosen, oskyrtLogAfter: gap, closesGap: false }
 }
 
 export function computeWageGapDecomposition(input: {
@@ -361,11 +586,13 @@ export function computeWageGapDecomposition(input: {
     return emptySnapshot(blockers, warnings, counts, benchmarkPercent)
   }
 
-  // ── The one fit: gender-blind, pooled, on log(tímakaup) ──────────────────
-  const logWage = (e: WageGapEmployeeInput) => Math.log(e.hourlyWage)
-  const pooledFit = fitLinear(
-    usable.map((e) => ({ x: buildDesign(e), y: logWage(e) })),
-  )
+  // ── The fit, the attribution, and the warnings that depend on them ───────
+  // `attributeGap` is a pure function of the rows handed to it, which is what
+  // lets the lágmarksmengi walk below call it again on modified wages.
+  const core = attributeGap(usable, isMale, pooledReferenceMode)
+  const { pooledFit, rawGapLog, explained, oskyrtLog, disadvantagedGender } =
+    core
+  const employees = core.employees
 
   // ⚠️ `xSumSquares`, NOT `slope !== null`: a degenerate fit returns slope 0,
   // not null, so the slope alone cannot distinguish "no variation to explain
@@ -384,97 +611,17 @@ export function computeWageGapDecomposition(input: {
     warnings.push(WageGapWarningEnum.NO_SCORE_OVERLAP)
   }
 
-  const maleLogMean = mean(men.map(logWage))
-  const femaleLogMean = mean(women.map(logWage))
-  const rawGapLog = maleLogMean - femaleLogMean
-
-  const maleScoreMean = mean(men.map(buildDesign))
-  const femaleScoreMean = mean(women.map(buildDesign))
-
-  // skýrt = (s̄_M − s̄_W) · β*₁. Note β*₀ cancels out of the twofold split
-  // entirely (it appears as −β*₀ + β*₀), so only the pooled SLOPE is ever
-  // needed — there is no pooled intercept to store.
-  const pooledSlope = resolvePooledSlope(
-    pooledReferenceMode,
-    pooledFit,
-    men,
-    women,
-    buildDesign,
-    logWage,
-  )
-  const explained = (maleScoreMean - femaleScoreMean) * pooledSlope
-  const oskyrtLog = rawGapLog - explained
-
-  // ── Per-employee attribution ─────────────────────────────────────────────
-  // ⚠️ The sign rule is fixed by GENDER, not by which gender turns out to be
-  // advantaged: men contribute +leif/n_M and women −leif/n_W, so
-  // Σ framlag ≡ m_M − m_W ≡ oskyrtLog with its sign intact, in both directions.
-  // (The plan's prose phrased this as advantaged/disadvantaged, which silently
-  // flips the sum's sign when men are the underpaid group — the identity test
-  // catches it immediately.)
-  const disadvantagedGender: WageGapDirectionEnum =
-    oskyrtLog > 0
-      ? WageGapDirectionEnum.FEMALE
-      : oskyrtLog < 0
-        ? WageGapDirectionEnum.MALE
-        : WageGapDirectionEnum.NONE
-
-  const employees: WageGapEmployeeSnapshot[] = usable.map((e) => {
-    const fitted =
-      (pooledFit.intercept ?? 0) + (pooledFit.slope ?? 0) * buildDesign(e)
-    const residualLog = logWage(e) - fitted
-    const male = isMale(e)
-    const contributionLog = male
-      ? residualLog / men.length
-      : -residualLog / women.length
-
-    const payStatus =
-      residualLog < 0
-        ? PayStatusEnum.UNDERPAID
-        : residualLog > 0
-          ? PayStatusEnum.OVERPAID
-          : PayStatusEnum.ON_LINE
-
-    const employeeGenderSide = male
-      ? WageGapDirectionEnum.MALE
-      : WageGapDirectionEnum.FEMALE
-
-    return {
-      ordinal: e.ordinal,
-      gender: e.gender,
-      score: e.score,
-      hourlyWage: e.hourlyWage,
-      expectedHourlyWage: Math.exp(fitted),
-      deviationPercent: (Math.exp(residualLog) - 1) * 100,
-      residualLog,
-      contributionLog,
-      contributionShare:
-        oskyrtLog === 0 ? null : (contributionLog / oskyrtLog) * 100,
-      payStatus,
-      isCorrectable:
-        payStatus === PayStatusEnum.UNDERPAID &&
-        employeeGenderSide === disadvantagedGender,
-      inMinimumSet: false,
-    }
-  })
-
   // ── Lágmarksmengi ────────────────────────────────────────────────────────
-  // ⚠️ LIFT ONLY. Candidates are the UNDERPAID side of the DISADVANTAGED gender,
-  // so this can never propose cutting anyone's pay. Overpaid members of the
-  // advantaged gender keep their real (positive) contribution in `employees` —
-  // that array is the audit trail — but never enter the set.
   const thresholdLog = thresholdLogFor(benchmarkPercent)
-  const candidates = employees
-    .filter((e) => e.isCorrectable)
-    .sort(
-      (a, b) => Math.abs(b.contributionLog) - Math.abs(a.contributionLog),
-    )
-
-  let running = Math.abs(oskyrtLog)
-  for (const candidate of candidates) {
-    if (running <= thresholdLog) break
-    running -= Math.abs(candidate.contributionLog)
-    candidate.inMinimumSet = true
+  const selection = selectMinimumSet(
+    usable,
+    isMale,
+    pooledReferenceMode,
+    thresholdLog,
+    core,
+  )
+  for (const employee of employees) {
+    employee.inMinimumSet = selection.chosen.has(employee.ordinal)
   }
 
   const rawPercent = gapPercentFromMeans(
@@ -508,9 +655,10 @@ export function computeWageGapDecomposition(input: {
     oskyrtPercentLowerBase: lowerBasePercent(oskyrtLog),
     disadvantagedGender,
     employees,
-    correctableCount: candidates.length,
+    correctableCount: employees.filter((e) => e.isCorrectable).length,
     minimumSetSize: employees.filter((e) => e.inMinimumSet).length,
-    oskyrtLogAfterMinimumSet: running,
+    oskyrtLogAfterMinimumSet: selection.oskyrtLogAfter,
+    minimumSetClosesGap: selection.closesGap,
     thresholdLog,
     benchmarkPercent,
   }

@@ -5,6 +5,7 @@ import {
   ApiDtoArray,
   ApiEnum,
   ApiNumber,
+  ApiOptionalBoolean,
   ApiOptionalDto,
   ApiOptionalEnum,
   ApiOptionalNumber,
@@ -134,7 +135,9 @@ export class WageGapEmployeeDto {
   })
   expectedHourlyWage!: number
 
-  @ApiNumber({ description: 'frávik %: (raun − væntanlegt) / væntanlegt × 100.' })
+  @ApiNumber({
+    description: 'frávik %: (raun − væntanlegt) / væntanlegt × 100.',
+  })
   deviationPercent!: number
 
   @ApiNumber({ description: 'Residual in log points. Signed.' })
@@ -142,7 +145,7 @@ export class WageGapEmployeeDto {
 
   @ApiNumber({
     description:
-      'This employee\'s contribution to óskýrt, in log points. Signed; sums exactly to oskyrtLog across all employees.',
+      "This employee's contribution to óskýrt, in log points. Signed; sums exactly to oskyrtLog across all employees.",
   })
   contributionLog!: number
 
@@ -266,15 +269,15 @@ export class WageGapDecompositionDto {
   @ApiArray({
     enum: WageGapBlockerEnum,
     isArray: true,
-    description: 'Echoes the raw-tier blockers so consumers need not reason about tiers.',
+    description:
+      'Echoes the raw-tier blockers so consumers need not reason about tiers.',
   })
   oskyrtBlockers!: WageGapBlockerEnum[]
 
   @ApiArray({
     enum: WageGapWarningEnum,
     isArray: true,
-    description:
-      'Soft: the figures ARE computed but must be shown caveated.',
+    description: 'Soft: the figures ARE computed but must be shown caveated.',
   })
   warnings!: WageGapWarningEnum[]
 
@@ -287,22 +290,32 @@ export class WageGapDecompositionDto {
   @ApiOptionalDto(WageGapPooledFitDto, { nullable: true })
   pooledFit!: WageGapPooledFitDto | null
 
-  @ApiOptionalNumber({ nullable: true, description: 'Δ in log points. Signed.' })
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'Δ in log points. Signed.',
+  })
   rawGapLog!: number | null
 
   @ApiOptionalNumber({
     nullable: true,
-    description: 'óskýrt in log points. Signed. Source of truth for the benchmark test.',
+    description:
+      'óskýrt in log points. Signed. Source of truth for the benchmark test.',
   })
   oskyrtLog!: number | null
 
   @ApiDto(WageGapTwofoldDto)
   twofold!: WageGapTwofoldDto
 
-  @ApiOptionalNumber({ nullable: true, description: 'Arithmetic mean, kr./klst.' })
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'Arithmetic mean, kr./klst.',
+  })
   meanHourlyWageMale!: number | null
 
-  @ApiOptionalNumber({ nullable: true, description: 'Arithmetic mean, kr./klst.' })
+  @ApiOptionalNumber({
+    nullable: true,
+    description: 'Arithmetic mean, kr./klst.',
+  })
   meanHourlyWageFemale!: number | null
 
   @ApiOptionalNumber({
@@ -317,7 +330,8 @@ export class WageGapDecompositionDto {
 
   @ApiOptionalNumber({
     nullable: true,
-    description: 'Geometric equivalent of rawGapPercent. Stored for basis swaps.',
+    description:
+      'Geometric equivalent of rawGapPercent. Stored for basis swaps.',
   })
   rawGapPercentGeometric!: number | null
 
@@ -333,7 +347,8 @@ export class WageGapDecompositionDto {
 
   @ApiOptionalNumber({
     nullable: true,
-    description: 'exp(|óskýrt|) − 1 — the lower-paid-group basis. Stored, not displayed.',
+    description:
+      'exp(|óskýrt|) − 1 — the lower-paid-group basis. Stored, not displayed.',
   })
   oskyrtPercentLowerBase!: number | null
 
@@ -343,19 +358,34 @@ export class WageGapDecompositionDto {
   @ApiDtoArray(WageGapEmployeeDto)
   employees!: WageGapEmployeeDto[]
 
-  @ApiNumber({ description: 'All underpaid employees of the disadvantaged gender.' })
+  @ApiNumber({
+    description: 'All underpaid employees of the disadvantaged gender.',
+  })
   correctableCount!: number
 
-  @ApiNumber({ description: 'Size of the lágmarksmengi. 0 when already compliant.' })
+  @ApiNumber({
+    description:
+      'Size of the lágmarksmengi — the fewest employees who must be accounted for in the úrbótaáætlun. 0 when already within the benchmark. The counterfactual correction used to pick them is a SELECTION device, not a prescribed raise.',
+  })
   minimumSetSize!: number
 
   @ApiOptionalNumber({
     nullable: true,
-    description: 'óskýrt in log points after correcting the lágmarksmengi.',
+    description:
+      "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude.",
   })
   oskyrtLogAfterMinimumSet!: number | null
 
-  @ApiNumber({ description: 'The benchmark in log points: −log(1 − benchmark/100).' })
+  @ApiOptionalBoolean({
+    nullable: true,
+    description:
+      'Whether correcting the set would bring óskýrt within the benchmark. False means the walk ran out of people to lift — the gap is carried by the advantaged group sitting above the line, so the list must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog.',
+  })
+  minimumSetClosesGap!: boolean | null
+
+  @ApiNumber({
+    description: 'The benchmark in log points: −log(1 − benchmark/100).',
+  })
   thresholdLog!: number
 
   @ApiNumber({ description: 'The configured benchmark percent (e.g. 3.9).' })

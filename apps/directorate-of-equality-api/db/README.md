@@ -46,7 +46,7 @@ Companies carry an industry classification using the Icelandic ÍSAT2008 standar
 How we handle it:
 
 - **Leaf codes only on the company.** `isat_category` is seeded with the 665 leaf (5-digit, two-dot) ÍSAT2008 codes, and a company is always classified at its own leaf — groups and classes are not stored.
-- **Section and division are stored on the leaf, for rollup filtering.** `isat_category.division` is the 2-digit prefix (`01110` → `01`), and `isat_category.section` is the ÍSAT bálkur letter (`A`–`U`, or `X`), a FK into the 22-row `isat_section` reference table. Section is *not* arithmetic on the division but it is a **total function** of it, via the fixed NACE Rev. 2 division→section table encoded in the `isat_section_for_code()` SQL function — the single source of truth used both by the backfill and by `db/seeders/seed-isat-category.js`. A division outside NACE yields NULL and trips the `NOT NULL`, rather than silently misfiling the row. This mirrors `postcode → region`: the rollup is reached by joining and is never denormalized onto the company.
+- **Section and division are stored on the leaf, for rollup filtering.** `isat_category.division` is the 2-digit prefix (`01110` → `01`), and `isat_category.section` is the ÍSAT bálkur letter (`A`–`U`, or `X`), a FK into the 22-row `isat_section` reference table. Section is _not_ arithmetic on the division but it is a **total function** of it, via the fixed NACE Rev. 2 division→section table encoded in the `isat_section_for_code()` SQL function — the single source of truth used both by the backfill and by `db/seeders/seed-isat-category.js`. A division outside NACE yields NULL and trips the `NOT NULL`, rather than silently misfiling the row. This mirrors `postcode → region`: the rollup is reached by joining and is never denormalized onto the company.
   - **`X` (Óþekkt starfsemi) is the one exception to the division rule.** ÍSAT2008 adds it on the fifth digit and NACE has no equivalent, so division `99` holds both `99.00.0` (extraterritorial organisations → `U`) and `99.99.9` (unknown activity → `X`). `isat_section_for_code()` matches `99999` on the whole code, ahead of the division rules. Mapping it by division instead would file every company of unknown activity under `U` and surface them in the section filter as embassies.
   - Icelandic section names in `isat_section` are verbatim from [Hagstofan's ÍSAT2008 handbook](https://hagstofa.is/media/49171/isat2008.pdf); English names are the official NACE Rev. 2 section titles. Don't reword them.
 - **Normalized code is the key.** `isat_category.code` is the normalized 5-digit form (`01110`). The dotted form (`01.11.0`) is kept alongside for display only. Company-level classification is always the normalized code.
@@ -68,7 +68,7 @@ How we handle it:
 **How rows actually get classified.** The three creation paths differ, and the difference matters when reading `sector` data:
 
 - `CompanyService.create` (admin creates one company) — classified, from the same RSK call that supplies address/postcode/ÍSAT.
-- `getOrCreateByNationalId` / `getOrCreateSubsidiaryReportSnapshotSource` (auto-provision) — classified, via one extra RSK call for the legal form only. These create from the *national* registry, which carries no legal form. RSK's `status` is deliberately **not** taken here: a deregistered record would create the company `INACTIVE` and block the very submission that triggered the provisioning.
+- `getOrCreateByNationalId` / `getOrCreateSubsidiaryReportSnapshotSource` (auto-provision) — classified, via one extra RSK call for the legal form only. These create from the _national_ registry, which carries no legal form. RSK's `status` is deliberately **not** taken here: a deregistered record would create the company `INACTIVE` and block the very submission that triggered the provisioning.
 - `CompanyImportService` (annual `.xlsx`) — **not classified.** Rows are born `UNKNOWN`.
 
 Most companies arrive through the import, so most of the register is `UNKNOWN` and stays that way until it is filled deliberately. That is a decision, not a gap: RSK has no bulk endpoint, the workbook carries no legal-form column, and `reconcile` runs for both preview and apply — so per-row lookups would mean thousands of HTTP calls, twice per import. **An automated RSK sweep was considered and ruled out.** Don't add one without revisiting that call.
@@ -160,45 +160,50 @@ launamunur** — the Oaxaca-Blinder unexplained term on `log(reglulegt tímakaup
 benchmark in `config.salary_difference_threshold_percent` (3,9%). Above it, the company owes an
 **áætlun um úrbætur**. Nothing is ever auto-rejected; every rejection is a human decision.
 
-**The employees that plan must account for are the `lágmarksmengi`:** the *fewest* underpaid members
+**The employees that plan must account for are the `lágmarksmengi`:** the _fewest_ underpaid members
 of the disadvantaged gender whose correction brings óskýrt under the benchmark. Membership is flagged
 per employee in the same snapshot (`employees[].inMinimumSet`) and persisted as
 `report_employee_outlier` rows.
 
 Three properties of that set are easy to get wrong:
 
-- **It is lift-only.** Candidates are underpaid members of the *disadvantaged* gender only, so the
+- **It is lift-only.** Candidates are underpaid members of the _disadvantaged_ gender only, so the
   set can never propose cutting anyone's pay — and an employee paid **above** the line is never a
   member, however far above.
 - **It is single-gender**, whichever gender the gap disfavours. That follows from the arithmetic:
   residuals sum to zero, so if one group's mean residual is higher the other's must be negative.
 - ⚠️ **Membership is a property of the SET, not of the person.** It comes from a greedy walk down the
-  correctable employees ordered by their contribution, stopping the moment the running gap drops under
-  the benchmark. Two employees on near-identical pay and score can land on opposite sides of the cut,
-  and the honest answer to *"why me and not my colleague?"* is "you carried more of the gap and N
+  correctable employees ordered by their contribution, applying each one's counterfactual correction,
+  **refitting**, and stopping once the recomputed gap is under the benchmark. Two employees on near-identical pay and score can land on opposite sides of the cut,
+  and the honest answer to _"why me and not my colleague?"_ is "you carried more of the gap and N
   corrections were enough" — not anything about that person alone.
 
-**An empty set and a compliant gap are the same fact.** `minimumSetSize === 0` ⟺ óskýrt is within the
-benchmark, because the greedy walk's exit condition *is* that comparison. Prefer reading the set:
-it uses the unrounded log figure, whereas comparing rounded percentages disagrees at the boundary
-(óskýrt of `0,03978087001184605` against a threshold of `0,0397808700118446` puts one employee in the
-set while the displayed percent rounds to exactly 3,9). Both the auto-review rule and the reviewer UI
-read the set for this reason.
+**Compliance is `minimumSetClosesGap`, not the size of the set.** Read the flag. It is decided on the
+unrounded log figure, whereas comparing rounded percentages disagrees at the boundary (óskýrt of
+`0,03978087001184605` against a threshold of `0,0397808700118446` is over the line while the displayed
+percent rounds to exactly 3,9). Both the auto-review rule and the reviewer UI read it for that reason.
+
+An empty set and a compliant gap do coincide today, but that is a property of the _fit_ rather than of
+the rule: óskýrt ≠ 0 forces the disadvantaged cohort's residuals to sum against it, so at least one
+member sits below the line and the candidate pool is never empty (zero occurrences in 20.000 synthetic
+cohorts). The walk also has a second exit — **it can run out of candidates** — and a set that took
+everyone available is not the same as a set that reached the benchmark. `minimumSetClosesGap`
+distinguishes them; the size cannot.
 
 ### Retiring the ±band
 
 Until 2026-08 compliance was decided **per employee**: fit a gender-blind line through
-(starfsmatsstig, tímakaup) and flag anyone further than *half* the statutory threshold (±1,95%) from
+(starfsmatsstig, tímakaup) and flag anyone further than _half_ the statutory threshold (±1,95%) from
 it. That rule is gone, along with `report_result.outlier_analysis_snapshot` which stored its verdicts
 and the tolerance corridor both chart renderers used to shade.
 
 Two consequences worth knowing when reading older code or data:
 
-- **It changed *which* employees are flagged, not just how many.** The band caught deviation in
+- **It changed _which_ employees are flagged, not just how many.** The band caught deviation in
   either direction, so it flagged overpaid staff too; the lágmarksmengi flags the underpaid side. On
   the same six-employee cohort the band flagged the overpaid man and the lágmarksmengi flags the two
   underpaid women.
-- **The set is far smaller, and that is not a proxy for severity.** It is *minimal by construction*,
+- **The set is far smaller, and that is not a proxy for severity.** It is _minimal by construction_,
   so a small set can mean a concentrated problem rather than a mild one. On a 100-employee reference
   cohort the band flagged 100; the lágmarksmengi is 6.
 
@@ -217,7 +222,7 @@ The column is currently named `correction_deadline`, which is a poor fit because
 
 ### 1. Outlier correction deadline (the "fix the gap" clock)
 
-Every salary report **with outliers** gets a deadline to actually *correct* the pay gap. This is a fixed policy, not a per-report or reviewer-set value:
+Every salary report **with outliers** gets a deadline to actually _correct_ the pay gap. This is a fixed policy, not a per-report or reviewer-set value:
 
 - **Default 9 months** from submission. Today this is uniform — every applicable report gets exactly 9 months, with no expectation that the duration will vary per report.
 - The intended action: ~9 months after submission the submitter receives an email asking whether they have fixed their outliers, and answers **yes/no**. (This email/follow-up action does not exist yet.)
@@ -269,7 +274,7 @@ Every report row records who submitted it on the upstream side via the pair `(pr
 
 Each new island.is submission gets its own `provider_id` — the type identifies the channel, the id identifies the individual application on that channel. Once a row exists for a given `(provider_type, provider_id)` tuple, that mapping is permanent: the row is never duplicated, and a future resubmission from the same company comes through as a fresh upstream application with a new `provider_id`. SYSTEM-created rows leave both columns null.
 
-**Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists *and the submitting company matches the existing row's parent*, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
+**Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists _and the submitting company matches the existing row's parent_, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
 ## Report identifier
 
@@ -427,9 +432,9 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 `report_result` holds one immutable report-level snapshot of **reglulegt tímakaup** — `(baseSalary + additionalSalary + bonusSalary) / paidHours`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns (see `report_employee`). It is stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL, and it carries report-level totals plus score-bucket breakdowns.
 
-There was previously a *second* snapshot for base pay alone (`baseSalary / workRatio`). It is gone, and not merely as a simplification: with an **hours** denominator, dividing a base-pay-only numerator by hours that include the overtime which earned the additional and bonus pay is arithmetically incoherent. Under the old full-time-equivalent divisor both variants were coherent; under this one, only the total-pay numerator is. The column is named `salary_snapshot` rather than reusing `base_snapshot` so the name cannot outlive the meaning.
+There was previously a _second_ snapshot for base pay alone (`baseSalary / workRatio`). It is gone, and not merely as a simplification: with an **hours** denominator, dividing a base-pay-only numerator by hours that include the overtime which earned the additional and bonus pay is arithmetically incoherent. Under the old full-time-equivalent divisor both variants were coherent; under this one, only the total-pay numerator is. The column is named `salary_snapshot` rather than reusing `base_snapshot` so the name cannot outlive the meaning.
 
-The same row also snapshots the **Oaxaca-Blinder decomposition** (`wage_gap_decomposition_snapshot`): the two displayed gap figures, the pooled fit on `log(tímakaup)`, each employee's contribution to the unexplained term, and the lágmarksmengi derived from it. `oskyrtPercent` there is the figure the statutory benchmark tests — *not* `salary_snapshot.totals.salaryDifferences.maleFemale`, which is the unadjusted cohort-mean gap; the two land on opposite sides of the line on real data.
+The same row also snapshots the **Oaxaca-Blinder decomposition** (`wage_gap_decomposition_snapshot`): the two displayed gap figures, the pooled fit on `log(tímakaup)`, each employee's contribution to the unexplained term, and the lágmarksmengi derived from it. `oskyrtPercent` there is the figure the statutory benchmark tests — _not_ `salary_snapshot.totals.salaryDifferences.maleFemale`, which is the unadjusted cohort-mean gap; the two land on opposite sides of the line on real data.
 
 There was previously a third snapshot, `outlier_analysis_snapshot`, holding a per-employee ±1,95% verdict against a fitted line plus four level-space regressions. It retired with the band: compliance is decided company-wide now, and the employees an úrbótaáætlun must account for are the lágmarksmengi. Its regression block was read by nothing — the chart computes its own line at request time. `report_role_result` was dropped in the same batch: written by no code path since it was created, and the last holder of the retired base/full pair.
 
@@ -460,22 +465,22 @@ Bucket placement is informational only, and always was. Compliance is decided by
 
 ## Enums
 
-| Enum                      | Values                                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                      |
-| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                   |
-| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                |
-| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`   |
-| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                             |
-| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                               |
-| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW` |
-| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                   |
-| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                             |
-| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                            |
+| Enum                      | Values                                                                                                                                                                                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GenderEnum`              | `MALE`, `FEMALE`, `NEUTRAL`                                                                                                                                                                                                                                               |
+| `ReportProviderEnum`      | `SYSTEM`, `ISLAND_IS`, `OTHER`                                                                                                                                                                                                                                            |
+| `ReportCriterionTypeEnum` | `RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`, `PERSONAL`                                                                                                                                                                                                         |
+| `ReportStatusEnum`        | `DRAFT`, `SUBMITTED`, `POSTPONED`, `IN_REVIEW`, `DENIED`, `APPROVED`, `SUPERSEDED`, `WITHDRAWN`                                                                                                                                                                           |
+| `ReportTypeEnum`          | `SALARY`, `EQUALITY`                                                                                                                                                                                                                                                      |
+| `SalaryDataBasisEnum`     | `MONTH`, `AVERAGE`                                                                                                                                                                                                                                                        |
+| `ReportEventTypeEnum`     | `SUBMITTED`, `ASSIGNED`, `UNASSIGNED`, `STATUS_CHANGED`, `SUPERSEDED`, `EDITED`, `WITHDRAWN`, `SYSTEM_AUTO_REVIEW`                                                                                                                                                        |
+| `AutoReviewDecisionEnum`  | `AUTO_APPROVE`, `NEEDS_REVIEW`                                                                                                                                                                                                                                            |
+| `CompanyStatusEnum`       | `ACTIVE`, `INACTIVE`                                                                                                                                                                                                                                                      |
+| `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                     |
 | `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL` |
-| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                   |
-| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                           |
-| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                            |
+| `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                            |
+| `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                    |
+| `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                     |
 
 ## Naming conventions
 
@@ -524,23 +529,23 @@ DoE staff (reviewers). Matches convention used by other apps in the repo (e.g. `
 
 ### `company`
 
-| Column                            | Type                                                |
-| --------------------------------- | --------------------------------------------------- |
-| `id`                              | `uuid` PK                                           |
-| `name`                            | `text`                                              |
-| `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`) |
-| `national_id`                     | `text` (unique)                                     |
-| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)         |
-| `email`                           | `text` (nullable — admin-set contact email; read by the report-deadline-reminder task) |
-| `address`                         | `text` (nullable)                                   |
-| `postcode_id`                     | `fk → postcode` (nullable)                          |
-| `salary_report_required`          | `boolean`                                           |
-| `salary_report_required_override` | `boolean`                                           |
-| `fines_started`                   | `boolean` (default `false`)                         |
-| `quarantined`                     | `boolean` (default `false`)                         |
-| `next_equality_report_due_at`     | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each EQUALITY approval) |
+| Column                            | Type                                                                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `id`                              | `uuid` PK                                                                                                                  |
+| `name`                            | `text`                                                                                                                     |
+| `employee_count_category`         | `company_size_enum` (`UNKNOWN`/`SMALL`/`MEDIUM`/`LARGE`)                                                                   |
+| `national_id`                     | `text` (unique)                                                                                                            |
+| `status`                          | `company_status_enum` (`ACTIVE`/`INACTIVE`)                                                                                |
+| `email`                           | `text` (nullable — admin-set contact email; read by the report-deadline-reminder task)                                     |
+| `address`                         | `text` (nullable)                                                                                                          |
+| `postcode_id`                     | `fk → postcode` (nullable)                                                                                                 |
+| `salary_report_required`          | `boolean`                                                                                                                  |
+| `salary_report_required_override` | `boolean`                                                                                                                  |
+| `fines_started`                   | `boolean` (default `false`)                                                                                                |
+| `quarantined`                     | `boolean` (default `false`)                                                                                                |
+| `next_equality_report_due_at`     | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each EQUALITY approval)                                |
 | `next_salary_report_due_at`       | `timestamptz` (nullable — seeded, then advanced to `valid_until` on each SALARY approval; gates the salary renewal window) |
-| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)        |
+| `isat_category_code`              | `text` `fk → isat_category(code)` (nullable)                                                                               |
 
 `status` is `ACTIVE` while a company is in the authoritative register and `INACTIVE`
 once it is not. It is set to `INACTIVE` either deliberately by an admin (bankruptcy,
@@ -558,17 +563,17 @@ next due dates; admins act on them via the derived `equalityReportOverdue` /
 
 Immutable, append-only timeline of company-lifecycle events. Mirrors `report_event` but scoped to the company. Insert-only (`created_at` only). Carries `CREATED` (registration), `STATUS_CHANGED` (`ACTIVE`/`INACTIVE` move, with `from_status`/`to_status`), the fines/quarantine toggles (`FINES_STARTED`/`FINES_STOPPED`/`QUARANTINED`/`UNQUARANTINED`, each with an optional `reason` and no status move), and the four deadline-reminder outcomes emitted by the report-deadline-reminder task. For reminder events, `reason` holds the ISO due date being reminded about and `reminder_tier` records which milestone fired — together they form the idempotency key (one row per company per report-kind per tier per due date).
 
-| Column           | Type                                                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| `id`             | `uuid` PK                                                                                  |
-| `company_id`     | `fk → company`                                                                             |
-| `event_type`     | `CompanyEventTypeEnum`                                                                      |
-| `actor_user_id`  | `fk → doe_user` (nullable — null for cron/system; set for admin actions)                   |
-| `status`         | `company_status_enum` (snapshot of the company status at insert)                           |
-| `from_status`    | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                 |
-| `to_status`      | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                 |
-| `reason`         | `text` (nullable — optional reason; for reminder events holds the ISO due date)            |
-| `reminder_tier`  | `company_reminder_tier_enum` (`CompanyReminderTierEnum`; nullable — set only on deadline-reminder events) |
+| Column          | Type                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------- |
+| `id`            | `uuid` PK                                                                                                 |
+| `company_id`    | `fk → company`                                                                                            |
+| `event_type`    | `CompanyEventTypeEnum`                                                                                    |
+| `actor_user_id` | `fk → doe_user` (nullable — null for cron/system; set for admin actions)                                  |
+| `status`        | `company_status_enum` (snapshot of the company status at insert)                                          |
+| `from_status`   | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                                |
+| `to_status`     | `company_status_enum` (nullable — set on `STATUS_CHANGED`)                                                |
+| `reason`        | `text` (nullable — optional reason; for reminder events holds the ISO due date)                           |
+| `reminder_tier` | `company_reminder_tier_enum` (`CompanyReminderTierEnum`; nullable — set only on deadline-reminder events) |
 
 Invariant (enforced via CHECK):
 
@@ -578,24 +583,24 @@ Invariant (enforced via CHECK):
 
 Internal, admin-authored note attached to a company. Unlike `report_comment` there is **no** visibility/author-kind dimension — company comments are reviewer-internal only (companies never see them); the author is always an admin `doe_user`. Soft-deletable so the timeline stays auditable; deleted rows are hidden from the rendered thread.
 
-| Column           | Type                                                |
-| ---------------- | --------------------------------------------------- |
-| `id`             | `uuid` PK                                           |
-| `company_id`     | `fk → company`                                      |
-| `author_user_id` | `fk → doe_user` (nullable)                          |
-| `body`           | `text`                                              |
-| `deleted_at`     | `timestamp` (nullable — soft delete by author)      |
+| Column           | Type                                           |
+| ---------------- | ---------------------------------------------- |
+| `id`             | `uuid` PK                                      |
+| `company_id`     | `fk → company`                                 |
+| `author_user_id` | `fk → doe_user` (nullable)                     |
+| `body`           | `text`                                         |
+| `deleted_at`     | `timestamp` (nullable — soft delete by author) |
 
 ### `isat_category`
 
 Reference table of ÍSAT2008 industry classifications, seeded from `ISAT_2008.json` (665 leaf codes — see [Industry classification](#industry-classification-ísat2008)). Read-only at runtime; refreshed only when the standard changes. `company.isat_category_code` FKs into `code`.
 
-| Column           | Type                                |
-| ---------------- | ----------------------------------- |
-| `code`           | `text` PK (normalized, e.g. `01110`) |
+| Column           | Type                                  |
+| ---------------- | ------------------------------------- |
+| `code`           | `text` PK (normalized, e.g. `01110`)  |
 | `code_dotted`    | `text` (display form, e.g. `01.11.0`) |
-| `description`    | `text` (Icelandic)                  |
-| `description_en` | `text` (English)                    |
+| `description`    | `text` (Icelandic)                    |
+| `description_en` | `text` (English)                      |
 
 ### `company_report`
 
@@ -632,12 +637,12 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `average_employee_female_count`  | `decimal(10, 2)`                                                                                                               |
 | `average_employee_neutral_count` | `decimal(10, 2)`                                                                                                               |
 | `salary_data_basis`              | `SalaryDataBasisEnum` (nullable — see "Salary-data basis")                                                                     |
-| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                                |
+| `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                               |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
-| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)              |
+| `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)             |
 | `imported_from_excel`            | `boolean`                                                                                                                      |
-| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                   |
-| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")          |
+| `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                  |
+| `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")         |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |
 | `reviewer_user_id`               | `fk → doe_user` (nullable)                                                                                                     |
 | `approved_at`                    | `timestamp` (nullable)                                                                                                         |
@@ -678,25 +683,25 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 
 ### `report_employee`
 
-| Column                    | Type                        |
-| ------------------------- | --------------------------- |
-| `id`                      | `uuid` PK                   |
-| `ordinal`                 | `int`                       |
-| `field`                   | `text`                      |
-| `department`              | `text`                      |
-| `start_date`              | `date`                      |
-| `paid_hours`              | `decimal(6, 2)` CHECK > 0    |
-| `base_salary`             | `decimal(14, 2)`            |
-| `additional_fixed_overtime` | `decimal(14, 2)` (nullable) |
-| `additional_fixed_car_allowance` | `decimal(14, 2)` (nullable) |
-| `bonus_occasional_car_allowance` | `decimal(14, 2)` (nullable) |
-| `bonus_occasional_overtime` | `decimal(14, 2)` (nullable) |
-| `bonus_payments`          | `decimal(14, 2)` (nullable) |
-| `bonus_other`             | `decimal(14, 2)` (nullable) |
-| `gender`                  | `GenderEnum`                |
-| `report_employee_role_id` | `fk → report_employee_role` |
-| `report_id`               | `fk → report`               |
-| `score`                   | `decimal(6, 2)` (nullable — see below) |
+| Column                           | Type                                   |
+| -------------------------------- | -------------------------------------- |
+| `id`                             | `uuid` PK                              |
+| `ordinal`                        | `int`                                  |
+| `field`                          | `text`                                 |
+| `department`                     | `text`                                 |
+| `start_date`                     | `date`                                 |
+| `paid_hours`                     | `decimal(6, 2)` CHECK > 0              |
+| `base_salary`                    | `decimal(14, 2)`                       |
+| `additional_fixed_overtime`      | `decimal(14, 2)` (nullable)            |
+| `additional_fixed_car_allowance` | `decimal(14, 2)` (nullable)            |
+| `bonus_occasional_car_allowance` | `decimal(14, 2)` (nullable)            |
+| `bonus_occasional_overtime`      | `decimal(14, 2)` (nullable)            |
+| `bonus_payments`                 | `decimal(14, 2)` (nullable)            |
+| `bonus_other`                    | `decimal(14, 2)` (nullable)            |
+| `gender`                         | `GenderEnum`                           |
+| `report_employee_role_id`        | `fk → report_employee_role`            |
+| `report_id`                      | `fk → report`                          |
+| `score`                          | `decimal(6, 2)` (nullable — see below) |
 
 `score` is **nullable**. It is derived from step assignments and is only
 computed and frozen when the report is submitted, so it is `NULL` while the
@@ -733,15 +738,15 @@ Owns the improvement-plan explanation (`reason` / `action` / `signature_name` / 
 
 Every report with detected outliers always has at least one group. When a salary report is submitted with outliers postponed (parent `status = POSTPONED`), a single default group is created covering every detected outlier with its explanation columns left NULL; the applicant fills them in (or replaces the grouping) on resolve via `PUT /api/v1/application/reports/:providerId/outliers`. The reviewer cannot pick up a `POSTPONED` report (the resolve happens applicant-side); see "Outlier deadlines". `name` is always set.
 
-| Column           | Type                                                                  |
-| ---------------- | --------------------------------------------------------------------- |
-| `id`             | `uuid` PK                                                             |
-| `report_id`      | `fk → report`                                                         |
-| `name`           | `text`                                                                |
-| `reason`         | `text` (nullable — null while postponed / not yet filled)             |
-| `action`         | `text` (nullable — null while postponed / not yet filled)            |
-| `signature_name` | `text` (nullable — null while postponed / not yet filled)            |
-| `signature_role` | `text` (nullable — null while postponed / not yet filled)            |
+| Column           | Type                                                      |
+| ---------------- | --------------------------------------------------------- |
+| `id`             | `uuid` PK                                                 |
+| `report_id`      | `fk → report`                                             |
+| `name`           | `text`                                                    |
+| `reason`         | `text` (nullable — null while postponed / not yet filled) |
+| `action`         | `text` (nullable — null while postponed / not yet filled) |
+| `signature_name` | `text` (nullable — null while postponed / not yet filled) |
+| `signature_role` | `text` (nullable — null while postponed / not yet filled) |
 
 Invariant (enforced via CHECK):
 
@@ -753,11 +758,11 @@ A thin join row pairing a detected outlier employee with its outlier group — o
 
 Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ the default group's explanation columns are NULL). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills the group explanations and flips status `POSTPONED → SUBMITTED`.
 
-| Column               | Type                            |
-| -------------------- | ------------------------------- |
-| `id`                 | `uuid` PK                       |
-| `report_employee_id` | `fk → report_employee`          |
-| `group_id`           | `fk → report_outlier_group`     |
+| Column               | Type                        |
+| -------------------- | --------------------------- |
+| `id`                 | `uuid` PK                   |
+| `report_employee_id` | `fk → report_employee`      |
+| `group_id`           | `fk → report_outlier_group` |
 
 ### `report_employee_role_criterion_step`
 
@@ -783,14 +788,14 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                                | Type                                                                          |
-| ------------------------------------- | ----------------------------------------------------------------------------- |
-| `id`                                  | `uuid` PK                                                                     |
-| `report_id`                           | `fk → report` (unique)                                                        |
-| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation |
+| Column                                | Type                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                             |
+| `report_id`                           | `fk → report` (unique)                                                                |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation         |
 | `calculation_version`                 | `text` (default `v2` — `v1` evaluated FTE-adjusted monthly pay and is not comparable) |
-| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                 |
-| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                |
+| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                         |
+| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                        |
 
 `salary_snapshot` holds:
 
@@ -802,6 +807,8 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
   - `totals` with the same aggregate shape as above
   - `counts` for `overall`, `male`, `female`, `neutral` (`neutral` always `0`)
 
+`wage_gap_decomposition_snapshot` stores the output of the launagreining. For the methodology behind it — what the 3,9% test actually is, how the lágmarksmengi is picked, and what happens on a lopsided or single-gender workforce — see [`docs/launagreining.md`](../docs/launagreining.md).
+
 `wage_gap_decomposition_snapshot` stores:
 
 - `method` and `pooledReferenceMode` — `OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE` under the pooled-OLS (Neumark) reference.
@@ -810,7 +817,17 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 - `oskyrtPercent` — **leiðréttur**, the Oaxaca unexplained term. **This is the figure the statutory benchmark tests.** Direction is carried separately (`oskyrtDirection`) so the test stays direction-agnostic; percentages are magnitudes.
 - `pooledFit` — the fit on `log(tímakaup)` vs stig. `xSumSquares` is the identifiability test, not `slope !== null`: a degenerate fit returns slope `0`.
 - `employees[]` — per ordinal: score, gender, actual and expected tímakaup, deviation, residual, `contributionLog` (sums exactly to `oskyrtLog`), `contributionShare`, `payStatus`, `isCorrectable`, `inMinimumSet`.
-- `correctableCount`, `minimumSetSize`, `oskyrtLogAfterMinimumSet`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest underpaid members of the disadvantaged gender whose correction brings óskýrt under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for.
+- `correctableCount`, `minimumSetSize`, `oskyrtLogAfterMinimumSet`, `minimumSetClosesGap`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest underpaid members of the disadvantaged gender whose correction would bring óskýrt under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for.
+
+  **It is a selection device, not a prescription.** The counterfactual raise is how the list is chosen; nobody is being told to give it. The company files a reason and an action per listed employee, and improvement is demonstrated at company level at the next report. Which is why the wording around it stays remedy-neutral — the UI says the listed employees' pay is lower than their starfsmatsstig imply and asks for ástæður og aðgerðir, and deliberately does not name a fix.
+
+  `oskyrtLogAfterMinimumSet` is **recomputed by refitting** with the set's lifts applied, not `|óskýrt| − Σ|framlag|`. The earlier subtraction held the pooled fit fixed, but β\*₁ is estimated from the very wages the counterfactual changes, so lifting anyone moves the line and every other residual with it. It was wrong in both directions — claiming compliance for cohorts still over the benchmark, and elsewhere padding the set with members it did not need.
+
+  The lift targets are each employee's `expectedHourlyWage` **as published in `employees[]`**, so the figure is reproducible: take the set, raise each member to the printed `Væntanlegt tímakaup`, re-run the engine, land on `oskyrtLogAfterMinimumSet`.
+
+  ⚠️ **Read `minimumSetClosesGap`; do not infer compliance from `minimumSetSize === 0`.** The two coincide today, but only because the reference is a least-squares fit through the whole workforce — see the note in the outlier section above. What the size genuinely cannot tell you is _why_ the walk stopped: reaching the benchmark and running out of candidates produce sets that look identical.
+
+  Because correction is lift-only, that case is not rare. It is the expected shape wherever the advantaged group is small and well paid — a mostly-female workforce with a few highly-paid men — because residuals sum to zero around the fit, so a small advantaged group carries the whole positive side between few people. `closesGap: false` is a normal category of report, not an error state.
 
 Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
 
@@ -833,19 +850,19 @@ Full six permutations precomputed — public consumer does no math. Exact aggreg
 
 Immutable audit row emitted on state-changing actions. Insert-only. See "Audit timeline" for semantics.
 
-| Column              | Type                                                                                                            |
-| ------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `id`                | `uuid` PK                                                                                                       |
-| `report_id`         | `fk → report`                                                                                                   |
-| `event_type`        | `ReportEventTypeEnum`                                                                                           |
-| `actor_user_id`     | `fk → doe_user` (nullable — null for company admin, cron, or system)                                            |
-| `report_status`     | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`)                                      |
-| `from_status`       | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                         |
-| `to_status`         | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                         |
-| `assigned_user_id`  | `fk → doe_user` (nullable — set on `ASSIGNED`)                                                                  |
-| `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                               |
-| `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession) |
-| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)            |
+| Column              | Type                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | `uuid` PK                                                                                                                             |
+| `report_id`         | `fk → report`                                                                                                                         |
+| `event_type`        | `ReportEventTypeEnum`                                                                                                                 |
+| `actor_user_id`     | `fk → doe_user` (nullable — null for company admin, cron, or system)                                                                  |
+| `report_status`     | `ReportStatusEnum` (snapshot at insert; `= to_status` on `STATUS_CHANGED`)                                                            |
+| `from_status`       | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                                               |
+| `to_status`         | `ReportStatusEnum` (nullable — set on `STATUS_CHANGED`)                                                                               |
+| `assigned_user_id`  | `fk → doe_user` (nullable — set on `ASSIGNED`)                                                                                        |
+| `reason`            | `text` (nullable — set on `STATUS_CHANGED` → `DENIED`; carries the denial reason)                                                     |
+| `related_report_id` | `fk → report` (nullable — set on `SUPERSEDED`; points to the newly approved report that triggered supersession)                       |
+| `company_id`        | `fk → company` (nullable — set on `SUBMITTED`; identifies the submitting company for audit purposes)                                  |
 | `system_decision`   | `report_event_system_decision_enum` (`AutoReviewDecisionEnum`; nullable — set only on `SYSTEM_AUTO_REVIEW`; see "System auto-review") |
 
 Invariants (enforce via CHECK):
@@ -903,11 +920,11 @@ No FKs, no relationships. Standalone lookup table.
 
 Distributed-lock bookkeeping for cron tasks. Backs `AdvisoryLockService` (`@dmr.is/shared-modules`), which uses it to prevent duplicate task runs across multiple API containers within a cooldown window — currently the report-deadline-reminder task (migration `m-20260623-report-deadline-reminder-task.js`). One row per job type.
 
-| Column         | Type                                                            |
-| -------------- | --------------------------------------------------------------- |
-| `job_key`      | `integer` PK (job-type id from `DOE_TASK_JOB_IDS`)              |
-| `last_run_at`  | `timestamptz` (when the job last ran)                           |
-| `container_id` | `text` (nullable — container/pod that ran the job, for debug)   |
+| Column         | Type                                                          |
+| -------------- | ------------------------------------------------------------- |
+| `job_key`      | `integer` PK (job-type id from `DOE_TASK_JOB_IDS`)            |
+| `last_run_at`  | `timestamptz` (when the job last ran)                         |
+| `container_id` | `text` (nullable — container/pod that ran the job, for debug) |
 
 No FKs, no relationships. Standalone bookkeeping table.
 

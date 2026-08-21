@@ -86,12 +86,29 @@ describe('wage-gap-decomposition against the reference cohort', () => {
     expect(snapshot.minimumSetSize).toBe(5)
   })
 
+  /**
+   * ⚠️ Was `3.69` while `oskyrtLogAfterMinimumSet` was computed as
+   * `|óskýrt| − Σ|framlag|`. It is now `3.70`: the figure comes from actually
+   * refitting with the set's lifts applied, rather than subtracting
+   * contributions from a fit held fixed. The pooled slope is estimated from the
+   * wages being changed, so lifting anyone moves the line.
+   *
+   * The set is still 5 members and the figure moved by only 0,01pp, which is
+   * precisely why the old approximation looked harmless *here*: 120 rows give a
+   * large `SSx`, and the omitted term scales as `1/SSx`. It is not small at the
+   * cohort sizes that actually file these reports — see `selectMinimumSet`.
+   *
+   * This assertion is also the reproducibility contract: raise each set member
+   * to the `expectedHourlyWage` the snapshot publishes, re-run the engine, and
+   * this is the number you get.
+   */
   it('lands under the benchmark after correcting the lágmarksmengi', () => {
     const after = gapPercentFromLog(snapshot.oskyrtLogAfterMinimumSet).percent
     if (after === null) throw new Error('expected a computed percent')
 
-    expect(after).toBeCloseTo(3.69, 2)
+    expect(after).toBeCloseTo(3.7, 2)
     expect(after).toBeLessThan(3.9)
+    expect(snapshot.minimumSetClosesGap).toBe(true)
   })
 
   /**
