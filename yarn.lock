@@ -4038,6 +4038,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared"
+  dependencies:
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/shared-models-base": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^11.1.29
+    "@nestjs/swagger": ^11.4.6
+    sequelize: 6.37.3
+    sequelize-typescript: 2.1.6
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/doe-web@workspace:apps/directorate-of-equality-web":
   version: 0.0.0-use.local
   resolution: "@dmr.is/doe-web@workspace:apps/directorate-of-equality-web"
