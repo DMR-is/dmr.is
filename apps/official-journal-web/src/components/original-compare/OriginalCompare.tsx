@@ -1,7 +1,6 @@
 import cn from 'classnames'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import dirtyClean from '@dmr.is/regulations-tools/dirtyClean-browser'
 import { getDiff, HTMLDump } from '@dmr.is/regulations-tools/html'
 import { HTMLText } from '@dmr.is/regulations-tools/types'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -21,6 +20,8 @@ export const OriginalCompare = ({ disclosure }: Props) => {
     isValidating,
   } = useCaseContext()
   const [activeText, setActiveText] = useState<'base' | 'diff'>('diff')
+  const [isOpen, setIsOpen] = useState(false)
+  const [diffHtml, setDiffHtml] = useState<HTMLText | null>(null)
 
   const [orignal, _setOriginal] = useState(
     activeCase.history.length > 0
@@ -28,24 +29,41 @@ export const OriginalCompare = ({ disclosure }: Props) => {
       : activeCase.html,
   )
 
-  const html = useMemo(() => {
-    if (activeText === 'base') return orignal as HTMLText
+  // Only compute the diff once the drawer is actually opened. Cleaning +
+  // diffing the full body is expensive (and pulls in sanitize-html), so we
+  // defer both the work and the chunk download until the user asks for it.
+  useEffect(() => {
+    if (!isOpen || activeText !== 'diff') return
 
-    const diffText = getDiff(
-      dirtyClean(orignal as HTMLText),
-      dirtyClean(activeCase.html as HTMLText),
-    )
+    let cancelled = false
+    const computeDiff = async () => {
+      const { simpleSanitize } = await import(
+        '@dmr.is/utils-server/cleanLegacyHtml'
+      )
+      const { diff } = getDiff(
+        simpleSanitize(orignal) as HTMLText,
+        simpleSanitize(activeCase.html) as HTMLText,
+      )
+      if (!cancelled) setDiffHtml(diff)
+    }
+    computeDiff()
 
-    return diffText.diff
-  }, [activeCase.html, activeText])
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, activeText, activeCase.html, orignal])
 
   const diffShowing = activeText === 'diff'
+  const html = diffShowing
+    ? (diffHtml ?? ('' as HTMLText))
+    : (orignal as HTMLText)
 
   return (
     <>
       <Drawer
         baseId="diff_drawer"
         ariaLabel="Sýna breytingar á meginmáli"
+        onVisibilityChange={setIsOpen}
         disclosure={
           disclosure ? (
             disclosure
