@@ -91,6 +91,13 @@
         "cwd": "apps/directorate-of-equality-api"
       }
     },
+    "refresh-reference-company": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/refresh-reference-company.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
     "refresh-wage-gap-fixtures": {
       "executor": "nx:run-commands",
       "options": {

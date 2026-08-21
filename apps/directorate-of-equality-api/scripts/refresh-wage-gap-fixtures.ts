@@ -207,27 +207,43 @@ const fixtures = {
   scenarioWithoutOutliers: scenarioSnapshot(false),
 }
 
-const out = join(DATA_DIR, 'wage-gap-fixtures.json')
-writeFileSync(out, `${JSON.stringify(fixtures, null, 2)}\n`)
+/**
+ * Writes JSON through the repo's own prettier.
+ *
+ * ⚠️ Raw `JSON.stringify` output is NOT what `.prettierrc` produces, so writing
+ * it directly leaves the committed fixture one `nx format:write` away from a
+ * spurious diff — regenerate and it drifts one way, format and it drifts back.
+ * `refresh-template-data.js` had exactly this bug and it surfaced as a CI
+ * failure claiming a generated file was stale when it was not.
+ */
+const writeFixture = async (path: string, value: unknown): Promise<void> => {
+  const prettier = await import('prettier')
+  const payload = `${JSON.stringify(value, null, 2)}\n`
+  writeFileSync(
+    path,
+    await prettier.format(payload, {
+      ...(await prettier.resolveConfig(path)),
+      filepath: path,
+    }),
+  )
+}
 
+const out = join(DATA_DIR, 'wage-gap-fixtures.json')
 const richOut = join(DATA_DIR, 'rich-demo-sheet.json')
-writeFileSync(
-  richOut,
-  `${JSON.stringify(
-    {
-      __generated:
-        'scripts/refresh-wage-gap-fixtures.ts — do not edit by hand; re-run the script',
-      payCutPercent: richDemo.payCutPercent,
-      criteria: richDemo.parsed.criteria,
-      roles: richDemo.parsed.roles,
-      employees: richDemo.parsed.employees,
-      scores: richDemo.scores,
-      chart: richDemo.chart,
-    },
-    null,
-    2,
-  )}\n`,
-)
+
+void (async () => {
+  await writeFixture(out, fixtures)
+  await writeFixture(richOut, {
+    __generated:
+      'scripts/refresh-wage-gap-fixtures.ts — do not edit by hand; re-run the script',
+    payCutPercent: richDemo.payCutPercent,
+    criteria: richDemo.parsed.criteria,
+    roles: richDemo.parsed.roles,
+    employees: richDemo.parsed.employees,
+    scores: richDemo.scores,
+    chart: richDemo.chart,
+  })
+})()
 
 const describe = (
   label: string,
