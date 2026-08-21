@@ -18,8 +18,11 @@ COPY ./apps/legal-gazette-web/dist/env ./env
 # environment and run with ECS supplying the values, so boot is the only moment
 # this can be checked. ./env is the flattened schema produced by the app's
 # flatten-env target -- the Dockerfile packages apps/<app>/dist only, and the
-# root .env.schema is not in there. Pinned from npm rather than curl | sh.
-RUN npm install -g varlock@1.16.1
+# root .env.schema is not in there. Pinned from npm rather than curl | sh. The
+# default here must stay in step with the varlock version in the root
+# package.json -- the build-time flatten and this runtime read have to agree.
+ARG VARLOCK_VERSION=1.16.1
+RUN npm install -g varlock@${VARLOCK_VERSION}
 
 ENV HOSTNAME="0.0.0.0"
 CMD ["varlock", "run", "--path", "./env", "--", "node", "server.js"]
