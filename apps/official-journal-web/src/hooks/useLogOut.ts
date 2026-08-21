@@ -1,16 +1,18 @@
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { signIn, signOut } from 'next-auth/react'
 
 import { identityServerId, signOutUrl } from '@dmr.is/auth/identityProvider'
 
 export const useLogOut = () => {
-  const { data: session } = useSession()
-
-  const logOut = () => {
+  const logOut = async () => {
     sessionStorage.clear()
 
-    signOut({
-      callbackUrl: signOutUrl(window, session?.idToken as string),
-    })
+    const endSession = await fetch(signOutUrl(window), { method: 'POST' })
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null)
+
+    await signOut({ redirect: false })
+
+    window.location.assign(endSession?.url ?? window.location.origin)
   }
   return logOut
 }
