@@ -6,6 +6,15 @@
  * Run after editing the xlsx template. The generated file is committed so
  * runtime never touches the filesystem for the template bytes.
  *
+ * ⚠️ **Output is prettier-formatted with the repo's own config**, which the
+ * `generated-files` CI job depends on: it regenerates and fails on any diff, so
+ * this script's output has to be byte-identical to what `nx format:write` would
+ * leave behind. It was not, and the drift was invisible until something
+ * formatted the tree — `JSON.stringify` always emits DOUBLE quotes while
+ * `.prettierrc` sets `singleQuote: true`, so the two disagreed on exactly one
+ * character and CI called the committed file stale. Formatting here removes the
+ * disagreement rather than exempting the file from formatting.
+ *
  * Usage:  node scripts/refresh-template-data.js
  */
 
@@ -53,8 +62,26 @@ export const TEMPLATE_BASE64 =
 ${JSON.stringify(wrapped, null, 0)}
 `
 
-fs.writeFileSync(OUT_PATH, content)
-// eslint-disable-next-line no-console
-console.log(
-  `Wrote ${path.relative(process.cwd(), OUT_PATH)} (${bytes.length} bytes → ${base64.length} base64 chars)`,
-)
+const main = async () => {
+  // Required lazily and resolved from the workspace root, matching
+  // `refresh-sub-criterion-catalog.js`: the point is to format with the repo's
+  // own prettier and `.prettierrc`, not a version pinned here.
+  const prettier = require('prettier')
+
+  const formatted = await prettier.format(content, {
+    ...(await prettier.resolveConfig(OUT_PATH)),
+    filepath: OUT_PATH,
+  })
+
+  fs.writeFileSync(OUT_PATH, formatted)
+  // eslint-disable-next-line no-console
+  console.log(
+    `Wrote ${path.relative(process.cwd(), OUT_PATH)} (${bytes.length} bytes → ${base64.length} base64 chars)`,
+  )
+}
+
+main().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error)
+  process.exit(1)
+})
