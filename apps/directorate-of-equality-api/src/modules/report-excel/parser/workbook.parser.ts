@@ -35,6 +35,7 @@ import {
 import { parseCriteriaTree } from './criteria.parser'
 import { parseEmployees } from './employees.parser'
 import { ErrorBag } from './errors'
+import { assertWorkbookLayout } from './layout.assert'
 
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
 const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
@@ -122,6 +123,19 @@ export const parseWorkbook = async (
   }
 
   const errors = new ErrorBag()
+
+  // ⚠️ Layout FIRST, and bail on mismatch. Every parser below reads by
+  // hard-coded column letter, so against an older template they would each
+  // report their own per-row failures — describing the submitter's data rather
+  // than the stale sheet that caused it. One accurate error beats a page of
+  // misleading ones.
+  if (!assertWorkbookLayout(workbook, errors)) {
+    const list = [...errors.list]
+    throw new BadRequestException({
+      message: list.map(formatImportError),
+      errors: list,
+    })
+  }
 
   const criteria = parseCriteriaTree(workbook, errors)
   const { employees, roles } = parseEmployees(workbook, errors)

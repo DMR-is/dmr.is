@@ -638,6 +638,67 @@ describe('parseWorkbook', () => {
     })
 
     /**
+     * The layout gate. Column letters are hard-coded in every table parser, so
+     * an older template silently feeds each one the wrong field — and the
+     * resulting per-row errors blame the submitter's data. This asserts the
+     * upload is rejected once, on the header, naming the stale sheet.
+     */
+    describe('workbook layout', () => {
+      it('accepts the shipped template', async () => {
+        // The positive case matters as much as the negative one: an assertion
+        // that is too strict would reject every real upload.
+        const wb = await loadTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours: 173.33,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOccasionalOvertime: null,
+          bonusPayments: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+
+        await expect(parseWorkbook(await serialize(wb))).resolves.toBeDefined()
+      })
+
+      it.each([
+        ['Launagögn', 'E', 'Starfshlutfall (0-1)'],
+        ['Undirviðmið', 'G', 'Hámarksstig'],
+      ])(
+        'rejects a stale %s layout at %s and says so once',
+        async (sheetName, column, staleHeader) => {
+          const wb = await loadTemplate()
+          const sheet = wb.getWorksheet(sheetName)
+          if (!sheet) throw new Error(`no ${sheetName} sheet`)
+          // Reproduce the pre-shift header without touching any data row.
+          sheet.getCell(`${column}5`).value = staleHeader
+
+          const { errors } = await expectBadRequest(
+            parseWorkbook(await serialize(wb)),
+          )
+
+          expect(
+            errors.some((e) =>
+              e.message.includes('Sniðmátið er af eldri útgáfu'),
+            ),
+          ).toBe(true)
+          // The point of bailing early: no per-row noise about the data.
+          expect(errors.every((e) => e.row === 5)).toBe(true)
+        },
+      )
+    })
+
+    /**
      * The mirror of the 2080 case: column E previously held
      * `Starfshlutfall (0–1)`, so a value carried over from an older sheet — or
      * from a submitter filling in the field they remember — is a plain positive

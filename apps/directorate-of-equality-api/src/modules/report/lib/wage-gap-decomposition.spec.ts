@@ -280,6 +280,56 @@ describe('wage-gap-decomposition', () => {
         )
       })
 
+      /**
+       * The incremental walk's safety net.
+       *
+       * `selectMinimumSet` updates óskýrt in O(1) per step rather than refitting —
+       * necessary, because refitting per candidate is quadratic and took 32 s at
+       * `MAX_EMPLOYEES` — so the claim that it equals a full refit has to be
+       * tested over MANY steps, not just the handful the small fixture needs. This
+       * cohort is large and lopsided enough that the walk takes dozens of them.
+       */
+      it('matches a full refit after many incremental steps', () => {
+        const rows: WageGapEmployeeInput[] = []
+        for (let i = 0; i < 200; i++) {
+          const isMale = i % 4 === 0 // lopsided, so the walk runs long
+          const score = 100 + ((i * 37) % 700)
+          rows.push({
+            ordinal: i + 1,
+            score,
+            gender: isMale ? GenderEnum.MALE : GenderEnum.FEMALE,
+            hourlyWage: Math.exp(
+              Math.log(3000) +
+                0.0015 * score +
+                ((i % 7) - 3) * 0.01 +
+                (isMale ? 0 : -0.12),
+            ),
+          })
+        }
+
+        const s = run(rows)
+        expect(s.minimumSetSize).toBeGreaterThan(20)
+
+        const lifted = new Map(
+          s.employees
+            .filter((e) => e.inMinimumSet)
+            .map((e) => [e.ordinal, e.expectedHourlyWage]),
+        )
+        const after = run(
+          rows.map((row) => ({
+            ...row,
+            hourlyWage: lifted.get(row.ordinal) ?? row.hourlyWage,
+          })),
+        )
+
+        assertNumber(s.oskyrtLogAfterMinimumSet)
+        assertNumber(after.oskyrtLog)
+        expect(s.oskyrtLogAfterMinimumSet).toBeCloseTo(
+          Math.abs(after.oskyrtLog),
+          9,
+        )
+      })
+
       it('closes the gap for real when it says it does', () => {
         const s = run(mixedCompany())
         expect(s.minimumSetClosesGap).toBe(true)
