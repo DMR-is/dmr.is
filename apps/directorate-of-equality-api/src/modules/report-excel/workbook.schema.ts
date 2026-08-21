@@ -59,17 +59,23 @@ export const MAX_STEPS = 8
  * a clear error instead of silently truncating, and (b) stay consistent with
  * how many rows/columns the Excel template physically provisions:
  *
- * - Roles → rows on Starfsmat (100 provisioned).
+ * - Roles → rows on Starfsmat (105 provisioned; rows 6–110).
  * - Personal sub-criteria → column pairs on Einstaklingsmat (25 provisioned).
- * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows).
+ * - Sub-criteria (job + personal) share the Undirviðmið sheet (200 rows; 6–205).
  * - Criteria → Viðmið rows (4 mandatory job-based + 1 personal).
- * - Employees → Launagögn rows (500 provisioned, extended by the employer).
+ * - Employees → Launagögn rows (**50** provisioned; rows 6–55).
+ *
+ * ⚠️ Launagögn provisions 50 rows, not 500. The 500 belongs to Einstaklingsmat,
+ * which carries 505 (rows 6–510) — one per employee to be classified. So the
+ * template ships room to CLASSIFY ten times as many employees as it ships room
+ * to ENTER, and any reasoning that treats "the employee sheet" as 500 rows is
+ * reading the wrong sheet. Measured off `template.xlsx`, not assumed.
  *
  * ⚠️ `MAX_PERSONAL_SUB_CRITERIA` (100) deliberately EXCEEDS what the template
  * provisions (25 pairs, cols F–BC). The two limits mean different things: this
  * is the domain ceiling, while the parser separately rejects more pairs than
  * the uploaded sheet physically carries, with a message naming that number.
- * Likewise `MAX_EMPLOYEES` (10 000) exceeds the 500 rows the template ships —
+ * Likewise `MAX_EMPLOYEES` (10 000) exceeds the 50 rows Launagögn ships —
  * employers with more staff extend the sheets themselves, so the shipped row
  * count is provisioning, never capacity. See `classifications.parser.ts`.
  *

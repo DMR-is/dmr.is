@@ -81,6 +81,21 @@ const columns: ColumnDef<Row>[] = [
 /** Monthly krónur. `formatHourlyRate` would be wrong here — see the note above. */
 const kr = (value: number) => formatSalary(value)
 
+/**
+ * Formats a gender's figure, or a dash when that gender has no employees.
+ *
+ * ⚠️ **`0 kr.` and "nobody to average" are different statements.** The API
+ * averages over a cohort, so an absent gender comes back as `0` with
+ * `count: 0` — indistinguishable, when printed, from a cohort that genuinely
+ * receives no viðbótarlaun. On a single-gender workforce the whole column would
+ * have read as a row of zeros, asserting something about people who are not
+ * there. Same reasoning as the gap cards never rendering `0%` when a gap is
+ * uncomputable.
+ */
+const cell = (value: number, count: number) => (count === 0 ? dash : kr(value))
+
+const dash = '—'
+
 export const PayComponentsTable = ({
   data,
 }: {
@@ -97,21 +112,24 @@ export const PayComponentsTable = ({
   const rows: Row[] = [
     {
       label: t.male,
-      additional: kr(data.male.averageAdditionalSalary),
-      bonus: kr(data.male.averageBonusSalary),
-      total: kr(data.male.averageTotal),
+      additional: cell(data.male.averageAdditionalSalary, data.male.count),
+      bonus: cell(data.male.averageBonusSalary, data.male.count),
+      total: cell(data.male.averageTotal, data.male.count),
     },
     {
       label: t.female,
-      additional: kr(data.female.averageAdditionalSalary),
-      bonus: kr(data.female.averageBonusSalary),
-      total: kr(data.female.averageTotal),
+      additional: cell(data.female.averageAdditionalSalary, data.female.count),
+      bonus: cell(data.female.averageBonusSalary, data.female.count),
+      total: cell(data.female.averageTotal, data.female.count),
     },
     {
       label: t.overall,
-      additional: kr(data.overall.averageAdditionalSalary),
-      bonus: kr(data.overall.averageBonusSalary),
-      total: kr(data.overall.averageTotal),
+      additional: cell(
+        data.overall.averageAdditionalSalary,
+        data.overall.count,
+      ),
+      bonus: cell(data.overall.averageBonusSalary, data.overall.count),
+      total: cell(data.overall.averageTotal, data.overall.count),
     },
     {
       label: t.gapRow,

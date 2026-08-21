@@ -4165,7 +4165,7 @@
           "paidHours": {
             "type": "number",
             "description": "Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.",
-            "minimum": 0.01,
+            "minimum": 4,
             "maximum": 750
           },
           "baseSalary": { "type": "number" },
@@ -4462,10 +4462,7 @@
             "type": "string",
             "enum": ["OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE"]
           },
-          "pooledReferenceMode": {
-            "type": "string",
-            "enum": ["POOLED_OLS", "WITH_DUMMY"]
-          },
+          "pooledReferenceMode": { "type": "string", "enum": ["POOLED_OLS"] },
           "rawGapAvailable": { "type": "boolean" },
           "rawGapBlockers": {
             "type": "array",

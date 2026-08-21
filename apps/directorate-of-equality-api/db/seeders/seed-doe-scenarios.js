@@ -1,17 +1,17 @@
 'use strict'
 
+const {
+  ASSISTANT_TOTAL_SCORE,
+  MANAGER_TOTAL_SCORE,
+  scenarioEmployees,
+  SPECIALIST_TOTAL_SCORE,
+} = require('../lib/scenario-cohort')
 const wageGapFixtures = require('./data/wage-gap-fixtures.json')
 
 // Existing reviewer (from initial seed)
 const REVIEWER_ID = 'b4e98cee-a4d8-4924-90df-b820c4bc0801'
 
 // Helper: pad a number into a UUID-shaped constant
-/** Greiddar stundir for every seeded employee — a standard Icelandic month.
- * Constant on purpose: a uniform denominator scales every wage equally, so each
- * scenario's intended outlier structure survives the move to an hourly basis
- * unchanged. */
-const SEEDED_PAID_HOURS = 173.33
-
 const cid = (n) =>
   `c${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
 const eid = (n) =>
@@ -477,9 +477,10 @@ function salaryScaffoldSql(
     EDUCATION_STEPS,
     EDUCATION_WEIGHT,
   )
-  const MANAGER_TOTAL_SCORE = MANAGEMENT_HIGH_SCORE + EDUCATION_HIGH_SCORE
-  const SPECIALIST_TOTAL_SCORE = MANAGEMENT_LOW_SCORE + EDUCATION_HIGH_SCORE
-  const ASSISTANT_TOTAL_SCORE = MANAGEMENT_LOW_SCORE + EDUCATION_LOW_SCORE
+  // MANAGER / SPECIALIST / ASSISTANT totals are imported from
+  // `db/lib/scenario-cohort`, which is also what the frozen snapshots are
+  // generated from. The step scores above stay local because they seed the
+  // criteria tree, and `scenario-cohort` asserts the same arithmetic.
 
   const critIds = [uid(base + 10), uid(base + 11)]
   const scrtIds = [uid(base + 20), uid(base + 21)]
@@ -533,7 +534,15 @@ function salaryScaffoldSql(
     ? '{"genderPayGap":9.1,"roles":3,"employees":6}'
     : '{"genderPayGap":0.8,"roles":3,"employees":6}'
 
-  const emp1Salary = hasOutliers ? 850000 : 707000
+  // ⚠️ The six employee rows come from `scenarioEmployees`, the SAME definition
+  // `scripts/refresh-wage-gap-fixtures.ts` feeds through the real engine to
+  // produce the `wage_gap_decomposition_snapshot` written below. Before this,
+  // the rows were hardcoded here with one flat `paid_hours` for all six while
+  // the snapshot described contract-varied hours — so a seeded report's frozen
+  // figures did not describe its own employee list, which is precisely the
+  // divergence that shared module exists to prevent.
+  const cohort = scenarioEmployees(hasOutliers)
+  const money = (value) => (value === null ? 'NULL' : `${value}.00`)
 
   let sql = `
 -- Salary report: company ${companyN} ${companyName} status=${status}
@@ -587,12 +596,14 @@ INSERT INTO report_employee (id, report_id, ordinal, field, department,
   additional_fixed_overtime, additional_fixed_car_allowance,
   bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
   gender, report_employee_role_id, score) VALUES
-  ('${empIds[0]}','${reportId}',1,'Viðskiptafræði','Stjórnun', '2015-01-15',${SEEDED_PAID_HOURS},${emp1Salary}.00,50000.00,NULL,NULL,NULL,100000.00,NULL,'MALE',  '${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[1]}','${reportId}',2,'Viðskiptafræði','Stjórnun', '2017-03-01',${SEEDED_PAID_HOURS},703000.00,50000.00,NULL,NULL,NULL, 80000.00,NULL,'FEMALE','${roleIds[0]}',${MANAGER_TOTAL_SCORE}.00),
-  ('${empIds[2]}','${reportId}',3,'Tölvunarfræði', 'Þróun',    '2018-06-01',${SEEDED_PAID_HOURS},602000.00,30000.00,NULL,NULL,NULL, 50000.00,NULL,'MALE',  '${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[3]}','${reportId}',4,'Tölvunarfræði', 'Þróun',    '2019-09-01',${SEEDED_PAID_HOURS},598000.00,30000.00,NULL,NULL,NULL, 40000.00,NULL,'FEMALE','${roleIds[1]}', ${SPECIALIST_TOTAL_SCORE}.00),
-  ('${empIds[4]}','${reportId}',5,'Almenn námsbraut','Þjónusta','2020-01-01',${SEEDED_PAID_HOURS},502000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'MALE',  '${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00),
-  ('${empIds[5]}','${reportId}',6,'Almenn námsbraut','Þjónusta','2021-06-01',${SEEDED_PAID_HOURS},498000.00,10000.00,NULL,NULL,NULL,     NULL,NULL,'FEMALE','${roleIds[2]}', ${ASSISTANT_TOTAL_SCORE}.00);
+${cohort
+  .map(
+    (e, i) =>
+      `  ('${empIds[i]}','${reportId}',${e.ordinal},'${e.field}','${e.department}','${e.startDate}',` +
+      `${e.paidHours},${money(e.baseSalary)},${money(e.additionalFixedOvertime)},NULL,NULL,NULL,` +
+      `${money(e.bonusPayments)},NULL,'${e.gender}','${roleIds[e.roleIndex]}',${e.score}.00)`,
+  )
+  .join(',\n')};
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)

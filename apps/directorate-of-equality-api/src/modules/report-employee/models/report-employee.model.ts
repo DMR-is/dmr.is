@@ -120,9 +120,7 @@ export const parsedRegularHourlyWage = (
     bonusOccasionalCarAllowance: nullableToStored(
       employee.bonusOccasionalCarAllowance,
     ),
-    bonusOccasionalOvertime: nullableToStored(
-      employee.bonusOccasionalOvertime,
-    ),
+    bonusOccasionalOvertime: nullableToStored(employee.bonusOccasionalOvertime),
     bonusPayments: nullableToStored(employee.bonusPayments),
     bonusOther: nullableToStored(employee.bonusOther),
   }

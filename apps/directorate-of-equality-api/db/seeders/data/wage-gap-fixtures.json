@@ -1443,7 +1443,8 @@
     ],
     "correctableCount": 24,
     "minimumSetSize": 6,
-    "oskyrtLogAfterMinimumSet": 0.033326,
+    "oskyrtLogAfterMinimumSet": 0.034862,
+    "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
     "benchmarkPercent": 3.9
   },
@@ -1575,6 +1576,7 @@
     "correctableCount": 2,
     "minimumSetSize": 2,
     "oskyrtLogAfterMinimumSet": 0.030478,
+    "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
     "benchmarkPercent": 3.9
   },
@@ -1706,6 +1708,7 @@
     "correctableCount": 2,
     "minimumSetSize": 0,
     "oskyrtLogAfterMinimumSet": 0.018996,
+    "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
     "benchmarkPercent": 3.9
   }

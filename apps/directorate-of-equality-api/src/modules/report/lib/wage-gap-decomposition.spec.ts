@@ -621,7 +621,6 @@ describe('wage-gap-decomposition', () => {
       )
     })
 
-
     // Worth stating explicitly, because it is easy to read a zero here as a bug:
     // when both cohorts have the same score distribution there is nothing for
     // the score to explain, so the ENTIRE raw gap is unexplained.
