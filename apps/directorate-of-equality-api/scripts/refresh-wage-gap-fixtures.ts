@@ -106,9 +106,7 @@ function scalePay(
   }
 }
 
-const hourlyWageOf = (
-  employee: ParsedReportDto['employees'][number],
-): number =>
+const hourlyWageOf = (employee: ParsedReportDto['employees'][number]): number =>
   getRegularHourlyWage({
     paidHours: employee.paidHours,
     baseSalary: employee.baseSalary,

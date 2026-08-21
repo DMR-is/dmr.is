@@ -123,9 +123,7 @@ export type RegularHourlyWageInput = {
  * additional and bonus pay. Under the old FTE divisor both variants were
  * coherent; under an hours divisor only the total-pay numerator is.
  */
-export function getRegularHourlyWage(
-  employee: RegularHourlyWageInput,
-): number {
+export function getRegularHourlyWage(employee: RegularHourlyWageInput): number {
   return (
     (employee.baseSalary +
       employee.additionalSalary +

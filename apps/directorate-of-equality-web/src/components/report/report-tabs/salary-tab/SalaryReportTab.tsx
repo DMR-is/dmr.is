@@ -64,7 +64,6 @@ export const SalaryReportTab = ({
       <SalaryStatistics
         maleAverageSalary={formatSalary(data.totals.maleAverageSalary)}
         femaleAverageSalary={formatSalary(data.totals.femaleAverageSalary)}
-        wageGapPercent={data.totals.wageGapPercent?.toString() ?? null}
         decomposition={decomposition}
         salaryDataBasis={salaryDataBasis}
         salaryDataPeriod={salaryDataPeriod}

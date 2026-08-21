@@ -72,22 +72,66 @@ export const computeRegularWages = (employee: RegularWageComponents): number =>
   computeBonusSalary(employee)
 
 /**
- * Reglulegt tímakaup — the quantity every salary statistic is evaluated on,
- * mandated by the regulation: *"reglulegum launum, **reiknuðum niður á
- * tímakaup**"*.
+ * Decimal places every pay column on `report_employee` stores — they are all
+ * `DECIMAL(_, 2)`, `paid_hours` included.
+ */
+export const STORED_PAY_DECIMALS = 2
+
+/** Quantizes one value to what the database will actually keep. */
+const toStoredPrecision = (value: number): number =>
+  Math.round(value * 10 ** STORED_PAY_DECIMALS) / 10 ** STORED_PAY_DECIMALS
+
+/**
+ * Reglulegt tímakaup for an employee that has **not been persisted yet** —
+ * computed at storage precision, so it equals what the same row will yield
+ * after a database round-trip.
+ *
+ * ⚠️ **This is why previews and the frozen snapshot agree.** The parser emits
+ * full-precision floats; `report_employee` stores every pay column and
+ * `paid_hours` as `DECIMAL(_, 2)`. Decomposing raw parsed floats and then
+ * re-decomposing the stored rows are therefore two slightly different
+ * calculations, and the lágmarksmengi is chosen by a greedy walk over
+ * contributions — so at the margin they can select DIFFERENT EMPLOYEES. The
+ * applicant would then see one list before submitting and the reviewer a
+ * different one after, with nothing to explain the change. Quantizing first
+ * removes the divergence at its source rather than papering over it downstream.
  *
  * ⚠️ **Never divide by a starfshlutfall as well.** Paid hours already normalise
  * for working time, and more precisely than an FTE proxy does; applying both
  * would double-count part-time. That is why `work_ratio` was dropped rather
  * than kept alongside `paid_hours`.
  *
- * `paidHours` is `NOT NULL CHECK (paid_hours > 0)` in the database and rejected
- * at `<= 0` by every ingress path, so this cannot divide by zero on persisted
- * data. Callers working with unvalidated input must guard first.
+ * Callers holding PERSISTED rows want `getRegularHourlyWage` instead — those
+ * values are already at storage precision, so quantizing again is a no-op that
+ * only obscures where the rounding happens.
+ *
+ * Guard `paidHours > 0` first: parsed input is unvalidated at this point.
  */
-export const computeRegularHourlyWage = (
+export const parsedRegularHourlyWage = (
   employee: RegularWageComponents & { paidHours: number },
-): number => computeRegularWages(employee) / employee.paidHours
+): number => {
+  const stored: RegularWageComponents & { paidHours: number } = {
+    paidHours: toStoredPrecision(employee.paidHours),
+    baseSalary: toStoredPrecision(employee.baseSalary),
+    additionalFixedOvertime: nullableToStored(employee.additionalFixedOvertime),
+    additionalFixedCarAllowance: nullableToStored(
+      employee.additionalFixedCarAllowance,
+    ),
+    bonusOccasionalCarAllowance: nullableToStored(
+      employee.bonusOccasionalCarAllowance,
+    ),
+    bonusOccasionalOvertime: nullableToStored(
+      employee.bonusOccasionalOvertime,
+    ),
+    bonusPayments: nullableToStored(employee.bonusPayments),
+    bonusOther: nullableToStored(employee.bonusOther),
+  }
+
+  return computeRegularWages(stored) / stored.paidHours
+}
+
+const nullableToStored = (value: number | null): number | null =>
+  value === null ? null : toStoredPrecision(value)
 
 /**
  * Asserts an employee's score has been computed. A draft's employee scores are

@@ -1,4 +1,3 @@
-import { getRegularHourlyWage } from '../../report/lib/compensation-aggregates'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
@@ -8,10 +7,7 @@ import {
   roundWageGapDecompositionSnapshot,
   type WageGapEmployeeInput,
 } from '../../report/lib/wage-gap-decomposition'
-import {
-  computeAdditionalSalary,
-  computeBonusSalary,
-} from '../../report-employee/models/report-employee.model'
+import { parsedRegularHourlyWage } from '../../report-employee/models/report-employee.model'
 import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import { SalaryAnalysisResponseDto } from '../dto/salary-analysis.response.dto'
 import {
@@ -58,12 +54,9 @@ export function analyzeSalaryPayload(
       ordinal: employee.ordinal,
       score: employeeScores[index],
       gender: employee.gender,
-      hourlyWage: getRegularHourlyWage({
-        paidHours: employee.paidHours,
-        baseSalary: employee.baseSalary,
-        additionalSalary: computeAdditionalSalary(employee),
-        bonusSalary: computeBonusSalary(employee),
-      }),
+      // Quantized to storage precision, so the previewed figures are the ones
+      // `report_result` will freeze at submit rather than merely close to them.
+      hourlyWage: parsedRegularHourlyWage(employee),
     }),
   )
 

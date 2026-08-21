@@ -138,9 +138,8 @@ export class ReportResultService implements IReportResultService {
       salaryDifferenceThresholdPercent: threshold,
       calculationVersion: REPORT_RESULT_CALCULATION_VERSION,
       salarySnapshot: roundSalaryResultSnapshot(aggregates.report.snapshot, 2),
-      wageGapDecompositionSnapshot: roundWageGapDecompositionSnapshot(
-        wageGapDecomposition,
-      ),
+      wageGapDecompositionSnapshot:
+        roundWageGapDecompositionSnapshot(wageGapDecomposition),
     } satisfies ReportResultCreateAttributes
 
     await this.reportResultModel.create(resultValues)

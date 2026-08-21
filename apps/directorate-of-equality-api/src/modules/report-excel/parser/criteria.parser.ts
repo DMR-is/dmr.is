@@ -75,9 +75,7 @@ type RectangularRange = {
 
 /** `'AB'` → 28. */
 const colToNum = (letters: string): number =>
-  letters
-    .split('')
-    .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
+  letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
 /** 28 → `'AB'`. */
 const numToCol = (n: number): string => {
@@ -173,13 +171,9 @@ const parseCriteriaSheet = (
     if (tegund === CRITERION_TEGUND.PERSONAL && !title) continue
 
     if (!title || !description) {
-      errors.add(
-        SHEETS.CRITERIA,
-        'Röð vantar heiti eða lýsingu',
-        {
-          row: r,
-        },
-      )
+      errors.add(SHEETS.CRITERIA, 'Röð vantar heiti eða lýsingu', {
+        row: r,
+      })
       continue
     }
 
@@ -391,10 +385,7 @@ export const parseCriteriaTree = (
   const viðmiðSheet = workbook.getWorksheet(SHEETS.CRITERIA)
   const undirviðmiðSheet = workbook.getWorksheet(SHEETS.SUB_CRITERIA)
   if (!viðmiðSheet) {
-    errors.add(
-      SHEETS.CRITERIA,
-      `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`,
-    )
+    errors.add(SHEETS.CRITERIA, `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`)
     return []
   }
   if (!undirviðmiðSheet) {

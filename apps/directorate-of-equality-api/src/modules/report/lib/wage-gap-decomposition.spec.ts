@@ -59,26 +59,16 @@ const segregatedCompany = (): WageGapEmployeeInput[] => [
   employee(8, GenderEnum.FEMALE, 500, 4700),
 ]
 
-const run = (
-  employees: WageGapEmployeeInput[],
-  pooledReferenceMode?: PooledReferenceModeEnum,
-) =>
-  computeWageGapDecomposition({
-    employees,
-    benchmarkPercent: BENCHMARK,
-    pooledReferenceMode,
-  })
+const run = (employees: WageGapEmployeeInput[]) =>
+  computeWageGapDecomposition({ employees, benchmarkPercent: BENCHMARK })
 
 describe('wage-gap-decomposition', () => {
   describe('the identities — the primary correctness gate', () => {
     // Holds for ANY β*, which is what makes it a real invariant rather than a
     // restatement of the fitting procedure. Catches sign errors and
     // wrong-reference-group bugs.
-    it.each([
-      PooledReferenceModeEnum.POOLED_OLS,
-      PooledReferenceModeEnum.WITH_DUMMY,
-    ])('skýrt + óskýrt = Δ under %s', (mode) => {
-      const s = run(mixedCompany(), mode)
+    it('skýrt + óskýrt = Δ', () => {
+      const s = run(mixedCompany())
 
       expect(
         Math.abs(
@@ -631,30 +621,6 @@ describe('wage-gap-decomposition', () => {
       )
     })
 
-    it('gives a different explained term under the Fortin within-group variant', () => {
-      const neumark = run(
-        segregatedCompany(),
-        PooledReferenceModeEnum.POOLED_OLS,
-      )
-      const fortin = run(
-        segregatedCompany(),
-        PooledReferenceModeEnum.WITH_DUMMY,
-      )
-
-      expect(neumark.twofold.explained).not.toBeCloseTo(
-        fortin.twofold.explained ?? 0,
-        9,
-      )
-      // Both must still satisfy the identity — see the identity block above.
-      expect(fortin.rawGapLog).toBeCloseTo(neumark.rawGapLog ?? 0, 12)
-      expect(
-        Math.abs(
-          (fortin.twofold.explained ?? 0) +
-            (fortin.twofold.unexplained ?? 0) -
-            (fortin.rawGapLog ?? 0),
-        ),
-      ).toBeLessThan(1e-9)
-    })
 
     // Worth stating explicitly, because it is easy to read a zero here as a bug:
     // when both cohorts have the same score distribution there is nothing for

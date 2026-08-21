@@ -58,14 +58,12 @@ const makeReportRow = (overrides: Partial<Record<string, unknown>> = {}) => {
   // provides via BaseModel. Tests only need something that returns a
   // plain object shape-compatible with the DTO.
   row.fromModelToListItem = (includesImprovementPlan = false) => {
-    const companyReport = row.companyReport as
-      | {
-          name?: string
-          nationalId?: string
-          isatCategory?: string
-          employeeCountCategory?: CompanySizeEnum
-        }
-      | null
+    const companyReport = row.companyReport as {
+      name?: string
+      nationalId?: string
+      isatCategory?: string
+      employeeCountCategory?: CompanySizeEnum
+    } | null
     return {
       id: row.id,
       identifier: row.identifier,
@@ -776,11 +774,7 @@ describe('ReportService.getById', () => {
 
   describe('salary calculations', () => {
     it('returns null/empty calc blocks for equality reports without querying role results or outliers', async () => {
-      const {
-        service,
-        findByPkOrThrow,
-        outlierCount,
-      } = makeService()
+      const { service, findByPkOrThrow, outlierCount } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
           type: ReportTypeEnum.EQUALITY,
@@ -796,11 +790,7 @@ describe('ReportService.getById', () => {
     })
 
     it('returns null/empty calc blocks for salary reports before scoring has run (result missing)', async () => {
-      const {
-        service,
-        findByPkOrThrow,
-        outlierCount,
-      } = makeService()
+      const { service, findByPkOrThrow, outlierCount } = makeService()
       findByPkOrThrow.mockResolvedValueOnce(
         makeDetailedReportRow({
           type: ReportTypeEnum.SALARY,
@@ -824,11 +814,7 @@ describe('ReportService.getById', () => {
     })
 
     it('flags includesImprovementPlan when outliers exist on a salary report', async () => {
-      const {
-        service,
-        findByPkOrThrow,
-        outlierCount,
-      } = makeService()
+      const { service, findByPkOrThrow, outlierCount } = makeService()
 
       const resultId = '00000000-0000-0000-0000-000000000111'
       const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
@@ -1244,7 +1230,9 @@ describe('ReportService.getOutlierGroups', () => {
 
   it('returns the report groups ordered by name', async () => {
     const { service, findByPkOrThrow, outlierGroupFindAll } = makeService()
-    findByPkOrThrow.mockResolvedValueOnce({ id: REPORT_ID } as unknown as ReportModel)
+    findByPkOrThrow.mockResolvedValueOnce({
+      id: REPORT_ID,
+    } as unknown as ReportModel)
     outlierGroupFindAll.mockResolvedValueOnce([makeGroupRow()])
 
     const result = await service.getOutlierGroups(REPORT_ID)
@@ -1257,13 +1245,19 @@ describe('ReportService.getOutlierGroups', () => {
       }),
     )
     expect(result.groups).toEqual([
-      expect.objectContaining({ id: 'group-1', name: 'Tenure', reason: 'Tenure premium' }),
+      expect.objectContaining({
+        id: 'group-1',
+        name: 'Tenure',
+        reason: 'Tenure premium',
+      }),
     ])
   })
 
   it('returns an empty list when the report has no groups', async () => {
     const { service, findByPkOrThrow, outlierGroupFindAll } = makeService()
-    findByPkOrThrow.mockResolvedValueOnce({ id: REPORT_ID } as unknown as ReportModel)
+    findByPkOrThrow.mockResolvedValueOnce({
+      id: REPORT_ID,
+    } as unknown as ReportModel)
     outlierGroupFindAll.mockResolvedValueOnce([])
 
     const result = await service.getOutlierGroups(REPORT_ID)

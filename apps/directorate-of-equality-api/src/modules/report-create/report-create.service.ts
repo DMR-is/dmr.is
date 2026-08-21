@@ -13,11 +13,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../../core/constants'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
-import {
-  CONFIG_KEYS,
-  parseNumericConfig,
-} from '../config/lib/numeric-config'
-import { getRegularHourlyWage } from '../report/lib/compensation-aggregates'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
@@ -32,10 +28,7 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import { IReportContentService } from '../report-content/report-content.service.interface'
-import {
-  computeAdditionalSalary,
-  computeBonusSalary,
-} from '../report-employee/models/report-employee.model'
+import { parsedRegularHourlyWage } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportFinalizeService } from '../report-finalize/report-finalize.service.interface'
@@ -455,12 +448,9 @@ export class ReportCreateService implements IReportCreateService {
         ordinal: employee.ordinal,
         score: employeeScores[index],
         gender: employee.gender,
-        hourlyWage: getRegularHourlyWage({
-          paidHours: employee.paidHours,
-          baseSalary: employee.baseSalary,
-          additionalSalary: computeAdditionalSalary(employee),
-          bonusSalary: computeBonusSalary(employee),
-        }),
+        // Storage precision, so this agrees with the frozen snapshot the
+        // reviewer sees — see `parsedRegularHourlyWage`.
+        hourlyWage: parsedRegularHourlyWage(employee),
       })),
       benchmarkPercent,
     })

@@ -17,13 +17,6 @@ interface SalaryStatisticsProps {
   maleAverageSalary: string
   femaleAverageSalary: string
   /**
-   * `null` when the gap is genuinely not computable — e.g. only one gender is
-   * present in the report. Do NOT default this to '0': a company that cannot
-   * be measured is not a company with no pay gap, and rendering 0% states the
-   * opposite of what is known.
-   */
-  wageGapPercent: string | null
-  /**
    * The frozen decomposition off `report_result`. Absent for a report whose
    * result has not been computed — the leiðréttur group then does not render at
    * all, which is honest: there is no figure, not a figure of zero.
@@ -33,9 +26,17 @@ interface SalaryStatisticsProps {
   salaryDataPeriod?: string | null
 }
 
-/** Maps the API's direction code to Icelandic. Codes only cross the wire. */
+/**
+ * Maps the API's direction code to Icelandic. Codes only cross the wire.
+ *
+ * Shared by both gap cards on purpose: óleiðréttur and leiðréttur are different
+ * figures but the same convention — magnitude plus an explicit direction, never
+ * a signed percentage.
+ */
 const disfavourLabel = (
-  direction: WageGapDecompositionDto['oskyrtDirection'],
+  direction:
+    | WageGapDecompositionDto['oskyrtDirection']
+    | WageGapDecompositionDto['rawGapDirection'],
 ): string => {
   if (direction === 'FEMALE') return t.disfavourFemale
   if (direction === 'MALE') return t.disfavourMale
@@ -45,7 +46,6 @@ const disfavourLabel = (
 export const SalaryStatistics = ({
   maleAverageSalary,
   femaleAverageSalary,
-  wageGapPercent,
   decomposition,
   salaryDataBasis,
   salaryDataPeriod,
@@ -75,14 +75,33 @@ export const SalaryStatistics = ({
               content={femaleAverageSalary}
             />
             {/*
-              Sits with the two averages on purpose: it is computed from them on
-              ARITHMETIC means, so a reader can subtract the cards either side of
-              it and arrive at this number. That self-verification is the reason
-              the arithmetic basis was chosen over the geometric one.
+              Sits with the two averages on purpose: it is
+              `(hærri − lægri) / hærri` on ARITHMETIC means, so a reader can
+              subtract the cards either side of it and arrive at this number.
+              That self-verification is why the arithmetic basis was chosen over
+              the geometric one, which is stored but not shown.
+
+              ⚠️ Reads `rawGapPercent` off the decomposition, NOT
+              `totals.wageGapPercent`. The latter is `(male − female) / male` —
+              signed, and with the denominator fixed to men, so the same
+              inequality yields a different magnitude depending on which gender
+              is ahead (4,00% one way, 4,17% the other on a 100/96 split). That
+              form was considered and explicitly rejected; the API exposes
+              `rawGapPercent`/`rawGapDirection` for this card precisely so the
+              magnitude is symmetric and the direction is stated rather than
+              encoded in a minus sign — matching the leiðréttur card below.
+
+              It also went through `.toString()` before, so it rendered a JS
+              decimal POINT (`4.2%`) on an Icelandic page while the PDF rendered
+              `+4,2%` through `formatPercent`. Same number, two renderings.
             */}
             <StatisticCard
               title={t.wageGapLabel}
-              content={wageGapPercent === null ? '—' : `${wageGapPercent}%`}
+              content={
+                decomposition?.rawGapPercent == null
+                  ? '—'
+                  : `${formatPercent(decomposition.rawGapPercent)} ${disfavourLabel(decomposition.rawGapDirection)}`
+              }
             />
           </Box>
         </Stack>

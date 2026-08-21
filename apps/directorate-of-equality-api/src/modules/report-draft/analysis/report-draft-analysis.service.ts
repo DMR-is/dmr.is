@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-} from '@nestjs/common'
+import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -166,18 +162,14 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
    * an already-compliant company returns an EMPTY set and so needs no
    * úrbótaáætlun at all, and overpaid employees are never returned.
    */
-  async getDetectedOutlierEmployeeIds(
-    reportId: string,
-  ): Promise<Set<string>> {
+  async getDetectedOutlierEmployeeIds(reportId: string): Promise<Set<string>> {
     const { scored, decomposition } = await this.decomposeDraft(reportId)
     const flagged = new Set(
       selectMinimumSet(decomposition).map((e) => e.ordinal),
     )
 
     return new Set(
-      scored
-        .filter((e) => flagged.has(e.ordinal))
-        .map((e) => e.employeeId),
+      scored.filter((e) => flagged.has(e.ordinal)).map((e) => e.employeeId),
     )
   }
 
@@ -269,9 +261,7 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
     const stepScoreById = new Map(steps.map((s) => [s.id, s.score]))
 
     // role id → assigned step ids
-    const roleIds = [
-      ...new Set(employees.map((e) => e.reportEmployeeRoleId)),
-    ]
+    const roleIds = [...new Set(employees.map((e) => e.reportEmployeeRoleId))]
     const roleStepRows = roleIds.length
       ? await this.roleStepModel.findAll({
           where: { reportEmployeeRoleId: roleIds },

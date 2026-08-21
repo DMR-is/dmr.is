@@ -1,24 +1,15 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { IConfigService } from '../config/config.service.interface'
-import {
-  CONFIG_KEYS,
-  parseNumericConfig,
-} from '../config/lib/numeric-config'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { IReportService } from '../report/report.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import {
-  analyzeSalaryPayload,
-} from '../report-statistics/lib/salary-analysis'
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
 import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
 import { IAdminReportService } from './admin-report.service.interface'

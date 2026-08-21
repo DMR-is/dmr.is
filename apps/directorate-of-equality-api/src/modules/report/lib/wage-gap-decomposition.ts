@@ -52,15 +52,32 @@ export enum WageGapDecompositionMethodEnum {
 /**
  * Which pooled reference coefficient vector β\* the twofold split uses.
  *
- * `POOLED_OLS` (Neumark 1988 — pooled fit, no gender dummy) is the default and
- * the variant the stakeholders' worked example reproduces: it gives óskýrt
- * +0,0658 → 6,80% against their quoted 6,8%, where the with-dummy (Fortin)
- * variant gives 6,98%. Both are legitimate published variants and the switch is
- * one line, so the alternative is kept rather than hard-coded away.
+ * **Neumark (1988) — a pooled fit with no gender dummy.** It reproduces the
+ * stakeholders' worked example (óskýrt +0,0658 → 6,80% against their quoted
+ * 6,8%) and the Directorate's own R reference names it as the convention it
+ * publishes: `group.weight = -1 -> sameiginlegt líkan (Neumark); oftast birt`.
+ *
+ * Recorded on every snapshot rather than merely implied, because the figure is
+ * regulatory: which reference produced it is part of what the number means.
+ *
+ * ⚠️ **A `WITH_DUMMY` (Fortin) variant used to sit beside it and was removed.**
+ * It existed only because the plan could not tell from the methodology PDF which
+ * convention was intended, so it implemented both and left a test to decide.
+ * The R reference settled that, at which point the alternative was dead code —
+ * and worse than dead: it was reached by no caller, it broke the
+ * `Σ framlag ≡ óskýrt` identity (contributions are attributed from the pooled
+ * fit's residuals, which a within-group slope no longer matches), and it forced
+ * a slow fallback path into {@link makeIncrementalGap}.
+ *
+ * Should it ever be wanted, the estimator is one expression, not a rediscovery:
+ * by Frisch-Waugh-Lovell, adding a gender dummy to a pooled fit yields the
+ * precision-weighted average of the two cohort slopes,
+ * `(SSx_M·β_M + SSx_W·β_W) / (SSx_M + SSx_W)` — which is what `xSumSquares` on
+ * {@link LinearFit} is for. Re-adding it also means re-deriving the per-employee
+ * attribution so the identity survives.
  */
 export enum PooledReferenceModeEnum {
   POOLED_OLS = 'POOLED_OLS',
-  WITH_DUMMY = 'WITH_DUMMY',
 }
 
 /** Hard. When non-empty, every numeric field on the snapshot is null. */
@@ -356,7 +373,6 @@ type GapAttribution = {
 function attributeGap(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
-  pooledReferenceMode: PooledReferenceModeEnum,
 ): GapAttribution {
   const logWage = (employee: WageGapEmployeeInput) =>
     Math.log(employee.hourlyWage)
@@ -373,15 +389,9 @@ function attributeGap(
   const rawGapLog = mean(men.map(logWage)) - mean(women.map(logWage))
 
   // skýrt = (s̄_M − s̄_W) · β*₁. β*₀ cancels out of the twofold split entirely
-  // (it appears as −β*₀ + β*₀), so only the pooled SLOPE is ever needed.
-  const pooledSlope = resolvePooledSlope(
-    pooledReferenceMode,
-    pooledFit,
-    men,
-    women,
-    buildDesign,
-    logWage,
-  )
+  // (it appears as −β*₀ + β*₀), so only the pooled SLOPE is ever needed — and
+  // under the Neumark reference that is simply the pooled fit's own slope.
+  const pooledSlope = pooledFit.slope ?? 0
   const explained =
     (mean(men.map(buildDesign)) - mean(women.map(buildDesign))) * pooledSlope
   const oskyrtLog = rawGapLog - explained
@@ -477,7 +487,6 @@ function attributeGap(
 function selectMinimumSet(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
-  pooledReferenceMode: PooledReferenceModeEnum,
   thresholdLog: number,
   initial: GapAttribution,
 ): { chosen: Set<number>; oskyrtLogAfter: number; closesGap: boolean } {
@@ -509,12 +518,7 @@ function selectMinimumSet(
     .filter((employee) => employee.isCorrectable)
     .sort((a, b) => Math.abs(b.contributionLog) - Math.abs(a.contributionLog))
 
-  const gapAfter = makeIncrementalGap(
-    usable,
-    isMale,
-    pooledReferenceMode,
-    initial,
-  )
+  const gapAfter = makeIncrementalGap(usable, isMale, initial)
 
   const chosen = new Set<number>()
   let gap = initialGap
@@ -567,33 +571,19 @@ function selectMinimumSet(
  * published set, re-runs the whole engine and asserts agreement to 9 decimal
  * places.
  *
- * ⚠️ Exact for `POOLED_OLS` only. `WITH_DUMMY` derives its slope from two
- * per-gender fits, which no single running sum tracks, so that mode falls back
- * to the full recomputation. It is unreachable today — no caller passes it.
+ * ⚠️ Relies on the pooled slope being the pooled fit's own slope, which is what
+ * the Neumark reference means. A within-group reference derives β\* from two
+ * per-gender fits, which no single running sum tracks — that variant was removed
+ * (see {@link PooledReferenceModeEnum}), and re-adding it would need a fallback
+ * to full recomputation here.
  */
 function makeIncrementalGap(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
-  pooledReferenceMode: PooledReferenceModeEnum,
   initial: GapAttribution,
 ): (ordinal: number, liftedWage: number) => number {
   const logWage = (employee: WageGapEmployeeInput) =>
     Math.log(employee.hourlyWage)
-
-  if (pooledReferenceMode !== PooledReferenceModeEnum.POOLED_OLS) {
-    // Correct but O(n) per step. Accumulates lifts and refits from scratch.
-    const wages = new Map(
-      usable.map((employee) => [employee.ordinal, employee.hourlyWage]),
-    )
-    return (ordinal, liftedWage) => {
-      wages.set(ordinal, liftedWage)
-      const rows = usable.map((employee) => ({
-        ...employee,
-        hourlyWage: wages.get(employee.ordinal) ?? employee.hourlyWage,
-      }))
-      return attributeGap(rows, isMale, pooledReferenceMode).oskyrtLog
-    }
-  }
 
   const men = usable.filter(isMale)
   const women = usable.filter((employee) => !isMale(employee))
@@ -649,11 +639,8 @@ function makeIncrementalGap(
 export function computeWageGapDecomposition(input: {
   employees: WageGapEmployeeInput[]
   benchmarkPercent: number
-  pooledReferenceMode?: PooledReferenceModeEnum
 }): WageGapDecompositionSnapshot {
   const { benchmarkPercent } = input
-  const pooledReferenceMode =
-    input.pooledReferenceMode ?? PooledReferenceModeEnum.POOLED_OLS
 
   // ── Guard 1: non-positive wages, SOFT ────────────────────────────────────
   // Excluded rather than fatal, because the level-OLS outlier path tolerates
@@ -691,7 +678,7 @@ export function computeWageGapDecomposition(input: {
   // ── The fit, the attribution, and the warnings that depend on them ───────
   // `attributeGap` is a pure function of the rows handed to it, which is what
   // lets the lágmarksmengi walk below call it again on modified wages.
-  const core = attributeGap(usable, isMale, pooledReferenceMode)
+  const core = attributeGap(usable, isMale)
   const { pooledFit, rawGapLog, explained, oskyrtLog, disadvantagedGender } =
     core
   const employees = core.employees
@@ -715,13 +702,7 @@ export function computeWageGapDecomposition(input: {
 
   // ── Lágmarksmengi ────────────────────────────────────────────────────────
   const thresholdLog = thresholdLogFor(benchmarkPercent)
-  const selection = selectMinimumSet(
-    usable,
-    isMale,
-    pooledReferenceMode,
-    thresholdLog,
-    core,
-  )
+  const selection = selectMinimumSet(usable, isMale, thresholdLog, core)
   for (const employee of employees) {
     employee.inMinimumSet = selection.chosen.has(employee.ordinal)
   }
@@ -736,7 +717,7 @@ export function computeWageGapDecomposition(input: {
   return {
     method:
       WageGapDecompositionMethodEnum.OAXACA_BLINDER_LOG_REGULAR_HOURLY_WAGE_BY_SCORE,
-    pooledReferenceMode,
+    pooledReferenceMode: PooledReferenceModeEnum.POOLED_OLS,
     rawGapAvailable: true,
     rawGapBlockers: [],
     oskyrtAvailable: true,
@@ -764,39 +745,6 @@ export function computeWageGapDecomposition(input: {
     thresholdLog,
     benchmarkPercent,
   }
-}
-
-/**
- * β\*₁ under the selected reference convention.
- *
- * `WITH_DUMMY` (Fortin) is the within-group estimator: by Frisch-Waugh-Lovell,
- * adding a gender dummy to a pooled fit yields a precision-weighted average of
- * the two cohort slopes, `(SSx_M·β_M + SSx_W·β_W) / (SSx_M + SSx_W)` — which is
- * why `xSumSquares` is on {@link LinearFit}. It is computed from per-cohort fits
- * only in this branch; the default path fits nothing per gender.
- */
-function resolvePooledSlope(
-  mode: PooledReferenceModeEnum,
-  pooledFit: LinearFit,
-  men: WageGapEmployeeInput[],
-  women: WageGapEmployeeInput[],
-  x: (e: WageGapEmployeeInput) => number,
-  y: (e: WageGapEmployeeInput) => number,
-): number {
-  if (mode === PooledReferenceModeEnum.POOLED_OLS) {
-    return pooledFit.slope ?? 0
-  }
-
-  const maleFit = fitLinear(men.map((e) => ({ x: x(e), y: y(e) })))
-  const femaleFit = fitLinear(women.map((e) => ({ x: x(e), y: y(e) })))
-  const weight = maleFit.xSumSquares + femaleFit.xSumSquares
-  if (weight <= 0) return pooledFit.slope ?? 0
-
-  return (
-    (maleFit.xSumSquares * (maleFit.slope ?? 0) +
-      femaleFit.xSumSquares * (femaleFit.slope ?? 0)) /
-    weight
-  )
 }
 
 const roundTo = (value: number | null, precision: number): number | null =>

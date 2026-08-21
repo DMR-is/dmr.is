@@ -13,6 +13,8 @@ import {
 } from './format'
 import { buildSalaryChartSvg } from './salary-chart-svg'
 
+import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
+
 export interface SalaryReportPdfData {
   report: ReportDetailDto
   statistics: SalaryByGenderAndScoreDto
@@ -117,7 +119,23 @@ function subsidiariesSection(report: ReportDetailDto): string {
   )
 }
 
-function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
+/**
+ * Magnitude + explicit direction, never a signed percentage — the same
+ * convention the web uses, so one figure cannot read two ways depending on
+ * where it is shown.
+ */
+function disfavourLabel(
+  direction: WageGapDecompositionDto['rawGapDirection'],
+): string {
+  if (direction === 'FEMALE') return 'í óhag kvenna'
+  if (direction === 'MALE') return 'í óhag karla'
+  return ''
+}
+
+function salaryAnalysisSection(
+  statistics: SalaryByGenderAndScoreDto,
+  decomposition?: WageGapDecompositionDto | null,
+): string {
   const { totals } = statistics
   const chart = buildSalaryChartSvg(
     statistics.dataPoints,
@@ -138,7 +156,11 @@ function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
       </div>
       <div class="stat-card stat-card--accent">
         <p class="stat-card__label">Óleiðréttur launamunur</p>
-        <p class="stat-card__value">${formatPercent(totals.wageGapPercent, { signed: true })}</p>
+        <p class="stat-card__value">${
+          decomposition?.rawGapPercent == null
+            ? '—'
+            : `${formatPercent(decomposition.rawGapPercent)} ${disfavourLabel(decomposition.rawGapDirection)}`.trim()
+        }</p>
       </div>
     </div>`,
   )
@@ -156,9 +178,7 @@ function salaryAnalysisSection(statistics: SalaryByGenderAndScoreDto): string {
  * listed — but the reason is the company-wide figure; `Hlutur af óskýrðu` is the
  * column that actually explains the selection.
  */
-function improvementPlanSection(
-  outliers: ReportEmployeeOutlierDto[],
-): string {
+function improvementPlanSection(outliers: ReportEmployeeOutlierDto[]): string {
   if (!outliers || outliers.length === 0) {
     return section(
       'Úrbótaáætlun',
@@ -219,7 +239,7 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     ${contactSection(report)}
     ${averageEmployeesSection(report)}
     ${subsidiariesSection(report)}
-    ${salaryAnalysisSection(statistics)}
+    ${salaryAnalysisSection(statistics, report.result?.wageGapDecomposition)}
     ${improvementPlanSection(outliers)}
     ${deadlineSection(report)}
   </body>

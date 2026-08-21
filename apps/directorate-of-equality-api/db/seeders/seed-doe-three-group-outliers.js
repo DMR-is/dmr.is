@@ -534,4 +534,3 @@ DELETE FROM company             WHERE id = ${escStr(COMPANY_ID)};
 COMMIT;
   `
 }
-

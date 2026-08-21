@@ -79,9 +79,7 @@ type StepInputGrid = {
 
 /** `'AB'` → 28. */
 const colToNum = (letters: string): number =>
-  letters
-    .split('')
-    .reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
+  letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
 
 /**
  * Parse a single rectangular named range (e.g. `Starfsmat!$G$11:$GX$110`)

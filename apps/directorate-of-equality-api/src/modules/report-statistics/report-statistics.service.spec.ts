@@ -476,7 +476,6 @@ describe('ReportStatisticsService', () => {
     })
   })
 
-
   describe('getRegularHourlyWageGenderWageGap', () => {
     it('returns average and median base salary per gender with wage gap', async () => {
       employeeFindAll.mockResolvedValue([
@@ -523,7 +522,6 @@ describe('ReportStatisticsService', () => {
       expect(result.femaleAverageSalary).toBe(3000)
     })
   })
-
 
   describe('getBenefitsBreakdown', () => {
     it('returns average bonus and additional per gender (raw monthly, not divided by hours)', async () => {

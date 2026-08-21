@@ -1,7 +1,4 @@
-import {
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common'
+import { InternalServerErrorException, NotFoundException } from '@nestjs/common'
 
 import { SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY } from '../config.constants'
 import { ConfigModel } from '../models/config.model'
@@ -36,8 +33,7 @@ export const CONFIG_KEYS = {
   SALARY_DIFFERENCE_THRESHOLD_PERCENT: SALARY_DIFFERENCE_THRESHOLD_CONFIG_KEY,
 } as const
 
-export type NumericConfigKey =
-  (typeof CONFIG_KEYS)[keyof typeof CONFIG_KEYS]
+export type NumericConfigKey = (typeof CONFIG_KEYS)[keyof typeof CONFIG_KEYS]
 
 /**
  * Validates a raw config value as a number, or throws.

@@ -11,9 +11,7 @@ export interface IReportStatisticsService {
     reportId: string,
   ): Promise<SalaryByGenderAndScoreDto>
 
-
   getRegularHourlyWageGenderWageGap(reportId: string): Promise<GenderWageGapDto>
-
 
   getBenefitsBreakdown(reportId: string): Promise<BenefitsBreakdownDto>
 }

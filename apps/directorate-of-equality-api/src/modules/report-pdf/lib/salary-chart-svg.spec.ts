@@ -10,7 +10,11 @@ const points: ScatterDataPointDto[] = [
 
 describe('buildSalaryChartSvg', () => {
   it('produces a single well-formed svg element', () => {
-    const svg = buildSalaryChartSvg(points, { slope: 16.14, intercept: -3358.43, rSquared: 1 })
+    const svg = buildSalaryChartSvg(points, {
+      slope: 16.14,
+      intercept: -3358.43,
+      rSquared: 1,
+    })
 
     expect(svg.trim().startsWith('<svg')).toBe(true)
     expect(svg.trim().endsWith('</svg>')).toBe(true)
@@ -19,14 +23,22 @@ describe('buildSalaryChartSvg', () => {
   })
 
   it('colors points by gender (blue male, purple female)', () => {
-    const svg = buildSalaryChartSvg(points, { slope: 16.14, intercept: -3358.43, rSquared: 1 })
+    const svg = buildSalaryChartSvg(points, {
+      slope: 16.14,
+      intercept: -3358.43,
+      rSquared: 1,
+    })
 
     expect(svg).toContain('fill="#0061ff"') // male
     expect(svg).toContain('fill="#6a2ea0"') // female
   })
 
   it('draws the regression line in the rose tint', () => {
-    const svg = buildSalaryChartSvg(points, { slope: 16.14, intercept: -3358.43, rSquared: 1 })
+    const svg = buildSalaryChartSvg(points, {
+      slope: 16.14,
+      intercept: -3358.43,
+      rSquared: 1,
+    })
 
     expect(svg).toContain('stroke="#9a0074"')
     expect(svg).toContain('clip-path="url(#plot-clip)"')

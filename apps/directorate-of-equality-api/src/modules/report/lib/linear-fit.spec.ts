@@ -65,15 +65,18 @@ describe('linear-fit', () => {
       { name: 'single sample', samples: [{ x: 4, y: 9 }] },
     ]
 
-    it.each(cases)('intercept + slope·xMean === yMean ($name)', ({ samples }) => {
-      const { slope, intercept, xMean, yMean } = fitLinear(samples)
-      assertFitted(slope)
-      assertFitted(intercept)
-      assertFitted(xMean)
-      assertFitted(yMean)
+    it.each(cases)(
+      'intercept + slope·xMean === yMean ($name)',
+      ({ samples }) => {
+        const { slope, intercept, xMean, yMean } = fitLinear(samples)
+        assertFitted(slope)
+        assertFitted(intercept)
+        assertFitted(xMean)
+        assertFitted(yMean)
 
-      expect(intercept + slope * xMean).toBeCloseTo(yMean, 10)
-    })
+        expect(intercept + slope * xMean).toBeCloseTo(yMean, 10)
+      },
+    )
 
     // Why per-employee contributions sum exactly to the unexplained gap.
     it.each(cases)('residuals sum to zero ($name)', ({ samples }) => {

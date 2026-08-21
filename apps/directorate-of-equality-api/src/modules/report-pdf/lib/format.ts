@@ -30,9 +30,7 @@ export function formatHourlyRate(value: number | null | undefined): string {
 /** Plain integer with is-IS grouping (no currency suffix). */
 export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('is-IS')
-    .format(value)
-    .replaceAll(',', '.')
+  return new Intl.NumberFormat('is-IS').format(value).replaceAll(',', '.')
 }
 
 /** Signed percent with one decimal (e.g. +6,3% / -12,0%). */

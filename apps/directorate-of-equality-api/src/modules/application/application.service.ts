@@ -22,10 +22,7 @@ import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
-import {
-  CONFIG_KEYS,
-  parseNumericConfig,
-} from '../config/lib/numeric-config'
+import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
 import {
   CommunicationStatusEnum,
@@ -62,9 +59,7 @@ import type { ReportResultDto } from '../report-result/dto/report-result.dto'
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import {
-  analyzeSalaryPayload,
-} from '../report-statistics/lib/salary-analysis'
+import { analyzeSalaryPayload } from '../report-statistics/lib/salary-analysis'
 import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
 import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
 import { EditEqualityContentDto } from './dto/edit-equality-content.dto'

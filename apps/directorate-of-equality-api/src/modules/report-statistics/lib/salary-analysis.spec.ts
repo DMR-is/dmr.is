@@ -44,6 +44,46 @@ describe('analyzeSalaryPayload', () => {
       expect(result.wageGapDecomposition).toEqual(expected)
     })
 
+    /**
+     * The parity that actually matters: parsed floats carry full precision,
+     * `report_employee` stores every pay column and `paid_hours` as
+     * `DECIMAL(_, 2)`. Before this, the preview decomposed the raw floats and
+     * `report_result` re-decomposed the rounded rows — two different
+     * calculations, and because the lágmarksmengi is a greedy walk over
+     * contributions, at the margin they could name DIFFERENT employees.
+     *
+     * Sub-cent inputs below, so an unquantized path would visibly diverge.
+     */
+    it('derives tímakaup at storage precision, so a DB round-trip changes nothing', () => {
+      const parsed = makeMixedPayload()
+      const employee = parsed.employees[0]
+      employee.paidHours = 173.336789
+      employee.baseSalary = 650000.4449
+      employee.additionalFixedOvertime = 25000.5551
+
+      const preview = analyzeSalaryPayload(parsed, THRESHOLD_PERCENT)
+
+      // What the same row looks like once Postgres has stored and returned it.
+      const roundTripped = parsed.employees.map((row) => ({
+        ...row,
+        paidHours: Number(row.paidHours.toFixed(2)),
+        baseSalary: Number(row.baseSalary.toFixed(2)),
+        additionalFixedOvertime:
+          row.additionalFixedOvertime === null
+            ? null
+            : Number(row.additionalFixedOvertime.toFixed(2)),
+      }))
+      const persisted = analyzeSalaryPayload(
+        { ...parsed, employees: roundTripped },
+        THRESHOLD_PERCENT,
+      )
+
+      expect(preview.wageGapDecomposition).toEqual(
+        persisted.wageGapDecomposition,
+      )
+      expect(preview.outliers).toEqual(persisted.outliers)
+    })
+
     it('computes a real gap on the fixture rather than silently nulling out', () => {
       const result = analyzeSalaryPayload(makeMixedPayload(), THRESHOLD_PERCENT)
       const gap = result.wageGapDecomposition

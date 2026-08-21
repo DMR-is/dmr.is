@@ -511,4 +511,3 @@ DELETE FROM company             WHERE id = ${escStr(RICH_CID)};
 COMMIT;
   `
 }
-

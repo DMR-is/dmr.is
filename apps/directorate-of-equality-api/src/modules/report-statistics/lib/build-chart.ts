@@ -93,37 +93,38 @@ function computeScoreBuckets(points: EmployeeDataPoint[]): ScoreBucketDto[] {
     salary: point.regularHourlyWage,
   }))
 
-  return computeSalaryScoreBucketSnapshots(salaryPoints, SCORE_BUCKET_WIDTH).map(
-    (bucket) => {
-      const snapshot = bucket.totals
+  return computeSalaryScoreBucketSnapshots(
+    salaryPoints,
+    SCORE_BUCKET_WIDTH,
+  ).map((bucket) => {
+    const snapshot = bucket.totals
 
-      return {
-        rangeFrom: bucket.rangeFrom,
-        rangeTo: bucket.rangeTo,
-        maleAverageSalary:
-          snapshot.male.average !== null
-            ? roundNullable(snapshot.male.average, 2)
-            : null,
-        femaleAverageSalary:
-          snapshot.female.average !== null
-            ? roundNullable(snapshot.female.average, 2)
-            : null,
-        overallAverageSalary: roundNullable(snapshot.overall.average, 2) ?? 0,
-        maleMedianSalary:
-          snapshot.male.median !== null
-            ? roundNullable(snapshot.male.median, 2)
-            : null,
-        femaleMedianSalary:
-          snapshot.female.median !== null
-            ? roundNullable(snapshot.female.median, 2)
-            : null,
-        overallMedianSalary: roundNullable(snapshot.overall.median, 2) ?? 0,
-        wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
-        maleCount: bucket.counts.male,
-        femaleCount: bucket.counts.female,
-      }
-    },
-  )
+    return {
+      rangeFrom: bucket.rangeFrom,
+      rangeTo: bucket.rangeTo,
+      maleAverageSalary:
+        snapshot.male.average !== null
+          ? roundNullable(snapshot.male.average, 2)
+          : null,
+      femaleAverageSalary:
+        snapshot.female.average !== null
+          ? roundNullable(snapshot.female.average, 2)
+          : null,
+      overallAverageSalary: roundNullable(snapshot.overall.average, 2) ?? 0,
+      maleMedianSalary:
+        snapshot.male.median !== null
+          ? roundNullable(snapshot.male.median, 2)
+          : null,
+      femaleMedianSalary:
+        snapshot.female.median !== null
+          ? roundNullable(snapshot.female.median, 2)
+          : null,
+      overallMedianSalary: roundNullable(snapshot.overall.median, 2) ?? 0,
+      wageGapPercent: roundNullable(snapshot.salaryDifferences.maleFemale, 1),
+      maleCount: bucket.counts.male,
+      femaleCount: bucket.counts.female,
+    }
+  })
 }
 
 function computeTotals(points: EmployeeDataPoint[]): SalaryTotalsDto {

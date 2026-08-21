@@ -34,9 +34,7 @@ export class ReportStatisticsController {
   async getRegularHourlyWageByScoreAll(
     @Param('reportId') reportId: string,
   ): Promise<SalaryByGenderAndScoreDto> {
-    return this.reportStatisticsService.getRegularHourlyWageByScoreAll(
-      reportId,
-    )
+    return this.reportStatisticsService.getRegularHourlyWageByScoreAll(reportId)
   }
 
   @Get('regular-hourly-wage-by-score-work')
@@ -67,7 +65,9 @@ export class ReportStatisticsController {
   async getRegularHourlyWageGenderWageGap(
     @Param('reportId') reportId: string,
   ): Promise<GenderWageGapDto> {
-    return this.reportStatisticsService.getRegularHourlyWageGenderWageGap(reportId)
+    return this.reportStatisticsService.getRegularHourlyWageGenderWageGap(
+      reportId,
+    )
   }
 
   @Get('benefits-breakdown')

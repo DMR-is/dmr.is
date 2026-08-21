@@ -268,8 +268,6 @@ describe('ReportResultService', () => {
 
     expect(result.salary.totals.overall.average).toBe(3125)
   })
-
-
 })
 
 function makeEmployee(

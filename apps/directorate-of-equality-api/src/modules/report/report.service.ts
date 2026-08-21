@@ -258,15 +258,12 @@ export class ReportService implements IReportService {
       )
     }
 
-    const [
-      { result, includesImprovementPlan },
-      timeline,
-      subsidiaries,
-    ] = await Promise.all([
-      this.loadSalaryCalculations(report),
-      this.buildTimeline(id, report.comments ?? []),
-      this.loadSubsidiaries(id),
-    ])
+    const [{ result, includesImprovementPlan }, timeline, subsidiaries] =
+      await Promise.all([
+        this.loadSalaryCalculations(report),
+        this.buildTimeline(id, report.comments ?? []),
+        this.loadSubsidiaries(id),
+      ])
 
     return {
       ...base,
@@ -275,8 +272,7 @@ export class ReportService implements IReportService {
       equalityReport,
       timeline,
       result,
-      companyFinesStarted:
-        report.companyReport.company?.finesStarted ?? false,
+      companyFinesStarted: report.companyReport.company?.finesStarted ?? false,
       companyQuarantined: report.companyReport.company?.quarantined ?? false,
       includesImprovementPlan,
     }
@@ -576,22 +572,22 @@ export class ReportService implements IReportService {
     // `GET /reports/:id/outliers` endpoint — too many to inline into the
     // detail payload. We only need the boolean here, so a count is enough.
     const outlierCount = await this.reportEmployeeOutlierModel.count({
-        include: [
-          {
-            model: ReportEmployeeModel,
-            as: 'reportEmployee',
-            attributes: ['gender', 'score'],
-            where: { reportId: report.id },
-            required: true,
-            include: [
-              {
-                model: ReportEmployeeRoleModel,
-                as: 'role',
-                attributes: ['title'],
-              },
-            ],
-          },
-        ],
+      include: [
+        {
+          model: ReportEmployeeModel,
+          as: 'reportEmployee',
+          attributes: ['gender', 'score'],
+          where: { reportId: report.id },
+          required: true,
+          include: [
+            {
+              model: ReportEmployeeRoleModel,
+              as: 'role',
+              attributes: ['title'],
+            },
+          ],
+        },
+      ],
     })
 
     return {
@@ -617,47 +613,48 @@ export class ReportService implements IReportService {
 
     const { limit, offset } = getLimitAndOffset(query)
 
-    const { rows, count } = await this.reportEmployeeOutlierModel.findAndCountAll({
-      // `groupId` is a non-null FK on every outlier row, so this scopes the
-      // page (and `count`) to one group without ever excluding rows; omitted
-      // → all of the report's outliers, preserving the pre-grouping behavior.
-      where: query.groupId ? { groupId: query.groupId } : undefined,
-      include: [
-        {
-          model: ReportEmployeeModel,
-          as: 'reportEmployee',
-          attributes: ['id', 'ordinal', 'gender', 'score'],
-          where: { reportId: report.id },
-          required: true,
-          include: [
-            {
-              model: ReportEmployeeRoleModel,
-              as: 'role',
-              attributes: ['id', 'title'],
-              required: false,
-            },
-          ],
-        },
-        {
-          model: ReportOutlierGroupModel,
-          as: 'group',
-          attributes: [
-            'id',
-            'name',
-            'reason',
-            'action',
-            'signatureName',
-            'signatureRole',
-          ],
-          required: true,
-        },
-      ],
-      order: this.buildOutlierOrder(query),
-      limit,
-      offset,
-      distinct: true,
-      subQuery: false,
-    })
+    const { rows, count } =
+      await this.reportEmployeeOutlierModel.findAndCountAll({
+        // `groupId` is a non-null FK on every outlier row, so this scopes the
+        // page (and `count`) to one group without ever excluding rows; omitted
+        // → all of the report's outliers, preserving the pre-grouping behavior.
+        where: query.groupId ? { groupId: query.groupId } : undefined,
+        include: [
+          {
+            model: ReportEmployeeModel,
+            as: 'reportEmployee',
+            attributes: ['id', 'ordinal', 'gender', 'score'],
+            where: { reportId: report.id },
+            required: true,
+            include: [
+              {
+                model: ReportEmployeeRoleModel,
+                as: 'role',
+                attributes: ['id', 'title'],
+                required: false,
+              },
+            ],
+          },
+          {
+            model: ReportOutlierGroupModel,
+            as: 'group',
+            attributes: [
+              'id',
+              'name',
+              'reason',
+              'action',
+              'signatureName',
+              'signatureRole',
+            ],
+            required: true,
+          },
+        ],
+        order: this.buildOutlierOrder(query),
+        limit,
+        offset,
+        distinct: true,
+        subQuery: false,
+      })
 
     const analysisByOrdinal = new Map(
       report.result?.wageGapDecompositionSnapshot.employees.map((employee) => [
@@ -669,7 +666,7 @@ export class ReportService implements IReportService {
     const outliers = rows.map((row) =>
       row.fromModel(
         row.reportEmployee
-          ? analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null
+          ? (analysisByOrdinal.get(row.reportEmployee.ordinal) ?? null)
           : null,
       ),
     )
@@ -717,7 +714,8 @@ export class ReportService implements IReportService {
       return [[reportEmployee, role, 'title', 'ASC'], ...ordinalAsc]
     }
 
-    const direction = query.direction === SortDirectionEnum.DESC ? 'DESC' : 'ASC'
+    const direction =
+      query.direction === SortDirectionEnum.DESC ? 'DESC' : 'ASC'
 
     switch (query.sortBy) {
       case ReportOutlierSortByEnum.EMPLOYEE_ORDINAL:

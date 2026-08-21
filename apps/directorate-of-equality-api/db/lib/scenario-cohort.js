@@ -41,8 +41,16 @@ const MANAGEMENT_STEPS = 3
 const EDUCATION_WEIGHT = 40
 const EDUCATION_STEPS = 4
 
-const MANAGEMENT_LOW_SCORE = seedStepScore(1, MANAGEMENT_STEPS, MANAGEMENT_WEIGHT)
-const MANAGEMENT_HIGH_SCORE = seedStepScore(3, MANAGEMENT_STEPS, MANAGEMENT_WEIGHT)
+const MANAGEMENT_LOW_SCORE = seedStepScore(
+  1,
+  MANAGEMENT_STEPS,
+  MANAGEMENT_WEIGHT,
+)
+const MANAGEMENT_HIGH_SCORE = seedStepScore(
+  3,
+  MANAGEMENT_STEPS,
+  MANAGEMENT_WEIGHT,
+)
 const EDUCATION_LOW_SCORE = seedStepScore(1, EDUCATION_STEPS, EDUCATION_WEIGHT)
 const EDUCATION_HIGH_SCORE = seedStepScore(4, EDUCATION_STEPS, EDUCATION_WEIGHT)
 
@@ -99,7 +107,8 @@ function scenarioEmployees(hasOutliers) {
   // Applied below: hours and every pay field move by the same factor.
   const sized = (employee) => {
     const factor = CONTRACT[employee.ordinal]
-    const scale = (v) => (v === null || v === undefined ? v : Math.round(v * factor))
+    const scale = (v) =>
+      v === null || v === undefined ? v : Math.round(v * factor)
     return {
       ...employee,
       paidHours: Math.round(SEEDED_PAID_HOURS * factor * 100) / 100,

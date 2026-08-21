@@ -142,9 +142,9 @@ describe('ReportDraftAnalysisService', () => {
       type: ReportTypeEnum.EQUALITY,
     })
 
-    await expect(
-      service.analyzeDraft(PROVIDER_ID, COMPANY),
-    ).rejects.toThrow(BadRequestException)
+    await expect(service.analyzeDraft(PROVIDER_ID, COMPANY)).rejects.toThrow(
+      BadRequestException,
+    )
   })
 
   it('returns an empty outlier list for a salary draft with no employees', async () => {
