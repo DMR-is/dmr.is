@@ -6,9 +6,15 @@ services:
     ports:
       - "${LG_WEB_PORT:-4200}:3000"
     environment:
+      # Run this file through the varlock wrapper, not `docker compose` directly:
+      #   scripts/varlock-run.sh legal-gazette-web docker compose -f apps/legal-gazette-web/docker-compose.yml up
+      # The wrapper resolves this app's declared .env.schema names into the
+      # environment compose interpolates from below; nothing is exported into
+      # the shell any more.
+      #
       # Authentication — production uses ISLAND_IS_DMR_WEB_* (shared config)
-      ISLAND_IS_DMR_WEB_CLIENT_ID: ${LG_WEB_CLIENT_ID}
-      ISLAND_IS_DMR_WEB_CLIENT_SECRET: ${LG_WEB_CLIENT_SECRET}
+      ISLAND_IS_DMR_WEB_CLIENT_ID: ${ISLAND_IS_DMR_WEB_CLIENT_ID}
+      ISLAND_IS_DMR_WEB_CLIENT_SECRET: ${ISLAND_IS_DMR_WEB_CLIENT_SECRET}
       IDENTITY_SERVER_DOMAIN: ${IDENTITY_SERVER_DOMAIN}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_COOKIE_SECURE: "false"

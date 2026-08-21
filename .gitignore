@@ -47,7 +47,7 @@ TODO
 !.env.schema
 # Generated from the schemas by varlock on every load. Not committed: nothing
 # imports them yet, and they would churn on every schema edit.
-env.ts
+apps/*/env.ts
 .envrc.*
 !.envrc.git
 .node-version
