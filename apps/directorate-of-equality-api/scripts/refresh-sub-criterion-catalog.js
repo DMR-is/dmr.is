@@ -81,12 +81,26 @@ const SCALE_MARKER = 'Almennur þrepakvarði →'
  * `parentTitle`, so it would be quietly mis-grouped with no test to catch it.
  */
 const TYPE_BY_PARENT = {
-  // Job-based (Starfsbundið).
+  // Job-based (Starfsbundið). These four are the mandatory criteria and are
+  // deliberately untouched by the 2026-08 template revision.
   Hæfni: 'COMPETENCE',
   Ábyrgð: 'RESPONSIBILITY',
   Álag: 'STRAIN',
   Vinnuaðstæður: 'CONDITION',
-  // Personal (Einstaklingsbundið) — two distinct labels, one enum type.
+  // Personal (Einstaklingsbundið) — several distinct labels, one enum type.
+  //
+  // A label may appear in more than one run of rows: the sheet groups by label,
+  // not by contiguous block, so `Þekking og reynsla` occupies rows 39-41 and
+  // again 47-48, and `Aukaábyrgð` rows 38 and 52. Nothing here depends on
+  // contiguity, but do not infer a row range from a label.
+  Aukaábyrgð: 'PERSONAL',
+  'Þekking og reynsla': 'PERSONAL',
+  Færni: 'PERSONAL',
+  Frammistaða: 'PERSONAL',
+  // Retired by the 2026-08 revision, which replaced them with the four above.
+  // Kept because this script accepts an arbitrary workbook path (see Usage), so
+  // dropping them would make it throw on any pre-revision template rather than
+  // regenerate it.
   Frammistöðumat: 'PERSONAL',
   'Einstaklingsbundinn þáttur': 'PERSONAL',
 }

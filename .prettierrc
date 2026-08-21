@@ -10,6 +10,13 @@
       "options": {
         "parser": "babel-ts"
       }
+    },
+    {
+      "_comment": "babel-ts cannot parse ambient declarations (`export const X: number` with no initializer), and the *.ts glob above matches *.d.ts too, so without this a single .d.ts makes `nx format:write` exit 2 for the whole repo.",
+      "files": ["*.d.ts"],
+      "options": {
+        "parser": "typescript"
+      }
     }
   ]
 }

@@ -23,16 +23,39 @@ import {
  */
 
 /**
- * Icelandic Yfirviðmið labels that resolve to PERSONAL. Two distinct labels for
- * one enum type, which is why the portal groups by `parentTitle` rather than by
- * `criterionType`. Pinned here so a new personal section cannot appear
+ * Icelandic Yfirviðmið labels that resolve to PERSONAL. Several distinct labels
+ * for one enum type, which is why the portal groups by `parentTitle` rather than
+ * by `criterionType`. Pinned here so a new personal section cannot appear
  * unnoticed — the generator throws on any parent it does not know, and this is
  * the other half of that contract.
+ *
+ * The 2026-08 template revision replaced `Frammistöðumat` and
+ * `Einstaklingsbundinn þáttur` with the four below. The job-based half was not
+ * touched: these four are additions to the *personal* taxonomy only, so
+ * `JOB_BASED_TITLE_TO_TYPE` and `ReportCriterionTypeEnum` both stay as they
+ * were. `Aukaábyrgð` in particular is personal despite reading like a job-based
+ * responsibility label.
+ *
+ * ⚠️ A label can occupy more than one run of rows — the sheet groups by label,
+ * not by contiguous block (`Þekking og reynsla` sits at rows 39-41 and again
+ * 47-48; `Aukaábyrgð` at 38 and 52). Do not infer a row range from a label.
  */
-const PERSONAL_PARENTS = ['Frammistöðumat', 'Einstaklingsbundinn þáttur']
+const PERSONAL_PARENTS = [
+  'Aukaábyrgð',
+  'Þekking og reynsla',
+  'Færni',
+  'Frammistaða',
+]
 
-/** Entry count as shipped. A row silently vanishing from the sheet fails here. */
-const EXPECTED_ENTRY_COUNT = 53
+/**
+ * Entry count as shipped. A row silently vanishing from the sheet fails here.
+ *
+ * Was 53 before the 2026-08 revision, which cut the personal half from rows
+ * 6-58 down to 6-52. Verified a real content change and not a skipped read: both
+ * workbooks scan gap-free to their last row, so the six missing entries were
+ * removed by Jafnréttisstofa rather than lost to a column shift.
+ */
+const EXPECTED_ENTRY_COUNT = 47
 
 describe('sub-criterion catalog', () => {
   it('is non-empty and covers both job-based and personal criteria', () => {
