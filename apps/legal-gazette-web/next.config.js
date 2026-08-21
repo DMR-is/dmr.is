@@ -45,10 +45,6 @@ const nextConfig = {
   },
   env: {
     API_MOCKS: process.env.API_MOCKS || null,
-    NEXTAUTH_URL:
-      process.env.NODE_ENV !== 'production'
-        ? `${process.env.LG_WEB_URL}/api/auth`
-        : process.env.NEXTAUTH_URL || null,
   },
 }
 

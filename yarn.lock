@@ -12812,6 +12812,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@varlock/1password-plugin@npm:2.0.3":
+  version: 2.0.3
+  resolution: "@varlock/1password-plugin@npm:2.0.3"
+  peerDependencies:
+    varlock: ^1.15.0
+  checksum: 10c0/65eb4f7c1b9501ca3accc3b116fba5c2680b7130bd5cae306ec5fc7e95535f68f9cc534457f3be64305bf0666f54121d636204c98cf488fb7585507a947e4ae9
+  languageName: node
+  linkType: hard
+
 "@webassemblyjs/ast@npm:1.14.1, @webassemblyjs/ast@npm:^1.14.1":
   version: 1.14.1
   resolution: "@webassemblyjs/ast@npm:1.14.1"
@@ -16315,6 +16324,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:7.18.0"
     "@typescript-eslint/parser": "npm:7.18.0"
     "@vanilla-extract/webpack-plugin": "npm:^2.3.22"
+    "@varlock/1password-plugin": "npm:2.0.3"
     "@yarnpkg/types": "npm:4.0.1"
     babel-jest: "npm:30.0.5"
     beygla: "npm:1.5.5"
@@ -16353,6 +16363,7 @@ __metadata:
     ts-node: "npm:10.9.1"
     typescript: "npm:5.8.3"
     url-loader: "npm:^4.1.1"
+    varlock: "npm:1.16.1"
     webpack: "npm:^5.98.0"
   languageName: unknown
   linkType: soft
@@ -29488,6 +29499,15 @@ __metadata:
   version: 6.0.0
   resolution: "varint@npm:6.0.0"
   checksum: 10c0/737fc37088a62ed3bd21466e318d21ca7ac4991d0f25546f518f017703be4ed0f9df1c5559f1dd533dddba4435a1b758fd9230e4772c1a930ef72b42f5c750fd
+  languageName: node
+  linkType: hard
+
+"varlock@npm:1.16.1":
+  version: 1.16.1
+  resolution: "varlock@npm:1.16.1"
+  bin:
+    varlock: bin/cli.js
+  checksum: 10c0/6ad7e0b29eed69dca68768634bc272b1eb69e63b0dd083122dbe37e7563d2703ab1ef5cb838cda91e60cef5935fc98a67335fda7b541e0aaa2d048c1d57242f6
   languageName: node
   linkType: hard
 

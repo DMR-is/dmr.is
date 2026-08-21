@@ -12,10 +12,7 @@ function handler(request: NextRequest) {
   const url = new URL(request.url)
   const idToken = url.searchParams.get('id_token')
 
-  const postLogoutRedirectUri =
-    process.env.NODE_ENV !== 'production'
-      ? (process.env.DOE_WEB_URL as string)
-      : (process.env.IDENTITY_SERVER_LOGOUT_URL as string)
+  const postLogoutRedirectUri = process.env.BASE_URL as string
 
   const endSessionUrl = `https://${process.env.IDENTITY_SERVER_DOMAIN}/connect/endsession?id_token_hint=${idToken}&post_logout_redirect_uri=${encodeURIComponent(
     postLogoutRedirectUri,

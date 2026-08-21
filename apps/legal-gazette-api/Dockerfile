@@ -28,8 +28,22 @@ COPY --from=deps /usr/src/app/.sequelizerc ./
 COPY --from=deps /usr/src/app/sequelize.config.js ./
 COPY ./apps/legal-gazette-api/dist .
 RUN npm install -g sequelize-cli
+# Validate the environment at container start. The image is built with an empty
+# environment and run with ECS supplying the values, so boot is the only moment
+# this can be checked. ./env is the flattened schema produced by the app's
+# flatten-env target -- the Dockerfile packages apps/<app>/dist only, and the
+# root .env.schema is not in there. Pinned from npm rather than curl | sh.
+#
+# The version is STILL duplicated: nothing passes VARLOCK_VERSION today, so this
+# default is what every build uses, and it is one of five places holding 1.16.1
+# (here, the three sibling Dockerfiles, and the root package.json). The arg only
+# means a build CAN override it without editing four files. Keep the default in
+# step with package.json -- the varlock that flattens the schema at build time
+# and the one that reads it at boot have to agree.
+ARG VARLOCK_VERSION=1.16.1
+RUN npm install -g varlock@${VARLOCK_VERSION}
 USER node
 EXPOSE 4100
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "sequelize-cli db:migrate && node main.js"]
+CMD ["varlock", "run", "--path", "./env", "--", "sh", "-c", "sequelize-cli db:migrate && node main.js"]
 
