@@ -4,8 +4,10 @@ import { OpenAPIObject } from '@nestjs/swagger'
 
 import { API_VERSION, applyApiRouting, GLOBAL_PREFIX } from '../../api-routing'
 import { AppModule } from '../../app/app.module'
+import { PUBLIC_ROUTE_METADATA } from '../../core/decorators/public-route.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
+import { declaresAccess } from '../../core/guards/declared-access/declared-access.guard'
 import { buildSwaggerDocument } from '../../setupSwaggerDocument'
 import { SWAGGER_CONFIG } from '../../swagger.config'
 
@@ -89,11 +91,53 @@ const UNPUBLISHED: ReadonlySet<OperationKey> = new Set([
  * reason.
  */
 const HIDDEN_FROM_SWAGGER: ReadonlySet<string> = new Set([
-  // Local-dev S3 bypass (PUT /v1/imports/local). Deliberately unguarded and
-  // inert once a bucket is configured, so it must not appear in any published
-  // contract. See ImportUploadLocalController.
+  // Local-dev S3 bypass (PUT /v1/imports/local). Deliberately unauthenticated,
+  // and not registered at all once a bucket is configured, so it must not
+  // appear in any published contract. See ImportUploadLocalController.
   'ImportUploadLocalController',
 ])
+
+/**
+ * Controllers allowed to carry `@PublicRoute`, i.e. to answer unauthenticated
+ * callers. `DeclaredAccessGuard` refuses everything else that does not declare
+ * an audience, so this set is the complete list of endpoints in the API reachable
+ * with no credential — the one place to look when asking what is exposed.
+ *
+ * Asserted as a ceiling rather than an exact match: `ImportUploadLocalController`
+ * is only registered when no S3 bucket is configured, so it is legitimately
+ * absent in some environments.
+ */
+const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
+  // GET /v1/health — cluster liveness probe. Load balancers send no token.
+  'HealthController',
+  // PUT /v1/imports/local — local-dev stand-in for an S3 presigned PUT. The
+  // browser request carries no Authorization header by design, and the module
+  // does not register it once a bucket is configured.
+  'ImportUploadLocalController',
+])
+
+/**
+ * Handlers allowed to require the ADMIN role. Everything else on the internal
+ * surface is reachable by any active `doe_user`, per
+ * `db/migrations/m-20260520-doe-user-role.js`: ADMIN is "full CRUD on users +
+ * reviewer actions", EDITOR is "reviewer actions only — no user management".
+ *
+ * The three `/users` mutations are that policy verbatim. `ConfigController`
+ * goes past it: #1410 gated the salary-threshold write to ADMIN so the API
+ * matches the `kerfisstillingar` page, which had always gated itself that way.
+ * Reviewer actions stay EDITOR-reachable either way — a system-wide setting is
+ * not a reviewer action.
+ *
+ * Pinned in both directions, unlike the sets above. Widening this silently
+ * changes who can act on the register; narrowing it silently hands user
+ * management to every reviewer.
+ */
+const ADMIN_ONLY_HANDLERS: readonly string[] = [
+  'ConfigController.updateByKey',
+  'UserController.createUser',
+  'UserController.deleteUser',
+  'UserController.updateUser',
+]
 
 /**
  * The draft-report lifecycle, each operation pinned to the `operationId` the
@@ -219,10 +263,12 @@ const swaggerExclusions = (controller: Function): string[] => {
     .filter((method) => method !== 'constructor')
     .filter(
       (method) =>
-        (Reflect.getMetadata(
-          API_EXCLUDE_ENDPOINT,
-          controller.prototype[method],
-        ) as { disable?: boolean } | undefined)?.disable,
+        (
+          Reflect.getMetadata(
+            API_EXCLUDE_ENDPOINT,
+            controller.prototype[method],
+          ) as { disable?: boolean } | undefined
+        )?.disable,
     )
     .map((method) => `${controller.name}.${method}`)
 }
@@ -246,9 +292,11 @@ const documentableHandlers = (app: INestApplication): string[] =>
   [...new Set<Function>(routedControllers(app))]
     .filter(
       (controller) =>
-        !(Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
-          | [boolean]
-          | undefined)?.[0],
+        !(
+          Reflect.getMetadata(API_EXCLUDE_CONTROLLER, controller) as
+            | [boolean]
+            | undefined
+        )?.[0],
     )
     .flatMap((controller) => {
       const excluded = new Set(swaggerExclusions(controller))
@@ -282,6 +330,54 @@ const guardsOn = (controller: Function): unknown[] => {
 
   return [...fromClass, ...fromHandlers]
 }
+
+/**
+ * The guards that actually run for one handler: class-level plus its own, which
+ * Nest unions rather than overrides.
+ *
+ * Distinct from `guardsOn` above, which unions *every* handler's guards to ask a
+ * question about the controller as a whole. That shape would report a controller
+ * as declared when a single handler carried the missing guard, so coverage has to
+ * be judged per handler.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+const guardsForHandler = (controller: Function, method: string): unknown[] => [
+  ...((Reflect.getMetadata(
+    GUARDS_METADATA,
+    controller.prototype[method],
+  ) as unknown[]) ?? []),
+  ...((Reflect.getMetadata(GUARDS_METADATA, controller) as unknown[]) ?? []),
+]
+
+/** Every routed handler in the container, as `[controller, method]` pairs. */
+const routedHandlers = (
+  app: INestApplication,
+  // eslint-disable-next-line @typescript-eslint/ban-types
+): Array<[Function, string]> =>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  [...new Set<Function>(routedControllers(app))].flatMap((controller) =>
+    Object.getOwnPropertyNames(controller.prototype)
+      .filter((method) => method !== 'constructor')
+      .filter(
+        (method) =>
+          Reflect.getMetadata(PATH_METADATA, controller.prototype[method]) !==
+          undefined,
+      )
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      .map((method): [Function, string] => [controller, method]),
+  )
+
+/**
+ * The `@PublicRoute` reason in force for one handler, class-level or its own.
+ * Mirrors the guard's `getAllAndOverride([handler, class])`.
+ */
+const publicRouteReason = (
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  controller: Function,
+  method: string,
+): string | undefined =>
+  Reflect.getMetadata(PUBLIC_ROUTE_METADATA, controller.prototype[method]) ??
+  Reflect.getMetadata(PUBLIC_ROUTE_METADATA, controller)
 
 /**
  * Every controller anywhere under `roots`, by walking module metadata.
@@ -551,5 +647,69 @@ describe('swagger document coverage', () => {
     )
 
     expect(overlap).toEqual([])
+  })
+
+  /**
+   * Authorization coverage, kept here rather than in its own spec because this is
+   * the only place that boots the container — `routedControllers` reads what Nest
+   * actually registered, which is the sole side of the comparison a forgotten
+   * `@UseGuards` cannot move.
+   *
+   * `DeclaredAccessGuard` already refuses undeclared routes at runtime. These
+   * assertions move that failure from the first request to CI, and pin the two
+   * lists the guard consults so neither can be widened quietly.
+   */
+  describe('default-deny coverage', () => {
+    it('declares an access policy for every routed handler', () => {
+      // Ordered first: the two assertions below constrain the exceptions, and both
+      // pass vacuously the moment routes stop being guarded at all.
+      const undeclared = routedHandlers(app)
+        .filter(
+          ([controller, method]) => !publicRouteReason(controller, method),
+        )
+        .filter(
+          ([controller, method]) =>
+            !declaresAccess(guardsForHandler(controller, method)),
+        )
+        .map(([controller, method]) => `${controller.name}.${method}`)
+        .sort()
+
+      expect(undeclared).toEqual([])
+    })
+
+    it('exposes no unauthenticated handler outside the allowlist', () => {
+      const unlisted = routedHandlers(app)
+        .filter(([controller, method]) => publicRouteReason(controller, method))
+        .filter(([controller]) => !PUBLIC_ROUTE_ALLOWLIST.has(controller.name))
+        .map(([controller, method]) => `${controller.name}.${method}`)
+        .sort()
+
+      expect(unlisted).toEqual([])
+    })
+
+    it('restricts the ADMIN role requirement to user management and config', () => {
+      const adminOnly = routedHandlers(app)
+        .filter(([controller, method]) =>
+          guardsForHandler(controller, method).includes(RequireAdminRoleGuard),
+        )
+        .map(([controller, method]) => `${controller.name}.${method}`)
+        .sort()
+
+      expect(adminOnly).toEqual([...ADMIN_ONLY_HANDLERS])
+    })
+
+    it('guards a substantial surface', () => {
+      // Anti-vacuity floor in the style of the routing check above: every
+      // assertion here is "no offenders", so an empty handler list satisfies all
+      // three. Loose bounds, so a legitimate new endpoint does not trip them.
+      const handlers = routedHandlers(app)
+
+      expect(handlers.length).toBeGreaterThan(50)
+      expect(
+        handlers.filter(([controller, method]) =>
+          declaresAccess(guardsForHandler(controller, method)),
+        ).length,
+      ).toBeGreaterThan(50)
+    })
   })
 })

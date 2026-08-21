@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common'
 import { ApiExcludeController } from '@nestjs/swagger'
 
+import { PublicRoute } from '../../core/decorators/public-route.decorator'
 import { IImportUploadService } from './import-upload.service.interface'
 
 /**
@@ -19,14 +20,18 @@ import { IImportUploadService } from './import-upload.service.interface'
  * this endpoint stashes the bytes on disk so the key-based fetch flow is
  * otherwise unchanged. Intentionally unguarded — the browser PUT carries no
  * auth header (mirroring a real presigned URL) and the capability is the
- * unguessable key. The service refuses to store anything once a bucket is set,
- * so this is inert in every deployed environment. Hidden from Swagger.
+ * unguessable key. `ImportUploadApiModule` only registers this controller when
+ * no bucket is configured, so the route does not exist in any deployed
+ * environment. Hidden from Swagger.
  */
 @Controller({
   path: 'imports',
   version: '1',
 })
 @ApiExcludeController()
+@PublicRoute(
+  'local-dev presigned-PUT stand-in; the browser PUT carries no Authorization header, and the capability is the unguessable key',
+)
 export class ImportUploadLocalController {
   constructor(
     @Inject(IImportUploadService)

@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { SequelizeModule } from '@nestjs/sequelize'
 
@@ -13,6 +13,7 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { DeclaredAccessGuard } from '../core/guards/declared-access/declared-access.guard'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
 import { CompanyEventModel } from '../modules/company/models/company-event.model'
@@ -102,6 +103,14 @@ import { HealthController } from './health.controller'
   ],
   controllers: [HealthController],
   providers: [
+    // Default-deny for every route in the API. Runs before any controller or
+    // route guard, and refuses anything whose @UseGuards chain does not state
+    // who may call it. Authorization is opt-out, not opt-in: a new controller
+    // is unreachable until its author declares an audience.
+    {
+      provide: APP_GUARD,
+      useClass: DeclaredAccessGuard,
+    },
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
