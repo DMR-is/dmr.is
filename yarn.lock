@@ -3989,6 +3989,7 @@ __metadata:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/db": "npm:*"
     "@dmr.is/decorators": "npm:*"
+    "@dmr.is/doe-shared": "npm:*"
     "@dmr.is/island-auth-nest": "npm:*"
     "@dmr.is/logging": "npm:*"
     "@dmr.is/pipelines": "npm:*"
@@ -4038,7 +4039,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared":
+"@dmr.is/doe-shared@npm:*, @dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared":
   version: 0.0.0-use.local
   resolution: "@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared"
   dependencies:
