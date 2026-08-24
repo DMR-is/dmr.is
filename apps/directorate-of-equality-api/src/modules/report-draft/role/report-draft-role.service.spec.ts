@@ -176,10 +176,10 @@ describe('ReportDraftRoleService', () => {
     await service.createRole(report, ROLE_ID, { title: '  Stjórnandi  ' })
 
     expect(roleBuild).toHaveBeenCalledWith({
+      id: ROLE_ID,
       title: 'Stjórnandi',
       reportId: REPORT_ID,
     })
-    expect(row.id).toBe(ROLE_ID)
     expect(row.save).toHaveBeenCalled()
   })
 

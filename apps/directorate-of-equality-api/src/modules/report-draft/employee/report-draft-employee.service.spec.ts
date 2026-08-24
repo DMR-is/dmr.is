@@ -351,13 +351,13 @@ describe('ReportDraftEmployeeService', () => {
       })
       expect(employeeBuild).toHaveBeenCalledWith(
         expect.objectContaining({
+          id: EMPLOYEE_ID,
           reportId: REPORT_ID,
           ordinal: 5,
           score: null,
           reportEmployeeRoleId: ROLE_ID,
         }),
       )
-      expect(row.id).toBe(EMPLOYEE_ID)
       expect(row.save).toHaveBeenCalled()
     })
 
