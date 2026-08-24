@@ -155,20 +155,26 @@ const AdjustedGapContent = ({
     )
   }
 
-  // ⚠️ Read off the SET, not from comparing percentages.
+  // ⚠️ Read off the snapshot's own compliance flag — not from comparing
+  // percentages, and no longer from the size of the set either.
   //
-  // `oskyrtPercent > benchmarkPercent` looks like the obvious test and is subtly
-  // wrong: it compares figures rounded to 4dp, while the lágmarksmengi is built
-  // from the unrounded log gap. At the boundary those disagree — óskýrt of
-  // 0,03978087001184605 against a threshold of 0,0397808700118446 puts one person
-  // in the set while the displayed percent rounds to exactly 3,9 and the
-  // comparison says "within". This card would then read *Undir viðmiði* directly
-  // above a lágmarksmengi of 1.
+  // `oskyrtPercent > benchmarkPercent` is the obvious test and is subtly wrong:
+  // it compares figures rounded to 4dp, while compliance is decided on the
+  // unrounded log gap. At the boundary those disagree — óskýrt of
+  // 0,03978087001184605 against a threshold of 0,0397808700118446 is over, while
+  // the displayed percent rounds to exactly 3,9 and the comparison says
+  // "within". This card would then read *Undir viðmiði* on a report that is not.
   //
-  // A non-empty set IS "óskýrt exceeds the benchmark" — same greedy walk, same
-  // unrounded arithmetic — so the two can never contradict each other. The API's
-  // auto-review rule reads the same signal for the same reason.
-  const exceeded = d.minimumSetSize > 0
+  // `minimumSetSize > 0` was the previous fix and was right while the walk always
+  // committed at least one candidate. It no longer does: with a two-directional
+  // pool the walk declines a candidate whose correction would push the gap
+  // further out, so an EMPTY set on a company that is over the benchmark is
+  // reachable — and this card would read *Undir viðmiði* above a live gap.
+  //
+  // `oskyrtWithinBenchmark` is computed once, in the engine, on the unrounded
+  // value. One number, one meaning. The API's auto-review rule reads the same
+  // field for the same reason.
+  const exceeded = d.oskyrtWithinBenchmark === false
 
   return (
     <Stack space={2}>

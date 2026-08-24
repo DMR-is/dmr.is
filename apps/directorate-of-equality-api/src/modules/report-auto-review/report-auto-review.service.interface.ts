@@ -44,6 +44,17 @@ export type AutoReviewSignals = {
    */
   minimumSetClosesGap: boolean | null
   /**
+   * THE compliance input: `|óskýrt|` within the benchmark, off the frozen
+   * snapshot. Null when the gap is not computable or when abstaining.
+   *
+   * ⚠️ Read this instead of `minimumSetSize === 0`. The two agreed while the
+   * walk always committed its first candidate; they no longer do, because the
+   * walk now declines a candidate that would push the gap further out. An empty
+   * set on a non-compliant company is therefore reachable, and keying the
+   * decision on size would auto-approve it.
+   */
+  oskyrtWithinBenchmark: boolean | null
+  /**
    * LEIÐRÉTTUR launamunur — the figure the statutory benchmark tests, as a
    * magnitude. Recorded for the audit trail; **not yet a decision input**,
    * because `AUTO_REVIEW_THRESHOLDS` still carries values calibrated against the

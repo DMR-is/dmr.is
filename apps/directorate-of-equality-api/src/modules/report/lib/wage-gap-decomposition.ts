@@ -146,9 +146,16 @@ export type WageGapEmployeeSnapshot = {
   /** framlag / oskyrtLog × 100. Null when óskýrt is exactly 0. */
   contributionShare: number | null
   payStatus: PayStatusEnum
-  /** UNDERPAID *and* of the disadvantaged gender — i.e. liftable. */
-  isCorrectable: boolean
-  /** Member of the lágmarksmengi: the fewest lifts that reach compliance. */
+  /**
+   * This employee's framlag shares the sign of `oskyrtLog` — they carry part of
+   * the gap rather than offsetting it, and are therefore eligible for the
+   * lágmarksmengi walk. Which SIDE of the line they sit on is `payStatus`.
+   *
+   * Two quadrants qualify: UNDERPAID on the disadvantaged side, and OVERPAID on
+   * the advantaged side. The other two offset the gap and are never candidates.
+   */
+  widensGap: boolean
+  /** Member of the lágmarksmengi: the fewest corrections that reach compliance. */
   inMinimumSet: boolean
 }
 
@@ -189,13 +196,37 @@ export type WageGapDecompositionSnapshot = {
 
   disadvantagedGender: WageGapDirectionEnum | null
   employees: WageGapEmployeeSnapshot[]
-  correctableCount: number
+  /**
+   * How many employees carry the gap (`widensGap`). A POPULATION, not a
+   * compliance signal — it is the pool the walk selects from, and a compliant
+   * company can still have a large one. For compliance read
+   * `oskyrtWithinBenchmark`.
+   */
+  gapCarrierCount: number
   minimumSetSize: number
+  /**
+   * **The** compliance boolean: `|oskyrtLog| <= thresholdLog`, evaluated on the
+   * unrounded log gap. Null when there is no computable gap.
+   *
+   * ⚠️ Read this rather than re-deriving compliance from `minimumSetSize > 0`
+   * or by comparing a rounded percentage to the benchmark. Those two used to
+   * agree with it and no longer always do: the walk can decline to commit a
+   * candidate that would push the gap further out, so an empty set is reachable
+   * on a company that is over the benchmark.
+   */
+  oskyrtWithinBenchmark: boolean | null
   /**
    * óskýrt after the set's counterfactual correction, RECOMPUTED — a refitted
    * figure, not `|óskýrt| − Σ|framlag|`. Magnitude.
    */
   oskyrtLogAfterMinimumSet: number | null
+  /**
+   * Which gender óskýrt disfavours AFTER the set's correction. Needed because
+   * `oskyrtLogAfterMinimumSet` is a magnitude, and a two-sided correction can
+   * overshoot: the residual gap may now run the other way. `NONE` when it lands
+   * exactly on zero, null when there is no computable gap.
+   */
+  oskyrtDirectionAfterMinimumSet: WageGapDirectionEnum | null
   /**
    * Whether correcting the set would actually bring óskýrt within the benchmark.
    *
@@ -335,9 +366,11 @@ const emptySnapshot = (
   oskyrtPercentLowerBase: null,
   disadvantagedGender: null,
   employees: [],
-  correctableCount: 0,
+  gapCarrierCount: 0,
   minimumSetSize: 0,
+  oskyrtWithinBenchmark: null,
   oskyrtLogAfterMinimumSet: null,
+  oskyrtDirectionAfterMinimumSet: null,
   minimumSetClosesGap: null,
   thresholdLog: thresholdLogFor(benchmarkPercent),
   benchmarkPercent,
@@ -349,6 +382,18 @@ const emptySnapshot = (
  */
 export function thresholdLogFor(benchmarkPercent: number): number {
   return -Math.log(1 - benchmarkPercent / 100)
+}
+
+/**
+ * Which gender a signed log gap disfavours. Positive means men earn more, so
+ * the gap is í óhag kvenna. Exactly zero is `NONE` rather than a coin flip.
+ */
+function directionOfLogGap(signedLogGap: number): WageGapDirectionEnum {
+  return signedLogGap > 0
+    ? WageGapDirectionEnum.FEMALE
+    : signedLogGap < 0
+      ? WageGapDirectionEnum.MALE
+      : WageGapDirectionEnum.NONE
 }
 
 /** One fit's worth of output: the gap, its split, and each employee's part. */
@@ -406,6 +451,17 @@ function attributeGap(
         ? WageGapDirectionEnum.MALE
         : WageGapDirectionEnum.NONE
 
+  /**
+   * The other side. `NONE` stays `NONE` so neither quadrant matches and no
+   * employee is a carrier — correct when there is no gap to carry.
+   */
+  const advantagedGender: WageGapDirectionEnum =
+    disadvantagedGender === WageGapDirectionEnum.FEMALE
+      ? WageGapDirectionEnum.MALE
+      : disadvantagedGender === WageGapDirectionEnum.MALE
+        ? WageGapDirectionEnum.FEMALE
+        : WageGapDirectionEnum.NONE
+
   const employees: WageGapEmployeeSnapshot[] = usable.map((employee) => {
     const fitted =
       (pooledFit.intercept ?? 0) +
@@ -439,9 +495,18 @@ function attributeGap(
       contributionShare:
         oskyrtLog === 0 ? null : (contributionLog / oskyrtLog) * 100,
       payStatus,
-      isCorrectable:
-        payStatus === PayStatusEnum.UNDERPAID &&
-        employeeGenderSide === disadvantagedGender,
+      // ⚠️ Written from the enums, NOT as `Math.sign(contributionLog) ===
+      // Math.sign(oskyrtLog)`. `Math.sign(0) === 0`, so the arithmetic form
+      // flags every ON_LINE employee as a carrier when óskýrt is exactly zero —
+      // a state this function reaches, because it computes the flag before the
+      // walk's early return. Checked against the sign test in all four
+      // quadrants: they agree everywhere the sign test is meaningful.
+      widensGap:
+        payStatus === PayStatusEnum.UNDERPAID
+          ? employeeGenderSide === disadvantagedGender
+          : payStatus === PayStatusEnum.OVERPAID
+            ? employeeGenderSide === advantagedGender
+            : false,
       inMinimumSet: false,
     }
   })
@@ -489,10 +554,21 @@ function selectMinimumSet(
   isMale: (employee: WageGapEmployeeInput) => boolean,
   thresholdLog: number,
   initial: GapAttribution,
-): { chosen: Set<number>; oskyrtLogAfter: number; closesGap: boolean } {
+): {
+  chosen: Set<number>
+  oskyrtLogAfter: number
+  /** Signed, so the caller can report which way any residual gap runs. */
+  oskyrtLogAfterSigned: number
+  closesGap: boolean
+} {
   const initialGap = Math.abs(initial.oskyrtLog)
   if (initialGap <= thresholdLog) {
-    return { chosen: new Set(), oskyrtLogAfter: initialGap, closesGap: true }
+    return {
+      chosen: new Set(),
+      oskyrtLogAfter: initialGap,
+      oskyrtLogAfterSigned: initial.oskyrtLog,
+      closesGap: true,
+    }
   }
 
   // ⚠️ Lift targets come from the ORIGINAL fit — the very
@@ -515,20 +591,56 @@ function selectMinimumSet(
   // approximation rather than a proven optimum — as it was before — but the
   // STOPPING TEST is a real refit rather than a running subtraction.
   const candidates = initial.employees
-    .filter((employee) => employee.isCorrectable)
-    .sort((a, b) => Math.abs(b.contributionLog) - Math.abs(a.contributionLog))
+    // ⚠️ Still lift-only in this commit — `widensGap` alone would already admit
+    // the overpaid advantaged side. Narrowed deliberately so this rename moves
+    // no figures; the pool opens in the commit that adds the probe guard.
+    .filter(
+      (employee) =>
+        employee.widensGap && employee.payStatus === PayStatusEnum.UNDERPAID,
+    )
+    // ⚠️ The ordinal tie-break is load-bearing, not cosmetic. Two employees on
+    // an identical rate at an identical score — an ordinary pay grade — have
+    // bit-identical |contributionLog|. Array#sort is stable, so without this
+    // the winner is decided by INPUT order, and the two queries feeding this
+    // (report-result.service and report-draft-analysis.service) return
+    // whatever order Postgres hands back. If only one of the pair fits inside
+    // the set, the preview and the submit can disagree about who is in it and
+    // the submit guard rejects with "Detected outlier(s) missing from the
+    // outlier groups". Both halves are fixed: this comparator, and an explicit
+    // `order` on both queries.
+    .sort(
+      (a, b) =>
+        Math.abs(b.contributionLog) - Math.abs(a.contributionLog) ||
+        a.ordinal - b.ordinal,
+    )
 
-  const gapAfter = makeIncrementalGap(usable, isMale, initial)
+  const running = makeIncrementalGap(usable, isMale, initial)
+
+  /** Throws on a miss rather than passing 0 into the refit. See `stepOf`. */
+  const targetFor = (ordinal: number): number => {
+    const target = targets.get(ordinal)
+    if (target === undefined) {
+      throw new Error(
+        `selectMinimumSet: no published target for ordinal ${ordinal}`,
+      )
+    }
+    return target
+  }
 
   const chosen = new Set<number>()
+  let signed = initial.oskyrtLog
   let gap = initialGap
   for (const candidate of candidates) {
     chosen.add(candidate.ordinal)
-    gap = Math.abs(
-      gapAfter(candidate.ordinal, targets.get(candidate.ordinal) ?? 0),
-    )
+    signed = running.commit(candidate.ordinal, targetFor(candidate.ordinal))
+    gap = Math.abs(signed)
     if (gap <= thresholdLog) {
-      return { chosen, oskyrtLogAfter: gap, closesGap: true }
+      return {
+        chosen,
+        oskyrtLogAfter: gap,
+        oskyrtLogAfterSigned: signed,
+        closesGap: true,
+      }
     }
   }
 
@@ -542,13 +654,31 @@ function selectMinimumSet(
   // cohort's residuals to sum against it, so at least one member is strictly
   // below the line. Kept as a defensive branch — non-emptiness is guaranteed by
   // the fit, not by this function.
-  return { chosen, oskyrtLogAfter: gap, closesGap: false }
+  return {
+    chosen,
+    oskyrtLogAfter: gap,
+    oskyrtLogAfterSigned: signed,
+    closesGap: false,
+  }
 }
 
 /**
- * Returns a function that applies one more counterfactual lift and gives back
- * the resulting óskýrt — **exactly** what a full refit would produce, in O(1)
- * per call instead of O(n).
+ * Returns a pair of operations over a running fit: `probe` reports the óskýrt
+ * that a counterfactual correction WOULD produce, and `commit` applies it and
+ * reports the same figure — each **exactly** what a full refit would produce,
+ * in O(1) per call instead of O(n).
+ *
+ * `probe` exists so a caller can reject a candidate before it is applied
+ * without having to commit-and-restore. Restoring is not bit-exact — floating
+ * addition is not associative, so `x + d - d !== x` in general — and this
+ * figure is published as `oskyrtLogAfterMinimumSet`, which a reviewer is
+ * invited to reproduce. A separate read-only computation avoids putting drift
+ * of that kind into a regulatory number.
+ *
+ * ⚠️ **Both directions are supported.** Every operation below is linear in
+ * `Δ` — no absolute values, no branch on its sign — so moving an OVERPAID
+ * employee DOWN onto the line is the same arithmetic as lifting an UNDERPAID
+ * one up, with `Δ < 0`.
  *
  * ⚠️ **This is a performance fix for a real problem, not a micro-optimisation.**
  * Calling {@link attributeGap} once per candidate is O(n) per step over up to
@@ -577,11 +707,18 @@ function selectMinimumSet(
  * (see {@link PooledReferenceModeEnum}), and re-adding it would need a fallback
  * to full recomputation here.
  */
+type IncrementalGap = {
+  /** óskýrt if this correction were applied. Does not mutate. */
+  probe: (ordinal: number, correctedWage: number) => number
+  /** Applies the correction and returns the resulting óskýrt. */
+  commit: (ordinal: number, correctedWage: number) => number
+}
+
 function makeIncrementalGap(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
   initial: GapAttribution,
-): (ordinal: number, liftedWage: number) => number {
+): IncrementalGap {
   const logWage = (employee: WageGapEmployeeInput) =>
     Math.log(employee.hourlyWage)
 
@@ -610,29 +747,56 @@ function makeIncrementalGap(
     usable.map((employee) => [employee.ordinal, logWage(employee)]),
   )
 
-  return (ordinal, liftedWage) => {
+  /** óskýrt implied by a candidate Sxy and pair of side means. Pure. */
+  const gapFrom = (sxy: number, male: number, female: number): number =>
+    male - female - scoreMeanDiff * (xSumSquares > 0 ? sxy / xSumSquares : 0)
+
+  /**
+   * Resolves one step. Throws rather than returning the unchanged gap: the
+   * previous version silently reported "no movement" for an unknown ordinal or
+   * a non-positive target, which read to the caller as a candidate that failed
+   * to help — indistinguishable from a genuine one, and it had already been
+   * added to the set by then.
+   */
+  const stepOf = (ordinal: number, correctedWage: number) => {
     const employee = byOrdinal.get(ordinal)
-    if (!employee || liftedWage <= 0) {
-      return maleLogMean - femaleLogMean - scoreMeanDiff * currentSlope()
+    if (!employee) {
+      throw new Error(
+        `makeIncrementalGap: ordinal ${ordinal} is not in the analysed cohort`,
+      )
     }
-
-    const previous = currentLog.get(ordinal) ?? logWage(employee)
-    const next = Math.log(liftedWage)
-    const delta = next - previous
-    currentLog.set(ordinal, next)
-
-    sumXy += (buildDesign(employee) - xMean) * delta
-    if (isMale(employee)) {
-      maleLogMean += delta / nMale
-    } else {
-      femaleLogMean += delta / nFemale
+    if (!Number.isFinite(correctedWage) || correctedWage <= 0) {
+      throw new Error(
+        `makeIncrementalGap: ordinal ${ordinal} has a non-positive correction target (${correctedWage})`,
+      )
     }
-
-    return maleLogMean - femaleLogMean - scoreMeanDiff * currentSlope()
+    const next = Math.log(correctedWage)
+    const delta = next - (currentLog.get(ordinal) ?? logWage(employee))
+    return { employee, next, delta }
   }
 
-  function currentSlope(): number {
-    return xSumSquares > 0 ? sumXy / xSumSquares : 0
+  return {
+    probe(ordinal, correctedWage) {
+      const { employee, delta } = stepOf(ordinal, correctedWage)
+      const male = isMale(employee)
+      return gapFrom(
+        sumXy + (buildDesign(employee) - xMean) * delta,
+        male ? maleLogMean + delta / nMale : maleLogMean,
+        male ? femaleLogMean : femaleLogMean + delta / nFemale,
+      )
+    },
+
+    commit(ordinal, correctedWage) {
+      const { employee, next, delta } = stepOf(ordinal, correctedWage)
+      currentLog.set(ordinal, next)
+      sumXy += (buildDesign(employee) - xMean) * delta
+      if (isMale(employee)) {
+        maleLogMean += delta / nMale
+      } else {
+        femaleLogMean += delta / nFemale
+      }
+      return gapFrom(sumXy, maleLogMean, femaleLogMean)
+    },
   }
 }
 
@@ -738,9 +902,13 @@ export function computeWageGapDecomposition(input: {
     oskyrtPercentLowerBase: lowerBasePercent(oskyrtLog),
     disadvantagedGender,
     employees,
-    correctableCount: employees.filter((e) => e.isCorrectable).length,
+    gapCarrierCount: employees.filter((e) => e.widensGap).length,
     minimumSetSize: employees.filter((e) => e.inMinimumSet).length,
+    oskyrtWithinBenchmark: Math.abs(oskyrtLog) <= thresholdLog,
     oskyrtLogAfterMinimumSet: selection.oskyrtLogAfter,
+    oskyrtDirectionAfterMinimumSet: directionOfLogGap(
+      selection.oskyrtLogAfterSigned,
+    ),
     minimumSetClosesGap: selection.closesGap,
     thresholdLog,
     benchmarkPercent,

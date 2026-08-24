@@ -44,6 +44,7 @@ const resultRow = (
     oskyrtPercent?: number | null
     minimumSetSize?: number
     minimumSetClosesGap?: boolean
+    oskyrtWithinBenchmark?: boolean
   } = {},
 ) => {
   const minimumSetSize = decomposition.minimumSetSize ?? 0
@@ -58,6 +59,14 @@ const resultRow = (
       // passed explicitly, because it is the one that used to auto-approve.
       minimumSetClosesGap:
         decomposition.minimumSetClosesGap ?? minimumSetSize === 0,
+      // ⚠️ Defaulted FROM the set size only because these fixtures were written
+      // when the two were equivalent. They are not in general: the walk can
+      // decline a candidate that would push the gap further out, so an empty set
+      // on a non-compliant company is reachable. That case is passed explicitly
+      // — see 'refuses to auto-approve an empty set that is still over the
+      // benchmark', which is the whole reason this field exists.
+      oskyrtWithinBenchmark:
+        decomposition.oskyrtWithinBenchmark ?? minimumSetSize === 0,
     },
   }
 }
@@ -117,6 +126,12 @@ describe('ReportAutoReviewService', () => {
      */
     minimumSetSize?: number
     minimumSetClosesGap?: boolean
+    /**
+     * THE compliance input. Defaults to `minimumSetSize === 0`, which is what
+     * these fixtures assumed while the two were equivalent; pass it explicitly
+     * to express an empty set on a company that is still over the benchmark.
+     */
+    oskyrtWithinBenchmark?: boolean
   }) => {
     reportFindOne.mockResolvedValueOnce({
       id: REPORT_ID,
@@ -135,6 +150,7 @@ describe('ReportAutoReviewService', () => {
       oskyrtAvailable: opts.oskyrtAvailable,
       minimumSetSize: opts.minimumSetSize ?? opts.outliers,
       minimumSetClosesGap: opts.minimumSetClosesGap,
+      oskyrtWithinBenchmark: opts.oskyrtWithinBenchmark,
     })
     const previous =
       opts.previousGap === undefined ? null : resultRow(opts.previousGap)
@@ -277,10 +293,21 @@ describe('ReportAutoReviewService', () => {
   // Confirmed with Þórður 2026-08-20: an unmeasurable gap goes to a human.
 
   /**
-   * The exhaustion case. An empty lágmarksmengi has two completely different
-   * causes — already inside the benchmark, or nobody on the disadvantaged side
-   * is underpaid so there was nothing to lift — and only the first is
-   * compliance. This used to auto-approve the second.
+   * The exhaustion case, and the reason the decision reads
+   * `oskyrtWithinBenchmark` rather than `minimumSetSize === 0`.
+   *
+   * An empty lágmarksmengi now has THREE causes, and only the first is
+   * compliance:
+   *
+   * 1. óskýrt is already inside the benchmark — nothing to correct.
+   * 2. Nobody on the disadvantaged side is underpaid, so there was nothing to
+   *    lift.
+   * 3. Every candidate's correction would have pushed óskýrt FURTHER out, so
+   *    the two-directional walk declined all of them.
+   *
+   * Keyed on set size, cases 2 and 3 auto-approve — a company approved
+   * BECAUSE the walk found nobody worth correcting. Keyed on the flag, they
+   * route to a human.
    */
   it('routes to review for an empty set that does not close the gap', async () => {
     arrangeSalary({
@@ -289,6 +316,9 @@ describe('ReportAutoReviewService', () => {
       gap: 2,
       minimumSetSize: 0,
       minimumSetClosesGap: false,
+      // Explicit: the builder would otherwise infer compliance from the empty
+      // set, which is the inference this test exists to disprove.
+      oskyrtWithinBenchmark: false,
     })
 
     const verdict = await service.evaluate(REPORT_ID)
@@ -296,6 +326,7 @@ describe('ReportAutoReviewService', () => {
     expect(verdict.decision).toBe(AutoReviewDecisionEnum.NEEDS_REVIEW)
     expect(verdict.signals.minimumSetSize).toBe(0)
     expect(verdict.signals.minimumSetClosesGap).toBe(false)
+    expect(verdict.signals.oskyrtWithinBenchmark).toBe(false)
   })
 
   /**

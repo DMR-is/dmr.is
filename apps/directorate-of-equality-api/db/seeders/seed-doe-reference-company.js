@@ -20,6 +20,10 @@
  * | Lágmarksmengi         | 5       | 5                   |
  * | Correctable           | 31      | 30                  |
  *
+ * The Úrbótaáætlun table renders the five-member lágmarksmengi in one explained
+ * group. Membership is read off this report's frozen decomposition, not
+ * recomputed, so the table and the headline figure cannot disagree.
+ *
  * The two óleiðréttur figures are the SAME quantity on different bases: ours is
  * arithmetic (and `rawGapPercentGeometric` on the snapshot is 8,61%, matching
  * theirs exactly). The leiðréttur difference is a modelling choice — the R script
@@ -57,7 +61,10 @@ const sid = (n) =>
 let nextUid = N * 1000
 const uid = () => {
   const n = nextUid++
-  return `f${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
+  return `f${String(n).padStart(7, '0')}-0000-4000-8000-${String(n).padStart(
+    12,
+    '0',
+  )}`
 }
 
 const COMPANY_ID = cid(N)
@@ -99,19 +106,25 @@ module.exports = {
 
     const criterionSql = CRITERIA.map(
       (c, i) =>
-        `  ('${critIds[i]}', '${SAL_REPORT_ID}', '${esc(c.title)}', 33.3333, '${esc(c.description)}', 'COMPETENCE')`,
+        `  ('${critIds[i]}', '${SAL_REPORT_ID}', '${esc(
+          c.title,
+        )}', 33.3333, '${esc(c.description)}', 'COMPETENCE')`,
     ).join(',\n')
 
     const subSql = CRITERIA.map(
       (c, i) =>
-        `  ('${subIds[i]}', '${critIds[i]}', '${esc(c.title)}', '${esc(c.description)}', 33.3333)`,
+        `  ('${subIds[i]}', '${critIds[i]}', '${esc(c.title)}', '${esc(
+          c.description,
+        )}', 33.3333)`,
     ).join(',\n')
 
     const stepSql = CRITERIA.flatMap((_, i) =>
       Array.from(
         { length: 5 },
         (_unused, v) =>
-          `  ('${stepIds[i][v]}', '${subIds[i]}', ${v + 1}, 'Þrep ${v + 1}', ${v + 1}.00)`,
+          `  ('${stepIds[i][v]}', '${subIds[i]}', ${v + 1}, 'Þrep ${v + 1}', ${
+            v + 1
+          }.00)`,
       ),
     ).join(',\n')
 
@@ -139,8 +152,12 @@ module.exports = {
       .map(
         (e, i) =>
           `  ('${empIds[i]}','${SAL_REPORT_ID}',${e.ordinal},'Hermd gögn','Hermd deild','2020-01-01',` +
-          `${e.paidHours},${money(e.baseSalary)},${money(e.additionalFixedOvertime)},` +
-          `${money(e.additionalFixedCarAllowance)},NULL,NULL,${money(e.bonusPayments)},NULL,` +
+          `${e.paidHours},${money(e.baseSalary)},${money(
+            e.additionalFixedOvertime,
+          )},` +
+          `${money(e.additionalFixedCarAllowance)},NULL,NULL,${money(
+            e.bonusPayments,
+          )},NULL,` +
           `'${e.gender}','${roleIdByTitle.get(e.role)}',${e.score}.00)`,
       )
       .join(',\n')
@@ -157,6 +174,33 @@ module.exports = {
     )
     const wageGapSnap = esc(JSON.stringify(reference.decomposition))
 
+    // Úrbótaáætlun: the lágmarksmengi, read off this report's OWN frozen
+    // decomposition rather than recomputed — so the table and the headline
+    // figure can never disagree about who is in the set.
+    //
+    // The explanation (reason / action / signature) lives on the GROUP; each
+    // report_employee_outlier row is a thin join carrying only group_id (the
+    // per-row explanation columns were dropped in m-20260616-outlier-groups).
+    // One group, fully explained, because this company exists to be read
+    // against the R output — an unexplained group would render a placeholder
+    // where the comparison should be.
+    const empIdByOrdinal = new Map(
+      reference.employees.map((e, i) => [e.ordinal, empIds[i]]),
+    )
+    const groupId = uid()
+    const outlierSql = reference.decomposition.employees
+      .filter((e) => e.inMinimumSet)
+      .map((e) => {
+        const empId = empIdByOrdinal.get(e.ordinal)
+        if (!empId) {
+          throw new Error(
+            `Lágmarksmengi references unknown ordinal ${e.ordinal}`,
+          )
+        }
+        return `  ('${uid()}', '${empId}', '${groupId}')`
+      })
+      .join(',\n')
+
     await queryInterface.sequelize.query(`
 BEGIN;
 
@@ -165,7 +209,9 @@ BEGIN;
 -- would otherwise collide on the primary key. Same reasoning as the other
 -- salary seeders.
 INSERT INTO company (id, name, national_id, employee_count_category, salary_report_required_override)
-VALUES ('${COMPANY_ID}', '${esc(COMPANY_NAME)}', '${NATIONAL_ID}', 'LARGE', FALSE)
+VALUES ('${COMPANY_ID}', '${esc(
+      COMPANY_NAME,
+    )}', '${NATIONAL_ID}', 'LARGE', FALSE)
 ON CONFLICT (id) DO NOTHING;
 
 -- A salary report requires an approved jafnréttisáætlun in force.
@@ -181,7 +227,9 @@ VALUES ('${EQ_REPORT_ID}', 'EQUALITY', 'APPROVED', '${NATIONAL_ID}',
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
 VALUES ('${uid()}', '${COMPANY_ID}', '${EQ_REPORT_ID}', NULL,
-  '${esc(COMPANY_NAME)}', '${NATIONAL_ID}', 'Hermistræti 1', 'Reykjavík', '101', 'LARGE', 'L');
+  '${esc(
+    COMPANY_NAME,
+  )}', '${NATIONAL_ID}', 'Hermistræti 1', 'Reykjavík', '101', 'LARGE', 'L');
 
 INSERT INTO report (id, type, status, company_national_id, company_admin_name, company_admin_email,
   company_admin_gender, contact_name, contact_email, contact_phone,
@@ -198,7 +246,9 @@ VALUES ('${SAL_REPORT_ID}', 'SALARY', 'IN_REVIEW', '${NATIONAL_ID}',
 INSERT INTO company_report (id, company_id, report_id, parent_company_id,
   name, national_id, address, city, postcode, employee_count_category, isat_category)
 VALUES ('${uid()}', '${COMPANY_ID}', '${SAL_REPORT_ID}', NULL,
-  '${esc(COMPANY_NAME)}', '${NATIONAL_ID}', 'Hermistræti 1', 'Reykjavík', '101', 'LARGE', 'L');
+  '${esc(
+    COMPANY_NAME,
+  )}', '${NATIONAL_ID}', 'Hermistræti 1', 'Reykjavík', '101', 'LARGE', 'L');
 
 INSERT INTO report_event (id, report_id, event_type, actor_user_id, report_status, company_id)
 VALUES ('${uid()}', '${SAL_REPORT_ID}', 'SUBMITTED', NULL, 'SUBMITTED', '${COMPANY_ID}');
@@ -229,6 +279,19 @@ INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
 VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v2', '${salarySnap}', '${wageGapSnap}');
 
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
+VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við nýliðun',
+  '${esc(
+    'Laun þessara starfsmanna eru lægri en starfsmatsstig þeirra gefa til kynna. Rýni sýndi að launin voru ákveðin við nýliðun á tímabili þar sem launasetning var ekki samræmd milli deilda.',
+  )}',
+  '${esc(
+    'Launasetning fyrirtækisins verður tekin til endurskoðunar í heild og viðmið um nýliðun sett í fastar skorður. Þau tilvik sem hér eru tilgreind verða leiðrétt í næstu launaákvörðun.',
+  )}',
+  'Anton Ö. Kristinsson', 'Framkvæmdastjóri');
+
+INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES
+${outlierSql};
+
 COMMIT;
     `)
   },
@@ -239,6 +302,9 @@ COMMIT;
     await queryInterface.sequelize.query(`
 BEGIN;
 DELETE FROM report_result WHERE report_id = '${SAL_REPORT_ID}';
+DELETE FROM report_employee_outlier WHERE group_id IN (
+  SELECT id FROM report_outlier_group WHERE report_id = '${SAL_REPORT_ID}');
+DELETE FROM report_outlier_group WHERE report_id = '${SAL_REPORT_ID}';
 DELETE FROM report_employee WHERE report_id = '${SAL_REPORT_ID}';
 DELETE FROM report_employee_role_criterion_step WHERE report_employee_role_id IN (
   SELECT id FROM report_employee_role WHERE report_id = '${SAL_REPORT_ID}');

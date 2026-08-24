@@ -218,7 +218,7 @@ async function main(): Promise<void> {
       `  employees        ${employees.length} (${males} karlar / ${employees.length - males} konur)`,
       `  óleiðréttur      ${decomposition.rawGapPercent}% ${decomposition.rawGapDirection}`,
       `  leiðréttur       ${decomposition.oskyrtPercent}% ${decomposition.oskyrtDirection}`,
-      `  correctable      ${decomposition.correctableCount}`,
+      `  gap carriers     ${decomposition.gapCarrierCount}`,
       `  lágmarksmengi    ${decomposition.minimumSetSize}`,
       `  closes the gap   ${decomposition.minimumSetClosesGap}`,
     ].join('\n'),

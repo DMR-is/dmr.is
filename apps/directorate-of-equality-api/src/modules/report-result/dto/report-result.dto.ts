@@ -159,9 +159,10 @@ export class WageGapEmployeeDto {
   payStatus!: PayStatusEnum
 
   @ApiBoolean({
-    description: 'Underpaid AND of the disadvantaged gender — i.e. liftable.',
+    description:
+      'Whether this employee CARRIES part of óskýrt: their framlag shares its sign, so correcting them narrows the gap. Two quadrants qualify — underpaid on the disadvantaged side, and overpaid on the advantaged side. Which side they sit on is payStatus. The other two quadrants offset the gap and are never candidates.',
   })
-  isCorrectable!: boolean
+  widensGap!: boolean
 
   @ApiBoolean({
     description:
@@ -359,9 +360,10 @@ export class WageGapDecompositionDto {
   employees!: WageGapEmployeeDto[]
 
   @ApiNumber({
-    description: 'All underpaid employees of the disadvantaged gender.',
+    description:
+      'How many employees carry part of óskýrt (widensGap). A POPULATION, not a compliance signal — it is the pool the lágmarksmengi is selected from, and a compliant company can still have a large one. For compliance read oskyrtWithinBenchmark.',
   })
-  correctableCount!: number
+  gapCarrierCount!: number
 
   @ApiNumber({
     description:
@@ -369,17 +371,31 @@ export class WageGapDecompositionDto {
   })
   minimumSetSize!: number
 
+  @ApiOptionalBoolean({
+    nullable: true,
+    description:
+      'THE compliance flag: whether |óskýrt| is within the benchmark, evaluated on the unrounded log gap. Null when no gap is computable. Read this rather than testing minimumSetSize > 0 or comparing a rounded percentage to the benchmark — an empty set is reachable on a company that is over the benchmark, because the walk declines candidates that would push the gap further out.',
+  })
+  oskyrtWithinBenchmark!: boolean | null
+
   @ApiOptionalNumber({
     nullable: true,
     description:
-      "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude.",
+      "óskýrt in log points after the set's counterfactual correction — RECOMPUTED by refitting, not |óskýrt| minus the summed contributions. Magnitude; the direction is oskyrtDirectionAfterMinimumSet.",
   })
   oskyrtLogAfterMinimumSet!: number | null
+
+  @ApiOptionalEnum(WageGapDirectionEnum, {
+    nullable: true,
+    description:
+      "Which gender óskýrt disfavours AFTER the set's correction. Needed because the figure above is a magnitude and a two-sided correction can overshoot, leaving a residual gap running the other way. NONE when it lands on zero.",
+  })
+  oskyrtDirectionAfterMinimumSet!: WageGapDirectionEnum | null
 
   @ApiOptionalBoolean({
     nullable: true,
     description:
-      'Whether correcting the set would bring óskýrt within the benchmark. False means the walk ran out of people to lift — the gap is carried by the advantaged group sitting above the line, so the list must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog.',
+      'Whether correcting the set would bring óskýrt within the benchmark. False means the walk could not land inside the benchmark — see oskyrtDirectionAfterMinimumSet for which way the residual gap runs. The list is still the right list to account for; it just must NOT be presented as closing the gap. Null when no gap is computable. Read this flag; do not re-derive it by comparing oskyrtLogAfterMinimumSet to thresholdLog.',
   })
   minimumSetClosesGap!: boolean | null
 

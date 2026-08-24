@@ -244,7 +244,10 @@ describe('ApplicationService', () => {
       expect(gap.counts).toEqual({ male: 6, female: 1, excluded: 0 })
       expect(gap.oskyrtPercent).toBeCloseTo(4.9711, 4)
       expect(gap.disadvantagedGender).toBe('FEMALE')
-      expect(gap.correctableCount).toBe(1)
+      // 5 carriers, not 1: the one underpaid woman plus the four men sitting
+      // above the line. Carrying the gap and being liftable are different
+      // things — only the first of those five is in the set.
+      expect(gap.gapCarrierCount).toBe(5)
       expect(gap.minimumSetSize).toBe(1)
 
       expect(result.outliers).toHaveLength(1)
@@ -1931,7 +1934,7 @@ function makeReportResultDto(
         deviationPercent: -5,
         payStatus: 'UNDERPAID',
         contributionShare: 100 / Math.max(detectedOrdinals.length, 1),
-        isCorrectable: true,
+        widensGap: true,
         inMinimumSet: true,
       })),
     },

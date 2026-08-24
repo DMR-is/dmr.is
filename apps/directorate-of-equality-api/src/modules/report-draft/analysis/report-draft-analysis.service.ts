@@ -232,8 +232,14 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
   private async deriveScoredEmployees(
     reportId: string,
   ): Promise<ScoredEmployee[]> {
+    // Ordered so the lágmarksmengi is a pure function of the data. The
+    // selection walk breaks |contributionLog| ties by ordinal, which only
+    // helps if the rows arrive in a stable order — an unordered findAll lets
+    // Postgres heap order decide, and it can differ between the preview
+    // request and the submit request for the same report.
     const employees = await this.employeeModel.findAll({
       where: { reportId },
+      order: [['ordinal', 'ASC']],
     })
     if (employees.length === 0) {
       return []

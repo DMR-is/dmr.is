@@ -80,7 +80,7 @@ describe('ReportResultService', () => {
         id: 'result-1',
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v2',
+        calculationVersion: 'v3',
         salary: {
           totals: { overall: { average: 3125 } },
           scoreBuckets: [],
@@ -118,7 +118,7 @@ describe('ReportResultService', () => {
       expect.objectContaining({
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v2',
+        calculationVersion: 'v3',
         salarySnapshot: expect.objectContaining({
           totals: expect.objectContaining({
             overall: expect.objectContaining({ average: 3125 }),
@@ -256,7 +256,7 @@ describe('ReportResultService', () => {
         id: 'result-1',
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v2',
+        calculationVersion: 'v3',
         salary: {
           totals: { overall: { average: 3125 } },
           scoreBuckets: [],

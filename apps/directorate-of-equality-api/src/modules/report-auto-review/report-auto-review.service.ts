@@ -108,6 +108,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       adjustedGapPercent: decomposition?.oskyrtPercent ?? null,
       minimumSetSize: decomposition?.minimumSetSize ?? null,
       minimumSetClosesGap: decomposition?.minimumSetClosesGap ?? null,
+      oskyrtWithinBenchmark: decomposition?.oskyrtWithinBenchmark ?? null,
     }
   }
 
@@ -236,7 +237,12 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       }
     }
 
-    if (signals.minimumSetSize === 0 && signals.minimumSetClosesGap === true) {
+    // ⚠️ Keyed on the compliance flag, not on `minimumSetSize === 0`. The two
+    // used to be equivalent; they are not now that the walk can decline a
+    // candidate rather than commit one that widens the gap, which makes an
+    // empty set reachable on a company that is over the benchmark. Size cannot
+    // say WHY the walk stopped — the flag can.
+    if (signals.oskyrtWithinBenchmark === true) {
       return {
         decision: AutoReviewDecisionEnum.AUTO_APPROVE,
         reason:
@@ -272,6 +278,7 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
         // `null`, not `false`: abstaining means the question was never asked, so
         // this must not read as "we tried and could not measure it".
         oskyrtAvailable: null,
+        oskyrtWithinBenchmark: null,
         adjustedGapPercent: null,
       },
     }

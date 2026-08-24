@@ -1,6 +1,6 @@
 {
   "__generated": "scripts/refresh-reference-company.ts — do not edit by hand; re-run the script",
-  "__source": "launagogn_hermd_launamunur.xlsx (simulated data, not in this repo)",
+  "__source": "launagogn_hermd_launamunur.xlsx (Jafnréttisstofa simulated data, not in this repo)",
   "counts": {
     "total": 120,
     "male": 66,
@@ -1499,7 +1499,7 @@
         "contributionLog": 0.005326,
         "contributionShare": 6.5416,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1513,7 +1513,7 @@
         "contributionLog": -0.002406,
         "contributionShare": -2.9547,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1527,7 +1527,7 @@
         "contributionLog": -0.000126,
         "contributionShare": -0.1542,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1541,7 +1541,7 @@
         "contributionLog": -0.0017,
         "contributionShare": -2.0876,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1555,7 +1555,7 @@
         "contributionLog": 0.003767,
         "contributionShare": 4.6267,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1569,7 +1569,7 @@
         "contributionLog": 0.011476,
         "contributionShare": 14.0943,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": true
       },
       {
@@ -1583,7 +1583,7 @@
         "contributionLog": 0.003536,
         "contributionShare": 4.3433,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1597,7 +1597,7 @@
         "contributionLog": -0.005485,
         "contributionShare": -6.7371,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1611,7 +1611,7 @@
         "contributionLog": 0.003697,
         "contributionShare": 4.54,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1625,7 +1625,7 @@
         "contributionLog": -0.001423,
         "contributionShare": -1.7474,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1639,7 +1639,7 @@
         "contributionLog": 0.002791,
         "contributionShare": 3.4279,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1653,7 +1653,7 @@
         "contributionLog": 0.001122,
         "contributionShare": 1.3777,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1667,7 +1667,7 @@
         "contributionLog": 0.000392,
         "contributionShare": 0.4817,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1681,7 +1681,7 @@
         "contributionLog": -0.002049,
         "contributionShare": -2.5166,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1695,7 +1695,7 @@
         "contributionLog": -0.002997,
         "contributionShare": -3.6812,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1709,7 +1709,7 @@
         "contributionLog": 0.004497,
         "contributionShare": 5.5236,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1723,7 +1723,7 @@
         "contributionLog": -0.003092,
         "contributionShare": -3.798,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1737,7 +1737,7 @@
         "contributionLog": 0.002123,
         "contributionShare": 2.6076,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1751,7 +1751,7 @@
         "contributionLog": 0.002991,
         "contributionShare": 3.6736,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1765,7 +1765,7 @@
         "contributionLog": 0.000164,
         "contributionShare": 0.2019,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1779,7 +1779,7 @@
         "contributionLog": -0.0022,
         "contributionShare": -2.7026,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1793,7 +1793,7 @@
         "contributionLog": -0.001649,
         "contributionShare": -2.0256,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1807,7 +1807,7 @@
         "contributionLog": 0.002537,
         "contributionShare": 3.1156,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1821,7 +1821,7 @@
         "contributionLog": 0.003791,
         "contributionShare": 4.6562,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1835,7 +1835,7 @@
         "contributionLog": -0.000476,
         "contributionShare": -0.5848,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1849,7 +1849,7 @@
         "contributionLog": 0.001112,
         "contributionShare": 1.3654,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1863,7 +1863,7 @@
         "contributionLog": -0.003446,
         "contributionShare": -4.2322,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1877,7 +1877,7 @@
         "contributionLog": -0.000331,
         "contributionShare": -0.4062,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1891,7 +1891,7 @@
         "contributionLog": 0.001096,
         "contributionShare": 1.3458,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1905,7 +1905,7 @@
         "contributionLog": -0.000361,
         "contributionShare": -0.4429,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1919,7 +1919,7 @@
         "contributionLog": 0.000005,
         "contributionShare": 0.0066,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1933,7 +1933,7 @@
         "contributionLog": 0.001373,
         "contributionShare": 1.6859,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1947,7 +1947,7 @@
         "contributionLog": 0.001022,
         "contributionShare": 1.2552,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1961,7 +1961,7 @@
         "contributionLog": -0.001567,
         "contributionShare": -1.9251,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -1975,7 +1975,7 @@
         "contributionLog": 0.002727,
         "contributionShare": 3.3487,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -1989,7 +1989,7 @@
         "contributionLog": 0.01028,
         "contributionShare": 12.6264,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": true
       },
       {
@@ -2003,7 +2003,7 @@
         "contributionLog": -0.002048,
         "contributionShare": -2.5156,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2017,7 +2017,7 @@
         "contributionLog": 0.001947,
         "contributionShare": 2.3918,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2031,7 +2031,7 @@
         "contributionLog": 0.010594,
         "contributionShare": 13.012,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": true
       },
       {
@@ -2045,7 +2045,7 @@
         "contributionLog": 0.005067,
         "contributionShare": 6.2235,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2059,7 +2059,7 @@
         "contributionLog": 0.001382,
         "contributionShare": 1.6979,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2073,7 +2073,7 @@
         "contributionLog": -0.001927,
         "contributionShare": -2.3665,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2087,7 +2087,7 @@
         "contributionLog": -0.000192,
         "contributionShare": -0.2357,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2101,7 +2101,7 @@
         "contributionLog": 0.001124,
         "contributionShare": 1.3803,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2115,7 +2115,7 @@
         "contributionLog": -0.001982,
         "contributionShare": -2.4343,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2129,7 +2129,7 @@
         "contributionLog": 0.002407,
         "contributionShare": 2.9567,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2143,7 +2143,7 @@
         "contributionLog": 0.003986,
         "contributionShare": 4.8952,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2157,7 +2157,7 @@
         "contributionLog": -0.001712,
         "contributionShare": -2.1027,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2171,7 +2171,7 @@
         "contributionLog": 0.000655,
         "contributionShare": 0.8045,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2185,7 +2185,7 @@
         "contributionLog": -0.001544,
         "contributionShare": -1.8958,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2199,7 +2199,7 @@
         "contributionLog": 0.000538,
         "contributionShare": 0.6611,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2213,7 +2213,7 @@
         "contributionLog": 0.005007,
         "contributionShare": 6.1497,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2227,7 +2227,7 @@
         "contributionLog": -0.001754,
         "contributionShare": -2.1536,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2241,7 +2241,7 @@
         "contributionLog": 0.001437,
         "contributionShare": 1.7645,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2255,7 +2255,7 @@
         "contributionLog": -0.004449,
         "contributionShare": -5.4643,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2269,7 +2269,7 @@
         "contributionLog": -0.001479,
         "contributionShare": -1.8166,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2283,7 +2283,7 @@
         "contributionLog": -0.003661,
         "contributionShare": -4.4968,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2297,7 +2297,7 @@
         "contributionLog": 0.003649,
         "contributionShare": 4.4814,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2311,7 +2311,7 @@
         "contributionLog": -0.00066,
         "contributionShare": -0.8108,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2325,7 +2325,7 @@
         "contributionLog": 0.001153,
         "contributionShare": 1.4165,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2339,7 +2339,7 @@
         "contributionLog": 0.001505,
         "contributionShare": 1.8484,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2353,7 +2353,7 @@
         "contributionLog": 0.001802,
         "contributionShare": 2.2136,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2367,7 +2367,7 @@
         "contributionLog": -0.005018,
         "contributionShare": -6.163,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2381,7 +2381,7 @@
         "contributionLog": -0.001844,
         "contributionShare": -2.2649,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2395,7 +2395,7 @@
         "contributionLog": 0.00479,
         "contributionShare": 5.8832,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2409,7 +2409,7 @@
         "contributionLog": -0.001573,
         "contributionShare": -1.9322,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2423,7 +2423,7 @@
         "contributionLog": 0.00144,
         "contributionShare": 1.7683,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2437,7 +2437,7 @@
         "contributionLog": -0.001456,
         "contributionShare": -1.7884,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2451,7 +2451,7 @@
         "contributionLog": -0.001665,
         "contributionShare": -2.0443,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2465,7 +2465,7 @@
         "contributionLog": 0.000065,
         "contributionShare": 0.0804,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2479,7 +2479,7 @@
         "contributionLog": 0.004683,
         "contributionShare": 5.7522,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2493,7 +2493,7 @@
         "contributionLog": -0.003118,
         "contributionShare": -3.8298,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2507,7 +2507,7 @@
         "contributionLog": 0.000942,
         "contributionShare": 1.1571,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2521,7 +2521,7 @@
         "contributionLog": -0.000356,
         "contributionShare": -0.4378,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2535,7 +2535,7 @@
         "contributionLog": 0.004127,
         "contributionShare": 5.0687,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2549,7 +2549,7 @@
         "contributionLog": 0.000197,
         "contributionShare": 0.2414,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2563,7 +2563,7 @@
         "contributionLog": 0.00003,
         "contributionShare": 0.0365,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2577,7 +2577,7 @@
         "contributionLog": 0.000234,
         "contributionShare": 0.2868,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2591,7 +2591,7 @@
         "contributionLog": 0.001515,
         "contributionShare": 1.8613,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2605,7 +2605,7 @@
         "contributionLog": 0.00069,
         "contributionShare": 0.8476,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2619,7 +2619,7 @@
         "contributionLog": 0.000769,
         "contributionShare": 0.944,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2633,7 +2633,7 @@
         "contributionLog": -0.000407,
         "contributionShare": -0.5004,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2647,7 +2647,7 @@
         "contributionLog": -0.003002,
         "contributionShare": -3.6873,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2661,7 +2661,7 @@
         "contributionLog": 0.0027,
         "contributionShare": 3.3163,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2675,7 +2675,7 @@
         "contributionLog": 0.001159,
         "contributionShare": 1.4233,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2689,7 +2689,7 @@
         "contributionLog": 0.001326,
         "contributionShare": 1.6289,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2703,7 +2703,7 @@
         "contributionLog": -0.000983,
         "contributionShare": -1.2079,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2717,7 +2717,7 @@
         "contributionLog": -0.000928,
         "contributionShare": -1.14,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2731,7 +2731,7 @@
         "contributionLog": -0.002418,
         "contributionShare": -2.97,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2745,7 +2745,7 @@
         "contributionLog": 0.00574,
         "contributionShare": 7.0497,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": true
       },
       {
@@ -2759,7 +2759,7 @@
         "contributionLog": 0.000951,
         "contributionShare": 1.168,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2773,7 +2773,7 @@
         "contributionLog": 0.001794,
         "contributionShare": 2.2029,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2787,7 +2787,7 @@
         "contributionLog": -0.002669,
         "contributionShare": -3.278,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2801,7 +2801,7 @@
         "contributionLog": 0.004378,
         "contributionShare": 5.3772,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2815,7 +2815,7 @@
         "contributionLog": 0.001999,
         "contributionShare": 2.4554,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2829,7 +2829,7 @@
         "contributionLog": 0.000616,
         "contributionShare": 0.756,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2843,7 +2843,7 @@
         "contributionLog": 0.001967,
         "contributionShare": 2.4153,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2857,7 +2857,7 @@
         "contributionLog": -0.000613,
         "contributionShare": -0.7534,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2871,7 +2871,7 @@
         "contributionLog": 0.005147,
         "contributionShare": 6.3219,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2885,7 +2885,7 @@
         "contributionLog": 0.005764,
         "contributionShare": 7.0787,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": true
       },
       {
@@ -2899,7 +2899,7 @@
         "contributionLog": 0.001193,
         "contributionShare": 1.4649,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2913,7 +2913,7 @@
         "contributionLog": -0.000808,
         "contributionShare": -0.9928,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2927,7 +2927,7 @@
         "contributionLog": -0.006139,
         "contributionShare": -7.5401,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2941,7 +2941,7 @@
         "contributionLog": -0.000658,
         "contributionShare": -0.8084,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -2955,7 +2955,7 @@
         "contributionLog": 0.001825,
         "contributionShare": 2.2415,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2969,7 +2969,7 @@
         "contributionLog": 0.001512,
         "contributionShare": 1.8576,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2983,7 +2983,7 @@
         "contributionLog": 0.001639,
         "contributionShare": 2.013,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -2997,7 +2997,7 @@
         "contributionLog": 0.000111,
         "contributionShare": 0.1364,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3011,7 +3011,7 @@
         "contributionLog": 0.000444,
         "contributionShare": 0.5448,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3025,7 +3025,7 @@
         "contributionLog": -0.004959,
         "contributionShare": -6.0912,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -3039,7 +3039,7 @@
         "contributionLog": 0.00074,
         "contributionShare": 0.9083,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3053,7 +3053,7 @@
         "contributionLog": 0.004055,
         "contributionShare": 4.9801,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3067,7 +3067,7 @@
         "contributionLog": -0.002131,
         "contributionShare": -2.6179,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -3081,7 +3081,7 @@
         "contributionLog": 0.000094,
         "contributionShare": 0.1159,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3095,7 +3095,7 @@
         "contributionLog": -0.002553,
         "contributionShare": -3.1353,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -3109,7 +3109,7 @@
         "contributionLog": 0.00013,
         "contributionShare": 0.1598,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3123,7 +3123,7 @@
         "contributionLog": 0.001826,
         "contributionShare": 2.2427,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3137,7 +3137,7 @@
         "contributionLog": 0.000478,
         "contributionShare": 0.5872,
         "payStatus": "OVERPAID",
-        "isCorrectable": false,
+        "widensGap": true,
         "inMinimumSet": false
       },
       {
@@ -3151,7 +3151,7 @@
         "contributionLog": -0.000837,
         "contributionShare": -1.0275,
         "payStatus": "UNDERPAID",
-        "isCorrectable": false,
+        "widensGap": false,
         "inMinimumSet": false
       },
       {
@@ -3165,13 +3165,15 @@
         "contributionLog": 0.001127,
         "contributionShare": 1.384,
         "payStatus": "UNDERPAID",
-        "isCorrectable": true,
+        "widensGap": true,
         "inMinimumSet": false
       }
     ],
-    "correctableCount": 31,
+    "gapCarrierCount": 73,
     "minimumSetSize": 5,
+    "oskyrtWithinBenchmark": false,
     "oskyrtLogAfterMinimumSet": 0.037741,
+    "oskyrtDirectionAfterMinimumSet": "FEMALE",
     "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
     "benchmarkPercent": 3.9

@@ -112,7 +112,7 @@ describe('wage-gap-decomposition', () => {
       const residualSum = s.employees.reduce((t, e) => t + e.residualLog, 0)
 
       expect(Math.abs(residualSum)).toBeLessThan(1e-9)
-      expect(s.correctableCount).toBeGreaterThan(0)
+      expect(s.gapCarrierCount).toBeGreaterThan(0)
     })
 
     it('óskýrt equals mean(leif | karlar) − mean(leif | konur)', () => {
@@ -186,6 +186,67 @@ describe('wage-gap-decomposition', () => {
      * walk subtracted contributions from a fit it never recomputed, and neither
      * was covered: the single hand-built fixture below happened to avoid both.
      */
+    describe('membership does not depend on input order', () => {
+      /**
+       * Two women on an identical rate at an identical score — an ordinary pay
+       * grade, not an exotic shape. Their residuals are equal, so their
+       * `|contributionLog|` is bit-identical, and only ONE of them is needed to
+       * bring óskýrt (5,31%) under the benchmark.
+       *
+       * `Array#sort` is stable, so before the ordinal tie-break the winner was
+       * decided by whichever row the database happened to return first:
+       * forward input selected {6, 8, 9} and reversed input {7, 8, 9}. That is
+       * not cosmetic — the preview and the submit run the same engine over two
+       * separate unordered queries, so the submit guard could reject a set the
+       * preview had just produced with "Detected outlier(s) missing from the
+       * outlier groups for employee ordinal(s): …".
+       */
+      const tiedCohort = (): WageGapEmployeeInput[] => [
+        employee(1, GenderEnum.MALE, 200, 3400),
+        employee(2, GenderEnum.MALE, 300, 4200),
+        employee(3, GenderEnum.MALE, 400, 4900),
+        employee(4, GenderEnum.MALE, 500, 5900),
+        employee(5, GenderEnum.MALE, 600, 6900),
+        employee(6, GenderEnum.FEMALE, 400, 4675),
+        employee(7, GenderEnum.FEMALE, 400, 4675),
+        employee(8, GenderEnum.FEMALE, 500, 5400),
+        employee(9, GenderEnum.FEMALE, 600, 6500),
+      ]
+
+      const membership = (employees: WageGapEmployeeInput[]): number[] =>
+        run(employees)
+          .employees.filter((candidate) => candidate.inMinimumSet)
+          .map((candidate) => candidate.ordinal)
+          .sort((a, b) => a - b)
+
+      it('has a genuine tie to break', () => {
+        const snapshot = run(tiedCohort())
+        const six = snapshot.employees.find((e) => e.ordinal === 6)
+        const seven = snapshot.employees.find((e) => e.ordinal === 7)
+
+        // Bit-identical, not merely close — that is what makes the order matter.
+        expect(Math.abs(six?.contributionLog ?? 0)).toBe(
+          Math.abs(seven?.contributionLog ?? 1),
+        )
+        // Exactly one of the pair is needed, so the tie decides membership.
+        expect(membership(tiedCohort())).toEqual([6, 8, 9])
+      })
+
+      it('resolves the tie by ordinal, whatever order the rows arrive in', () => {
+        const forward = membership(tiedCohort())
+
+        expect(membership([...tiedCohort()].reverse())).toEqual(forward)
+
+        // A few deterministic rotations — no RNG, so a failure is reproducible.
+        for (let offset = 1; offset < 9; offset++) {
+          const rotated = tiedCohort()
+          expect(
+            membership([...rotated.slice(offset), ...rotated.slice(0, offset)]),
+          ).toEqual(forward)
+        }
+      })
+    })
+
     describe('sufficiency is reported, not assumed', () => {
       /**
        * Every man exactly +0.04 log points above the pooled line, every woman
@@ -221,8 +282,15 @@ describe('wage-gap-decomposition', () => {
       it('flags an unclosable gap instead of reporting the set as sufficient', () => {
         const s = run(symmetricallySplitCohort())
 
-        // The whole correctable side is taken and it still is not enough.
-        expect(s.minimumSetSize).toBe(s.correctableCount)
+        // The whole liftable side is taken and it still is not enough.
+        //
+        // ⚠️ Compared against the UNDERPAID carriers, not `gapCarrierCount`:
+        // that aggregate counts carriers on both sides of the line, and this
+        // walk is still lift-only. The distinction is the point of the rename.
+        const liftable = s.employees.filter(
+          (e) => e.widensGap && e.payStatus === PayStatusEnum.UNDERPAID,
+        ).length
+        expect(s.minimumSetSize).toBe(liftable)
         expect(s.minimumSetClosesGap).toBe(false)
         assertNumber(s.oskyrtLogAfterMinimumSet)
         expect(s.oskyrtLogAfterMinimumSet).toBeGreaterThan(s.thresholdLog)
@@ -332,7 +400,7 @@ describe('wage-gap-decomposition', () => {
       const s = run(mixedCompany())
 
       expect(s.oskyrtLogAfterMinimumSet).toBeLessThanOrEqual(s.thresholdLog)
-      expect(s.minimumSetSize).toBeLessThanOrEqual(s.correctableCount)
+      expect(s.minimumSetSize).toBeLessThanOrEqual(s.gapCarrierCount)
 
       const members = s.employees.filter((e) => e.inMinimumSet)
       expect(
@@ -347,15 +415,42 @@ describe('wage-gap-decomposition', () => {
       ).toBe(true)
     })
 
-    it('never proposes lowering anyone: no overpaid employee is correctable', () => {
+    it('counts overpaid employees on the advantaged side as gap carriers', () => {
+      const s = run(mixedCompany())
+      const overpaid = s.employees.filter(
+        (e) => e.payStatus === PayStatusEnum.OVERPAID,
+      )
+
+      expect(overpaid).not.toHaveLength(0)
+
+      // `widensGap` is a statement about carrying the gap, not about being
+      // liftable: an overpaid member of the ADVANTAGED side pulls óskýrt wider
+      // just as an underpaid member of the disadvantaged side does.
+      expect(
+        overpaid.some(
+          (e) =>
+            e.widensGap &&
+            (e.gender === GenderEnum.MALE ? 'MALE' : 'FEMALE') !==
+              s.disadvantagedGender,
+        ),
+      ).toBe(true)
+
+      // Every carrier's framlag shares the sign of óskýrt — the definition,
+      // asserted directly rather than through the two quadrants.
+      assertNumber(s.oskyrtLog)
+      for (const carrier of s.employees.filter((e) => e.widensGap)) {
+        expect(carrier.contributionLog * s.oskyrtLog).toBeGreaterThan(0)
+      }
+    })
+
+    it('never proposes lowering anyone: the set is still lift-only', () => {
       const s = run(mixedCompany())
 
-      expect(
-        s.employees.filter((e) => e.payStatus === PayStatusEnum.OVERPAID),
-      ).not.toHaveLength(0)
+      // Holds in THIS commit by an explicit narrowing in `selectMinimumSet`;
+      // the pool opens in the commit that adds the probe guard.
       expect(
         s.employees.some(
-          (e) => e.isCorrectable && e.payStatus !== PayStatusEnum.UNDERPAID,
+          (e) => e.inMinimumSet && e.payStatus !== PayStatusEnum.UNDERPAID,
         ),
       ).toBe(false)
     })
@@ -553,7 +648,7 @@ describe('wage-gap-decomposition', () => {
 
         // The remedy is the same size, drawn from the other side.
         expect(mirrored.minimumSetSize).toBe(forward.minimumSetSize)
-        expect(mirrored.correctableCount).toBe(forward.correctableCount)
+        expect(mirrored.gapCarrierCount).toBe(forward.gapCarrierCount)
       },
     )
 
