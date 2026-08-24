@@ -383,7 +383,7 @@ BEGIN;
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 3.90, 'v2',
+VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 3.90, 'v3',
   ${escJson(salarySnapshot)}, ${escJson(wageGapSnapshot)});
 
 COMMIT;
@@ -397,11 +397,13 @@ COMMIT;
 // — both satisfy the group CHECK and exercise both UI branches.
 //
 // ⚠️ Membership is the lágmarksmengi, read off this report's OWN frozen
-// decomposition. It used to be `|differencePercent| >= 32`, a leftover of the
-// retired ±1,95% band, which selected whoever deviated furthest in EITHER
-// direction — including people paid above the line. The set is now lift-only and
-// company-wide: the fewest underpaid konur whose raises bring óskýrt under 3,9%.
-// Six of them, on the demo sheet.
+// decomposition — never hardcoded. It has changed twice: first from
+// `|differencePercent| >= 32` (a leftover of the retired ±1,95% band, which
+// flagged whoever deviated furthest in either direction and decided nothing),
+// then from a lift-only set to a two-directional one. It is now the fewest
+// employees CARRYING óskýrt whose correction brings it under 3,9% — underpaid
+// konur and overpaid karlar together, so the rows here span both directions.
+// Six of them on the demo sheet, two of whom are paid ABOVE the line.
 function outliersSql() {
   const filtered = wageGapFixtures.richSheet.employees.filter(
     (e) => e.inMinimumSet,

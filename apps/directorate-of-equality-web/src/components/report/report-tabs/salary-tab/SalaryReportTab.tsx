@@ -10,7 +10,7 @@ import {
   type WageGapDecompositionDto,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
-import { formatSalary } from '../../../../lib/utils'
+import { foldDeviationDirection, formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { PayComponentsTable } from './PayComponentsTable'
@@ -55,6 +55,10 @@ export const SalaryReportTab = ({
     )
   }
 
+  const members = (decomposition?.employees ?? []).filter(
+    (employee) => employee.inMinimumSet,
+  )
+
   return (
     <Stack space={6}>
       <SalaryDistributionChart data={data} decomposition={decomposition} />
@@ -74,6 +78,17 @@ export const SalaryReportTab = ({
             reportId={reportId}
             groups={groups}
             minimumSetSize={decomposition?.minimumSetSize}
+            // ⚠️ Folded over the SNAPSHOT, not over the table's rows. The
+            // groups below are paged at 10, so folding the fetched rows would
+            // report "below" for a group whose overpaid member happens to sit
+            // on page 2. The snapshot carries every member of the set.
+            //
+            // No `members.length > 0` guard: the fold itself returns `undefined`
+            // when there is nothing to fold, and the prompt then does not render.
+            // Guarding here as well would just be a second place to get it wrong.
+            direction={foldDeviationDirection(
+              members.map((employee) => employee.payStatus),
+            )}
             outliersPostponed={outliersPostponed}
             outlierDate={outlierDate}
           />

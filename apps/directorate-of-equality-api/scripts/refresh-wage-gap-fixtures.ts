@@ -254,7 +254,7 @@ const describe = (
     `karlar/konur ${snapshot.counts.male}/${snapshot.counts.female}`.padEnd(20),
     `óskýrt ${snapshot.oskyrtPercent ?? '—'}%`.padEnd(18),
     `${snapshot.oskyrtDirection ?? 'engin átt'}`.padEnd(12),
-    `lágmarksmengi ${snapshot.minimumSetSize}/${snapshot.correctableCount}`,
+    `lágmarksmengi ${snapshot.minimumSetSize}/${snapshot.gapCarrierCount}`,
   ].join(' ')
 
 // eslint-disable-next-line no-console

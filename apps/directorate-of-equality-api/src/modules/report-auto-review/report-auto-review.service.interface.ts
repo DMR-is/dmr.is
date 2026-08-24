@@ -38,11 +38,24 @@ export type AutoReviewSignals = {
   /**
    * Whether the frozen set's correction would bring óskýrt within the benchmark.
    *
-   * ⚠️ Required alongside `minimumSetSize` because an empty set does NOT imply
-   * compliance: when nobody on the disadvantaged side is underpaid, there is
-   * nothing to lift and the walk returns an empty set with `closesGap: false`.
+   * ⚠️ Recorded for the audit trail, and NOT a compliance input — read
+   * `oskyrtWithinBenchmark` for that. An empty set does not imply compliance, and
+   * under the two-directional pool `false` here means the walk would have
+   * OVER-corrected past the benchmark in the other direction rather than fallen
+   * short of it.
    */
   minimumSetClosesGap: boolean | null
+  /**
+   * THE compliance input: `|óskýrt|` within the benchmark, off the frozen
+   * snapshot. Null when the gap is not computable or when abstaining.
+   *
+   * ⚠️ Read this instead of `minimumSetSize === 0`. The two agreed while the
+   * walk always committed its first candidate; they no longer do, because the
+   * walk now declines a candidate that would push the gap further out. An empty
+   * set on a non-compliant company is therefore reachable, and keying the
+   * decision on size would auto-approve it.
+   */
+  oskyrtWithinBenchmark: boolean | null
   /**
    * LEIÐRÉTTUR launamunur — the figure the statutory benchmark tests, as a
    * magnitude. Recorded for the audit trail; **not yet a decision input**,

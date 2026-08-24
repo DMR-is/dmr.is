@@ -16,9 +16,11 @@ import { SalaryByGenderAndScoreDto } from './salary-by-gender-and-score.dto'
  * account for.
  *
  * ⚠️ Read the contract on `selectMinimumSet` before rendering this: membership
- * is a property of the *set*, not of the employee, and the set is lift-only. The
- * fields below describe the individual, but the reason they are in the list is
- * the company-wide óskýrt figure, not their own deviation.
+ * is a property of the *set*, not of the employee, and the set is
+ * two-directional. The fields below describe the individual, but the reason they
+ * are in the list is the company-wide óskýrt figure, not their own deviation —
+ * and `payStatus` decides which question the employer is being asked about them,
+ * so it must be rendered rather than assumed.
  *
  * The `direction` / `differencePercent` / `allowedDifferencePercent` /
  * `scoreBucketRange*` fields this class used to carry are gone with the ±1,95%

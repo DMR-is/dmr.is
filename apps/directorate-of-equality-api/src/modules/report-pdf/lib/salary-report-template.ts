@@ -1,5 +1,6 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
+import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
@@ -136,9 +137,13 @@ function salaryAnalysisSection(
   decomposition?: WageGapDecompositionDto | null,
 ): string {
   const { totals } = statistics
+  // ⚠️ `decomposition?.pooledFit`, NOT `statistics.regressionLine`. See the
+  // docblock on buildSalaryChartSvg: regressionLine is a level-space fit nothing
+  // else reads, and drawing it here contradicted the úrbótaáætlun table below,
+  // which prints figures from the log fit.
   const chart = buildSalaryChartSvg(
     statistics.dataPoints,
-    statistics.regressionLine,
+    decomposition?.pooledFit,
   )
 
   return section(
@@ -168,21 +173,64 @@ function salaryAnalysisSection(
 /**
  * Úrbótaáætlun — the lágmarksmengi and its explanations.
  *
- * The empty state is a **finding, not an absence**: an empty set means óskýrt is
- * already under the benchmark, so the copy says so rather than implying nothing
- * was measured.
+ * The empty state is a **finding, not an absence**, so the copy says which
+ * finding it is. ⚠️ It takes the decomposition for exactly that reason: an empty
+ * list does NOT imply compliance and cannot be read as such on the document of
+ * record.
+ *
+ * It used to. While the walk was lift-only it committed its first candidate
+ * unconditionally, so an empty set really did mean óskýrt was already under the
+ * benchmark. The two-directional walk probes before committing and can decline
+ * every candidate — see the four-employee cohort in
+ * `wage-gap-decomposition.spec.ts`, óskýrt 4,88% with two carriers and nothing
+ * listed. Keying the sentence on `outliers.length` alone would print *engar
+ * úrbætur nauðsynlegar* onto the PDF of a company that is over the benchmark,
+ * and a PDF is the one surface whose reader cannot ask a follow-up question.
  *
  * Each row carries actual, expected and deviation together. Showing the
  * deviation alone (as this did) invites reading it as the reason the employee is
  * listed — but the reason is the company-wide figure; `Hlutur af óskýrðu` is the
  * column that actually explains the selection.
  */
-function improvementPlanSection(outliers: ReportEmployeeOutlierDto[]): string {
+/**
+ * Frávik — the signed deviation plus the direction in words.
+ *
+ * The sign already carries the direction, but only for a reader who knows the
+ * convention. Both admin tables say it outright for the same reason, and the
+ * reason applies here hardest: the list can now name someone for being paid
+ * ABOVE their starfsmatsstig, which is the opposite of what a reader who
+ * remembers the lift-only set expects — and a PDF reader cannot ask.
+ */
+function deviationCell(outlier: ReportEmployeeOutlierDto): string {
+  const percent = formatPercent(outlier.deviationPercent, { signed: true })
+  const word =
+    outlier.payStatus === PayStatusEnum.UNDERPAID
+      ? 'undir'
+      : outlier.payStatus === PayStatusEnum.OVERPAID
+        ? 'yfir'
+        : null
+
+  return word ? `${percent} (${word})` : percent
+}
+
+function improvementPlanSection(
+  outliers: ReportEmployeeOutlierDto[],
+  decomposition?: WageGapDecompositionDto | null,
+): string {
   if (!outliers || outliers.length === 0) {
-    return section(
-      'Úrbótaáætlun',
-      `<p class="empty-note">Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.</p>`,
-    )
+    // Three states, deliberately distinguished. Only an explicit `true` claims
+    // compliance; `false` is the newly reachable declined-every-candidate case;
+    // null/undefined is a report with no computable gap or no frozen result at
+    // all, where the honest answer is that no set was selected — not that none
+    // was needed.
+    const emptyNote =
+      decomposition?.oskyrtWithinBenchmark === true
+        ? 'Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.'
+        : decomposition?.oskyrtWithinBenchmark === false
+          ? 'Óskýrður launamunur er yfir viðmiði, en ekki var unnt að setja saman lágmarksmengi: hver einstök leiðrétting hefði fært launamuninn út fyrir viðmiðið í gagnstæða átt. Launamunurinn stendur því eftir og krefst yfirferðar.'
+          : 'Ekkert lágmarksmengi var valið, enda liggur óskýrður launamunur ekki fyrir.'
+
+    return section('Úrbótaáætlun', `<p class="empty-note">${emptyNote}</p>`)
   }
 
   const rows = outliers
@@ -194,7 +242,7 @@ function improvementPlanSection(outliers: ReportEmployeeOutlierDto[]): string {
           <td>${genderLabel(o.gender)}</td>
           <td>${formatHourlyRate(o.regularHourlyWage)}</td>
           <td>${formatHourlyRate(o.expectedHourlyWage)}</td>
-          <td>${formatPercent(o.deviationPercent, { signed: true })}</td>
+          <td>${deviationCell(o)}</td>
           <td>${formatPercent(o.contributionShare)}</td>
         </tr>`,
     )
@@ -239,7 +287,7 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     ${averageEmployeesSection(report)}
     ${subsidiariesSection(report)}
     ${salaryAnalysisSection(statistics, report.result?.wageGapDecomposition)}
-    ${improvementPlanSection(outliers)}
+    ${improvementPlanSection(outliers, report.result?.wageGapDecomposition)}
     ${deadlineSection(report)}
   </body>
 </html>`

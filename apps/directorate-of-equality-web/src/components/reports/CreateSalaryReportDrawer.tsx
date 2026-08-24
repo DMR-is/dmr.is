@@ -33,6 +33,7 @@ import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
+  foldDeviationDirection,
   formatHourlyRate,
   formatNationalId,
   formatPercent,
@@ -828,6 +829,33 @@ type OutlierEditorProps = {
   groupsComplete: boolean
 }
 
+/**
+ * The direction prompt above a group's reason/action fields.
+ *
+ * Its own component so the "nothing to say" case is a `return null` rather than
+ * a ternary inside JSX: `group.ordinals` can be empty, and an ordinal can fail
+ * to resolve against `outliers`, both of which yield no direction. Rendering the
+ * mixed prompt there would ask the submitter to explain pay that is
+ * simultaneously high and low.
+ */
+const GroupDirectionPrompt = ({
+  payStatuses,
+}: {
+  payStatuses: readonly (SalaryAnalysisOutlierDto['payStatus'] | undefined)[]
+}) => {
+  const direction = foldDeviationDirection(payStatuses)
+
+  if (!direction) return null
+
+  return (
+    <Box marginBottom={1}>
+      <Text variant="small" color="dark300">
+        {d.directionPrompt[direction]}
+      </Text>
+    </Box>
+  )
+}
+
 const OutlierEditor = ({
   outliers,
   minimumSetClosesGap,
@@ -934,10 +962,24 @@ const OutlierEditor = ({
     {
       id: 'difference',
       header: d.tableDifference,
-      // No direction suffix: the lágmarksmengi is lift-only, so every row here
-      // is underpaid. "undir viðmiði" on all of them told the reader nothing.
-      cell: ({ row }) =>
-        formatPercent(row.original.deviationPercent, { signed: true }),
+      // ⚠️ The direction suffix is BACK, and for the opposite reason it was
+      // removed. It was dropped when the set became lift-only: every row was
+      // underpaid, so the word told the reader nothing. The set is
+      // two-directional now, so a row can be listed for being paid ABOVE its
+      // stig — which is precisely what a submitter would not expect, and the
+      // sign alone relies on them knowing the convention.
+      cell: ({ row }) => {
+        const percent = formatPercent(row.original.deviationPercent, {
+          signed: true,
+        })
+        const word =
+          row.original.payStatus === 'UNDERPAID'
+            ? d.directionBelow
+            : row.original.payStatus === 'OVERPAID'
+              ? d.directionAbove
+              : null
+        return word ? `${percent} (${word})` : percent
+      },
     },
     {
       id: 'contribution',
@@ -1040,6 +1082,22 @@ const OutlierEditor = ({
                     {d.removeGroup}
                   </Button>
                 </Box>
+                {/*
+                  ⚠️ Folded over THIS group's own members, which is correct here
+                  and would not be on the reviewer's side: the explanation lives
+                  on the group, the submitter composes groups freely, and all
+                  members are in local state rather than paged. A group holding
+                  both directions gets the `mixed` prompt — a real third case,
+                  because "why is this pay low" and "why is this pay high" are
+                  different questions and one group can contain both.
+                */}
+                <GroupDirectionPrompt
+                  payStatuses={group.ordinals.map(
+                    (ordinal) =>
+                      outliers.find((o) => o.employeeOrdinal === ordinal)
+                        ?.payStatus,
+                  )}
+                />
                 <GridRow rowGap={1}>
                   <GridColumn span="12/12">
                     <TextInput

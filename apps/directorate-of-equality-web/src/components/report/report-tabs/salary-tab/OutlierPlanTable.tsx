@@ -5,6 +5,7 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import { type ReportOutlierGroupDto } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
+import { type DeviationDirection } from '../../../../lib/utils'
 import { OutlierGroupTable } from './OutlierGroupTable'
 import { OutlierInputForm } from './OutlierInputForm'
 
@@ -21,6 +22,16 @@ interface OutlierPlanTableProps {
    * subtitle rather than a zero.
    */
   minimumSetSize?: number
+  /**
+   * Which way the listed employees deviate, folded over the whole
+   * lágmarksmengi by the caller.
+   *
+   * Shown here rather than per group on purpose: the group tables below are
+   * paged, so a per-group fold would be computed from one page and could
+   * contradict itself between pages. Per-row direction is still shown in the
+   * Launafrávik column, where it is always exact.
+   */
+  direction?: DeviationDirection
 }
 
 const o = reportText.salaryTab.outlierTable
@@ -31,6 +42,7 @@ export const OutlierPlanTable = ({
   outliersPostponed,
   outlierDate,
   minimumSetSize,
+  direction,
 }: OutlierPlanTableProps) => {
   const t = reportText.salaryTab
   return (
@@ -45,6 +57,11 @@ export const OutlierPlanTable = ({
               minimumSetSize === 0 ? t.minimumSetNone : minimumSetSize
             }`}
           </Text>
+        </Box>
+      )}
+      {direction && (
+        <Box marginBottom={2}>
+          <Text variant="small">{o.directionPrompt[direction]}</Text>
         </Box>
       )}
       {outliersPostponed && (

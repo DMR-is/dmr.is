@@ -119,14 +119,49 @@ export const overviewText = {
       // report. It was also simply false whenever the set cannot close the gap.
       // State the observation and the obligation; say nothing about the fix.
       intro:
-        'Laun þessara starfsmanna eru lægri en starfsmatsstig þeirra gefa til kynna — skráðu ástæður og aðgerðir. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
+        'Þessir starfsmenn bera óskýrðan launamun fyrirtækisins — laun þeirra víkja frá því sem starfsmatsstig þeirra gefa til kynna. Skráðu ástæður og aðgerðir. Skráðu úrbætur í hópa eða frestaðu skilum þeirra.',
       /**
-       * Added when `minimumSetClosesGap === false`: the listed employees do not
-       * account for the whole gap. No figures — quantifying it would imply the
-       * exact raises the process never asks for.
+       * ⚠️ Direction-specific, and shown PER GROUP rather than per row.
+       *
+       * The explanation fields live on `report_outlier_group`, not on the
+       * employee join, and the submitter composes groups freely — so a group
+       * can legitimately hold someone paid below their stig and someone paid
+       * above. That is why there are three variants and not two: `mixed` is a
+       * real case, not a fudge.
+       *
+       * The two questions are genuinely different. Asked about someone above
+       * the line, the likeliest honest answer is that the job evaluation is
+       * wrong — in which case the correction is to the evaluation and nobody's
+       * pay moves. Sharing one prompt would hide that.
+       */
+      directionPrompt: {
+        below:
+          'Laun þessara starfsmanna eru LÆGRI en starfsmatsstig þeirra gefa til kynna. Skráðu hvers vegna og hvað verður gert.',
+        above:
+          'Laun þessara starfsmanna eru HÆRRI en starfsmatsstig þeirra gefa til kynna. Skráðu hvers vegna — ef starfsmatið vanmetur starfið er úrbótin að endurskoða matið, ekki launin.',
+        mixed:
+          'Í þessum hópi eru bæði starfsmenn með lægri og hærri laun en starfsmatsstig þeirra gefa til kynna. Skráðu ástæður sem eiga við hópinn í heild.',
+      },
+      /** Suffix on the Frávik cell, so a row states its own direction. */
+      directionBelow: 'undir',
+      directionAbove: 'yfir',
+      /**
+       * Added when `minimumSetClosesGap === false`.
+       *
+       * ⚠️ The MEANING of this flag inverted with the two-directional set. It
+       * used to mean "the listed employees do not account for the whole gap,
+       * because the rest of it sits with people we cannot reach" — and this
+       * string said exactly that, naming the overpaid side as the unreachable
+       * part. The set now reaches that side, so the old text described the
+       * opposite of the truth.
+       *
+       * It now means the correction OVERSHOOTS: bringing these employees onto
+       * the line would carry óskýrt past the benchmark in the other direction,
+       * so no subset of them lands inside it. Still no figures — quantifying it
+       * would imply the exact pay changes the process never asks for.
        */
       introDoesNotClose:
-        'Athugið: þessir starfsmenn skýra ekki allan óskýrðan launamun fyrirtækisins. Hann er að hluta til vegna launa sem eru hærri en starfsmatsstig gefa til kynna.',
+        'Athugið: launamunur fyrirtækisins verður ekki færður undir viðmiðið með þessum starfsmönnum einum. Skráðu samt ástæður og aðgerðir — úrbætur eru sýndar á fyrirtækinu í heild við næstu skil.',
       postponeOption: 'Fresta skilum frávika',
       tableEmployee: 'Starfsmaður',
       tableSalary: 'Tímakaup',
@@ -329,9 +364,35 @@ export const reportText = {
     // the old level-space straight line. `Hallatala`/`Skurðpunktur` are gone
     // with it: a log-space slope is not kr./klst. per stig, and printing it
     // under that label would be a unit error on a government page.
+    /**
+     * ⚠️ Why the line bends, said once and plainly.
+     *
+     * The curvature is the single most-questioned thing on this page — it looks
+     * like a modelling flourish and is in fact the whole model. Pay is fitted as
+     * a constant PERCENTAGE rise per stig, and a constant percentage compounds,
+     * so the line must bend in krónur. It is straight in log space, which is the
+     * space it was fitted in.
+     *
+     * Kept next to the growth figure rather than buried in a tooltip: the two
+     * explain each other. "+32,6% á hver 100 stig" is exactly why the gap
+     * between successive 100-stig steps widens as you go right.
+     */
+    chartCurveNote:
+      'Viðmiðslínan sveigist vegna þess að væntanlegt tímakaup hækkar um fast HLUTFALL á hvert stig, ekki fasta krónutölu — og hlutfallshækkun leggst við sjálfa sig. Í krónum verður hvert 100 stiga þrep því stærra en það síðasta.',
     regressionHeading: 'Viðmiðslína',
     curveGrowthLabel: 'Hækkun á hver 100 stig',
     curveGrowthHint: 'Hlutfallsleg hækkun á væntanlegu tímakaupi',
+    /**
+     * The krónur anchor for the growth figure above.
+     *
+     * ⚠️ This replaces the skurðpunktur, which is `exp(intercept)` — expected
+     * pay at ZERO stig, a score no job holds. Printing it invited a reader to
+     * treat a meaningless extrapolation as a floor. Expected pay at the cohort's
+     * MEAN score is a real point on the curve, inside the data, and it gives the
+     * percentage something concrete to be a percentage of.
+     */
+    curveAtMeanLabel: 'Væntanlegt tímakaup við meðalstig',
+    curveAtMeanHint: 'Punktur á línunni við meðalstig starfsmanna',
     curveUnavailable: 'Viðmiðslína ekki reiknanleg fyrir þessi gögn',
     rSquaredLabel: 'R²',
     rSquaredHint: 'Hve mikið af launabreytileikanum stigin skýra',
@@ -349,7 +410,7 @@ export const reportText = {
     },
     chartTitle: 'Stig á móti reglulegu tímakaupi',
     chartDescription:
-      'Viðmiðslínan er væntanlegt tímakaup eftir stigum. Launafrávik hvers starfsmanns er mælt frá henni, og starfsmenn undir línunni eru þeir sem úrbótaáætlun getur tekið til.',
+      'Viðmiðslínan er væntanlegt tímakaup eftir stigum. Launafrávik hvers starfsmanns er mælt frá henni, og úrbótaáætlun getur tekið til starfsmanna á báða vegu — bæði undir línunni og yfir henni.',
     chartScaleScore: 'stig',
     chartScaleCurrency: 'kr./klst.',
     chartRegressionSeries: 'Væntanlegt tímakaup',
@@ -378,6 +439,23 @@ export const reportText = {
       contributionShareHeader: 'Hlutur af óskýrðu',
       emptyMinimumSet:
         'Engar úrbætur nauðsynlegar — óskýrður launamunur er undir viðmiði.',
+      /**
+       * Mirrors the submitter-facing prompt so a reviewer reads the same
+       * question the company was asked. Chosen per group by folding the
+       * members' `payStatus`; `mixed` is a real case because the explanation
+       * lives on the group and groups may span both directions.
+       */
+      directionPrompt: {
+        below:
+          'Laun þessara starfsmanna eru lægri en starfsmatsstig þeirra gefa til kynna.',
+        above:
+          'Laun þessara starfsmanna eru hærri en starfsmatsstig þeirra gefa til kynna.',
+        mixed:
+          'Hópurinn nær yfir starfsmenn með bæði lægri og hærri laun en starfsmatsstig þeirra gefa til kynna.',
+      },
+      /** Suffix on the Launafrávik cell, so a row states its own direction. */
+      directionBelow: 'undir',
+      directionAbove: 'yfir',
     },
     /**
      * ── Pay-component split by gender ────────────────────────────────────────

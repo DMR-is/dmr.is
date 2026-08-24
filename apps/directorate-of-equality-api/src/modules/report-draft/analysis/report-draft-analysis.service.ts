@@ -156,11 +156,13 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
    * ⚠️ This used to be the ±1,95% band around a fitted line, evaluated per
    * employee. It is now membership of the smallest set of corrections that
    * brings óskýrt under the benchmark — see `selectMinimumSet` for why that is
-   * a property of the set rather than of the person, and why it is lift-only.
+   * a property of the set rather than of the person.
    *
    * Consequences for the callers (submit and sync), neither of which changes:
    * an already-compliant company returns an EMPTY set and so needs no
-   * úrbótaáætlun at all, and overpaid employees are never returned.
+   * úrbótaáætlun at all, and the set is two-directional, so an id returned here
+   * may belong to someone paid ABOVE their stig. Membership is all the callers
+   * need; direction is carried on the snapshot for the copy to read.
    */
   async getDetectedOutlierEmployeeIds(reportId: string): Promise<Set<string>> {
     const { scored, decomposition } = await this.decomposeDraft(reportId)
@@ -232,8 +234,14 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
   private async deriveScoredEmployees(
     reportId: string,
   ): Promise<ScoredEmployee[]> {
+    // Ordered so the lágmarksmengi is a pure function of the data. The
+    // selection walk breaks |contributionLog| ties by ordinal, which only
+    // helps if the rows arrive in a stable order — an unordered findAll lets
+    // Postgres heap order decide, and it can differ between the preview
+    // request and the submit request for the same report.
     const employees = await this.employeeModel.findAll({
       where: { reportId },
+      order: [['ordinal', 'ASC']],
     })
     if (employees.length === 0) {
       return []

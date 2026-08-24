@@ -34,12 +34,19 @@ import { IReportResultService } from './report-result.service.interface'
 
 const LOGGING_CONTEXT = 'ReportResultService'
 /**
+ * `v3` = two-directional lágmarksmengi. The snapshot's per-employee
+ * `isCorrectable` became `widensGap` with a wider meaning (carries the gap on
+ * either side of the line, not just liftable), `correctableCount` became
+ * `gapCarrierCount`, and two fields were added. A v2 row deserialises with the
+ * old field names, so the marker is what makes that diagnosable rather than
+ * silently `undefined`.
+ *
  * `v2` = reglulegt tímakaup. `v1` evaluated FTE-adjusted monthly salary
  * (`baseSalary / workRatio`) and stored separate base/full snapshots; the two
  * are not comparable, and no v1 row survived the migration that introduced
  * `paid_hours`.
  */
-const REPORT_RESULT_CALCULATION_VERSION = 'v2'
+const REPORT_RESULT_CALCULATION_VERSION = 'v3'
 
 @Injectable()
 export class ReportResultService implements IReportResultService {
@@ -97,8 +104,14 @@ export class ReportResultService implements IReportResultService {
       )
     }
 
+    // Ordered so the lágmarksmengi is a pure function of the data. The
+    // selection walk breaks |contributionLog| ties by ordinal, which only
+    // helps if the rows arrive in a stable order — an unordered findAll lets
+    // Postgres heap order decide, and it can differ between the preview
+    // request and the submit request for the same report.
     const employees = await this.reportEmployeeModel.findAll({
       where: { reportId },
+      order: [['ordinal', 'ASC']],
     })
 
     if (employees.length === 0) {

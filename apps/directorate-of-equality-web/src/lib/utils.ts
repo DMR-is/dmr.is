@@ -1,4 +1,4 @@
-import { CompanySizeEnum } from '../gen/fetch'
+import { CompanySizeEnum, type WageGapEmployeeDto } from '../gen/fetch'
 import { reportText, sharedText } from './text'
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -48,6 +48,50 @@ export const formatSalary = (v: number) =>
  */
 export const formatHourlyRate = (v: number | null | undefined) =>
   v == null ? '—' : `${formatSalary(v)} ${reportText.salaryTab.hourlyUnit}`
+
+/**
+ * Which way a set of listed employees deviates from the fitted line.
+ *
+ * The úrbótaáætlun's explanation fields (`reason` / `action` / signature) live on
+ * `report_outlier_group`, not on the per-employee join, and whoever builds the
+ * groups composes them freely — so a group can legitimately contain someone paid
+ * below their starfsmatsstig and someone paid above. `mixed` is therefore a real
+ * third case, not a fallback.
+ *
+ * `ON_LINE` cannot be a member of the lágmarksmengi (a zero residual carries
+ * none of the gap), so it is treated as absent rather than given a fourth
+ * branch.
+ */
+export type DeviationDirection = 'below' | 'above' | 'mixed'
+
+/**
+ * ⚠️ Returns `undefined` when there is nothing to fold, and callers must render
+ * no prompt at all in that case.
+ *
+ * `mixed` was the previous answer and is wrong: it asserts that the list spans
+ * both sides of the line, which is a claim about data that is absent — the same
+ * class of mistake as rendering 0% for a gap that is not computable. Both call
+ * sites can reach it (a group whose ordinals no longer resolve against the
+ * fetched rows; a report with no frozen decomposition), and only one of them used
+ * to guard, so the guard belongs here where it cannot be forgotten.
+ *
+ * ⚠️ Typed off the DTO rather than as `string`. Through `string` these comparisons
+ * still compile after the API renames an enum member, and every group would then
+ * fall silently to the mixed prompt.
+ */
+export const foldDeviationDirection = (
+  payStatuses: readonly (WageGapEmployeeDto['payStatus'] | null | undefined)[],
+): DeviationDirection | undefined => {
+  let below = false
+  let above = false
+  for (const status of payStatuses) {
+    if (status === 'UNDERPAID') below = true
+    else if (status === 'OVERPAID') above = true
+  }
+  if (below && !above) return 'below'
+  if (above && !below) return 'above'
+  return below && above ? 'mixed' : undefined
+}
 
 /**
  * A percentage to one decimal, or an em dash when not computable. `signed` adds

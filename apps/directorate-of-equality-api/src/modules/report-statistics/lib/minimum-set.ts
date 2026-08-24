@@ -9,9 +9,12 @@ import { SalaryAnalysisOutlierDto } from '../dto/salary-analysis.response.dto'
  * about, and the single definition of "flagged" now that the ±1,95% band is
  * retired.
  *
- * Membership means: *the fewest underpaid members of the disadvantaged gender
- * whose correction brings óskýrt (leiðréttur launamunur) under the statutory
- * benchmark.*
+ * Membership means: *the fewest employees CARRYING óskýrt whose correction
+ * brings it (leiðréttur launamunur) under the statutory benchmark.*
+ *
+ * Carrying means their framlag shares the sign of óskýrt — the underpaid on the
+ * disadvantaged side, and the overpaid on the advantaged side. Both pull the gap
+ * open, so both are candidates, and `payStatus` says which a given row is.
  *
  * ⚠️ **This is a property of the SET, not of the person.** The old band was
  * per-employee — `|frávik| ≥ 1,95%` was a fact about one row, answerable
@@ -22,14 +25,23 @@ import { SalaryAnalysisOutlierDto } from '../dto/salary-analysis.response.dto'
  * answer to *"why me and not my colleague?"* is "you carried more of the gap
  * and N corrections were enough" — not anything about that person alone.
  *
- * Two further consequences worth knowing before writing copy against this:
+ * Three further consequences worth knowing before writing copy against this:
  *
- * - **It is lift-only.** Candidates are underpaid members of the disadvantaged
- *   gender, so the set can never propose cutting anyone's pay. Overpaid staff
- *   are never members — under the band they were flagged just as loudly.
+ * - **It runs in both directions, and still prescribes nothing.** A member may
+ *   sit above the line as easily as below it. Nothing here proposes cutting
+ *   anyone's pay: being listed obliges the employer to supply a reason and an
+ *   action, and improvement is demonstrated at company level at the next report.
+ *   The counterfactual correction is how the list is CHOSEN, not a payment
+ *   instruction. Asked about someone above the line, the likeliest honest answer
+ *   is that the job evaluation understates the role — in which case the fix is to
+ *   the evaluation and no pay moves at all.
+ * - **The two directions are different questions** and must not share one
+ *   prompt. `payStatus` carries the direction per row so the copy can branch;
+ *   the explanation itself lives on the GROUP, which may span both.
  * - **A compliant company flags nobody.** When óskýrt is already under the
  *   benchmark the set is empty, and that is the intended signal rather than an
- *   absence of analysis.
+ *   absence of analysis. An empty set does NOT imply compliance in the other
+ *   direction, though — read `oskyrtWithinBenchmark` for that.
  */
 export function selectMinimumSet(
   snapshot: WageGapDecompositionSnapshot,

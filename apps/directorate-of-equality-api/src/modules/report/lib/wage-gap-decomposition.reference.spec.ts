@@ -82,7 +82,7 @@ describe('wage-gap-decomposition against the reference cohort', () => {
   })
 
   it('reproduces the correctable population and the lágmarksmengi', () => {
-    expect(snapshot.correctableCount).toBe(31)
+    expect(snapshot.gapCarrierCount).toBe(73)
     expect(snapshot.minimumSetSize).toBe(5)
   })
 
@@ -117,7 +117,7 @@ describe('wage-gap-decomposition against the reference cohort', () => {
    * against a triple-digit flag list.
    */
   it('needs far fewer corrections than the retired fixed band would have flagged', () => {
-    expect(snapshot.minimumSetSize).toBeLessThan(snapshot.correctableCount / 5)
+    expect(snapshot.minimumSetSize).toBeLessThan(snapshot.gapCarrierCount / 5)
   })
 
   it('still satisfies the identities on real-shaped data', () => {

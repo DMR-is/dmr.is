@@ -35,9 +35,14 @@ export const AUTO_REVIEW_ENFORCE = false
  *   óskýrt in both directions (13,4% vs 7,84% on the demo sheet; 4,50% vs 5,80%
  *   on a constructed cohort).
  *
- * Together they overrode a signal that was already correct. Verified 2026-08-20
- * over 800 synthetic cohorts: `minimumSetSize > 0` and "óskýrt exceeds the
- * benchmark" agree everywhere except at a ~1,4×10⁻¹⁵ floating-point boundary,
- * where the *unrounded* comparison is the right one — which is another reason to
- * read the set rather than compare rounded percentages.
+ * Together they overrode a signal that was already correct.
+ *
+ * ⚠️ That signal is `oskyrtWithinBenchmark`, NOT `minimumSetSize > 0`. Verified
+ * 2026-08-20 over 800 synthetic cohorts, the two agreed everywhere except at a
+ * ~1,4×10⁻¹⁵ floating-point boundary — but that equivalence was a property of the
+ * lift-only walk, which always committed its first candidate. The
+ * two-directional walk can decline every candidate, so an empty set over the
+ * benchmark is reachable and the two no longer agree. The unrounded comparison is
+ * still the right one, which is why the engine computes the flag once rather than
+ * leaving consumers to compare rounded percentages.
  */

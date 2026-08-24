@@ -62,8 +62,22 @@ const columns: ColumnDef<ReportEmployeeOutlierDto>[] = [
     id: 'deviationPercent',
     header: o.deviationHeader,
     accessorFn: (row) => row.deviationPercent ?? 0,
-    cell: ({ row }) =>
-      formatPercent(row.original.deviationPercent, { signed: true }),
+    // The signed percentage already carries the direction, but only to a
+    // reader who knows the sign convention. The word says it outright, which
+    // matters now that a row can be listed for being paid ABOVE its stig — the
+    // opposite of what a reader who remembers the lift-only set would assume.
+    cell: ({ row }) => {
+      const percent = formatPercent(row.original.deviationPercent, {
+        signed: true,
+      })
+      const word =
+        row.original.payStatus === 'UNDERPAID'
+          ? o.directionBelow
+          : row.original.payStatus === 'OVERPAID'
+            ? o.directionAbove
+            : null
+      return word ? `${percent} (${word})` : percent
+    },
     // ⚠️ NOT sortable, and it cannot be. `report_employee_outlier` has exactly
     // two real columns (`report_employee_id`, `group_id`); this value is
     // injected from `wage_gap_decomposition_snapshot.employees` when the DTO is

@@ -146,9 +146,16 @@ export type WageGapEmployeeSnapshot = {
   /** framlag / oskyrtLog × 100. Null when óskýrt is exactly 0. */
   contributionShare: number | null
   payStatus: PayStatusEnum
-  /** UNDERPAID *and* of the disadvantaged gender — i.e. liftable. */
-  isCorrectable: boolean
-  /** Member of the lágmarksmengi: the fewest lifts that reach compliance. */
+  /**
+   * This employee's framlag shares the sign of `oskyrtLog` — they carry part of
+   * the gap rather than offsetting it, and are therefore eligible for the
+   * lágmarksmengi walk. Which SIDE of the line they sit on is `payStatus`.
+   *
+   * Two quadrants qualify: UNDERPAID on the disadvantaged side, and OVERPAID on
+   * the advantaged side. The other two offset the gap and are never candidates.
+   */
+  widensGap: boolean
+  /** Member of the lágmarksmengi: the fewest corrections that reach compliance. */
   inMinimumSet: boolean
 }
 
@@ -189,21 +196,57 @@ export type WageGapDecompositionSnapshot = {
 
   disadvantagedGender: WageGapDirectionEnum | null
   employees: WageGapEmployeeSnapshot[]
-  correctableCount: number
+  /**
+   * How many employees carry the gap (`widensGap`). A POPULATION, not a
+   * compliance signal — it is the pool the walk selects from, and a compliant
+   * company can still have a large one. For compliance read
+   * `oskyrtWithinBenchmark`.
+   */
+  gapCarrierCount: number
   minimumSetSize: number
+  /**
+   * **The** compliance boolean: `|oskyrtLog| <= thresholdLog`, evaluated on the
+   * unrounded log gap. Null when there is no computable gap.
+   *
+   * ⚠️ Read this rather than re-deriving compliance from `minimumSetSize > 0`
+   * or by comparing a rounded percentage to the benchmark. Those two used to
+   * agree with it and no longer always do: the walk can decline to commit a
+   * candidate that would push the gap further out, so an empty set is reachable
+   * on a company that is over the benchmark.
+   */
+  oskyrtWithinBenchmark: boolean | null
   /**
    * óskýrt after the set's counterfactual correction, RECOMPUTED — a refitted
    * figure, not `|óskýrt| − Σ|framlag|`. Magnitude.
    */
   oskyrtLogAfterMinimumSet: number | null
   /**
+   * Which gender óskýrt disfavours AFTER the set's correction. Needed because
+   * `oskyrtLogAfterMinimumSet` is a magnitude, and a two-sided correction can
+   * overshoot: the residual gap may now run the other way. `NONE` when it lands
+   * exactly on zero, null when there is no computable gap.
+   */
+  oskyrtDirectionAfterMinimumSet: WageGapDirectionEnum | null
+  /**
    * Whether correcting the set would actually bring óskýrt within the benchmark.
    *
-   * `false` means the walk ran out of people to lift: the gap is carried by the
-   * advantaged group sitting above the line, and no set of raises on the
-   * disadvantaged side reaches the benchmark. The list is still the right list
-   * to account for — it just must not be presented as closing the gap. Null when
-   * there is no computable gap at all.
+   * ⚠️ **NOT the compliance flag.** That is `oskyrtWithinBenchmark`, which asks
+   * whether the company is over the benchmark NOW. This one asks whether the
+   * selected list is sufficient to get it under, which is a different question
+   * and answers `true` on a company that is currently over.
+   *
+   * `false` means the walk could not land inside `[−θ, +θ]`. Under the
+   * two-directional pool that is an OVER-correction, not a shortfall: the pool
+   * spans both sides, so exhausting it does not converge on zero but on
+   * `−N − Δβ·(s̄_M − s̄_W)` — the far side, with the disadvantaged gender now
+   * advantaged. Every candidate that remains would push the gap further out,
+   * which is why the probe guard declines them. (It read the other way before the
+   * pool widened: "ran out of people to lift".) Null when there is no computable
+   * gap at all.
+   *
+   * The list is still the right list to account for; it just must not be
+   * presented as closing the gap — and `oskyrtDirectionAfterMinimumSet` says
+   * which way the residual runs.
    *
    * ⚠️ Do NOT re-derive this by comparing `oskyrtLogAfterMinimumSet` to
    * `thresholdLog` and expecting agreement at the boundary; read this flag.
@@ -335,9 +378,11 @@ const emptySnapshot = (
   oskyrtPercentLowerBase: null,
   disadvantagedGender: null,
   employees: [],
-  correctableCount: 0,
+  gapCarrierCount: 0,
   minimumSetSize: 0,
+  oskyrtWithinBenchmark: null,
   oskyrtLogAfterMinimumSet: null,
+  oskyrtDirectionAfterMinimumSet: null,
   minimumSetClosesGap: null,
   thresholdLog: thresholdLogFor(benchmarkPercent),
   benchmarkPercent,
@@ -349,6 +394,18 @@ const emptySnapshot = (
  */
 export function thresholdLogFor(benchmarkPercent: number): number {
   return -Math.log(1 - benchmarkPercent / 100)
+}
+
+/**
+ * Which gender a signed log gap disfavours. Positive means men earn more, so
+ * the gap is í óhag kvenna. Exactly zero is `NONE` rather than a coin flip.
+ */
+function directionOfLogGap(signedLogGap: number): WageGapDirectionEnum {
+  return signedLogGap > 0
+    ? WageGapDirectionEnum.FEMALE
+    : signedLogGap < 0
+      ? WageGapDirectionEnum.MALE
+      : WageGapDirectionEnum.NONE
 }
 
 /** One fit's worth of output: the gap, its split, and each employee's part. */
@@ -406,6 +463,17 @@ function attributeGap(
         ? WageGapDirectionEnum.MALE
         : WageGapDirectionEnum.NONE
 
+  /**
+   * The other side. `NONE` stays `NONE` so neither quadrant matches and no
+   * employee is a carrier — correct when there is no gap to carry.
+   */
+  const advantagedGender: WageGapDirectionEnum =
+    disadvantagedGender === WageGapDirectionEnum.FEMALE
+      ? WageGapDirectionEnum.MALE
+      : disadvantagedGender === WageGapDirectionEnum.MALE
+        ? WageGapDirectionEnum.FEMALE
+        : WageGapDirectionEnum.NONE
+
   const employees: WageGapEmployeeSnapshot[] = usable.map((employee) => {
     const fitted =
       (pooledFit.intercept ?? 0) +
@@ -439,9 +507,18 @@ function attributeGap(
       contributionShare:
         oskyrtLog === 0 ? null : (contributionLog / oskyrtLog) * 100,
       payStatus,
-      isCorrectable:
-        payStatus === PayStatusEnum.UNDERPAID &&
-        employeeGenderSide === disadvantagedGender,
+      // ⚠️ Written from the enums, NOT as `Math.sign(contributionLog) ===
+      // Math.sign(oskyrtLog)`. `Math.sign(0) === 0`, so the arithmetic form
+      // flags every ON_LINE employee as a carrier when óskýrt is exactly zero —
+      // a state this function reaches, because it computes the flag before the
+      // walk's early return. Checked against the sign test in all four
+      // quadrants: they agree everywhere the sign test is meaningful.
+      widensGap:
+        payStatus === PayStatusEnum.UNDERPAID
+          ? employeeGenderSide === disadvantagedGender
+          : payStatus === PayStatusEnum.OVERPAID
+            ? employeeGenderSide === advantagedGender
+            : false,
       inMinimumSet: false,
     }
   })
@@ -456,51 +533,187 @@ function attributeGap(
   }
 }
 
+type MinimumSetWalk = {
+  chosen: Set<number>
+  oskyrtLogAfter: number
+  /** Signed, so the caller can report which way any residual gap runs. */
+  oskyrtLogAfterSigned: number
+  closesGap: boolean
+}
+
+/**
+ * One greedy pass down an ordered pool.
+ *
+ * `guarded` turns on probe-before-commit, which is what makes a two-directional
+ * pool safe. A one-directional walk can only ever move óskýrt toward zero, so
+ * every step is an improvement by construction. A two-directional walk can move
+ * it THROUGH zero: a candidate carrying more than twice the remaining gap
+ * overshoots, and every later pick then makes things worse. Measured over
+ * synthetic cohorts, an unguarded two-sided walk closed the gap LESS often than
+ * lift-only for small, high-dispersion companies — and sometimes named more
+ * people while doing it.
+ *
+ * The guard needs no new constant or tolerance. A candidate is committed only if
+ * the refitted gap lands inside the benchmark, or is strictly closer to zero
+ * than before. Anything else would widen the gap, and a member that widens the
+ * gap cannot belong to a minimal set that closes it.
+ */
+function walkPool(
+  usable: WageGapEmployeeInput[],
+  isMale: (employee: WageGapEmployeeInput) => boolean,
+  thresholdLog: number,
+  initial: GapAttribution,
+  targetFor: (ordinal: number) => number,
+  pool: WageGapEmployeeSnapshot[],
+  guarded: boolean,
+): MinimumSetWalk {
+  const running = makeIncrementalGap(usable, isMale, initial)
+
+  const chosen = new Set<number>()
+  let signed = initial.oskyrtLog
+  let gap = Math.abs(signed)
+
+  for (const candidate of pool) {
+    const target = targetFor(candidate.ordinal)
+
+    if (guarded) {
+      const probed = Math.abs(running.probe(candidate.ordinal, target))
+      if (probed > thresholdLog && probed >= gap) continue
+    }
+
+    chosen.add(candidate.ordinal)
+    signed = running.commit(candidate.ordinal, target)
+    gap = Math.abs(signed)
+
+    if (gap <= thresholdLog) {
+      return {
+        chosen,
+        oskyrtLogAfter: gap,
+        oskyrtLogAfterSigned: signed,
+        closesGap: true,
+      }
+    }
+  }
+
+  return {
+    chosen,
+    oskyrtLogAfter: gap,
+    oskyrtLogAfterSigned: signed,
+    closesGap: false,
+  }
+}
+
+/**
+ * Picks between two candidate walks, on one objective in three tiers:
+ *
+ * 1. Landing inside the benchmark beats not landing inside it.
+ * 2. Among walks that land, name fewer people. Being named carries an
+ *    obligation, so two more than necessary is a real unfairness.
+ * 3. Among walks that do not, get closer — more of the gap accounted for. On an
+ *    exact tie, fall back to tier 2's reasoning and name fewer people.
+ *
+ * Ties go to `preferred`, the two-directional result: equal burden, and the
+ * question asked of someone paid above their starfsmatsstig is usually the more
+ * productive one (the likeliest honest answer is that the job evaluation is
+ * wrong, which costs nobody their pay).
+ *
+ * ⚠️ Tier 3 weighs the residual ABOVE the size of the set, so a walk that names
+ * eight people can beat one that names one for an arbitrarily small reduction in
+ * the residual. That is a deliberate choice and not obviously the right one — but
+ * the alternative needs a tolerance ("close enough to prefer the shorter list"),
+ * and an arbitrary constant is what this module is built to avoid; the probe
+ * guard was written the way it was for the same reason. Neither walk closing also
+ * means the report is going to manual review regardless, where the residual is
+ * the more useful of the two facts. Worth revisiting WITH the Directorate rather
+ * than settling here.
+ */
+function betterWalk(
+  preferred: MinimumSetWalk,
+  fallback: MinimumSetWalk,
+): MinimumSetWalk {
+  if (preferred.closesGap !== fallback.closesGap) {
+    return preferred.closesGap ? preferred : fallback
+  }
+  if (preferred.closesGap) {
+    return preferred.chosen.size <= fallback.chosen.size ? preferred : fallback
+  }
+  if (preferred.oskyrtLogAfter !== fallback.oskyrtLogAfter) {
+    return preferred.oskyrtLogAfter < fallback.oskyrtLogAfter
+      ? preferred
+      : fallback
+  }
+  // Identical residuals — no tolerance involved, so tier 2's rule applies
+  // cleanly: the same outcome for fewer people named.
+  return preferred.chosen.size <= fallback.chosen.size ? preferred : fallback
+}
+
 /**
  * The lágmarksmengi: the fewest employees who have to be accounted for.
  *
- * ⚠️ **A SELECTION device, not a prescription.** The counterfactual lift below
- * is how the list is chosen; it is not a raise anyone is being told to give. The
- * úrbótaáætlun asks the company for a reason and an action per listed employee,
- * and improvement is demonstrated at company level at the next report — so the
- * only thing that matters here is that the list be minimal and defensible.
- * Naming a person carries a burden, and naming two more than necessary is a real
- * unfairness even though no money is prescribed.
+ * ⚠️ **A SELECTION device, not a prescription.** The counterfactual correction
+ * below is how the list is chosen; it is not a raise — or a cut — anyone is
+ * being told to make. The úrbótaáætlun asks the company for a reason and an
+ * action per listed employee, and improvement is demonstrated at company level
+ * at the next report, so the only thing that matters here is that the list be
+ * minimal and defensible. Naming a person carries a burden, and naming two more
+ * than necessary is a real unfairness even though no money is prescribed.
+ *
+ * ⚠️ **Two-directional.** Candidates are everyone whose framlag shares the sign
+ * of óskýrt: the underpaid on the disadvantaged side AND the overpaid on the
+ * advantaged side. There is no separate rule for the second group — the pool
+ * simply widens to everyone pulling the gap open, and the existing
+ * biggest-carrier-first ordering picks whoever carries most. In an imbalanced
+ * workforce that is usually the well-paid few, which is why the list gets
+ * SHORTER rather than longer.
+ *
+ * Being listed as paid ABOVE your starfsmatsstig asks a different question from
+ * being listed as paid below them, and the likeliest honest answer is that the
+ * job evaluation is wrong — the correction then goes to the evaluation and
+ * nobody's pay moves at all. `payStatus` carries the direction per row so the
+ * two can be prompted differently.
  *
  * ⚠️ **Refits after every pick, and that is the whole point.** This used to be
  * `running -= |contributionLog|` over a candidate list sorted once — arithmetic
  * on a fit that was never recomputed. But óskýrt is
  * `rawGapLog − (s̄_M − s̄_W)·β*₁`, and β*₁ is fitted to the very wages being
- * changed: raising one person moves the line and every other residual with it.
+ * changed: moving one person moves the line and every other residual with it.
  * The omitted term is `−(s̄_M − s̄_W)·(xᵢ − x̄)·Δy / SSx`, zero only when the two
  * genders happen to share a mean score. Measured over synthetic cohorts, the
  * old estimate put the set at 16 where a refit needs 14, and elsewhere claimed
  * compliance at cohorts that were still over the benchmark after correction —
  * wrong in both directions, so not even conservative.
  *
- * There is no new constant and no tolerance: the loop stops when the RECOMPUTED
- * gap is within the same statutory `thresholdLog`, or when the side runs out.
+ * There is no new constant and no tolerance anywhere in here. The walk stops
+ * when the RECOMPUTED gap is within the same statutory `thresholdLog`, or when
+ * the pool runs out — see {@link walkPool} for why a two-directional pool needs
+ * a probe before each commit, and {@link betterWalk} for why the narrower
+ * one-directional pool is walked as well.
  *
  * ⚠️ Identity is by `ordinal`, which `assertParsedPayloadIntegrity` guarantees
- * unique upstream. Duplicated ordinals would lift more than one row per pick.
+ * unique upstream. Duplicated ordinals would move more than one row per pick.
  */
 function selectMinimumSet(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
   thresholdLog: number,
   initial: GapAttribution,
-): { chosen: Set<number>; oskyrtLogAfter: number; closesGap: boolean } {
+): MinimumSetWalk {
   const initialGap = Math.abs(initial.oskyrtLog)
   if (initialGap <= thresholdLog) {
-    return { chosen: new Set(), oskyrtLogAfter: initialGap, closesGap: true }
+    return {
+      chosen: new Set(),
+      oskyrtLogAfter: initialGap,
+      oskyrtLogAfterSigned: initial.oskyrtLog,
+      closesGap: true,
+    }
   }
 
-  // ⚠️ Lift targets come from the ORIGINAL fit — the very
+  // ⚠️ Correction targets come from the ORIGINAL fit — the very
   // `expectedHourlyWage` the snapshot publishes for each employee and the
   // úrbótaáætlun table prints as `Væntanlegt tímakaup`. That is deliberate and
-  // it is the reason this is not a step-by-step refit of the lift AMOUNTS: a
-  // reviewer must be able to take the published set, raise each member to the
-  // published figure, re-run the engine and land on exactly
+  // it is the reason this is not a step-by-step refit of the correction
+  // AMOUNTS: a reviewer must be able to take the published set, move each
+  // member to the published figure, re-run the engine and land on exactly
   // `oskyrtLogAfterMinimumSet`. Re-deriving targets from intermediate fits gave
   // a marginally different number that appeared nowhere in the snapshot and so
   // could not be audited or reproduced.
@@ -511,44 +724,86 @@ function selectMinimumSet(
     ]),
   )
 
-  // Ordered once, biggest carrier of óskýrt first. Greedy, so "fewest" is an
-  // approximation rather than a proven optimum — as it was before — but the
-  // STOPPING TEST is a real refit rather than a running subtraction.
-  const candidates = initial.employees
-    .filter((employee) => employee.isCorrectable)
-    .sort((a, b) => Math.abs(b.contributionLog) - Math.abs(a.contributionLog))
-
-  const gapAfter = makeIncrementalGap(usable, isMale, initial)
-
-  const chosen = new Set<number>()
-  let gap = initialGap
-  for (const candidate of candidates) {
-    chosen.add(candidate.ordinal)
-    gap = Math.abs(
-      gapAfter(candidate.ordinal, targets.get(candidate.ordinal) ?? 0),
-    )
-    if (gap <= thresholdLog) {
-      return { chosen, oskyrtLogAfter: gap, closesGap: true }
+  /** Throws on a miss rather than passing 0 into the refit. See `stepOf`. */
+  const targetFor = (ordinal: number): number => {
+    const target = targets.get(ordinal)
+    if (target === undefined) {
+      throw new Error(
+        `selectMinimumSet: no published target for ordinal ${ordinal}`,
+      )
     }
+    return target
   }
 
-  // Exhausted. The gap is carried by people this side cannot reach — most often
-  // a small, well-paid advantaged group sitting above the line — so no set of
-  // raises here closes it. The list still stands as the employees to account
-  // for; it simply must not be presented as closing the gap.
+  // Ordered once, biggest carrier of óskýrt first. Greedy, so "fewest" is an
+  // approximation rather than a proven optimum, but the STOPPING TEST is a real
+  // refit rather than a running subtraction.
   //
-  // ⚠️ `chosen` is empty here only if the pool was empty to begin with, which an
-  // OLS reference makes unreachable: óskýrt ≠ 0 forces the disadvantaged
-  // cohort's residuals to sum against it, so at least one member is strictly
-  // below the line. Kept as a defensive branch — non-emptiness is guaranteed by
-  // the fit, not by this function.
-  return { chosen, oskyrtLogAfter: gap, closesGap: false }
+  // ⚠️ The ordinal tie-break is load-bearing, not cosmetic. Two employees on
+  // an identical rate at an identical score — an ordinary pay grade — have
+  // bit-identical |contributionLog|. Array#sort is stable, so without this
+  // the winner is decided by INPUT order, and the two queries feeding this
+  // (report-result.service and report-draft-analysis.service) return
+  // whatever order Postgres hands back. If only one of the pair fits inside
+  // the set, the preview and the submit can disagree about who is in it and
+  // the submit guard rejects with "Detected outlier(s) missing from the
+  // outlier groups". Both halves are fixed: this comparator, and an explicit
+  // `order` on both queries.
+  const carriers = initial.employees
+    .filter((employee) => employee.widensGap)
+    .sort(
+      (a, b) =>
+        Math.abs(b.contributionLog) - Math.abs(a.contributionLog) ||
+        a.ordinal - b.ordinal,
+    )
+
+  // ⚠️ Both walks are run, and the better result wins. Two-directional is a
+  // large improvement on average and a REGRESSION on a small tail — there are
+  // cohort shapes where lift-only closes the gap and two-sided, guard and all,
+  // does not. Running the narrower pool as well costs one extra O(n) pass and
+  // guarantees no company gets a worse answer than the one-directional rule
+  // would have given it. That guarantee is worth more than the pass costs.
+  const twoDirectional = walkPool(
+    usable,
+    isMale,
+    thresholdLog,
+    initial,
+    targetFor,
+    carriers,
+    true,
+  )
+  const liftOnly = walkPool(
+    usable,
+    isMale,
+    thresholdLog,
+    initial,
+    targetFor,
+    carriers.filter(
+      (employee) => employee.payStatus === PayStatusEnum.UNDERPAID,
+    ),
+    false,
+  )
+
+  return betterWalk(twoDirectional, liftOnly)
 }
 
 /**
- * Returns a function that applies one more counterfactual lift and gives back
- * the resulting óskýrt — **exactly** what a full refit would produce, in O(1)
- * per call instead of O(n).
+ * Returns a pair of operations over a running fit: `probe` reports the óskýrt
+ * that a counterfactual correction WOULD produce, and `commit` applies it and
+ * reports the same figure — each **exactly** what a full refit would produce,
+ * in O(1) per call instead of O(n).
+ *
+ * `probe` exists so a caller can reject a candidate before it is applied
+ * without having to commit-and-restore. Restoring is not bit-exact — floating
+ * addition is not associative, so `x + d - d !== x` in general — and this
+ * figure is published as `oskyrtLogAfterMinimumSet`, which a reviewer is
+ * invited to reproduce. A separate read-only computation avoids putting drift
+ * of that kind into a regulatory number.
+ *
+ * ⚠️ **Both directions are supported.** Every operation below is linear in
+ * `Δ` — no absolute values, no branch on its sign — so moving an OVERPAID
+ * employee DOWN onto the line is the same arithmetic as lifting an UNDERPAID
+ * one up, with `Δ < 0`.
  *
  * ⚠️ **This is a performance fix for a real problem, not a micro-optimisation.**
  * Calling {@link attributeGap} once per candidate is O(n) per step over up to
@@ -577,11 +832,18 @@ function selectMinimumSet(
  * (see {@link PooledReferenceModeEnum}), and re-adding it would need a fallback
  * to full recomputation here.
  */
+type IncrementalGap = {
+  /** óskýrt if this correction were applied. Does not mutate. */
+  probe: (ordinal: number, correctedWage: number) => number
+  /** Applies the correction and returns the resulting óskýrt. */
+  commit: (ordinal: number, correctedWage: number) => number
+}
+
 function makeIncrementalGap(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
   initial: GapAttribution,
-): (ordinal: number, liftedWage: number) => number {
+): IncrementalGap {
   const logWage = (employee: WageGapEmployeeInput) =>
     Math.log(employee.hourlyWage)
 
@@ -610,29 +872,56 @@ function makeIncrementalGap(
     usable.map((employee) => [employee.ordinal, logWage(employee)]),
   )
 
-  return (ordinal, liftedWage) => {
+  /** óskýrt implied by a candidate Sxy and pair of side means. Pure. */
+  const gapFrom = (sxy: number, male: number, female: number): number =>
+    male - female - scoreMeanDiff * (xSumSquares > 0 ? sxy / xSumSquares : 0)
+
+  /**
+   * Resolves one step. Throws rather than returning the unchanged gap: the
+   * previous version silently reported "no movement" for an unknown ordinal or
+   * a non-positive target, which read to the caller as a candidate that failed
+   * to help — indistinguishable from a genuine one, and it had already been
+   * added to the set by then.
+   */
+  const stepOf = (ordinal: number, correctedWage: number) => {
     const employee = byOrdinal.get(ordinal)
-    if (!employee || liftedWage <= 0) {
-      return maleLogMean - femaleLogMean - scoreMeanDiff * currentSlope()
+    if (!employee) {
+      throw new Error(
+        `makeIncrementalGap: ordinal ${ordinal} is not in the analysed cohort`,
+      )
     }
-
-    const previous = currentLog.get(ordinal) ?? logWage(employee)
-    const next = Math.log(liftedWage)
-    const delta = next - previous
-    currentLog.set(ordinal, next)
-
-    sumXy += (buildDesign(employee) - xMean) * delta
-    if (isMale(employee)) {
-      maleLogMean += delta / nMale
-    } else {
-      femaleLogMean += delta / nFemale
+    if (!Number.isFinite(correctedWage) || correctedWage <= 0) {
+      throw new Error(
+        `makeIncrementalGap: ordinal ${ordinal} has a non-positive correction target (${correctedWage})`,
+      )
     }
-
-    return maleLogMean - femaleLogMean - scoreMeanDiff * currentSlope()
+    const next = Math.log(correctedWage)
+    const delta = next - (currentLog.get(ordinal) ?? logWage(employee))
+    return { employee, next, delta }
   }
 
-  function currentSlope(): number {
-    return xSumSquares > 0 ? sumXy / xSumSquares : 0
+  return {
+    probe(ordinal, correctedWage) {
+      const { employee, delta } = stepOf(ordinal, correctedWage)
+      const male = isMale(employee)
+      return gapFrom(
+        sumXy + (buildDesign(employee) - xMean) * delta,
+        male ? maleLogMean + delta / nMale : maleLogMean,
+        male ? femaleLogMean : femaleLogMean + delta / nFemale,
+      )
+    },
+
+    commit(ordinal, correctedWage) {
+      const { employee, next, delta } = stepOf(ordinal, correctedWage)
+      currentLog.set(ordinal, next)
+      sumXy += (buildDesign(employee) - xMean) * delta
+      if (isMale(employee)) {
+        maleLogMean += delta / nMale
+      } else {
+        femaleLogMean += delta / nFemale
+      }
+      return gapFrom(sumXy, maleLogMean, femaleLogMean)
+    },
   }
 }
 
@@ -738,9 +1027,13 @@ export function computeWageGapDecomposition(input: {
     oskyrtPercentLowerBase: lowerBasePercent(oskyrtLog),
     disadvantagedGender,
     employees,
-    correctableCount: employees.filter((e) => e.isCorrectable).length,
+    gapCarrierCount: employees.filter((e) => e.widensGap).length,
     minimumSetSize: employees.filter((e) => e.inMinimumSet).length,
+    oskyrtWithinBenchmark: Math.abs(oskyrtLog) <= thresholdLog,
     oskyrtLogAfterMinimumSet: selection.oskyrtLogAfter,
+    oskyrtDirectionAfterMinimumSet: directionOfLogGap(
+      selection.oskyrtLogAfterSigned,
+    ),
     minimumSetClosesGap: selection.closesGap,
     thresholdLog,
     benchmarkPercent,

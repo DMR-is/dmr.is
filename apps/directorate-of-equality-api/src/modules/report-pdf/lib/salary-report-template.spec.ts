@@ -47,6 +47,11 @@ function makeData(
       wageGapDecomposition: {
         rawGapPercent: 7.72,
         rawGapDirection: 'FEMALE',
+        // The default fixture is a COMPLIANT company, stated explicitly rather
+        // than implied by `outliers` being empty. The úrbótaáætlun's empty state
+        // reads this flag, so leaving it out would make the compliant copy the
+        // fixture's accident instead of its subject.
+        oskyrtWithinBenchmark: true,
       },
     },
   } as unknown as ReportDetailDto
@@ -125,6 +130,58 @@ describe('buildSalaryReportHtml', () => {
     )
   })
 
+  /**
+   * ⚠️ The regression this section exists to prevent.
+   *
+   * An empty list used to imply compliance and no longer does: the
+   * two-directional walk probes before committing and can decline every
+   * candidate, so a company over the benchmark can come back with nothing
+   * listed (see the 4,88% four-employee cohort in
+   * `wage-gap-decomposition.spec.ts`). Keyed on `outliers.length` alone this
+   * would print *engar úrbætur nauðsynlegar* onto the PDF of record.
+   */
+  it('does not claim compliance for an empty set on a company over the benchmark', () => {
+    const data = makeData()
+    const html = buildSalaryReportHtml({
+      ...data,
+      report: {
+        ...data.report,
+        result: {
+          ...data.report.result,
+          wageGapDecomposition: {
+            ...data.report.result?.wageGapDecomposition,
+            oskyrtWithinBenchmark: false,
+          },
+        },
+      } as unknown as ReportDetailDto,
+    })
+
+    expect(html).not.toContain('Engar úrbætur nauðsynlegar')
+    expect(html).toContain('Óskýrður launamunur er yfir viðmiði')
+    expect(html).toContain('krefst yfirferðar')
+  })
+
+  /**
+   * Absent, not false — the shape an older frozen snapshot has, and the shape
+   * every report has before its result is computed. `undefined === true` is
+   * false, so this must not read as compliant either; it must not read as a
+   * failed walk either, because no walk was run.
+   */
+  it('claims neither compliance nor a failed walk when the flag is absent', () => {
+    const data = makeData()
+    const html = buildSalaryReportHtml({
+      ...data,
+      report: {
+        ...data.report,
+        result: undefined,
+      } as unknown as ReportDetailDto,
+    })
+
+    expect(html).not.toContain('Engar úrbætur nauðsynlegar')
+    expect(html).not.toContain('Óskýrður launamunur er yfir viðmiði')
+    expect(html).toContain('Ekkert lágmarksmengi var valið')
+  })
+
   it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {
     const outliers = [
       {
@@ -137,6 +194,19 @@ describe('buildSalaryReportHtml', () => {
         payStatus: 'UNDERPAID',
         contributionShare: 42.5,
       },
+      // The other direction, in the same table. A PDF reader cannot ask which
+      // way a row runs, and both admin tables spell it out, so this one must
+      // too — the sign alone only works for a reader who knows the convention.
+      {
+        employeeOrdinal: 7,
+        roleTitle: 'Deildarstjóri',
+        gender: GenderEnum.MALE,
+        regularHourlyWage: 6300,
+        expectedHourlyWage: 6000,
+        deviationPercent: 5,
+        payStatus: 'OVERPAID',
+        contributionShare: 31,
+      },
     ] as unknown as ReportEmployeeOutlierDto[]
 
     const html = buildSalaryReportHtml(makeData({ outliers }))
@@ -147,9 +217,15 @@ describe('buildSalaryReportHtml', () => {
     // salary two orders of magnitude too low.
     expect(html).toContain('4.750 kr./klst.')
     expect(html).toContain('5.000 kr./klst.')
-    expect(html).toContain('-5,0%')
     expect(html).toContain('42,5%')
     expect(html).toContain('Hlutur af óskýrðu')
     expect(html).not.toContain('Engar úrbætur nauðsynlegar')
+
+    // Direction in words on BOTH rows, beside the signed percentage. Asserted
+    // as the whole cell rather than as two separate substrings, so a regression
+    // that drops the word cannot pass on the percentage alone.
+    expect(html).toContain('-5,0% (undir)')
+    expect(html).toContain('+5,0% (yfir)')
+    expect(html).toContain('Deildarstjóri')
   })
 })
