@@ -434,8 +434,10 @@ export class ReportCreateService implements IReportCreateService {
    * preview".
    *
    * ⚠️ Was the ±1,95% band around a fitted line. See `selectMinimumSet`: the set
-   * is lift-only, and an already-compliant company yields an EMPTY set, which
-   * makes `assertOutlierGroupsMatchDetected` below require no groups at all.
+   * is two-directional, so a returned ordinal may be someone paid ABOVE their
+   * stig, and an already-compliant company yields an EMPTY set, which makes
+   * `assertOutlierGroupsMatchDetected` below require no groups at all. The guard
+   * itself is indifferent to direction — it compares ordinals.
    */
   private async computeDetectedOutlierOrdinals(
     input: CreateReportDto,

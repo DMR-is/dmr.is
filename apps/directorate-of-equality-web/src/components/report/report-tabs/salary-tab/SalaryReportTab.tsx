@@ -10,7 +10,7 @@ import {
   type WageGapDecompositionDto,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
-import { formatSalary } from '../../../../lib/utils'
+import { foldDeviationDirection, formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { PayComponentsTable } from './PayComponentsTable'
@@ -55,6 +55,10 @@ export const SalaryReportTab = ({
     )
   }
 
+  const members = (decomposition?.employees ?? []).filter(
+    (employee) => employee.inMinimumSet,
+  )
+
   return (
     <Stack space={6}>
       <SalaryDistributionChart data={data} decomposition={decomposition} />
@@ -74,6 +78,22 @@ export const SalaryReportTab = ({
             reportId={reportId}
             groups={groups}
             minimumSetSize={decomposition?.minimumSetSize}
+            // ⚠️ Folded over the SNAPSHOT, not over the table's rows. The
+            // groups below are paged at 10, so folding the fetched rows would
+            // report "below" for a group whose overpaid member happens to sit
+            // on page 2. The snapshot carries every member of the set.
+            //
+            // `undefined` when there is no snapshot to fold, so no prompt
+            // renders. An empty fold yields "mixed", which would assert that the
+            // list spans both directions on a report where we know nothing —
+            // the same class of mistake as rendering 0% for "not computable".
+            direction={
+              members.length > 0
+                ? foldDeviationDirection(
+                    members.map((employee) => employee.payStatus),
+                  )
+                : undefined
+            }
             outliersPostponed={outliersPostponed}
             outlierDate={outlierDate}
           />

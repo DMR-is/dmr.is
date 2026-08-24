@@ -83,7 +83,7 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalString({
     nullable: true,
     description:
-      "'UNDERPAID' | 'OVERPAID' | 'ON_LINE' relative to the pooled fit. Members of the lágmarksmengi are always UNDERPAID — the set is lift-only.",
+      "'UNDERPAID' | 'OVERPAID' | 'ON_LINE' relative to the pooled fit. A member of the lágmarksmengi may be either UNDERPAID or OVERPAID — the set is two-directional, drawn from whoever carries óskýrt. Render this: the two cases are different questions, and a reader cannot tell them apart from the signed percentage alone. ON_LINE never appears in the set (a zero residual carries none of the gap).",
   })
   payStatus!: string | null
 

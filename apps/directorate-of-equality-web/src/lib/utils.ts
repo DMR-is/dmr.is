@@ -63,6 +63,36 @@ export const formatHourlyRate = (v: number | null | undefined) =>
  * untouched. Reaching for the wrong one turns a broken config row into a
  * confident `0,0%`.
  */
+/**
+ * Which way a set of listed employees deviates from the fitted line.
+ *
+ * The úrbótaáætlun's explanation fields (`reason` / `action` / signature) live on
+ * `report_outlier_group`, not on the per-employee join, and whoever builds the
+ * groups composes them freely — so a group can legitimately contain someone paid
+ * below their starfsmatsstig and someone paid above. `mixed` is therefore a real
+ * third case, not a fallback.
+ *
+ * `ON_LINE` cannot be a member of the lágmarksmengi (a zero residual carries
+ * none of the gap), so it is treated as absent rather than given a fourth
+ * branch. An empty list yields `mixed`, which is the safe reading: it makes no
+ * claim about a direction.
+ */
+export type DeviationDirection = 'below' | 'above' | 'mixed'
+
+export const foldDeviationDirection = (
+  payStatuses: readonly (string | null | undefined)[],
+): DeviationDirection => {
+  let below = false
+  let above = false
+  for (const status of payStatuses) {
+    if (status === 'UNDERPAID') below = true
+    else if (status === 'OVERPAID') above = true
+  }
+  if (below && !above) return 'below'
+  if (above && !below) return 'above'
+  return 'mixed'
+}
+
 export const formatPercent = (
   v: number | null | undefined,
   { signed = false }: { signed?: boolean } = {},

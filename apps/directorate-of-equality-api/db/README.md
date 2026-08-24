@@ -167,11 +167,16 @@ per employee in the same snapshot (`employees[].inMinimumSet`) and persisted as
 
 Three properties of that set are easy to get wrong:
 
-- **It is lift-only.** Candidates are underpaid members of the _disadvantaged_ gender only, so the
-  set can never propose cutting anyone's pay — and an employee paid **above** the line is never a
-  member, however far above.
-- **It is single-gender**, whichever gender the gap disfavours. That follows from the arithmetic:
-  residuals sum to zero, so if one group's mean residual is higher the other's must be negative.
+- **It runs in both directions.** Candidates are everyone whose framlag shares the sign of óskýrt:
+  the underpaid on the _disadvantaged_ side and the overpaid on the _advantaged_ side. Both pull the
+  gap open. Nothing here proposes cutting anyone's pay — being listed obliges the employer to supply
+  a reason and an action, and the counterfactual correction is how the list is chosen rather than a
+  payment instruction. `employees[].payStatus` says which direction a given row is, and it must be
+  rendered: the two are different questions.
+- **It spans both genders**, therefore, where a lift-only set could not. In a mostly-female workforce
+  with a few highly-paid men the set is usually mostly those men, because residuals sum to zero
+  around the fit and a small advantaged group carries the whole positive side between few people —
+  so the list gets SHORTER rather than longer.
 - ⚠️ **Membership is a property of the SET, not of the person.** It comes from a greedy walk down the
   correctable employees ordered by their contribution, applying each one's counterfactual correction,
   **refitting**, and stopping once the recomputed gap is under the benchmark. Two employees on near-identical pay and score can land on opposite sides of the cut,
@@ -817,7 +822,7 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 - `oskyrtPercent` — **leiðréttur**, the Oaxaca unexplained term. **This is the figure the statutory benchmark tests.** Direction is carried separately (`oskyrtDirection`) so the test stays direction-agnostic; percentages are magnitudes.
 - `pooledFit` — the fit on `log(tímakaup)` vs stig. `xSumSquares` is the identifiability test, not `slope !== null`: a degenerate fit returns slope `0`.
 - `employees[]` — per ordinal: score, gender, actual and expected tímakaup, deviation, residual, `contributionLog` (sums exactly to `oskyrtLog`), `contributionShare`, `payStatus`, `isCorrectable`, `inMinimumSet`.
-- `correctableCount`, `minimumSetSize`, `oskyrtLogAfterMinimumSet`, `minimumSetClosesGap`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest underpaid members of the disadvantaged gender whose correction would bring óskýrt under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for.
+- `gapCarrierCount`, `minimumSetSize`, `oskyrtWithinBenchmark`, `oskyrtLogAfterMinimumSet`, `oskyrtDirectionAfterMinimumSet`, `minimumSetClosesGap`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest employees carrying óskýrt whose correction would bring it under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for. `gapCarrierCount` is the pool it was selected from and is **not** a compliance signal; `oskyrtWithinBenchmark` is.
 
   **It is a selection device, not a prescription.** The counterfactual raise is how the list is chosen; nobody is being told to give it. The company files a reason and an action per listed employee, and improvement is demonstrated at company level at the next report. Which is why the wording around it stays remedy-neutral — the UI says the listed employees' pay is lower than their starfsmatsstig imply and asks for ástæður og aðgerðir, and deliberately does not name a fix.
 
@@ -827,7 +832,9 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
   ⚠️ **Read `minimumSetClosesGap`; do not infer compliance from `minimumSetSize === 0`.** The two coincide today, but only because the reference is a least-squares fit through the whole workforce — see the note in the outlier section above. What the size genuinely cannot tell you is _why_ the walk stopped: reaching the benchmark and running out of candidates produce sets that look identical.
 
-  Because correction is lift-only, that case is not rare. It is the expected shape wherever the advantaged group is small and well paid — a mostly-female workforce with a few highly-paid men — because residuals sum to zero around the fit, so a small advantaged group carries the whole positive side between few people. `closesGap: false` is a normal category of report, not an error state.
+  ⚠️ **The meaning of `closesGap: false` inverted with the two-directional set.** It used to mean the walk ran out of people to lift, the rest of the gap sitting with an advantaged group it could not reach. It now means the opposite problem: correcting the carriers OVERSHOOTS, carrying óskýrt past the benchmark in the other direction, so no prefix of the ordered pool lands inside it. Exhausting the pool lands at `−N − Δβ·(x̄_M − x̄_W)` where `N` is the offsetting mass, not at zero. Read `oskyrtDirectionAfterMinimumSet` for which way the residual gap runs — `oskyrtLogAfterMinimumSet` is a magnitude and cannot say.
+
+  It remains a normal category of report rather than an error state, and it is not rare at small cohort sizes with wide pay dispersion.
 
 Missing cohorts are represented as `null` in the relevant nested metrics, not `0`.
 

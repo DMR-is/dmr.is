@@ -156,11 +156,13 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
    * ⚠️ This used to be the ±1,95% band around a fitted line, evaluated per
    * employee. It is now membership of the smallest set of corrections that
    * brings óskýrt under the benchmark — see `selectMinimumSet` for why that is
-   * a property of the set rather than of the person, and why it is lift-only.
+   * a property of the set rather than of the person.
    *
    * Consequences for the callers (submit and sync), neither of which changes:
    * an already-compliant company returns an EMPTY set and so needs no
-   * úrbótaáætlun at all, and overpaid employees are never returned.
+   * úrbótaáætlun at all, and the set is two-directional, so an id returned here
+   * may belong to someone paid ABOVE their stig. Membership is all the callers
+   * need; direction is carried on the snapshot for the copy to read.
    */
   async getDetectedOutlierEmployeeIds(reportId: string): Promise<Set<string>> {
     const { scored, decomposition } = await this.decomposeDraft(reportId)
