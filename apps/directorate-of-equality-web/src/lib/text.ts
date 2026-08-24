@@ -364,9 +364,35 @@ export const reportText = {
     // the old level-space straight line. `Hallatala`/`Skurðpunktur` are gone
     // with it: a log-space slope is not kr./klst. per stig, and printing it
     // under that label would be a unit error on a government page.
+    /**
+     * ⚠️ Why the line bends, said once and plainly.
+     *
+     * The curvature is the single most-questioned thing on this page — it looks
+     * like a modelling flourish and is in fact the whole model. Pay is fitted as
+     * a constant PERCENTAGE rise per stig, and a constant percentage compounds,
+     * so the line must bend in krónur. It is straight in log space, which is the
+     * space it was fitted in.
+     *
+     * Kept next to the growth figure rather than buried in a tooltip: the two
+     * explain each other. "+32,6% á hver 100 stig" is exactly why the gap
+     * between successive 100-stig steps widens as you go right.
+     */
+    chartCurveNote:
+      'Viðmiðslínan sveigist vegna þess að væntanlegt tímakaup hækkar um fast HLUTFALL á hvert stig, ekki fasta krónutölu — og hlutfallshækkun leggst við sjálfa sig. Í krónum verður hvert 100 stiga þrep því stærra en það síðasta.',
     regressionHeading: 'Viðmiðslína',
     curveGrowthLabel: 'Hækkun á hver 100 stig',
     curveGrowthHint: 'Hlutfallsleg hækkun á væntanlegu tímakaupi',
+    /**
+     * The krónur anchor for the growth figure above.
+     *
+     * ⚠️ This replaces the skurðpunktur, which is `exp(intercept)` — expected
+     * pay at ZERO stig, a score no job holds. Printing it invited a reader to
+     * treat a meaningless extrapolation as a floor. Expected pay at the cohort's
+     * MEAN score is a real point on the curve, inside the data, and it gives the
+     * percentage something concrete to be a percentage of.
+     */
+    curveAtMeanLabel: 'Væntanlegt tímakaup við meðalstig',
+    curveAtMeanHint: 'Punktur á línunni við meðalstig starfsmanna',
     curveUnavailable: 'Viðmiðslína ekki reiknanleg fyrir þessi gögn',
     rSquaredLabel: 'R²',
     rSquaredHint: 'Hve mikið af launabreytileikanum stigin skýra',

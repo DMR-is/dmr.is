@@ -22,6 +22,7 @@ import {
   type WageGapDecompositionDto,
 } from '../../../../gen/fetch'
 import { reportText } from '../../../../lib/text'
+import { formatHourlyRate } from '../../../../lib/utils'
 import { CohortSummary } from './CohortSummary'
 function formatSalary(v: number) {
   return new Intl.NumberFormat('is-IS')
@@ -272,7 +273,12 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
         </ComposedChart>
       </ResponsiveContainer>
 
-      <RegressionReadout slope={slope} rSquared={rSquared} />
+      <RegressionReadout
+        slope={slope}
+        intercept={intercept}
+        meanScore={fit?.xMean ?? null}
+        rSquared={rSquared}
+      />
     </Box>
   )
 }
@@ -296,9 +302,14 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
  */
 function RegressionReadout({
   slope,
+  intercept,
+  meanScore,
   rSquared,
 }: {
   slope?: number | null
+  intercept?: number | null
+  /** `pooledFit.xMean` — the cohort's mean starfsmatsstig. */
+  meanScore?: number | null
   rSquared?: number | null
 }) {
   const t = reportText.salaryTab
@@ -325,11 +336,25 @@ function RegressionReadout({
   // `slope · 100`, which would be the log-space increment and understate it.
   const growthPercent = (Math.exp(slope * 100) - 1) * 100
 
+  // The krónur anchor for the percentage above: a real point ON the curve, at
+  // the cohort's own mean score. Deliberately not `exp(intercept)`, which is pay
+  // at zero stig — outside any support, and a number a reader could mistake for
+  // a floor.
+  const expectedAtMeanScore =
+    intercept != null && meanScore != null
+      ? Math.exp(intercept + slope * meanScore)
+      : null
+
   const rows = [
     {
       label: t.curveGrowthLabel,
       value: `${num(growthPercent, 1)}%`,
       hint: t.curveGrowthHint,
+    },
+    {
+      label: t.curveAtMeanLabel,
+      value: formatHourlyRate(expectedAtMeanScore),
+      hint: t.curveAtMeanHint,
     },
     { label: t.rSquaredLabel, value: num(rSquared, 2), hint: t.rSquaredHint },
   ]
@@ -337,6 +362,11 @@ function RegressionReadout({
   return (
     <Box marginTop={2}>
       <Text variant="h5">{t.regressionHeading}</Text>
+      <Box marginTop={1} marginBottom={1}>
+        <Text variant="small" color="dark300">
+          {t.chartCurveNote}
+        </Text>
+      </Box>
       {rows.map((row) => (
         <Box key={row.label} display="flex" columnGap={2} marginTop={1}>
           <Text variant="small" fontWeight="semiBold">

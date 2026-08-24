@@ -136,11 +136,24 @@ auto-rejected in any branch.
 
 Compliance used to be decided **per employee**: flag anyone more than half the
 threshold (±1,95%) from a fitted line. That is gone. It answered a different
-question from the one the regulation asks, it flagged overpaid staff as
-findings, and its provisional auto-review thresholds auto-approved a cohort
-sitting 49% over the benchmark. There is no tolerance band anywhere any more —
-including on the chart, where a shaded corridor would have looked identical while
-deciding nothing.
+question from the one the regulation asks, and its provisional auto-review
+thresholds auto-approved a cohort sitting 49% over the benchmark. There is no
+tolerance band anywhere any more — including on the chart, where a shaded
+corridor would have looked identical while deciding nothing.
+
+⚠️ **The band also flagged people paid above the line, and so does the
+lágmarksmengi. These are not the same thing, and the difference is the point.**
+
+|                             | ±1,95% band                                                 | lágmarksmengi                                  |
+| --------------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| Why this person is listed   | their own deviation crossed a fixed width                   | their pay carries part of the company's óskýrt |
+| Where the number comes from | half a threshold, chosen for no stated reason               | the statutory 3,9%, unhalved                   |
+| How many are listed         | everyone past the line — 111 of 120 on the reference cohort | the fewest that account for the gap — 5 of 120 |
+| What it decided             | nothing                                                     | which employees the úrbótaáætlun must cover    |
+
+So being listed is no longer a statement that an individual's pay is wrong. It is
+a statement that the company's gap runs through them, which is answerable — and
+that is what makes asking for a reason fair.
 
 ## 4. How outliers are picked — the lágmarksmengi
 
@@ -158,10 +171,28 @@ sign. The sign rule is fixed by gender, not by who turns out to be
 disadvantaged — phrasing it the other way silently flips the sum when men are
 the underpaid group.
 
-**Step 3 — walk, biggest carrier first.** Take the underpaid members of the
-disadvantaged gender, ordered by `|contributionLog|`. Add one, apply the
-counterfactual lift, **refit, and re-measure**. Stop when the recomputed óskýrt
-is within the benchmark.
+**Step 3 — walk, biggest carrier first.** Take everyone whose `contributionLog`
+shares the sign of óskýrt — the **carriers** — ordered by `|contributionLog|`.
+Add one, move them onto the line, **refit, and re-measure**. Stop when the
+recomputed óskýrt is within the benchmark.
+
+Two quadrants carry the gap and two offset it:
+
+|                         | on the disadvantaged side | on the advantaged side |
+| ----------------------- | ------------------------- | ---------------------- |
+| **paid below the line** | carries — a candidate     | offsets                |
+| **paid above the line** | offsets                   | carries — a candidate  |
+
+There is no separate rule for the second group. The pool is simply everyone
+pulling the gap open, and biggest-carrier-first does the rest. In an imbalanced
+workforce that is usually the well-paid few, so **the list gets shorter, not
+longer** — on synthetic 15%-men cohorts it averages 2,1 employees, where the
+lift-only rule it replaced named around thirteen. See §8 for the measurements.
+
+Ties in `|contributionLog|` break by `ordinal`. That is not cosmetic: two
+employees on one pay grade have bit-identical contributions, and without a
+deterministic tie-break the preview and the submit could disagree about which of
+them is in the set.
 
 ⚠️ **The refit is the point, and it is where we differ from the R reference.**
 That script subtracts each contribution from a fit it never recomputes
@@ -183,10 +214,26 @@ raise each member to the printed number, re-run the engine, and you land on
 `oskyrtLogAfterMinimumSet`. Deriving targets from intermediate fits gave a
 slightly different number that appeared nowhere and could not be audited.
 
-**Lift-only.** Candidates are always the _underpaid_ side of the _disadvantaged_
-gender, so the analysis can never propose cutting anyone's pay. Overpaid members
-of the advantaged group keep their real, signed contribution in `employees[]` —
-that array is the audit trail — but never enter the set.
+**Step 4 — two guards on the walk**, both of which exist because a
+two-directional pool can do something a one-directional one cannot: overshoot.
+
+_Probe before committing._ A lift-only walk can only move óskýrt toward zero, so
+every step is an improvement by construction. A two-directional walk can move it
+**through** zero — a candidate carrying more than twice the remaining gap steps
+clean over the window, and every later pick then makes things worse. So each
+candidate is tested before being committed, and kept only if the refitted gap
+lands inside the benchmark or is strictly closer to zero. No new constant and no
+tolerance: a member that widens the gap cannot belong to a minimal set that
+closes it.
+
+_A one-directional walk is run as well, and the better result kept._
+Two-directional is a large improvement on average and a **regression on a small
+tail**. Concretely, with four employees on one starfsmatsstig and óskýrt +0,20:
+the two-directional walk picks the overpaid man, lands at −0,10 and cannot
+recover; lifting the one underpaid woman lands exactly on zero. Running the
+narrower pool too costs one extra pass and guarantees no company gets a worse
+answer than the previous rule gave it. Preference order: closing beats not
+closing, then fewer people, then a smaller residual gap.
 
 ### It selects; it does not prescribe
 
@@ -195,15 +242,79 @@ told to give.** The company files an `Ástæða` and an `Aðgerð` per listed
 employee; approval rests on those, not on wages changing. Improvement is
 demonstrated at company level at the next report.
 
-That is why the wording stays remedy-neutral — _"laun þessara starfsmanna eru
-lægri en starfsmatsstig þeirra gefa til kynna — skráðu ástæður og aðgerðir"_ —
-and never names a fix. It also means minimality is a **fairness** property:
+That is why the wording stays remedy-neutral — _"þessir starfsmenn bera óskýrðan
+launamun fyrirtækisins … skráðu ástæður og aðgerðir"_ — and never names a fix.
+The prompt does branch on direction, because "why is this pay below the stig" and
+"why is it above them" are different questions, but neither version asks for a
+payment. It also means minimality is a **fairness** property:
 naming a person carries a burden, and naming two more than necessary is a real
 unfairness even though no money is prescribed.
 
 A perfectly legitimate `Ástæða` is that the **starfsmatsstig are wrong**. Someone
 far above the line may be carrying responsibility the evaluation never captured,
 in which case the honest correction is to the evaluation, not to anyone's pay.
+
+### The chart: why the reference line bends
+
+The line drawn on the chart is `væntanlegt tímakaup = exp(a + b·stig)`. It is a
+**curve** in krónur, and that is the model rather than a rendering choice — it is
+the line every `Launafrávik` in the table is measured from, so points below it are
+exactly the ones on the low side.
+
+Three questions come up every time, so they are answered here.
+
+**"Is the curve a mistake?"** No. The fit is linear — in log space, which is the
+space it was fitted in. Plot the same fit with log wages on the y-axis and it is a
+straight line, with a constant step per 100 stig:
+
+```
+330 stig   log(w) = 7,8820
+430 stig   log(w) = 8,1643    +0,2823
+530 stig   log(w) = 8,4466    +0,2823   ← constant
+630 stig   log(w) = 8,7289    +0,2823
+```
+
+**"Then where does the bend come from?"** From converting back to krónur. Equal
+steps in log space are equal _percentages_, and a percentage compounds. Same fit,
+same steps, in krónur:
+
+```
+330 stig    2.649 kr.
+430 stig    3.513 kr.    +  864 kr.
+530 stig    4.659 kr.    +1.146 kr.
+630 stig    6.179 kr.    +1.520 kr.
+730 stig    8.194 kr.    +2.015 kr.
+```
+
+Every step is 100 stig wide and every step is **32,6% larger in krónur than the
+one before** — which is exactly the `Hækkun á hver 100 stig` figure printed
+beside the chart. The compounding _is_ the curve.
+
+**"Could the axis be logarithmic instead, so the line is straight?"** It could,
+and the line would be straight, but the tick labels would then read 7,5 / 8,0 /
+8,5 — meaningless to a company reading its own pay report. A log-scaled axis with
+krónur labels is a third option; it makes equal vertical distances mean equal
+percentages rather than equal krónur, which trades one confusion for a subtler
+one. We keep krónur on the axis and draw the curve.
+
+Two things follow that are worth knowing:
+
+- **A given percentage deviation is the same vertical distance anywhere on the
+  chart.** Under a level-space fit, 20% below the line looked like a hair's
+  breadth at 2.000 kr and a chasm at 9.000 kr. Now 20% looks like 20% at both
+  ends, which is what `Frávik %` actually measures.
+- **A level-space fit is not a safe substitute.** On our demo cohort it is
+  `w = −3.394 + 15,80·stig`, which predicts _negative_ pay below about 215 stig
+  and disagrees with the log fit by 45,6% at the bottom of the observed range.
+  `exp()` cannot go negative. The PDF drew such a line until recently while its
+  own table printed log-fit figures, so a reader could see a point above the drawn
+  line whose row said the employee was underpaid; both renderers now draw the same
+  curve.
+
+Printed beside the chart: the growth per 100 stig, the **væntanlegt tímakaup at
+the cohort's mean stig** (a real point on the curve, unlike `exp(a)` which is pay
+at zero stig — a score no job holds), and **R²**, which says how much of the pay
+variation the starfsmatsstig explain at all.
 
 ## 5. Big gender imbalance
 
@@ -218,30 +329,37 @@ the evaluation is set up.
 Imbalance never changes _whether_ we list outliers. There are three outcomes, and
 they are the same three for any workforce:
 
-| Situation                  | `minimumSetSize`                                        | `closesGap` | What the company sees                                                             |
-| -------------------------- | ------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------- |
-| Óskýrt already within 3,9% | `0`                                                     | `true`      | **No outliers.** Report can go straight in                                        |
-| Over 3,9%, closable        | a subset — the biggest carriers                         | `true`      | Those employees, listed                                                           |
-| Over 3,9%, not closable    | **all** underpaid employees of the disadvantaged gender | `false`     | Those employees, listed, plus a caveat that they do not account for the whole gap |
+| Situation                             | `minimumSetSize`                | `oskyrtWithinBenchmark` | `closesGap` | What the company sees                                                             |
+| ------------------------------------- | ------------------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------- |
+| Óskýrt already within 3,9%            | `0`                             | `true`                  | `true`      | **No outliers.** Report can go straight in                                        |
+| Over 3,9%, closable                   | a subset — the biggest carriers | `false`                 | `true`      | Those employees, listed                                                           |
+| Over 3,9%, not closable               | whatever the walk committed     | `false`                 | `false`     | Those employees, listed, plus a caveat that they do not account for the whole gap |
+| Over 3,9%, every candidate overshoots | `0`                             | `false`                 | `false`     | Nothing listed, plus that same caveat                                             |
 
-**Nobody is hidden and nobody extra is added.** The third row is the imbalance
-case, and it is the _maximum_ the list ever reaches — verified over ~6.500
-unclosable synthetic cohorts, where the set equalled the full candidate pool
-every single time.
+⚠️ **Read `oskyrtWithinBenchmark` for compliance, never `minimumSetSize === 0`.**
+The last row is why. It is real, not theoretical — four employees on one
+starfsmatsstig with óskýrt of 4,88% produce two carriers and an empty set,
+because moving either one overshoots the window in a single step. Anything
+inferring compliance from an empty list would show _Undir viðmiði_ on that
+report. Both consumers read the flag.
 
 ### No, not everyone becomes an outlier
 
-The candidate pool has a hard ceiling: **underpaid employees of the disadvantaged
-gender only.** Never in the set, in any scenario:
+The candidate pool still has a hard ceiling — the **carriers**. Never in the set,
+in any scenario:
 
-- anyone of the advantaged gender — including the overpaid men who are usually
-  _causing_ the imbalance
-- anyone paid at or above the line, of either gender
+- anyone paid exactly on the line, of either gender
+- anyone whose pay OFFSETS the gap rather than widening it: the underpaid on the
+  advantaged side, and the overpaid on the disadvantaged side
 
-So in a mostly-female workplace with a few highly-paid men, the ceiling is "the
-underpaid women". That can be most of the women, but it is never the men, and it
-is never the whole workforce. In the sweep above the largest set was **80% of the
-cohort**, and that is a deliberately extreme generator.
+Those two quadrants are roughly half the workforce, so the set can never be
+everyone. What changed is _which_ half is eligible, not that a ceiling exists.
+
+And the practical effect runs the other way from what widening a pool suggests.
+In a mostly-female workplace with a few highly-paid men, the men now carry most
+of óskýrt between few people, so they sort to the top and the walk stops sooner.
+The list is typically **shorter** than the lift-only one it replaced — about two
+people where the old rule named thirteen, on synthetic 15%-men cohorts.
 
 ### Why the imbalance case exists at all
 
@@ -250,38 +368,68 @@ cohort**, and that is a deliberately extreme generator.
 > average distance above the line is large. If it is the **majority**, that same
 > total is spread thin.
 
-Correction is lift-only, so it can only pull on the disadvantaged side.
-Algebraically the set cannot close the gap once the advantaged group's mean
-distance above the line exceeds the benchmark itself — which is reached far
-sooner when that group is small.
+That concentration used to be what made the gap unclosable: a lift-only walk
+could not reach the advantaged group at all, so once its mean distance above the
+line exceeded the benchmark, no set of raises on the other side was enough. The
+canonical case — a **mostly-female workforce with a few highly-paid men**, common
+in care, education, retail and service, i.e. exactly the sectors this regulation
+exists for — was unclosable about two thirds of the time.
 
-The canonical case is a **mostly-female workforce with a few highly-paid men** —
-common in care, education, retail and service, i.e. exactly the sectors this
-regulation exists for. On synthetic cohorts, balanced workforces were unclosable
-roughly a third of the time and female-dominated ones about two thirds, near
-enough independent of headcount; male-dominated ones essentially never.
+**The two-directional walk reaches that group, so this is largely solved.** The
+same concentration that made the gap unclosable now makes it easy: few people
+carrying a lot sort to the top and the walk stops after one or two. On 15%-men
+cohorts of 40, closure went from about half the time to 99,7%.
 
-**`closesGap: false` is therefore a normal category of report, not an error
-state.** The list still stands as the employees to account for. It simply must not
-be presented as closing the gap, and the caveat carries no figures — quantifying
-it would imply the exact raises the process never asks for.
+⚠️ **`closesGap: false` still occurs, but it now means the opposite thing.** It
+used to mean "we ran out of people to correct". It now means the correction
+**overshoots**: moving the carriers onto the line carries óskýrt past the
+benchmark in the other direction, and no prefix of the ordered pool lands inside
+the window. Exhausting the pool does not land on zero — it lands at
+
+```
+−N − Δβ·(s̄_M − s̄_W)
+```
+
+where `N` is the offsetting mass, i.e. on the far side. A worked example: a
+six-person cohort with óskýrt of **9,46% í óhag karla** lands at **0,0687 í óhag
+kvenna** after its one carrier is corrected.
+
+That inversion is why `oskyrtDirectionAfterMinimumSet` exists — the after-figure
+is a magnitude and cannot say which way the residual gap runs.
+
+It remains a normal category of report rather than an error state, and it
+concentrates at small cohort sizes with wide pay dispersion — 7,5% of
+over-benchmark companies at twelve employees, against essentially none at forty. The list still stands as the
+employees to account for; it simply must not be presented as closing the gap, and
+the caveat carries no figures — quantifying it would imply the exact pay changes
+the process never asks for.
 
 ### One thing not to lean on
 
-`minimumSetSize === 0` and "compliant" are _almost_ the same fact, and the code
-does not assume it. An empty set could in principle mean "nobody on the
-disadvantaged side is underpaid, so there was nothing to lift" — a company over
-the benchmark with an empty list.
+`minimumSetSize === 0` and "compliant" used to be _almost_ the same fact. **They
+are not any more, and the difference is reachable.**
 
-In practice that cannot arise: óskýrt > 0 implies the disadvantaged cohort's
-residuals sum to something negative, so at least one of its members is strictly
-below the line and the pool is never empty. The sweep above found **zero**
-occurrences in 20.000 cohorts.
+Under a one-directional walk the pool was never empty when óskýrt was non-zero
+(residuals sum to zero, so the disadvantaged cohort always had someone below the
+line) and the first candidate was always committed. A sweep of 20.000 cohorts
+found zero counterexamples.
 
-The branch is kept as a defensive one, and consumers read `minimumSetClosesGap`
-rather than inferring compliance from the size, because the equivalence holds
-only as long as the reference line is a least-squares fit through the whole
-workforce. Change that and the inference silently breaks.
+The probe guard breaks that. It declines a candidate whose correction would push
+the gap further out — and it can decline **every** candidate, leaving an empty set
+on a company that is over the benchmark. Minimal reproduction, pinned by a spec:
+four employees on one starfsmatsstig, óskýrt 4,88%, two carriers, nothing listed.
+
+So there are three distinct causes of an empty set and only the first is
+compliance:
+
+1. óskýrt is already inside the benchmark — nothing to correct.
+2. Nobody carries the gap (only reachable when óskýrt is exactly zero).
+3. Every candidate's correction overshoots, so the walk committed none.
+
+**Read `oskyrtWithinBenchmark`.** It is computed once, in the engine, from the
+unrounded log gap. The reviewer's compliance card and the auto-review rule both
+read it, and a spec asserts that size and compliance disagree on the cohort
+above — so the inference cannot creep back in.
 
 ## 6. Only one gender in the workforce
 
@@ -334,108 +482,111 @@ All of these are **enum codes**; the API carries no Icelandic and the web maps
 codes to copy. Every state returns **HTTP 200** — "not enough data to decompose"
 is a valid state of a valid report, not a client error.
 
-## 8. Why we only correct in one direction
+## 8. Why the analysis runs in both directions
 
-Correction today is **lift-only**: the lágmarksmengi is drawn exclusively from
-_underpaid_ members of the _disadvantaged_ gender. The obvious question — and the
-one to expect from anyone reading section 5 — is why we do not also look at the
-people sitting _above_ the line, since in an imbalanced workforce they are what
-drives the gap.
+The lágmarksmengi is drawn from everyone whose pay **carries** óskýrt: the
+underpaid on the disadvantaged side, and the overpaid on the advantaged side.
 
-We have explored it. It works, it works well, and the reason we have not adopted
-it is a policy question rather than a technical one. This section is here so that
-question can be answered deliberately rather than discovered later.
+This section used to argue the opposite — that correction was lift-only and
+whether to widen it was an open policy question. That question has been answered
+and the widening is implemented. What follows is the case for it, the two
+safeguards it needed, and what it did not change.
 
-### What two-sided would give us
+### What it gave us
 
-Same simulation, lift-only against a two-sided walk. **These are synthetic
-cohorts, not measurements of real Icelandic companies** — they show the mechanism
-and its rough magnitude, nothing more.
+Measured on synthetic cohorts against the implemented engine, 4.000 trials per
+row, counting only companies that were **over** the benchmark. **These are not
+measurements of real Icelandic companies** — they show the mechanism and its
+rough magnitude, nothing more.
 
-| Workforce        | Gap closed, lift-only | Gap closed, two-sided | Employees listed, lift-only | Employees listed, two-sided |
-| ---------------- | --------------------- | --------------------- | --------------------------- | --------------------------- |
-| Balanced (50/50) | 89%                   | **100%**              | 3,7                         | 2,9                         |
-| 15% men          | 54%                   | **100%**              | **13,0**                    | **1,9**                     |
-| 25% men          | 69%                   | **100%**              | 10,8                        | 2,8                         |
+| Workforce                  | n   | Gap closed | Employees listed |
+| -------------------------- | --- | ---------- | ---------------- |
+| Balanced (50/50)           | 40  | 100,0%     | 3,3              |
+| 15% men                    | 40  | **99,7%**  | **2,1**          |
+| 25% men                    | 40  | 100,0%     | 2,7              |
+| Small, wide pay dispersion | 12  | **92,5%**  | 2,4              |
 
-The middle row is the one that matters. In a mostly-female workforce, lift-only
-names **thirteen women** and still fails to account for the gap about half the
-time. Two-sided names **about two people — almost entirely the highly-paid men** —
-and accounts for it every time.
+The 15%-men row is the one that matters, and it is worth comparing against what
+lift-only did on the same shape of cohort: it named around **thirteen women** and
+still failed to account for the gap about **half** the time. The two-directional
+walk names **about two people — almost entirely the highly-paid men** — and
+accounts for it in 99,7% of cases.
 
-Two things follow. Closure stops being conditional, so `minimumSetClosesGap` would
-be true in practice everywhere. And the number of named individuals falls sharply,
-which matters because being named carries an obligation to explain.
+(The lift-only figures were measured before the change, on a differently seeded
+generator, so treat the comparison as an order of magnitude rather than a
+like-for-like delta. The two-directional column is a direct measurement of the
+code as shipped.)
 
-There is no separate "go after the men" rule involved. The candidate pool widens
-to everyone whose contribution pulls the gap wider, the existing
-biggest-contributor-first ordering is untouched, and the overpaid men are selected
-because that is where the contribution mass is. In balanced workforces the same
-ordering picks a mix of both sides.
+Two things follow. **Fewer individuals are named**, which matters because being
+named carries an obligation. And the gap is closable in the cases the instrument
+exists for, rather than only in the cases where it was already least needed.
 
-### It would not be a proposal to cut anyone's pay
+⚠️ **Not 100%, and the last row is why.** An earlier draft of this section claimed
+closure would "stop being conditional" and that `minimumSetClosesGap` would be
+true everywhere in practice. Measurement corrected that: at **twelve** employees
+with wide pay dispersion, 7,5% of over-benchmark companies still cannot be closed.
+Small cohorts with a wide spread are exactly where a single correction overshoots.
+See §5 for what non-closure now means.
+
+### It is not a proposal to cut anyone's pay
 
 This is the point most likely to be misread, so it is worth stating plainly.
 
-The úrbótaáætlun does not prescribe raises today and would not prescribe cuts.
-Being listed means the employer owes an **ástæða** and an **aðgerð** for that
-employee. Approval rests on those explanations; improvement is demonstrated at
-company level at the next report.
+The úrbótaáætlun does not prescribe raises and does not prescribe cuts. Being
+listed means the employer owes an **ástæða** and an **aðgerð** for that employee.
+Approval rests on those explanations; improvement is demonstrated at company level
+at the next report.
 
-So a two-sided list would ask the employer to explain why someone is paid
-substantially **above** what their starfsmatsstig imply. That is a different
-question from the one asked about an underpaid employee, and often a more
-productive one — the most likely honest answer is that **the job evaluation is
-wrong**, i.e. the person carries responsibility the evaluation never captured. The
-correction in that case is to the evaluation, and nobody's pay changes at all.
+So the list asks an employer to explain why someone is paid substantially **above**
+what their starfsmatsstig imply. That is a different question from the one asked
+about an underpaid employee, and often a more productive one — the most likely
+honest answer is that **the job evaluation is wrong**, i.e. the person carries
+responsibility the evaluation never captured. The correction in that case is to
+the evaluation, and nobody's pay changes at all.
 
-### How it would work
+Because the two are different questions, they do not share a prompt. `payStatus`
+carries the direction per employee and the copy branches on it. A group holding
+both directions gets a third, explicitly mixed prompt rather than one of the two
+one-sided ones.
 
-1. The candidate pool becomes every employee whose contribution shares the sign
-   of óskýrt — underpaid members of the disadvantaged gender _and_ overpaid
-   members of the advantaged one — instead of only the former.
-2. The counterfactual per candidate becomes "move to the line" in whichever
-   direction they sit, rather than "lift to the line".
-3. The walk is otherwise unchanged: order by contribution, apply, refit,
-   re-measure.
+### Two safeguards it needed
 
-The list would have to carry direction, because the two cases are not the same
-question and should not share one prompt. `payStatus` already records it per
-employee, so the data is in place.
+Widening the pool is not simply a matter of removing a filter. A one-directional
+walk can only move óskýrt toward zero; a two-directional one can move it
+**through** zero, and both safeguards exist for that.
 
-### What needs deciding
+**Probe before committing.** A candidate carrying more than twice the remaining
+gap overshoots the window in one step, and every later pick then makes things
+worse. Each candidate is therefore tested before being committed, and kept only
+if the refitted gap lands inside the benchmark or is strictly closer to zero. No
+new constant, no tolerance: a member that widens the gap cannot belong to a
+minimal set that closes it.
 
-Not whether reducing pay is lawful — that is not what would be proposed. The
-question is narrower:
+**A one-directional walk runs as well, and the better result is kept.**
+Two-directional is a large improvement on average and a **regression on a small
+tail** — there are cohort shapes where lift-only closes the gap and the
+two-directional walk, safeguard and all, does not. The minimal example: four
+employees on one starfsmatsstig, óskýrt +0,20. The two-directional walk picks the
+overpaid man, lands at −0,10 and cannot recover; lifting the one underpaid woman
+lands exactly on zero. Running the narrower pool costs one extra pass and
+guarantees **no company gets a worse answer than the one-directional rule would
+have given it**. Preference order: closing beats not closing, then fewer people
+named, then a smaller residual gap.
 
-> **Is it acceptable to name an individual employee in a report as being paid
-> materially above what their starfsmatsstig imply, and require the employer to
-> explain it?**
+### What still needs watching
 
-That is a statement about an identifiable person, so it is a policy judgement
-rather than an engineering one. Everything on the technical side is ready either
-way.
-
-Two smaller points worth putting alongside it:
-
-- A company could respond to such a listing by freezing or reducing that pay, even
-  though the report never asks for it. Employment contracts and kjarasamningar
-  make a reduction difficult, and it is arguably a legitimate response to pay that
-  genuinely cannot be explained — but it is a foreseeable consequence.
-- Conversely, pay far above an employee's evaluated job value may itself indicate
-  a departure from the applicable kjarasamningur's structure. If so, surfacing it
-  is squarely within what the evaluation exists to find.
-
-### What we do in the meantime
-
-Lift-only, with the limitation reported rather than hidden. Where the listed
-employees cannot account for the whole gap, `minimumSetClosesGap` is `false` and
-the report says so without figures.
-
-The diagnostic already exists in the data: every employee's real signed
-contribution is stored in `employees[]`, overpaid members of the advantaged group
-included. Nothing needs recomputing to adopt two-sided — only a decision about
-what we are willing to ask an employer to explain.
+- **Non-closure now means over-correction**, not exhaustion. The copy for that
+  case had to be rewritten because the old text named the overpaid side as the
+  part of the gap the set could not reach — which is precisely what it now covers.
+- **An empty set no longer implies compliance.** The probe can decline every
+  candidate. Read `oskyrtWithinBenchmark`; see §5.
+- **The change moves _which people_ are named, not only how many.** On our
+  scenario fixtures one cohort went from two underpaid women to a single overpaid
+  man. Membership is always derived from the snapshot's `inMinimumSet` and never
+  hardcoded, precisely because it has now shifted twice.
+- **Two-directional is not a strict improvement per company.** It is a large
+  average improvement with a small tail; the fallback above removes the
+  regression, but the tail is why that fallback is not optional.
 
 ## 9. Where the numbers live
 
@@ -447,3 +598,24 @@ The applicant preview runs the _same_ function with the same rounding, so what a
 company sees before submitting is byte-identical to what gets frozen. Both paths
 derive tímakaup at the two decimal places the columns store, so a database
 round-trip cannot move a figure — asserted by a spec.
+
+`report_result.calculation_version` marks the shape. **`v3`** is the
+two-directional set; `v2` was reglulegt tímakaup with a lift-only set; `v1` was
+FTE-adjusted monthly salary and is not comparable to either.
+
+The fields most likely to be read wrongly:
+
+| Field                            | Means                                                                     | Do not use it for                          |
+| -------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
+| `oskyrtWithinBenchmark`          | **compliance** — `\|óskýrt\|` within 3,9%, unrounded                      | —                                          |
+| `minimumSetSize`                 | how many employees the úrbótaáætlun must cover                            | compliance; an empty set does not imply it |
+| `gapCarrierCount`                | how many employees carry part of óskýrt — the pool the set was drawn from | compliance, or severity                    |
+| `employees[].widensGap`          | this employee carries the gap, so is eligible                             | whether they are paid unfairly             |
+| `employees[].payStatus`          | which side of the line they sit on                                        | membership                                 |
+| `minimumSetClosesGap`            | whether correcting the set would land inside the benchmark                | how far off it is                          |
+| `oskyrtLogAfterMinimumSet`       | the residual gap after correction, as a **magnitude**                     | its direction                              |
+| `oskyrtDirectionAfterMinimumSet` | which gender that residual gap disfavours                                 | —                                          |
+
+`employees[]` carries every analysed employee, not only the listed ones, with each
+one's real signed contribution. That array is the audit trail: every figure in
+this document can be recomputed from it.

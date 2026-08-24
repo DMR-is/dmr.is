@@ -136,9 +136,13 @@ function salaryAnalysisSection(
   decomposition?: WageGapDecompositionDto | null,
 ): string {
   const { totals } = statistics
+  // ⚠️ `decomposition?.pooledFit`, NOT `statistics.regressionLine`. See the
+  // docblock on buildSalaryChartSvg: regressionLine is a level-space fit nothing
+  // else reads, and drawing it here contradicted the úrbótaáætlun table below,
+  // which prints figures from the log fit.
   const chart = buildSalaryChartSvg(
     statistics.dataPoints,
-    statistics.regressionLine,
+    decomposition?.pooledFit,
   )
 
   return section(

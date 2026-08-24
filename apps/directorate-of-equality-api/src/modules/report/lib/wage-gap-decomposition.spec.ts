@@ -547,6 +547,38 @@ describe('wage-gap-decomposition', () => {
       expect(member?.payStatus).toBe(PayStatusEnum.UNDERPAID)
     })
 
+    /**
+     * ⚠️ The case `oskyrtWithinBenchmark` exists for.
+     *
+     * An empty set used to imply compliance, because the walk always committed
+     * its first candidate. The probe guard can decline every candidate — here
+     * both carriers overshoot the window in one step — so a company OVER the
+     * benchmark can come back with nothing listed.
+     *
+     * Anything reading `minimumSetSize === 0` as "compliant" therefore reports
+     * *Undir viðmiði* on a 4,88% gap. Both consumers (the reviewer's card and
+     * the auto-review rule) read the flag instead.
+     */
+    it('can return an empty set for a company that is NOT compliant', () => {
+      // Four employees on one starfsmatsstig, so the slope is degenerate and
+      // óskýrt is the raw difference in mean log wage.
+      const s = run([
+        employee(1, GenderEnum.MALE, 300, Math.exp(1.5)),
+        employee(2, GenderEnum.MALE, 300, Math.exp(-0.45)),
+        employee(3, GenderEnum.FEMALE, 300, Math.exp(1.45)),
+        employee(4, GenderEnum.FEMALE, 300, Math.exp(-0.5)),
+      ])
+
+      expect(s.oskyrtWithinBenchmark).toBe(false)
+      expect(s.gapCarrierCount).toBeGreaterThan(0)
+      expect(s.minimumSetSize).toBe(0)
+      expect(s.minimumSetClosesGap).toBe(false)
+
+      // The trap, stated as an assertion so it cannot creep back: size and
+      // compliance disagree here, and only one of them is compliance.
+      expect(s.minimumSetSize === 0).not.toBe(s.oskyrtWithinBenchmark)
+    })
+
     it('is empty when the company is already under the benchmark', () => {
       // Identical pay at identical scores ⇒ óskýrt 0.
       const s = run([
