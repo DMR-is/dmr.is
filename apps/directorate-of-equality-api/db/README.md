@@ -183,17 +183,30 @@ Three properties of that set are easy to get wrong:
   and the honest answer to _"why me and not my colleague?"_ is "you carried more of the gap and N
   corrections were enough" — not anything about that person alone.
 
-**Compliance is `minimumSetClosesGap`, not the size of the set.** Read the flag. It is decided on the
-unrounded log figure, whereas comparing rounded percentages disagrees at the boundary (óskýrt of
-`0,03978087001184605` against a threshold of `0,0397808700118446` is over the line while the displayed
-percent rounds to exactly 3,9). Both the auto-review rule and the reviewer UI read it for that reason.
+**Compliance is `oskyrtWithinBenchmark`.** Not the size of the set, and not
+`minimumSetClosesGap` either — those answer different questions:
 
-An empty set and a compliant gap do coincide today, but that is a property of the _fit_ rather than of
-the rule: óskýrt ≠ 0 forces the disadvantaged cohort's residuals to sum against it, so at least one
-member sits below the line and the candidate pool is never empty (zero occurrences in 20.000 synthetic
-cohorts). The walk also has a second exit — **it can run out of candidates** — and a set that took
-everyone available is not the same as a set that reached the benchmark. `minimumSetClosesGap`
-distinguishes them; the size cannot.
+| Field                   | Answers                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `oskyrtWithinBenchmark` | **is this company compliant?**                                          |
+| `minimumSetClosesGap`   | would correcting the listed employees land óskýrt inside the benchmark? |
+| `minimumSetSize`        | how many employees the úrbótaáætlun must cover                          |
+
+The flag is decided on the unrounded log figure, whereas comparing rounded percentages disagrees at
+the boundary (óskýrt of `0,03978087001184605` against a threshold of `0,0397808700118446` is over the
+line while the displayed percent rounds to exactly 3,9). Both the auto-review rule and the reviewer UI
+read it for that reason.
+
+⚠️ **An empty set does NOT imply a compliant gap.** It did until the walk became two-directional,
+because the pool was never empty when óskýrt ≠ 0 (residuals sum to zero, so the disadvantaged cohort
+always had a member below the line) and the first candidate was always committed — zero
+counterexamples in 20.000 synthetic cohorts. The probe guard changed that: it declines a candidate
+whose correction would push the gap further out, and it can decline **every** candidate. Minimal
+reproduction, pinned by a spec: four employees on one starfsmatsstig, óskýrt 4,88%, two carriers,
+nothing listed.
+
+So an empty set now has three causes and only the first is compliance — already inside the benchmark,
+nobody carries the gap, or every candidate overshoots. Read the flag.
 
 ### Retiring the ±band
 
@@ -204,10 +217,20 @@ and the tolerance corridor both chart renderers used to shade.
 
 Two consequences worth knowing when reading older code or data:
 
-- **It changed _which_ employees are flagged, not just how many.** The band caught deviation in
-  either direction, so it flagged overpaid staff too; the lágmarksmengi flags the underpaid side. On
-  the same six-employee cohort the band flagged the overpaid man and the lágmarksmengi flags the two
-  underpaid women.
+- **It changed _which_ employees are flagged, not just how many — twice.** Follow one
+  six-employee cohort (`scenarioWithOutliers`) through all three rules:
+
+  | Rule                          | Flagged                | Because                                                 |
+  | ----------------------------- | ---------------------- | ------------------------------------------------------- |
+  | ±1,95% band                   | the overpaid man       | he deviated furthest from the line, in either direction |
+  | lift-only lágmarksmengi       | two underpaid women    | only the underpaid disadvantaged side was eligible      |
+  | two-directional lágmarksmengi | the overpaid man again | he carries more of óskýrt than the two women together   |
+
+  The first and last agree on the person and on nothing else. The band flagged him for a fact about
+  him alone and decided nothing; the current rule lists him because the company's gap runs through
+  him, and asks the employer to account for it. This is why membership is always derived from
+  `employees[].inMinimumSet` and never hardcoded in a seeder or a fixture.
+
 - **The set is far smaller, and that is not a proxy for severity.** It is _minimal by construction_,
   so a small set can mean a concentrated problem rather than a mild one. On a 100-employee reference
   cohort the band flagged 100; the lágmarksmengi is 6.
@@ -461,7 +484,10 @@ This is a **reclassification at computation/display time only** — raw `report_
 The same chart shape that `buildChartFromEmployeePoints` produces for the application-side preview can be rebuilt from a persisted `report_result` row:
 
 - **Scatter points** — `wage_gap_decomposition_snapshot.employees[*]` carries `score`, `gender` and `hourlyWage` per employee.
-- **Expected-pay curve** — each employee's `expectedHourlyWage` is `exp(fitted)` from `pooledFit`, so in krónur space the model is a curve rather than a straight line. The live chart endpoint additionally returns a `regressionLine` fitted in level space; that line is descriptive only and is **not** the model any decision rests on.
+- **Expected-pay curve** — each employee's `expectedHourlyWage` is `exp(fitted)` from `pooledFit`, so in krónur space the model is a curve rather than a straight line. Both renderers draw that curve: the admin chart samples it, and `report-pdf/lib/salary-chart-svg.ts` does the same.
+
+  ⚠️ The live chart endpoint still returns a `regressionLine` fitted in **level space**, and it is now read by **nothing** — the PDF was its last consumer and was moved to `pooledFit`, because drawing a level line beside a table of log-fit figures let the two contradict each other (they disagree by 45,6% at the bottom of the demo cohort's score range). It remains on the wire only because removing it means touching the DTO and regenerating the client. Do not wire it up again.
+
 - **Score-bucket overlay** — bucket-level aggregates (median, average, gender breakdowns, counts) live in `salary_snapshot.scoreBuckets`. Join on the bucket range when an overlay is needed. Per-employee bucket placement is no longer stored: it existed for the retired band.
 - **No tolerance band.** The chart used to shade `predicted × (1 ± allowedDifferencePercent / 100)` and call points outside it outliers. That rule is gone — see "Retiring the ±band" under "What counts as an outlier" — and nothing shades a corridor now, because a corridor that decides nothing while looking exactly as it did would read as a finding.
 - **Highlighting** — mark `inMinimumSet` employees if the chart needs to show who the úrbótaáætlun covers.
@@ -793,14 +819,14 @@ Join: which sub-criteria steps apply to a given employee personally.
 
 Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
-| Column                                | Type                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------- |
-| `id`                                  | `uuid` PK                                                                             |
-| `report_id`                           | `fk → report` (unique)                                                                |
-| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation         |
-| `calculation_version`                 | `text` (default `v2` — `v1` evaluated FTE-adjusted monthly pay and is not comparable) |
-| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                         |
-| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                        |
+| Column                                | Type                                                                                                                                                                                      |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                                  | `uuid` PK                                                                                                                                                                                 |
+| `report_id`                           | `fk → report` (unique)                                                                                                                                                                    |
+| `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                             |
+| `calculation_version`                 | `text` (default `v3` — `v2` had a lift-only lágmarksmengi and `isCorrectable`/`correctableCount` in the snapshot; `v1` evaluated FTE-adjusted monthly pay. Neither is comparable to `v3`) |
+| `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                             |
+| `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                            |
 
 `salary_snapshot` holds:
 
@@ -821,7 +847,7 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 - `rawGapPercent` — **óleiðréttur**, on arithmetic means, so it reproduces from the two `meanHourlyWage*` figures printed beside it. Informational; no compliance role.
 - `oskyrtPercent` — **leiðréttur**, the Oaxaca unexplained term. **This is the figure the statutory benchmark tests.** Direction is carried separately (`oskyrtDirection`) so the test stays direction-agnostic; percentages are magnitudes.
 - `pooledFit` — the fit on `log(tímakaup)` vs stig. `xSumSquares` is the identifiability test, not `slope !== null`: a degenerate fit returns slope `0`.
-- `employees[]` — per ordinal: score, gender, actual and expected tímakaup, deviation, residual, `contributionLog` (sums exactly to `oskyrtLog`), `contributionShare`, `payStatus`, `isCorrectable`, `inMinimumSet`.
+- `employees[]` — per ordinal: score, gender, actual and expected tímakaup, deviation, residual, `contributionLog` (sums exactly to `oskyrtLog`), `contributionShare`, `payStatus`, `widensGap`, `inMinimumSet`.
 - `gapCarrierCount`, `minimumSetSize`, `oskyrtWithinBenchmark`, `oskyrtLogAfterMinimumSet`, `oskyrtDirectionAfterMinimumSet`, `minimumSetClosesGap`, `thresholdLog`, `benchmarkPercent` — the **lágmarksmengi**: the fewest employees carrying óskýrt whose correction would bring it under the benchmark. This set — not any per-employee tolerance — is what the úrbótaáætlun must account for. `gapCarrierCount` is the pool it was selected from and is **not** a compliance signal; `oskyrtWithinBenchmark` is.
 
   **It is a selection device, not a prescription.** The counterfactual raise is how the list is chosen; nobody is being told to give it. The company files a reason and an action per listed employee, and improvement is demonstrated at company level at the next report. Which is why the wording around it stays remedy-neutral — the UI says the listed employees' pay is lower than their starfsmatsstig imply and asks for ástæður og aðgerðir, and deliberately does not name a fix.
@@ -830,7 +856,7 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 
   The lift targets are each employee's `expectedHourlyWage` **as published in `employees[]`**, so the figure is reproducible: take the set, raise each member to the printed `Væntanlegt tímakaup`, re-run the engine, land on `oskyrtLogAfterMinimumSet`.
 
-  ⚠️ **Read `minimumSetClosesGap`; do not infer compliance from `minimumSetSize === 0`.** The two coincide today, but only because the reference is a least-squares fit through the whole workforce — see the note in the outlier section above. What the size genuinely cannot tell you is _why_ the walk stopped: reaching the benchmark and running out of candidates produce sets that look identical.
+  ⚠️ **Read `oskyrtWithinBenchmark` for compliance.** Neither `minimumSetSize === 0` nor `minimumSetClosesGap` is that fact — see the outlier section above for why an empty set no longer implies a compliant gap. What the size genuinely cannot tell you is _why_ the walk stopped: reaching the benchmark, exhausting the pool, and declining every candidate as an overshoot all produce sets that look alike.
 
   ⚠️ **The meaning of `closesGap: false` inverted with the two-directional set.** It used to mean the walk ran out of people to lift, the rest of the gap sitting with an advantaged group it could not reach. It now means the opposite problem: correcting the carriers OVERSHOOTS, carrying óskýrt past the benchmark in the other direction, so no prefix of the ordered pool lands inside it. Exhausting the pool lands at `−N − Δβ·(x̄_M − x̄_W)` where `N` is the offsetting mass, not at zero. Read `oskyrtDirectionAfterMinimumSet` for which way the residual gap runs — `oskyrtLogAfterMinimumSet` is a magnitude and cannot say.
 

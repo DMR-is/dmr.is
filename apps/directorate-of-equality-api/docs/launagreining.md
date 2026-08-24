@@ -329,12 +329,12 @@ the evaluation is set up.
 Imbalance never changes _whether_ we list outliers. There are three outcomes, and
 they are the same three for any workforce:
 
-| Situation                             | `minimumSetSize`                | `oskyrtWithinBenchmark` | `closesGap` | What the company sees                                                             |
-| ------------------------------------- | ------------------------------- | ----------------------- | ----------- | --------------------------------------------------------------------------------- |
-| Óskýrt already within 3,9%            | `0`                             | `true`                  | `true`      | **No outliers.** Report can go straight in                                        |
-| Over 3,9%, closable                   | a subset — the biggest carriers | `false`                 | `true`      | Those employees, listed                                                           |
-| Over 3,9%, not closable               | whatever the walk committed     | `false`                 | `false`     | Those employees, listed, plus a caveat that they do not account for the whole gap |
-| Over 3,9%, every candidate overshoots | `0`                             | `false`                 | `false`     | Nothing listed, plus that same caveat                                             |
+| Situation                             | `minimumSetSize`                | `oskyrtWithinBenchmark` | `minimumSetClosesGap` | What the company sees                                                             |
+| ------------------------------------- | ------------------------------- | ----------------------- | --------------------- | --------------------------------------------------------------------------------- |
+| Óskýrt already within 3,9%            | `0`                             | `true`                  | `true`                | **No outliers.** Report can go straight in                                        |
+| Over 3,9%, closable                   | a subset — the biggest carriers | `false`                 | `true`                | Those employees, listed                                                           |
+| Over 3,9%, not closable               | whatever the walk committed     | `false`                 | `false`               | Those employees, listed, plus a caveat that they do not account for the whole gap |
+| Over 3,9%, every candidate overshoots | `0`                             | `false`                 | `false`               | Nothing listed, plus that same caveat                                             |
 
 ⚠️ **Read `oskyrtWithinBenchmark` for compliance, never `minimumSetSize === 0`.**
 The last row is why. It is real, not theoretical — four employees on one
