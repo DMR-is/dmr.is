@@ -83,17 +83,12 @@ export const SalaryReportTab = ({
             // report "below" for a group whose overpaid member happens to sit
             // on page 2. The snapshot carries every member of the set.
             //
-            // `undefined` when there is no snapshot to fold, so no prompt
-            // renders. An empty fold yields "mixed", which would assert that the
-            // list spans both directions on a report where we know nothing —
-            // the same class of mistake as rendering 0% for "not computable".
-            direction={
-              members.length > 0
-                ? foldDeviationDirection(
-                    members.map((employee) => employee.payStatus),
-                  )
-                : undefined
-            }
+            // No `members.length > 0` guard: the fold itself returns `undefined`
+            // when there is nothing to fold, and the prompt then does not render.
+            // Guarding here as well would just be a second place to get it wrong.
+            direction={foldDeviationDirection(
+              members.map((employee) => employee.payStatus),
+            )}
             outliersPostponed={outliersPostponed}
             outlierDate={outlierDate}
           />

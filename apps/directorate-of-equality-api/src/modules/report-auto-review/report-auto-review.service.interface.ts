@@ -38,9 +38,11 @@ export type AutoReviewSignals = {
   /**
    * Whether the frozen set's correction would bring óskýrt within the benchmark.
    *
-   * ⚠️ Required alongside `minimumSetSize` because an empty set does NOT imply
-   * compliance: when nobody on the disadvantaged side is underpaid, there is
-   * nothing to lift and the walk returns an empty set with `closesGap: false`.
+   * ⚠️ Recorded for the audit trail, and NOT a compliance input — read
+   * `oskyrtWithinBenchmark` for that. An empty set does not imply compliance, and
+   * under the two-directional pool `false` here means the walk would have
+   * OVER-corrected past the benchmark in the other direction rather than fallen
+   * short of it.
    */
   minimumSetClosesGap: boolean | null
   /**

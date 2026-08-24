@@ -607,7 +607,7 @@ ${cohort
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES ('${resultId}', '${reportId}', 3.90, 'v2', '${salarySnap}', '${wageGapSnap}');
+VALUES ('${resultId}', '${reportId}', 3.90, 'v3', '${salarySnap}', '${wageGapSnap}');
 
 `
 

@@ -468,11 +468,11 @@ flat list of reasons.
 
 **Warnings — soft. Figures ARE computed, and must be shown caveated.**
 
-| Code                              | Meaning                                                                                                                                                                                                                  |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ROWS_EXCLUDED_NON_POSITIVE_WAGE` | Rows with a non-finite or ≤ 0 tímakaup were dropped; see `counts.excluded`                                                                                                                                               |
-| `NO_SCORE_VARIATION`              | Every score identical, so no slope is identifiable. Óskýrt collapses to the raw gap rather than nulling                                                                                                                  |
-| `NO_SCORE_OVERLAP`                | The two cohorts share no score range at all — total occupational segregation. A genuine, reportable finding, so it warns rather than blocks: nulling it would hide the most extreme case the instrument exists to detect |
+| Code                              | Meaning                                                                                                                                                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ROWS_EXCLUDED_NON_POSITIVE_WAGE` | Rows with a non-finite or ≤ 0 tímakaup were dropped; see `counts.excluded`                                                                                                                                                                                                           |
+| `NO_SCORE_VARIATION`              | Every score identical, so no slope is identifiable. Óskýrt collapses to the raw gap rather than nulling. The chart also draws no reference line in this case: the observed range is a single point, and stretching a line across the plot from one score would be pure extrapolation |
+| `NO_SCORE_OVERLAP`                | The two cohorts share no score range at all — total occupational segregation. A genuine, reportable finding, so it warns rather than blocks: nulling it would hide the most extreme case the instrument exists to detect                                                             |
 
 Identifiability is tested with `xSumSquares <= 0`, **never** `slope !== null` — a
 degenerate fit returns slope `0`, not null, so the slope alone cannot distinguish
@@ -549,6 +549,10 @@ carries the direction per employee and the copy branches on it. A group holding
 both directions gets a third, explicitly mixed prompt rather than one of the two
 one-sided ones.
 
+Each listed row also names its direction in words beside the signed percentage —
+on screen and in the PDF. The sign alone only works for a reader who already knows
+the convention, and the PDF is the one surface whose reader cannot ask.
+
 ### Two safeguards it needed
 
 Widening the pool is not simply a matter of removing a filter. A one-directional
@@ -571,7 +575,8 @@ overpaid man, lands at −0,10 and cannot recover; lifting the one underpaid wom
 lands exactly on zero. Running the narrower pool costs one extra pass and
 guarantees **no company gets a worse answer than the one-directional rule would
 have given it**. Preference order: closing beats not closing, then fewer people
-named, then a smaller residual gap.
+named, then a smaller residual gap — and on an exact tie in that residual, fewer
+people again.
 
 ### What still needs watching
 
@@ -587,6 +592,24 @@ named, then a smaller residual gap.
 - **Two-directional is not a strict improvement per company.** It is a large
   average improvement with a small tail; the fallback above removes the
   regression, but the tail is why that fallback is not optional.
+- **The greedy walk can strand the candidate that would have closed the gap.**
+  Carriers are taken largest-first, so a large one can be committed, land outside
+  the window, and leave every smaller candidate to be declined — including one
+  that alone would have landed inside. The engine then reports non-closure while
+  naming the wrong person. This is **not a regression**: on those cohorts the old
+  lift-only rule gave the same answer, and the fallback above bounds it. It is the
+  widened pool failing to pay off.
+
+  A one-pass lookahead fixes it — prefer any remaining candidate whose probe lands
+  inside the benchmark before committing a merely-improving one. Measured over
+  39.353 synthetic cohorts against the shipped engine: it gains closure on **4,9%**,
+  closes with **fewer** people on **5,9%**, and is **never worse** (zero cases). The
+  reference company and all three scenario fixtures come back bit-identical, so it
+  is not a threat to the R-parity anchor. It is not shipped because it is O(n²) in
+  the size of the pool — 39,5 ms to 2,28 s at the 10.000-employee ceiling, on a path
+  that also serves the interactive preview — and because it moves which named
+  individuals appear on roughly a tenth of úrbótaáætlanir, which is a change the
+  Directorate should see rather than inherit.
 
 ## 9. Where the numbers live
 
@@ -605,16 +628,16 @@ FTE-adjusted monthly salary and is not comparable to either.
 
 The fields most likely to be read wrongly:
 
-| Field                            | Means                                                                     | Do not use it for                          |
-| -------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
-| `oskyrtWithinBenchmark`          | **compliance** — `\|óskýrt\|` within 3,9%, unrounded                      | —                                          |
-| `minimumSetSize`                 | how many employees the úrbótaáætlun must cover                            | compliance; an empty set does not imply it |
-| `gapCarrierCount`                | how many employees carry part of óskýrt — the pool the set was drawn from | compliance, or severity                    |
-| `employees[].widensGap`          | this employee carries the gap, so is eligible                             | whether they are paid unfairly             |
-| `employees[].payStatus`          | which side of the line they sit on                                        | membership                                 |
-| `minimumSetClosesGap`            | whether correcting the set would land inside the benchmark                | how far off it is                          |
-| `oskyrtLogAfterMinimumSet`       | the residual gap after correction, as a **magnitude**                     | its direction                              |
-| `oskyrtDirectionAfterMinimumSet` | which gender that residual gap disfavours                                 | —                                          |
+| Field                            | Means                                                                     | Do not use it for                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `oskyrtWithinBenchmark`          | **compliance** — `\|óskýrt\|` within 3,9%, unrounded                      | —                                                                                                                                                                  |
+| `minimumSetSize`                 | how many employees the úrbótaáætlun must cover                            | compliance; an empty set does not imply it                                                                                                                         |
+| `gapCarrierCount`                | how many employees carry part of óskýrt — the pool the set was drawn from | compliance, or severity                                                                                                                                            |
+| `employees[].widensGap`          | this employee carries the gap, so is eligible                             | whether they are paid unfairly                                                                                                                                     |
+| `employees[].payStatus`          | which side of the line they sit on                                        | membership                                                                                                                                                         |
+| `minimumSetClosesGap`            | whether correcting the set would land inside the benchmark                | compliance — it answers whether the list is _sufficient_, and is `true` on companies that are currently over; or how far off it is                                 |
+| `oskyrtLogAfterMinimumSet`       | the residual gap after correction, as a **magnitude**                     | its direction                                                                                                                                                      |
+| `oskyrtDirectionAfterMinimumSet` | which gender that residual gap disfavours                                 | the company's direction today — it describes a counterfactual in which every listed employee has been moved onto the line. Audit trail only; no surface renders it |
 
 `employees[]` carries every analysed employee, not only the listed ones, with each
 one's real signed contribution. That array is the audit trail: every figure in

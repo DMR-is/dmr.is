@@ -174,7 +174,19 @@ const AdjustedGapContent = ({
   // `oskyrtWithinBenchmark` is computed once, in the engine, on the unrounded
   // value. One number, one meaning. The API's auto-review rule reads the same
   // field for the same reason.
-  const exceeded = d.oskyrtWithinBenchmark === false
+  //
+  // ⚠️ `!== true`, deliberately, NOT `=== false`. The flag is nullable on the
+  // wire — it is absent from `WageGapDecompositionDto`'s required list, so it
+  // arrives `undefined` from a snapshot frozen before this deploy, and during any
+  // window where this app ships ahead of the API. `undefined === false` is
+  // `false`, which would render *Undir viðmiði* over a live gap: the exact
+  // failure the paragraph above describes, reintroduced through the SHAPE of the
+  // comparison rather than the choice of field. So fail closed — only an explicit
+  // `true` may claim compliance, which is the form the API's own rule uses.
+  //
+  // This cannot mislabel a report whose gap is not computable: the
+  // `!d.oskyrtAvailable` branch above has already returned by here.
+  const exceeded = d.oskyrtWithinBenchmark !== true
 
   return (
     <Stack space={2}>

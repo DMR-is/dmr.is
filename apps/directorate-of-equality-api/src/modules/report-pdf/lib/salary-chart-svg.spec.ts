@@ -126,8 +126,10 @@ describe('buildSalaryChartSvg', () => {
     expect(buildSalaryChartSvg(points)).not.toContain('<polyline')
   })
 
-  // ...but slope 0 is a REAL degenerate fit (every score identical), not absent
-  // data, so it must still draw — flat, at exp(intercept).
+  // ...but slope 0 is a REAL result, not absent data, so it must still draw —
+  // flat, at exp(intercept). ⚠️ Note the fixture spreads over three scores: this
+  // is the flat-fit case, NOT the single-score case below, which is what actually
+  // produces a zero slope and which draws no extent at all.
   it('still draws a flat line for a genuine zero slope', () => {
     const svg = buildSalaryChartSvg(points, {
       slope: 0,
@@ -144,6 +146,30 @@ describe('buildSalaryChartSvg', () => {
     const svg = buildSalaryChartSvg(points, FIT)
 
     expect(svg).toContain('>kr./klst.<')
+  })
+
+  /**
+   * A cohort on one starfsmatsstig. The observed range is a point, so the curve
+   * has no extent to draw across — every sample shares one x. Pinned because the
+   * renderer's own note says a zero slope "does get drawn", and it is worth being
+   * explicit that this neighbouring shape is the exception rather than a bug: the
+   * alternative is extrapolating a line to the plot edge from a single x value.
+   */
+  it('draws a curve with no extent for a single-score cohort', () => {
+    const svg = buildSalaryChartSvg(
+      [
+        { score: 300, regularHourlyWage: 4000, gender: GenderEnum.MALE },
+        { score: 300, regularHourlyWage: 4400, gender: GenderEnum.FEMALE },
+      ],
+      { slope: 0, intercept: Math.log(4200) },
+    )
+
+    const polyline = /<polyline points="([^"]+)"/.exec(svg)?.[1] ?? ''
+    const xs = polyline.split(' ').map((pair) => Number(pair.split(',')[0]))
+
+    expect(xs.length).toBeGreaterThan(1)
+    expect(xs.every(Number.isFinite)).toBe(true)
+    expect(new Set(xs.map((x) => x.toFixed(6))).size).toBe(1)
   })
 
   it('does not throw on an empty dataset', () => {

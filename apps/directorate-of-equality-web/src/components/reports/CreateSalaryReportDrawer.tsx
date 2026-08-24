@@ -829,6 +829,33 @@ type OutlierEditorProps = {
   groupsComplete: boolean
 }
 
+/**
+ * The direction prompt above a group's reason/action fields.
+ *
+ * Its own component so the "nothing to say" case is a `return null` rather than
+ * a ternary inside JSX: `group.ordinals` can be empty, and an ordinal can fail
+ * to resolve against `outliers`, both of which yield no direction. Rendering the
+ * mixed prompt there would ask the submitter to explain pay that is
+ * simultaneously high and low.
+ */
+const GroupDirectionPrompt = ({
+  payStatuses,
+}: {
+  payStatuses: readonly (SalaryAnalysisOutlierDto['payStatus'] | undefined)[]
+}) => {
+  const direction = foldDeviationDirection(payStatuses)
+
+  if (!direction) return null
+
+  return (
+    <Box marginBottom={1}>
+      <Text variant="small" color="dark300">
+        {d.directionPrompt[direction]}
+      </Text>
+    </Box>
+  )
+}
+
 const OutlierEditor = ({
   outliers,
   minimumSetClosesGap,
@@ -1064,22 +1091,13 @@ const OutlierEditor = ({
                   because "why is this pay low" and "why is this pay high" are
                   different questions and one group can contain both.
                 */}
-                <Box marginBottom={1}>
-                  <Text variant="small" color="dark300">
-                    {
-                      d.directionPrompt[
-                        foldDeviationDirection(
-                          group.ordinals.map(
-                            (ordinal) =>
-                              outliers.find(
-                                (o) => o.employeeOrdinal === ordinal,
-                              )?.payStatus,
-                          ),
-                        )
-                      ]
-                    }
-                  </Text>
-                </Box>
+                <GroupDirectionPrompt
+                  payStatuses={group.ordinals.map(
+                    (ordinal) =>
+                      outliers.find((o) => o.employeeOrdinal === ordinal)
+                        ?.payStatus,
+                  )}
+                />
                 <GridRow rowGap={1}>
                   <GridColumn span="12/12">
                     <TextInput

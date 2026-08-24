@@ -548,6 +548,67 @@ describe('wage-gap-decomposition', () => {
     })
 
     /**
+     * The OTHER half of the hybrid rule, and the half the feature is for.
+     *
+     * The test above is tier 1: two-directional cannot close, lift-only can, so
+     * the fallback is taken. This is tier 2 — BOTH walks close, and the smaller
+     * set wins. Óskýrt is 8,08% disfavouring women, and the three carriers are,
+     * biggest first: #2 (overpaid man, 0,0661), #3 (underpaid woman, 0,0505),
+     * #4 (overpaid man, 0,0498).
+     *
+     * - two-directional takes #2 first, which does not reach the benchmark, then
+     *   #3, which does — and lands at 0,0203 having named TWO people.
+     * - lift-only sees only #3, and #3 alone lands at 0,0211. ONE person.
+     *
+     * Both close, so the tie-break is size, and #2 is dropped even though the
+     * greedy walk reached for it first and it carries more of the gap than the
+     * person who ends up listed. Remove tier 2 — let ties and near-ties fall to
+     * the two-directional walk — and this company gets a second name on its
+     * úrbótaáætlun for a marginally smaller residual. That is the unfairness the
+     * tier exists to prevent, so it is asserted rather than assumed.
+     */
+    it('prefers the smaller set when both walks close the gap', () => {
+      const s = run([
+        employee(1, GenderEnum.MALE, 350, 3762),
+        employee(2, GenderEnum.MALE, 350, 5871),
+        employee(3, GenderEnum.FEMALE, 350, 4352),
+        employee(4, GenderEnum.MALE, 350, 5591),
+        employee(5, GenderEnum.FEMALE, 200, 3466),
+      ])
+
+      expect(s.minimumSetClosesGap).toBe(true)
+      expect(s.minimumSetSize).toBe(1)
+
+      const members = s.employees.filter((e) => e.inMinimumSet)
+      expect(members.map((e) => e.ordinal)).toEqual([3])
+
+      // The discriminating part: a BIGGER carrier exists, on the overpaid
+      // advantaged side, and the two-directional walk picks it first. It is
+      // absent from the set only because the walk that included it needed two
+      // people where this one needs one.
+      const byOrdinal = (ordinal: number) => {
+        const found = s.employees.find((e) => e.ordinal === ordinal)
+        if (!found) throw new Error(`no employee with ordinal ${ordinal}`)
+        return found
+      }
+
+      const dropped = byOrdinal(2)
+      const listed = byOrdinal(3)
+
+      expect(dropped.widensGap).toBe(true)
+      expect(dropped.payStatus).toBe(PayStatusEnum.OVERPAID)
+      expect(dropped.inMinimumSet).toBe(false)
+      expect(Math.abs(dropped.contributionLog)).toBeGreaterThan(
+        Math.abs(listed.contributionLog),
+      )
+
+      // ⚠️ And the two flags disagree here, which is the whole reason there are
+      // two of them: the company IS over the benchmark right now, and the listed
+      // set WOULD bring it under. Compliance is the first question.
+      expect(s.oskyrtWithinBenchmark).toBe(false)
+    })
+
+    /**
      * ⚠️ The case `oskyrtWithinBenchmark` exists for.
      *
      * An empty set used to imply compliance, because the walk always committed
@@ -590,6 +651,13 @@ describe('wage-gap-decomposition', () => {
 
       expect(Math.abs(s.oskyrtLog ?? 1)).toBeLessThan(1e-9)
       expect(s.minimumSetSize).toBe(0)
+
+      // ⚠️ Asserted `true` HERE and nowhere else. Every other assertion on this
+      // flag is `false`, so a regression that hard-coded it `false` — or dropped
+      // the field and left it `undefined` under a loose matcher — would pass the
+      // rest of the file. The auto-review rule gates on `=== true`, so this is
+      // the branch that decides whether a compliant company auto-approves.
+      expect(s.oskyrtWithinBenchmark).toBe(true)
     })
 
     // Direction-agnostic: the same machinery must work when MEN are underpaid.

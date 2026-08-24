@@ -230,11 +230,23 @@ export type WageGapDecompositionSnapshot = {
   /**
    * Whether correcting the set would actually bring óskýrt within the benchmark.
    *
-   * `false` means the walk ran out of people to lift: the gap is carried by the
-   * advantaged group sitting above the line, and no set of raises on the
-   * disadvantaged side reaches the benchmark. The list is still the right list
-   * to account for — it just must not be presented as closing the gap. Null when
-   * there is no computable gap at all.
+   * ⚠️ **NOT the compliance flag.** That is `oskyrtWithinBenchmark`, which asks
+   * whether the company is over the benchmark NOW. This one asks whether the
+   * selected list is sufficient to get it under, which is a different question
+   * and answers `true` on a company that is currently over.
+   *
+   * `false` means the walk could not land inside `[−θ, +θ]`. Under the
+   * two-directional pool that is an OVER-correction, not a shortfall: the pool
+   * spans both sides, so exhausting it does not converge on zero but on
+   * `−N − Δβ·(s̄_M − s̄_W)` — the far side, with the disadvantaged gender now
+   * advantaged. Every candidate that remains would push the gap further out,
+   * which is why the probe guard declines them. (It read the other way before the
+   * pool widened: "ran out of people to lift".) Null when there is no computable
+   * gap at all.
+   *
+   * The list is still the right list to account for; it just must not be
+   * presented as closing the gap — and `oskyrtDirectionAfterMinimumSet` says
+   * which way the residual runs.
    *
    * ⚠️ Do NOT re-derive this by comparing `oskyrtLogAfterMinimumSet` to
    * `thresholdLog` and expecting agreement at the boundary; read this flag.
@@ -597,12 +609,23 @@ function walkPool(
  * 1. Landing inside the benchmark beats not landing inside it.
  * 2. Among walks that land, name fewer people. Being named carries an
  *    obligation, so two more than necessary is a real unfairness.
- * 3. Among walks that do not, get closer — more of the gap accounted for.
+ * 3. Among walks that do not, get closer — more of the gap accounted for. On an
+ *    exact tie, fall back to tier 2's reasoning and name fewer people.
  *
  * Ties go to `preferred`, the two-directional result: equal burden, and the
  * question asked of someone paid above their starfsmatsstig is usually the more
  * productive one (the likeliest honest answer is that the job evaluation is
  * wrong, which costs nobody their pay).
+ *
+ * ⚠️ Tier 3 weighs the residual ABOVE the size of the set, so a walk that names
+ * eight people can beat one that names one for an arbitrarily small reduction in
+ * the residual. That is a deliberate choice and not obviously the right one — but
+ * the alternative needs a tolerance ("close enough to prefer the shorter list"),
+ * and an arbitrary constant is what this module is built to avoid; the probe
+ * guard was written the way it was for the same reason. Neither walk closing also
+ * means the report is going to manual review regardless, where the residual is
+ * the more useful of the two facts. Worth revisiting WITH the Directorate rather
+ * than settling here.
  */
 function betterWalk(
   preferred: MinimumSetWalk,
@@ -614,9 +637,14 @@ function betterWalk(
   if (preferred.closesGap) {
     return preferred.chosen.size <= fallback.chosen.size ? preferred : fallback
   }
-  return preferred.oskyrtLogAfter <= fallback.oskyrtLogAfter
-    ? preferred
-    : fallback
+  if (preferred.oskyrtLogAfter !== fallback.oskyrtLogAfter) {
+    return preferred.oskyrtLogAfter < fallback.oskyrtLogAfter
+      ? preferred
+      : fallback
+  }
+  // Identical residuals — no tolerance involved, so tier 2's rule applies
+  // cleanly: the same outcome for fewer people named.
+  return preferred.chosen.size <= fallback.chosen.size ? preferred : fallback
 }
 
 /**

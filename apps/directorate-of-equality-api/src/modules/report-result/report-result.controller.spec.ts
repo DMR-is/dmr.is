@@ -10,7 +10,7 @@ describe('ReportResultController', () => {
       id: 'result-1',
       reportId: 'report-1',
       salaryDifferenceThresholdPercent: 3.9,
-      calculationVersion: 'v2',
+      calculationVersion: 'v3',
       salary: {
         totals: { overall: { average: 5000 } },
         scoreBuckets: [],

@@ -176,28 +176,24 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
   }
 
   /**
-   * PROVISIONAL decision rule. No outliers → auto-approve. With outliers, the
-   * report still auto-approves only if the outlier share and pay gap are within
-   * the configured bounds and the gap did not worsen versus the last approved
-   * report; otherwise it is routed to manual review with the failing reasons.
-   * Replace this body (not its callers) when the real criteria land.
-   */
-  /**
    * The decision rule.
    *
    * Three branches, and the middle one carries all the weight: the report is
-   * compliant iff the frozen snapshot says the gap was ALREADY within the
-   * benchmark — an empty lágmarksmengi that also closes the gap.
+   * compliant iff the frozen snapshot says óskýrt is within the benchmark.
    *
-   * ⚠️ **Tests the FLAG, not just the size.** They coincide today, but only as a
-   * consequence of the reference being a least-squares fit through the whole
-   * workforce: óskýrt ≠ 0 forces the disadvantaged cohort's residuals to sum
-   * against it, so at least one member sits below the line and the candidate pool
-   * is never empty (measured: zero occurrences in 20.000 synthetic cohorts). That
-   * is a property of the fit, not of this rule, and it would break silently if the
-   * reference ever changed. The size also cannot say WHY the walk stopped —
-   * reaching the benchmark and exhausting the candidates look identical.
-   * `minimumSetClosesGap` separates them.
+   * ⚠️ **Tests the FLAG, never the size of the set.** The two used to coincide,
+   * and the reason they did is worth keeping because it explains why they stopped:
+   * the reference is a least-squares fit through the whole workforce, so óskýrt ≠ 0
+   * forces the disadvantaged cohort's residuals to sum against it and at least one
+   * member always sat below the line — the pool was never empty, so a lift-only
+   * walk always committed someone. That was a property of the fit, not of this
+   * rule. The two-directional walk probes before committing and DECLINES a
+   * candidate that would push the gap further out, so an empty set on a company
+   * over the benchmark is now reachable and `minimumSetSize === 0` would
+   * auto-approve it.
+   *
+   * The size also cannot say WHY the walk stopped — landing inside the benchmark
+   * and declining every candidate look identical from a count of zero.
    *
    * ⚠️ **Read off the SNAPSHOT, not `outlierEmployees`.** That signal is a
    * `COUNT(*)` over `report_employee_outlier` rows written by the create-path
@@ -251,9 +247,24 @@ export class ReportAutoReviewService implements IReportAutoReviewService {
       }
     }
 
+    // ⚠️ An empty set here does NOT mean there is nothing to look at. This
+    // branch is now reachable with `minimumSetSize === 0` — the walk declined
+    // every candidate — and "0 starfsmenn í úrbótaáætlun krefjast yfirferðar"
+    // would read as though nothing needs attention on precisely the report where
+    // the gap is live and nobody has been named for it. This string is the audit
+    // trail a reviewer reads first, so it says which of the two states it is.
+    const size = signals.minimumSetSize ?? 0
+    // Icelandic agrees with the last digit: 1 and 21 take the singular, 11 does
+    // not. Cheaper to get right here than to leave "starfsmaður/starfsmenn" in a
+    // reviewer-facing string.
+    const singular = size % 10 === 1 && size % 100 !== 11
+
     return {
       decision: AutoReviewDecisionEnum.NEEDS_REVIEW,
-      reason: `Óskýrður launamunur er yfir viðmiði — ${signals.minimumSetSize ?? 0} starfsmaður/starfsmenn í úrbótaáætlun krefjast yfirferðar.`,
+      reason:
+        size === 0
+          ? 'Óskýrður launamunur er yfir viðmiði en ekkert lágmarksmengi náði að loka honum — skýrslan krefst yfirferðar.'
+          : `Óskýrður launamunur er yfir viðmiði — ${size} ${singular ? 'starfsmaður' : 'starfsmenn'} í úrbótaáætlun ${singular ? 'krefst' : 'krefjast'} yfirferðar.`,
       signals,
     }
   }

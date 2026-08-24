@@ -18,7 +18,14 @@
  * | Óleiðréttur           | 7,48%   | 8,61% (geometric)   |
  * | Leiðréttur (óskýrt)   | 7,82%   | 7,98%               |
  * | Lágmarksmengi         | 5       | 5                   |
- * | Correctable           | 31      | 30                  |
+ *
+ * The carrier count is deliberately NOT in that table any more. It used to read
+ * `Correctable 31 / 30`, and the two sides stopped measuring the same thing when
+ * the pool went two-directional: `gapCarrierCount` is now 73 here because it
+ * counts everyone whose framlag shares the sign of óskýrt, on BOTH sides of the
+ * line, while the R script's 30 counted only the underpaid disadvantaged side.
+ * The numbers are not comparable, so presenting them side by side as a parity
+ * check would invite reading a redefinition as a discrepancy.
  *
  * The Úrbótaáætlun table renders the five-member lágmarksmengi in one explained
  * group. Membership is read off this report's frozen decomposition, not
@@ -277,7 +284,7 @@ ${employeeSql};
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v2', '${salarySnap}', '${wageGapSnap}');
+VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v3', '${salarySnap}', '${wageGapSnap}');
 
 INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
 VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við nýliðun',

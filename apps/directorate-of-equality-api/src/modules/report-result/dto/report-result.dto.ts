@@ -388,7 +388,7 @@ export class WageGapDecompositionDto {
   @ApiOptionalEnum(WageGapDirectionEnum, {
     nullable: true,
     description:
-      "Which gender óskýrt disfavours AFTER the set's correction. Needed because the figure above is a magnitude and a two-sided correction can overshoot, leaving a residual gap running the other way. NONE when it lands on zero.",
+      "Which gender óskýrt disfavours AFTER the set's correction. Needed because the figure above is a magnitude and a two-sided correction can overshoot, leaving a residual gap running the other way. NONE when it lands on zero. AUDIT TRAIL ONLY — no surface renders it today, and none should render it as a company's current position: it describes a counterfactual in which every listed employee has been moved onto the line. The company's actual direction is oskyrtDirection.",
   })
   oskyrtDirectionAfterMinimumSet!: WageGapDirectionEnum | null
 

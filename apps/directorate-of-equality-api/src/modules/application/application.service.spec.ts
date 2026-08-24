@@ -1915,7 +1915,7 @@ function makeReportResultDto(
     id: 'report-result-1',
     reportId,
     salaryDifferenceThresholdPercent: 3.9,
-    calculationVersion: 'v2',
+    calculationVersion: 'v3',
     salary: snapshot,
     // `detectedOrdinals` are now the LÁGMARKSMENGI, flagged by `inMinimumSet`
     // rather than by a per-employee band. `editOutliers` reads this to check the

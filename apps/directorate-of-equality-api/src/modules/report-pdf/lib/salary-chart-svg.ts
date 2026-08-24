@@ -80,8 +80,15 @@ export function buildSalaryChartSvg(
   // ⚠️ Drawn only when the fit exists, and never defaulted to 0. The old code
   // coerced a null fit to a flat line across the chart, which reads as a
   // finding ("pay does not rise with score at all") rather than as absent data.
-  // `slope === 0` is NOT the same case — that is a real degenerate fit from
-  // identical scores, and it does get drawn.
+  // `slope === 0` is NOT the same case — a genuinely flat fit across a spread of
+  // scores is a real result, and it is drawn as the horizontal line it is.
+  //
+  // One cohort shape draws nothing regardless: everybody on a SINGLE
+  // starfsmatsstig. The observed range collapses to a point, so every sample
+  // below lands on the same x and the polyline has no extent. That is the honest
+  // outcome — there is no range to draw a line across, and stretching one to the
+  // plot edge would be extrapolation from one x value. The scatter still shows
+  // the column of points and the úrbótaáætlun table still carries every figure.
   const slope = pooledFit?.slope ?? null
   const intercept = pooledFit?.intercept ?? null
   const hasFit = slope !== null && intercept !== null
