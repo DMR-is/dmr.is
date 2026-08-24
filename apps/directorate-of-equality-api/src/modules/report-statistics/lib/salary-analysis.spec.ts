@@ -122,15 +122,30 @@ describe('analyzeSalaryPayload', () => {
       expect(expected.length).toBeGreaterThan(0)
     })
 
-    // The set is lift-only by construction. An OVERPAID member would mean the
-    // engine was proposing a pay cut — see the guard in wage-gap-decomposition.
-    it('never includes an overpaid employee', () => {
+    /**
+     * Every listed row carries the gap in the same direction as óskýrt — the
+     * membership rule, projected onto the wire shape.
+     *
+     * ⚠️ This used to assert `payStatus === UNDERPAID` on the grounds that the
+     * set was "lift-only by construction". It is not any more: an overpaid
+     * member of the advantaged side carries the gap just as an underpaid member
+     * of the disadvantaged side does, and the walk takes from both. The
+     * assertion happened to keep passing on this cohort, whose set is in fact
+     * all underpaid — which is precisely why it is replaced rather than left to
+     * pass by luck until a fixture changes.
+     *
+     * `contributionShare > 0` is the invariant that survives in either
+     * direction: share is `framlag / óskýrt`, and a carrier shares óskýrt's
+     * sign, so the *Hlutur af óskýrðu* column is positive on every listed row.
+     */
+    it('lists only employees whose framlag shares the direction of óskýrt', () => {
       const result = analyzeSalaryPayload(makeMixedPayload(), THRESHOLD_PERCENT)
 
       expect(result.outliers.length).toBeGreaterThan(0)
       for (const outlier of result.outliers) {
-        expect(outlier.payStatus).toBe(PayStatusEnum.UNDERPAID)
-        expect(outlier.deviationPercent).toBeLessThan(0)
+        expect(outlier.payStatus).not.toBe(PayStatusEnum.ON_LINE)
+        expect(outlier.contributionShare).not.toBeNull()
+        expect(outlier.contributionShare as number).toBeGreaterThan(0)
       }
     })
 

@@ -521,46 +521,155 @@ function attributeGap(
   }
 }
 
+type MinimumSetWalk = {
+  chosen: Set<number>
+  oskyrtLogAfter: number
+  /** Signed, so the caller can report which way any residual gap runs. */
+  oskyrtLogAfterSigned: number
+  closesGap: boolean
+}
+
+/**
+ * One greedy pass down an ordered pool.
+ *
+ * `guarded` turns on probe-before-commit, which is what makes a two-directional
+ * pool safe. A one-directional walk can only ever move óskýrt toward zero, so
+ * every step is an improvement by construction. A two-directional walk can move
+ * it THROUGH zero: a candidate carrying more than twice the remaining gap
+ * overshoots, and every later pick then makes things worse. Measured over
+ * synthetic cohorts, an unguarded two-sided walk closed the gap LESS often than
+ * lift-only for small, high-dispersion companies — and sometimes named more
+ * people while doing it.
+ *
+ * The guard needs no new constant or tolerance. A candidate is committed only if
+ * the refitted gap lands inside the benchmark, or is strictly closer to zero
+ * than before. Anything else would widen the gap, and a member that widens the
+ * gap cannot belong to a minimal set that closes it.
+ */
+function walkPool(
+  usable: WageGapEmployeeInput[],
+  isMale: (employee: WageGapEmployeeInput) => boolean,
+  thresholdLog: number,
+  initial: GapAttribution,
+  targetFor: (ordinal: number) => number,
+  pool: WageGapEmployeeSnapshot[],
+  guarded: boolean,
+): MinimumSetWalk {
+  const running = makeIncrementalGap(usable, isMale, initial)
+
+  const chosen = new Set<number>()
+  let signed = initial.oskyrtLog
+  let gap = Math.abs(signed)
+
+  for (const candidate of pool) {
+    const target = targetFor(candidate.ordinal)
+
+    if (guarded) {
+      const probed = Math.abs(running.probe(candidate.ordinal, target))
+      if (probed > thresholdLog && probed >= gap) continue
+    }
+
+    chosen.add(candidate.ordinal)
+    signed = running.commit(candidate.ordinal, target)
+    gap = Math.abs(signed)
+
+    if (gap <= thresholdLog) {
+      return {
+        chosen,
+        oskyrtLogAfter: gap,
+        oskyrtLogAfterSigned: signed,
+        closesGap: true,
+      }
+    }
+  }
+
+  return {
+    chosen,
+    oskyrtLogAfter: gap,
+    oskyrtLogAfterSigned: signed,
+    closesGap: false,
+  }
+}
+
+/**
+ * Picks between two candidate walks, on one objective in three tiers:
+ *
+ * 1. Landing inside the benchmark beats not landing inside it.
+ * 2. Among walks that land, name fewer people. Being named carries an
+ *    obligation, so two more than necessary is a real unfairness.
+ * 3. Among walks that do not, get closer — more of the gap accounted for.
+ *
+ * Ties go to `preferred`, the two-directional result: equal burden, and the
+ * question asked of someone paid above their starfsmatsstig is usually the more
+ * productive one (the likeliest honest answer is that the job evaluation is
+ * wrong, which costs nobody their pay).
+ */
+function betterWalk(
+  preferred: MinimumSetWalk,
+  fallback: MinimumSetWalk,
+): MinimumSetWalk {
+  if (preferred.closesGap !== fallback.closesGap) {
+    return preferred.closesGap ? preferred : fallback
+  }
+  if (preferred.closesGap) {
+    return preferred.chosen.size <= fallback.chosen.size ? preferred : fallback
+  }
+  return preferred.oskyrtLogAfter <= fallback.oskyrtLogAfter
+    ? preferred
+    : fallback
+}
+
 /**
  * The lágmarksmengi: the fewest employees who have to be accounted for.
  *
- * ⚠️ **A SELECTION device, not a prescription.** The counterfactual lift below
- * is how the list is chosen; it is not a raise anyone is being told to give. The
- * úrbótaáætlun asks the company for a reason and an action per listed employee,
- * and improvement is demonstrated at company level at the next report — so the
- * only thing that matters here is that the list be minimal and defensible.
- * Naming a person carries a burden, and naming two more than necessary is a real
- * unfairness even though no money is prescribed.
+ * ⚠️ **A SELECTION device, not a prescription.** The counterfactual correction
+ * below is how the list is chosen; it is not a raise — or a cut — anyone is
+ * being told to make. The úrbótaáætlun asks the company for a reason and an
+ * action per listed employee, and improvement is demonstrated at company level
+ * at the next report, so the only thing that matters here is that the list be
+ * minimal and defensible. Naming a person carries a burden, and naming two more
+ * than necessary is a real unfairness even though no money is prescribed.
+ *
+ * ⚠️ **Two-directional.** Candidates are everyone whose framlag shares the sign
+ * of óskýrt: the underpaid on the disadvantaged side AND the overpaid on the
+ * advantaged side. There is no separate rule for the second group — the pool
+ * simply widens to everyone pulling the gap open, and the existing
+ * biggest-carrier-first ordering picks whoever carries most. In an imbalanced
+ * workforce that is usually the well-paid few, which is why the list gets
+ * SHORTER rather than longer.
+ *
+ * Being listed as paid ABOVE your starfsmatsstig asks a different question from
+ * being listed as paid below them, and the likeliest honest answer is that the
+ * job evaluation is wrong — the correction then goes to the evaluation and
+ * nobody's pay moves at all. `payStatus` carries the direction per row so the
+ * two can be prompted differently.
  *
  * ⚠️ **Refits after every pick, and that is the whole point.** This used to be
  * `running -= |contributionLog|` over a candidate list sorted once — arithmetic
  * on a fit that was never recomputed. But óskýrt is
  * `rawGapLog − (s̄_M − s̄_W)·β*₁`, and β*₁ is fitted to the very wages being
- * changed: raising one person moves the line and every other residual with it.
+ * changed: moving one person moves the line and every other residual with it.
  * The omitted term is `−(s̄_M − s̄_W)·(xᵢ − x̄)·Δy / SSx`, zero only when the two
  * genders happen to share a mean score. Measured over synthetic cohorts, the
  * old estimate put the set at 16 where a refit needs 14, and elsewhere claimed
  * compliance at cohorts that were still over the benchmark after correction —
  * wrong in both directions, so not even conservative.
  *
- * There is no new constant and no tolerance: the loop stops when the RECOMPUTED
- * gap is within the same statutory `thresholdLog`, or when the side runs out.
+ * There is no new constant and no tolerance anywhere in here. The walk stops
+ * when the RECOMPUTED gap is within the same statutory `thresholdLog`, or when
+ * the pool runs out — see {@link walkPool} for why a two-directional pool needs
+ * a probe before each commit, and {@link betterWalk} for why the narrower
+ * one-directional pool is walked as well.
  *
  * ⚠️ Identity is by `ordinal`, which `assertParsedPayloadIntegrity` guarantees
- * unique upstream. Duplicated ordinals would lift more than one row per pick.
+ * unique upstream. Duplicated ordinals would move more than one row per pick.
  */
 function selectMinimumSet(
   usable: WageGapEmployeeInput[],
   isMale: (employee: WageGapEmployeeInput) => boolean,
   thresholdLog: number,
   initial: GapAttribution,
-): {
-  chosen: Set<number>
-  oskyrtLogAfter: number
-  /** Signed, so the caller can report which way any residual gap runs. */
-  oskyrtLogAfterSigned: number
-  closesGap: boolean
-} {
+): MinimumSetWalk {
   const initialGap = Math.abs(initial.oskyrtLog)
   if (initialGap <= thresholdLog) {
     return {
@@ -571,12 +680,12 @@ function selectMinimumSet(
     }
   }
 
-  // ⚠️ Lift targets come from the ORIGINAL fit — the very
+  // ⚠️ Correction targets come from the ORIGINAL fit — the very
   // `expectedHourlyWage` the snapshot publishes for each employee and the
   // úrbótaáætlun table prints as `Væntanlegt tímakaup`. That is deliberate and
-  // it is the reason this is not a step-by-step refit of the lift AMOUNTS: a
-  // reviewer must be able to take the published set, raise each member to the
-  // published figure, re-run the engine and land on exactly
+  // it is the reason this is not a step-by-step refit of the correction
+  // AMOUNTS: a reviewer must be able to take the published set, move each
+  // member to the published figure, re-run the engine and land on exactly
   // `oskyrtLogAfterMinimumSet`. Re-deriving targets from intermediate fits gave
   // a marginally different number that appeared nowhere in the snapshot and so
   // could not be audited or reproduced.
@@ -586,35 +695,6 @@ function selectMinimumSet(
       employee.expectedHourlyWage,
     ]),
   )
-
-  // Ordered once, biggest carrier of óskýrt first. Greedy, so "fewest" is an
-  // approximation rather than a proven optimum — as it was before — but the
-  // STOPPING TEST is a real refit rather than a running subtraction.
-  const candidates = initial.employees
-    // ⚠️ Still lift-only in this commit — `widensGap` alone would already admit
-    // the overpaid advantaged side. Narrowed deliberately so this rename moves
-    // no figures; the pool opens in the commit that adds the probe guard.
-    .filter(
-      (employee) =>
-        employee.widensGap && employee.payStatus === PayStatusEnum.UNDERPAID,
-    )
-    // ⚠️ The ordinal tie-break is load-bearing, not cosmetic. Two employees on
-    // an identical rate at an identical score — an ordinary pay grade — have
-    // bit-identical |contributionLog|. Array#sort is stable, so without this
-    // the winner is decided by INPUT order, and the two queries feeding this
-    // (report-result.service and report-draft-analysis.service) return
-    // whatever order Postgres hands back. If only one of the pair fits inside
-    // the set, the preview and the submit can disagree about who is in it and
-    // the submit guard rejects with "Detected outlier(s) missing from the
-    // outlier groups". Both halves are fixed: this comparator, and an explicit
-    // `order` on both queries.
-    .sort(
-      (a, b) =>
-        Math.abs(b.contributionLog) - Math.abs(a.contributionLog) ||
-        a.ordinal - b.ordinal,
-    )
-
-  const running = makeIncrementalGap(usable, isMale, initial)
 
   /** Throws on a miss rather than passing 0 into the refit. See `stepOf`. */
   const targetFor = (ordinal: number): number => {
@@ -627,39 +707,56 @@ function selectMinimumSet(
     return target
   }
 
-  const chosen = new Set<number>()
-  let signed = initial.oskyrtLog
-  let gap = initialGap
-  for (const candidate of candidates) {
-    chosen.add(candidate.ordinal)
-    signed = running.commit(candidate.ordinal, targetFor(candidate.ordinal))
-    gap = Math.abs(signed)
-    if (gap <= thresholdLog) {
-      return {
-        chosen,
-        oskyrtLogAfter: gap,
-        oskyrtLogAfterSigned: signed,
-        closesGap: true,
-      }
-    }
-  }
-
-  // Exhausted. The gap is carried by people this side cannot reach — most often
-  // a small, well-paid advantaged group sitting above the line — so no set of
-  // raises here closes it. The list still stands as the employees to account
-  // for; it simply must not be presented as closing the gap.
+  // Ordered once, biggest carrier of óskýrt first. Greedy, so "fewest" is an
+  // approximation rather than a proven optimum, but the STOPPING TEST is a real
+  // refit rather than a running subtraction.
   //
-  // ⚠️ `chosen` is empty here only if the pool was empty to begin with, which an
-  // OLS reference makes unreachable: óskýrt ≠ 0 forces the disadvantaged
-  // cohort's residuals to sum against it, so at least one member is strictly
-  // below the line. Kept as a defensive branch — non-emptiness is guaranteed by
-  // the fit, not by this function.
-  return {
-    chosen,
-    oskyrtLogAfter: gap,
-    oskyrtLogAfterSigned: signed,
-    closesGap: false,
-  }
+  // ⚠️ The ordinal tie-break is load-bearing, not cosmetic. Two employees on
+  // an identical rate at an identical score — an ordinary pay grade — have
+  // bit-identical |contributionLog|. Array#sort is stable, so without this
+  // the winner is decided by INPUT order, and the two queries feeding this
+  // (report-result.service and report-draft-analysis.service) return
+  // whatever order Postgres hands back. If only one of the pair fits inside
+  // the set, the preview and the submit can disagree about who is in it and
+  // the submit guard rejects with "Detected outlier(s) missing from the
+  // outlier groups". Both halves are fixed: this comparator, and an explicit
+  // `order` on both queries.
+  const carriers = initial.employees
+    .filter((employee) => employee.widensGap)
+    .sort(
+      (a, b) =>
+        Math.abs(b.contributionLog) - Math.abs(a.contributionLog) ||
+        a.ordinal - b.ordinal,
+    )
+
+  // ⚠️ Both walks are run, and the better result wins. Two-directional is a
+  // large improvement on average and a REGRESSION on a small tail — there are
+  // cohort shapes where lift-only closes the gap and two-sided, guard and all,
+  // does not. Running the narrower pool as well costs one extra O(n) pass and
+  // guarantees no company gets a worse answer than the one-directional rule
+  // would have given it. That guarantee is worth more than the pass costs.
+  const twoDirectional = walkPool(
+    usable,
+    isMale,
+    thresholdLog,
+    initial,
+    targetFor,
+    carriers,
+    true,
+  )
+  const liftOnly = walkPool(
+    usable,
+    isMale,
+    thresholdLog,
+    initial,
+    targetFor,
+    carriers.filter(
+      (employee) => employee.payStatus === PayStatusEnum.UNDERPAID,
+    ),
+    false,
+  )
+
+  return betterWalk(twoDirectional, liftOnly)
 }
 
 /**

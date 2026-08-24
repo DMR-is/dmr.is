@@ -616,13 +616,17 @@ VALUES ('${resultId}', '${reportId}', 3.90, 'v2', '${salarySnap}', '${wageGapSna
     const exp = outliersExplained
       ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
       : `NULL, NULL, NULL, NULL`
-    // ⚠️ Membership is derived from the snapshot's `inMinimumSet`, NOT hardcoded.
-    // It used to insert one row for empIds[0] — ordinal 1, the man paid ABOVE the
-    // line — because the retired ±band flagged whoever deviated most in either
-    // direction. The lágmarksmengi is lift-only, so it is ordinals 2 and 4: the
-    // underpaid women whose raises close the gap. The membership did not just
-    // change size, it changed PEOPLE, and hardcoding it would have put the
-    // wrong employee under an úrbótaáætlun.
+    // ⚠️ Membership is derived from the snapshot's `inMinimumSet`, NOT hardcoded,
+    // and it has now changed PEOPLE twice — which is the whole argument for
+    // deriving it.
+    //
+    // Originally one hardcoded row for empIds[0], ordinal 1: the man paid ABOVE
+    // the line, because the retired ±band flagged whoever deviated most in
+    // either direction. The lift-only lágmarksmengi replaced him with ordinals 2
+    // and 4, the underpaid women whose raises closed the gap. The
+    // two-directional set is back to ordinal 1 alone — not because the band is
+    // back, but because he carries more of óskýrt than the two women together
+    // and correcting him alone brings it under 3,9%.
     const minimumSetOrdinals = wageGapFixtures.scenarioWithOutliers.employees
       .filter((e) => e.inMinimumSet)
       .map((e) => e.ordinal)

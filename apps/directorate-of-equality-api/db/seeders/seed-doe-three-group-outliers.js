@@ -406,16 +406,19 @@ COMMIT;
 // explained groups (all four explanation fields populated) and distribute the
 // flagged outliers round-robin so every group gets a spread of deviations.
 // ⚠️ Membership is the lágmarksmengi, read off this report's OWN frozen
-// decomposition. It used to be `|differencePercent| >= 32`, a leftover of the
-// retired ±1,95% band, which selected whoever deviated furthest in EITHER
-// direction — including people paid above the line. The set is now lift-only and
-// company-wide: the fewest underpaid konur whose raises bring óskýrt under 3,9%.
+// decomposition — never hardcoded. It has changed twice: first from
+// `|differencePercent| >= 32` (a leftover of the retired ±1,95% band, which
+// flagged whoever deviated furthest in either direction and decided nothing),
+// then from a lift-only set to a two-directional one. It is now the fewest
+// employees CARRYING óskýrt whose correction brings it under 3,9% — underpaid
+// konur and overpaid karlar together, so the rows here span both directions.
 //
 // The demo sheet yields exactly SIX, which is why this scenario still works:
-// round-robin across three groups puts two in each. If the pay cut in
-// `refresh-wage-gap-fixtures.ts` is ever changed, check the count still divides
-// sensibly — at three or fewer, the third group would come out empty and this
-// scenario would stop demonstrating what it is named for.
+// round-robin across three groups puts two in each. It survived the switch to a
+// two-directional set at the same size but with DIFFERENT people. If the pay cut
+// in `refresh-wage-gap-fixtures.ts` or the selection rule is ever changed, check
+// the count still divides sensibly — at three or fewer the third group comes out
+// empty and this scenario stops demonstrating what it is named for.
 function outliersSql() {
   const filtered = wageGapFixtures.richSheet.employees.filter(
     (e) => e.inMinimumSet,

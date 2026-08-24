@@ -66,7 +66,7 @@
         "contributionShare": 9.1778,
         "payStatus": "OVERPAID",
         "widensGap": true,
-        "inMinimumSet": false
+        "inMinimumSet": true
       },
       {
         "ordinal": 3,
@@ -206,7 +206,7 @@
         "contributionShare": 9.041,
         "payStatus": "UNDERPAID",
         "widensGap": true,
-        "inMinimumSet": true
+        "inMinimumSet": false
       },
       {
         "ordinal": 13,
@@ -1018,7 +1018,7 @@
         "contributionShare": 12.6272,
         "payStatus": "OVERPAID",
         "widensGap": true,
-        "inMinimumSet": false
+        "inMinimumSet": true
       },
       {
         "ordinal": 71,
@@ -1200,7 +1200,7 @@
         "contributionShare": 9.0548,
         "payStatus": "UNDERPAID",
         "widensGap": true,
-        "inMinimumSet": true
+        "inMinimumSet": false
       },
       {
         "ordinal": 84,
@@ -1444,7 +1444,7 @@
     "gapCarrierCount": 49,
     "minimumSetSize": 6,
     "oskyrtWithinBenchmark": false,
-    "oskyrtLogAfterMinimumSet": 0.034862,
+    "oskyrtLogAfterMinimumSet": 0.037698,
     "oskyrtDirectionAfterMinimumSet": "FEMALE",
     "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
@@ -1502,7 +1502,7 @@
         "contributionShare": 56.1146,
         "payStatus": "OVERPAID",
         "widensGap": true,
-        "inMinimumSet": false
+        "inMinimumSet": true
       },
       {
         "ordinal": 2,
@@ -1516,7 +1516,7 @@
         "contributionShare": 30.358,
         "payStatus": "UNDERPAID",
         "widensGap": true,
-        "inMinimumSet": true
+        "inMinimumSet": false
       },
       {
         "ordinal": 3,
@@ -1544,7 +1544,7 @@
         "contributionShare": 26.3716,
         "payStatus": "UNDERPAID",
         "widensGap": true,
-        "inMinimumSet": true
+        "inMinimumSet": false
       },
       {
         "ordinal": 5,
@@ -1576,9 +1576,9 @@
       }
     ],
     "gapCarrierCount": 4,
-    "minimumSetSize": 2,
+    "minimumSetSize": 1,
     "oskyrtWithinBenchmark": false,
-    "oskyrtLogAfterMinimumSet": 0.030478,
+    "oskyrtLogAfterMinimumSet": 0.030911,
     "oskyrtDirectionAfterMinimumSet": "FEMALE",
     "minimumSetClosesGap": true,
     "thresholdLog": 0.039781,
