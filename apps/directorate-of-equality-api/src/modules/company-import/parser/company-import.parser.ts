@@ -38,6 +38,57 @@ const HEADERS = {
 // Without these the file isn't the register we expect.
 const REQUIRED_HEADERS = [HEADERS.nationalId, HEADERS.name, HEADERS.size]
 
+/** Headers are row 1, so data starts here. */
+const FIRST_DATA_ROW = 2
+
+/**
+ * Hard ceiling on how many data rows are scanned, whatever the file claims.
+ *
+ * ⚠️ `sheet.rowCount` is NOT a trustworthy bound — it is
+ * `Worksheet._lastRowNumber`, taken straight from the `r` attribute of the
+ * highest `<row>` in the uploaded sheet XML (`row-xform.js` does
+ * `parseInt(node.attributes.r, 10)` with no clamp). Whoever authors the .xlsx
+ * chooses it. Because `getRow`/`getCell` *create and retain* Row and Cell
+ * objects, a sub-kilobyte file declaring `<row r="2000000000">` used to drive a
+ * synchronous allocating loop that blocked the only thread and exhausted the
+ * heap — taking the whole API down for every user, from the cheapest possible
+ * request. The endpoint needs no privilege beyond a logged-in DoE user, since
+ * `AdminGuard` only resolves an active `doe_user` row and returns true.
+ *
+ * The value is headroom, not a business rule: the Icelandic company register is
+ * on the order of tens of thousands of rows, so 100 000 cannot reject a real
+ * import while still bounding the worst case to something that finishes.
+ */
+const ABSOLUTE_MAX_COMPANY_ROWS = 100000
+
+/**
+ * Stop scanning after this many consecutive empty rows.
+ *
+ * The cap above is the backstop; this is what normally ends the scan. Whole-
+ * column formatting — borders or styles applied to an entire column, very
+ * common in hand-edited files — pushes `rowCount` out to Excel's ~1 048 576-row
+ * maximum with no data behind it. A real register never contains a 200-row
+ * internal gap, so breaking after this run bounds cell materialisation to the
+ * real data plus a small margin, while still tolerating the stray blank rows
+ * that a register exported by hand tends to carry.
+ *
+ * Matches `report-excel/parser/employees.parser.ts`, which guards the same
+ * hazard on the employee sheet.
+ */
+const EMPTY_ROW_RUN_LIMIT = 200
+
+/**
+ * The scan bound, clamped to {@link ABSOLUTE_MAX_COMPANY_ROWS}.
+ *
+ * Exported so the clamp itself can be asserted directly: the blank-run break is
+ * what ends a realistic scan, which means an end-to-end test cannot distinguish
+ * a working cap from a missing one without a fixture of >100 000 populated rows.
+ * Keeping the arithmetic here makes the bound a unit-testable fact rather than
+ * an untested backstop.
+ */
+export const computeLastRow = (rowCount: number): number =>
+  Math.min(rowCount, FIRST_DATA_ROW + ABSOLUTE_MAX_COMPANY_ROWS - 1)
+
 /** LAUNAFLOKKUR → size bucket. Anything that isn't 50+/25-49 is treated as SMALL. */
 export const mapSizeLabel = (label: string | null): CompanySizeEnum => {
   const v = (label ?? '').replace(/\s/g, '')
@@ -104,12 +155,22 @@ export const parseCompanyImport = async (
   const seenAt = new Map<string, number>()
   const dupKennitalas = new Set<string>()
 
-  for (let rowNo = 2; rowNo <= sheet.rowCount; rowNo++) {
+  // Never scan past the ceiling, however many rows the file declares.
+  const lastRow = computeLastRow(sheet.rowCount)
+
+  let consecutiveEmpty = 0
+  for (let rowNo = FIRST_DATA_ROW; rowNo <= lastRow; rowNo++) {
     const rawKt = cellStr(rowNo, HEADERS.nationalId)
     const name = cellStr(rowNo, HEADERS.name)
 
-    // Skip fully-blank rows (no kennitala and no name).
-    if (!rawKt && !name) continue
+    // Skip fully-blank rows (no kennitala and no name), and bail out of a
+    // runaway scan once the blank run is long enough that no real data can
+    // plausibly follow (see EMPTY_ROW_RUN_LIMIT).
+    if (!rawKt && !name) {
+      if (++consecutiveEmpty >= EMPTY_ROW_RUN_LIMIT) break
+      continue
+    }
+    consecutiveEmpty = 0
 
     const nationalId = rawKt ? sanitize(rawKt) : null
 
