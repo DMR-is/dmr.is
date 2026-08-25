@@ -2,6 +2,11 @@ name: Deploy Containers to AWS Dev
 
 on:
   workflow_dispatch:
+    inputs:
+      rebuild-all:
+        description: 'Rebuild every container, ignoring affected-detection'
+        type: boolean
+        default: false
   workflow_run:
     workflows: ['Monorepo pipeline - quality']
     branches: ['main']
@@ -18,6 +23,18 @@ permissions:
   id-token: write # Required f. IAM Token
   contents: read
 
+# Only one dev deploy at a time, newest merge wins. Without this, two merges in
+# quick succession race for the same ECR tags.
+#
+# Cancelling is only safe because affected-detection below is based on the last
+# SUCCESSFUL deploy: a cancelled run does not advance that base, so the next run
+# still sees the same containers as affected and rebuilds them. Do not remove the
+# last-successful-event input while this is enabled -- together they would drop
+# changes silently.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   detect-affected:
     name: Detect affected containers
@@ -28,6 +45,7 @@ jobs:
       unaffected: ${{ steps.set-affected.outputs.unaffected }}
       has_affected: ${{ steps.set-affected.outputs.has_affected }}
       has_unaffected: ${{ steps.set-affected.outputs.has_unaffected }}
+      base_sha: ${{ steps.set-affected.outputs.base_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,11 +56,43 @@ jobs:
         with:
           node-version: 24.19.0
 
+      # BASE MUST BE THE LAST SUCCESSFUL DEPLOY, NOT HEAD~1.
+      #
+      # Both inputs matter. last-successful-event defaults to `push`, and this
+      # workflow only ever runs on workflow_run / workflow_dispatch, so the
+      # default finds nothing, warns, and silently falls back to HEAD~1. That
+      # makes "unaffected" mean "untouched by the newest commit" instead of
+      # "unchanged since the image that is actually deployed" -- which is what
+      # the re-tag job below assumes when it copies an image forward.
+      #
+      # The consequence was not theoretical. A container whose build failed or
+      # was cancelled kept its old image, the next merge marked it unaffected,
+      # and the re-tag stamped that new commit's sha onto the stale image. Since
+      # .github/actions/deploy/version-tag resolves prod releases by
+      # sha-<commit>, stale code shipped to production under a version tag
+      # claiming to contain the change, with every workflow run green.
+      #
+      # When there is no baseline at all -- first run after a rename, or run
+      # history aged out -- the action reports noPreviousBuild instead of us
+      # guessing. That case is handled explicitly below by treating every
+      # container as affected: rebuilding all eleven is wasteful but always
+      # correct, where HEAD~1 is cheap and sometimes wrong. Fail safe, not
+      # fail closed, so a missing baseline never blocks a deploy either.
+      #
+      # workflow-id is left at its default, which is this workflow, so the
+      # baseline is this workflow's own last successful run.
       - name: Set NX SHAs
+        id: set-shas
         uses: nrwl/nx-set-shas@v5
+        with:
+          last-successful-event: workflow_run
 
       - name: Determine affected containers
         id: set-affected
+        env:
+          NO_PREVIOUS_BUILD: ${{ steps.set-shas.outputs.noPreviousBuild }}
+          BASE_SHA: ${{ steps.set-shas.outputs.base }}
+          REBUILD_ALL: ${{ inputs.rebuild-all }}
         run: |
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
@@ -61,11 +111,29 @@ jobs:
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
-          echo "Log out what show projects returns"
-          npx nx show projects --affected --type=app
+          # Two ways to end up rebuilding everything, and both produce a set of
+          # sha-<HEAD> tags that are true by construction rather than by
+          # inheritance -- which is what makes this the repair tool when tags are
+          # suspect.
+          #
+          # - no baseline: nothing can be proven unchanged, so nothing is
+          #   claimed unchanged
+          # - rebuild-all: asked for by hand, e.g. after a base image update
+          #   that no source diff can see, or to re-establish trust in the tags
+          if [ "${REBUILD_ALL:-}" = "true" ]; then
+            echo "::notice::rebuild-all requested. Building every container regardless of affected-detection."
+            AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+          elif [ "${NO_PREVIOUS_BUILD:-}" = "true" ]; then
+            echo "::warning::No previous successful deploy found. Rebuilding every container, because there is no baseline that would let 'unaffected' mean anything."
+            AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+          else
+            echo "Base: ${BASE_SHA}"
+            echo "Determining affected projects with nx"
+            AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          fi
 
-          echo "Determining affected projects with nx"
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          echo "Affected projects:"
+          echo "$AFFECTED_PROJECTS"
 
           AFFECTED_CONTAINERS="[]"
           UNAFFECTED_CONTAINERS="[]"
@@ -81,6 +149,12 @@ jobs:
 
           echo "affected=$AFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
           echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
+
+          # Published so the re-tag job can copy the image built for this exact
+          # commit, rather than whatever `latest` happens to point at. Taken from
+          # the action's output rather than the NX_BASE env var it also exports,
+          # so the dependency is explicit.
+          echo "base_sha=${BASE_SHA}" >> $GITHUB_OUTPUT
 
           HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
           HAS_UNAFFECTED=$([ "$(echo $UNAFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
@@ -171,21 +245,40 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Copy latest tag to sha-${{ github.sha }}
+      # Copy the image built for the BASE commit, not `latest`.
+      #
+      # `latest` is a floating tag: it only moves when a container is actually
+      # built, so it can be older than the base and carries no proof of which
+      # commit it came from. sha-<base> is exact, and because base is the last
+      # successful deploy, "unaffected since base" means this image really is
+      # this container at this commit. That is what makes the copy honest rather
+      # than a guess -- and what stops a stale image from being stamped with a
+      # commit it does not contain, which prod then releases by sha.
+      #
+      # If sha-<base> is missing, that invariant is already broken. Fail rather
+      # than fall back to `latest`: a red deploy is recoverable, a mislabelled
+      # image in production is not.
+      - name: Copy sha-${{ needs.detect-affected.outputs.base_sha }} to sha-${{ github.sha }}
         run: |
           SHA="${{ github.sha }}"
+          BASE_SHA="${{ needs.detect-affected.outputs.base_sha }}"
           REPO="${{ matrix.container }}"
 
-          echo "Re-tagging ${REPO}:latest as sha-${SHA}"
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::No base SHA from detect-affected. Cannot re-tag ${REPO} safely."
+            exit 1
+          fi
+
+          echo "Re-tagging ${REPO}:sha-${BASE_SHA} as sha-${SHA}"
 
           MANIFEST=$(aws ecr batch-get-image \
             --repository-name "$REPO" \
-            --image-ids imageTag=latest \
+            --image-ids imageTag="sha-${BASE_SHA}" \
             --query 'images[].imageManifest' \
             --output text)
 
           if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
-            echo "::error::No 'latest' image found for ${REPO}. Cannot re-tag."
+            echo "::error::No sha-${BASE_SHA} image for ${REPO}. The last successful deploy did not produce one, so this container's history is broken -- rebuild it rather than re-tagging something else."
             exit 1
           fi
 
