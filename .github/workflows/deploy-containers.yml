@@ -39,7 +39,7 @@ jobs:
           node-version: 24.19.0
 
       - name: Set NX SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
 
       - name: Determine affected containers
         id: set-affected

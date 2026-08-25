@@ -33,7 +33,7 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - name: Linting
         run: yarn run nx affected -t lint
@@ -118,7 +118,7 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - name: Run tests
         run: yarn run nx affected -t test
@@ -144,7 +144,7 @@ jobs:
           cache-install-state: true
           cache-node-modules: true
 
-      - uses: nrwl/nx-set-shas@v4
+      - uses: nrwl/nx-set-shas@v5
 
       - name: tsc
         run: yarn run nx affected -t tsc
