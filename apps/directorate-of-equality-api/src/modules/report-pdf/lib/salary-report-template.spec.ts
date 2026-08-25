@@ -1,11 +1,17 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
+import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
 import {
   GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../../report/models/report.enums'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
+import {
+  PayDispersionBlockerEnum,
+  type PayDispersionDto,
+  PayDispersionPopulationEnum,
+} from '../../report-statistics/dto/pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   buildSalaryReportHtml,
@@ -183,7 +189,14 @@ describe('buildSalaryReportHtml', () => {
   })
 
   describe('ábendingar um launadreifingu', () => {
-    const withPayDispersion = (payDispersion: unknown) => {
+    /**
+     * ⚠️ Typed as the DTO, deliberately. With `unknown` these four fixtures were
+     * unchecked against `PayDispersionDto` — renaming `employeeOrdinal` would
+     * have rendered "Starfsmaður undefined" with all four tests still passing.
+     * The absent-field case below opts out explicitly, because that is the one
+     * scenario whose whole point is a payload that does NOT match the type.
+     */
+    const withPayDispersion = (payDispersion: PayDispersionDto | undefined) => {
       const data = makeData()
       return buildSalaryReportHtml({
         ...data,
@@ -198,9 +211,10 @@ describe('buildSalaryReportHtml', () => {
       const html = withPayDispersion({
         available: true,
         blockers: [],
-        population: 'ALL_EMPLOYEES',
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
         threshold: 2,
-        cohortResidualSpreadPercent: 25.67,
+        cohortResidualSpreadPercentUp: 25.67,
+        cohortResidualSpreadPercentDown: -20.43,
         employees: [
           {
             employeeOrdinal: 70,
@@ -209,7 +223,7 @@ describe('buildSalaryReportHtml', () => {
             regularHourlyWage: 7800,
             expectedHourlyWage: 4488,
             deviationPercent: 73.8,
-            payStatus: 'OVERPAID',
+            payStatus: PayStatusEnum.OVERPAID,
             studentizedResidual: 2.53,
           },
         ],
@@ -221,7 +235,10 @@ describe('buildSalaryReportHtml', () => {
       // Spreads, not a percentage — the two columns sit side by side and must
       // not be confusable.
       expect(html).toContain('+2,53')
-      expect(html).toContain('±25,7%')
+      // Both ends, no ±: the spread is symmetric in log points and asymmetric in
+      // krónur, so one figure with a ± overstates the downward band by ~5pp.
+      expect(html).toContain('-20,4% til +25,7%')
+      expect(html).not.toContain('±')
 
       // ⚠️ The sentence that stops a reader treating this as a second
       // úrbótaáætlun. If this assertion is ever deleted, so is the distinction.
@@ -242,9 +259,10 @@ describe('buildSalaryReportHtml', () => {
       const html = withPayDispersion({
         available: true,
         blockers: [],
-        population: 'EXCLUDING_MINIMUM_SET',
+        population: PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET,
         threshold: 2,
-        cohortResidualSpreadPercent: 26.1,
+        cohortResidualSpreadPercentUp: 26.1,
+        cohortResidualSpreadPercentDown: -20.7,
         employees: [
           {
             employeeOrdinal: 1,
@@ -253,7 +271,7 @@ describe('buildSalaryReportHtml', () => {
             regularHourlyWage: 7000,
             expectedHourlyWage: 4060,
             deviationPercent: 72.4,
-            payStatus: 'OVERPAID',
+            payStatus: PayStatusEnum.OVERPAID,
             studentizedResidual: 2.49,
           },
         ],
@@ -266,18 +284,20 @@ describe('buildSalaryReportHtml', () => {
     it('distinguishes "cannot be assessed" from "nothing to report"', () => {
       const blocked = withPayDispersion({
         available: false,
-        blockers: ['COHORT_TOO_SMALL'],
-        population: 'ALL_EMPLOYEES',
+        blockers: [PayDispersionBlockerEnum.COHORT_TOO_SMALL],
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
         threshold: 2,
-        cohortResidualSpreadPercent: null,
+        cohortResidualSpreadPercentUp: null,
+        cohortResidualSpreadPercentDown: null,
         employees: [],
       })
       const allClear = withPayDispersion({
         available: true,
         blockers: [],
-        population: 'ALL_EMPLOYEES',
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
         threshold: 2,
-        cohortResidualSpreadPercent: 4.2,
+        cohortResidualSpreadPercentUp: 4.2,
+        cohortResidualSpreadPercentDown: -4.03,
         employees: [],
       })
 

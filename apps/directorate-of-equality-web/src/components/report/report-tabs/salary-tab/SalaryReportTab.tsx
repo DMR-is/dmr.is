@@ -81,11 +81,6 @@ export const SalaryReportTab = ({
         salaryDataBasis={salaryDataBasis}
         salaryDataPeriod={salaryDataPeriod}
       />
-      {/* ⚠️ Below the úrbótaáætlun, and OUTSIDE the `groups.length > 0` gate on
-          purpose: the two are mutually exclusive by construction. Ábendingar
-          render only when the company is within the benchmark, which is exactly
-          when the lágmarksmengi — and therefore `groups` — is empty. */}
-      <PayDispersionTable payDispersion={payDispersion} />
       {groups.length > 0 && (
         <Box marginBottom={4}>
           <OutlierPlanTable
@@ -108,6 +103,17 @@ export const SalaryReportTab = ({
           />
         </Box>
       )}
+      {/*
+        ⚠️ LAST, and outside the `groups.length > 0` gate. Last because the
+        obligation must be read before the advisory: putting a list that asks
+        nothing above the one that asks for a reason and an action per person is
+        the exact confusion this section exists to avoid.
+
+        Outside the gate because the two are mutually exclusive by construction —
+        ábendingar render only for a company within the benchmark, which is
+        precisely when the lágmarksmengi, and therefore `groups`, is empty.
+      */}
+      <PayDispersionTable payDispersion={payDispersion} />
     </Stack>
   )
 }

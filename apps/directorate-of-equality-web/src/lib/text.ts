@@ -496,8 +496,8 @@ export const reportText = {
        * answer being that the cut-off is measured in the company's OWN spread, not
        * in percent.
        */
-      spreadNote: (spread: string, threshold: string) =>
-        `Dæmigert vik frá línunni hjá þessu fyrirtæki er ±${spread}. Hér eru starfsmenn sem víkja meira en ${threshold} staðalvik frá henni.`,
+      spreadNote: (down: string, up: string, threshold: string) =>
+        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}. Hér eru starfsmenn sem víkja ${threshold} staðalvik eða meira frá henni.`,
       allClear:
         'Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.',
       /**

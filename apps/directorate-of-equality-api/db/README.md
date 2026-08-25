@@ -236,7 +236,7 @@ Two consequences worth knowing when reading older code or data:
   ⚠️ Nor are the ábendingar of the next subsection the band returning. The band was a **fixed
   per-person width** that _decided compliance_; ábendingar are measured in the company's own pay
   spread, run only after compliance has already been settled, and oblige the employer to nothing. A
-  fixed 20%-off-expected rule would flag 28 of those 120 employees and 45 of 100 on richSheet,
+  fixed 20%-off-expected rule would flag 28 of the 120-employee reference cohort and 45 of 100 on richSheet,
   because the spread itself is roughly that wide — that is the band's failure with a bigger
   constant.
 

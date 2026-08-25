@@ -50,7 +50,7 @@ import { buildChartFromEmployeePoints } from '../src/modules/report-statistics/l
  * `1 − DEMO_PAY_CUT` before anything is computed from it.
  *
  * Why the sheet needs adjusting at all: as captured, it is **compliant** under
- * the rule that replaced the ±band — óskýrt is 2,11% against a 3,9% benchmark,
+ * the rule that replaced the ±band — óskýrt is 2,10% against a 3,9% benchmark,
  * and it runs *í óhag karla*. So the two seeders built to demonstrate the
  * úrbótaáætlun had nothing to demonstrate. The sheet was captured when an
  * individual ±1,95% band decided everything and a company-wide gap decided

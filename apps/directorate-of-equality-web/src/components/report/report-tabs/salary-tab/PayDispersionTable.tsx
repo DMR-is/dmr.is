@@ -21,8 +21,12 @@ const p = reportText.salaryTab.payDispersion
  * decimal is also too coarse — 2,5 and 2,5 would hide the ordering between two
  * rows that 2,53 and 2,49 make plain.
  */
-const formatSpreads = (value: number): string =>
-  `${value > 0 ? '+' : ''}${value.toFixed(2).replace('.', ',')}`
+const formatSpreads = (value: number | null | undefined): string =>
+  value == null
+    ? dash
+    : `${value > 0 ? '+' : ''}${value.toFixed(2).replace('.', ',')}`
+
+const dash = '–'
 
 const genderMap: Record<string, string> = {
   MALE: sharedText.genders.male,
@@ -48,6 +52,7 @@ const columns: ColumnDef<PayDispersionEmployeeDto>[] = [
   {
     accessorKey: 'employeeOrdinal',
     header: p.numberHeader,
+    cell: ({ getValue }) => getValue<number | null>() ?? dash,
     enableSorting: false,
     meta: { fit: true },
   },
@@ -61,6 +66,7 @@ const columns: ColumnDef<PayDispersionEmployeeDto>[] = [
   {
     accessorKey: 'score',
     header: p.points,
+    cell: ({ getValue }) => getValue<number | null>() ?? dash,
     enableSorting: false,
     meta: { fit: true },
   },
@@ -71,10 +77,13 @@ const columns: ColumnDef<PayDispersionEmployeeDto>[] = [
     enableSorting: false,
   },
   {
+    // Absorbs the width the `fit` columns do not use, so they collapse to their
+    // content instead of the browser distributing slack across all seven.
     accessorKey: 'expectedHourlyWage',
     header: p.predictedSalary,
     cell: ({ getValue }) => formatHourlyRate(getValue<number>()),
     enableSorting: false,
+    meta: { grow: true },
   },
   {
     id: 'deviationPercent',
@@ -129,10 +138,22 @@ export const PayDispersionTable = ({
   // Deliberately unrendered, NOT unused: do not remove the branch. Optional-chained rather than compared directly, so
   // an older API response (where the field is absent) renders nothing instead of
   // throwing.
-  if (payDispersion?.population !== 'ALL_EMPLOYEES') return null
+  if (!payDispersion) return null
+  // ⚠️ Blocker states must survive this gate. `population` is ALL_EMPLOYEES
+  // whenever no lágmarksmengi was withheld — which includes every snapshot where
+  // no gap is computable — so a report that cannot be assessed still renders its
+  // reason. Only a PRODUCIBLE list for the not-yet-approved population is skipped.
+  if (payDispersion.available && payDispersion.population !== 'ALL_EMPLOYEES') {
+    return null
+  }
 
-  const { available, blockers, employees, cohortResidualSpreadPercent } =
-    payDispersion
+  const {
+    available,
+    blockers,
+    employees,
+    cohortResidualSpreadPercentUp,
+    cohortResidualSpreadPercentDown,
+  } = payDispersion
 
   return (
     <Box marginBottom={4}>
@@ -156,20 +177,38 @@ export const PayDispersionTable = ({
         ) : (
           <Stack space={2}>
             <Text variant="default">{p.intro}</Text>
-            {/* The sentence that keeps this from reading as a second
-                úrbótaáætlun. Not optional. */}
-            <Text variant="small" color="dark300">
+            {/*
+              The sentence that keeps this from reading as a second
+              úrbótaáætlun. Not optional — and deliberately NOT `dark300`: that
+              muted grey is for de-emphasised asides, and this is the most
+              load-bearing sentence in the section. Muting the one line that says
+              "you owe nothing for this" is exactly the wrong emphasis, and it
+              also puts the contrast below AA.
+            */}
+            <Text variant="default" fontWeight="semiBold">
               {p.noObligation}
             </Text>
-            {cohortResidualSpreadPercent != null && (
-              <Text variant="small" color="dark300">
-                {p.spreadNote(
-                  formatPercent(cohortResidualSpreadPercent),
-                  String(payDispersion.threshold).replace('.', ','),
-                )}
-              </Text>
-            )}
-            <Table columns={columns} data={employees} />
+            {cohortResidualSpreadPercentUp != null &&
+              cohortResidualSpreadPercentDown != null && (
+                <Text variant="small" color="dark300">
+                  {p.spreadNote(
+                    formatPercent(cohortResidualSpreadPercentDown),
+                    formatPercent(cohortResidualSpreadPercentUp, {
+                      signed: true,
+                    }),
+                    String(payDispersion.threshold).replace('.', ','),
+                  )}
+                </Text>
+              )}
+            {/*
+              ⚠️ `layout="auto"` is REQUIRED by the `fit`/`grow` meta above — see
+              the ColumnMeta docstring in the shared Table. Without it the table
+              defaults to `fixed` while `sizingStyle` still applies
+              `width: 1; nowrap`, so every fit column is pinned to 1px and its
+              content overflows the cell. `OutlierGroupTable` passes it for the
+              same reason.
+            */}
+            <Table columns={columns} data={employees} layout="auto" />
           </Stack>
         )}
       </Stack>

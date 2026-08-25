@@ -720,12 +720,21 @@ Because the spread **is** roughly that wide. Measured against the shipped engine
 
 | cohort            |   n | spread `s` in krónur | `\|t\| ≥ 2` | fixed `\|frávik\| ≥ 20%` |
 | ----------------- | --: | -------------------- | ----------: | -----------------------: |
-| reference company | 120 | ±19,5%               |       **3** |                       28 |
-| richSheet         | 100 | ±26,1%               |       **2** |                       45 |
+| reference company | 120 | −16,4% … +19,6%      |       **3** |                       28 |
+| richSheet         | 100 | −20,4% … +25,7%      |       **2** |                       45 |
 
 A fixed 20% rule flags a third of the workforce. That is the retired ±1,95% band's
 failure mode with a bigger constant — an arbitrary width, applied per person,
 deciding nothing.
+
+⚠️ **The spread is symmetric in log space and asymmetric in krónur, so it is never
+printed with a `±`.** `s` is one number, but `exp(s) − 1` upward is always larger in
+magnitude than `exp(−s) − 1` downward: +19,6% against −16,4% on the reference
+cohort, +25,7% against −20,4% on richSheetCompliant — a 3–5 percentage-point gap.
+A single figure shown as "±19,6%" would tell an employee sitting 18% _below_
+expected that they are inside the company's spread when they are outside it. The
+snapshot therefore carries both ends (`cohortResidualSpreadPercentUp` /
+`…Down`) and every surface prints the range.
 
 ⚠️ **This is not the band coming back.** The band was a fixed per-person tolerance
 that _decided compliance_. This is a distribution-relative screen that decides
@@ -753,10 +762,19 @@ no regulation has asked about.
 
 ### Two populations, and why the second is not displayed yet
 
-| company     | population              | shown today                        |
-| ----------- | ----------------------- | ---------------------------------- |
-| within 3,9% | `ALL_EMPLOYEES`         | **yes**                            |
-| over 3,9%   | `EXCLUDING_MINIMUM_SET` | **no** — computed, exposed, tested |
+| company                     | population              | shown today                        |
+| --------------------------- | ----------------------- | ---------------------------------- |
+| within 3,9%                 | `ALL_EMPLOYEES`         | **yes**                            |
+| over 3,9%                   | `EXCLUDING_MINIMUM_SET` | **no** — computed, exposed, tested |
+| no computable gap (blocked) | `ALL_EMPLOYEES`         | **yes** — as a stated reason       |
+
+⚠️ The population records whether a lágmarksmengi was **withheld**, so it is
+`EXCLUDING_MINIMUM_SET` only when the company is over the benchmark. A report with
+no computable gap — a single-gender workforce, say — has no lágmarksmengi to
+withhold, so it stays `ALL_EMPLOYEES` and renders its blocker reason instead.
+Deriving this from "is the company compliant" instead put those reports into the
+supplementary population, which every surface skips _before_ it reads `blockers` —
+so the section vanished silently on exactly the report that needed an explanation.
 
 On a company over the benchmark the lágmarksmengi is withheld from the list, so
 nobody appears in two tables under two framings. Everyone else stays eligible —

@@ -281,12 +281,24 @@ function improvementPlanSection(
  * a finding that failed to print.
  */
 function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
-  if (payDispersion?.population !== PayDispersionPopulationEnum.ALL_EMPLOYEES) {
+  if (!payDispersion) return ''
+  // ⚠️ Blocker states must survive this gate — see the note on `population` in
+  // pay-dispersion.ts. A report that cannot be assessed still explains why; only
+  // a PRODUCIBLE list for the not-yet-approved population is skipped.
+  if (
+    payDispersion.available &&
+    payDispersion.population !== PayDispersionPopulationEnum.ALL_EMPLOYEES
+  ) {
     return ''
   }
 
-  const { available, blockers, employees, cohortResidualSpreadPercent } =
-    payDispersion
+  const {
+    available,
+    blockers,
+    employees,
+    cohortResidualSpreadPercentUp,
+    cohortResidualSpreadPercentDown,
+  } = payDispersion
 
   // Three states, and an empty table is only one of them — the same rule the
   // úrbótaáætlun section above had to learn. "Cannot be assessed" and "nothing to
@@ -305,10 +317,14 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     )
   }
 
+  // ⚠️ Both ends, and no `±`. The spread is symmetric in log points and asymmetric
+  // in krónur, so a single figure with a ± in front of it overstates the downward
+  // band by 3–5 percentage points — and this is the document of record.
   const spreadNote =
-    cohortResidualSpreadPercent === null
+    cohortResidualSpreadPercentUp === null ||
+    cohortResidualSpreadPercentDown === null
       ? ''
-      : `<p class="empty-note">Dæmigert vik frá línunni hjá þessu fyrirtæki er ±${formatPercent(cohortResidualSpreadPercent)}. Hér eru starfsmenn sem víkja meira en ${formatNumber(payDispersion.threshold)} staðalvik frá henni.</p>`
+      : `<p class="empty-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${formatNumber(payDispersion.threshold)} staðalvik eða meira frá henni.</p>`
 
   const rows = employees
     .map(

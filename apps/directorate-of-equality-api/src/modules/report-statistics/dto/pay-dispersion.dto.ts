@@ -166,9 +166,16 @@ export class PayDispersionDto {
   @ApiOptionalNumber({
     nullable: true,
     description:
-      'The cohort\'s own residual spread expressed in percent — exp(s) − 1. Context for the reader: it is why the cut-off is not a fixed percentage. Typically 19–26% on real workforces, which is why a fixed "20% off expected" rule flags a third of a workforce. Null when not available.',
+      "The cohort's own residual spread, UPWARD, in percent — exp(s) − 1. Context for the reader: it is why the cut-off is not a fixed percentage. Typically 19–26% on real workforces, which is why a fixed 20%-off-expected rule flags a third of a workforce. WARNING: do NOT render this as a symmetric plus-or-minus — the spread is symmetric in log space and asymmetric in percent, so pair it with cohortResidualSpreadPercentDown. Null when not available.",
   })
-  cohortResidualSpreadPercent!: number | null
+  cohortResidualSpreadPercentUp!: number | null
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      'The same spread DOWNWARD, in percent — exp(-s) − 1, so always negative and always smaller in magnitude than the upward figure (+19,55% / −16,35% on a real cohort). Exists so a surface can state the band honestly instead of printing one end with a plus-or-minus in front of it. Null when not available.',
+  })
+  cohortResidualSpreadPercentDown!: number | null
 
   @ApiDtoArray(PayDispersionEmployeeDto)
   employees!: PayDispersionEmployeeDto[]

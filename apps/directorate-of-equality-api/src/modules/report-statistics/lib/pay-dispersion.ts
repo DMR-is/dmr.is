@@ -153,8 +153,18 @@ function residualSpread(
 export function computePayDispersion(
   snapshot: WageGapDecompositionSnapshot,
 ): PayDispersionDto {
+  // ⚠️ `!== false`, NOT `=== true`. The question this answers is *did we withhold
+  // a lágmarksmengi*, and we withhold one only when the company is over the
+  // benchmark. `oskyrtWithinBenchmark` is `null` when no gap is computable — a
+  // single-gender workforce, say — and in that state there IS no lágmarksmengi to
+  // withhold, so the population is everyone.
+  //
+  // Reading `=== true` put those snapshots in EXCLUDING_MINIMUM_SET, which both
+  // surfaces skip before they ever look at `blockers` — so GAP_NOT_COMPUTABLE
+  // rendered nowhere and the section silently vanished on the one report that most
+  // needed an explanation. See the spec that pins the population per state.
   const population =
-    snapshot.oskyrtWithinBenchmark === true
+    snapshot.oskyrtWithinBenchmark !== false
       ? PayDispersionPopulationEnum.ALL_EMPLOYEES
       : PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET
 
@@ -166,7 +176,8 @@ export function computePayDispersion(
       blockers,
       population,
       threshold: PAY_DISPERSION_THRESHOLD,
-      cohortResidualSpreadPercent: null,
+      cohortResidualSpreadPercentUp: null,
+      cohortResidualSpreadPercentDown: null,
       employees: [],
     }
   }
@@ -178,7 +189,16 @@ export function computePayDispersion(
       ? () => true
       : (employee: WageGapEmployeeSnapshot) => !employee.inMinimumSet
 
+  // ⚠️ Rounded BEFORE the comparison, not after. Filtering on the raw value and
+  // publishing a 2dp one makes the list unreproducible at the boundary: |t| =
+  // 1,996 would be excluded while displaying as 2,00, and 2,004 included while
+  // displaying the same. A reader checking our arithmetic against the printed
+  // column would find two rows they cannot account for. One rounding, one number.
   const employees = studentizedResiduals(snapshot)
+    .map((row) => ({
+      ...row,
+      studentizedResidual: round2(row.studentizedResidual),
+    }))
     .filter(
       (row) =>
         Math.abs(row.studentizedResidual) >= PAY_DISPERSION_THRESHOLD &&
@@ -197,11 +217,17 @@ export function computePayDispersion(
     blockers: [],
     population,
     threshold: PAY_DISPERSION_THRESHOLD,
-    // `exp(s) − 1`: the spread restated in krónur terms, so copy can say "the
-    // typical spread here is ±19,5%" and the reader understands why the cut-off
-    // is not itself a percentage.
-    cohortResidualSpreadPercent:
+    // ⚠️ TWO figures, because one would be a lie. The spread is symmetric in log
+    // space (±s) and asymmetric once converted to percent: `exp(s) − 1` upward is
+    // always larger in magnitude than `exp(−s) − 1` downward — +19,55/−16,35 on
+    // the reference cohort, +25,67/−20,43 on richSheetCompliant, a 3–5pp gap.
+    //
+    // A single field printed as "±19,55%" tells an employee sitting 18% BELOW
+    // expected that they are inside the company's spread when they are outside it.
+    cohortResidualSpreadPercentUp:
       spread === null ? null : round2((Math.exp(spread) - 1) * 100),
+    cohortResidualSpreadPercentDown:
+      spread === null ? null : round2((Math.exp(-spread) - 1) * 100),
     employees,
   }
 }
@@ -214,10 +240,17 @@ export function computePayDispersion(
 function blockersFor(
   snapshot: WageGapDecompositionSnapshot,
 ): PayDispersionBlockerEnum[] {
+  // ⚠️ Optional-chained, and `!fit` rather than `fit === null`. A snapshot with
+  // `pooledFit` ABSENT (an undefined key rather than a JSON null) passed the
+  // strict check and then threw on `.xSumSquares` below — and because this runs
+  // inside `ReportResultModel.fromModel`, the single mapping path for every
+  // report-result read, that TypeError would 500 the whole report-detail response
+  // rather than degrading one advisory section. Nothing upstream catches it:
+  // `application.service.ts` catches only `NotFoundException`.
   if (
     !snapshot.oskyrtAvailable ||
-    snapshot.pooledFit === null ||
-    snapshot.employees.length === 0
+    !snapshot.pooledFit ||
+    !snapshot.employees?.length
   ) {
     return [PayDispersionBlockerEnum.GAP_NOT_COMPUTABLE]
   }
@@ -228,7 +261,13 @@ function blockersFor(
   // makes the spread NaN, which lands in the same "no spread" branch as a
   // PERFECT fit. Those two states must not share an answer: one means nobody
   // deviates, the other means we cannot tell.
+  // ⚠️ The FIT is in this gate too, not just the employees. `studentizedResiduals`
+  // returns `[]` when `xMean` is null — but by then `available: true` has already
+  // been committed, so the response published a false all-clear: the one path in a
+  // deliberately fail-closed function that failed OPEN.
   if (
+    !Number.isFinite(snapshot.pooledFit.xMean) ||
+    !Number.isFinite(snapshot.pooledFit.xSumSquares) ||
     !snapshot.employees.every(
       (employee) =>
         Number.isFinite(employee.residualLog) &&
