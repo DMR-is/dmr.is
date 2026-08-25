@@ -30,6 +30,12 @@
       }
     },
     "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/varlock-run.sh legal-gazette-public-web nx run legal-gazette-public-web:serve-raw"
+      }
+    },
+    "serve-raw": {
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
@@ -91,7 +97,7 @@
     },
     "container": {
       "executor": "@nx-tools/nx-container:build",
-      "dependsOn": ["build"],
+      "dependsOn": ["flatten-env"],
       "options": {
         "engine": "docker",
         "metadata": {
@@ -110,6 +116,14 @@
       "options": {
         "jestConfig": "apps/legal-gazette-public-web/jest.config.ts",
         "passWithNoTests": true
+      }
+    },
+    "flatten-env": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/legal-gazette-public-web",
+        "command": "../../node_modules/.bin/varlock flatten --out-dir dist/env && find dist/env -type f ! -name '.env.schema' -delete"
       }
     }
   }
