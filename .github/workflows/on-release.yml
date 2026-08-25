@@ -12,8 +12,120 @@ env:
   ENV: prod
 
 jobs:
+  # Refuse to release an image that does not contain the commit being released.
+  #
+  # version-tag below resolves each image by sha-<commit>, but that tag is not
+  # proof: the dev pipeline copies an existing image onto a new commit's sha tag
+  # for every container it considers unaffected. If that judgement is ever wrong
+  # -- a base computed against the wrong commit, a build that failed and was
+  # papered over, a manual ECR tag -- the sha tag names an image that predates
+  # the change, and prod ships stale code under a version tag claiming to
+  # contain it. Nothing downstream notices, because the tag exists and resolves.
+  #
+  # Every image carries org.opencontainers.image.revision, the commit it was
+  # actually built from. So the claim is checkable: if that revision differs
+  # from the release commit, the container must be UNAFFECTED between the two.
+  # If nx says it changed, the tag is lying and the release stops here.
+  verify-image-provenance:
+    name: 🔍 Verify ${{ matrix.ECR_REPOSITORY }} image matches the release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ECR_REPOSITORY:
+          [
+            official-journal-api,
+            official-journal-admin-api,
+            official-journal-application-api,
+            official-journal-web,
+            regulations-api,
+            legal-gazette-api,
+            legal-gazette-web,
+            legal-gazette-application-web,
+            legal-gazette-public-web,
+            directorate-of-equality-api,
+            directorate-of-equality-web,
+          ]
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: 🔐 Configure AWS Shared credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-session-name: GitHub-Action-Role
+          aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::592944621100:role/shared-github-ci-role
+
+      - name: 🔍 Check the image was built from this commit, or from a commit that did not change it
+        run: |
+          set -euo pipefail
+          REPO="${{ matrix.ECR_REPOSITORY }}"
+          SHA="${{ github.sha }}"
+
+          MANIFEST=$(aws ecr batch-get-image \
+            --repository-name "$REPO" \
+            --image-ids imageTag="sha-${SHA}" \
+            --query 'images[].imageManifest' --output text)
+
+          if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
+            echo "::error::No sha-${SHA} image for ${REPO}. The dev deploy for this commit did not complete -- re-run it before releasing."
+            exit 1
+          fi
+
+          CONFIG_DIGEST=$(echo "$MANIFEST" | jq -r '.config.digest // empty')
+          if [ -z "$CONFIG_DIGEST" ]; then
+            echo "::warning::${REPO}: manifest has no image config (multi-arch index?). Cannot verify provenance."
+            exit 0
+          fi
+
+          URL=$(aws ecr get-download-url-for-layer \
+            --repository-name "$REPO" \
+            --layer-digest "$CONFIG_DIGEST" \
+            --query downloadUrl --output text)
+
+          REVISION=$(curl -sSL "$URL" | jq -r '.config.Labels["org.opencontainers.image.revision"] // empty')
+
+          if [ -z "$REVISION" ]; then
+            echo "::warning::${REPO}: image carries no org.opencontainers.image.revision label. Built before labelling; provenance unverifiable."
+            exit 0
+          fi
+
+          if [ "$REVISION" = "$SHA" ]; then
+            echo "${REPO}: built from this exact commit."
+            exit 0
+          fi
+
+          echo "${REPO}: image was built from ${REVISION}, not ${SHA}. Checking whether it changed since."
+
+          if ! git cat-file -e "${REVISION}^{commit}" 2>/dev/null; then
+            echo "::error::${REPO}: image revision ${REVISION} is not a commit in this repository. Cannot verify what is in this image."
+            exit 1
+          fi
+
+          mkdir -p /tmp/nx-tmp node_modules
+          npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
+          cp -r /tmp/nx-tmp/node_modules/. node_modules/
+
+          AFFECTED=$(npx nx show projects --affected --type=app --base="$REVISION" --head="$SHA" 2>/dev/null || echo "")
+
+          if echo "$AFFECTED" | grep -q "^${REPO}$"; then
+            echo "::error::${REPO} CHANGED between ${REVISION} and ${SHA}, but sha-${SHA} points at the image built from ${REVISION}. Releasing this would deploy stale code under a tag claiming otherwise. Rebuild ${REPO} at ${SHA} before releasing."
+            exit 1
+          fi
+
+          echo "${REPO}: unchanged between ${REVISION} and ${SHA} -- image is correct for this release."
+
   version-tag:
     name: 🔖 Version tag images
+    needs: verify-image-provenance
     runs-on: ubuntu-latest
     strategy:
       matrix:
