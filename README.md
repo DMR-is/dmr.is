@@ -78,30 +78,36 @@ brew install direnv 1password-cli
 2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
    That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
    every launch.
-3. Store a scoped 1Password service-account token to authorise per *session* instead. varlock
-   encrypts it device-locally — hardware-backed, gated by Touch ID, and decryptable only on the
-   machine that encrypted it:
+3. Put a scoped 1Password service-account token in the macOS login Keychain, so authentication is a
+   genuinely one-time step rather than a prompt on every command:
 
    ```bash
-   cd config/1password
-   printf 'OP_TOKEN=varlock(prompt)\n' > .env.local
-   varlock load
+   varlock keychain set OP_TOKEN --account dmr.is:local:OP_TOKEN
+   security find-generic-password -s varlock -a dmr.is:local:OP_TOKEN -w
    ```
 
-   Paste the token at the masked prompt; varlock encrypts it and rewrites that line as
-   `OP_TOKEN=varlock("local:…")`. The file is gitignored, and one token serves every app —
-   `OP_TOKEN` is declared once in `config/1password/.env.schema` and imported by each app's config.
-   Rotating it is the same three lines again.
+   Paste the token at the masked prompt. The second command raises the Keychain access dialog —
+   **click "Always Allow", not "Allow"**. That is the entire trick: it adds `/usr/bin/security` to
+   the item's trusted-application list, and every later read is silent. Nothing else is needed.
+
+   One token serves every app: `OP_TOKEN` is declared once in `config/1password/.env.schema` and
+   imported by each app's config, where it resolves via
+   `exec(security find-generic-password …)`. Keep the token in 1Password too — after this it lives
+   only in your Keychain.
 
    The token needs read access to every environment it resolves: the shared one plus each app's.
    Miss that and resolution fails at the first `setValuesBulk` with a generic "an unexpected error
    occurred while processing the request", which looks nothing like a permissions problem.
 
-   You authenticate once per *session*, not once per command — varlock's helper daemon holds it.
-   `varlock lock` ends that session deliberately, so a prompt straight after `lock` is expected.
+   Do not reach for varlock's own `keychain()` or `varlock()` resolvers here. Both route reads
+   through varlock's native helper, which on macOS is gated by Secure Enclave user presence and
+   whose dialog offers **no "Always Allow"** — so it cannot be granted persistently. That path
+   prompts on every run, or once per terminal, no matter what you do to the item's ACL. See
+   [config/1password/README.md](config/1password/README.md) for the full account.
 
-   Skipping this step is survivable: `allowAppAuth=true` means anyone without a local token falls
-   back to 1Password desktop auth, which works but prompts per run.
+   Skipping this step is survivable, and is what a non-macOS developer does: `allowAppAuth=true`
+   means anyone without the Keychain item falls back to 1Password desktop auth, which works but
+   prompts per run.
 4. `direnv allow`
 
 Check resolution by asking for a single value:

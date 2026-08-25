@@ -144,20 +144,54 @@ those files are now nearly all decorators.
 
 `OP_TOKEN` is declared once, in `config/1password/.env.schema`, and reaches each app through an
 `@import(../)` in its own config — so the token is stored and rotated in one place rather than six.
-The value itself is device-local ciphertext in the gitignored values file beside that schema, written
-by `varlock(prompt)`; see the repo README's setup steps.
+It resolves by shelling out to the system Keychain tool:
+
+```text
+OP_TOKEN=exec(`security find-generic-password -s varlock -a dmr.is:local:OP_TOKEN -w 2>/dev/null || true`)
+```
 
 Left empty, authentication falls back to the 1Password desktop app. That still works, but it
 authorises per *run* rather than per session, and it connects as **you**, with your full access
-rather than a scoped service account — fine for dev secrets, not for anything else.
+rather than a scoped service account — fine for dev secrets, not for anything else. The `2>/dev/null
+|| true` guard exists so that fallback is what a non-macOS developer gets, instead of a hard failure
+where `security` does not exist.
 
-This replaced a `keychain()` reference, and the reasons are worth keeping. A Keychain item is gated
-by an ACL bound per binary path, so every `yarn install` orphaned the entry for varlock's helper
-under `node_modules` and macOS fell back to asking for the login password. Granting the helper with
-`varlock keychain fix-access` was necessary but not sufficient — the item also carries a partition
-list keyed by Team ID, invisible in Keychain Access, which has to be satisfied separately. Device-
-local encryption has neither problem, and unlike `keychain()` it is not macOS-only, so this setup no
-longer excludes developers who are not on a Mac.
+## Why exec() and not varlock's own resolvers
+
+Both alternatives were tried and measured. Neither can be made silent on macOS:
+
+| Approach | Result |
+|---|---|
+| `keychain()` | prompts on **every run** |
+| `varlock()` device-local encryption | prompts **once per terminal** |
+| `exec(security …)` + Always Allow | **silent** |
+
+The reason is that varlock's own resolvers route every read through its native helper
+(`VarlockEnclave`), which on macOS is gated by Secure Enclave user presence. Its dialog offers
+**no "Always Allow" button** — only a password field — so it can never be granted persistently. The
+varlock docs are explicit: *"Secure Enclave keys never leave the enclave, and every decrypt requires
+user presence (Touch ID or password), so there is no unattended decrypt on macOS."*
+
+Reading the item with `/usr/bin/security` bypasses the helper, so the ordinary Keychain ACL applies —
+and that dialog *does* offer **Always Allow**, which is a persistent grant. Clicking it is the whole
+setup.
+
+Four dead ends, recorded so nobody repeats an afternoon on them:
+
+- **`varlock keychain fix-access` is not the fix.** It grants varlock's helper access, and reports
+  `1 updated` truthfully, but the helper's own presence gate still fires.
+- **Nor is the partition list.** Keychain items carry an `ACLAuthorizationPartitionID` list keyed by
+  Team ID, invisible in Keychain Access. Adding varlock's (`BPHZUT9PGB`) with
+  `security set-generic-password-partition-list` changed nothing.
+- **Nor is "Allow all applications"** on the item. `keychain()` still prompted every run.
+- **The file-based fallback cannot be selected.** `VARLOCK_FORCE_FILE_ENCRYPTION_FALLBACK` exists in
+  the binary but is inert here; the fallback engages only when native capabilities are *unavailable*,
+  which on a laptop with a working Secure Enclave they are not. `~/.varlock/` is never created.
+
+A related red herring: a prompt straight after `varlock lock` proves nothing, because `lock` exists
+to force re-authentication. Verify with repeated resolves instead — or, now, by confirming a resolve
+is silent *immediately after* a `lock`, which is only possible because `exec()` never touches the
+enclave.
 
 Environment ids are committed on purpose. An id is an identifier, not a credential, and is useless
 without authentication — the same category as the vault name in an `op://` reference. Committing them
