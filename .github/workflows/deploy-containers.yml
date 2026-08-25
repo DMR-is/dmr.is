@@ -70,7 +70,7 @@ jobs:
       # error-on-no-successful-workflow makes that fallback fail loudly instead.
       # A failed deploy is recoverable; a silent stale deploy is not.
       - name: Set NX SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
         with:
           last-successful-event: workflow_run
           error-on-no-successful-workflow: true
