@@ -18,6 +18,18 @@ permissions:
   id-token: write # Required f. IAM Token
   contents: read
 
+# Only one dev deploy at a time, newest merge wins. Without this, two merges in
+# quick succession race for the same ECR tags.
+#
+# Cancelling is only safe because affected-detection below is based on the last
+# SUCCESSFUL deploy: a cancelled run does not advance that base, so the next run
+# still sees the same containers as affected and rebuilds them. Do not remove the
+# last-successful-event input while this is enabled -- together they would drop
+# changes silently.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   detect-affected:
     name: Detect affected containers
@@ -28,6 +40,7 @@ jobs:
       unaffected: ${{ steps.set-affected.outputs.unaffected }}
       has_affected: ${{ steps.set-affected.outputs.has_affected }}
       has_unaffected: ${{ steps.set-affected.outputs.has_unaffected }}
+      base_sha: ${{ steps.set-affected.outputs.base_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,8 +51,29 @@ jobs:
         with:
           node-version: 24.19.0
 
+      # BASE MUST BE THE LAST SUCCESSFUL DEPLOY, NOT HEAD~1.
+      #
+      # Both inputs matter. last-successful-event defaults to `push`, and this
+      # workflow only ever runs on workflow_run / workflow_dispatch, so the
+      # default finds nothing, warns, and silently falls back to HEAD~1. That
+      # makes "unaffected" mean "untouched by the newest commit" instead of
+      # "unchanged since the image that is actually deployed" -- which is what
+      # the re-tag job below assumes when it copies an image forward.
+      #
+      # The consequence was not theoretical. A container whose build failed or
+      # was cancelled kept its old image, the next merge marked it unaffected,
+      # and the re-tag stamped that new commit's sha onto the stale image. Since
+      # .github/actions/deploy/version-tag resolves prod releases by
+      # sha-<commit>, stale code shipped to production under a version tag
+      # claiming to contain the change, with every workflow run green.
+      #
+      # error-on-no-successful-workflow makes that fallback fail loudly instead.
+      # A failed deploy is recoverable; a silent stale deploy is not.
       - name: Set NX SHAs
         uses: nrwl/nx-set-shas@v4
+        with:
+          last-successful-event: workflow_run
+          error-on-no-successful-workflow: true
 
       - name: Determine affected containers
         id: set-affected
@@ -81,6 +115,10 @@ jobs:
 
           echo "affected=$AFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
           echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
+
+          # Published so the re-tag job can copy the image built for this exact
+          # commit, rather than whatever `latest` happens to point at.
+          echo "base_sha=$NX_BASE" >> $GITHUB_OUTPUT
 
           HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
           HAS_UNAFFECTED=$([ "$(echo $UNAFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
@@ -171,21 +209,40 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Copy latest tag to sha-${{ github.sha }}
+      # Copy the image built for the BASE commit, not `latest`.
+      #
+      # `latest` is a floating tag: it only moves when a container is actually
+      # built, so it can be older than the base and carries no proof of which
+      # commit it came from. sha-<base> is exact, and because base is the last
+      # successful deploy, "unaffected since base" means this image really is
+      # this container at this commit. That is what makes the copy honest rather
+      # than a guess -- and what stops a stale image from being stamped with a
+      # commit it does not contain, which prod then releases by sha.
+      #
+      # If sha-<base> is missing, that invariant is already broken. Fail rather
+      # than fall back to `latest`: a red deploy is recoverable, a mislabelled
+      # image in production is not.
+      - name: Copy sha-${{ needs.detect-affected.outputs.base_sha }} to sha-${{ github.sha }}
         run: |
           SHA="${{ github.sha }}"
+          BASE_SHA="${{ needs.detect-affected.outputs.base_sha }}"
           REPO="${{ matrix.container }}"
 
-          echo "Re-tagging ${REPO}:latest as sha-${SHA}"
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::No base SHA from detect-affected. Cannot re-tag ${REPO} safely."
+            exit 1
+          fi
+
+          echo "Re-tagging ${REPO}:sha-${BASE_SHA} as sha-${SHA}"
 
           MANIFEST=$(aws ecr batch-get-image \
             --repository-name "$REPO" \
-            --image-ids imageTag=latest \
+            --image-ids imageTag="sha-${BASE_SHA}" \
             --query 'images[].imageManifest' \
             --output text)
 
           if [ -z "$MANIFEST" ] || [ "$MANIFEST" = "None" ]; then
-            echo "::error::No 'latest' image found for ${REPO}. Cannot re-tag."
+            echo "::error::No sha-${BASE_SHA} image for ${REPO}. The last successful deploy did not produce one, so this container's history is broken -- rebuild it rather than re-tagging something else."
             exit 1
           fi
 
