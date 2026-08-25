@@ -1,10 +1,12 @@
 import { randomUUID } from 'crypto'
-import { mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { mkdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   PayloadTooLargeException,
@@ -25,6 +27,9 @@ const LOGGING_CONTEXT = 'ImportUploadService'
 const KEY_PREFIX = 'doe-imports'
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
+
+/** Single wording for every place the cap is enforced. */
+const TOO_LARGE_MESSAGE = `Uploaded workbook exceeds the ${MAX_UPLOAD_BYTES / ONE_MB}MB limit`
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 
@@ -101,17 +106,58 @@ export class ImportUploadService implements IImportUploadService {
       throw new BadRequestException('Invalid import upload key')
     }
 
-    const buffer = this.isLocal
-      ? await this.readLocal(key)
-      : (await this.aws.getObjectBuffer(key, getDoeImportsBucket())).unwrap()
+    try {
+      // The cap has to be pushed down into the download itself. The presigned
+      // PUT signs neither Content-Length nor Content-Type, so the staged object
+      // can be arbitrarily large, and the URL stays valid for an hour against a
+      // key the caller owns — so it can be swapped after any size check we do
+      // up front. Capping the stream is the only bound that holds; capping the
+      // finished buffer means we already read the whole thing into memory.
+      const buffer = this.isLocal
+        ? await this.readLocal(key)
+        : (
+            await this.aws.getObjectBuffer(key, getDoeImportsBucket(), {
+              maxBytes: MAX_UPLOAD_BYTES,
+            })
+          ).unwrap()
 
-    if (buffer.length > MAX_UPLOAD_BYTES) {
-      throw new PayloadTooLargeException(
-        `Uploaded workbook exceeds the ${MAX_UPLOAD_BYTES / ONE_MB}MB limit`,
-      )
+      // Backstop only — both branches above already cap the read. This asserts
+      // the contract of the functions we just called rather than adding
+      // protection.
+      if (buffer.length > MAX_UPLOAD_BYTES) {
+        throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
+      }
+
+      return buffer
+    } catch (error) {
+      // An object we refused for its size can never become importable, so drop
+      // it now rather than leaving it for the bucket lifecycle rule. The
+      // controllers only reach cleanup() through their try/finally *after* this
+      // method returns, so on a 413 the object would otherwise stay in the
+      // bucket — and a caller could loop presign -> PUT something huge ->
+      // import -> 413 to park unbounded data there. Rejecting cheaply made that
+      // loop fast, so this is the half that closes it.
+      //
+      // Deleting here is safe precisely because the keyPattern check above has
+      // already proven the key sits inside this boundary's own prefix; cleanup()
+      // does not validate keys, which is also why the fix does not belong in the
+      // controllers' try/finally, where the invalid-key path would reach it.
+      //
+      // Only for 413. A transient S3 or disk failure must not destroy the
+      // caller's upload. The S3 branch's 413 arrives from ResultWrapper.unwrap
+      // as a bare HttpException rather than a PayloadTooLargeException, so match
+      // on the status, not the subclass.
+      if (
+        error instanceof HttpException &&
+        error.getStatus() === HttpStatus.PAYLOAD_TOO_LARGE
+      ) {
+        // cleanup() is best-effort and swallows its own failures, so this cannot
+        // turn the 413 into a 500.
+        await this.cleanup(key)
+      }
+
+      throw error
     }
-
-    return buffer
   }
 
   async cleanup(key: string): Promise<void> {
@@ -145,9 +191,7 @@ export class ImportUploadService implements IImportUploadService {
     }
 
     if (data.length > MAX_UPLOAD_BYTES) {
-      throw new PayloadTooLargeException(
-        `Uploaded workbook exceeds the ${MAX_UPLOAD_BYTES / ONE_MB}MB limit`,
-      )
+      throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
     }
 
     await mkdir(LOCAL_UPLOAD_DIR, { recursive: true })
@@ -160,8 +204,23 @@ export class ImportUploadService implements IImportUploadService {
   }
 
   private async readLocal(key: string): Promise<Buffer> {
+    const path = this.localPath(key)
+
+    let size: number
     try {
-      return await readFile(this.localPath(key))
+      size = (await stat(path)).size
+    } catch {
+      throw new BadRequestException('Import upload not found')
+    }
+
+    // Dev-only path, but it must not read an arbitrarily large file into memory
+    // either — check the size on disk before opening it.
+    if (size > MAX_UPLOAD_BYTES) {
+      throw new PayloadTooLargeException(TOO_LARGE_MESSAGE)
+    }
+
+    try {
+      return await readFile(path)
     } catch {
       throw new BadRequestException('Import upload not found')
     }

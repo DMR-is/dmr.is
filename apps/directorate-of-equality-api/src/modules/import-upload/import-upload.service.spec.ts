@@ -1,10 +1,29 @@
-import { BadRequestException, PayloadTooLargeException } from '@nestjs/common'
+import { mkdir, rm, stat, truncate, writeFile } from 'fs/promises'
+import { tmpdir } from 'os'
+import { join } from 'path'
+
+import {
+  BadRequestException,
+  HttpException,
+  PayloadTooLargeException,
+} from '@nestjs/common'
 
 import { IAWSService } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
 import { ImportUploadService } from './import-upload.service'
 import { ImportUploadBoundary } from './import-upload.service.interface'
+
+// `readFile` is wrapped (not stubbed) so a test can assert that an oversized
+// file is rejected from its `stat` alone, without ever being read into memory.
+jest.mock('fs/promises', () => {
+  const actual = jest.requireActual('fs/promises')
+
+  return {
+    ...actual,
+    readFile: jest.fn((...args: Array<unknown>) => actual.readFile(...args)),
+  }
+})
 
 const BUCKET = 'test-doe-imports'
 const ONE_MB = 1024 * 1024
@@ -15,12 +34,28 @@ const ADMIN_KEY = 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx'
 const APP_KEY =
   'doe-imports/application/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.xlsx'
 
+/** Mirrors the staging dir and key flattening in ImportUploadService. */
+const { readFile: mockReadFile } = jest.requireMock('fs/promises') as {
+  readFile: jest.Mock
+}
+
+const LOCAL_UPLOAD_DIR = join(tmpdir(), 'doe-import-uploads')
+const localPathFor = (key: string) =>
+  join(LOCAL_UPLOAD_DIR, key.replace(/\//g, '_'))
+
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }
+
+/** The shape getObjectBuffer returns when @LogAndHandle caught an HttpException. */
+const awsError = (code: number, message: string) =>
+  ResultWrapper.err<Buffer, { code: number; message: string }>({
+    code,
+    message,
+  })
 
 /** A buffer of a given logical size without actually allocating it. */
 const bufferOfSize = (length: number) => ({ length }) as unknown as Buffer
@@ -109,7 +144,9 @@ describe('ImportUploadService', () => {
       )
 
       expect(result).toBe(buffer)
-      expect(aws.getObjectBuffer).toHaveBeenCalledWith(ADMIN_KEY, BUCKET)
+      expect(aws.getObjectBuffer).toHaveBeenCalledWith(ADMIN_KEY, BUCKET, {
+        maxBytes: MAX_UPLOAD_BYTES,
+      })
     })
 
     it('accepts an application key on the application boundary', async () => {
@@ -162,6 +199,54 @@ describe('ImportUploadService', () => {
       await expect(
         service.fetchWorkbook(ADMIN_KEY, ImportUploadBoundary.ADMIN),
       ).resolves.toBeDefined()
+    })
+
+    it('deletes the object when the download is rejected as too large', async () => {
+      // A 413 out of getObjectBuffer arrives via ResultWrapper.unwrap as a bare
+      // HttpException, not a PayloadTooLargeException.
+      aws.getObjectBuffer.mockResolvedValue(
+        awsError(413, 'Object exceeds the maximum allowed size of 20MB'),
+      )
+      aws.deleteObject.mockResolvedValue(ResultWrapper.ok())
+
+      let thrown: unknown
+      try {
+        await service.fetchWorkbook(ADMIN_KEY, ImportUploadBoundary.ADMIN)
+      } catch (error) {
+        thrown = error
+      }
+
+      // The caller still sees the original 413 …
+      expect(thrown).toBeInstanceOf(HttpException)
+      expect((thrown as HttpException).getStatus()).toBe(413)
+      // … and the object it refused is gone, so it cannot be used to park data.
+      expect(aws.deleteObject).toHaveBeenCalledWith(ADMIN_KEY, BUCKET)
+    })
+
+    it('leaves the object in place when the download fails for any other reason', async () => {
+      // A transient S3 failure must not destroy the caller's upload.
+      aws.getObjectBuffer.mockResolvedValue(awsError(500, 'S3 is having a day'))
+
+      await expect(
+        service.fetchWorkbook(ADMIN_KEY, ImportUploadBoundary.ADMIN),
+      ).rejects.toBeInstanceOf(HttpException)
+
+      expect(aws.deleteObject).not.toHaveBeenCalled()
+    })
+
+    it('never deletes on the invalid-key path (arbitrary-object DELETE guard)', async () => {
+      // cleanup() does not validate keys, so nothing that runs before the
+      // keyPattern check may ever reach it — otherwise a client-supplied key
+      // becomes an arbitrary DELETE in the imports bucket. Do not "simplify"
+      // this by moving the validation inside the try.
+      await expect(
+        service.fetchWorkbook(
+          'doe-imports/admin/../../etc/passwd',
+          ImportUploadBoundary.ADMIN,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(aws.deleteObject).not.toHaveBeenCalled()
     })
   })
 
@@ -227,6 +312,43 @@ describe('ImportUploadService', () => {
       await expect(
         service.storeLocalUpload(ADMIN_KEY, bufferOfSize(MAX_UPLOAD_BYTES + 1)),
       ).rejects.toBeInstanceOf(PayloadTooLargeException)
+    })
+
+    it('fetchWorkbook rejects an oversized file already on disk', async () => {
+      const path = localPathFor(ADMIN_KEY)
+      await mkdir(LOCAL_UPLOAD_DIR, { recursive: true })
+      // Sparse: stat() reports the full length without writing 20MB, so this
+      // only passes if the size is checked before the file is read.
+      await writeFile(path, '')
+      await truncate(path, MAX_UPLOAD_BYTES + 1)
+
+      try {
+        await expect(
+          service.fetchWorkbook(ADMIN_KEY, ImportUploadBoundary.ADMIN),
+        ).rejects.toBeInstanceOf(PayloadTooLargeException)
+        // Rejected from stat() alone — the point is that the bytes are never
+        // pulled into memory, which the post-download backstop cannot give us.
+        expect(mockReadFile).not.toHaveBeenCalled()
+      } finally {
+        await rm(path, { force: true })
+      }
+    })
+
+    it('removes an oversized staged file after rejecting it', async () => {
+      const path = localPathFor(ADMIN_KEY)
+      await mkdir(LOCAL_UPLOAD_DIR, { recursive: true })
+      await writeFile(path, '')
+      await truncate(path, MAX_UPLOAD_BYTES + 1)
+
+      try {
+        await expect(
+          service.fetchWorkbook(ADMIN_KEY, ImportUploadBoundary.ADMIN),
+        ).rejects.toBeInstanceOf(PayloadTooLargeException)
+
+        await expect(stat(path)).rejects.toThrow()
+      } finally {
+        await rm(path, { force: true })
+      }
     })
   })
 

@@ -5,6 +5,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  PayloadTooLargeException,
 } from '@nestjs/common'
 
 import { ONE_HOUR } from '@dmr.is/constants'
@@ -14,7 +15,7 @@ import { PresignedUrlResponse, S3UploadFileResponse } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
 import { getS3Bucket } from '@dmr.is/utils-server/serverUtils'
 
-import { IAWSService } from './aws.service.interface'
+import { GetObjectBufferOptions, IAWSService } from './aws.service.interface'
 
 import {
   AbortMultipartUploadCommand,
@@ -31,6 +32,12 @@ import { fromIni } from '@aws-sdk/credential-providers'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const LOGGING_CATEGORY = 's3-service'
+
+const ONE_MB = 1024 * 1024
+
+/** Renders a byte count as whole megabytes where it divides evenly, e.g. `20MB`. */
+const formatMegabytes = (bytes: number) =>
+  `${Number((bytes / ONE_MB).toFixed(2))}MB`
 
 /**
  * Service class for interacting with the S3 bucket. Handles all S3-related operations.
@@ -338,16 +345,43 @@ export class AWSService implements IAWSService {
   }
 
   /**
+   * Aborts an S3 response body instead of leaving the socket to drain. `Body` is
+   * typed as `SdkStream<unknown>`, but in Node it is a `Readable`, so probe for
+   * `destroy` rather than asserting the type.
+   */
+  private destroyResponseBody(body: unknown): void {
+    const destroy = (body as { destroy?: unknown } | undefined)?.destroy
+
+    if (typeof destroy !== 'function') {
+      return
+    }
+
+    try {
+      destroy.call(body)
+    } catch (error) {
+      // Never let a failed abort mask the reason we are aborting.
+      this.logger.warn('Failed to destroy S3 response stream', {
+        category: LOGGING_CATEGORY,
+        error,
+      })
+    }
+  }
+
+  /**
    * Fetches an object buffer based on key in S3 bucket
    * @param key key to which object to retrieve
+   * @param s3Bucket bucket override, defaults to the application files bucket
+   * @param options optional size cap, see {@link GetObjectBufferOptions}
    * @returns Buffer of the object
    */
   @LogAndHandle()
   async getObjectBuffer(
     key: string,
     s3Bucket?: string,
+    options?: GetObjectBufferOptions,
   ): Promise<ResultWrapper<Buffer>> {
     const bucket = s3Bucket || getS3Bucket()
+    const maxBytes = options?.maxBytes
 
     // check if key starts with slash
     if (key.startsWith('/')) {
@@ -376,10 +410,47 @@ export class AWSService implements IAWSService {
       throw new InternalServerErrorException('Failed to get object from S3')
     }
 
+    const rejectTooLarge = (size: number, limit: number): never => {
+      this.destroyResponseBody(download.Body)
+
+      this.logger.warn('Refusing to buffer an oversized S3 object', {
+        category: LOGGING_CATEGORY,
+        bucket,
+        key,
+        size,
+        limit,
+      })
+
+      throw new PayloadTooLargeException(
+        `Object exceeds the maximum allowed size of ${formatMegabytes(limit)}`,
+      )
+    }
+
+    // Cheap path: trust the advertised size only to reject early, never to
+    // accept. No bytes are read here.
+    if (
+      maxBytes !== undefined &&
+      typeof download.ContentLength === 'number' &&
+      download.ContentLength > maxBytes
+    ) {
+      rejectTooLarge(download.ContentLength, maxBytes)
+    }
+
+    // The guarantee that actually holds: cap the bytes as they arrive, which
+    // also covers a missing or understated Content-Length.
     const chunks: Uint8Array[] = []
-    for await (const chunk of download.Body as any) {
+    let bytesRead = 0
+
+    for await (const chunk of download.Body as AsyncIterable<Uint8Array>) {
+      bytesRead += chunk.length
+
+      if (maxBytes !== undefined && bytesRead > maxBytes) {
+        rejectTooLarge(bytesRead, maxBytes)
+      }
+
       chunks.push(chunk)
     }
+
     const buffer = Buffer.concat(chunks)
 
     return ResultWrapper.ok(buffer)
