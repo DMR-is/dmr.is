@@ -96,12 +96,13 @@ export class ReportDraftSubCriterionService
     }
 
     const row = this.subCriterionModel.build({
+      id,
       reportCriterionId: data.criterionId,
       title,
       description: data.description,
       weight: data.weight,
-    })
-    row.id = id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft sub-criterion "${id}" (create)`, {

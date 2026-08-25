@@ -277,9 +277,12 @@ describe('ReportDraftCriterionService', () => {
     await service.createCriterion(report, CRITERION_ID, VALID_CREATE)
 
     expect(criterionBuild).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Ábyrgð', reportId: REPORT_ID }),
+      expect.objectContaining({
+        id: CRITERION_ID,
+        title: 'Ábyrgð',
+        reportId: REPORT_ID,
+      }),
     )
-    expect(row.id).toBe(CRITERION_ID)
     expect(row.save).toHaveBeenCalled()
   })
 

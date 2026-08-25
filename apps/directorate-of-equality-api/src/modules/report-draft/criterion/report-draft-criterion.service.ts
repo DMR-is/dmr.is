@@ -173,13 +173,14 @@ export class ReportDraftCriterionService
     }
 
     const row = this.criterionModel.build({
+      id,
       title,
       weight: data.weight,
       description: data.description,
       type: data.type,
       reportId: report.id,
-    })
-    row.id = id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft criterion "${id}" (create)`, {

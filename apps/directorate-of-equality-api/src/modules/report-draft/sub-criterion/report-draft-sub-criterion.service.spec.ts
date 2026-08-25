@@ -128,13 +128,13 @@ describe('ReportDraftSubCriterionService', () => {
       })
       expect(subBuild).toHaveBeenCalledWith(
         expect.objectContaining({
+          id: SUB_ID,
           title: 'Menntun',
           description: 'd',
           weight: 0.5,
           reportCriterionId: CRITERION_ID,
         }),
       )
-      expect(built.id).toBe(SUB_ID)
       expect(save).toHaveBeenCalled()
     })
 

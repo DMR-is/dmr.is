@@ -93,12 +93,13 @@ export class ReportDraftStepService implements IReportDraftStepService {
     }
 
     const row = this.stepModel.build({
+      id,
       reportSubCriterionId: data.subCriterionId,
       order: data.order,
       description: data.description,
       score: data.score,
-    })
-    row.id = id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft step "${id}" (create)`, {

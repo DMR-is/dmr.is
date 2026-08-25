@@ -133,8 +133,12 @@ export class ReportDraftRoleService implements IReportDraftRoleService {
       return
     }
 
-    const row = this.roleModel.build({ title, reportId: report.id })
-    row.id = id
+    const row = this.roleModel.build({
+      id,
+      title,
+      reportId: report.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft role "${id}" (create)`, {

@@ -260,6 +260,7 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
     // The required columns are guaranteed present by the guard above; the casts
     // narrow away the `undefined` the optional change-data DTO carries.
     const row = this.employeeModel.build({
+      id,
       reportId: report.id,
       ordinal,
       score: null,
@@ -276,8 +277,8 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       bonusOccasionalOvertime: data.bonusOccasionalOvertime ?? null,
       bonusPayments: data.bonusPayments ?? null,
       bonusOther: data.bonusOther ?? null,
-    })
-    row.id = id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft employee "${id}" (create)`, {

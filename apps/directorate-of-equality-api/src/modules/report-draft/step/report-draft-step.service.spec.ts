@@ -137,13 +137,13 @@ describe('ReportDraftStepService', () => {
 
       expect(stepBuild).toHaveBeenCalledWith(
         expect.objectContaining({
+          id: STEP_ID,
           reportSubCriterionId: SUB_ID,
           order: 1,
           description: 'd',
           score: 3,
         }),
       )
-      expect(built.id).toBe(STEP_ID)
       expect(save).toHaveBeenCalled()
     })
 

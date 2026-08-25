@@ -112,12 +112,18 @@ export class ReportDraftOutlierGroupService
       return
     }
 
+    // `id` is deliberately excluded from ReportOutlierGroupCreateAttributes,
+    // so it must be cast through — passing it here (rather than assigning
+    // `row.id` after `.build()`) is required for the client-minted id to
+    // actually stick; a post-build assignment silently gets clobbered by the
+    // column's `defaultValue: UUIDV4` before `.save()`.
     const row = this.groupModel.build({
+      id,
       reportId: report.id,
       name,
       ...explanation,
-    })
-    row.id = id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
     await row.save()
 
     this.logger.info(`Synced draft outlier group "${id}" (create)`, {
