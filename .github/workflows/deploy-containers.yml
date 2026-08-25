@@ -2,6 +2,11 @@ name: Deploy Containers to AWS Dev
 
 on:
   workflow_dispatch:
+    inputs:
+      rebuild-all:
+        description: 'Rebuild every container, ignoring affected-detection'
+        type: boolean
+        default: false
   workflow_run:
     workflows: ['Monorepo pipeline - quality']
     branches: ['main']
@@ -87,6 +92,7 @@ jobs:
         env:
           NO_PREVIOUS_BUILD: ${{ steps.set-shas.outputs.noPreviousBuild }}
           BASE_SHA: ${{ steps.set-shas.outputs.base }}
+          REBUILD_ALL: ${{ inputs.rebuild-all }}
         run: |
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
@@ -105,9 +111,19 @@ jobs:
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
-          if [ "${NO_PREVIOUS_BUILD:-}" = "true" ]; then
-            # No baseline to compare against, so nothing can be proven unchanged.
-            # Treat every container as affected and rebuild the lot.
+          # Two ways to end up rebuilding everything, and both produce a set of
+          # sha-<HEAD> tags that are true by construction rather than by
+          # inheritance -- which is what makes this the repair tool when tags are
+          # suspect.
+          #
+          # - no baseline: nothing can be proven unchanged, so nothing is
+          #   claimed unchanged
+          # - rebuild-all: asked for by hand, e.g. after a base image update
+          #   that no source diff can see, or to re-establish trust in the tags
+          if [ "${REBUILD_ALL:-}" = "true" ]; then
+            echo "::notice::rebuild-all requested. Building every container regardless of affected-detection."
+            AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+          elif [ "${NO_PREVIOUS_BUILD:-}" = "true" ]; then
             echo "::warning::No previous successful deploy found. Rebuilding every container, because there is no baseline that would let 'unaffected' mean anything."
             AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
           else
