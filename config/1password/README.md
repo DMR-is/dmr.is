@@ -99,6 +99,25 @@ scripts/varlock-run.sh <app> printenv <KEY>
 already present in your shell, which is exactly what `varlock-run.sh` scrubs before resolving. It
 produced three wrong conclusions before this was noticed.
 
+## Which varlock binary runs
+
+`scripts/varlock.sh` picks it, and prefers a globally installed `varlock` over the workspace copy.
+Install the global one from the maintainers' tap (it shadows the `homebrew/core` formula of the same
+name; both track the same releases):
+
+```bash
+brew install dmno-dev/tap/varlock          # or: curl -sSfL https://varlock.dev/install.sh | sh -s
+```
+
+The reason the global one is preferred is the Keychain: the ACL granting access to `OP_TOKEN` is
+attached to one binary path, so a `varlock` that `yarn install` rewrites loses the grant and macOS
+asks for the login password on every launch. Homebrew's path is stable, so the one-time
+`keychain fix-access` stays one-time.
+
+CI, a fresh clone and the Docker build stages have no global install and land on the pinned version;
+none of them read the Keychain, so nothing changes there. The `flatten-env` targets stay on
+`node_modules/.bin/varlock` on purpose — see the header of `scripts/varlock.sh`.
+
 ## Caching
 
 No config sets `cacheTtl`, deliberately. It looks like the obvious optimisation — avoid a 1Password

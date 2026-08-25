@@ -55,10 +55,26 @@ One-time setup:
 brew install direnv 1password-cli
 ```
 
-1. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
+1. **Install varlock globally**, before the Keychain step below. From the maintainers' own tap,
+   which shadows the `homebrew/core` formula of the same name — both track the same releases, and
+   the tap is what this setup is tested against:
+
+   ```bash
+   brew install dmno-dev/tap/varlock
+   ```
+
+   Or without Homebrew:
+
+   ```bash
+   curl -sSfL https://varlock.dev/install.sh | sh -s
+   ```
+
+   Do not skip this in favour of the copy `yarn install` puts in `node_modules/.bin` — step 3
+   explains why it costs you a password prompt on every app launch.
+2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
    That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
    every launch.
-2. Put a scoped 1Password service-account token in the macOS Keychain to authorise per *session*
+3. Put a scoped 1Password service-account token in the macOS Keychain to authorise per *session*
    instead. The account name is pinned rather than defaulted, because varlock otherwise derives it
    from the current directory name — a token stored in the main checkout would not resolve in a
    worktree:
@@ -68,9 +84,17 @@ brew install direnv 1password-cli
    varlock keychain fix-access          --account dmr.is:local:OP_TOKEN
    ```
 
+   Run these with the global varlock from step 1 — a bare `varlock`, not `yarn varlock`.
+
    `fix-access` is not optional — without it macOS asks for your login password on every read. The
    token needs read access to every environment it resolves: the shared one plus each app's.
-3. `direnv allow`
+
+   The grant it writes belongs to **the binary that ran it**, because that is how a macOS Keychain
+   ACL works. So `scripts/varlock-run.sh` resolves through a globally installed `varlock` when there
+   is one, and only falls back to `node_modules/.bin/varlock` otherwise: the workspace copy is
+   rewritten by every `yarn install`, which invalidates the grant and brings the password prompt
+   back on every launch. `VARLOCK_BIN=<path>` overrides the choice for one command.
+4. `direnv allow`
 
 Check resolution by asking for a single value:
 

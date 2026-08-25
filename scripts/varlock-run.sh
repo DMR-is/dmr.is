@@ -51,9 +51,10 @@ if [ ! -f "$config_dir/.env.schema" ]; then
   exit 2
 fi
 
-varlock="$root/node_modules/.bin/varlock"
-if [ ! -x "$varlock" ]; then
-  echo "varlock-run: $varlock not found -- run yarn install" >&2
+# A globally installed varlock is preferred over the one under node_modules,
+# because the Keychain ACL that holds OP_TOKEN is granted per binary path. See
+# scripts/varlock.sh for why, and for the VARLOCK_BIN override.
+if ! varlock="$("$root/scripts/varlock.sh" --resolve)"; then
   exit 2
 fi
 
