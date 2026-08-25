@@ -36,6 +36,7 @@ import {
   selectMinimumSet,
   toMinimumSetDtos,
 } from '../../report-statistics/lib/minimum-set'
+import { computePayDispersion } from '../../report-statistics/lib/pay-dispersion'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { IReportDraftAnalysisService } from './report-draft-analysis.service.interface'
 
@@ -147,6 +148,9 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
       outliers: toMinimumSetDtos(decomposition),
       regularHourlyWageByScoreAll: buildChartFromEmployeePoints(chartPoints),
       wageGapDecomposition: decomposition,
+      // Ábendingar — informational, no obligation. Derived from the same
+      // decomposition, so a draft preview and the frozen result cannot disagree.
+      payDispersion: computePayDispersion(decomposition),
     }
   }
 

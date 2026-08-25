@@ -1,4 +1,4 @@
-import { GenderEnum } from '../models/report.model'
+import { GenderEnum } from '../models/report.enums'
 import { fitLinear } from './linear-fit'
 
 export type CompensationEmployeeInput = {

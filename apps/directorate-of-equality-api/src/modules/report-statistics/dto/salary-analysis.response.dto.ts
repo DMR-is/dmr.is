@@ -9,6 +9,7 @@ import {
 import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum } from '../../report/models/report.model'
 import { WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
+import { PayDispersionDto } from './pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from './salary-by-gender-and-score.dto'
 
 /**
@@ -85,4 +86,23 @@ export class SalaryAnalysisResponseDto {
    */
   @ApiDto(WageGapDecompositionDto)
   wageGapDecomposition!: WageGapDecompositionDto
+
+  /**
+   * **Ábendingar** — a SECOND instrument over the same data, and a different
+   * question: not *who carries the company's gender pay gap* (that is `outliers`
+   * above) but *whose pay is far from what their starfsmatsstig imply*.
+   *
+   * ⚠️ **It asks nothing.** No group, no reason, no action, no signature, no
+   * submission. Rendering it beside the úrbótaáætlun's inputs, or with them,
+   * misrepresents it — see `PayDispersionDto`, and render only
+   * `population: ALL_EMPLOYEES` until DMR says otherwise.
+   *
+   * Derived from `wageGapDecomposition` above rather than stored, so it needed no
+   * schema change and is reproducible from the frozen snapshot.
+   */
+  @ApiDto(PayDispersionDto, {
+    description:
+      'ÁBENDINGAR um launadreifingu — a SECOND, informational list over the same data, answering a different question from `outliers` above. `outliers` (the lágmarksmengi) is "who carries the company\'s gender pay gap"; ábendingar is "whose pay is far from what their starfsmatsstig imply". It exists because óskýrður launamunur is a difference between the cohorts MEAN deviations, so deviations that offset each other inside one cohort cancel exactly — a company can be well under 3,9% while individuals sit a long way off the fitted line. ⚠️ IT ASKS NOTHING: never render it with the reason/action/signature inputs the úrbótaáætlun uses, never require it to be filled in, never submit it. The employer owes no explanation for these rows and they cannot affect how the report is decided. ⚠️ Render only population = ALL_EMPLOYEES; EXCLUDING_MINIMUM_SET is shipped so the contract is ready but has not been requested yet — do NOT render it, and confirm with DMR first. Derived from wageGapDecomposition on read, never stored. See docs/launagreining.md §10.',
+  })
+  payDispersion!: PayDispersionDto
 }

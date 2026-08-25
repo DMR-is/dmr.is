@@ -458,6 +458,73 @@ export const reportText = {
       directionAbove: 'yfir',
     },
     /**
+     * ── Ábendingar um launadreifingu ─────────────────────────────────────────
+     *
+     * ⚠️ **A DIFFERENT INSTRUMENT from the úrbótaáætlun above**, and this copy has
+     * one job above all others: make sure nobody reads it as the same one. The
+     * úrbótaáætlun obliges the employer to record an ástæða and an aðgerð for each
+     * person named, and a reviewer approves on those explanations. This asks for
+     * nothing, is submitted nowhere, and cannot affect how the report is decided.
+     *
+     * It exists because óskýrður launamunur is a difference between the cohorts'
+     * MEAN deviations, so deviations that offset each other inside one cohort
+     * cancel exactly. A company can sit comfortably under 3,9% while individuals
+     * are a long way off the line — and the statutory figure is silent about them,
+     * correctly, because there is no gender gap to report.
+     *
+     * ⚠️ Deliberately its own keys rather than reaching into `outlierTable`. The
+     * two words they would share are cheaper duplicated than a coupling that
+     * invites someone to merge the tables.
+     *
+     * Addressed to the EMPLOYER, not the reviewer: the person who can go and look
+     * at the underlying data works inside the company.
+     */
+    payDispersion: {
+      heading: 'Ábendingar um launadreifingu',
+      intro:
+        'Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir.',
+      /**
+       * ⚠️ Load-bearing. Without this sentence the table reads as a second, softer
+       * úrbótaáætlun, and a reviewer starts asking the company to account for
+       * rows it owes no account of.
+       */
+      noObligation:
+        'Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.',
+      /**
+       * The context that makes the selection explicable. Without it a reader asks
+       * why someone 30% off the line is listed while someone 25% off is not — the
+       * answer being that the cut-off is measured in the company's OWN spread, not
+       * in percent.
+       */
+      spreadNote: (spread: string, threshold: string) =>
+        `Dæmigert vik frá línunni hjá þessu fyrirtæki er ±${spread}. Hér eru starfsmenn sem víkja meira en ${threshold} staðalvik frá henni.`,
+      allClear:
+        'Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.',
+      /**
+       * ⚠️ Each of these is a state that is NOT "all clear", and must not be
+       * rendered as an empty table. "Cannot be assessed" and "nothing to report"
+       * are different answers.
+       */
+      blockers: {
+        COHORT_TOO_SMALL:
+          'Of fáir starfsmenn til að meta launadreifingu áreiðanlega — það þarf að minnsta kosti 12.',
+        NO_SCORE_VARIATION:
+          'Öll starfsmatsstig eru eins, því liggur ekkert væntanlegt tímakaup fyrir til að víkja frá.',
+        GAP_NOT_COMPUTABLE:
+          'Launadreifing verður ekki metin því ekki var unnt að reikna væntanlegt tímakaup.',
+      },
+      numberHeader: 'Númer',
+      genderHeader: 'Kyn',
+      points: 'Stig',
+      salary: 'Tímakaup',
+      predictedSalary: 'Væntanlegt tímakaup',
+      deviationHeader: 'Launafrávik',
+      /** The column that explains the selection — see `spreadNote`. */
+      spreadHeader: 'Staðalvik frá línu',
+      directionBelow: 'undir',
+      directionAbove: 'yfir',
+    },
+    /**
      * ── Pay-component split by gender ────────────────────────────────────────
      *
      * ⚠️ `Aukagreiðslur`, NOT `hlunnindi`. The template's own computed columns

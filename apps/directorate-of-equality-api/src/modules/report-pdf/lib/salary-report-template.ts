@@ -3,6 +3,11 @@ import { ReportDetailDto } from '../../report/dto/report-detail.dto'
 import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
+import {
+  PayDispersionBlockerEnum,
+  type PayDispersionDto,
+  PayDispersionPopulationEnum,
+} from '../../report-statistics/dto/pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   escapeHtml,
@@ -201,7 +206,9 @@ function salaryAnalysisSection(
  * ABOVE their starfsmatsstig, which is the opposite of what a reader who
  * remembers the lift-only set expects — and a PDF reader cannot ask.
  */
-function deviationCell(outlier: ReportEmployeeOutlierDto): string {
+function deviationCell(
+  outlier: Pick<ReportEmployeeOutlierDto, 'deviationPercent' | 'payStatus'>,
+): string {
   const percent = formatPercent(outlier.deviationPercent, { signed: true })
   const word =
     outlier.payStatus === PayStatusEnum.UNDERPAID
@@ -257,6 +264,100 @@ function improvementPlanSection(
   )
 }
 
+/**
+ * **Ábendingar um launadreifingu** — the informational counterpart to the
+ * úrbótaáætlun above, and the one place a company reader is most likely to
+ * confuse the two, because on paper they look alike.
+ *
+ * So the copy leads with what it does NOT ask, and the table drops every column
+ * that implies an obligation — no group, no reason, no action, no signature, no
+ * `Hlutur af óskýrðu`. A PDF reader cannot ask a follow-up question, so the
+ * distinction has to survive on the page alone.
+ *
+ * ⚠️ **Renders only for `ALL_EMPLOYEES`.** `EXCLUDING_MINIMUM_SET` is computed and
+ * shipped so the contract is ready, but its framing is not agreed — so a report
+ * that is over the benchmark gets no section at all rather than an empty one.
+ * Returning `''` and not a heading is deliberate: a heading over nothing reads as
+ * a finding that failed to print.
+ */
+function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
+  if (payDispersion?.population !== PayDispersionPopulationEnum.ALL_EMPLOYEES) {
+    return ''
+  }
+
+  const { available, blockers, employees, cohortResidualSpreadPercent } =
+    payDispersion
+
+  // Three states, and an empty table is only one of them — the same rule the
+  // úrbótaáætlun section above had to learn. "Cannot be assessed" and "nothing to
+  // report" are different answers and must read differently.
+  if (!available) {
+    return section(
+      'Ábendingar um launadreifingu',
+      `<p class="empty-note">${blockers.map(payDispersionBlockerText).join(' ')}</p>`,
+    )
+  }
+
+  if (employees.length === 0) {
+    return section(
+      'Ábendingar um launadreifingu',
+      `<p class="empty-note">Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.</p>`,
+    )
+  }
+
+  const spreadNote =
+    cohortResidualSpreadPercent === null
+      ? ''
+      : `<p class="empty-note">Dæmigert vik frá línunni hjá þessu fyrirtæki er ±${formatPercent(cohortResidualSpreadPercent)}. Hér eru starfsmenn sem víkja meira en ${formatNumber(payDispersion.threshold)} staðalvik frá henni.</p>`
+
+  const rows = employees
+    .map(
+      (employee) =>
+        `<tr>
+          <td>Starfsmaður ${employee.employeeOrdinal}</td>
+          <td>${genderLabel(employee.gender)}</td>
+          <td>${formatNumber(employee.score)}</td>
+          <td>${formatHourlyRate(employee.regularHourlyWage)}</td>
+          <td>${formatHourlyRate(employee.expectedHourlyWage)}</td>
+          <td>${deviationCell(employee)}</td>
+          <td>${formatSpreads(employee.studentizedResidual)}</td>
+        </tr>`,
+    )
+    .join('')
+
+  return section(
+    'Ábendingar um launadreifingu',
+    `<p class="empty-note">Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir. Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
+    ${spreadNote}
+    <table class="data-table">
+      <thead><tr><th>Starfsmaður</th><th>Kyn</th><th>Stig</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Staðalvik frá línu</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`,
+  )
+}
+
+const payDispersionBlockerText = (
+  blocker: PayDispersionBlockerEnum,
+): string => {
+  switch (blocker) {
+    case PayDispersionBlockerEnum.COHORT_TOO_SMALL:
+      return 'Of fáir starfsmenn til að meta launadreifingu áreiðanlega — það þarf að minnsta kosti 12.'
+    case PayDispersionBlockerEnum.NO_SCORE_VARIATION:
+      return 'Öll starfsmatsstig eru eins, því liggur ekkert væntanlegt tímakaup fyrir til að víkja frá.'
+    case PayDispersionBlockerEnum.GAP_NOT_COMPUTABLE:
+      return 'Launadreifing verður ekki metin því ekki var unnt að reikna væntanlegt tímakaup.'
+  }
+}
+
+/**
+ * Spreads, two decimals, Icelandic comma — and deliberately no `%`. This is a
+ * count of standard deviations; printing a percent sign would invite comparison
+ * with the Frávik column beside it. Mirrors `formatSpreads` in the web's
+ * `PayDispersionTable` (change both together).
+ */
+const formatSpreads = (value: number): string =>
+  `${value > 0 ? '+' : ''}${value.toFixed(2).replace('.', ',')}`
+
 function deadlineSection(report: ReportDetailDto): string {
   return section(
     'Frestur til úrbóta',
@@ -288,6 +389,7 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     ${subsidiariesSection(report)}
     ${salaryAnalysisSection(statistics, report.result?.wageGapDecomposition)}
     ${improvementPlanSection(outliers, report.result?.wageGapDecomposition)}
+    ${payDispersionSection(report.result?.payDispersion)}
     ${deadlineSection(report)}
   </body>
 </html>`

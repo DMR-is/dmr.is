@@ -4,6 +4,7 @@ import { Stack } from '@island.is/island-ui/core'
 
 import {
   type BenefitsBreakdownDto,
+  type PayDispersionDto,
   ReportOutlierGroupDto,
   SalaryByGenderAndScoreDto,
   SalaryDataBasisEnum,
@@ -14,6 +15,7 @@ import { foldDeviationDirection, formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { PayComponentsTable } from './PayComponentsTable'
+import { PayDispersionTable } from './PayDispersionTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
 
@@ -27,6 +29,12 @@ interface SalaryReportTabProps {
   decomposition?: WageGapDecompositionDto | null
   /** Viðbótarlaun / aukagreiðslur per gender — monthly krónur, not rates. */
   payComponents?: BenefitsBreakdownDto | null
+  /**
+   * Ábendingar — informational, derived on read rather than frozen. A SECOND
+   * instrument: see `PayDispersionTable`, which renders nothing at all unless the
+   * company is within the benchmark.
+   */
+  payDispersion?: PayDispersionDto | null
   reportId: string
   groups: ReportOutlierGroupDto[]
   outlierDate?: Date
@@ -39,6 +47,7 @@ export const SalaryReportTab = ({
   data,
   decomposition,
   payComponents,
+  payDispersion,
   reportId,
   groups,
   outliersPostponed,
@@ -72,6 +81,11 @@ export const SalaryReportTab = ({
         salaryDataBasis={salaryDataBasis}
         salaryDataPeriod={salaryDataPeriod}
       />
+      {/* ⚠️ Below the úrbótaáætlun, and OUTSIDE the `groups.length > 0` gate on
+          purpose: the two are mutually exclusive by construction. Ábendingar
+          render only when the company is within the benchmark, which is exactly
+          when the lágmarksmengi — and therefore `groups` — is empty. */}
+      <PayDispersionTable payDispersion={payDispersion} />
       {groups.length > 0 && (
         <Box marginBottom={4}>
           <OutlierPlanTable

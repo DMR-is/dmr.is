@@ -22,6 +22,7 @@ import {
   WageGapWarningEnum,
 } from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum } from '../../report/models/report.model'
+import { PayDispersionDto } from '../../report-statistics/dto/pay-dispersion.dto'
 
 export class SalaryAggregateMetricsDto {
   @ApiOptionalNumber({ nullable: true })
@@ -429,4 +430,24 @@ export class ReportResultDto {
 
   @ApiDto(WageGapDecompositionDto)
   wageGapDecomposition!: WageGapDecompositionDto
+
+  /**
+   * **Ábendingar** — the informational counterpart to the úrbótaáætlun.
+   *
+   * ⚠️ **Derived on read, NOT part of the frozen snapshot.** Everything above is
+   * `report_result` as it was written at submit; this is computed from
+   * `wageGapDecomposition` each time the row is read. Deliberate: an advisory rule
+   * must stay tunable without rewriting published history, while a regulatory
+   * figure must not. It also means this works on every v3 row already in the
+   * database, and needed no migration.
+   *
+   * That is also why it is a SIBLING of `wageGapDecomposition` rather than a field
+   * inside it — that DTO *is* the stored JSONB, verbatim, and derived data inside
+   * it would break the identity the audit trail depends on.
+   */
+  @ApiDto(PayDispersionDto, {
+    description:
+      'ÁBENDINGAR um launadreifingu — the informational counterpart to the lágmarksmengi, asking whose pay is far from what their starfsmatsstig imply rather than who carries the gender gap. Carries NO obligation: no reason, no action, no signature, no reviewer step, never a basis for rejection, and invisible to auto-review. ⚠️ DERIVED ON READ from wageGapDecomposition, not part of the frozen snapshot — an advisory rule must stay tunable without rewriting published history, which is also why it is a sibling of wageGapDecomposition rather than a field inside it. Render only population = ALL_EMPLOYEES. See docs/launagreining.md §10.',
+  })
+  payDispersion!: PayDispersionDto
 }

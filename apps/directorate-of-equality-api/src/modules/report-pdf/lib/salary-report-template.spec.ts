@@ -182,6 +182,119 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('Ekkert lágmarksmengi var valið')
   })
 
+  describe('ábendingar um launadreifingu', () => {
+    const withPayDispersion = (payDispersion: unknown) => {
+      const data = makeData()
+      return buildSalaryReportHtml({
+        ...data,
+        report: {
+          ...data.report,
+          result: { ...data.report.result, payDispersion },
+        } as unknown as ReportDetailDto,
+      })
+    }
+
+    it('renders the advisory table, and says outright that it asks nothing', () => {
+      const html = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: 'ALL_EMPLOYEES',
+        threshold: 2,
+        cohortResidualSpreadPercent: 25.67,
+        employees: [
+          {
+            employeeOrdinal: 70,
+            gender: GenderEnum.MALE,
+            score: 655,
+            regularHourlyWage: 7800,
+            expectedHourlyWage: 4488,
+            deviationPercent: 73.8,
+            payStatus: 'OVERPAID',
+            studentizedResidual: 2.53,
+          },
+        ],
+      })
+
+      expect(html).toContain('Ábendingar um launadreifingu')
+      expect(html).toContain('Starfsmaður 70')
+      expect(html).toContain('+73,8% (yfir)')
+      // Spreads, not a percentage — the two columns sit side by side and must
+      // not be confusable.
+      expect(html).toContain('+2,53')
+      expect(html).toContain('±25,7%')
+
+      // ⚠️ The sentence that stops a reader treating this as a second
+      // úrbótaáætlun. If this assertion is ever deleted, so is the distinction.
+      expect(html).toContain('Engra skýringa er krafist')
+      expect(html).toContain('engin áhrif á afgreiðslu skýrslunnar')
+
+      // And none of the obligation-bearing vocabulary leaks in.
+      expect(html).not.toContain('Hlutur af óskýrðu')
+    })
+
+    /**
+     * ⚠️ The pre-wired half. `EXCLUDING_MINIMUM_SET` is computed and shipped so
+     * the contract is ready, but its framing is not agreed — so it must produce
+     * **no section at all**, not an empty one. A heading over nothing reads as a
+     * finding that failed to print.
+     */
+    it('renders no section at all for the population that is not yet approved', () => {
+      const html = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: 'EXCLUDING_MINIMUM_SET',
+        threshold: 2,
+        cohortResidualSpreadPercent: 26.1,
+        employees: [
+          {
+            employeeOrdinal: 1,
+            gender: GenderEnum.FEMALE,
+            score: 500,
+            regularHourlyWage: 7000,
+            expectedHourlyWage: 4060,
+            deviationPercent: 72.4,
+            payStatus: 'OVERPAID',
+            studentizedResidual: 2.49,
+          },
+        ],
+      })
+
+      expect(html).not.toContain('Ábendingar um launadreifingu')
+      expect(html).not.toContain('Starfsmaður 1<')
+    })
+
+    it('distinguishes "cannot be assessed" from "nothing to report"', () => {
+      const blocked = withPayDispersion({
+        available: false,
+        blockers: ['COHORT_TOO_SMALL'],
+        population: 'ALL_EMPLOYEES',
+        threshold: 2,
+        cohortResidualSpreadPercent: null,
+        employees: [],
+      })
+      const allClear = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: 'ALL_EMPLOYEES',
+        threshold: 2,
+        cohortResidualSpreadPercent: 4.2,
+        employees: [],
+      })
+
+      expect(blocked).toContain('Of fáir starfsmenn')
+      expect(blocked).not.toContain('Engar ábendingar')
+
+      expect(allClear).toContain('Engar ábendingar')
+      expect(allClear).not.toContain('Of fáir starfsmenn')
+    })
+
+    it('renders nothing when the field is absent, as on an older API response', () => {
+      const html = withPayDispersion(undefined)
+
+      expect(html).not.toContain('Ábendingar um launadreifingu')
+    })
+  })
+
   it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {
     const outliers = [
       {
