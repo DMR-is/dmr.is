@@ -48,14 +48,15 @@ export class ImportUploadService implements IImportUploadService {
   ) {}
 
   /**
-   * Local development has no S3 bucket configured. When that's the case we skip
-   * S3 entirely: `createUpload` hands back a URL pointing at this API's own
-   * local PUT endpoint, and fetch/cleanup read and delete from a temp dir. The
-   * `AWS_SALARY_ANALYSIS_FILES_BUCKET` env var is the signal — it's always set
-   * in deployed environments and never set locally, so this can't trip in prod.
+   * Local development skips S3 entirely: `createUpload` hands back a URL
+   * pointing at this API's own local PUT endpoint, and fetch/cleanup read and
+   * delete from a temp dir. Signalled via NODE_ENV rather than the presence of
+   * `AWS_SALARY_ANALYSIS_FILES_BUCKET` — varlock now populates that bucket var
+   * in every environment, including local dev (see .env.schema), so it's no
+   * longer a valid proxy for "is this deployed".
    */
   private get isLocal(): boolean {
-    return !process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+    return process.env.NODE_ENV !== 'production'
   }
 
   async createUpload(

@@ -29,12 +29,16 @@ describe('ImportUploadService', () => {
   let aws: jest.Mocked<Pick<IAWSService, 'getPresignedUrl' | 'getObjectBuffer' | 'deleteObject'>>
   let service: ImportUploadService
 
+  const ORIGINAL_NODE_ENV = process.env.NODE_ENV
+
   beforeAll(() => {
     process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET = BUCKET
+    process.env.NODE_ENV = 'production'
   })
 
   afterAll(() => {
     delete process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+    process.env.NODE_ENV = ORIGINAL_NODE_ENV
   })
 
   beforeEach(() => {
@@ -182,15 +186,15 @@ describe('ImportUploadService', () => {
     })
   })
 
-  // With no bucket configured the service bypasses S3 and stages uploads on
+  // Outside NODE_ENV=production the service bypasses S3 and stages uploads on
   // disk. These tests round-trip through a real temp dir.
-  describe('local mode (no bucket configured)', () => {
+  describe('local mode (NODE_ENV !== production)', () => {
     beforeEach(() => {
-      delete process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET
+      process.env.NODE_ENV = 'development'
     })
 
     afterEach(() => {
-      process.env.AWS_SALARY_ANALYSIS_FILES_BUCKET = BUCKET
+      process.env.NODE_ENV = 'production'
     })
 
     it('createUpload returns a local API url and never touches S3', async () => {
@@ -230,7 +234,7 @@ describe('ImportUploadService', () => {
     })
   })
 
-  it('storeLocalUpload is disabled when a bucket is configured', async () => {
+  it('storeLocalUpload is disabled when NODE_ENV is production', async () => {
     await expect(
       service.storeLocalUpload(ADMIN_KEY, Buffer.from('x')),
     ).rejects.toBeInstanceOf(BadRequestException)
