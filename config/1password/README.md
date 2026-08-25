@@ -109,13 +109,15 @@ name; both track the same releases):
 brew install dmno-dev/tap/varlock          # or: curl -sSfL https://varlock.dev/install.sh | sh -s
 ```
 
-The reason the global one is preferred is the Keychain: the ACL granting access to `OP_TOKEN` is
-attached to one binary path, so a `varlock` that `yarn install` rewrites loses the grant and macOS
-asks for the login password on every launch. Homebrew's path is stable, so the one-time
-`keychain fix-access` stays one-time.
+The reason the global one is preferred is the decryption session. Each varlock install ships its own
+copy of varlock's native helper, and the daemon that holds your authenticated session belongs to
+whichever copy started it. Alternating between the Homebrew varlock and the one under `node_modules`
+tears that session down and forces a fresh authentication; pinning every caller to one binary means
+one prompt per session instead of one per switch. The `node_modules` copy is the unstable side of
+that pair — `yarn install` rewrites it, killing any daemon running from it.
 
 CI, a fresh clone and the Docker build stages have no global install and land on the pinned version;
-none of them read the Keychain, so nothing changes there. The `flatten-env` targets stay on
+none of them decrypt anything, so nothing changes there. The `flatten-env` targets stay on
 `node_modules/.bin/varlock` on purpose — see the header of `scripts/varlock.sh`.
 
 ## Caching
@@ -140,9 +142,22 @@ parses every at-token in a comment block as a decorator, so a sentence mentionin
 redeclaration with the sentence as its value. That constraint is why this document is Markdown and
 those files are now nearly all decorators.
 
-`OP_TOKEN` is left empty on a developer machine so authentication goes through the desktop app. That
-connects as **you**, with your full access rather than a scoped service account — fine for dev
-secrets, not for anything else.
+`OP_TOKEN` is declared once, in `config/1password/.env.schema`, and reaches each app through an
+`@import(../)` in its own config — so the token is stored and rotated in one place rather than six.
+The value itself is device-local ciphertext in the gitignored values file beside that schema, written
+by `varlock(prompt)`; see the repo README's setup steps.
+
+Left empty, authentication falls back to the 1Password desktop app. That still works, but it
+authorises per *run* rather than per session, and it connects as **you**, with your full access
+rather than a scoped service account — fine for dev secrets, not for anything else.
+
+This replaced a `keychain()` reference, and the reasons are worth keeping. A Keychain item is gated
+by an ACL bound per binary path, so every `yarn install` orphaned the entry for varlock's helper
+under `node_modules` and macOS fell back to asking for the login password. Granting the helper with
+`varlock keychain fix-access` was necessary but not sufficient — the item also carries a partition
+list keyed by Team ID, invisible in Keychain Access, which has to be satisfied separately. Device-
+local encryption has neither problem, and unlike `keychain()` it is not macOS-only, so this setup no
+longer excludes developers who are not on a Mac.
 
 Environment ids are committed on purpose. An id is an identifier, not a credential, and is useless
 without authentication — the same category as the vault name in an `op://` reference. Committing them

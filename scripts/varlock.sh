@@ -7,21 +7,24 @@
 #
 # WHY A GLOBAL INSTALL IS PREFERRED OVER node_modules/.bin
 #
-# varlock reads the 1Password service-account token out of the macOS Keychain,
-# and a Keychain ACL is granted to a SPECIFIC binary, not to a user. That is
-# what `varlock keychain fix-access` writes during setup (see README, "Local
-# environment setup") -- and it writes it for whichever varlock ran it, which
-# after `brew install dmno-dev/tap/varlock` is the Homebrew one.
+# Resolving a value means decrypting the device-local 1Password token, which is
+# done by varlock's native helper (VarlockEnclave). The helper runs as a daemon
+# that holds an authenticated session, so you authenticate ONCE per session
+# rather than once per command.
 #
-# Homebrew's /opt/homebrew/bin/varlock is stable, so the grant survives. The
-# copy under node_modules/.bin is rewritten by every `yarn install`, so the ACL
-# no longer matches and macOS falls back to asking for the login password -- on
-# every single app launch. Preferring the global binary is what makes the
-# one-time `fix-access` stay one-time.
+# Each varlock install ships its own copy of that helper. The daemon belongs to
+# whichever copy started it, so alternating between the Homebrew varlock and the
+# one under node_modules tears the session down and forces a fresh
+# authentication. Pinning every caller to one binary keeps one daemon, and so
+# one prompt per session instead of one per switch.
+#
+# The copy under node_modules is the unstable side of that pair: `yarn install`
+# rewrites it, which also kills any daemon running from it. Homebrew's path is
+# stable across everything except its own upgrades.
 #
 # The fallback still matters: CI, the Docker build stages and a fresh clone have
-# no global install, and land on the version package.json pins. Those worlds
-# never touch the Keychain, so nothing is lost there.
+# no global install, and land on the version package.json pins. None of them
+# decrypt anything, so nothing is lost there.
 #
 # CAVEAT, and the reason for VARLOCK_BIN: the global binary is upgraded by
 # Homebrew on its own schedule and will drift from the pinned version. That is
@@ -34,7 +37,7 @@
 # NOT FOR THE flatten-env TARGETS, and that is deliberate. They call
 # node_modules/.bin/varlock directly and should keep doing so. `varlock flatten`
 # never resolves a value -- it is a purely structural @import rewrite -- so it
-# never reads the Keychain and has nothing to gain here. It has something to
+# never decrypts anything and has nothing to gain here. It has something to
 # lose: the flattened schema is read at container boot by the varlock version
 # pinned in each Dockerfile, so the binary that writes it must be the pinned one
 # too. Routing those targets through this script would silently flatten with
@@ -65,7 +68,7 @@ resolve() {
   #    `command -v varlock` under `yarn nx serve` returns the workspace copy --
   #    the exact binary this ordering exists to avoid. Any node_modules hit is
   #    skipped, not just this repo's: another project's install is not global
-  #    either, and would be a Keychain-prompting binary all the same.
+  #    either, and ships its own helper all the same.
   local dir candidate
   local IFS=:
   for dir in $PATH; do

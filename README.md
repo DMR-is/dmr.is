@@ -56,7 +56,7 @@ One-time setup:
 brew install direnv 1password-cli
 ```
 
-1. **Install varlock globally**, before the Keychain step below. From the maintainers' own tap,
+1. **Install varlock globally**, before the token step below. From the maintainers' own tap,
    which shadows the `homebrew/core` formula of the same name — both track the same releases, and
    the tap is what this setup is tested against:
 
@@ -70,31 +70,38 @@ brew install direnv 1password-cli
    curl -sSfL https://varlock.dev/install.sh | sh -s
    ```
 
-   Do not skip this in favour of the copy `yarn install` puts in `node_modules/.bin` — step 3
-   explains why it costs you a password prompt on every app launch.
+   Do not skip this in favour of the copy `yarn install` puts in `node_modules/.bin`. Both ship
+   varlock's native helper, the daemon holding your decryption session belongs to whichever copy
+   started it, and alternating between them tears that session down and re-prompts. That is why
+   `scripts/varlock-run.sh` resolves through a global `varlock` when there is one and only falls
+   back to the workspace copy otherwise. `VARLOCK_BIN=<path>` overrides the choice for one command.
 2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
    That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
    every launch.
-3. Put a scoped 1Password service-account token in the macOS Keychain to authorise per *session*
-   instead. The account name is pinned rather than defaulted, because varlock otherwise derives it
-   from the current directory name — a token stored in the main checkout would not resolve in a
-   worktree:
+3. Store a scoped 1Password service-account token to authorise per *session* instead. varlock
+   encrypts it device-locally — hardware-backed, gated by Touch ID, and decryptable only on the
+   machine that encrypted it:
 
    ```bash
-   varlock keychain set        OP_TOKEN --account dmr.is:local:OP_TOKEN
-   varlock keychain fix-access          --account dmr.is:local:OP_TOKEN
+   cd config/1password
+   printf 'OP_TOKEN=varlock(prompt)\n' > .env.local
+   varlock load
    ```
 
-   Run these with the global varlock from step 1 — a bare `varlock`, not `yarn varlock`.
+   Paste the token at the masked prompt; varlock encrypts it and rewrites that line as
+   `OP_TOKEN=varlock("local:…")`. The file is gitignored, and one token serves every app —
+   `OP_TOKEN` is declared once in `config/1password/.env.schema` and imported by each app's config.
+   Rotating it is the same three lines again.
 
-   `fix-access` is not optional — without it macOS asks for your login password on every read. The
-   token needs read access to every environment it resolves: the shared one plus each app's.
+   The token needs read access to every environment it resolves: the shared one plus each app's.
+   Miss that and resolution fails at the first `setValuesBulk` with a generic "an unexpected error
+   occurred while processing the request", which looks nothing like a permissions problem.
 
-   The grant it writes belongs to **the binary that ran it**, because that is how a macOS Keychain
-   ACL works. So `scripts/varlock-run.sh` resolves through a globally installed `varlock` when there
-   is one, and only falls back to `node_modules/.bin/varlock` otherwise: the workspace copy is
-   rewritten by every `yarn install`, which invalidates the grant and brings the password prompt
-   back on every launch. `VARLOCK_BIN=<path>` overrides the choice for one command.
+   You authenticate once per *session*, not once per command — varlock's helper daemon holds it.
+   `varlock lock` ends that session deliberately, so a prompt straight after `lock` is expected.
+
+   Skipping this step is survivable: `allowAppAuth=true` means anyone without a local token falls
+   back to 1Password desktop auth, which works but prompts per run.
 4. `direnv allow`
 
 Check resolution by asking for a single value:
