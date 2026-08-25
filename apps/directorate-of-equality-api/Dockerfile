@@ -35,12 +35,12 @@ RUN npm install -g sequelize-cli
 # root .env.schema is not in there. Pinned from npm rather than curl | sh.
 #
 # The version is STILL duplicated: nothing passes VARLOCK_VERSION today, so this
-# default is what every build uses, and it is one of seven places holding 1.16.1
+# default is what every build uses, and it is one of seven places holding 1.17.0
 # (here, the five sibling Dockerfiles, and the root package.json). The arg only
 # means a build CAN override it without editing six files. Keep the default in
 # step with package.json -- the varlock that flattens the schema at build time
 # and the one that reads it at boot have to agree.
-ARG VARLOCK_VERSION=1.16.1
+ARG VARLOCK_VERSION=1.17.0
 RUN npm install -g varlock@${VARLOCK_VERSION}
 USER node
 EXPOSE 4100

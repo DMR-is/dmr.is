@@ -12821,6 +12821,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@varlock/native-helper-darwin@npm:1.17.0":
+  version: 1.17.0
+  resolution: "@varlock/native-helper-darwin@npm:1.17.0"
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
+"@varlock/native-helper-linux-arm64@npm:1.17.0":
+  version: 1.17.0
+  resolution: "@varlock/native-helper-linux-arm64@npm:1.17.0"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@varlock/native-helper-linux-x64@npm:1.17.0":
+  version: 1.17.0
+  resolution: "@varlock/native-helper-linux-x64@npm:1.17.0"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@varlock/native-helper-win32-x64@npm:1.17.0":
+  version: 1.17.0
+  resolution: "@varlock/native-helper-win32-x64@npm:1.17.0"
+  conditions: (os=win32 | os=linux)
+  languageName: node
+  linkType: hard
+
 "@webassemblyjs/ast@npm:1.14.1, @webassemblyjs/ast@npm:^1.14.1":
   version: 1.14.1
   resolution: "@webassemblyjs/ast@npm:1.14.1"
@@ -16363,7 +16391,7 @@ __metadata:
     ts-node: "npm:10.9.1"
     typescript: "npm:5.8.3"
     url-loader: "npm:^4.1.1"
-    varlock: "npm:1.16.1"
+    varlock: "npm:1.17.0"
     webpack: "npm:^5.98.0"
   languageName: unknown
   linkType: soft
@@ -29502,12 +29530,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"varlock@npm:1.16.1":
-  version: 1.16.1
-  resolution: "varlock@npm:1.16.1"
+"varlock@npm:1.17.0":
+  version: 1.17.0
+  resolution: "varlock@npm:1.17.0"
+  dependencies:
+    "@varlock/native-helper-darwin": "npm:1.17.0"
+    "@varlock/native-helper-linux-arm64": "npm:1.17.0"
+    "@varlock/native-helper-linux-x64": "npm:1.17.0"
+    "@varlock/native-helper-win32-x64": "npm:1.17.0"
+  dependenciesMeta:
+    "@varlock/native-helper-darwin":
+      optional: true
+    "@varlock/native-helper-linux-arm64":
+      optional: true
+    "@varlock/native-helper-linux-x64":
+      optional: true
+    "@varlock/native-helper-win32-x64":
+      optional: true
   bin:
     varlock: bin/cli.js
-  checksum: 10c0/6ad7e0b29eed69dca68768634bc272b1eb69e63b0dd083122dbe37e7563d2703ab1ef5cb838cda91e60cef5935fc98a67335fda7b541e0aaa2d048c1d57242f6
+  checksum: 10c0/f07cc59a744e6cf04663b26bdace09101f8800a4099302954bf77189940b7d1132d3dd10fbc59802b616281b909cf8345b6b71b7c7aca5640283f1bb54054866
   languageName: node
   linkType: hard
 
