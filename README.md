@@ -41,10 +41,11 @@ scripts/varlock-run.sh <app> <command>   # e.g. nx serve <app>, sequelize-cli db
 Because nothing lands in the shell, ad-hoc commands need the same wrapper — `echo $DB_NAME` in your
 terminal returns nothing for a migrated app.
 
-An app is migrated once it has a directory under `config/1password/`. Four do today:
-`legal-gazette-api`, `legal-gazette-web`, `directorate-of-equality-api` and
-`directorate-of-equality-web`. Everything else still reads the gitignored secrets file out of the
-shell via `direnv`, and keeps working unchanged.
+An app is migrated once it has a directory under `config/1password/`. Six do today:
+`legal-gazette-api`, `legal-gazette-web`, `legal-gazette-application-web`,
+`legal-gazette-public-web`, `directorate-of-equality-api` and `directorate-of-equality-web`.
+Everything else still reads the gitignored secrets file out of the shell via `direnv`, and keeps
+working unchanged.
 
 Deployed services never use 1Password — ECS task definitions fill the same variables — so local and
 deployed environments differ only in who populates `process.env`.
