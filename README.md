@@ -41,10 +41,11 @@ scripts/varlock-run.sh <app> <command>   # e.g. nx serve <app>, sequelize-cli db
 Because nothing lands in the shell, ad-hoc commands need the same wrapper — `echo $DB_NAME` in your
 terminal returns nothing for a migrated app.
 
-An app is migrated once it has a directory under `config/1password/`. Four do today:
-`legal-gazette-api`, `legal-gazette-web`, `directorate-of-equality-api` and
-`directorate-of-equality-web`. Everything else still reads the gitignored secrets file out of the
-shell via `direnv`, and keeps working unchanged.
+An app is migrated once it has a directory under `config/1password/`. Six do today:
+`legal-gazette-api`, `legal-gazette-web`, `legal-gazette-application-web`,
+`legal-gazette-public-web`, `directorate-of-equality-api` and `directorate-of-equality-web`.
+Everything else still reads the gitignored secrets file out of the shell via `direnv`, and keeps
+working unchanged.
 
 Deployed services never use 1Password — ECS task definitions fill the same variables — so local and
 deployed environments differ only in who populates `process.env`.
@@ -55,22 +56,59 @@ One-time setup:
 brew install direnv 1password-cli
 ```
 
-1. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
-   That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
-   every launch.
-2. Put a scoped 1Password service-account token in the macOS Keychain to authorise per *session*
-   instead. The account name is pinned rather than defaulted, because varlock otherwise derives it
-   from the current directory name — a token stored in the main checkout would not resolve in a
-   worktree:
+1. **Install varlock globally**, before the token step below. From the maintainers' own tap,
+   which shadows the `homebrew/core` formula of the same name — both track the same releases, and
+   the tap is what this setup is tested against:
 
    ```bash
-   varlock keychain set        OP_TOKEN --account dmr.is:local:OP_TOKEN
-   varlock keychain fix-access          --account dmr.is:local:OP_TOKEN
+   brew install dmno-dev/tap/varlock
    ```
 
-   `fix-access` is not optional — without it macOS asks for your login password on every read. The
-   token needs read access to every environment it resolves: the shared one plus each app's.
-3. `direnv allow`
+   Or without Homebrew:
+
+   ```bash
+   curl -sSfL https://varlock.dev/install.sh | sh -s
+   ```
+
+   Do not skip this in favour of the copy `yarn install` puts in `node_modules/.bin`. Both ship
+   varlock's native helper, the daemon holding your decryption session belongs to whichever copy
+   started it, and alternating between them tears that session down and re-prompts. That is why
+   `scripts/varlock-run.sh` resolves through a global `varlock` when there is one and only falls
+   back to the workspace copy otherwise. `VARLOCK_BIN=<path>` overrides the choice for one command.
+2. Enable the 1Password CLI integration: **Settings → Developer → Integrate with 1Password CLI**.
+   That is enough on its own, but desktop-app auth authorises **per run**, so you get a prompt on
+   every launch.
+3. Put a scoped 1Password service-account token in the macOS login Keychain, so authentication is a
+   genuinely one-time step rather than a prompt on every command:
+
+   ```bash
+   varlock keychain set OP_TOKEN --account dmr.is:local:OP_TOKEN
+   security find-generic-password -s varlock -a dmr.is:local:OP_TOKEN -w
+   ```
+
+   Paste the token at the masked prompt. The second command raises the Keychain access dialog —
+   **click "Always Allow", not "Allow"**. That is the entire trick: it adds `/usr/bin/security` to
+   the item's trusted-application list, and every later read is silent. Nothing else is needed.
+
+   One token serves every app: `OP_TOKEN` is declared once in `config/1password/.env.schema` and
+   imported by each app's config, where it resolves via
+   `exec(security find-generic-password …)`. Keep the token in 1Password too — after this it lives
+   only in your Keychain.
+
+   The token needs read access to every environment it resolves: the shared one plus each app's.
+   Miss that and resolution fails at the first `setValuesBulk` with a generic "an unexpected error
+   occurred while processing the request", which looks nothing like a permissions problem.
+
+   Do not reach for varlock's own `keychain()` or `varlock()` resolvers here. Both route reads
+   through varlock's native helper, which on macOS is gated by Secure Enclave user presence and
+   whose dialog offers **no "Always Allow"** — so it cannot be granted persistently. That path
+   prompts on every run, or once per terminal, no matter what you do to the item's ACL. See
+   [config/1password/README.md](config/1password/README.md) for the full account.
+
+   Skipping this step is survivable, and is what a non-macOS developer does: `allowAppAuth=true`
+   means anyone without the Keychain item falls back to 1Password desktop auth, which works but
+   prompts per run.
+4. `direnv allow`
 
 Check resolution by asking for a single value:
 
