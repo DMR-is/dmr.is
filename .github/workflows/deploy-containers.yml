@@ -67,16 +67,26 @@ jobs:
       # sha-<commit>, stale code shipped to production under a version tag
       # claiming to contain the change, with every workflow run green.
       #
-      # error-on-no-successful-workflow makes that fallback fail loudly instead.
-      # A failed deploy is recoverable; a silent stale deploy is not.
+      # When there is no baseline at all -- first run after a rename, or run
+      # history aged out -- the action reports noPreviousBuild instead of us
+      # guessing. That case is handled explicitly below by treating every
+      # container as affected: rebuilding all eleven is wasteful but always
+      # correct, where HEAD~1 is cheap and sometimes wrong. Fail safe, not
+      # fail closed, so a missing baseline never blocks a deploy either.
+      #
+      # workflow-id is left at its default, which is this workflow, so the
+      # baseline is this workflow's own last successful run.
       - name: Set NX SHAs
+        id: set-shas
         uses: nrwl/nx-set-shas@v5
         with:
           last-successful-event: workflow_run
-          error-on-no-successful-workflow: true
 
       - name: Determine affected containers
         id: set-affected
+        env:
+          NO_PREVIOUS_BUILD: ${{ steps.set-shas.outputs.noPreviousBuild }}
+          BASE_SHA: ${{ steps.set-shas.outputs.base }}
         run: |
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
@@ -95,11 +105,19 @@ jobs:
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
           cp -r /tmp/nx-tmp/node_modules/. node_modules/
 
-          echo "Log out what show projects returns"
-          npx nx show projects --affected --type=app
+          if [ "${NO_PREVIOUS_BUILD:-}" = "true" ]; then
+            # No baseline to compare against, so nothing can be proven unchanged.
+            # Treat every container as affected and rebuild the lot.
+            echo "::warning::No previous successful deploy found. Rebuilding every container, because there is no baseline that would let 'unaffected' mean anything."
+            AFFECTED_PROJECTS=$(echo "$ALL_CONTAINERS" | jq -r '.[].name')
+          else
+            echo "Base: ${BASE_SHA}"
+            echo "Determining affected projects with nx"
+            AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          fi
 
-          echo "Determining affected projects with nx"
-          AFFECTED_PROJECTS=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          echo "Affected projects:"
+          echo "$AFFECTED_PROJECTS"
 
           AFFECTED_CONTAINERS="[]"
           UNAFFECTED_CONTAINERS="[]"
@@ -117,8 +135,10 @@ jobs:
           echo "unaffected=$UNAFFECTED_CONTAINERS" >> $GITHUB_OUTPUT
 
           # Published so the re-tag job can copy the image built for this exact
-          # commit, rather than whatever `latest` happens to point at.
-          echo "base_sha=$NX_BASE" >> $GITHUB_OUTPUT
+          # commit, rather than whatever `latest` happens to point at. Taken from
+          # the action's output rather than the NX_BASE env var it also exports,
+          # so the dependency is explicit.
+          echo "base_sha=${BASE_SHA}" >> $GITHUB_OUTPUT
 
           HAS_AFFECTED=$([ "$(echo $AFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
           HAS_UNAFFECTED=$([ "$(echo $UNAFFECTED_CONTAINERS | jq length)" -gt 0 ] && echo "true" || echo "false")
