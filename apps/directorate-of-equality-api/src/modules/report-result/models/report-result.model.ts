@@ -6,6 +6,7 @@ import { DoeModels } from '../../../core/constants'
 import type { SalaryResultSnapshot } from '../../report/lib/compensation-aggregates'
 import { type WageGapDecompositionSnapshot } from '../../report/lib/wage-gap-decomposition'
 import { ReportModel } from '../../report/models/report.model'
+import { computePayDispersion } from '../../report-statistics/lib/pay-dispersion'
 import type { ReportResultDto } from '../dto/report-result.dto'
 
 const parseDecimal = (raw: unknown): number | null =>
@@ -99,7 +100,15 @@ export class ReportResultModel extends MutableModel<
       salaryDifferenceThresholdPercent: model.salaryDifferenceThresholdPercent,
       calculationVersion: model.calculationVersion,
       salary: model.salarySnapshot,
+      // ⚠️ The stored JSONB, verbatim and unnormalised. Consumers of the newer
+      // fields must fail closed rather than assume presence — a row frozen
+      // before a field existed yields `undefined`, not `false`.
       wageGapDecomposition: model.wageGapDecompositionSnapshot,
+      // Derived here, on every read, rather than stored. One call site so the
+      // reviewer web and the PDF cannot disagree, and so an advisory rule stays
+      // tunable without rewriting published history. Cheap: one pass over
+      // `employees[]`, which is already in memory.
+      payDispersion: computePayDispersion(model.wageGapDecompositionSnapshot),
     }
   }
 

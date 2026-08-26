@@ -41,7 +41,7 @@
  * change in one place: see {@link buildDesign}.
  */
 
-import { GenderEnum } from '../models/report.model'
+import { GenderEnum } from '../models/report.enums'
 import { bundleNeutralIntoFemale } from './compensation-aggregates'
 import { fitLinear, type LinearFit } from './linear-fit'
 
@@ -649,6 +649,13 @@ function betterWalk(
 
 /**
  * The lágmarksmengi: the fewest employees who have to be accounted for.
+ *
+ * ⚠️ **The STATUTORY instrument, and not the only list on a report.** This one
+ * carries the obligation: a reason, an action and a signature per person named.
+ * `report-statistics/lib/pay-dispersion.ts` derives a second, informational list
+ * (ábendingar) that asks nothing — reach for that if the question is "whose pay is
+ * far from what their stig imply" rather than "who carries the gender gap". The
+ * two are never derived from each other.
  *
  * ⚠️ **A SELECTION device, not a prescription.** The counterfactual correction
  * below is how the list is chosen; it is not a raise — or a cut — anyone is

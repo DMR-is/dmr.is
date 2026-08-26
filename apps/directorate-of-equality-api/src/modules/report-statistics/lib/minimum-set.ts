@@ -42,6 +42,15 @@ import { SalaryAnalysisOutlierDto } from '../dto/salary-analysis.response.dto'
  *   benchmark the set is empty, and that is the intended signal rather than an
  *   absence of analysis. An empty set does NOT imply compliance in the other
  *   direction, though — read `oskyrtWithinBenchmark` for that.
+ *
+ * ⚠️ **That last point is only half the story, and the other half lives in
+ * {@link computePayDispersion}.** "Nobody carries a gender gap" is not "nobody is
+ * mispaid": óskýrt is a difference between the cohorts' MEAN deviations, so
+ * deviations that offset each other inside one cohort cancel exactly. Ábendingar
+ * is the second, informational instrument for that — same data, different
+ * question, and no obligation whatsoever. Do not widen this set to cover it; on a
+ * compliant company the walk never runs, and on a non-compliant one the pool by
+ * definition excludes everyone whose correction would widen the gap.
  */
 export function selectMinimumSet(
   snapshot: WageGapDecompositionSnapshot,

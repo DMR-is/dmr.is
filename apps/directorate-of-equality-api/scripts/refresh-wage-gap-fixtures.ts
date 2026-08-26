@@ -50,7 +50,7 @@ import { buildChartFromEmployeePoints } from '../src/modules/report-statistics/l
  * `1 − DEMO_PAY_CUT` before anything is computed from it.
  *
  * Why the sheet needs adjusting at all: as captured, it is **compliant** under
- * the rule that replaced the ±band — óskýrt is 2,11% against a 3,9% benchmark,
+ * the rule that replaced the ±band — óskýrt is 2,10% against a 3,9% benchmark,
  * and it runs *í óhag karla*. So the two seeders built to demonstrate the
  * úrbótaáætlun had nothing to demonstrate. The sheet was captured when an
  * individual ±1,95% band decided everything and a company-wide gap decided
@@ -140,7 +140,7 @@ const hourlyWageOf = (employee: ParsedReportDto['employees'][number]): number =>
  * submittable. Running the real gate here means it cannot silently drift out of
  * validity again.
  */
-function richDemoFixture() {
+function richDemoFixture(payCut: number = DEMO_PAY_CUT) {
   const pristine: ParsedReportDto = JSON.parse(
     readFileSync(join(DATA_DIR, 'excel-import-test-res.json'), 'utf8'),
   )
@@ -152,7 +152,7 @@ function richDemoFixture() {
     employees: pristine.employees.map((employee) =>
       employee.gender === GenderEnum.MALE
         ? employee
-        : scalePay(employee, 1 - DEMO_PAY_CUT),
+        : scalePay(employee, 1 - payCut),
     ),
   }
 
@@ -169,7 +169,7 @@ function richDemoFixture() {
   }))
 
   return {
-    payCutPercent: DEMO_PAY_CUT * 100,
+    payCutPercent: payCut * 100,
     parsed,
     scores,
     // Same builder the live endpoints use, so the seeded chart matches what the
@@ -199,10 +199,27 @@ function scenarioSnapshot(hasOutliers: boolean): WageGapDecompositionSnapshot {
 
 const richDemo = richDemoFixture()
 
+/**
+ * The SAME 100-employee capture with **no** pay cut applied, and therefore
+ * **compliant** — óskýrt 2,11% í óhag karla, comfortably inside the 3,9%
+ * benchmark. This is the state the sheet was captured in; see
+ * {@link DEMO_PAY_CUT} for why the úrbótaáætlun demos need it adjusted.
+ *
+ * It exists because the ábendingar list (`report-statistics/lib/pay-dispersion.ts`)
+ * is only DISPLAYED on a compliant company, and every other compliant fixture is
+ * six employees — below the statistic's `n ≥ 12` floor. Without this, the one
+ * case a user actually sees would be the one case no fixture exercises.
+ *
+ * Not invented data: it is the pristine capture, at a real workforce's scale and
+ * pay dispersion, with the adjustment simply not applied.
+ */
+const richDemoCompliant = richDemoFixture(0)
+
 const fixtures = {
   __generated:
     'scripts/refresh-wage-gap-fixtures.ts — do not edit by hand; re-run the script',
   richSheet: richDemo.decomposition,
+  richSheetCompliant: richDemoCompliant.decomposition,
   scenarioWithOutliers: scenarioSnapshot(true),
   scenarioWithoutOutliers: scenarioSnapshot(false),
 }
@@ -263,6 +280,7 @@ console.log(
     `Wrote ${out}`,
     `Wrote ${richOut} (konur −${richDemo.payCutPercent}%)`,
     describe('richSheet', fixtures.richSheet),
+    describe('richSheetCompliant', fixtures.richSheetCompliant),
     describe('scenarioWithOutliers', fixtures.scenarioWithOutliers),
     describe('scenarioWithoutOutliers', fixtures.scenarioWithoutOutliers),
   ].join('\n'),

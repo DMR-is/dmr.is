@@ -15,6 +15,7 @@ import {
   type EmployeeDataPoint,
 } from './build-chart'
 import { toMinimumSetDtos } from './minimum-set'
+import { computePayDispersion } from './pay-dispersion'
 
 /**
  * Runs the salary analysis over a parsed workbook payload, WITHOUT persisting
@@ -80,5 +81,11 @@ export function analyzeSalaryPayload(
     outliers: toMinimumSetDtos(wageGapDecomposition),
     regularHourlyWageByScoreAll: buildChartFromEmployeePoints(chartPoints),
     wageGapDecomposition,
+    // 6. Ábendingar — derived from the decomposition above, never stored. A
+    //    SECOND instrument over the same data, asking whose pay is far from what
+    //    their stig imply rather than who carries the gender gap, and carrying no
+    //    obligation at all. Computed here so the preview and the frozen result
+    //    agree; `ReportResultModel.fromModel` derives it the same way on read.
+    payDispersion: computePayDispersion(wageGapDecomposition),
   }
 }

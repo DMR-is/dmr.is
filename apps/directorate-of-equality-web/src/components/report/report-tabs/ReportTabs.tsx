@@ -96,6 +96,8 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
               <SalaryReportTab
                 data={salaryStats}
                 decomposition={report.result?.wageGapDecomposition}
+                // Derived on read from the same frozen snapshot, not stored.
+                payDispersion={report.result?.payDispersion}
                 payComponents={componentsData}
                 reportId={report.id}
                 groups={groupsData?.groups ?? []}

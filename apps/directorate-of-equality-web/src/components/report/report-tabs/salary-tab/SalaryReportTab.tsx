@@ -4,6 +4,7 @@ import { Stack } from '@island.is/island-ui/core'
 
 import {
   type BenefitsBreakdownDto,
+  type PayDispersionDto,
   ReportOutlierGroupDto,
   SalaryByGenderAndScoreDto,
   SalaryDataBasisEnum,
@@ -14,6 +15,7 @@ import { foldDeviationDirection, formatSalary } from '../../../../lib/utils'
 import { Empty } from '../../../Empty'
 import { OutlierPlanTable } from './OutlierPlanTable'
 import { PayComponentsTable } from './PayComponentsTable'
+import { PayDispersionTable } from './PayDispersionTable'
 import { SalaryDistributionChart } from './SalaryDistributionChart'
 import { SalaryStatistics } from './SalaryStatistics'
 
@@ -27,6 +29,12 @@ interface SalaryReportTabProps {
   decomposition?: WageGapDecompositionDto | null
   /** Viðbótarlaun / aukagreiðslur per gender — monthly krónur, not rates. */
   payComponents?: BenefitsBreakdownDto | null
+  /**
+   * Ábendingar — informational, derived on read rather than frozen. A SECOND
+   * instrument: see `PayDispersionTable`, which renders nothing at all unless the
+   * company is within the benchmark.
+   */
+  payDispersion?: PayDispersionDto | null
   reportId: string
   groups: ReportOutlierGroupDto[]
   outlierDate?: Date
@@ -39,6 +47,7 @@ export const SalaryReportTab = ({
   data,
   decomposition,
   payComponents,
+  payDispersion,
   reportId,
   groups,
   outliersPostponed,
@@ -94,6 +103,24 @@ export const SalaryReportTab = ({
           />
         </Box>
       )}
+      {/*
+        ⚠️ LAST, and outside the `groups.length > 0` gate. Last because the
+        obligation must be read before the advisory: putting a list that asks
+        nothing above the one that asks for a reason and an action per person is
+        the exact confusion this section exists to avoid.
+
+        Outside the `groups.length > 0` gate because the two LISTS are mutually
+        exclusive by construction — ábendingar rows are produced only for a company
+        within the benchmark, which is precisely when the lágmarksmengi, and
+        therefore `groups`, is empty.
+
+        ⚠️ The two SECTIONS are not mutually exclusive: a blocked report renders its
+        reason whatever the population, so an over-benchmark company under the
+        12-employee floor shows an úrbótaáætlun and a "cannot be assessed" note
+        together. That is intended — one asks for explanations, the other explains
+        why it has nothing to show.
+      */}
+      <PayDispersionTable payDispersion={payDispersion} />
     </Stack>
   )
 }

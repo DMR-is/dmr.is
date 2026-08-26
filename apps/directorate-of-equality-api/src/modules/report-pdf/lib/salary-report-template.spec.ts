@@ -1,11 +1,17 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
+import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
 import {
   GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from '../../report/models/report.enums'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
+import {
+  PayDispersionBlockerEnum,
+  type PayDispersionDto,
+  PayDispersionPopulationEnum,
+} from '../../report-statistics/dto/pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   buildSalaryReportHtml,
@@ -180,6 +186,179 @@ describe('buildSalaryReportHtml', () => {
     expect(html).not.toContain('Engar úrbætur nauðsynlegar')
     expect(html).not.toContain('Óskýrður launamunur er yfir viðmiði')
     expect(html).toContain('Ekkert lágmarksmengi var valið')
+  })
+
+  describe('ábendingar um launadreifingu', () => {
+    /**
+     * ⚠️ Typed as the DTO, deliberately. With `unknown` these four fixtures were
+     * unchecked against `PayDispersionDto` — renaming `employeeOrdinal` would
+     * have rendered "Starfsmaður undefined" with all four tests still passing.
+     * The absent-field case below opts out explicitly, because that is the one
+     * scenario whose whole point is a payload that does NOT match the type.
+     */
+    const withPayDispersion = (payDispersion: PayDispersionDto | undefined) => {
+      const data = makeData()
+      return buildSalaryReportHtml({
+        ...data,
+        report: {
+          ...data.report,
+          result: { ...data.report.result, payDispersion },
+        } as unknown as ReportDetailDto,
+      })
+    }
+
+    it('renders the advisory table, and says outright that it asks nothing', () => {
+      const html = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: 25.67,
+        cohortResidualSpreadPercentDown: -20.43,
+        employees: [
+          {
+            employeeOrdinal: 70,
+            gender: GenderEnum.MALE,
+            score: 655,
+            regularHourlyWage: 7800,
+            expectedHourlyWage: 4488,
+            deviationPercent: 73.8,
+            payStatus: PayStatusEnum.OVERPAID,
+            studentizedResidual: 2.53,
+          },
+        ],
+      })
+
+      expect(html).toContain('Ábendingar um launadreifingu')
+      expect(html).toContain('Starfsmaður 70')
+      expect(html).toContain('+73,8% (yfir)')
+      // Spreads, not a percentage — the two columns sit side by side and must
+      // not be confusable.
+      expect(html).toContain('+2,53')
+      // Both ends, no ±: the spread is symmetric in log points and asymmetric in
+      // krónur, so one figure with a ± overstates the downward band by ~5pp.
+      expect(html).toContain('-20,4% til +25,7%')
+      expect(html).not.toContain('±')
+
+      // ⚠️ The sentence that stops a reader treating this as a second
+      // úrbótaáætlun. If this assertion is ever deleted, so is the distinction.
+      expect(html).toContain('Engra skýringa er krafist')
+      expect(html).toContain('engin áhrif á afgreiðslu skýrslunnar')
+
+      /*
+        ⚠️ The CLASS, not just the words — otherwise reverting the stylesheet
+        change is invisible to this suite.
+
+        `.empty-note` is #8a8aa0 = 3.37:1, below WCAG AA. That is defensible for
+        a genuine absence ("Engin dótturfyrirtæki skráð") and wrong for prose a
+        reader has to act on, so the advisory section uses `.advisory-note`
+        (#43425a = 9.70:1) and `.advisory-note--lead` (#00003c = 19.71:1) for the
+        no-obligation sentence. Asserted per-paragraph rather than by counting,
+        so moving one sentence back to the faint class fails here.
+      */
+      expect(html).toContain(
+        '<p class="advisory-note--lead">Engra skýringa er krafist',
+      )
+      expect(html).toContain(
+        '<p class="advisory-note">Laun þessara starfsmanna víkja',
+      )
+      expect(html).toContain('<p class="advisory-note">Dæmigerð dreifing')
+
+      // And none of the obligation-bearing vocabulary leaks in.
+      expect(html).not.toContain('Hlutur af óskýrðu')
+    })
+
+    /**
+     * ⚠️ The pre-wired half. `EXCLUDING_MINIMUM_SET` is computed and shipped so
+     * the contract is ready, but its framing is not agreed — so it must produce
+     * **no section at all**, not an empty one. A heading over nothing reads as a
+     * finding that failed to print.
+     */
+    it('renders no section at all for the population that is not yet approved', () => {
+      const html = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: 26.1,
+        cohortResidualSpreadPercentDown: -20.7,
+        employees: [
+          {
+            employeeOrdinal: 1,
+            gender: GenderEnum.FEMALE,
+            score: 500,
+            regularHourlyWage: 7000,
+            expectedHourlyWage: 4060,
+            deviationPercent: 72.4,
+            payStatus: PayStatusEnum.OVERPAID,
+            studentizedResidual: 2.49,
+          },
+        ],
+      })
+
+      expect(html).not.toContain('Ábendingar um launadreifingu')
+      expect(html).not.toContain('Starfsmaður 1<')
+    })
+
+    it('distinguishes "cannot be assessed" from "nothing to report"', () => {
+      const blocked = withPayDispersion({
+        available: false,
+        blockers: [PayDispersionBlockerEnum.COHORT_TOO_SMALL],
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: null,
+        cohortResidualSpreadPercentDown: null,
+        employees: [],
+      })
+      const allClear = withPayDispersion({
+        available: true,
+        blockers: [],
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: 4.2,
+        cohortResidualSpreadPercentDown: -4.03,
+        employees: [],
+      })
+
+      expect(blocked).toContain('Of fáir starfsmenn')
+      expect(blocked).not.toContain('Engar ábendingar')
+
+      expect(allClear).toContain('Engar ábendingar')
+      expect(allClear).not.toContain('Of fáir starfsmenn')
+
+      // Both are the ENTIRE content of their section, so neither may be faint.
+      expect(blocked).toContain('<p class="advisory-note">Of fáir starfsmenn')
+      expect(allClear).toContain('<p class="advisory-note">Engar ábendingar')
+    })
+
+    /**
+     * ⚠️ Blocked AND `EXCLUDING_MINIMUM_SET` — an over-benchmark company under the
+     * n=12 floor. This is the combination the `available &&` clause in the gate
+     * exists for: without it the section vanishes and the company is told nothing,
+     * which is the bug this whole commit was written to fix.
+     */
+    it('still explains itself when blocked on the not-yet-approved population', () => {
+      const html = withPayDispersion({
+        available: false,
+        blockers: [PayDispersionBlockerEnum.COHORT_TOO_SMALL],
+        population: PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: null,
+        cohortResidualSpreadPercentDown: null,
+        employees: [],
+      })
+
+      expect(html).toContain('Ábendingar um launadreifingu')
+      expect(html).toContain('Of fáir starfsmenn')
+      // ...but still no table and no advisory framing, since nothing was produced.
+      expect(html).not.toContain('Engra skýringa er krafist')
+    })
+
+    it('renders nothing when the field is absent, as on an older API response', () => {
+      const html = withPayDispersion(undefined)
+
+      expect(html).not.toContain('Ábendingar um launadreifingu')
+    })
   })
 
   it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {

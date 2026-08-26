@@ -155,7 +155,18 @@ So being listed is no longer a statement that an individual's pay is wrong. It i
 a statement that the company's gap runs through them, which is answerable — and
 that is what makes asking for a reason fair.
 
+⚠️ **§10 adds a second list, and it is not the band returning either.** Ábendingar
+are measured in each company's own pay spread rather than against a fixed width,
+they run only after compliance has already been decided, and — decisively — they
+oblige the employer to nothing. See the consequence table in §10.
+
 ## 4. How outliers are picked — the lágmarksmengi
+
+⚠️ This section describes the **statutory** instrument: the list the úrbótaáætlun
+is built from and the only one that carries an obligation. §10 describes a second,
+informational list — same data, different question, no obligation — which exists
+because a compliant company can still hold large individual deviations that offset
+each other. Neither is derived from the other.
 
 Outliers are not "everyone off the line". They are the **fewest employees who
 have to be accounted for** in the úrbótaáætlun.
@@ -642,3 +653,183 @@ The fields most likely to be read wrongly:
 `employees[]` carries every analysed employee, not only the listed ones, with each
 one's real signed contribution. That array is the audit trail: every figure in
 this document can be recomputed from it.
+
+## 10. Ábendingar — the second instrument
+
+Everything above answers one question: **who carries the company's gender pay
+gap.** This section is about a different one — **whose pay is far from what their
+starfsmatsstig imply** — over the same data, with a **different consequence:
+none.**
+
+### Why a second instrument at all
+
+Óskýrt is a difference between the two cohorts' **mean** deviations from the
+fitted line. Deviations that offset each other _inside_ one cohort cancel
+exactly.
+
+So take a company where one woman sits 30% below the line and another 30% above.
+The female mean deviation is zero. They contribute nothing to óskýrt, the company
+is comfortably compliant, and §4's lágmarksmengi is empty — correctly, because
+there is no _gender_ gap to report. Both women are nonetheless a long way from
+what their stig imply.
+
+**"Compliant" therefore means "no aggregate gender gap". It does not mean "no
+individual pay problems".** With R² typically 0,4–0,7 there is substantial
+unexplained individual variation on every workforce, gap or no gap, and until now
+nothing on the report said so.
+
+⚠️ The lágmarksmengi cannot be widened to cover this. It is structurally unable
+to: a company under 3,9% exits the selection walk before the candidate pool is
+even built, and on a company over 3,9% the pool only ever contains employees whose
+correction would _narrow_ the gap. Roughly half of every workforce sits in the
+other two quadrants — **47 of 120** on the reference cohort, **51 of 100** on
+richSheet — and no amount of tuning reaches them, because correcting them would
+widen the very figure the statute tests.
+
+### The statistic
+
+Each employee's deviation restated in units of the company's own spread:
+
+```
+t_i = e_i / (s · √(1 − h_i))
+  e_i = leif_i                            log points from the fitted line
+  s   = √(Σe² / (n − 2))                  the spread
+  h_i = 1/n + (stig_i − s̄)² / Sxx         leverage
+```
+
+An employee is listed when `|t| ≥ 2` — two spreads from the line.
+
+**Leverage is not decoration.** An employee at either end of the stig range pulls
+the fitted line toward themselves, which shrinks their own deviation and
+understates how unusual they are. Dividing by `√(1 − h)` undoes exactly that. The
+reference cohort spans 417–770 stig, so it matters at both ends.
+
+**The rule disables itself on a small workforce, arithmetically.** `|t|` is bounded
+by `√(n − 2)`, because the deviation under test is itself part of the sum of
+squares it is divided by. So `|t| ≥ 2` is impossible below **six** employees, and
+unstable up to about ten — one deviation would have to account for nearly all of
+the total. The floor is set at **n ≥ 12**
+(`n − p ≥ 10` with `p = 2`, the standard regression-diagnostic rule). Below it the
+answer is _"cannot be assessed in a workforce this size"_ — which is **not** the
+same statement as _"nobody deviates"_, and the copy says so rather than rendering
+an empty table.
+
+### Why not simply "more than 20% off expected"
+
+Because the spread **is** roughly that wide. Measured against the shipped engine:
+
+| cohort            |   n | spread `s` in krónur | `\|t\| ≥ 2` | fixed `\|frávik\| ≥ 20%` |
+| ----------------- | --: | -------------------- | ----------: | -----------------------: |
+| reference company | 120 | −16,4% … +19,6%      |       **3** |                       28 |
+| richSheet         | 100 | −20,4% … +25,7%      |       **2** |                       45 |
+
+A fixed 20% rule flags a third of the workforce. That is the retired ±1,95% band's
+failure mode with a bigger constant — an arbitrary width, applied per person,
+deciding nothing.
+
+⚠️ **The spread is symmetric in log space and asymmetric in krónur, so it is never
+printed with a `±`.** `s` is one number, but `exp(s) − 1` upward is always larger in
+magnitude than `exp(−s) − 1` downward: +19,6% against −16,4% on the reference
+cohort, +25,7% against −20,4% on richSheetCompliant — a 3–5 percentage-point gap.
+A single figure shown as "±19,6%" would tell an employee sitting 18% _below_
+expected that they are inside the company's spread when they are outside it. The
+snapshot therefore carries both ends (`cohortResidualSpreadPercentUp` /
+`…Down`) and every surface prints the range.
+
+⚠️ **This is not the band coming back.** The band was a fixed per-person tolerance
+that _decided compliance_. This is a distribution-relative screen that decides
+nothing at all, and it runs only after compliance has already been settled by
+óskýrt. The one number in it — `2` — is the conventional regression-diagnostic
+cut-off, and it is a count of **spreads**, not of percent, which is why it adapts
+to a company instead of being imposed on it.
+
+### The consequence boundary — the part that matters
+
+|                      | Lágmarksmengi (§4)                                 | Ábendingar                                             |
+| -------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| Question asked       | who carries the company's gender pay gap           | whose pay is far from what their stig imply            |
+| Selected by          | contribution to óskýrt, greedy walk, stops at 3,9% | `\|t\| ≥ 2`, per person                                |
+| Employer must supply | **ástæða and aðgerð per person**, signed           | **nothing**                                            |
+| Reviewer             | approves on those explanations                     | does not act on it; it cannot be a basis for rejection |
+| Auto-review          | óskýrt decides the verdict                         | invisible to it entirely                               |
+| Addressed to         | the Directorate, via the employer                  | the employer — someone inside the company who can look |
+| Stored               | frozen in the snapshot at submit                   | **derived on read**, never stored                      |
+
+Being in the lágmarksmengi says _the company's statutory gap runs through your
+pay, and the employer owes an account of it_. An ábending says _this looks worth a
+look_. Presenting the second as the first would ask a company to justify pay that
+no regulation has asked about.
+
+### Two populations, and why the second is not displayed yet
+
+| company                     | population              | shown today                        |
+| --------------------------- | ----------------------- | ---------------------------------- |
+| within 3,9%                 | `ALL_EMPLOYEES`         | **yes**                            |
+| over 3,9%                   | `EXCLUDING_MINIMUM_SET` | **no** — computed, exposed, tested |
+| no computable gap (blocked) | `ALL_EMPLOYEES`         | **yes** — as a stated reason       |
+
+⚠️ The population records whether a lágmarksmengi was **withheld**, so it is
+`EXCLUDING_MINIMUM_SET` only when the company is over the benchmark. A report with
+no computable gap — a single-gender workforce, say — has no lágmarksmengi to
+withhold, so it stays `ALL_EMPLOYEES` and renders its blocker reason instead.
+Deriving this from "is the company compliant" instead put those reports into the
+supplementary population, which every surface skips _before_ it reads `blockers` —
+so the section vanished silently on exactly the report that needed an explanation.
+
+⚠️ **The gate is on the LIST, not on the section.** A report that cannot be assessed
+has no rows to withhold, so it renders its reason whatever the population says.
+One consequence worth stating because it looks like a contradiction of the previous
+paragraph: a company **over** the benchmark and **under** the twelve-employee floor
+shows an úrbótaáætlun _and_ an ábendingar note saying the dispersion cannot be
+assessed. That is intended. The two lists remain mutually exclusive — only one of
+them can ever have rows — but the two sections are not.
+
+On a company over the benchmark the lágmarksmengi is withheld from the list, so
+nobody appears in two tables under two framings. Everyone else stays eligible —
+**including gap carriers the selection walk did not pick.** The reference company
+has 73 carriers and 5 in the set; the other 68 are eligible.
+
+⚠️ **Withheld from the OUTPUT, never removed from the ANALYSIS.** Members of the
+lágmarksmengi stay in the fitted line, in the spread `s`, in the leverage term and
+in their own `t`. Recomputing `s` on a reduced set would shrink the spread, push
+new employees over the threshold, and shrink it again — a cascade with no fixed
+point; refitting would additionally move `expectedHourlyWage` and put two
+different _væntanlegt tímakaup_ on one report for one employee.
+
+The supplementary population is built and shipped so the contract is ready, but it
+has not been requested yet, so no surface renders it.
+
+### The worked example
+
+`richSheet` — 100 employees, óskýrt 7,84% í óhag kvenna, six in the lágmarksmengi.
+Two employees exceed `|t| ≥ 2`:
+
+- **`#70`** — `t = +2,60`, paid **+78,2%** above expected. A gap carrier, and in the
+  lágmarksmengi. Withheld: he is already named in the úrbótaáætlun.
+- **`#1`** — `t = +2,09`, paid **+59,0%** above expected, a **woman** in a company
+  whose gap disfavours women. Correcting her downward would _widen_ the reported
+  gap, so `widensGap` is false and she can **never** enter the lágmarksmengi however
+  extreme she becomes.
+
+`#1` is the reason this instrument exists. Six rows in one table, one in the
+other, nobody listed twice, and all 100 employees still in the fit.
+
+The same hundred people **without** the demo pay cut (`richSheetCompliant`, óskýrt
+2,10%) are compliant, so the lágmarksmengi is empty, the population is
+`ALL_EMPLOYEES`, and **both** `#70` and `#1` are listed.
+
+### Where it comes from
+
+Derived from `report_result.wage_gap_decomposition_snapshot` on read —
+`employees[].residualLog`, `employees[].score` and `pooledFit` — by
+`report-statistics/lib/pay-dispersion.ts`. Never stored.
+
+That is deliberate. An advisory rule must stay tunable without rewriting
+published history; a regulatory figure must not. It also means the instrument
+works on every snapshot already frozen, needed no migration and no
+`calculation_version` bump, and is reproducible by anyone holding the published
+JSON.
+
+⚠️ A snapshot whose employees carry no usable `residualLog` reports
+`GAP_NOT_COMPUTABLE`, **not** an empty list. "Cannot tell" and "nobody deviates"
+are different answers and they must not share a rendering.
