@@ -2,11 +2,10 @@
 
 import {
   CartesianGrid,
-  ComposedChart,
   Legend,
-  Line,
   ResponsiveContainer,
   Scatter,
+  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -18,11 +17,13 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { theme } from '@island.is/island-ui/theme'
 
 import {
+  type PayDispersionDto,
   SalaryByGenderAndScoreDto,
   type WageGapDecompositionDto,
+  type WageGapEmployeeDto,
 } from '../../../../gen/fetch'
-import { reportText } from '../../../../lib/text'
-import { formatHourlyRate } from '../../../../lib/utils'
+import { reportText, sharedText } from '../../../../lib/text'
+import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
 import { CohortSummary } from './CohortSummary'
 function formatSalary(v: number) {
   return new Intl.NumberFormat('is-IS')
@@ -58,17 +59,306 @@ function niceAxisMax(dataMax: number) {
 /** How many points the curve is sampled at. Enough to read as smooth. */
 const CURVE_SAMPLES = 48
 
+/**
+ * One plotted employee. `employee` is null only on the no-decomposition
+ * fallback, where the source rows carry no identity.
+ */
+type ChartPoint = {
+  score: number
+  regularHourlyWage: number
+  gender: string
+  employee: WageGapEmployeeDto | null
+  marked: boolean
+}
+
+/**
+ * Whether this employee is on the list the report actually has.
+ *
+ * ⚠️ Exactly one instrument applies per report, so there is no collision to
+ * resolve. A lágmarksmengi exists only when the company is OVER the benchmark;
+ * ábendingar rows are produced only when it is under. Keying on
+ * `oskyrtWithinBenchmark === false` rather than on `minimumSetSize > 0` keeps
+ * that the same test the rest of the app uses — the two came apart when the
+ * selection walk gained the ability to decline every candidate.
+ */
+function isMarked(
+  employee: WageGapEmployeeDto,
+  decomposition: WageGapDecompositionDto,
+  payDispersion: PayDispersionDto | null | undefined,
+): boolean {
+  if (decomposition.oskyrtWithinBenchmark === false) {
+    return employee.inMinimumSet
+  }
+
+  return (
+    payDispersion?.employees.some(
+      (row) => row.employeeOrdinal === employee.ordinal,
+    ) ?? false
+  )
+}
+
+/** Renders nothing, so the curve's points have no hoverable geometry. */
+function NoSymbol() {
+  return <g />
+}
+
+/**
+ * A plotted employee, ringed when they are on the report's list.
+ *
+ * ⚠️ A ring rather than a different fill, so the dot keeps saying which gender
+ * it is. Splitting into marked/unmarked series instead would have doubled the
+ * legend and thrown away that pairing.
+ */
+function EmployeeDot(props: {
+  cx?: number
+  cy?: number
+  fill?: string
+  payload?: ChartPoint
+}) {
+  const { cx, cy, fill, payload } = props
+  if (cx == null || cy == null) return null
+
+  const marked = payload?.marked === true
+
+  return (
+    <g>
+      {/*
+        ⚠️ An invisible target CONCENTRIC with the visible dot, drawn first.
+
+        The visible radius is 4px, which is a very small thing to point at, and
+        recharts hit-tests the rendered geometry — so the dot itself was
+        awkward to hit while the space around it sometimes answered instead.
+        Growing the visible dot would clutter a 120-point scatter; growing an
+        invisible one centred on the same cx/cy keeps the picture and makes the
+        target symmetric about what the eye is aiming at.
+      */}
+      <circle cx={cx} cy={cy} r={10} fill="transparent" />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={marked ? 6 : 4}
+        fill={fill}
+        fillOpacity={marked ? 1 : 0.8}
+        stroke={marked ? theme.color.dark400 : 'none'}
+        strokeWidth={marked ? 2 : 0}
+        pointerEvents="none"
+      />
+    </g>
+  )
+}
+
+/**
+ * A plotted employee rather than a curve sample.
+ *
+ * `employee` is the discriminator rather than `gender`: a curve sample is
+ * `{ score, salary }`, so it has neither, but only `ChartPoint` declares
+ * `employee` — including on the fallback path, where it is explicitly null.
+ */
+function isChartPoint(datum: unknown): datum is ChartPoint {
+  return (
+    typeof datum === 'object' &&
+    datum !== null &&
+    'employee' in datum &&
+    'gender' in datum
+  )
+}
+
+/**
+ * Per-point tooltip.
+ *
+ * ⚠️ Reached only because `<Tooltip shared={false}>` puts recharts in ITEM mode.
+ * In its default axis mode this got whatever series sat nearest the hovered
+ * stig — so hovering a dot could show the curve's numbers, or a colleague's.
+ *
+ * Three shapes to render: a curve sample, an identified employee, and the
+ * fallback point with no identity at all.
+ */
+function ChartTooltip({
+  active,
+  payload,
+  markedLabel,
+}: {
+  active?: boolean
+  payload?: { payload?: ChartPoint | Record<string, unknown> }[]
+  markedLabel: string
+}) {
+  const t = reportText.salaryTab.chartTooltip
+  const datum = active ? payload?.[0]?.payload : undefined
+
+  // ⚠️ Employee points only. The curve's samples are `{ score, salary }` and
+  // would render a heading with an em dash for every field — recharts can still
+  // activate the Line series, so this is the backstop that keeps the curve from
+  // producing a tooltip at all.
+  if (!isChartPoint(datum)) return null
+
+  const rows: [string, string][] = []
+  const { employee } = datum
+  const heading = employee
+    ? `${t.employee} ${employee.ordinal}`
+    : reportText.salaryTab.chartTitle
+
+  if (employee) rows.push([t.gender, genderLabel(employee.gender)])
+  rows.push([t.score, String(Math.round(datum.score))])
+  rows.push([t.salary, formatHourlyRate(datum.regularHourlyWage)])
+
+  if (employee) {
+    rows.push([t.expected, formatHourlyRate(employee.expectedHourlyWage)])
+    // Signed percentage plus the direction word, matching both tables and the
+    // PDF — the sign alone only works for a reader who knows the convention.
+    const direction =
+      employee.payStatus === 'UNDERPAID'
+        ? reportText.salaryTab.payDispersion.directionBelow
+        : employee.payStatus === 'OVERPAID'
+          ? reportText.salaryTab.payDispersion.directionAbove
+          : null
+    const deviation = formatPercent(employee.deviationPercent, { signed: true })
+    rows.push([
+      t.deviation,
+      direction ? `${deviation} (${direction})` : deviation,
+    ])
+  }
+
+  return (
+    <Box
+      background="white"
+      borderRadius="standard"
+      padding={2}
+      style={{
+        border: `1px solid ${theme.color.blue200}`,
+        boxShadow: '0 2px 8px rgba(0, 0, 60, 0.12)',
+      }}
+    >
+      <Text variant="small" fontWeight="semiBold">
+        {heading}
+      </Text>
+      {rows.map(([label, value]) => (
+        <Box key={label} display="flex" columnGap={1}>
+          <Text variant="small" color="dark350">
+            {label}:
+          </Text>
+          <Text variant="small">{value}</Text>
+        </Box>
+      ))}
+      {datum.marked && (
+        <Box marginTop={1}>
+          <Text variant="small" fontWeight="semiBold">
+            {markedLabel}
+          </Text>
+        </Box>
+      )}
+    </Box>
+  )
+}
+
+/** Gender code → Icelandic. NEUTRAL is shown as itself here, not folded. */
+function genderLabel(gender: string): string {
+  if (gender === 'MALE') return sharedText.genders.male
+  if (gender === 'FEMALE') return sharedText.genders.female
+  return sharedText.genders.neutral
+}
+
+/**
+ * The chart's key, rendered by hand.
+ *
+ * ⚠️ Not recharts' automatic legend: the marked swatch has to read as a RING to
+ * match the dots it describes, and recharts 3 does not allow supplying a legend
+ * payload (`Legend` is typed `Omit<Props, 'payload' | …>`). Drawing it here also
+ * keeps the four entries in a fixed order rather than series-declaration order.
+ */
+function ChartLegend({
+  hasMale,
+  hasFemale,
+  hasCurve,
+  markedLabel,
+}: {
+  hasMale: boolean
+  hasFemale: boolean
+  hasCurve: boolean
+  /** Null when nothing on this report is marked. */
+  markedLabel: string | null
+}) {
+  const items: { label: string; swatch: React.ReactNode }[] = []
+  const dot = (fill: string) => (
+    <svg width={12} height={12} aria-hidden>
+      <circle cx={6} cy={6} r={5} fill={fill} fillOpacity={0.8} />
+    </svg>
+  )
+
+  if (hasMale) items.push({ label: 'Karl', swatch: dot(theme.color.blue400) })
+  if (hasFemale)
+    items.push({ label: 'Kona', swatch: dot(theme.color.purple400) })
+  if (hasCurve) {
+    items.push({
+      label: reportText.salaryTab.chartRegressionSeries,
+      swatch: (
+        <svg width={16} height={12} aria-hidden>
+          <line
+            x1={0}
+            y1={6}
+            x2={16}
+            y2={6}
+            stroke={theme.color.roseTinted400}
+            strokeWidth={2.5}
+          />
+        </svg>
+      ),
+    })
+  }
+  if (markedLabel) {
+    items.push({
+      label: markedLabel,
+      swatch: (
+        <svg width={14} height={14} aria-hidden>
+          {/* Unfilled: the ring means membership, and membership is not a
+              gender. A blue fill here read as "karl". */}
+          <circle
+            cx={7}
+            cy={7}
+            r={5}
+            fill="none"
+            stroke={theme.color.dark400}
+            strokeWidth={2}
+          />
+        </svg>
+      ),
+    })
+  }
+
+  return (
+    <Box display="flex" justifyContent="center" columnGap={3} flexWrap="wrap">
+      {items.map((item) => (
+        <Box key={item.label} display="flex" alignItems="center" columnGap={1}>
+          {item.swatch}
+          <Text variant="small">{item.label}</Text>
+        </Box>
+      ))}
+    </Box>
+  )
+}
+
 type Props = {
   data: SalaryByGenderAndScoreDto | null | undefined
   /**
    * The frozen decomposition. Supplies the ONE line worth drawing — see the
-   * note on `pooledFit` below. Absent for a report with no computed result, in
-   * which case the chart is a bare scatter.
+   * note on `pooledFit` below — and, via `employees[]`, the identity of every
+   * plotted point. Absent for a report with no computed result, in which case
+   * the chart falls back to `data.dataPoints`: a bare scatter with no marks and
+   * no per-point tooltip, because those rows carry no identity.
    */
   decomposition?: WageGapDecompositionDto | null
+  /**
+   * Ábendingar, derived on read. Supplies the marks on a report that is WITHIN
+   * the benchmark; above it the marks come from `inMinimumSet` instead. See
+   * `markedOrdinals` below for why only one of the two can ever apply.
+   */
+  payDispersion?: PayDispersionDto | null
 }
 
-export function SalaryDistributionChart({ data, decomposition }: Props) {
+export function SalaryDistributionChart({
+  data,
+  decomposition,
+  payDispersion,
+}: Props) {
   if (!data) {
     return (
       <div
@@ -121,8 +411,53 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
   // the underpaid ones the lágmarksmengi is selected out of. That is why a band
   // is redundant here rather than merely unwanted — the curve already marks the
   // only boundary that means anything.
-  const malePoints = data.dataPoints.filter((p) => p.gender === 'MALE')
-  const femalePoints = data.dataPoints.filter((p) => p.gender !== 'MALE')
+  //
+  // What the chart marks instead is MEMBERSHIP: the dots on whichever list this
+  // report actually has. That is a fact about the report rather than a corridor
+  // a reader could mistake for the rule. See `isMarked`.
+
+  // ⚠️ Plotted from `decomposition.employees[]`, NOT `data.dataPoints`.
+  //
+  // `dataPoints` is `{ score, regularHourlyWage, gender }` — no identity at all.
+  // Marking a dot or giving it its own tooltip is impossible from that without
+  // matching on position, which is fragile the moment two employees share a
+  // score and a rate. `employees[]` carries the ordinal, `payStatus`,
+  // `expectedHourlyWage`, `deviationPercent` and `inMinimumSet` — every figure
+  // the tooltip prints and the mark depends on.
+  //
+  // One visible difference: `dataPoints` includes rows EXCLUDED for a
+  // non-positive wage, which plot at y = 0; `employees[]` does not.
+  // `counts.excluded` is 0 on every cohort we have, and dropping a noise dot at
+  // zero is the better behaviour when it is not.
+  //
+  // No decomposition ⇒ fall back to `dataPoints` for a bare scatter. Identity is
+  // simply unavailable there, so `marked` is false and the tooltip degrades to
+  // score and wage.
+  const points: ChartPoint[] = decomposition?.employees?.length
+    ? decomposition.employees.map((employee) => ({
+        score: employee.score,
+        regularHourlyWage: employee.hourlyWage,
+        gender: employee.gender,
+        employee,
+        marked: isMarked(employee, decomposition, payDispersion),
+      }))
+    : data.dataPoints.map((point) => ({
+        score: point.score,
+        regularHourlyWage: point.regularHourlyWage,
+        gender: point.gender,
+        employee: null,
+        marked: false,
+      }))
+
+  const malePoints = points.filter((p) => p.gender === 'MALE')
+  const femalePoints = points.filter((p) => p.gender !== 'MALE')
+
+  /** Which instrument the marks represent — drives the legend and the tooltip. */
+  const markedLabel =
+    decomposition?.oskyrtWithinBenchmark === false
+      ? reportText.salaryTab.chartMarkedLegend.minimumSet
+      : reportText.salaryTab.chartMarkedLegend.abending
+  const hasMarked = points.some((p) => p.marked)
 
   const xAxisMax =
     Math.ceil(
@@ -134,13 +469,15 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
   // data would both extrapolate beyond any support and inflate the y-axis until
   // the real points flatten into the bottom of the plot; and the model has
   // nothing to say about scores nobody holds.
-  const scores = data.dataPoints.map((p) => p.score)
+  const scores = points.map((p) => p.score)
   const curveFrom = scores.length > 0 ? Math.min(...scores) : 0
   const curveTo = scores.length > 0 ? Math.max(...scores) : 0
   const regressionData = hasFit
     ? Array.from({ length: CURVE_SAMPLES + 1 }, (_, i) => {
         const score = curveFrom + ((curveTo - curveFrom) * i) / CURVE_SAMPLES
-        return { score, salary: predict(score) }
+        // Keyed `regularHourlyWage`, matching the YAxis dataKey — a Scatter
+        // reads its position from the axes, unlike Line's own `dataKey`.
+        return { score, regularHourlyWage: predict(score) }
       })
     : []
 
@@ -148,8 +485,8 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
   // top end can sit above every observed wage, and omitting it would clip the
   // line at the plot edge.
   const allY = [
-    ...data.dataPoints.map((p) => p.regularHourlyWage),
-    ...regressionData.map((point) => point.salary),
+    ...points.map((p) => p.regularHourlyWage),
+    ...regressionData.map((point) => point.regularHourlyWage),
   ]
   const yMax = niceAxisMax(Math.max(...allY, 1))
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(yMax * f))
@@ -166,7 +503,17 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
       </Box>
 
       <ResponsiveContainer width="100%" height={420}>
-        <ComposedChart
+        {/*
+          ⚠️ `ScatterChart`, NOT `ComposedChart`, and the reason is not stylistic.
+          `ComposedChart` declares `allowedTooltipTypes = ['axis']`, so recharts
+          validates any requested `item` event type straight back to `axis` —
+          `shared={false}` was silently ignored. The tooltip then activated on the
+          nearest X, which meant hovering anywhere in a dot's vertical strip
+          (including well below it, or over a neighbour in a cluster) produced
+          that dot's card. `ScatterChart` declares `['item']`, which is the only
+          way to get a tooltip bound to the symbol the pointer is actually over.
+        */}
+        <ScatterChart
           margin={{ top: 24, right: 0, left: 0, bottom: 24 }}
           style={{ outline: 'none' }}
         >
@@ -214,27 +561,55 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
             }}
           />
 
+          {/*
+            ⚠️ Dots only — the CURVE deliberately has no hover.
+            An earlier attempt overlaid invisible hit targets on the curve
+            samples, since the Line is drawn `dot={false}` and recharts activates
+            item tooltips on a line's dots. It worked, and it was worse: the
+            targets sat on top of every employee dot near the line, which is
+            exactly where the interesting ones are, so hovering a dot got you the
+            curve instead. Væntanlegt tímakaup is already on each dot's tooltip
+            and in the readout below the chart, so nothing was lost by dropping
+            it. Do not re-add without solving that overlap.
+
+            ⚠️ `shared={false}` is the fix, not the custom content.
+            Without it recharts runs in AXIS mode: it snaps to the nearest stig,
+            draws a vertical cursor, and shows every series sitting at that x —
+            so hovering an employee could report the curve's numbers, or a
+            colleague's. `cursor={false}` removes the line that behaviour drew.
+          */}
           <Tooltip
-            formatter={(
-              value: number | undefined,
-              name: string | undefined,
-            ) => {
-              if (value == null) return ['', name ?? '']
-              if (name === 'score')
-                return [String(value), reportText.salaryTab.chartTooltipScore]
-              return [
-                formatSalary(value),
-                reportText.salaryTab.chartTooltipSalary,
-              ]
-            }}
+            cursor={false}
+            // Recharts animates the card BETWEEN positions, so moving from one
+            // dot to the next slid the panel across the plot at 400ms. For a
+            // per-point tooltip that reads as lag: appear where the pointer is,
+            // immediately.
+            isAnimationActive={false}
+            content={<ChartTooltip markedLabel={markedLabel} />}
           />
 
+          {/*
+            The ring gets its own swatch, with a label that follows WHICH list
+            the report has — otherwise a reviewer sees a marked dot and has to
+            guess what marked it. Only added when something is actually marked.
+          */}
+          {/*
+            ⚠️ Custom `content`, not a `payload` override — recharts 3 types
+            `Legend` as `Omit<Props, 'payload' | …>`, so the payload cannot be
+            supplied. Rendering it ourselves is also what lets the marked swatch
+            be drawn as a RING rather than a filled circle, which is the thing it
+            has to communicate.
+          */}
           <Legend
-            wrapperStyle={{
-              paddingTop: 16,
-              fontSize: 13,
-              color: theme.color.black,
-            }}
+            wrapperStyle={{ paddingTop: 16 }}
+            content={
+              <ChartLegend
+                hasMale={malePoints.length > 0}
+                hasFemale={femalePoints.length > 0}
+                hasCurve={regressionData.length > 0}
+                markedLabel={hasMarked ? markedLabel : null}
+              />
+            }
           />
 
           {malePoints.length > 0 && (
@@ -242,8 +617,8 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
               name="Karl"
               data={malePoints}
               fill={theme.color.blue400}
-              legendType="circle"
-              opacity={0.8}
+              legendType="none"
+              shape={<EmployeeDot />}
             />
           )}
 
@@ -252,25 +627,36 @@ export function SalaryDistributionChart({ data, decomposition }: Props) {
               name="Kona"
               data={femalePoints}
               fill={theme.color.purple400}
-              legendType="circle"
-              opacity={0.8}
+              legendType="none"
+              shape={<EmployeeDot />}
             />
           )}
 
+          {/*
+            The curve, drawn as a Scatter whose points are joined and whose
+            symbols render nothing. `<Line>` belongs to ComposedChart; this is
+            ScatterChart's idiom for the same picture. 49 straight segments are
+            indistinguishable from a smoothed curve at this width.
+
+            ⚠️ `NoSymbol` renders an empty group, so the curve has NO hoverable
+            geometry — which is what keeps the line hover gone now that the chart
+            is genuinely in item mode.
+          */}
           {regressionData.length > 0 && (
-            <Line
+            <Scatter
               data={regressionData}
-              type="monotone"
-              dataKey="salary"
               name={reportText.salaryTab.chartRegressionSeries}
-              stroke={theme.color.roseTinted400}
-              strokeWidth={2.5}
-              dot={false}
-              legendType="plainline"
-              isAnimationActive={true}
+              line={{
+                stroke: theme.color.roseTinted400,
+                strokeWidth: 2.5,
+              }}
+              lineType="joint"
+              shape={<NoSymbol />}
+              legendType="none"
+              isAnimationActive={false}
             />
           )}
-        </ComposedChart>
+        </ScatterChart>
       </ResponsiveContainer>
 
       <RegressionReadout
@@ -317,7 +703,7 @@ function RegressionReadout({
   if (slope == null) {
     return (
       <Box marginTop={2}>
-        <Text variant="small" color="dark300">
+        <Text variant="small" color="dark350">
           {t.curveUnavailable}
         </Text>
       </Box>
@@ -363,7 +749,7 @@ function RegressionReadout({
     <Box marginTop={2}>
       <Text variant="h5">{t.regressionHeading}</Text>
       <Box marginTop={1} marginBottom={1}>
-        <Text variant="small" color="dark300">
+        <Text variant="small" color="dark350">
           {t.chartCurveNote}
         </Text>
       </Box>
@@ -373,7 +759,7 @@ function RegressionReadout({
             {row.label}
           </Text>
           <Text variant="small">{row.value}</Text>
-          <Text variant="small" color="dark300">
+          <Text variant="small" color="dark350">
             {row.hint}
           </Text>
         </Box>
