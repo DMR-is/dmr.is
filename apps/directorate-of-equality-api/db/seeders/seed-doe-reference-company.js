@@ -226,8 +226,8 @@ INSERT INTO report (id, type, status, company_national_id, company_admin_name, c
   company_admin_gender, contact_name, contact_email, contact_phone,
   provider_type, provider_id, identifier, reviewer_user_id, approved_at, valid_until)
 VALUES ('${EQ_REPORT_ID}', 'EQUALITY', 'APPROVED', '${NATIONAL_ID}',
-  'Anton Ö. Kristinsson', 'anton@vidmid.is', 'MALE',
-  'Anton Ö. Kristinsson', 'anton@vidmid.is', '555-0040',
+  'Þórður Jónsson', 'thj@test.is', 'MALE',
+  'Þórður Jónsson', 'thj@test.is', '1234567',
   'ISLAND_IS', 'prov-eq-040', 'JA-2026-040',
   '${REVIEWER_ID}', NOW() - INTERVAL '40 days', NOW() - INTERVAL '40 days' + INTERVAL '3 years');
 
@@ -244,8 +244,8 @@ INSERT INTO report (id, type, status, company_national_id, company_admin_name, c
   average_employee_male_count, average_employee_female_count, average_employee_neutral_count,
   reviewer_user_id)
 VALUES ('${SAL_REPORT_ID}', 'SALARY', 'IN_REVIEW', '${NATIONAL_ID}',
-  'Anton Ö. Kristinsson', 'anton@vidmid.is', 'MALE',
-  'Anton Ö. Kristinsson', 'anton@vidmid.is', '555-0040',
+  'Þórður Jónsson', 'thj@test.is', 'MALE',
+  'Þórður Jónsson', 'thj@test.is', '1234567',
   'ISLAND_IS', 'prov-sal-040', 'LS-2026-040',
   '${EQ_REPORT_ID}', ${counts.male}, ${counts.female}, 0,
   '${REVIEWER_ID}');
@@ -294,7 +294,7 @@ VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við 
   '${esc(
     'Launasetning fyrirtækisins verður tekin til endurskoðunar í heild og viðmið um nýliðun sett í fastar skorður. Þau tilvik sem hér eru tilgreind verða leiðrétt í næstu launaákvörðun.',
   )}',
-  'Anton Ö. Kristinsson', 'Framkvæmdastjóri');
+  'Þórður Jónsson', 'Framkvæmdastjóri');
 
 INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES
 ${outlierSql};
