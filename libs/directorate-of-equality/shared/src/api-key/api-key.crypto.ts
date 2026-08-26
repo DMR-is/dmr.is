@@ -26,6 +26,13 @@ export const API_KEY_ID_BYTES = 8
 /** 32 bytes → 43 base64url characters. 256 bits of entropy. */
 export const API_KEY_SECRET_BYTES = 32
 
+/**
+ * Minimum accepted pepper length. Deliberately a placeholder filter rather than
+ * an entropy check — nothing here can tell 32 random bytes from 32 repeated
+ * characters, and pretending otherwise would be worse than not checking.
+ */
+export const MIN_PEPPER_LENGTH = 32
+
 const API_KEY_ID_LENGTH = API_KEY_ID_BYTES * 2
 const API_KEY_SECRET_LENGTH = 43
 const HASH_LENGTH = 64
@@ -107,6 +114,18 @@ export const parseApiKey = (raw: string): ParsedApiKey | null => {
 export const hashApiKeySecret = (secret: string, pepper: string): string => {
   if (!pepper) {
     throw new Error('API key pepper is not configured')
+  }
+
+  // A floor, not a strength test. HMAC accepts a key of any length, so
+  // `changeme` would otherwise be a working configuration and every digest in
+  // the table would be forgeable by anyone who guessed it. 32 is the digest
+  // size and the point past which length stops mattering — keys above the
+  // 64-byte block are hashed down anyway. Enforced here rather than at the
+  // config boundary because this is the one call both APIs must go through.
+  if (pepper.length < MIN_PEPPER_LENGTH) {
+    throw new Error(
+      `API key pepper is too short: expected at least ${MIN_PEPPER_LENGTH} characters, got ${pepper.length}. Generate one with \`openssl rand -base64 32\`.`,
+    )
   }
 
   return createHmac('sha256', pepper).update(secret).digest('hex')

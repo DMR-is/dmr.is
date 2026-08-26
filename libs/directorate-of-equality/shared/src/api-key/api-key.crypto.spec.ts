@@ -3,11 +3,12 @@ import {
   buildApiKey,
   generateApiKey,
   hashApiKeySecret,
+  MIN_PEPPER_LENGTH,
   parseApiKey,
   verifyApiKeySecret,
 } from './api-key.crypto'
 
-const PEPPER = 'test-pepper-not-a-real-secret'
+const PEPPER = 'spec-pepper-not-a-real-secret-but-long-enough'
 
 describe('api-key crypto', () => {
   describe('generateApiKey', () => {
@@ -97,7 +98,7 @@ describe('api-key crypto', () => {
       const { secret } = generateApiKey('live')
 
       expect(hashApiKeySecret(secret, PEPPER)).not.toBe(
-        hashApiKeySecret(secret, 'a-different-pepper'),
+        hashApiKeySecret(secret, 'a-different-pepper-also-long-enough-to-pass'),
       )
     })
 
@@ -113,6 +114,29 @@ describe('api-key crypto', () => {
       expect(() => hashApiKeySecret('secret', '')).toThrow(
         'API key pepper is not configured',
       )
+    })
+
+    it('refuses a pepper short enough to be a placeholder', () => {
+      // HMAC would happily accept these, which is the point of the floor.
+      for (const weak of ['changeme', 'x', 'a'.repeat(MIN_PEPPER_LENGTH - 1)]) {
+        expect(() => hashApiKeySecret('secret', weak)).toThrow(
+          /pepper is too short/,
+        )
+      }
+    })
+
+    it('accepts a pepper exactly at the floor', () => {
+      expect(() =>
+        hashApiKeySecret('secret', 'a'.repeat(MIN_PEPPER_LENGTH)),
+      ).not.toThrow()
+    })
+
+    it('accepts what the documented generator produces', () => {
+      // openssl rand -base64 32 -> 44 characters
+      const generated = Buffer.from('b'.repeat(32)).toString('base64')
+
+      expect(generated.length).toBeGreaterThanOrEqual(MIN_PEPPER_LENGTH)
+      expect(() => hashApiKeySecret('secret', generated)).not.toThrow()
     })
   })
 
@@ -137,7 +161,7 @@ describe('api-key crypto', () => {
       const { secret } = generateApiKey('live')
       const stored = hashApiKeySecret(secret, PEPPER)
 
-      expect(verifyApiKeySecret(secret, stored, 'rotated-pepper')).toBe(false)
+      expect(verifyApiKeySecret(secret, stored, 'rotated-pepper-also-long-enough-to-pass-ok')).toBe(false)
     })
 
     it('rejects a stored hash of the wrong length instead of throwing', () => {

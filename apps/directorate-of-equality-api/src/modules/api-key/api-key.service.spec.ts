@@ -17,7 +17,7 @@ import { ICompanyEventService } from '../company-event/company-event.service.int
 import { ApiKeyService } from './api-key.service'
 import { ApiKeyCompany } from './api-key.service.interface'
 
-const PEPPER = 'spec-pepper'
+const PEPPER = 'spec-pepper-not-a-real-secret-but-long-enough'
 
 const COMPANY: ApiKeyCompany = {
   id: '11111111-1111-1111-1111-111111111111',
