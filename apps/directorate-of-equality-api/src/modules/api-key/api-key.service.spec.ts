@@ -50,8 +50,8 @@ describe('ApiKeyService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks()
-    process.env.DOE_API_KEY_PEPPER = PEPPER
-    process.env.DOE_API_KEY_ENV = 'live'
+    process.env.DOE_API_KEY_HMAC_SECRET = PEPPER
+    process.env.API_ENV = 'prod'
 
     create = jest.fn().mockImplementation(async (attrs) => rowFrom(attrs))
     findAll = jest.fn().mockResolvedValue([])
@@ -74,8 +74,8 @@ describe('ApiKeyService', () => {
   })
 
   afterEach(() => {
-    delete process.env.DOE_API_KEY_PEPPER
-    delete process.env.DOE_API_KEY_ENV
+    delete process.env.DOE_API_KEY_HMAC_SECRET
+    delete process.env.API_ENV
   })
 
   describe('issue', () => {
@@ -114,7 +114,7 @@ describe('ApiKeyService', () => {
         actorNationalId: '0101901234',
       })
 
-      expect(parseApiKey(issued.key)?.env).toBe('live')
+      expect(parseApiKey(issued.key)?.env).toBe('prod')
     })
 
     it('records the kennitala and no reviewer on the island.is path', async () => {
@@ -249,7 +249,7 @@ describe('ApiKeyService', () => {
     })
 
     it('refuses to issue with no pepper configured', async () => {
-      delete process.env.DOE_API_KEY_PEPPER
+      delete process.env.DOE_API_KEY_HMAC_SECRET
 
       await expect(
         service.issue({
@@ -257,7 +257,7 @@ describe('ApiKeyService', () => {
           createdVia: ApiKeyOriginEnum.ISLAND_IS,
           actorNationalId: '0101901234',
         }),
-      ).rejects.toThrow(/DOE_API_KEY_PEPPER/)
+      ).rejects.toThrow(/DOE_API_KEY_HMAC_SECRET/)
     })
 
     it('mints a distinct credential every time', async () => {

@@ -29,16 +29,21 @@ import {
 const LOGGING_CONTEXT = 'ApiKeyService'
 
 /**
- * Environment segment baked into every issued key (`doe_<env>_...`). Set per
- * deployment so a staging credential pasted into production is rejected on
- * shape rather than after a hash miss, which is a far clearer error to hand an
- * integrator. Defaults to `dev` because that is the safe end to be wrong on.
+ * Environment segment baked into every issued key (`doe_<env>_...`), so a dev
+ * credential pasted into production is rejected on shape rather than after a
+ * hash miss — a far clearer error to hand an integrator.
+ *
+ * Reuses `API_ENV` rather than declaring a variable of its own. That one is
+ * already the app's deployment identity (it drives varlock's currentEnv), so
+ * the prefix cannot disagree with the environment that minted the key, and
+ * there is no second value to get wrong. Falls back to `dev`, the safe end to
+ * be wrong on.
  */
-const API_KEY_ENV_VAR = 'DOE_API_KEY_ENV'
+const API_KEY_ENV_VAR = 'API_ENV'
 const DEFAULT_API_KEY_ENV = 'dev'
 
 /** Server-side HMAC key. Absent means the API cannot issue or verify at all. */
-const API_KEY_PEPPER_VAR = 'DOE_API_KEY_PEPPER'
+const API_KEY_HMAC_SECRET_VAR = 'DOE_API_KEY_HMAC_SECRET'
 
 @Injectable()
 export class ApiKeyService implements IApiKeyService {
@@ -55,7 +60,7 @@ export class ApiKeyService implements IApiKeyService {
     const { actorUserId, actorNationalId } = this.resolveIssuer(input)
 
     const generated = generateApiKey(this.env())
-    const secretHash = hashApiKeySecret(generated.secret, this.pepper())
+    const secretHash = hashApiKeySecret(generated.secret, this.hmacSecret())
 
     const created = await this.apiKeyModel.create({
       companyId: input.company.id,
@@ -217,19 +222,29 @@ export class ApiKeyService implements IApiKeyService {
     return process.env[API_KEY_ENV_VAR] || DEFAULT_API_KEY_ENV
   }
 
-  private pepper(): string {
-    const pepper = process.env[API_KEY_PEPPER_VAR]
+  /**
+   * The server-side secret mixed into every key digest.
+   *
+   * `api-key.crypto.ts` calls this a pepper, which is the precise term for a
+   * server-wide secret added to a hash — as opposed to a salt, which is
+   * per-record and stored beside the digest. The distinction matters here
+   * because it is why rotating this value invalidates every issued key. The
+   * name follows the environment variable rather than the crypto term so that
+   * what is configured and what is read are searchably the same string.
+   */
+  private hmacSecret(): string {
+    const secret = process.env[API_KEY_HMAC_SECRET_VAR]
 
-    if (!pepper) {
+    if (!secret) {
       this.logger.error(
-        `Missing required environment variable: ${API_KEY_PEPPER_VAR}`,
+        `Missing required environment variable: ${API_KEY_HMAC_SECRET_VAR}`,
         { context: LOGGING_CONTEXT },
       )
       throw new InternalServerErrorException(
-        `Missing required environment variable: ${API_KEY_PEPPER_VAR}`,
+        `Missing required environment variable: ${API_KEY_HMAC_SECRET_VAR}`,
       )
     }
 
-    return pepper
+    return secret
   }
 }
