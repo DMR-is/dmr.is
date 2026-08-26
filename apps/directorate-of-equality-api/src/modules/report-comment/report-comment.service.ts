@@ -81,9 +81,11 @@ export class ReportCommentService implements IReportCommentService {
    * A reviewer marking a comment visible to the applicant IS the change
    * request: there is nothing else it could mean. So that single call posts the
    * comment, moves the thread to AWAITING_RESPONSE, logs an EDITED event, and
-   * drives the island.is application into edit state. There is no separate
-   * "send to edit" action and no explicit open/close of the thread — the admin
-   * writes one comment and ticks one box.
+   * drives the island.is application into edit state — the last two only on the
+   * comment that actually makes that move, so a follow-up sent before the
+   * applicant replies stays a message rather than a second change request.
+   * There is no separate "send to edit" action and no explicit open/close of
+   * the thread — the admin writes one comment and ticks one box.
    *
    * A reviewer's INTERNAL note is just a note: no status move, no outbound
    * notification, invisible to the applicant.
@@ -165,19 +167,36 @@ export class ReportCommentService implements IReportCommentService {
 
     // Move the thread to whoever now owes an answer. Silent — the comment row
     // itself is the audit trail, so these transitions emit no event.
+    const previousStatus = report.communicationStatus
     const nextStatus = !isReviewer
       ? CommunicationStatusEnum.RESPONSE_RECEIVED
       : visibility === CommentVisibilityEnum.EXTERNAL
         ? CommunicationStatusEnum.AWAITING_RESPONSE
         : null
 
-    if (nextStatus && report.communicationStatus !== nextStatus) {
+    if (nextStatus && previousStatus !== nextStatus) {
       await report.update({ communicationStatus: nextStatus })
     }
 
-    if (isReviewer && visibility === CommentVisibilityEnum.EXTERNAL) {
-      await this.mailService.sendExternalCommentNotification(report, comment)
+    const isExternalFromReviewer =
+      isReviewer && visibility === CommentVisibilityEnum.EXTERNAL
 
+    // Only the comment that actually *moves* the thread into AWAITING_RESPONSE
+    // is a change request. A reviewer following up before the applicant has
+    // replied is a second message on a conversation already handed over: the
+    // island.is application is still open for editing, so re-driving it would
+    // add nothing but a duplicate "sent for changes" row on the timeline and a
+    // redundant EDIT the far-side state machine may well reject.
+    const isChangeRequest =
+      isExternalFromReviewer &&
+      previousStatus !== CommunicationStatusEnum.AWAITING_RESPONSE
+
+    // Every DB write the request makes lands before the outbound calls below.
+    // The request runs inside one CLS transaction (`CLSMiddleware` is applied
+    // to all routes and rolls it back on a non-2xx response), so a throw here
+    // takes the comment and the status move with it — but nothing recalls an
+    // email or an island.is application already reopened.
+    if (isChangeRequest) {
       const companyId = await this.getParentCompanyId(context.reportId)
       if (companyId) {
         await this.reportEventService.emitEdited(
@@ -185,8 +204,21 @@ export class ReportCommentService implements IReportCommentService {
           context.reportStatus,
           companyId,
         )
+      } else {
+        this.logger.warn(
+          `No parent company snapshot for report ${context.reportId}; skipping the EDITED audit row`,
+          { context: LOGGING_CONTEXT, reportId: context.reportId },
+        )
       }
+    }
 
+    if (isExternalFromReviewer) {
+      // Mail is not gated on the transition: a follow-up message is still a
+      // message the applicant should hear about.
+      await this.mailService.sendExternalCommentNotification(report, comment)
+    }
+
+    if (isChangeRequest) {
       await this.notifyApplicationSystemEdited(report)
     }
 
@@ -257,8 +289,10 @@ export class ReportCommentService implements IReportCommentService {
   /**
    * Best-effort outbound notification that the applicant should edit and
    * resubmit. Only island.is-sourced reports have an application to update, and
-   * a failed outbound call must not fail the reviewer's comment — the comment is
-   * already committed at this point.
+   * a failed outbound call must not fail the reviewer's comment: the comment,
+   * the status move and the EDITED row are all written by this point, and
+   * letting island.is roll them back would lose the reviewer's message over an
+   * outage on someone else's service.
    */
   private async notifyApplicationSystemEdited(
     report: ReportModel,

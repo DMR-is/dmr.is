@@ -299,6 +299,50 @@ describe('ReportCommentService', () => {
     })
   })
 
+  // A follow-up sent before the applicant has replied is a second message on a
+  // conversation already handed over, not a second change request.
+  it('does not re-drive island.is when the thread is already AWAITING_RESPONSE', async () => {
+    const report = makeReport(CommunicationStatusEnum.AWAITING_RESPONSE)
+    const commentRecord = makeComment('comment-3d')
+    reportModel.findByPk.mockResolvedValue(report)
+    reportCommentModel.create.mockResolvedValue(commentRecord)
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'Just a nudge',
+    })
+
+    expect(report.update).not.toHaveBeenCalled()
+    expect(reportEventService.emitEdited).not.toHaveBeenCalled()
+    expect(applicationSystemService.notifyEdited).not.toHaveBeenCalled()
+    // The applicant still hears about the message itself.
+    expect(mailService.sendExternalCommentNotification).toHaveBeenCalledWith(
+      report,
+      commentRecord,
+    )
+  })
+
+  it('posts the comment and warns when the report has no parent company snapshot', async () => {
+    companyReportModel.findOne.mockResolvedValue(null)
+    reportModel.findByPk.mockResolvedValue(makeReport())
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-3e'))
+
+    await expect(
+      service.create(reviewerContext, {
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'Please update the report',
+      }),
+    ).resolves.toEqual({ id: 'comment-3e' })
+
+    expect(reportEventService.emitEdited).not.toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalled()
+    // The applicant is still let back in — the missing audit row must not cost
+    // them the ability to resubmit.
+    expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
+      'application-1',
+    )
+  })
+
   it('rejects a reviewer external comment when the report is not in review', async () => {
     reportModel.findByPk.mockResolvedValue(makeReport())
 
