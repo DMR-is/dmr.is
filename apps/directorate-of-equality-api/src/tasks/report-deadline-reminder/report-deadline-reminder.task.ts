@@ -7,6 +7,7 @@ import { AdvisoryLockService } from '@dmr.is/shared-modules'
 import {
   DOE_TASK_JOB_IDS,
   DOE_TASK_NAMESPACE,
+  isEmailReminderJobEnabled,
   REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT,
 } from '../constants'
 import { IReportDeadlineReminderService } from './report-deadline-reminder.service.interface'
@@ -34,6 +35,15 @@ export class ReportDeadlineReminderTask {
     name: 'report-deadline-reminder-task',
   })
   async run(): Promise<void> {
+    // Nothing goes out unless the environment opts in explicitly.
+    if (!isEmailReminderJobEnabled()) {
+      this.logger.debug(
+        'Skipped report deadline reminder task: EMAIL_REMINDER_JOB_ENABLED is not "true"',
+        { context: LOGGING_CONTEXT },
+      )
+      return
+    }
+
     // One container does the work per run; the rest see the held lock or the
     // cooldown. 12h cooldown comfortably covers a once-a-day schedule.
     const { ran, reason } = await this.advisoryLockService.runWithDistributedLock(
