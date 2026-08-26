@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -34,10 +34,17 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
 
   const { mutate: createComment, isPending } = useMutation({
     ...trpc.reportComments.create.mutationOptions(),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       setBody('')
       setIsExternal(false)
       setIsConfirmOpen(false)
+      // An external comment is not undoable — it has emailed the applicant and
+      // reopened their island.is application — so say plainly that it left.
+      // An internal note is visible in the timeline the moment it lands and
+      // needs no announcement.
+      if (variables.visibility === CommentVisibilityEnum.EXTERNAL) {
+        toast.success(reportText.comments.externalSuccess)
+      }
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
       })
@@ -67,6 +74,17 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   const isDraft = report?.status === ReportStatusEnum.DRAFT
   const canSendExternal = report?.status === ReportStatusEnum.IN_REVIEW
 
+  // The sidebar can move the report out of review while the reviewer is mid
+  // comment. The checkbox disables itself, but a tick left standing behind it
+  // would re-appear on its own if the status came back — drop it instead, so
+  // sending to the applicant is always something the reviewer just chose.
+  useEffect(() => {
+    if (!canSendExternal) {
+      setIsExternal(false)
+      setIsConfirmOpen(false)
+    }
+  }, [canSendExternal])
+
   const handleSubmit = () => {
     if (!body.trim()) return
 
@@ -84,10 +102,12 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     })
   }
 
-  const handleConfirmExternal = (confirmedBody: string) => {
+  const handleConfirmExternal = () => {
+    if (!body.trim()) return
+
     createComment({
       reportId,
-      body: confirmedBody,
+      body,
       visibility: CommentVisibilityEnum.EXTERNAL,
     })
   }
@@ -111,7 +131,12 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       onExternalChange={setIsExternal}
       onSubmit={handleSubmit}
       onConfirmExternal={handleConfirmExternal}
-      onCancelExternal={() => setIsConfirmOpen(false)}
+      onCancelExternal={() => {
+        // The send is already on its way; closing now would hide the only
+        // spinner the reviewer has and invite a second click.
+        if (isPending) return
+        setIsConfirmOpen(false)
+      }}
       onDelete={handleDelete}
     />
   )

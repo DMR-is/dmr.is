@@ -213,6 +213,8 @@ export const reportText = {
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
     createError: 'Villa við að vista athugasemd',
+    externalSuccess:
+      'Athugasemd send til innsendanda. Skýrslan er opin til breytinga á Ísland.is.',
     deleteError: 'Villa við að eyða athugasemd',
     deleteSuccess: 'Athugasemd eytt',
   },

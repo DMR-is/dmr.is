@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react'
-
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
@@ -15,35 +13,31 @@ const t = reportText.externalCommentModal
 
 interface Props {
   visible: boolean
-  /** The comment the reviewer already typed — the modal opens prefilled with it. */
-  initialBody: string
+  /** The comment the reviewer typed. Edited here, it is the same field. */
+  body: string
   isLoading?: boolean
+  onBodyChange: (value: string) => void
   onClose: () => void
-  onSubmit: (body: string) => void
+  onSubmit: () => void
 }
 
 /**
  * Last stop before a comment reaches the applicant. Sending one reopens their
- * island.is application, so the text gets one more look — prefilled from the
- * comment box, still editable here.
+ * island.is application, so the text gets one more look — still editable here.
+ *
+ * The input is driven straight off the comment box rather than a local copy.
+ * `Modal` dismisses on Esc and on a backdrop click and keeps its children
+ * mounted afterwards, so a local copy would let the reviewer expand their
+ * comment in here, tap Esc, and lose every word of it with nothing to say so.
  */
 export const ExternalCommentConfirmModal = ({
   visible,
-  initialBody,
+  body,
   isLoading = false,
+  onBodyChange,
   onClose,
   onSubmit,
 }: Props) => {
-  const [body, setBody] = React.useState(initialBody)
-
-  // Re-seed each time the modal opens: the reviewer may have edited the comment
-  // box since the last time they opened it.
-  React.useEffect(() => {
-    if (visible) {
-      setBody(initialBody)
-    }
-  }, [visible, initialBody])
-
   return (
     <Modal
       baseId="external-comment-confirm-modal"
@@ -70,13 +64,13 @@ export const ExternalCommentConfirmModal = ({
             backgroundColor="blue"
             value={body}
             disabled={isLoading}
-            onChange={(val) => setBody(val.target.value)}
+            onChange={(val) => onBodyChange(val.target.value)}
           />
           <Button
             fluid
             size="default"
             type="submit"
-            onClick={() => onSubmit(body.trim())}
+            onClick={onSubmit}
             disabled={body.trim().length === 0 || isLoading}
             loading={isLoading}
           >

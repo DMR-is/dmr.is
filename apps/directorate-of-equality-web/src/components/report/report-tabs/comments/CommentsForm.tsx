@@ -22,7 +22,7 @@ type Props = {
   onBodyChange: (value: string) => void
   onExternalChange: (value: boolean) => void
   onSubmit: () => void
-  onConfirmExternal: (body: string) => void
+  onConfirmExternal: () => void
   onCancelExternal: () => void
   onDelete: (commentId: string) => void
 }
@@ -80,8 +80,9 @@ export const CommentsForm = ({
 
       <ExternalCommentConfirmModal
         visible={isConfirmOpen}
-        initialBody={body}
+        body={body}
         isLoading={isPending}
+        onBodyChange={onBodyChange}
         onClose={onCancelExternal}
         onSubmit={onConfirmExternal}
       />
