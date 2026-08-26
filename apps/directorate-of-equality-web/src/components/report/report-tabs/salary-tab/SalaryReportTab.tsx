@@ -70,7 +70,13 @@ export const SalaryReportTab = ({
 
   return (
     <Stack space={6}>
-      <SalaryDistributionChart data={data} decomposition={decomposition} />
+      <SalaryDistributionChart
+        data={data}
+        decomposition={decomposition}
+        // Supplies the chart's marks on a report WITHIN the benchmark; above it
+        // they come from `inMinimumSet`. Only one can apply — see `isMarked`.
+        payDispersion={payDispersion}
+      />
       {/* Below the chart, as its own section — monthly krónur, so it is kept
           clear of the tímakaup figures rather than mixed among them. */}
       <PayComponentsTable data={payComponents} />

@@ -416,6 +416,45 @@ export const reportText = {
     chartRegressionSeries: 'Væntanlegt tímakaup',
     chartTooltipScore: 'Stig',
     chartTooltipSalary: 'Tímakaup',
+    /**
+     * ── Chart hover ──────────────────────────────────────────────────────────
+     *
+     * ⚠️ The tooltip is per-POINT, not per-axis-position. It used to run in
+     * recharts' default axis mode, which snapped to the nearest stig, drew a
+     * vertical cursor and showed whatever series happened to sit at that x —
+     * including the curve. A reviewer hovering a dot got figures that were not
+     * that dot's.
+     */
+    chartTooltip: {
+      employee: 'Starfsmaður',
+      gender: 'Kyn',
+      score: 'Stig',
+      salary: 'Tímakaup',
+      /**
+       * Shorter than the same field's label in the tables (`Væntanlegt
+       * tímakaup`) on purpose: this one sits in a floating card over the plot,
+       * and the full label made the card wide enough to cover the dots a
+       * reviewer is comparing against. Nothing is lost — it sits directly under
+       * `Tímakaup`, and the value carries its own kr./klst.
+       */
+      expected: 'Væntanlegt',
+      deviation: 'Launafrávik',
+      /**
+       * Only on a marked dot, and the wording follows WHICH list the report has.
+       * The two can never both apply: a lágmarksmengi exists only above the
+       * benchmark, ábendingar rows only below it.
+       */
+      inMinimumSet: 'Í úrbótaáætlun',
+      isAbending: 'Ábending — engra skýringa krafist',
+    },
+    /**
+     * The ring on a marked dot, named in the legend so the mark is never a
+     * mystery. Same either/or as `chartTooltip` above.
+     */
+    chartMarkedLegend: {
+      minimumSet: 'Í úrbótaáætlun',
+      abending: 'Ábending',
+    },
     hourlyUnit: 'kr./klst.',
     outlierTable: {
       heading: 'Úrbótaáætlun',
