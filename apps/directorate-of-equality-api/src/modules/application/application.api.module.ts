@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { ApiKeyCoreModule } from '../api-key/api-key.core.module'
 import { CompanyCoreModule } from '../company/company.core.module'
 import { ImportUploadCoreModule } from '../import-upload/import-upload.core.module'
 import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
@@ -10,6 +11,7 @@ import { ApplicationCoreModule } from './application.core.module'
 @Module({
   imports: [
     ApplicationCoreModule,
+    ApiKeyCoreModule,
     ReportExcelCoreModule,
     CompanyCoreModule,
     ImportUploadCoreModule,
