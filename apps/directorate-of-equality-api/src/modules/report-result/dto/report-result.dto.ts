@@ -447,7 +447,7 @@ export class ReportResultDto {
    */
   @ApiDto(PayDispersionDto, {
     description:
-      'ÁBENDINGAR um launadreifingu — the informational counterpart to the lágmarksmengi, asking whose pay is far from what their starfsmatsstig imply rather than who carries the gender gap. Carries NO obligation: no reason, no action, no signature, no reviewer step, never a basis for rejection, and invisible to auto-review. ⚠️ DERIVED ON READ from wageGapDecomposition, not part of the frozen snapshot — an advisory rule must stay tunable without rewriting published history, which is also why it is a sibling of wageGapDecomposition rather than a field inside it. Render only population = ALL_EMPLOYEES. See docs/launagreining.md §10.',
+      'ÁBENDINGAR um launadreifingu — the informational counterpart to the lágmarksmengi, asking whose pay is far from what their starfsmatsstig imply rather than who carries the gender gap. Carries NO obligation: no reason, no action, no signature, no reviewer step, never a basis for rejection, and invisible to auto-review. ⚠️ DERIVED ON READ from wageGapDecomposition, not part of the frozen snapshot — an advisory rule must stay tunable without rewriting published history, which is also why it is a sibling of wageGapDecomposition rather than a field inside it. ⚠️ Gate the LIST, not the section: render rows only for population = ALL_EMPLOYEES (EXCLUDING_MINIMUM_SET is shipped so the contract is ready but has not been requested yet), but when `available` is false there are no rows to withhold, so render the `blockers` reason whatever the population says — otherwise a company over the benchmark and under the 12-employee floor is shown nothing at all. See docs/launagreining.md §10.',
   })
   payDispersion!: PayDispersionDto
 }

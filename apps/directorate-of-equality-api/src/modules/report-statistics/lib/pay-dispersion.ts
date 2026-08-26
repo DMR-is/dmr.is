@@ -318,12 +318,25 @@ function toEmployeeDto(row: StudentizedResidual): PayDispersionEmployeeDto {
  * relative on a ~4.000 kr./klst. figure, and the error compounds once
  * percentages are derived from it.
  *
- * ⚠️ Symmetric about zero. `Math.round` breaks ties toward `+∞`, so a bare
- * `Math.round(-2.005 * 100) / 100` gives `-2` while `+2.005` gives `2.01` — the
- * same magnitude printing two different figures depending on sign. Nothing is
- * dropped either way (the filter and the display share this rounding), but a
- * published column should not tell an underpaid and an overpaid employee
- * different things about the same distance from the line.
+ * ⚠️ Symmetric about zero — round-half-away-from-zero, not `Math.round`'s
+ * half-toward-`+∞`. A bare `Math.round(t * 100) / 100` prints `-2,04` for
+ * `t = −2,045` while printing `+2,05` for its mirror: the same distance from the
+ * line, two different figures, decided by which side of it the employee sits.
+ *
+ * ⚠️ **This is not only cosmetic.** An earlier version of this comment said
+ * nothing was dropped either way. That was wrong. The filter compares the
+ * ROUNDED value against the threshold, so at an exact tie the old rounding also
+ * changed MEMBERSHIP:
+ *
+ * | `t`      | old  | listed at `≥ 2`? | new   | listed? |
+ * | -------- | ---- | ---------------- | ----- | ------- |
+ * | `+1,995` | 2,00 | yes              | 2,00  | yes     |
+ * | `−1,995` | 1,99 | **no**           | −2,00 | yes     |
+ *
+ * The underpaid row vanished while its overpaid mirror was listed. Reaching that
+ * needs `t · 100` to land on an exactly representable `.5`, which no cohort this
+ * pipeline can produce does — the spec pins the reachable half, the display
+ * asymmetry at `t = ±2,045`.
  *
  * ⚠️ Do NOT feed this a possibly-null value. `Math.round(null * 100) / 100` is
  * `0`, not `NaN`, so a missing figure would publish as a real one — a null

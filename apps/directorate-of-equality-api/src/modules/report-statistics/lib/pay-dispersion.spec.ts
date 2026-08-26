@@ -247,6 +247,60 @@ describe('pay-dispersion (ábendingar)', () => {
       }
     })
 
+    /**
+     * ⚠️ Pins `round2`'s symmetry, and it BITES: revert it to
+     * `Math.round(value * 100) / 100` and this fails.
+     *
+     * The cohort is solved so the mirrored pair lands on `t = ±2,045` — twelve
+     * employees at `x̄`, residuals `±1` against ten fillers at `±0,2467`, giving
+     * `s` such that `1/(s·√(1−1/12)) = 2,045` exactly. `Math.round` breaks ties
+     * toward `+∞`, so it publishes `+2,05` and `−2,04`: the same distance from
+     * the line printed as two different numbers depending on which side of it the
+     * employee sits.
+     *
+     * ⚠️ The MEMBERSHIP asymmetry documented on `round2` is deliberately not
+     * tested here. It needs `t · 100` to land on an exactly representable `.5`,
+     * and no cohort this pipeline can produce does — I swept 500 candidate
+     * targets and every reachable tie sits below the threshold, so it is never
+     * published. What is reachable, and what this pins, is the display half.
+     */
+    it('publishes a mirrored pair as exact negatives', () => {
+      const n = 12
+      const filler = 0.24669143510488942
+      const result = computePayDispersion(
+        makeSnapshot({
+          oskyrtWithinBenchmark: true,
+          employees: [
+            employee(1, { score: FIT.xMean, residualLog: 1 }),
+            employee(2, { score: FIT.xMean, residualLog: -1 }),
+            ...Array.from({ length: n - 2 }, (_, i) =>
+              employee(i + 3, {
+                score: FIT.xMean,
+                residualLog: i % 2 === 0 ? filler : -filler,
+              }),
+            ),
+          ],
+        }),
+      )
+
+      const listed = (ordinal: number) => {
+        const row = result.employees.find((e) => e.employeeOrdinal === ordinal)
+        if (!row) throw new Error(`employee ${ordinal} was not listed`)
+        return row
+      }
+      const above = listed(1)
+      const below = listed(2)
+
+      // Both are listed either way — the fix is about the printed figure.
+      expect(above.studentizedResidual).toBe(2.05)
+      expect(below.studentizedResidual).toBe(-2.05)
+      // Stated as the invariant as well as the literals, so the intent survives
+      // a future change to the construction.
+      expect(above.studentizedResidual).toBe(-below.studentizedResidual)
+      // The fillers stay well clear, so the pair above is the whole list.
+      expect(result.employees).toHaveLength(2)
+    })
+
     it('corrects for leverage rather than using the bare residual', () => {
       const rows = studentizedResiduals(referenceCompany)
 
@@ -607,9 +661,16 @@ describe('pay-dispersion (ábendingar)', () => {
       ['an absent hourlyWage', 'hourlyWage'],
       ['an absent deviationPercent', 'deviationPercent'],
     ])('fails closed on %s', (_label, broken) => {
-      const employees = Array.from({ length: 20 }, (_, i) =>
-        employee(i + 1, { residualLog: 0.3 }),
-      )
+      // ⚠️ The broken employee carries an EXTREME residual, so without the gate
+      // it would be listed — `expect(employees).toEqual([])` then reproduces the
+      // harm rather than restating a coincidence. With a uniform 0,3 every row
+      // sits at t ≈ 0,97 and the assertion held even with the gate deleted.
+      const employees = [
+        employee(1, { residualLog: 3 }),
+        ...Array.from({ length: 19 }, (_, i) =>
+          employee(i + 2, { residualLog: i % 2 === 0 ? 0.02 : -0.02 }),
+        ),
+      ]
       if (broken !== 'xSumSquares') {
         delete (employees[0] as unknown as Record<string, unknown>)[broken]
       }

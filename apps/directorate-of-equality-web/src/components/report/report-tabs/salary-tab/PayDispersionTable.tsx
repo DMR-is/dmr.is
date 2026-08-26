@@ -7,6 +7,12 @@ import {
   type PayDispersionDto,
   type PayDispersionEmployeeDto,
 } from '../../../../gen/fetch'
+import { reportText, sharedText } from '../../../../lib/text'
+import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
+
+import { type ColumnDef } from '@tanstack/react-table'
+
+const p = reportText.salaryTab.payDispersion
 
 /**
  * The one population whose ROWS are approved for display.
@@ -17,12 +23,6 @@ import {
  * typed constant is the closest available equivalent.
  */
 const RENDERED_POPULATION: PayDispersionDto['population'] = 'ALL_EMPLOYEES'
-import { reportText, sharedText } from '../../../../lib/text'
-import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
-
-import { type ColumnDef } from '@tanstack/react-table'
-
-const p = reportText.salaryTab.payDispersion
 
 /**
  * Spreads, to two decimals, Icelandic comma. Deliberately NOT `formatPercent`:
@@ -144,17 +144,16 @@ interface PayDispersionTableProps {
 export const PayDispersionTable = ({
   payDispersion,
 }: PayDispersionTableProps) => {
-  // ⚠️ Rendered ONLY for the compliant population. `EXCLUDING_MINIMUM_SET` is
-  // computed and shipped so the contract is ready, but has not been requested
-  // yet — turning it on is deleting this condition and writing the copy for it.
-  // Deliberately unrendered, NOT unused: do not remove the branch. Optional-chained rather than compared directly, so
-  // an older API response (where the field is absent) renders nothing instead of
-  // throwing.
+  // Absent on an older API response — render nothing rather than throwing.
   if (!payDispersion) return null
-  // ⚠️ Blocker states must survive this gate. `population` is ALL_EMPLOYEES
-  // whenever no lágmarksmengi was withheld — which includes every snapshot where
-  // no gap is computable — so a report that cannot be assessed still renders its
-  // reason. Only a PRODUCIBLE list for the not-yet-approved population is skipped.
+  // ⚠️ Gates the LIST, not the section — and that distinction is the whole point.
+  //
+  // `EXCLUDING_MINIMUM_SET` rows are computed and shipped so the contract is
+  // ready, but have not been requested yet: deliberately unrendered, NOT unused,
+  // so do not remove this branch. What must NOT be skipped is a blocked report —
+  // it has no rows to withhold, so it renders its `blockers` reason whatever the
+  // population says. Gating the section instead left a company over the benchmark
+  // and under the 12-employee floor showing nothing at all.
   if (
     payDispersion.available &&
     payDispersion.population !== RENDERED_POPULATION
@@ -180,13 +179,13 @@ export const PayDispersionTable = ({
         {!available ? (
           <Stack space={1}>
             {blockers.map((code) => (
-              <Text key={code} variant="small" color="dark300">
+              <Text key={code} variant="small" color="dark350">
                 {p.blockers[code as keyof typeof p.blockers] ?? code}
               </Text>
             ))}
           </Stack>
         ) : employees.length === 0 ? (
-          <Text variant="small" color="dark300">
+          <Text variant="small" color="dark350">
             {p.allClear}
           </Text>
         ) : (
@@ -205,7 +204,7 @@ export const PayDispersionTable = ({
             </Text>
             {cohortResidualSpreadPercentUp != null &&
               cohortResidualSpreadPercentDown != null && (
-                <Text variant="small" color="dark300">
+                <Text variant="small" color="dark350">
                   {p.spreadNote(
                     formatPercent(cohortResidualSpreadPercentDown),
                     formatPercent(cohortResidualSpreadPercentUp, {

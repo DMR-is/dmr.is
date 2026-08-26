@@ -316,7 +316,7 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
   if (employees.length === 0) {
     return section(
       'Ábendingar um launadreifingu',
-      `<p class="empty-note">Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.</p>`,
+      `<p class="advisory-note">Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.</p>`,
     )
   }
 
@@ -327,7 +327,7 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     cohortResidualSpreadPercentUp === null ||
     cohortResidualSpreadPercentDown === null
       ? ''
-      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${formatNumber(payDispersion.threshold)} staðalvik eða meira frá henni.</p>`
+      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${String(payDispersion.threshold).replace('.', ',')} staðalvik eða meira frá henni.</p>`
 
   const rows = employees
     .map(

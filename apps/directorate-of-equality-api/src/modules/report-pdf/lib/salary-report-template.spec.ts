@@ -245,6 +245,25 @@ describe('buildSalaryReportHtml', () => {
       expect(html).toContain('Engra skýringa er krafist')
       expect(html).toContain('engin áhrif á afgreiðslu skýrslunnar')
 
+      /*
+        ⚠️ The CLASS, not just the words — otherwise reverting the stylesheet
+        change is invisible to this suite.
+
+        `.empty-note` is #8a8aa0 = 3.37:1, below WCAG AA. That is defensible for
+        a genuine absence ("Engin dótturfyrirtæki skráð") and wrong for prose a
+        reader has to act on, so the advisory section uses `.advisory-note`
+        (#43425a = 9.70:1) and `.advisory-note--lead` (#00003c = 19.71:1) for the
+        no-obligation sentence. Asserted per-paragraph rather than by counting,
+        so moving one sentence back to the faint class fails here.
+      */
+      expect(html).toContain(
+        '<p class="advisory-note--lead">Engra skýringa er krafist',
+      )
+      expect(html).toContain(
+        '<p class="advisory-note">Laun þessara starfsmanna víkja',
+      )
+      expect(html).toContain('<p class="advisory-note">Dæmigerð dreifing')
+
       // And none of the obligation-bearing vocabulary leaks in.
       expect(html).not.toContain('Hlutur af óskýrðu')
     })
@@ -306,6 +325,10 @@ describe('buildSalaryReportHtml', () => {
 
       expect(allClear).toContain('Engar ábendingar')
       expect(allClear).not.toContain('Of fáir starfsmenn')
+
+      // Both are the ENTIRE content of their section, so neither may be faint.
+      expect(blocked).toContain('<p class="advisory-note">Of fáir starfsmenn')
+      expect(allClear).toContain('<p class="advisory-note">Engar ábendingar')
     })
 
     /**
