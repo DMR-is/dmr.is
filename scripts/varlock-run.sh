@@ -75,8 +75,8 @@ fi
 # A declared key is normally the app's to decide, never the shell's. These are
 # the exception: they are ambient SESSION IDENTITY, not app configuration. In a
 # container they come from the ECS task role; on a laptop they come from the
-# developer's AWS session. No secret store holds them in either world -- the
-# infra repo sets AWS_REGION on none of the services.
+# developer's AWS session. No secret store holds them in either world, and no
+# deployed service sets AWS_REGION.
 #
 # Scrubbing them does not fail loudly, which is why this list exists. See
 # libs/shared/modules/src/lib/aws/aws.service.ts: a missing AWS_CREDENTIALS_SOURCE
