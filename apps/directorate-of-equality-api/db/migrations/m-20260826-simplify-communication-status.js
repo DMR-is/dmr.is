@@ -25,9 +25,14 @@ module.exports = {
     return await queryInterface.sequelize.query(`
     BEGIN;
 
+    -- Compare the column as text, not as the enum. Written the obvious way
+    -- (communication_status = 'OPEN') Postgres coerces the literal into the
+    -- enum type and raises "invalid input value" on any database whose type has
+    -- no OPEN label — a rebuilt-from-dump checkout, or a second run of this
+    -- migration. Casting left-hand-side to text makes the no-op case a no-op.
     UPDATE report
       SET communication_status = 'AWAITING_RESPONSE'
-      WHERE communication_status = 'OPEN';
+      WHERE communication_status::text = 'OPEN';
 
     ALTER TYPE communication_status_enum
       RENAME TO communication_status_enum_old;
