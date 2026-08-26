@@ -63,6 +63,7 @@ export function ReportSidebarContainer({
       <ReportStatusSelect
         reportId={data.id}
         status={data.status}
+        reviewerId={data.reviewer?.id ?? null}
         disabled={isTerminal}
       />
       <Box paddingTop={1}>

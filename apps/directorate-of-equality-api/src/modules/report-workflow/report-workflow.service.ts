@@ -91,28 +91,40 @@ export class ReportWorkflowService implements IReportWorkflowService {
       }
     }
 
-    // Status transitions:
-    // - SUBMITTED + target  → IN_REVIEW
-    // - IN_REVIEW + target  → IN_REVIEW (reassignment)
-    // - IN_REVIEW + null    → SUBMITTED (return to queue)
-    // - anything else       → 400
+    // A reviewer is only meaningful while the report is in the review pipeline,
+    // whether or not this call moves it along.
+    if (
+      context.reportStatus !== ReportStatusEnum.SUBMITTED &&
+      context.reportStatus !== ReportStatusEnum.IN_REVIEW
+    ) {
+      throw new BadRequestException(
+        `Cannot assign report with status ${context.reportStatus}`,
+      )
+    }
+
+    // `updateStatus` decides whether this is "take this report" or a plain
+    // reviewer change. Defaults to the former to keep the pipeline transition
+    // the behaviour a caller gets without asking.
+    // - false                → status untouched
+    // - SUBMITTED + target   → IN_REVIEW
+    // - SUBMITTED + null     → 400 (nothing to hand back)
+    // - IN_REVIEW + target   → IN_REVIEW (reassignment)
+    // - IN_REVIEW + null     → SUBMITTED (return to queue)
     let nextStatus: ReportStatusEnum
-    if (context.reportStatus === ReportStatusEnum.SUBMITTED) {
+    if (dto.updateStatus === false) {
+      nextStatus = context.reportStatus
+    } else if (context.reportStatus === ReportStatusEnum.SUBMITTED) {
       if (targetUserId === null) {
         throw new BadRequestException(
           'Cannot unassign a report that is not in review',
         )
       }
       nextStatus = ReportStatusEnum.IN_REVIEW
-    } else if (context.reportStatus === ReportStatusEnum.IN_REVIEW) {
+    } else {
       nextStatus =
         targetUserId === null
           ? ReportStatusEnum.SUBMITTED
           : ReportStatusEnum.IN_REVIEW
-    } else {
-      throw new BadRequestException(
-        `Cannot assign report with status ${context.reportStatus}`,
-      )
     }
 
     const currentReviewerUserId = await this.getReviewerUserId(context.reportId)
@@ -135,12 +147,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
         context.reportId,
         actorUserId,
         currentReviewerUserId,
+        nextStatus,
       )
     } else {
       await this.reportEventService.emitAssigned(
         context.reportId,
         actorUserId,
         targetUserId,
+        nextStatus,
       )
     }
   }

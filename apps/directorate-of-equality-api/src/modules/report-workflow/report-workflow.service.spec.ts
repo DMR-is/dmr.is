@@ -122,6 +122,7 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'reviewer-1',
+        ReportStatusEnum.IN_REVIEW,
       )
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
     })
@@ -151,6 +152,7 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'user-2',
+        ReportStatusEnum.IN_REVIEW,
       )
     })
 
@@ -175,6 +177,7 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'user-2',
+        ReportStatusEnum.IN_REVIEW,
       )
     })
 
@@ -200,6 +203,7 @@ describe('ReportWorkflowService', () => {
         'report-1',
         'reviewer-1',
         'user-1',
+        ReportStatusEnum.SUBMITTED,
       )
     })
 
@@ -268,6 +272,134 @@ describe('ReportWorkflowService', () => {
       ).rejects.toBeInstanceOf(ForbiddenException)
 
       expect(reportModel.update).not.toHaveBeenCalled()
+    })
+
+    describe('updateStatus: false', () => {
+      it('assigns a SUBMITTED report without moving it into review', async () => {
+        reportModel.update.mockResolvedValue([1])
+        reportModel.findOne.mockResolvedValue({ reviewerUserId: null })
+        userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+        reportEventService.emitAssigned.mockResolvedValue(undefined)
+
+        await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: 'user-2',
+          updateStatus: false,
+        })
+
+        expect(reportModel.update).toHaveBeenCalledWith(
+          {
+            status: ReportStatusEnum.SUBMITTED,
+            reviewerUserId: 'user-2',
+          },
+          { where: { id: 'report-1' } },
+        )
+        expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+          'report-1',
+          'reviewer-1',
+          'user-2',
+          ReportStatusEnum.SUBMITTED,
+        )
+      })
+
+      it('allows unassigning a SUBMITTED report, which is a 400 otherwise', async () => {
+        reportModel.update.mockResolvedValue([1])
+        reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-2' })
+        reportEventService.emitUnassigned.mockResolvedValue(undefined)
+
+        await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: null,
+          updateStatus: false,
+        })
+
+        expect(reportModel.update).toHaveBeenCalledWith(
+          {
+            status: ReportStatusEnum.SUBMITTED,
+            reviewerUserId: null,
+          },
+          { where: { id: 'report-1' } },
+        )
+        expect(reportEventService.emitUnassigned).toHaveBeenCalledWith(
+          'report-1',
+          'reviewer-1',
+          'user-2',
+          ReportStatusEnum.SUBMITTED,
+        )
+      })
+
+      it('keeps an IN_REVIEW report in review when the reviewer is cleared', async () => {
+        reportModel.update.mockResolvedValue([1])
+        reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-2' })
+        reportEventService.emitUnassigned.mockResolvedValue(undefined)
+
+        await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          userId: null,
+          updateStatus: false,
+        })
+
+        expect(reportModel.update).toHaveBeenCalledWith(
+          {
+            status: ReportStatusEnum.IN_REVIEW,
+            reviewerUserId: null,
+          },
+          { where: { id: 'report-1' } },
+        )
+      })
+
+      it('reassigns an IN_REVIEW report to a different reviewer', async () => {
+        reportModel.update.mockResolvedValue([1])
+        reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-1' })
+        userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+        reportEventService.emitAssigned.mockResolvedValue(undefined)
+
+        await service.assign(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          userId: 'user-2',
+          updateStatus: false,
+        })
+
+        expect(reportModel.update).toHaveBeenCalledWith(
+          {
+            status: ReportStatusEnum.IN_REVIEW,
+            reviewerUserId: 'user-2',
+          },
+          { where: { id: 'report-1' } },
+        )
+        expect(reportEventService.emitAssigned).toHaveBeenCalledWith(
+          'report-1',
+          'reviewer-1',
+          'user-2',
+          ReportStatusEnum.IN_REVIEW,
+        )
+      })
+
+      it('still refuses a status outside SUBMITTED / IN_REVIEW', async () => {
+        // Explicitly an *active* target, so the rejection can only be the
+        // status guard — `jest.clearAllMocks()` keeps implementations, so
+        // leaving this unset would resolve off a previous test's mock and the
+        // assertion could not tell the two guards apart.
+        userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+
+        await expect(
+          service.assign(reviewerContext(ReportStatusEnum.POSTPONED), {
+            userId: 'user-2',
+            updateStatus: false,
+          }),
+        ).rejects.toThrow('Cannot assign report with status POSTPONED')
+
+        expect(reportModel.update).not.toHaveBeenCalled()
+      })
+
+      it('is still a no-op when the reviewer is unchanged', async () => {
+        reportModel.findOne.mockResolvedValue({ reviewerUserId: 'user-2' })
+        userModel.findOne.mockResolvedValue({ id: 'user-2', isActive: true })
+
+        await service.assign(reviewerContext(ReportStatusEnum.SUBMITTED), {
+          userId: 'user-2',
+          updateStatus: false,
+        })
+
+        expect(reportModel.update).not.toHaveBeenCalled()
+        expect(reportEventService.emitAssigned).not.toHaveBeenCalled()
+      })
     })
   })
 
@@ -353,9 +485,11 @@ describe('ReportWorkflowService', () => {
       expect(update).toHaveBeenCalledWith({
         communicationStatus: CommunicationStatusEnum.CLOSED,
       })
-      expect(
-        reportEventService.emitCommunicationClosed,
-      ).toHaveBeenCalledWith('report-1', ReportStatusEnum.DENIED, 'reviewer-1')
+      expect(reportEventService.emitCommunicationClosed).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatusEnum.DENIED,
+        'reviewer-1',
+      )
     })
 
     it('forces a never-opened thread to CLOSED without an audit event', async () => {
@@ -375,9 +509,7 @@ describe('ReportWorkflowService', () => {
       expect(update).toHaveBeenCalledWith({
         communicationStatus: CommunicationStatusEnum.CLOSED,
       })
-      expect(
-        reportEventService.emitCommunicationClosed,
-      ).not.toHaveBeenCalled()
+      expect(reportEventService.emitCommunicationClosed).not.toHaveBeenCalled()
     })
 
     it('leaves an already-CLOSED thread untouched', async () => {
@@ -395,9 +527,7 @@ describe('ReportWorkflowService', () => {
       })
 
       expect(update).not.toHaveBeenCalled()
-      expect(
-        reportEventService.emitCommunicationClosed,
-      ).not.toHaveBeenCalled()
+      expect(reportEventService.emitCommunicationClosed).not.toHaveBeenCalled()
     })
 
     it('does not notify the application system for non-island.is reports', async () => {
@@ -422,9 +552,7 @@ describe('ReportWorkflowService', () => {
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: 'app-uuid-1',
       })
-      applicationSystemService.notifyDenied.mockRejectedValue(
-        new Error('boom'),
-      )
+      applicationSystemService.notifyDenied.mockRejectedValue(new Error('boom'))
 
       await expect(
         service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
@@ -673,7 +801,9 @@ describe('ReportWorkflowService', () => {
         update,
       })
 
-      await service.openCommunication(reviewerContext(ReportStatusEnum.IN_REVIEW))
+      await service.openCommunication(
+        reviewerContext(ReportStatusEnum.IN_REVIEW),
+      )
 
       expect(update).toHaveBeenCalledWith({
         communicationStatus: CommunicationStatusEnum.OPEN,
@@ -693,7 +823,9 @@ describe('ReportWorkflowService', () => {
         update,
       })
 
-      await service.openCommunication(reviewerContext(ReportStatusEnum.IN_REVIEW))
+      await service.openCommunication(
+        reviewerContext(ReportStatusEnum.IN_REVIEW),
+      )
 
       expect(update).not.toHaveBeenCalled()
       expect(reportEventService.emitCommunicationOpened).not.toHaveBeenCalled()
