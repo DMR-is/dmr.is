@@ -119,6 +119,11 @@ if [ -n "${VARLOCK_FRESH:-}" ]; then
   echo "varlock-run: clearing cache before resolving $app" >&2
 fi
 
+# DMR_RUNTIME=local exempts a laptop from the forEnv(deployed) markers in the app
+# schemas, which default it to "deployed" so a bypassed wrapper fails closed. Set
+# after the scrub deliberately: env applies -u before assignments, so the value
+# survives even though the schemas declare the key. A local container runs its own
+# process, so each web docker-compose.yml sets it too.
 cd "$here"
 # shellcheck disable=SC2086  # deliberate word-splitting; keys match [A-Z0-9_]
-exec env $scrub "$varlock" run --path "$config_dir" $fresh -- "$@"
+exec env $scrub DMR_RUNTIME=local "$varlock" run --path "$config_dir" $fresh -- "$@"
