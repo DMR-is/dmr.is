@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common'
 
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import {
+  computeLastRow,
   mapSizeLabel,
   normalizeIsatCode,
   parseCompanyImport,
@@ -137,6 +138,79 @@ describe('company-import parser', () => {
     const buf = await buildBook([row({ year: 2025 }), row({ kt: kt2, year: 2024 })])
     const result = await parseCompanyImport(buf)
     expect(result.year).toBeNull()
+  })
+
+  describe('computeLastRow', () => {
+    // The security-relevant bound. `sheet.rowCount` is attacker-chosen, so the
+    // clamp is what stops a declared 2e9 from becoming 2e9 iterations of
+    // Row/Cell allocation.
+    it('clamps a declared row count to the absolute maximum', () => {
+      expect(computeLastRow(2000000000)).toBe(100001)
+      expect(computeLastRow(1048576)).toBe(100001)
+    })
+
+    it('leaves a plausible row count untouched', () => {
+      expect(computeLastRow(2)).toBe(2)
+      expect(computeLastRow(4000)).toBe(4000)
+      expect(computeLastRow(100001)).toBe(100001)
+    })
+  })
+
+  // `sheet.rowCount` comes from the `r` attribute of the highest <row> in the
+  // uploaded XML, so it is chosen by whoever authored the file. Scanning to it
+  // materialises a Row and Cells per iteration — an inflated value used to
+  // exhaust the heap and take the API down. The scan must terminate on the
+  // blank run instead of the declared count.
+  it('does not scan to an inflated declared row count', async () => {
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Companies')
+    ws.addRow(HEADER)
+    ws.addRow(row())
+
+    // One lone row far below the data, with nothing in between. Deliberately
+    // placed INSIDE ABSOLUTE_MAX_COMPANY_ROWS, so the blank-run break is the
+    // only thing that can stop the scan reaching it — otherwise the cap would
+    // catch this case and the test could not tell a working break from a
+    // missing one. The cap is asserted separately, in `computeLastRow`.
+    const farRow = ws.getRow(50000)
+    farRow.getCell(2).value = kt2
+    farRow.getCell(3).value = 'Far away ehf.'
+    farRow.commit()
+
+    const buf = Buffer.from(
+      (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
+    )
+    expect(ws.rowCount).toBeGreaterThan(40000)
+
+    const result = await parseCompanyImport(buf)
+
+    // The real row is parsed; the far one is never reached.
+    expect(result.rows).toHaveLength(1)
+    expect(result.rows[0].nationalId).toBe(kt1)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('keeps reading across a blank gap shorter than the run limit', async () => {
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Companies')
+    ws.addRow(HEADER)
+    ws.addRow(row())
+
+    // Rows 3-12 blank, data resumes at 13 — the stray gaps a hand-exported
+    // register carries must not truncate the import.
+    const resumed = ws.getRow(13)
+    row({ kt: kt2, name: 'Beta ehf.' }).forEach((value, i) => {
+      resumed.getCell(i + 1).value = value
+    })
+    resumed.commit()
+
+    const buf = Buffer.from(
+      (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
+    )
+    const result = await parseCompanyImport(buf)
+
+    expect(result.rows).toHaveLength(2)
+    expect(result.rows.map((r) => r.nationalId)).toEqual([kt1, kt2])
   })
 
   it('throws on a missing required header', async () => {
