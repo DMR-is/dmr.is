@@ -16,6 +16,13 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { CurrentUser } from '@dmr.is/decorators'
+import {
+  ApiKeyDto,
+  ApiKeyOriginEnum,
+  IssuedApiKeyDto,
+} from '@dmr.is/doe-shared'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -23,6 +30,10 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { IApiKeyService } from '../api-key/api-key.service.interface'
+import { CreateApiKeyDto } from '../api-key/dto/create-api-key.dto'
+import { GetApiKeysResponseDto } from '../api-key/dto/get-api-keys-response.dto'
+import { resolveActorNationalId } from '../api-key/lib/resolve-actor'
 import { CompanyDto } from '../company/dto/company.dto'
 import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
 import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
@@ -68,6 +79,8 @@ export class ApplicationController {
     private readonly reportExcelService: IReportExcelService,
     @Inject(IImportUploadService)
     private readonly importUploadService: IImportUploadService,
+    @Inject(IApiKeyService)
+    private readonly apiKeyService: IApiKeyService,
   ) {}
 
   @Get('company')
@@ -393,5 +406,81 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<void> {
     return this.applicationService.withdraw(providerId, company)
+  }
+
+  // ---------------------------------------------------------------------------
+  // API keys for the third-party integration.
+  //
+  // Self-service issuance: a company mints its own credential from an optional
+  // screen in the island.is application, then pastes it into whichever payroll
+  // system submits on its behalf. The DoE admin surface has the same three
+  // operations as a fallback for a company that has lost its key and has no open
+  // application to reach this screen from.
+  //
+  // These endpoints issue a credential for the PARTNER api; nothing here
+  // authenticates with one. The company always comes from the authenticated
+  // context, so a caller cannot mint or list a credential for anyone else.
+  // ---------------------------------------------------------------------------
+
+  @Post('api-keys')
+  @HttpCode(HttpStatus.CREATED)
+  @DoeResponse({
+    operationId: 'issueApplicationApiKey',
+    status: HttpStatus.CREATED,
+    type: IssuedApiKeyDto,
+    description:
+      'Mints an API key for the authenticated company and returns it with the plaintext secret. **The secret is shown exactly once** — it is stored only as a hash and cannot be retrieved again, so a lost key is replaced rather than recovered. Several live keys per company are allowed, which is how a credential is rotated without downtime.',
+  })
+  async issueApiKey(
+    @CurrentCompany() company: CompanyDto,
+    @CurrentUser() user: DMRUser,
+    @Body() input: CreateApiKeyDto,
+  ): Promise<IssuedApiKeyDto> {
+    return this.apiKeyService.issue({
+      company,
+      createdVia: ApiKeyOriginEnum.ISLAND_IS,
+      actorNationalId: resolveActorNationalId(user),
+      label: input.label,
+      scopes: input.scopes,
+      expiresAt: input.expiresAt,
+    })
+  }
+
+  @Get('api-keys')
+  @DoeResponse({
+    operationId: 'getApplicationApiKeys',
+    type: GetApiKeysResponseDto,
+    description:
+      'Every API key the authenticated company holds, newest first. Revoked and expired keys are included so the list doubles as an audit view. Never contains a secret — none is recoverable.',
+  })
+  async getApiKeys(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetApiKeysResponseDto> {
+    return { apiKeys: await this.apiKeyService.list(company.id) }
+  }
+
+  @Delete('api-keys/:id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'The key\'s `id` as listed, not the `keyId` inside the credential.',
+  })
+  @DoeResponse({
+    operationId: 'revokeApplicationApiKey',
+    type: ApiKeyDto,
+    include404: true,
+    description:
+      'Revokes one of the authenticated company\'s keys. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail. A key belonging to another company answers 404, not 403.',
+  })
+  async revokeApiKey(
+    @Param('id') id: string,
+    @CurrentCompany() company: CompanyDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<ApiKeyDto> {
+    return this.apiKeyService.revoke({
+      id,
+      company,
+      actorNationalId: resolveActorNationalId(user),
+    })
   }
 }
