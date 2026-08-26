@@ -48,6 +48,11 @@ const referenceCompany = (
   ) as { decomposition: WageGapDecompositionSnapshot }
 ).decomposition
 
+/** Narrows a nullable figure, failing the test rather than asserting `!`. */
+function assertNumber(value: number | null): asserts value is number {
+  if (value === null) throw new Error('expected a computed number, got null')
+}
+
 describe('pay-dispersion (ábendingar)', () => {
   describe('the statistic', () => {
     /**
@@ -171,6 +176,39 @@ describe('pay-dispersion (ábendingar)', () => {
     })
 
     /**
+     * ⚠️ The cohort above puts everyone at `x̄`, so `(x − x̄)²/Sxx` is identically
+     * zero and an implementation that dropped the leverage term altogether would
+     * still pass it. This one moves a single employee OFF the mean, so the term
+     * is non-zero and hand-computable, and pins that it is actually applied.
+     */
+    it('applies the leverage term, not just the 1/n floor', () => {
+      const n = 12
+      const offset = 300 // stig away from x̄
+      const e = 0.5
+      const rows = studentizedResiduals(
+        makeSnapshot({
+          employees: [
+            employee(1, { score: FIT.xMean + offset, residualLog: e }),
+            ...Array.from({ length: n - 1 }, (_, i) =>
+              employee(i + 2, { score: FIT.xMean, residualLog: 0 }),
+            ),
+          ],
+        }),
+      )
+
+      const leverage = 1 / n + offset ** 2 / FIT.xSumSquares
+      const s = Math.sqrt(e ** 2 / (n - 2))
+
+      // The term is material, not a rounding artefact: 1/12 = 0,0833 alone.
+      expect(leverage).toBeCloseTo(0.083333 + 0.45, 5)
+      expect(rows[0].leverage).toBeCloseTo(leverage, 12)
+      expect(rows[0].studentizedResidual).toBeCloseTo(
+        e / (s * Math.sqrt(1 - leverage)),
+        10,
+      )
+    })
+
+    /**
      * The published figure and the filtered figure must be the same number.
      *
      * Filtering on the raw `t` and publishing a 2dp one makes the list
@@ -248,6 +286,14 @@ describe('pay-dispersion (ábendingar)', () => {
       // in LOG space only; a single figure rendered as ±25,67% would overstate
       // the downward band by 5pp.
       expect(result.cohortResidualSpreadPercentDown).toBeCloseTo(-20.43, 1)
+      // Fixture-independent: the two ends are exp(s) and exp(−s), so their
+      // gross-up factors must multiply to 1 whatever the cohort.
+      assertNumber(result.cohortResidualSpreadPercentUp)
+      assertNumber(result.cohortResidualSpreadPercentDown)
+      expect(
+        (1 + result.cohortResidualSpreadPercentUp / 100) *
+          (1 + result.cohortResidualSpreadPercentDown / 100),
+      ).toBeCloseTo(1, 3)
     })
 
     /**
@@ -348,21 +394,36 @@ describe('pay-dispersion (ábendingar)', () => {
   })
 
   describe('blockers — an empty table must never read as all-clear', () => {
-    it('cannot assess a six-employee workforce, and says so', () => {
-      for (const key of ['scenarioWithOutliers', 'scenarioWithoutOutliers']) {
-        const result = computePayDispersion(fixtures[key])
+    /**
+     * ⚠️ The `population` assertions are the point, not the blockers.
+     *
+     * `scenarioWithOutliers` is OVER the benchmark, so it is blocked *and*
+     * `EXCLUDING_MINIMUM_SET` — the one combination both consumer gates have to
+     * let through on the strength of `available === false` alone. Assert only
+     * `blockers` here and you can delete `available &&` from either gate with the
+     * whole suite still green, while the blocker copy dies again for every
+     * over-benchmark company under n=12.
+     */
+    it.each([
+      [
+        'scenarioWithOutliers',
+        PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET,
+      ],
+      ['scenarioWithoutOutliers', PayDispersionPopulationEnum.ALL_EMPLOYEES],
+    ])('cannot assess %s, and says so', (key, expectedPopulation) => {
+      const result = computePayDispersion(fixtures[key])
 
-        expect(fixtures[key].employees.length).toBeLessThan(
-          PAY_DISPERSION_MIN_COHORT,
-        )
-        expect(result.available).toBe(false)
-        expect(result.blockers).toEqual([
-          PayDispersionBlockerEnum.COHORT_TOO_SMALL,
-        ])
-        expect(result.employees).toEqual([])
-        expect(result.cohortResidualSpreadPercentUp).toBeNull()
-        expect(result.cohortResidualSpreadPercentDown).toBeNull()
-      }
+      expect(fixtures[key].employees.length).toBeLessThan(
+        PAY_DISPERSION_MIN_COHORT,
+      )
+      expect(result.available).toBe(false)
+      expect(result.blockers).toEqual([
+        PayDispersionBlockerEnum.COHORT_TOO_SMALL,
+      ])
+      expect(result.population).toBe(expectedPopulation)
+      expect(result.employees).toEqual([])
+      expect(result.cohortResidualSpreadPercentUp).toBeNull()
+      expect(result.cohortResidualSpreadPercentDown).toBeNull()
     })
 
     /**
@@ -528,6 +589,44 @@ describe('pay-dispersion (ábendingar)', () => {
       expect(result.blockers).toEqual([
         PayDispersionBlockerEnum.GAP_NOT_COMPUTABLE,
       ])
+    })
+
+    /**
+     * Each clause of the finiteness gate, with the failure it prevents. Only
+     * `xMean` was covered; a non-finite `score` NaNs the leverage and would
+     * publish `studentizedResidual: 0` — printing that employee as sitting
+     * exactly ON the line — and a null `expectedHourlyWage` rounds to `0`, not
+     * NaN, so it would print "væntanlegt tímakaup 0 kr./klst." on the PDF.
+     */
+    // ⚠️ The overrides are named, not constructed, because `it.each` evaluates its
+    // table at describe time — before the `FIT` const below is initialised.
+    it.each([
+      ['a non-finite xSumSquares', 'xSumSquares'],
+      ['a non-finite score', 'score'],
+      ['an absent expectedHourlyWage', 'expectedHourlyWage'],
+      ['an absent hourlyWage', 'hourlyWage'],
+      ['an absent deviationPercent', 'deviationPercent'],
+    ])('fails closed on %s', (_label, broken) => {
+      const employees = Array.from({ length: 20 }, (_, i) =>
+        employee(i + 1, { residualLog: 0.3 }),
+      )
+      if (broken !== 'xSumSquares') {
+        delete (employees[0] as unknown as Record<string, unknown>)[broken]
+      }
+
+      const result = computePayDispersion(
+        makeSnapshot({
+          pooledFit:
+            broken === 'xSumSquares' ? { ...FIT, xSumSquares: NaN } : FIT,
+          employees,
+        }),
+      )
+
+      expect(result.available).toBe(false)
+      expect(result.blockers).toEqual([
+        PayDispersionBlockerEnum.GAP_NOT_COMPUTABLE,
+      ])
+      expect(result.employees).toEqual([])
     })
 
     /** A perfect fit is not a blocker — it is a company where nobody deviates. */

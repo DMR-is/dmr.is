@@ -274,11 +274,14 @@ function improvementPlanSection(
  * `Hlutur af óskýrðu`. A PDF reader cannot ask a follow-up question, so the
  * distinction has to survive on the page alone.
  *
- * ⚠️ **Renders only for `ALL_EMPLOYEES`.** `EXCLUDING_MINIMUM_SET` is computed and
- * shipped so the contract is ready, but its framing is not agreed — so a report
- * that is over the benchmark gets no section at all rather than an empty one.
- * Returning `''` and not a heading is deliberate: a heading over nothing reads as
- * a finding that failed to print.
+ * ⚠️ **Only the LIST is gated on `ALL_EMPLOYEES`, not the section.** A blocked
+ * report explains itself whatever its population — otherwise a company over the
+ * benchmark and under the 12-employee floor gets no section and no reason, which
+ * is the failure this section was rewritten to prevent. What is withheld is the
+ * rows for `EXCLUDING_MINIMUM_SET`, whose framing is not agreed yet.
+ *
+ * Returning `''` rather than a bare heading is deliberate: a heading over nothing
+ * reads as a finding that failed to print.
  */
 function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
   if (!payDispersion) return ''
@@ -306,7 +309,7 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
   if (!available) {
     return section(
       'Ábendingar um launadreifingu',
-      `<p class="empty-note">${blockers.map(payDispersionBlockerText).join(' ')}</p>`,
+      `<p class="advisory-note">${blockers.map(payDispersionBlockerText).join(' ')}</p>`,
     )
   }
 
@@ -324,7 +327,7 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     cohortResidualSpreadPercentUp === null ||
     cohortResidualSpreadPercentDown === null
       ? ''
-      : `<p class="empty-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${formatNumber(payDispersion.threshold)} staðalvik eða meira frá henni.</p>`
+      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${formatNumber(payDispersion.threshold)} staðalvik eða meira frá henni.</p>`
 
   const rows = employees
     .map(
@@ -343,7 +346,8 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
 
   return section(
     'Ábendingar um launadreifingu',
-    `<p class="empty-note">Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir. Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
+    `<p class="advisory-note">Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir.</p>
+    <p class="advisory-note--lead">Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
     ${spreadNote}
     <table class="data-table">
       <thead><tr><th>Starfsmaður</th><th>Kyn</th><th>Stig</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Staðalvik frá línu</th></tr></thead>

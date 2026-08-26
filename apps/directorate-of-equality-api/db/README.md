@@ -262,9 +262,13 @@ figure the statute tests.
 
 Selection is `|studentized residual| ≥ 2` — two of the company's **own** pay spreads from the fitted
 line, leverage-corrected — with a floor of 12 analysed employees, below which the statistic cannot
-fire arithmetically. Two populations: `ALL_EMPLOYEES` on a compliant company, and
-`EXCLUDING_MINIMUM_SET` on one over the benchmark, where members of the lágmarksmengi are withheld so
-nobody appears in two tables under two framings. **Only `ALL_EMPLOYEES` is rendered today.**
+fire arithmetically. The `population` field records whether a lágmarksmengi was **withheld**:
+`EXCLUDING_MINIMUM_SET` on a company over the benchmark, where its members are held back so nobody
+appears in two tables under two framings, and `ALL_EMPLOYEES` otherwise — which covers both a
+compliant company **and** one whose gap is not computable at all, since neither has a lágmarksmengi to
+withhold. **Only `ALL_EMPLOYEES` rows are rendered today**, but a blocked report renders its
+`blockers` reason whatever the population: gate the list, not the section, or a company over the
+benchmark and under the 12-employee floor is shown nothing at all.
 
 ⚠️ **Withheld on `inMinimumSet`, never on `widensGap`.** The set is only the few carriers the
 selection walk picked — the reference company has 73 carriers and 5 in the set, and the other 68 stay

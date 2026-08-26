@@ -7,6 +7,16 @@ import {
   type PayDispersionDto,
   type PayDispersionEmployeeDto,
 } from '../../../../gen/fetch'
+
+/**
+ * The one population whose ROWS are approved for display.
+ *
+ * Typed off the DTO rather than written as a bare literal in the comparison, so
+ * renaming the API's enum member breaks this compile instead of silently making
+ * the gate always-true. openapi-ts emits a union type, not an enum value, so a
+ * typed constant is the closest available equivalent.
+ */
+const RENDERED_POPULATION: PayDispersionDto['population'] = 'ALL_EMPLOYEES'
 import { reportText, sharedText } from '../../../../lib/text'
 import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
 
@@ -77,13 +87,15 @@ const columns: ColumnDef<PayDispersionEmployeeDto>[] = [
     enableSorting: false,
   },
   {
-    // Absorbs the width the `fit` columns do not use, so they collapse to their
-    // content instead of the browser distributing slack across all seven.
+    // ⚠️ No `grow` here, deliberately. Every column in this table is a number or
+    // an enum — there is no text column to absorb slack, and putting `grow` on one
+    // of the two identically-shaped wage columns stretches it while its twin
+    // collapses. With `layout="auto"` and `width: 1` on the five `fit` columns,
+    // the two wage columns share what is left, which is the balanced result.
     accessorKey: 'expectedHourlyWage',
     header: p.predictedSalary,
     cell: ({ getValue }) => formatHourlyRate(getValue<number>()),
     enableSorting: false,
-    meta: { grow: true },
   },
   {
     id: 'deviationPercent',
@@ -143,7 +155,10 @@ export const PayDispersionTable = ({
   // whenever no lágmarksmengi was withheld — which includes every snapshot where
   // no gap is computable — so a report that cannot be assessed still renders its
   // reason. Only a PRODUCIBLE list for the not-yet-approved population is skipped.
-  if (payDispersion.available && payDispersion.population !== 'ALL_EMPLOYEES') {
+  if (
+    payDispersion.available &&
+    payDispersion.population !== RENDERED_POPULATION
+  ) {
     return null
   }
 
@@ -201,7 +216,7 @@ export const PayDispersionTable = ({
                 </Text>
               )}
             {/*
-              ⚠️ `layout="auto"` is REQUIRED by the `fit`/`grow` meta above — see
+              ⚠️ `layout="auto"` is REQUIRED by the `fit` meta above — see
               the ColumnMeta docstring in the shared Table. Without it the table
               defaults to `fixed` while `sizingStyle` still applies
               `width: 1; nowrap`, so every fit column is pinned to 1px and its

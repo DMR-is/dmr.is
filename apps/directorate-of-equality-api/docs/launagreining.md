@@ -776,6 +776,14 @@ Deriving this from "is the company compliant" instead put those reports into the
 supplementary population, which every surface skips _before_ it reads `blockers` —
 so the section vanished silently on exactly the report that needed an explanation.
 
+⚠️ **The gate is on the LIST, not on the section.** A report that cannot be assessed
+has no rows to withhold, so it renders its reason whatever the population says.
+One consequence worth stating because it looks like a contradiction of the previous
+paragraph: a company **over** the benchmark and **under** the twelve-employee floor
+shows an úrbótaáætlun _and_ an ábendingar note saying the dispersion cannot be
+assessed. That is intended. The two lists remain mutually exclusive — only one of
+them can ever have rows — but the two sections are not.
+
 On a company over the benchmark the lágmarksmengi is withheld from the list, so
 nobody appears in two tables under two framings. Everyone else stays eligible —
 **including gap carriers the selection walk did not pick.** The reference company

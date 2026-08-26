@@ -308,6 +308,29 @@ describe('buildSalaryReportHtml', () => {
       expect(allClear).not.toContain('Of fáir starfsmenn')
     })
 
+    /**
+     * ⚠️ Blocked AND `EXCLUDING_MINIMUM_SET` — an over-benchmark company under the
+     * n=12 floor. This is the combination the `available &&` clause in the gate
+     * exists for: without it the section vanishes and the company is told nothing,
+     * which is the bug this whole commit was written to fix.
+     */
+    it('still explains itself when blocked on the not-yet-approved population', () => {
+      const html = withPayDispersion({
+        available: false,
+        blockers: [PayDispersionBlockerEnum.COHORT_TOO_SMALL],
+        population: PayDispersionPopulationEnum.EXCLUDING_MINIMUM_SET,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: null,
+        cohortResidualSpreadPercentDown: null,
+        employees: [],
+      })
+
+      expect(html).toContain('Ábendingar um launadreifingu')
+      expect(html).toContain('Of fáir starfsmenn')
+      // ...but still no table and no advisory framing, since nothing was produced.
+      expect(html).not.toContain('Engra skýringa er krafist')
+    })
+
     it('renders nothing when the field is absent, as on an older API response', () => {
       const html = withPayDispersion(undefined)
 

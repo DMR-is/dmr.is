@@ -109,9 +109,16 @@ export const SalaryReportTab = ({
         nothing above the one that asks for a reason and an action per person is
         the exact confusion this section exists to avoid.
 
-        Outside the gate because the two are mutually exclusive by construction —
-        ábendingar render only for a company within the benchmark, which is
-        precisely when the lágmarksmengi, and therefore `groups`, is empty.
+        Outside the `groups.length > 0` gate because the two LISTS are mutually
+        exclusive by construction — ábendingar rows are produced only for a company
+        within the benchmark, which is precisely when the lágmarksmengi, and
+        therefore `groups`, is empty.
+
+        ⚠️ The two SECTIONS are not mutually exclusive: a blocked report renders its
+        reason whatever the population, so an over-benchmark company under the
+        12-employee floor shows an úrbótaáætlun and a "cannot be assessed" note
+        together. That is intended — one asks for explanations, the other explains
+        why it has nothing to show.
       */}
       <PayDispersionTable payDispersion={payDispersion} />
     </Stack>

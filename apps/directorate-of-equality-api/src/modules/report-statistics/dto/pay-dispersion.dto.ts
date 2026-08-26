@@ -153,7 +153,7 @@ export class PayDispersionDto {
 
   @ApiEnum(PayDispersionPopulationEnum, {
     description:
-      '⚠️ CLIENTS: render ALL_EMPLOYEES only. EXCLUDING_MINIMUM_SET is computed and shipped so the contract is ready, but has not been requested yet — do NOT render it, and confirm with DMR first. This field describes which employees were eligible for the list; it does NOT change how the statistic was computed.',
+      '⚠️ CLIENTS: render a LIST only for ALL_EMPLOYEES. EXCLUDING_MINIMUM_SET is computed and shipped so the contract is ready, but has not been requested yet — do NOT render its rows. ⚠️ Gate on the list, not on the section: when `available` is false there are no rows to withhold, so render the `blockers` reason whatever the population says. Otherwise a company over the benchmark and under the 12-employee floor is shown nothing at all. Both DMR surfaces do exactly this. This field describes which employees were eligible for the list; it does NOT change how the statistic was computed.',
   })
   population!: PayDispersionPopulationEnum
 

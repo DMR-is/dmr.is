@@ -268,10 +268,19 @@ function blockersFor(
   if (
     !Number.isFinite(snapshot.pooledFit.xMean) ||
     !Number.isFinite(snapshot.pooledFit.xSumSquares) ||
-    !snapshot.employees.every(
-      (employee) =>
-        Number.isFinite(employee.residualLog) &&
-        Number.isFinite(employee.score),
+    // ⚠️ EVERY number `toEmployeeDto` publishes, not only the two the statistic
+    // reads. `round2(null)` is `0`, not `NaN` — so an `expectedHourlyWage` of
+    // null would print "væntanlegt tímakaup 0 kr./klst." on the document of
+    // record instead of a blocker. Same fail-open class the fit clauses above
+    // were added to close.
+    !snapshot.employees.every((employee) =>
+      [
+        employee.residualLog,
+        employee.score,
+        employee.hourlyWage,
+        employee.expectedHourlyWage,
+        employee.deviationPercent,
+      ].every(Number.isFinite),
     )
   ) {
     return [PayDispersionBlockerEnum.GAP_NOT_COMPUTABLE]
@@ -308,5 +317,20 @@ function toEmployeeDto(row: StudentizedResidual): PayDispersionEmployeeDto {
  * 2dp, matching `toMinimumSetDtos` — rounding rates to whole krónur is 2×10⁻⁴
  * relative on a ~4.000 kr./klst. figure, and the error compounds once
  * percentages are derived from it.
+ *
+ * ⚠️ Symmetric about zero. `Math.round` breaks ties toward `+∞`, so a bare
+ * `Math.round(-2.005 * 100) / 100` gives `-2` while `+2.005` gives `2.01` — the
+ * same magnitude printing two different figures depending on sign. Nothing is
+ * dropped either way (the filter and the display share this rounding), but a
+ * published column should not tell an underpaid and an overpaid employee
+ * different things about the same distance from the line.
+ *
+ * ⚠️ Do NOT feed this a possibly-null value. `Math.round(null * 100) / 100` is
+ * `0`, not `NaN`, so a missing figure would publish as a real one — a null
+ * `expectedHourlyWage` printing "0 kr./klst." on the document of record. The
+ * guarantee lives in `blockersFor`, which gates every field this rounds on
+ * `Number.isFinite` and returns GAP_NOT_COMPUTABLE instead; that is deliberately
+ * a blocker rather than a dash, because a row we cannot state is not a row.
  */
-const round2 = (value: number): number => Math.round(value * 100) / 100
+const round2 = (value: number): number =>
+  Math.sign(value) * (Math.round(Math.abs(value) * 100) / 100)
