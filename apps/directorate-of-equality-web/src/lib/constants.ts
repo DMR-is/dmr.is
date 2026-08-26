@@ -78,10 +78,9 @@ export enum ReportStatusTranslatedEnum {
 
 export enum CommunicationStatusTranslatedEnum {
   NOT_STARTED = 'Ekki hafin',
-  OPEN = 'Opin',
   AWAITING_RESPONSE = 'Beðið eftir svörum',
   RESPONSE_RECEIVED = 'Svör hafa borist',
-  CLOSED = 'Lokað',
+  CLOSED = 'Lokið',
 }
 import { overviewText, reportText, sharedText } from './text'
 

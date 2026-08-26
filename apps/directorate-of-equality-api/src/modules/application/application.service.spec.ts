@@ -114,7 +114,6 @@ describe('ApplicationService', () => {
   let getResultByReportId: jest.Mock
   let emitEdited: jest.Mock
   let emitStatusChanged: jest.Mock
-  let emitCommunicationClosed: jest.Mock
 
   beforeEach(async () => {
     configGetByKey = jest.fn().mockResolvedValue({
@@ -147,7 +146,6 @@ describe('ApplicationService', () => {
     getResultByReportId = jest.fn()
     emitEdited = jest.fn().mockResolvedValue(undefined)
     emitStatusChanged = jest.fn().mockResolvedValue(undefined)
-    emitCommunicationClosed = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -184,7 +182,6 @@ describe('ApplicationService', () => {
           useValue: {
             emitEdited,
             emitStatusChanged,
-            emitCommunicationClosed,
           },
         },
         {
@@ -1252,7 +1249,7 @@ describe('ApplicationService', () => {
       )
     })
 
-    it('force-closes an open communication thread on withdraw', async () => {
+    it('force-closes the communication thread on withdraw', async () => {
       reportFindOne.mockResolvedValueOnce(
         makeReportRow({
           id: REPORT_ID,
@@ -1268,14 +1265,10 @@ describe('ApplicationService', () => {
 
       await service.withdraw(PROVIDER_ID, COMPANY)
 
+      // Silent — the WITHDRAWN event is the audit record of why it closed.
       expect(reportUpdate).toHaveBeenCalledWith(
         { communicationStatus: CommunicationStatusEnum.CLOSED },
         { where: { id: REPORT_ID } },
-      )
-      expect(emitCommunicationClosed).toHaveBeenCalledWith(
-        REPORT_ID,
-        ReportStatusEnum.WITHDRAWN,
-        null,
       )
     })
 

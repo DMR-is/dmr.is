@@ -8,7 +8,6 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
 import {
   CommentVisibilityEnum,
-  CommunicationStatusEnum,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
 import { reportText } from '../../lib/text'
@@ -25,6 +24,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   const queryClient = useQueryClient()
   const [body, setBody] = useState('')
   const [isExternal, setIsExternal] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
   const { data: report } = useQuery(
     trpc.reports.getById.queryOptions({ id: reportId }),
@@ -37,8 +37,14 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
     onSuccess: () => {
       setBody('')
       setIsExternal(false)
+      setIsConfirmOpen(false)
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
+      })
+      // The communication status moved as a side effect of the comment, and the
+      // overview surfaces it — refresh the list too.
+      queryClient.invalidateQueries({
+        queryKey: trpc.reports.list.queryKey(),
       })
     },
     onError: () => toast.error(reportText.comments.createError),
@@ -56,25 +62,33 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   })
 
   // Internal notes are allowed on any report a reviewer can open (everything
-  // but a draft). Messaging the applicant (external) is only possible while the
-  // communication thread is open — opening/closing is an explicit action in the
-  // sidebar, no longer a side effect of commenting.
+  // but a draft). Messaging the applicant reopens their island.is application,
+  // so it is only offered while the report is actually under review.
   const isDraft = report?.status === ReportStatusEnum.DRAFT
-  const canSendExternal =
-    report?.communicationStatus === CommunicationStatusEnum.OPEN ||
-    report?.communicationStatus ===
-      CommunicationStatusEnum.AWAITING_RESPONSE ||
-    report?.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
+  const canSendExternal = report?.status === ReportStatusEnum.IN_REVIEW
 
   const handleSubmit = () => {
     if (!body.trim()) return
+
+    // Visible to the applicant means "send this report back for changes" —
+    // confirm the wording before it leaves.
+    if (isExternal && canSendExternal) {
+      setIsConfirmOpen(true)
+      return
+    }
+
     createComment({
       reportId,
       body,
-      visibility:
-        isExternal && canSendExternal
-          ? CommentVisibilityEnum.EXTERNAL
-          : CommentVisibilityEnum.INTERNAL,
+      visibility: CommentVisibilityEnum.INTERNAL,
+    })
+  }
+
+  const handleConfirmExternal = (confirmedBody: string) => {
+    createComment({
+      reportId,
+      body: confirmedBody,
+      visibility: CommentVisibilityEnum.EXTERNAL,
     })
   }
 
@@ -92,9 +106,12 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       body={body}
       isExternal={isExternal && canSendExternal}
       isPending={isPending}
+      isConfirmOpen={isConfirmOpen}
       onBodyChange={setBody}
       onExternalChange={setIsExternal}
       onSubmit={handleSubmit}
+      onConfirmExternal={handleConfirmExternal}
+      onCancelExternal={() => setIsConfirmOpen(false)}
       onDelete={handleDelete}
     />
   )

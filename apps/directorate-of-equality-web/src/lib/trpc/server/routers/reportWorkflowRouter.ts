@@ -2,12 +2,8 @@ import {
   zApproveReportPath,
   zAssignReportBody,
   zAssignReportPath,
-  zCloseReportCommunicationPath,
   zDenyReportBody,
   zDenyReportPath,
-  zOpenReportCommunicationPath,
-  zSendReportToEditBody,
-  zSendReportToEditPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
@@ -34,31 +30,6 @@ export const reportWorkflowRouter = router({
     .input(zApproveReportPath)
     .mutation(async ({ ctx, input }) => {
       await ctx.api.approveReport({
-        path: { reportId: input.reportId },
-      })
-    }),
-
-  sendToEdit: protectedProcedure
-    .input(zSendReportToEditPath.extend(zSendReportToEditBody.shape))
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.sendReportToEdit({
-        path: { reportId: input.reportId },
-        body: { reason: input.reason },
-      })
-    }),
-
-  openCommunication: protectedProcedure
-    .input(zOpenReportCommunicationPath)
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.openReportCommunication({
-        path: { reportId: input.reportId },
-      })
-    }),
-
-  closeCommunication: protectedProcedure
-    .input(zCloseReportCommunicationPath)
-    .mutation(async ({ ctx, input }) => {
-      await ctx.api.closeReportCommunication({
         path: { reportId: input.reportId },
       })
     }),

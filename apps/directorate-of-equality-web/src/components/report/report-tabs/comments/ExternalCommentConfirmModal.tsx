@@ -8,29 +8,45 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 
-import { reportText } from '../../../lib/text'
-import * as styles from './ReportDenialModal.css'
+import { reportText } from '../../../../lib/text'
+import * as styles from '../../report-sidebar/ReportDenialModal.css'
 
-const t = reportText.sendToEditModal
+const t = reportText.externalCommentModal
 
-interface ReportSendToEditModalProps {
+interface Props {
   visible: boolean
+  /** The comment the reviewer already typed — the modal opens prefilled with it. */
+  initialBody: string
   isLoading?: boolean
   onClose: () => void
-  onSubmit: (reason: string) => void
+  onSubmit: (body: string) => void
 }
 
-export const ReportSendToEditModal = ({
+/**
+ * Last stop before a comment reaches the applicant. Sending one reopens their
+ * island.is application, so the text gets one more look — prefilled from the
+ * comment box, still editable here.
+ */
+export const ExternalCommentConfirmModal = ({
   visible,
+  initialBody,
   isLoading = false,
   onClose,
   onSubmit,
-}: ReportSendToEditModalProps) => {
-  const [reason, setReason] = React.useState('')
+}: Props) => {
+  const [body, setBody] = React.useState(initialBody)
+
+  // Re-seed each time the modal opens: the reviewer may have edited the comment
+  // box since the last time they opened it.
+  React.useEffect(() => {
+    if (visible) {
+      setBody(initialBody)
+    }
+  }, [visible, initialBody])
 
   return (
     <Modal
-      baseId="report-send-to-edit-modal"
+      baseId="external-comment-confirm-modal"
       onVisibilityChange={(v) => {
         if (!v) onClose()
       }}
@@ -46,22 +62,22 @@ export const ReportSendToEditModal = ({
             message={t.warningMessage}
           />
           <Input
-            name="send-to-edit-reason-input"
-            label={t.reasonLabel}
+            name="external-comment-body-input"
+            label={t.bodyLabel}
             size="sm"
             textarea
             rows={4}
             backgroundColor="blue"
-            value={reason}
+            value={body}
             disabled={isLoading}
-            onChange={(val) => setReason(val.target.value)}
+            onChange={(val) => setBody(val.target.value)}
           />
           <Button
             fluid
             size="default"
             type="submit"
-            onClick={() => onSubmit(reason.trim())}
-            disabled={reason.trim().length === 0 || isLoading}
+            onClick={() => onSubmit(body.trim())}
+            disabled={body.trim().length === 0 || isLoading}
             loading={isLoading}
           >
             {t.submitButton}

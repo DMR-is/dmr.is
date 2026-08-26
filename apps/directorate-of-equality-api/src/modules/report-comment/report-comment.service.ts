@@ -9,16 +9,20 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
+import { IApplicationSystemService } from '../application-system/application-system.service.interface'
+import { CompanyReportModel } from '../company/models/company-report.model'
 import { IDoeMailService } from '../mail/doe-mail.service.interface'
 import {
   CommunicationStatusEnum,
   ReportModel,
+  ReportProviderEnum,
   ReportStatusEnum,
 } from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
+import { IReportEventService } from '../report-event/report-event.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { ReportCommentDto } from './dto/report-comment.dto'
@@ -38,8 +42,14 @@ export class ReportCommentService implements IReportCommentService {
     private readonly reportCommentModel: typeof ReportCommentModel,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
+    @InjectModel(CompanyReportModel)
+    private readonly companyReportModel: typeof CompanyReportModel,
     @Inject(IDoeMailService)
     private readonly mailService: IDoeMailService,
+    @Inject(IReportEventService)
+    private readonly reportEventService: IReportEventService,
+    @Inject(IApplicationSystemService)
+    private readonly applicationSystemService: IApplicationSystemService,
   ) {}
 
   async getByReportId(
@@ -64,6 +74,20 @@ export class ReportCommentService implements IReportCommentService {
     return comments.map((comment) => comment.fromModel())
   }
 
+  /**
+   * The one way a comment lands on a report — and, for a reviewer's EXTERNAL
+   * comment, the one way a report is sent back for changes.
+   *
+   * A reviewer marking a comment visible to the applicant IS the change
+   * request: there is nothing else it could mean. So that single call posts the
+   * comment, moves the thread to AWAITING_RESPONSE, logs an EDITED event, and
+   * drives the island.is application into edit state. There is no separate
+   * "send to edit" action and no explicit open/close of the thread — the admin
+   * writes one comment and ticks one box.
+   *
+   * A reviewer's INTERNAL note is just a note: no status move, no outbound
+   * notification, invisible to the applicant.
+   */
   async create(
     context: ReportResourceContext,
     dto: CreateReportCommentDto,
@@ -111,16 +135,19 @@ export class ReportCommentService implements IReportCommentService {
       )
     }
 
-    const isOpen =
-      report.communicationStatus === CommunicationStatusEnum.OPEN ||
-      report.communicationStatus ===
-        CommunicationStatusEnum.AWAITING_RESPONSE ||
-      report.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
+    // Messaging the applicant reopens their island.is application, so it is
+    // only possible while the report is actually under review.
+    if (isReviewer && visibility === CommentVisibilityEnum.EXTERNAL) {
+      if (context.reportStatus !== ReportStatusEnum.IN_REVIEW) {
+        throw new BadRequestException(
+          `Cannot message the applicant on a report with status ${context.reportStatus}`,
+        )
+      }
+    }
 
-    // External comments (from either side) require an open thread. Opening is an
-    // explicit reviewer action — an external comment never opens a NOT_STARTED /
-    // CLOSED thread. Reviewer INTERNAL notes are exempt (see DRAFT guard above).
-    if (visibility === CommentVisibilityEnum.EXTERNAL && !isOpen) {
+    // The applicant may only reply into a thread the reviewer has started, and
+    // only while it is still live (a concluded review is CLOSED).
+    if (!isReviewer && !this.isCommunicationOpen(report.communicationStatus)) {
       throw new ForbiddenException('Communication is not open on this report')
     }
 
@@ -136,29 +163,31 @@ export class ReportCommentService implements IReportCommentService {
       reportStatus: context.reportStatus,
     })
 
-    // Move the directional sub-state. The applicant answering flips the thread
-    // to RESPONSE_RECEIVED (surfaces the overview "Beðið svara" icon); a reviewer
-    // reply on an already-open thread flips it back to AWAITING_RESPONSE. A
-    // reviewer comment does NOT open a NOT_STARTED / CLOSED thread — opening is
-    // an explicit action (see ReportWorkflowService.openCommunication).
-    if (!isReviewer) {
-      if (report.communicationStatus !== CommunicationStatusEnum.RESPONSE_RECEIVED) {
-        await report.update({
-          communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
-        })
-      }
-    } else if (
-      visibility === CommentVisibilityEnum.EXTERNAL &&
-      isOpen &&
-      report.communicationStatus !== CommunicationStatusEnum.AWAITING_RESPONSE
-    ) {
-      await report.update({
-        communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
-      })
+    // Move the thread to whoever now owes an answer. Silent — the comment row
+    // itself is the audit trail, so these transitions emit no event.
+    const nextStatus = !isReviewer
+      ? CommunicationStatusEnum.RESPONSE_RECEIVED
+      : visibility === CommentVisibilityEnum.EXTERNAL
+        ? CommunicationStatusEnum.AWAITING_RESPONSE
+        : null
+
+    if (nextStatus && report.communicationStatus !== nextStatus) {
+      await report.update({ communicationStatus: nextStatus })
     }
 
     if (isReviewer && visibility === CommentVisibilityEnum.EXTERNAL) {
       await this.mailService.sendExternalCommentNotification(report, comment)
+
+      const companyId = await this.getParentCompanyId(context.reportId)
+      if (companyId) {
+        await this.reportEventService.emitEdited(
+          context.reportId,
+          context.reportStatus,
+          companyId,
+        )
+      }
+
+      await this.notifyApplicationSystemEdited(report)
     }
 
     // Reload with the author so the response carries authorName (the freshly
@@ -208,5 +237,50 @@ export class ReportCommentService implements IReportCommentService {
     }
 
     await comment.destroy()
+  }
+
+  private isCommunicationOpen(status: CommunicationStatusEnum): boolean {
+    return (
+      status === CommunicationStatusEnum.AWAITING_RESPONSE ||
+      status === CommunicationStatusEnum.RESPONSE_RECEIVED
+    )
+  }
+
+  private async getParentCompanyId(reportId: string): Promise<string | null> {
+    const snapshot = await this.companyReportModel.findOne({
+      where: { reportId, parentCompanyId: null },
+      attributes: ['companyId'],
+    })
+    return snapshot?.companyId ?? null
+  }
+
+  /**
+   * Best-effort outbound notification that the applicant should edit and
+   * resubmit. Only island.is-sourced reports have an application to update, and
+   * a failed outbound call must not fail the reviewer's comment — the comment is
+   * already committed at this point.
+   */
+  private async notifyApplicationSystemEdited(
+    report: ReportModel,
+  ): Promise<void> {
+    if (
+      report.providerType !== ReportProviderEnum.ISLAND_IS ||
+      !report.providerId
+    ) {
+      return
+    }
+
+    try {
+      await this.applicationSystemService.notifyEdited(report.providerId)
+    } catch (error) {
+      this.logger.error(
+        `Failed to notify application system (edit) for report ${report.id}`,
+        {
+          context: LOGGING_CONTEXT,
+          applicationId: report.providerId,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
   }
 }

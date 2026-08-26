@@ -17,9 +17,11 @@ export enum ReportEventTypeEnum {
   EDITED = 'EDITED',
   WITHDRAWN = 'WITHDRAWN',
   SYSTEM_AUTO_REVIEW = 'SYSTEM_AUTO_REVIEW',
-  // Reviewer opened / closed the communication thread with the applicant. The
-  // AWAITING_RESPONSE <-> RESPONSE_RECEIVED sub-states flip on comments and are
-  // not events; only the explicit open/close transitions are recorded.
+  // RETIRED — nothing emits these any more. `communication_status` moves as a
+  // silent side effect of comments and of the review concluding, so there is no
+  // explicit open/close action left to audit. Kept because rows emitted before
+  // the simplification are still in the timeline (and Postgres cannot drop an
+  // enum value).
   COMMUNICATION_OPENED = 'COMMUNICATION_OPENED',
   COMMUNICATION_CLOSED = 'COMMUNICATION_CLOSED',
 }

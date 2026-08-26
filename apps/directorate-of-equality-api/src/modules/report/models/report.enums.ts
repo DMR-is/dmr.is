@@ -23,23 +23,25 @@ export enum ReportStatusEnum {
 
 /**
  * Persisted state of the reviewer <-> applicant communication thread on a
- * report. Replaces the previously derived `waitingForAction` boolean.
+ * report. Never set directly by an admin — it is a projection of what has
+ * happened on the thread, moved silently as a side effect of the actions that
+ * make it true.
  *
- *   NOT_STARTED       never opened; the applicant cannot comment.
- *   OPEN              opened, no message exchanged yet; the applicant may comment.
- *   AWAITING_RESPONSE open, reviewer messaged; ball in the applicant's court.
- *   RESPONSE_RECEIVED open, the applicant has replied (surfaces the overview
- *                     "Beðið svara" icon; ball in the reviewer's court).
- *   CLOSED            reviewer closed the thread; the applicant cannot comment.
+ *   NOT_STARTED       no reviewer message has been sent; the applicant cannot comment.
+ *   AWAITING_RESPONSE the reviewer messaged the applicant; ball in the applicant's court.
+ *   RESPONSE_RECEIVED the applicant replied (surfaces the overview "Beðið svara"
+ *                     icon); ball in the reviewer's court.
+ *   CLOSED            the review concluded (approve / deny / withdraw); the
+ *                     thread accepts no further messages.
  *
- * OPEN / AWAITING_RESPONSE / RESPONSE_RECEIVED are the "open" set — the
- * applicant may comment and reviewer/applicant comments flip the direction.
- * NOT_STARTED / CLOSED gate the applicant out. Opening requires the report to
- * be IN_REVIEW; withdraw/approve/deny force CLOSED.
+ * AWAITING_RESPONSE / RESPONSE_RECEIVED are the "open" set — the applicant may
+ * comment, and a message from either side flips the direction. NOT_STARTED /
+ * CLOSED gate the applicant out. A reviewer's external comment is what opens
+ * the thread (see `ReportCommentService.create`); there is no separate
+ * open/close action and no audit event for these transitions.
  */
 export enum CommunicationStatusEnum {
   NOT_STARTED = 'NOT_STARTED',
-  OPEN = 'OPEN',
   AWAITING_RESPONSE = 'AWAITING_RESPONSE',
   RESPONSE_RECEIVED = 'RESPONSE_RECEIVED',
   CLOSED = 'CLOSED',
