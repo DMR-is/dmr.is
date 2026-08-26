@@ -10,7 +10,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
-import { CompanyReportModel } from '../company/models/company-report.model'
 import { IDoeMailService } from '../mail/doe-mail.service.interface'
 import {
   CommunicationStatusEnum,
@@ -22,7 +21,6 @@ import {
   type ReportResourceContext,
   ReportRoleEnum,
 } from '../report/types/report-resource-context'
-import { IReportEventService } from '../report-event/report-event.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { CreateReportCommentDto } from './dto/create-report-comment.dto'
 import { ReportCommentDto } from './dto/report-comment.dto'
@@ -42,12 +40,8 @@ export class ReportCommentService implements IReportCommentService {
     private readonly reportCommentModel: typeof ReportCommentModel,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
-    @InjectModel(CompanyReportModel)
-    private readonly companyReportModel: typeof CompanyReportModel,
     @Inject(IDoeMailService)
     private readonly mailService: IDoeMailService,
-    @Inject(IReportEventService)
-    private readonly reportEventService: IReportEventService,
     @Inject(IApplicationSystemService)
     private readonly applicationSystemService: IApplicationSystemService,
   ) {}
@@ -80,10 +74,10 @@ export class ReportCommentService implements IReportCommentService {
    *
    * A reviewer marking a comment visible to the applicant IS the change
    * request: there is nothing else it could mean. So that single call posts the
-   * comment, moves the thread to AWAITING_RESPONSE, logs an EDITED event, and
-   * drives the island.is application into edit state — the last two only on the
-   * comment that actually makes that move, so a follow-up sent before the
-   * applicant replies stays a message rather than a second change request.
+   * comment, moves the thread to AWAITING_RESPONSE, and drives the island.is
+   * application into edit state — the last only on the comment that actually
+   * makes that move, so a follow-up sent before the applicant replies stays a
+   * message rather than a second change request.
    * There is no separate "send to edit" action and no explicit open/close of
    * the thread — the admin writes one comment and ticks one box.
    *
@@ -191,27 +185,19 @@ export class ReportCommentService implements IReportCommentService {
       isExternalFromReviewer &&
       previousStatus !== CommunicationStatusEnum.AWAITING_RESPONSE
 
+    // No EDITED event here. The reviewer is *requesting* changes, not making
+    // them — "gerði breytingar á skýrslu" against their name read as the
+    // opposite of what happened — and the row carried no information either:
+    // an external comment from a reviewer IS the change request, so the comment
+    // itself already records it. EDITED stays for the two places the applicant
+    // genuinely edits (`editEqualityContent`, `editOutliers`), where the label
+    // is true and is the only audit signal that they responded.
+    //
     // Every DB write the request makes lands before the outbound calls below.
     // The request runs inside one CLS transaction (`CLSMiddleware` is applied
     // to all routes and rolls it back on a non-2xx response), so a throw here
     // takes the comment and the status move with it — but nothing recalls an
     // email or an island.is application already reopened.
-    if (isChangeRequest) {
-      const companyId = await this.getParentCompanyId(context.reportId)
-      if (companyId) {
-        await this.reportEventService.emitEdited(
-          context.reportId,
-          context.reportStatus,
-          companyId,
-        )
-      } else {
-        this.logger.warn(
-          `No parent company snapshot for report ${context.reportId}; skipping the EDITED audit row`,
-          { context: LOGGING_CONTEXT, reportId: context.reportId },
-        )
-      }
-    }
-
     if (isExternalFromReviewer) {
       // Mail is not gated on the transition: a follow-up message is still a
       // message the applicant should hear about.
@@ -278,21 +264,13 @@ export class ReportCommentService implements IReportCommentService {
     )
   }
 
-  private async getParentCompanyId(reportId: string): Promise<string | null> {
-    const snapshot = await this.companyReportModel.findOne({
-      where: { reportId, parentCompanyId: null },
-      attributes: ['companyId'],
-    })
-    return snapshot?.companyId ?? null
-  }
-
   /**
    * Best-effort outbound notification that the applicant should edit and
    * resubmit. Only island.is-sourced reports have an application to update, and
-   * a failed outbound call must not fail the reviewer's comment: the comment,
-   * the status move and the EDITED row are all written by this point, and
-   * letting island.is roll them back would lose the reviewer's message over an
-   * outage on someone else's service.
+   * a failed outbound call must not fail the reviewer's comment: the comment
+   * and the status move are both written by this point, and letting island.is
+   * roll them back would lose the reviewer's message over an outage on someone
+   * else's service.
    */
   private async notifyApplicationSystemEdited(
     report: ReportModel,

@@ -35,16 +35,8 @@ describe('ReportCommentService', () => {
     findByPk: jest.fn(),
   }
 
-  const companyReportModel = {
-    findOne: jest.fn(),
-  }
-
   const mailService = {
     sendExternalCommentNotification: jest.fn(),
-  }
-
-  const reportEventService = {
-    emitEdited: jest.fn(),
   }
 
   const applicationSystemService = {
@@ -76,14 +68,11 @@ describe('ReportCommentService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
     service = new ReportCommentService(
       logger as never,
       reportCommentModel as never,
       reportModel as never,
-      companyReportModel as never,
       mailService as never,
-      reportEventService as never,
       applicationSystemService as never,
     )
     reviewerContext = {
@@ -261,7 +250,7 @@ describe('ReportCommentService', () => {
 
   // A reviewer's external comment IS the change request: no separate open
   // action, no separate send-to-edit button.
-  it('opens a NOT_STARTED thread, logs EDITED and reopens the island.is application', async () => {
+  it('opens a NOT_STARTED thread and reopens the island.is application', async () => {
     const report = makeReport(CommunicationStatusEnum.NOT_STARTED)
     reportModel.findByPk.mockResolvedValue(report)
     reportCommentModel.create.mockResolvedValue(makeComment('comment-3c'))
@@ -274,11 +263,6 @@ describe('ReportCommentService', () => {
     expect(report.update).toHaveBeenCalledWith({
       communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
     })
-    expect(reportEventService.emitEdited).toHaveBeenCalledWith(
-      'report-1',
-      'IN_REVIEW',
-      'company-1',
-    )
     expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
       'application-1',
     )
@@ -313,33 +297,11 @@ describe('ReportCommentService', () => {
     })
 
     expect(report.update).not.toHaveBeenCalled()
-    expect(reportEventService.emitEdited).not.toHaveBeenCalled()
     expect(applicationSystemService.notifyEdited).not.toHaveBeenCalled()
     // The applicant still hears about the message itself.
     expect(mailService.sendExternalCommentNotification).toHaveBeenCalledWith(
       report,
       commentRecord,
-    )
-  })
-
-  it('posts the comment and warns when the report has no parent company snapshot', async () => {
-    companyReportModel.findOne.mockResolvedValue(null)
-    reportModel.findByPk.mockResolvedValue(makeReport())
-    reportCommentModel.create.mockResolvedValue(makeComment('comment-3e'))
-
-    await expect(
-      service.create(reviewerContext, {
-        visibility: CommentVisibilityEnum.EXTERNAL,
-        body: 'Please update the report',
-      }),
-    ).resolves.toEqual({ id: 'comment-3e' })
-
-    expect(reportEventService.emitEdited).not.toHaveBeenCalled()
-    expect(logger.warn).toHaveBeenCalled()
-    // The applicant is still let back in — the missing audit row must not cost
-    // them the ability to resubmit.
-    expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
-      'application-1',
     )
   })
 
@@ -371,7 +333,6 @@ describe('ReportCommentService', () => {
 
     expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
     expect(report.update).not.toHaveBeenCalled()
-    expect(reportEventService.emitEdited).not.toHaveBeenCalled()
     expect(applicationSystemService.notifyEdited).not.toHaveBeenCalled()
   })
 
