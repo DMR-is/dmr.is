@@ -59,6 +59,7 @@ export const overviewText = {
   companyFinesStarted: 'Fyrirtæki er í dagsektarferli',
   openAdmin: 'Opna ritjstjórn',
   reviewerSelect: {
+    label: 'Starfsmaður',
     placeholder: 'Óúthlutað',
   },
   filter: {
@@ -196,8 +197,6 @@ export const reportText = {
   },
   employeeSelect: {
     label: 'Starfsmaður',
-    successToast: 'Úthlutun tókst.',
-    errorToast: 'Villa við að úthluta starfsmanni.',
   },
   detailFields: {
     isatCode: 'ÍSAT atvinnugreinaflokkun',
@@ -622,6 +621,12 @@ export const sharedText = {
   statusLabel: 'Staða',
   delete: 'Eyða',
   companies: 'Fyrirtæki',
+  // Shared by every reviewer-assignment control (the report sidebar, the
+  // overview's reviewer column), which all go through `useAssignReviewer`.
+  reviewerAssign: {
+    successToast: 'Úthlutun tókst.',
+    errorToast: 'Villa við að úthluta starfsmanni.',
+  },
   filter: {
     labelClearAll: 'Hreinsa allar síur',
     labelOpen: 'Opna síur',

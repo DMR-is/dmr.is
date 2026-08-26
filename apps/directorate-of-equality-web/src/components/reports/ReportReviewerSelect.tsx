@@ -1,21 +1,19 @@
 'use client'
 
-import { useQuery } from '@dmr.is/trpc/client/trpc'
+import { useMemo } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { InlineSelect } from '@dmr.is/ui/components/island-is/InlineSelect'
-import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { ReportStatusEnum } from '../../gen/fetch/types.gen'
-import { overviewText, reportText } from '../../lib/text'
-import { useTRPC } from '../../lib/trpc/client/trpc'
-
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAssignReviewer, useReviewerOptions } from '../../hooks/useReviewers'
+import { overviewText } from '../../lib/text'
 
 type Props = {
   reportId: string
   status: ReportStatusEnum
   reviewerId: string | null
-  /** Name to fall back to when the row cannot be assigned from the list. */
+  /** The assigned reviewer's name, as the list reported it. */
   reviewerName: string
 }
 
@@ -39,40 +37,29 @@ export const ReportReviewerSelect = ({
   reviewerId,
   reviewerName,
 }: Props) => {
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
-
   const isAssignable =
     status === ReportStatusEnum.SUBMITTED ||
     status === ReportStatusEnum.IN_REVIEW
 
-  const { data: users, isLoading: isLoadingUsers } = useQuery(
-    trpc.user.list.queryOptions(undefined, { enabled: isAssignable }),
-  )
+  const { options: reviewerOptions, isLoading: isLoadingUsers } =
+    useReviewerOptions({ enabled: isAssignable })
 
-  const assign = useMutation({
-    ...trpc.reportWorkflow.assign.mutationOptions(),
-    onSuccess: () => {
-      // The list itself carries both the row and the tab counts, and assigning
-      // from the first tab flips the status, so the whole list is refetched.
-      queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
-      queryClient.invalidateQueries({
-        queryKey: trpc.reports.getById.queryKey({ id: reportId }),
-      })
-      toast.success(reportText.employeeSelect.successToast)
-    },
-    onError: () => {
-      toast.error(reportText.employeeSelect.errorToast)
-    },
-  })
+  const assign = useAssignReviewer(reportId)
+
+  // The row already knows who is assigned; the options list may not. It arrives
+  // after first paint, and never contains a reviewer who has since been
+  // deactivated. Falling back to the name from the list keeps the cell from
+  // reading "Óúthlutað" over a real assignment — which matters here, because
+  // the cell is also the control an admin would reassign from.
+  const options = useMemo(() => {
+    if (!reviewerId || reviewerOptions.some((o) => o.value === reviewerId)) {
+      return reviewerOptions
+    }
+    return [...reviewerOptions, { value: reviewerId, label: reviewerName }]
+  }, [reviewerOptions, reviewerId, reviewerName])
 
   // The cell already carries the table's text styles, so the name goes in bare.
   if (!isAssignable) return <>{reviewerName}</>
-
-  const options = (users ?? []).map((u) => ({
-    label: `${u.firstName} ${u.lastName}`.trim(),
-    value: u.id,
-  }))
 
   return (
     // The table navigates to the report on any cell click, which would tear the
@@ -84,7 +71,7 @@ export const ReportReviewerSelect = ({
     >
       <InlineSelect
         name={`report-reviewer-${reportId}`}
-        aria-label={overviewText.filter.reviewerLabel}
+        aria-label={overviewText.reviewerSelect.label}
         options={options}
         value={reviewerId}
         placeholder={overviewText.reviewerSelect.placeholder}

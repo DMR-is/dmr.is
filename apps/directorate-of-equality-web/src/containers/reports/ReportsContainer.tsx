@@ -3,7 +3,6 @@
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
 import { useMemo, useState } from 'react'
 
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
@@ -32,6 +31,7 @@ import {
 } from '../../gen/fetch/types.gen'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useReports } from '../../hooks/useReports'
+import { reviewerFullName, useReviewerOptions } from '../../hooks/useReviewers'
 import {
   Case,
   COLUMN_REVIEWER,
@@ -39,7 +39,6 @@ import {
   COLUMNS,
 } from '../../lib/constants'
 import { overviewText, serverErrorText, sharedText } from '../../lib/text'
-import { useTRPC } from '../../lib/trpc/client/trpc'
 import { formatNationalId } from '../../lib/utils'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -79,6 +78,18 @@ const ALL_STATUS_OPTIONS: FilterOption[] = (
   ] as const
 ).map((value) => ({ value, label: sharedText.statusLabels[value] }))
 
+/**
+ * Which tabs get the reviewer column as an editable select. An exhaustive
+ * allow-list rather than "everything except afgreitt", so a tab added later has
+ * to say yes rather than inherit an editable column by omission.
+ */
+const TAB_HAS_REVIEWER_SELECT: Record<TabId, boolean> = {
+  innsendingar: true,
+  'i-vinnslu': true,
+  // Assignment is not a valid action on a processed report.
+  afgreitt: false,
+}
+
 const EXCLUDED_FROM_STATUS_FILTER: Record<TabId, string[]> = {
   innsendingar: ALL_STATUS_OPTIONS.map((o) => o.value),
   'i-vinnslu': ALL_STATUS_OPTIONS.map((o) => o.value),
@@ -98,9 +109,7 @@ const STATUS_VARIANT: Record<string, TagVariant> = {
 const unknown = sharedText.unknown
 
 function mapReportToCase(report: ReportListItemDto): Case {
-  const reviewer = report.reviewer
-    ? `${report.reviewer.firstName} ${report.reviewer.lastName}`.trim()
-    : unknown
+  const reviewer = report.reviewer ? reviewerFullName(report.reviewer) : unknown
   return {
     id: report.id,
     date: report.createdAt
@@ -215,7 +224,6 @@ const statusColumn: ColumnDef<Case> = {
 }
 
 export const ReportsContainer = () => {
-  const trpc = useTRPC()
   const { isMobile } = useIsMobile()
   const [activeTab, setActiveTab] = useQueryState(
     'tab',
@@ -242,15 +250,11 @@ export const ReportsContainer = () => {
 
   const totalCountsData = data?.statusCounts
 
+  // The filter offers a reviewer only where rows can already have one.
   const needsUsers = activeTab !== 'innsendingar'
-  const { data: usersData } = useQuery(
-    trpc.user.list.queryOptions(undefined, { enabled: needsUsers }),
-  )
-
-  const reviewerOptions: FilterOption[] = (usersData ?? []).map((u) => ({
-    value: u.id,
-    label: `${u.firstName} ${u.lastName}`.trim(),
-  }))
+  const { options: reviewerOptions } = useReviewerOptions({
+    enabled: needsUsers,
+  })
 
   const excluded = EXCLUDED_FROM_STATUS_FILTER[activeTab]
   const statusOptions = ALL_STATUS_OPTIONS.filter(
@@ -273,10 +277,9 @@ export const ReportsContainer = () => {
   }
 
   const leadingColumns: ColumnDef<Case>[] = []
-  // Assignment is only a valid action while a report is still being worked, so
-  // the processed tab keeps its columns as they were.
-  const middleColumns: ColumnDef<Case>[] =
-    activeTab === 'afgreitt' ? [] : [reviewerSelectColumn]
+  const middleColumns: ColumnDef<Case>[] = TAB_HAS_REVIEWER_SELECT[activeTab]
+    ? [reviewerSelectColumn]
+    : []
   const trailingColumns: ColumnDef<Case>[] =
     activeTab === 'innsendingar'
       ? [companyStatusColumn]

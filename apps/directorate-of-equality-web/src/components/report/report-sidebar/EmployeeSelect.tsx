@@ -1,13 +1,12 @@
 'use client'
 
-import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
-import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
+import {
+  useAssignReviewer,
+  useReviewerOptions,
+} from '../../../hooks/useReviewers'
 import { reportText } from '../../../lib/text'
-import { useTRPC } from '../../../lib/trpc/client/trpc'
-
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 type Props = {
   reportId: string
@@ -20,37 +19,8 @@ export const EmployeeSelect = ({
   assignedUserId,
   disabled,
 }: Props) => {
-  const trpc = useTRPC()
-  const queryClient = useQueryClient()
-
-  const { data: users, isLoading: isLoadingUsers } = useQuery(
-    trpc.user.list.queryOptions(),
-  )
-
-  // `updateStatus: false` — picking a reviewer here is bookkeeping, not the
-  // report being taken on. The "Færa í vinnslu" button in `ReportStatusSelect`
-  // owns the SUBMITTED → IN_REVIEW transition, and it would be surprising for a
-  // dropdown labelled "Starfsmaður" to move the report through the pipeline as
-  // a side effect.
-  const assign = useMutation({
-    ...trpc.reportWorkflow.assign.mutationOptions(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: trpc.reports.getById.queryKey({ id: reportId }),
-      })
-      queryClient.invalidateQueries({ queryKey: trpc.reports.list.queryKey() })
-      toast.success(reportText.employeeSelect.successToast)
-    },
-
-    onError: () => {
-      toast.error(reportText.employeeSelect.errorToast)
-    },
-  })
-
-  const options = (users ?? []).map((u) => ({
-    label: `${u.firstName} ${u.lastName}`,
-    value: u.id,
-  }))
+  const { options, isLoading: isLoadingUsers } = useReviewerOptions()
+  const assign = useAssignReviewer(reportId)
 
   const value = options.find((o) => o.value === assignedUserId) ?? null
 
@@ -67,6 +37,11 @@ export const EmployeeSelect = ({
         assign.mutate({
           reportId,
           userId: opt?.value ?? null,
+          // `updateStatus: false` — picking a reviewer here is bookkeeping, not
+          // the report being taken on. The "Færa í vinnslu" button in
+          // `ReportStatusSelect` owns the SUBMITTED → IN_REVIEW transition, and
+          // it would be surprising for a dropdown labelled "Starfsmaður" to
+          // move the report through the pipeline as a side effect.
           updateStatus: false,
         })
       }
