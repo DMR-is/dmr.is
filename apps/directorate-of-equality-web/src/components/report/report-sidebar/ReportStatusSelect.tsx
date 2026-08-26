@@ -20,10 +20,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 type Props = {
   reportId: string
   status: ReportStatusEnum
+  /** Reviewer already on the report, if any — see the assign button below. */
+  reviewerId?: string | null
   disabled?: boolean
 }
 
-export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
+export const ReportStatusSelect = ({
+  reportId,
+  status,
+  reviewerId,
+  disabled,
+}: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -96,7 +103,22 @@ export const ReportStatusSelect = ({ reportId, status, disabled }: Props) => {
             disabled={disabled || isLoading}
             loading={assign.isPending}
             icon="arrowForward"
-            onClick={() => assign.mutate({ reportId })}
+            // The one assignment that *is* a status change: `updateStatus`
+            // moves SUBMITTED → IN_REVIEW.
+            //
+            // The reviewer is passed through rather than left to default. With
+            // no userId the API assigns the caller, which would silently
+            // overwrite a reviewer someone had already picked from the overview
+            // table — invisibly, since this button does not show who is
+            // assigned. This button moves the report along; it does not claim
+            // it. An unassigned report still falls through to the caller.
+            onClick={() =>
+              assign.mutate({
+                reportId,
+                userId: reviewerId ?? undefined,
+                updateStatus: true,
+              })
+            }
           >
             <Text color="white" variant="small" fontWeight="semiBold">
               {reportText.statusSelect.assignButton}

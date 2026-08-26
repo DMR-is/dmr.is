@@ -7,7 +7,7 @@ import {
   type SalaryScorePoint,
   SCORE_BUCKET_WIDTH,
 } from '../../report/lib/compensation-aggregates'
-import { GenderEnum } from '../../report/models/report.model'
+import { GenderEnum } from '../../report/models/report.enums'
 import {
   RegressionLineDto,
   SalaryByGenderAndScoreDto,

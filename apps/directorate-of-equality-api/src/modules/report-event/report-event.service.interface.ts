@@ -6,11 +6,13 @@ export interface IReportEventService {
     reportId: string,
     actorUserId: string,
     assignedUserId: string,
+    reportStatus: ReportStatusEnum,
   ): Promise<void>
   emitUnassigned(
     reportId: string,
     actorUserId: string,
     previousAssigneeUserId: string | null,
+    reportStatus: ReportStatusEnum,
   ): Promise<void>
   emitStatusChanged(
     reportId: string,

@@ -184,4 +184,27 @@ export const pdfStyles = `
     color: #8a8aa0;
     font-style: italic;
   }
+
+  /**
+   * A note that STATES something, as opposed to \`.empty-note\` which marks an
+   * absence.
+   *
+   * ⚠️ Separate class because \`.empty-note\`'s #8a8aa0 italic is 3.37:1 against
+   * white — below WCAG AA's 4.5:1 — which is defensible for "engin dótturfyrirtæki
+   * skráð" and wrong for a sentence a reader has to act on. #43425a is 9.7:1 and
+   * already the body colour elsewhere in this stylesheet.
+   *
+   * The load-bearing case is ábendingar' "engra skýringa er krafist": muting the
+   * one line that tells an employer they owe nothing is exactly the wrong
+   * emphasis. The reviewer-web copy of that sentence is rendered semiBold at full
+   * contrast, and the two surfaces must not disagree about it.
+   */
+  .advisory-note {
+    color: #43425a;
+  }
+
+  .advisory-note--lead {
+    color: #00003c;
+    font-weight: 600;
+  }
 `

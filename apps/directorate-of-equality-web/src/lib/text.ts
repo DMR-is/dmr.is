@@ -58,6 +58,10 @@ export const overviewText = {
   companyQuarantined: 'Fyrirtæki er í vari',
   companyFinesStarted: 'Fyrirtæki er í dagsektarferli',
   openAdmin: 'Opna ritjstjórn',
+  reviewerSelect: {
+    label: 'Starfsmaður',
+    placeholder: 'Óúthlutað',
+  },
   filter: {
     heading: 'Leit og síun',
     placeholder: 'Sláðu inn leitarorð',
@@ -239,8 +243,6 @@ export const reportText = {
   },
   employeeSelect: {
     label: 'Starfsmaður',
-    successToast: 'Úthlutun tókst.',
-    errorToast: 'Villa við að úthluta starfsmanni.',
   },
   detailFields: {
     isatCode: 'ÍSAT atvinnugreinaflokkun',
@@ -413,6 +415,45 @@ export const reportText = {
     chartRegressionSeries: 'Væntanlegt tímakaup',
     chartTooltipScore: 'Stig',
     chartTooltipSalary: 'Tímakaup',
+    /**
+     * ── Chart hover ──────────────────────────────────────────────────────────
+     *
+     * ⚠️ The tooltip is per-POINT, not per-axis-position. It used to run in
+     * recharts' default axis mode, which snapped to the nearest stig, drew a
+     * vertical cursor and showed whatever series happened to sit at that x —
+     * including the curve. A reviewer hovering a dot got figures that were not
+     * that dot's.
+     */
+    chartTooltip: {
+      employee: 'Starfsmaður',
+      gender: 'Kyn',
+      score: 'Stig',
+      salary: 'Tímakaup',
+      /**
+       * Shorter than the same field's label in the tables (`Væntanlegt
+       * tímakaup`) on purpose: this one sits in a floating card over the plot,
+       * and the full label made the card wide enough to cover the dots a
+       * reviewer is comparing against. Nothing is lost — it sits directly under
+       * `Tímakaup`, and the value carries its own kr./klst.
+       */
+      expected: 'Væntanlegt',
+      deviation: 'Launafrávik',
+      /**
+       * Only on a marked dot, and the wording follows WHICH list the report has.
+       * The two can never both apply: a lágmarksmengi exists only above the
+       * benchmark, ábendingar rows only below it.
+       */
+      inMinimumSet: 'Í úrbótaáætlun',
+      isAbending: 'Ábending — engra skýringa krafist',
+    },
+    /**
+     * The ring on a marked dot, named in the legend so the mark is never a
+     * mystery. Same either/or as `chartTooltip` above.
+     */
+    chartMarkedLegend: {
+      minimumSet: 'Í úrbótaáætlun',
+      abending: 'Ábending',
+    },
     hourlyUnit: 'kr./klst.',
     outlierTable: {
       heading: 'Úrbótaáætlun',
@@ -451,6 +492,73 @@ export const reportText = {
           'Hópurinn nær yfir starfsmenn með bæði lægri og hærri laun en starfsmatsstig þeirra gefa til kynna.',
       },
       /** Suffix on the Launafrávik cell, so a row states its own direction. */
+      directionBelow: 'undir',
+      directionAbove: 'yfir',
+    },
+    /**
+     * ── Ábendingar um launadreifingu ─────────────────────────────────────────
+     *
+     * ⚠️ **A DIFFERENT INSTRUMENT from the úrbótaáætlun above**, and this copy has
+     * one job above all others: make sure nobody reads it as the same one. The
+     * úrbótaáætlun obliges the employer to record an ástæða and an aðgerð for each
+     * person named, and a reviewer approves on those explanations. This asks for
+     * nothing, is submitted nowhere, and cannot affect how the report is decided.
+     *
+     * It exists because óskýrður launamunur is a difference between the cohorts'
+     * MEAN deviations, so deviations that offset each other inside one cohort
+     * cancel exactly. A company can sit comfortably under 3,9% while individuals
+     * are a long way off the line — and the statutory figure is silent about them,
+     * correctly, because there is no gender gap to report.
+     *
+     * ⚠️ Deliberately its own keys rather than reaching into `outlierTable`. The
+     * two words they would share are cheaper duplicated than a coupling that
+     * invites someone to merge the tables.
+     *
+     * Addressed to the EMPLOYER, not the reviewer: the person who can go and look
+     * at the underlying data works inside the company.
+     */
+    payDispersion: {
+      heading: 'Ábendingar um launadreifingu',
+      intro:
+        'Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir.',
+      /**
+       * ⚠️ Load-bearing. Without this sentence the table reads as a second, softer
+       * úrbótaáætlun, and a reviewer starts asking the company to account for
+       * rows it owes no account of.
+       */
+      noObligation:
+        'Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.',
+      /**
+       * The context that makes the selection explicable. Without it a reader asks
+       * why someone 30% off the line is listed while someone 25% off is not — the
+       * answer being that the cut-off is measured in the company's OWN spread, not
+       * in percent.
+       */
+      spreadNote: (down: string, up: string, threshold: string) =>
+        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}. Hér eru starfsmenn sem víkja ${threshold} staðalvik eða meira frá henni.`,
+      allClear:
+        'Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.',
+      /**
+       * ⚠️ Each of these is a state that is NOT "all clear", and must not be
+       * rendered as an empty table. "Cannot be assessed" and "nothing to report"
+       * are different answers.
+       */
+      blockers: {
+        COHORT_TOO_SMALL:
+          'Of fáir starfsmenn til að meta launadreifingu áreiðanlega — það þarf að minnsta kosti 12.',
+        NO_SCORE_VARIATION:
+          'Öll starfsmatsstig eru eins, því liggur ekkert væntanlegt tímakaup fyrir til að víkja frá.',
+        GAP_NOT_COMPUTABLE:
+          'Launadreifing verður ekki metin því ekki var unnt að reikna væntanlegt tímakaup.',
+      },
+      numberHeader: 'Númer',
+      genderHeader: 'Kyn',
+      points: 'Stig',
+      salary: 'Tímakaup',
+      predictedSalary: 'Væntanlegt tímakaup',
+      deviationHeader: 'Launafrávik',
+      /** The column that explains the selection — see `spreadNote`. */
+      spreadHeader: 'Staðalvik frá línu',
       directionBelow: 'undir',
       directionAbove: 'yfir',
     },
@@ -842,6 +950,12 @@ export const sharedText = {
   statusLabel: 'Staða',
   delete: 'Eyða',
   companies: 'Fyrirtæki',
+  // Shared by every reviewer-assignment control (the report sidebar, the
+  // overview's reviewer column), which all go through `useAssignReviewer`.
+  reviewerAssign: {
+    successToast: 'Úthlutun tókst.',
+    errorToast: 'Villa við að úthluta starfsmanni.',
+  },
   filter: {
     labelClearAll: 'Hreinsa allar síur',
     labelOpen: 'Opna síur',

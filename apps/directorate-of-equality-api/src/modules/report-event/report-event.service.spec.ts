@@ -41,7 +41,12 @@ describe('ReportEventService', () => {
     it('creates an ASSIGNED event with the new assignee and IN_REVIEW status', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitAssigned('report-1', 'reviewer-1', 'user-2')
+      await service.emitAssigned(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.IN_REVIEW,
+      )
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
@@ -51,13 +56,33 @@ describe('ReportEventService', () => {
         assignedUserId: 'user-2',
       })
     })
+
+    it('snapshots the status it is given rather than assuming IN_REVIEW', async () => {
+      reportEventModel.create.mockResolvedValue({})
+
+      await service.emitAssigned(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.SUBMITTED,
+      )
+
+      expect(reportEventModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({ reportStatus: ReportStatusEnum.SUBMITTED }),
+      )
+    })
   })
 
   describe('emitUnassigned', () => {
     it('creates an UNASSIGNED event with the previous assignee and SUBMITTED status', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitUnassigned('report-1', 'reviewer-1', 'user-2')
+      await service.emitUnassigned(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.SUBMITTED,
+      )
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
@@ -71,7 +96,12 @@ describe('ReportEventService', () => {
     it('records a null previous assignee when none was set', async () => {
       reportEventModel.create.mockResolvedValue({})
 
-      await service.emitUnassigned('report-1', 'reviewer-1', null)
+      await service.emitUnassigned(
+        'report-1',
+        'reviewer-1',
+        null,
+        ReportStatusEnum.SUBMITTED,
+      )
 
       expect(reportEventModel.create).toHaveBeenCalledWith({
         reportId: 'report-1',
@@ -80,6 +110,21 @@ describe('ReportEventService', () => {
         reportStatus: ReportStatusEnum.SUBMITTED,
         assignedUserId: null,
       })
+    })
+
+    it('snapshots IN_REVIEW when the reviewer was cleared without a transition', async () => {
+      reportEventModel.create.mockResolvedValue({})
+
+      await service.emitUnassigned(
+        'report-1',
+        'reviewer-1',
+        'user-2',
+        ReportStatusEnum.IN_REVIEW,
+      )
+
+      expect(reportEventModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({ reportStatus: ReportStatusEnum.IN_REVIEW }),
+      )
     })
   })
 

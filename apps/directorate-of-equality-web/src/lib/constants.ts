@@ -82,6 +82,7 @@ export enum CommunicationStatusTranslatedEnum {
   RESPONSE_RECEIVED = 'Svör hafa borist',
   CLOSED = 'Lokið',
 }
+import { type ReportStatusEnum } from '../gen/fetch/types.gen'
 import { overviewText, reportText, sharedText } from './text'
 
 import { type ColumnDef } from '@tanstack/react-table'
@@ -95,9 +96,16 @@ export type Case = {
   companyAdminGender: string
   kennitala: string
   status: string
+  /**
+   * Untranslated status. `status` is the Icelandic label the table renders, so
+   * anything that has to *decide* something off the status (the reviewer cell
+   * asking whether the API will accept an assignment) needs the raw enum too.
+   */
+  rawStatus: ReportStatusEnum
   email: string
   isatCode: string
   reviewer: string
+  reviewerId: string | null
   employeeCount: string
   communicationStatus: string
   companyFinesStarted: boolean

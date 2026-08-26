@@ -229,11 +229,51 @@ Two consequences worth knowing when reading older code or data:
   The first and last agree on the person and on nothing else. The band flagged him for a fact about
   him alone and decided nothing; the current rule lists him because the company's gap runs through
   him, and asks the employer to account for it. This is why membership is always derived from
-  `employees[].inMinimumSet` and never hardcoded in a seeder or a fixture.
+  `employees[].inMinimumSet` and never hardcoded in a seeder or a fixture — and the same holds for
+  the ábendingar list below, which is derived from the snapshot on read and must likewise never be
+  seeded as data.
+
+  ⚠️ Nor are the ábendingar of the next subsection the band returning. The band was a **fixed
+  per-person width** that _decided compliance_; ábendingar are measured in the company's own pay
+  spread, run only after compliance has already been settled, and oblige the employer to nothing. A
+  fixed 20%-off-expected rule would flag 28 of the 120-employee reference cohort and 45 of 100 on richSheet,
+  because the spread itself is roughly that wide — that is the band's failure with a bigger
+  constant.
 
 - **The set is far smaller, and that is not a proxy for severity.** It is _minimal by construction_,
   so a small set can mean a concentrated problem rather than a mild one. On a 100-employee reference
   cohort the band flagged 100; the lágmarksmengi is 6.
+
+### Ábendingar — a second list, with no obligation
+
+⚠️ **Everything above is the _compliance_ rule. It is not the only list on a salary report.**
+
+`report-statistics/lib/pay-dispersion.ts` derives a second, **informational** list — _ábendingar_ —
+answering a different question: not _who carries the company's gender gap_ but _whose pay is far from
+what their starfsmatsstig imply_. The employer owes **nothing** for it: no reason, no action, no
+signature, no submission, and it can never be a basis for rejection or an auto-review input.
+
+It exists because óskýrt is a difference between the cohorts' **mean** deviations, so deviations that
+offset each other inside one cohort cancel exactly. A company can sit well under 3,9% while
+individuals are a long way off the line — so "compliant" means _no aggregate gender gap_, not _no
+individual pay problems_. Roughly half of any workforce (47 of 120 on the reference cohort) sits in
+quadrants the lágmarksmengi structurally cannot reach, because correcting them would widen the very
+figure the statute tests.
+
+Selection is `|studentized residual| ≥ 2` — two of the company's **own** pay spreads from the fitted
+line, leverage-corrected — with a floor of 12 analysed employees, below which the statistic cannot
+fire arithmetically. The `population` field records whether a lágmarksmengi was **withheld**:
+`EXCLUDING_MINIMUM_SET` on a company over the benchmark, where its members are held back so nobody
+appears in two tables under two framings, and `ALL_EMPLOYEES` otherwise — which covers both a
+compliant company **and** one whose gap is not computable at all, since neither has a lágmarksmengi to
+withhold. **Only `ALL_EMPLOYEES` rows are rendered today**, but a blocked report renders its
+`blockers` reason whatever the population: gate the list, not the section, or a company over the
+benchmark and under the 12-employee floor is shown nothing at all.
+
+⚠️ **Withheld on `inMinimumSet`, never on `widensGap`.** The set is only the few carriers the
+selection walk picked — the reference company has 73 carriers and 5 in the set, and the other 68 stay
+eligible. See [`docs/launagreining.md`](../docs/launagreining.md) §10 for the statistic, the
+consequence boundary and the worked example.
 
 **Naming is deliberately unchanged.** `report_employee_outlier`, `report_outlier_group`, the
 `/outliers` endpoints and the úrbótaáætlun UI all keep the word "outlier". Renaming the flow would
@@ -785,7 +825,7 @@ Invariant (enforced via CHECK):
 
 ### `report_employee_outlier`
 
-A thin join row pairing a detected outlier employee with its outlier group — one row per outlier the company has acknowledged at submission. The explanation/signature fields no longer live here (they moved up to `report_outlier_group`); this table is now just `report_employee_id` + `group_id`. `group_id` is `NOT NULL` — every outlier always belongs to a group.
+A thin join row pairing a detected outlier employee with its outlier group — one row per outlier the company has acknowledged at submission. ⚠️ **Only the lágmarksmengi ever produces rows here.** Ábendingar never do: this table means _the company has acknowledged this outlier at submission_, and an advisory has nothing to acknowledge. The explanation/signature fields no longer live here (they moved up to `report_outlier_group`); this table is now just `report_employee_id` + `group_id`. `group_id` is `NOT NULL` — every outlier always belongs to a group.
 
 Postponement is all-or-none across the report — encoded in `report.status` (`POSTPONED` ⇔ the default group's explanation columns are NULL). The submit-side outlier guard requires every detected outlier to have a row here; extras (rows for non-outliers) are rejected. The applicant resolves postponement via the outliers edit endpoint, which atomically fills the group explanations and flips status `POSTPONED → SUBMITTED`.
 
@@ -839,6 +879,15 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
   - `counts` for `overall`, `male`, `female`, `neutral` (`neutral` always `0`)
 
 `wage_gap_decomposition_snapshot` stores the output of the launagreining. For the methodology behind it — what the 3,9% test actually is, how the lágmarksmengi is picked, and what happens on a lopsided or single-gender workforce — see [`docs/launagreining.md`](../docs/launagreining.md).
+
+⚠️ **Ábendingar are NOT in this snapshot.** They are derived on read from it — `employees[].residualLog`,
+`employees[].score` and `pooledFit.{sampleCount,xMean,xSumSquares}` — by
+`report-statistics/lib/pay-dispersion.ts`, and surfaced as `ReportResultDto.payDispersion`, a sibling
+of `wageGapDecomposition` rather than a field inside it. Deliberate on three counts: an advisory rule
+must stay tunable without rewriting published history (a regulatory figure must not); it therefore
+needed no migration and no `calculation_version` bump, and works on every row already frozen; and it
+is reproducible by anyone holding the published JSON. The DTO for `wageGapDecomposition` _is_ the
+stored JSONB verbatim, so derived data inside it would break the identity the audit trail rests on.
 
 `wage_gap_decomposition_snapshot` stores:
 
