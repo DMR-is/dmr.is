@@ -77,10 +77,15 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
       nullScores,
     )
 
-    // An import writes children only, exactly like bulk sync, so the report row
-    // has to be touched or the abandoned-draft reaper counts a draft the
-    // employer just populated from a workbook as inactive.
-    await this.reportDraftService.touchDraft(report.id)
+    // The parser ran, so this draft's scoring content is workbook-derived
+    // rather than keyed into the portal UI — which is the distinction
+    // `report.imported_from_excel` exists to record, and this is the only place
+    // in the application flow where the server can observe it. The same
+    // statement bumps `updated_at`, which an import needs anyway: it writes
+    // children only, exactly like bulk sync, so without touching the report row
+    // the abandoned-draft reaper would count a draft the employer just
+    // populated from a workbook as inactive.
+    await this.reportDraftService.markImportedFromExcel(report.id)
 
     this.logger.info(
       `Seeded draft report "${report.id}" from workbook (${parsed.employees.length} employees)`,

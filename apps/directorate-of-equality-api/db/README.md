@@ -116,6 +116,15 @@ The presign + fetch + cleanup logic lives in one shared `ImportUploadService`; e
 
 > **Infra prerequisites.** The bucket needs (a) CORS allowing `PUT` from the web origins, or the browser upload fails, and (b) a lifecycle rule to expire `doe-imports/` objects. `AWS_SALARY_ANALYSIS_FILES_BUCKET` must be set per environment (the resolver throws if it's missing).
 
+### Recording how the data was entered
+
+`report.imported_from_excel` says whether a salary report's scoring content came out of a workbook or was keyed in by hand. Who sets it depends on the flow, because the server can only observe the parser for one of them:
+
+- **Draft flow** (`POST …/application/reports/draft` → `…/draft/import` → `…/draft/submit`) — **server-derived, authoritative.** `createDraft` opens the row `false`; `ReportDraftSeedService.seedFromWorkbook` flips it to `true` once the parser has run and its output is persisted. The sync and per-entity draft endpoints are the portal UI keying data in, and leave it `false`. Submit promotes the same row without touching the column, so the flag the draft carried is the flag the submitted report keeps. Readable back on the draft as `DraftDetailDto.importedFromExcel`.
+- **Single-shot submits** (`POST /reports/salary`, `POST /application/reports/salary`, `POST /admin-report/companies/:companyId/reports/salary`) — **client-asserted, unvalidated.** The caller parses via `/excel/import`, then echoes the whole `ParsedReportDto` back on the submit body alongside its own `importedFromExcel`. `parsed` is required either way, so nothing distinguishes a parsed payload from a hand-built one; the server takes the caller's word. Making these authoritative needs `/import` to hand back a receipt the submit must echo — a client change on the island.is side, not done.
+
+The flag is **sticky**: it records the origin of the data, so hand-editing rows after an import does not clear it. A re-import writes `true` again unconditionally, which also keeps `updated_at` moving for the abandoned-draft reaper.
+
 ## Report lifecycle
 
 `report.status` drives every transition. Resubmissions are new rows; there is no FK chain back to the prior submission.
@@ -711,7 +720,7 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `salary_data_period`             | `date` (nullable — the payroll month, always the 1st; set only when `salary_data_basis = MONTH`)                               |
 | `provider_type`                  | `ReportProviderEnum` (upstream channel — see "Provider correlation")                                                           |
 | `provider_id`                    | `text` (nullable; upstream submission ID — see "Provider correlation". Unique with `provider_type` when not null.)             |
-| `imported_from_excel`            | `boolean`                                                                                                                      |
+| `imported_from_excel`            | `boolean` (server-set — see "Excel import transport" → "Recording how the data was entered")                                   |
 | `identifier`                     | `text` (nullable; minted server-side, unique among non-null values — see "Report identifier")                                  |
 | `status`                         | `ReportStatusEnum` (a salary report submitted with all outliers deferred lands on `POSTPONED`; see "Report lifecycle")         |
 | `equality_report_id`             | `fk → report` (nullable — set on `type = SALARY` rows, points to the approved equality report this salary was audited against) |

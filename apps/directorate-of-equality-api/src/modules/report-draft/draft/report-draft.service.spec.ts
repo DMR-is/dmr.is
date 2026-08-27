@@ -286,6 +286,7 @@ describe('ReportDraftService', () => {
       salaryDataBasis: SalaryDataBasisEnum.MONTH,
       salaryDataPeriod: '2026-03-01',
       equalityReportContent: null,
+      importedFromExcel: true,
       createdAt: new Date('2026-06-30T00:00:00Z'),
       updatedAt: new Date('2026-06-30T00:00:00Z'),
     }
@@ -308,6 +309,9 @@ describe('ReportDraftService', () => {
         companyAdminTitle: 'Framkvæmdastjóri',
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
         salaryDataPeriod: '2026-03-01',
+        // The portal has to be able to tell whether it is looking at a draft it
+        // uploaded a workbook for or one being keyed in by hand.
+        importedFromExcel: true,
         counts: { employees: 3, criteria: 5, outlierGroups: 1 },
       })
     })
@@ -561,10 +565,11 @@ describe('ReportDraftService', () => {
   // drafts; both creation paths share it.
 
   describe('touchDraft', () => {
-    // The reaper keys off the report ROW's updated_at, but bulk sync and
-    // workbook import write only children — so both call this to register the
-    // activity. A plain no-column update would issue no query at all, hence
-    // the explicit timestamp.
+    // The reaper keys off the report ROW's updated_at, but bulk sync writes
+    // only children — so it calls this to register the activity. A plain
+    // no-column update would issue no query at all, hence the explicit
+    // timestamp. (Workbook import registers via markImportedFromExcel, which
+    // writes a column of its own and the timestamp in one statement.)
     it('bumps the report row updated_at without touching any other column', async () => {
       reportUpdate.mockResolvedValueOnce([1])
 
@@ -572,6 +577,36 @@ describe('ReportDraftService', () => {
 
       expect(reportUpdate).toHaveBeenCalledWith(
         { updatedAt: expect.any(Date) },
+        { where: { id: REPORT_ID }, silent: true },
+      )
+    })
+  })
+
+  describe('markImportedFromExcel', () => {
+    it('sets the flag and registers the import as activity in one statement', async () => {
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.markImportedFromExcel(REPORT_ID)
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { importedFromExcel: true, updatedAt: expect.any(Date) },
+        { where: { id: REPORT_ID }, silent: true },
+      )
+    })
+
+    it('writes unconditionally, so a re-import still moves updated_at', async () => {
+      // The flag is already true on the second import. A conditional or
+      // change-tracked write would issue no query and the reaper would count a
+      // draft the employer just re-populated as inactive.
+      reportUpdate.mockResolvedValue([1])
+
+      await service.markImportedFromExcel(REPORT_ID)
+      await service.markImportedFromExcel(REPORT_ID)
+
+      expect(reportUpdate).toHaveBeenCalledTimes(2)
+      expect(reportUpdate).toHaveBeenNthCalledWith(
+        2,
+        { importedFromExcel: true, updatedAt: expect.any(Date) },
         { where: { id: REPORT_ID }, silent: true },
       )
     })

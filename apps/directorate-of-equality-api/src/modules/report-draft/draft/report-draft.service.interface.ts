@@ -29,10 +29,20 @@ export interface IReportDraftService {
   deleteDraft(providerId: string, company: CompanyDto): Promise<void>
 
   /**
-   * Bumps the report row's `updated_at` so child-only edits (bulk sync,
-   * workbook import) count as activity against the abandoned-draft reaper.
+   * Bumps the report row's `updated_at` so child-only edits (bulk sync) count
+   * as activity against the abandoned-draft reaper.
    */
   touchDraft(reportId: string): Promise<void>
+
+  /**
+   * Records that this draft's scoring content came out of an Excel workbook
+   * rather than being keyed into the portal UI, and counts as activity (so the
+   * workbook-import path does not also need `touchDraft`).
+   *
+   * Sticky: the flag marks the ORIGIN of the data, so hand-editing rows
+   * afterwards through the sync / per-entity endpoints does not clear it.
+   */
+  markImportedFromExcel(reportId: string): Promise<void>
 
   /**
    * Hard-deletes every DRAFT untouched since `cutoff` (abandoned-draft reaper,

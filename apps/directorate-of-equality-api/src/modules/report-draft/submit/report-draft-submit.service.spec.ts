@@ -320,6 +320,24 @@ describe('ReportDraftSubmitService', () => {
     })
   })
 
+  // `report.imported_from_excel` is set on the draft row when the workbook
+  // parser runs (ReportDraftSeedService) and is the only record of how the
+  // applicant entered their data. Submit promotes that same row, so writing the
+  // column here — even to `false` — would erase the fact for every report that
+  // came out of a spreadsheet.
+  it('leaves importedFromExcel alone, carrying the draft flag onto the submitted report', async () => {
+    const report = makeReport(ReportTypeEnum.SALARY)
+    findOwnedDraft.mockResolvedValueOnce({ ...report, importedFromExcel: true })
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set())
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(reportUpdate).toHaveBeenCalledTimes(1)
+    expect(reportUpdate.mock.calls[0][0]).not.toHaveProperty(
+      'importedFromExcel',
+    )
+  })
+
   // Reviewers search reports by identifier and it is printed on the PDF, so a
   // draft-born report that submits without one is effectively unfindable.
   it('mints an identifier server-side and freezes it onto the report', async () => {
