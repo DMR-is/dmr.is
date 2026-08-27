@@ -105,25 +105,33 @@ const TYPE_BY_PARENT = {
   'Einstaklingsbundinn þáttur': 'PERSONAL',
 }
 
-const APP_ROOT = path.join(__dirname, '..')
-
-const OUT_FILE = path.join(
-  APP_ROOT,
-  'src',
+const LIB_SRC = path.join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'libs',
+  'directorate-of-equality',
   'modules',
+  'src',
+)
+
+/**
+ * Output and source both live in `@dmr.is/doe-modules` now: the DoE domain layer
+ * moved into a library so the partner API can write reports in its own process.
+ * The generator stays here because it is a repo maintenance script, not part of
+ * either app's runtime — and the CI check that asserts it produces no diff lives
+ * in this app's pipeline.
+ */
+const OUT_FILE = path.join(
+  LIB_SRC,
   'application',
   'sub-criterion-catalog',
   'sub-criterion-catalog.data.ts',
 )
 
 /** The workbook shipped by `GET /application/reports/excel/template`. */
-const DEFAULT_SOURCE = path.join(
-  APP_ROOT,
-  'src',
-  'modules',
-  'report-excel',
-  'template.xlsx',
-)
+const DEFAULT_SOURCE = path.join(LIB_SRC, 'report-excel', 'template.xlsx')
 
 /**
  * Human-readable cell reference for error messages (`C7`).
