@@ -842,6 +842,7 @@ describe('ReportCreateService', () => {
         id: '00000000-0000-0000-0000-0000000000ee',
         providerType: input.providerType,
         providerId: input.providerId,
+        type: ReportTypeEnum.SALARY,
       })
       companyReportFindOne.mockResolvedValueOnce({
         companyId: PARENT_COMPANY_ID,
@@ -870,6 +871,7 @@ describe('ReportCreateService', () => {
         id: EXISTING_REPORT_ID,
         providerType: input.providerType,
         providerId: input.providerId,
+        type: ReportTypeEnum.SALARY,
       })
       companyReportFindOne.mockResolvedValueOnce({
         companyId: PARENT_COMPANY_ID,
@@ -894,6 +896,7 @@ describe('ReportCreateService', () => {
         id: EXISTING_REPORT_ID,
         providerType: input.providerType,
         providerId: input.providerId,
+        type: ReportTypeEnum.SALARY,
       })
       companyReportFindOne.mockResolvedValueOnce({
         companyId: 'someone-else-company-id',
@@ -915,6 +918,7 @@ describe('ReportCreateService', () => {
         id: EXISTING_REPORT_ID,
         providerType: input.providerType,
         providerId: input.providerId,
+        type: ReportTypeEnum.EQUALITY,
       })
       companyReportFindOne.mockResolvedValueOnce({
         companyId: PARENT_COMPANY_ID,
@@ -927,6 +931,77 @@ describe('ReportCreateService', () => {
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
       expect(reportEventCreate).not.toHaveBeenCalled()
+    })
+
+    it('rejects with 409 when the tuple is registered for the other report type', async () => {
+      // Was the live defect: the lookup matched on (providerType, providerId)
+      // alone, so a vendor reusing one providerId across the equality and
+      // salary calls got 201 with the EQUALITY report's id and filed no salary
+      // report at all. Reading back by provider id returned that same equality
+      // report, so nothing on the caller's side revealed the loss.
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '5555555555:vendor-client'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        type: ReportTypeEnum.EQUALITY,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        ConflictException,
+      )
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('names the type the tuple is taken by, which is what makes it actionable', async () => {
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '5555555555:vendor-client'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        type: ReportTypeEnum.EQUALITY,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        /EQUALITY/,
+      )
+    })
+
+    it('checks ownership before type, so a foreign tuple reveals nothing about it', async () => {
+      // A caller that does not own the tuple must not learn what it is
+      // registered for -- it gets the cross-company refusal instead.
+      const input = makeInput()
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '5555555555:vendor-client'
+
+      reportFindOne.mockResolvedValueOnce({
+        id: EXISTING_REPORT_ID,
+        providerType: input.providerType,
+        providerId: input.providerId,
+        type: ReportTypeEnum.EQUALITY,
+      })
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: 'someone-else-company-id',
+        parentCompanyId: null,
+      })
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        /different company/,
+      )
     })
 
     it('proceeds with insert when providerId is non-null but no existing tuple matches', async () => {
