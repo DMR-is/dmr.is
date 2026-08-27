@@ -1,6 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // es2021 to match how consumers compile these sources: the app
+    // resolves this library to its .ts files and builds them under
+    // tsconfig.preset-nestjs (target es2021), so a lower target here would
+    // fail on syntax the real build accepts — String.replaceAll, for one.
+    "target": "es2021",
     "outDir": "../../../dist/out-tsc",
     "types": ["jest", "node"]
   },

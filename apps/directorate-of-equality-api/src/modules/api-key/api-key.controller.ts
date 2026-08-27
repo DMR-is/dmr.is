@@ -13,6 +13,13 @@ import {
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import {
+  CreateApiKeyDto,
+  GetApiKeysResponseDto,
+  IApiKeyService,
+  ICompanyService,
+  UserModel,
+} from '@dmr.is/doe-modules'
+import {
   ApiKeyDto,
   ApiKeyOriginEnum,
   IssuedApiKeyDto,
@@ -23,11 +30,6 @@ import { CurrentAdminUser } from '../../core/decorators/current-admin-user.decor
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
-import { ICompanyService } from '../company/company.service.interface'
-import { UserModel } from '../user/models/user.model'
-import { CreateApiKeyDto } from './dto/create-api-key.dto'
-import { GetApiKeysResponseDto } from './dto/get-api-keys-response.dto'
-import { IApiKeyService } from './api-key.service.interface'
 
 /**
  * Reviewer-facing key administration — the fallback to self-service issuance

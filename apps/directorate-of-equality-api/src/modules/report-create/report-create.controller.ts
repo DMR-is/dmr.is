@@ -9,14 +9,16 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  CreateEqualityReportDto,
+  CreateReportDto,
+  CreateReportResponseDto,
+  IReportCreateService,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
-import { CreateEqualityReportDto } from './dto/create-equality-report.dto'
-import { CreateReportDto } from './dto/create-report.dto'
-import { CreateReportResponseDto } from './dto/create-report-response.dto'
-import { IReportCreateService } from './report-create.service.interface'
 
 @Controller({ path: 'reports', version: '1' })
 @ApiTags('Reports')

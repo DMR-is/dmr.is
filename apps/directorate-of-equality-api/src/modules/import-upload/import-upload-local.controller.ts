@@ -11,8 +11,11 @@ import {
 } from '@nestjs/common'
 import { ApiExcludeController } from '@nestjs/swagger'
 
+import {
+  IImportUploadService,
+} from '@dmr.is/doe-modules'
+
 import { PublicRoute } from '../../core/decorators/public-route.decorator'
-import { IImportUploadService } from './import-upload.service.interface'
 
 /**
  * Local-development S3 bypass. {@link ImportUploadService.createUpload} points

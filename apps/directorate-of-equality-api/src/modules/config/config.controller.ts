@@ -9,13 +9,16 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  ConfigDto,
+  IConfigService,
+  UpdateConfigDto,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
-import { ConfigDto, UpdateConfigDto } from './dto/config.dto'
-import { IConfigService } from './config.service.interface'
 
 @Controller({
   path: 'config',

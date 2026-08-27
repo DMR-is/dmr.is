@@ -1,15 +1,15 @@
 import { Controller, Inject, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+  PresignUploadResponseDto,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { PresignUploadResponseDto } from './dto/presign-upload-response.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from './import-upload.service.interface'
 
 /**
  * Issues presigned upload targets for admin Excel imports. The logic lives in

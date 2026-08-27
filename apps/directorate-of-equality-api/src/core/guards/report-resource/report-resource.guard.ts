@@ -5,9 +5,11 @@ import {
   Injectable,
 } from '@nestjs/common'
 
+import {
+  IAuthorizationService,
+} from '@dmr.is/doe-modules'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
-import { IAuthorizationService } from '../../../modules/authorization/authorization.service.interface'
 
 @Injectable()
 export class ReportResourceGuard implements CanActivate {

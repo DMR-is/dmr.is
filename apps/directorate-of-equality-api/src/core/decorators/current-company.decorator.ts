@@ -4,9 +4,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
+import {
+  CompanyDto,
+} from '@dmr.is/doe-modules'
 import { getLogger } from '@dmr.is/logging'
 
-import { CompanyDto } from '../../modules/company/dto/company.dto'
 import { CompanyResourceRequest } from '../guards/company-resource/company-resource.guard'
 
 export const CurrentCompany = createParamDecorator(

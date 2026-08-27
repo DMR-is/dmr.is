@@ -1,12 +1,14 @@
 import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  IReportResultService,
+  ReportResultDto,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ReportResultDto } from './dto/report-result.dto'
-import { IReportResultService } from './report-result.service.interface'
 
 @Controller({
   path: 'reports/:reportId/result',

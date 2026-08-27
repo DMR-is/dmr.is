@@ -1,0 +1,163 @@
+import { Max, Min } from 'class-validator'
+
+import {
+  ApiDtoArray,
+  ApiEnum,
+  ApiNumber,
+  ApiOptionalNumber,
+  ApiOptionalString,
+  ApiString,
+} from '@dmr.is/decorators'
+
+import {
+  MAX_PAID_HOURS_PER_MONTH,
+  MIN_PAID_HOURS_PER_MONTH,
+} from '../../constants'
+import { GenderEnum } from '../../report/models/report.model'
+import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
+
+export class ParsedSubCriterionStepDto {
+  @ApiNumber()
+  order!: number
+
+  @ApiString()
+  description!: string
+
+  @ApiNumber()
+  score!: number
+}
+
+export class ParsedSubCriterionDto {
+  @ApiString()
+  title!: string
+
+  @ApiString()
+  description!: string
+
+  @ApiNumber()
+  weight!: number
+
+  @ApiDtoArray(ParsedSubCriterionStepDto)
+  steps!: ParsedSubCriterionStepDto[]
+}
+
+export class ParsedCriterionDto {
+  @ApiEnum(ReportCriterionTypeEnum)
+  type!: ReportCriterionTypeEnum
+
+  @ApiString()
+  title!: string
+
+  @ApiString()
+  description!: string
+
+  @ApiNumber()
+  weight!: number
+
+  @ApiDtoArray(ParsedSubCriterionDto)
+  subCriteria!: ParsedSubCriterionDto[]
+}
+
+export class ParsedStepAssignmentDto {
+  @ApiString()
+  criterionTitle!: string
+
+  @ApiString()
+  subTitle!: string
+
+  @ApiNumber()
+  stepOrder!: number
+}
+
+export class ParsedRoleDto {
+  @ApiString()
+  title!: string
+
+  @ApiDtoArray(ParsedStepAssignmentDto)
+  stepAssignments!: ParsedStepAssignmentDto[]
+}
+
+export class ParsedEmployeeDto {
+  @ApiNumber()
+  ordinal!: number
+
+  /**
+   * Pseudonymous display handle the app-system uses in place of the
+   * employee's real name. Format: `{3-uppercase-letters}-{padded-ordinal}`
+   * e.g. `KVZ-001`. The prefix is a random 3-letter code generated once per
+   * `/import` request (same for every employee in that import). It is NOT a
+   * stable key across imports — the app-system attaches its own stable
+   * identity when it persists the report.
+   */
+  @ApiString()
+  identifier!: string
+
+  @ApiString()
+  roleTitle!: string
+
+  @ApiEnum(GenderEnum)
+  gender!: GenderEnum
+
+  @ApiOptionalString({ nullable: true })
+  field!: string | null
+
+  @ApiOptionalString({ nullable: true })
+  department!: string | null
+
+  @ApiString()
+  startDate!: string
+
+  @ApiNumber({
+    description:
+      'Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.',
+    minimum: MIN_PAID_HOURS_PER_MONTH,
+    maximum: MAX_PAID_HOURS_PER_MONTH,
+  })
+  @Min(MIN_PAID_HOURS_PER_MONTH)
+  @Max(MAX_PAID_HOURS_PER_MONTH)
+  paidHours!: number
+
+  @ApiNumber()
+  baseSalary!: number
+
+  // ── Viðbótarlaun (additional salary) sub-components ──
+  @ApiOptionalNumber({ nullable: true })
+  additionalFixedOvertime!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  additionalFixedCarAllowance!: number | null
+
+  // ── Aukagreiðslur (bonus salary) sub-components ──
+  @ApiOptionalNumber({ nullable: true })
+  bonusOccasionalCarAllowance!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusOccasionalOvertime!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusPayments!: number | null
+
+  @ApiOptionalNumber({ nullable: true })
+  bonusOther!: number | null
+
+  @ApiDtoArray(ParsedStepAssignmentDto)
+  personalStepAssignments!: ParsedStepAssignmentDto[]
+}
+
+/**
+ * The shape `/import` returns. Contains only data that lives in the workbook:
+ * criteria tree, roles, employees. Report-level metadata (admin / contact
+ * details) and company identification come from the app-system's auth
+ * context, not from us — including them here would be echoing back the
+ * caller's own input.
+ */
+export class ParsedReportDto {
+  @ApiDtoArray(ParsedCriterionDto)
+  criteria!: ParsedCriterionDto[]
+
+  @ApiDtoArray(ParsedRoleDto)
+  roles!: ParsedRoleDto[]
+
+  @ApiDtoArray(ParsedEmployeeDto)
+  employees!: ParsedEmployeeDto[]
+}

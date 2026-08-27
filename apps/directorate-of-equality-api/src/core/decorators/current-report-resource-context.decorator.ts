@@ -4,9 +4,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
+import {
+  ReportResourceContext,
+} from '@dmr.is/doe-modules'
 import { getLogger } from '@dmr.is/logging'
 
-import { ReportResourceContext } from '../../modules/report/types/report-resource-context'
 
 export const CurrentReportResourceContext = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): ReportResourceContext => {

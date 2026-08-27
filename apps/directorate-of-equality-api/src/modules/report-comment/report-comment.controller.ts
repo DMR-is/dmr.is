@@ -11,15 +11,17 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import {
+  CreateReportCommentDto,
+  IReportCommentService,
+  ReportCommentDto,
+  type ReportResourceContext,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
-import { type ReportResourceContext } from '../report/types/report-resource-context'
-import { CreateReportCommentDto } from './dto/create-report-comment.dto'
-import { ReportCommentDto } from './dto/report-comment.dto'
-import { IReportCommentService } from './report-comment.service.interface'
 
 @Controller({
   path: 'reports/:reportId/comments',
