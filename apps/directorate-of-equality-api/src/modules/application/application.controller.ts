@@ -18,6 +18,34 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import {
+  ApplicationReportCommentDto,
+  ApplicationReportDetailDto,
+  CompanyDto,
+  CreateApiKeyDto,
+  CreateReportResponseDto,
+  EditEqualityContentDto,
+  EditOutliersDto,
+  EqualityReportSummaryDto,
+  GetApiKeysResponseDto,
+  GetReportOutliersResponseDto,
+  GetSubCriterionCatalogResponseDto,
+  IApiKeyService,
+  IApplicationService,
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+  IReportExcelService,
+  ParsedReportDto,
+  PresignUploadResponseDto,
+  resolveActorNationalId,
+  SalaryAnalysisRequestDto,
+  SalaryAnalysisResponseDto,
+  SalaryReportEligibilityDto,
+  SubmitApplicationReportCommentDto,
+  SubmitEqualityReportDto,
+  SubmitSalaryReportDto,
+} from '@dmr.is/doe-modules'
+import {
   ApiKeyDto,
   ApiKeyOriginEnum,
   IssuedApiKeyDto,
@@ -30,34 +58,6 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
-import { IApiKeyService } from '../api-key/api-key.service.interface'
-import { CreateApiKeyDto } from '../api-key/dto/create-api-key.dto'
-import { GetApiKeysResponseDto } from '../api-key/dto/get-api-keys-response.dto'
-import { resolveActorNationalId } from '../api-key/lib/resolve-actor'
-import { CompanyDto } from '../company/dto/company.dto'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from '../import-upload/import-upload.service.interface'
-import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
-import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
-import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
-import { IReportExcelService } from '../report-excel/report-excel.service.interface'
-import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
-import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
-import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
-import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
-import { EditOutliersDto } from './dto/edit-outliers.dto'
-import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
-import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
-import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
-import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
-import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
-import { IApplicationService } from './application.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

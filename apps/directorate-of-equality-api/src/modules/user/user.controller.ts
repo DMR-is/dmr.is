@@ -16,18 +16,20 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
+import {
+  CreateUserBodyDto,
+  GetUsersQueryDto,
+  IUserService,
+  UpdateUserBodyDto,
+  UserDto,
+  UserModel,
+} from '@dmr.is/doe-modules'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'
-import { CreateUserBodyDto } from './dto/create-user.body.dto'
-import { GetUsersQueryDto } from './dto/get-users.query.dto'
-import { UpdateUserBodyDto } from './dto/update-user.body.dto'
-import { UserDto } from './dto/user.dto'
-import { UserModel } from './models/user.model'
-import { IUserService } from './user.service.interface'
 
 type RequestWithAdminUser = { adminUser: UserModel }
 

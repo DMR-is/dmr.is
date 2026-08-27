@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common'
 
+import {
+  AuthorizationCoreModule,
+  ReportCommentCoreModule,
+} from '@dmr.is/doe-modules'
+
 import { ReportResourceGuard } from '../../core/guards/report-resource/report-resource.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ReportCommentController } from './report-comment.controller'
-import { ReportCommentCoreModule } from './report-comment.core.module'
 
 @Module({
   imports: [ReportCommentCoreModule, AuthorizationCoreModule],

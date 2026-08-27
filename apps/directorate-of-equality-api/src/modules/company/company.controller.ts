@@ -14,33 +14,35 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import {
+  CompanyCommentDto,
+  CompanyDto,
+  CompanyLookupDto,
+  CompanyRskPreviewDto,
+  CompanyTimelineItemDto,
+  CreateCompanyCommentDto,
+  CreateCompanyDto,
+  GetCompaniesQueryDto,
+  GetCompaniesResponseDto,
+  ICompanyCommentService,
+  ICompanyService,
+  IsatCategoryDto,
+  IsatSectionDto,
+  SearchIsatCategoriesQueryDto,
+  UpdateCompanyEmailDto,
+  UpdateCompanyFinesDto,
+  UpdateCompanyIsatDto,
+  UpdateCompanyQuarantineDto,
+  UpdateCompanySectorDto,
+  UpdateCompanyStatusDto,
+  UserModel,
+} from '@dmr.is/doe-modules'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentAdminUser } from '../../core/decorators/current-admin-user.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ParseNationalIdPipe } from '../../core/pipes/parse-national-id.pipe'
-import { ICompanyCommentService } from '../company-comment/company-comment.service.interface'
-import { CreateCompanyCommentDto } from '../company-comment/dto/create-company-comment.dto'
-import { UserModel } from '../user/models/user.model'
-import { CompanyDto } from './dto/company.dto'
-import { CompanyCommentDto } from './dto/company-comment.dto'
-import { CompanyLookupDto } from './dto/company-lookup.dto'
-import { CompanyRskPreviewDto } from './dto/company-rsk-preview.dto'
-import { CompanyTimelineItemDto } from './dto/company-timeline-item.dto'
-import { CreateCompanyDto } from './dto/create-company.dto'
-import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
-import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
-import { IsatCategoryDto } from './dto/isat-category.dto'
-import { IsatSectionDto } from './dto/isat-section.dto'
-import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
-import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
-import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
-import { UpdateCompanyIsatDto } from './dto/update-company-isat.dto'
-import { UpdateCompanyQuarantineDto } from './dto/update-company-quarantine.dto'
-import { UpdateCompanySectorDto } from './dto/update-company-sector.dto'
-import { UpdateCompanyStatusDto } from './dto/update-company-status.dto'
-import { ICompanyService } from './company.service.interface'
 
 @Controller({
   path: 'companies',

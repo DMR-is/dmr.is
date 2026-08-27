@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common'
 
+import {
+  AuthorizationCoreModule,
+  ImportUploadCoreModule,
+} from '@dmr.is/doe-modules'
+
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { ImportUploadController } from './import-upload.controller'
-import { ImportUploadCoreModule } from './import-upload.core.module'
 import { ImportUploadLocalController } from './import-upload-local.controller'
 
 /**
