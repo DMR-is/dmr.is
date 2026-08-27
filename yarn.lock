@@ -4039,6 +4039,50 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dmr.is/doe-modules@workspace:libs/directorate-of-equality/modules":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/doe-modules@workspace:libs/directorate-of-equality/modules"
+  dependencies:
+    "@dmr.is/clients-national-registry": "npm:*"
+    "@dmr.is/clients-rsk-client": "npm:*"
+    "@dmr.is/constants": "npm:*"
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/doe-shared": "npm:*"
+    "@dmr.is/logging": "npm:*"
+    "@dmr.is/pipelines": "npm:*"
+    "@dmr.is/shared-dto": "npm:*"
+    "@dmr.is/shared-models-base": "npm:*"
+    "@dmr.is/shared-modules": "npm:*"
+    "@dmr.is/utils-server": "npm:*"
+    "@dmr.is/utils-shared": "npm:*"
+    "@types/lodash": "npm:^4.14.160"
+    "@types/validator": "npm:^13.7.0"
+    cache-manager: "npm:7.2.4"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    date-fns: "npm:2.30.0"
+    deepmerge: "npm:4.3.1"
+    exceljs: "npm:4.4.0"
+    jszip: "npm:^3.10.1"
+    kennitala: "npm:^2.0.6"
+    lodash: "npm:4.18.1"
+    pdf-lib: "npm:1.17.1"
+    puppeteer: "npm:^22.8.1"
+    validator: "npm:13.15.22"
+    zod: "npm:4.1.11"
+  peerDependencies:
+    "@nestjs/cache-manager": 3.0.1
+    "@nestjs/common": ^11.1.29
+    "@nestjs/core": ^11.1.29
+    "@nestjs/event-emitter": 3.0.1
+    "@nestjs/sequelize": ^11.0.0
+    "@nestjs/swagger": ^11.4.6
+    sequelize: 6.37.3
+    sequelize-typescript: 2.1.6
+    winston: ^3.11.0
+  languageName: unknown
+  linkType: soft
+
 "@dmr.is/doe-shared@npm:*, @dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared":
   version: 0.0.0-use.local
   resolution: "@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared"
