@@ -1040,12 +1040,7 @@ export class ApplicationService implements IApplicationService {
       return null
     }
 
-    return {
-      id: equalityReport.id,
-      identifier: equalityReport.identifier,
-      approvedAt: equalityReport.approvedAt,
-      validUntil: equalityReport.validUntil,
-    }
+    return ReportModel.toEqualitySummary(equalityReport)
   }
 
   private async loadDenialReason(report: ReportModel): Promise<string | null> {

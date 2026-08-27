@@ -12,6 +12,7 @@ import {
 } from './dto/get-reports.query.dto'
 import {
   CommunicationStatusEnum,
+  ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from './models/report.enums'
@@ -1129,15 +1130,21 @@ describe('ReportService.getActiveEqualityForCompany', () => {
     findOne.mockResolvedValueOnce({
       id: 'eq-1',
       identifier: 'EQ-2025-001',
+      providerType: ReportProviderEnum.ISLAND_IS,
+      providerId: 'island-is-application-eq-1',
       approvedAt,
       validUntil,
     })
 
     const result = await service.getActiveEqualityForCompany(COMPANY_ID)
 
+    // `providerId` is the only handle the applicant portal can fetch the
+    // report's content with — `GET /application/reports/:providerId`. Neither
+    // `id` (admin-only route) nor `identifier` (display code) resolves there.
     expect(result).toEqual({
       id: 'eq-1',
       identifier: 'EQ-2025-001',
+      providerId: 'island-is-application-eq-1',
       approvedAt,
       validUntil,
     })
@@ -1199,6 +1206,25 @@ describe('ReportService.getActiveEqualityForCompany', () => {
 
     const callArg = findOne.mock.calls[0][0]
     expect(callArg.where.validUntil).toEqual({ [Op.gt]: expect.any(Date) })
+  })
+
+  it('withholds the provider handle when the report did not originate on island.is', async () => {
+    const { service, findOne } = makeService()
+    findOne.mockResolvedValueOnce({
+      id: 'eq-2',
+      identifier: 'EQ-2025-002',
+      providerType: ReportProviderEnum.SYSTEM,
+      // A stray handle on a non-island.is report would only ever 404 against
+      // `GET /application/reports/:providerId`, which filters on ISLAND_IS.
+      providerId: 'not-an-island-is-application',
+      approvedAt: new Date('2025-06-01T00:00:00.000Z'),
+      validUntil: new Date('2028-06-01T00:00:00.000Z'),
+    })
+
+    const result = await service.getActiveEqualityForCompany(COMPANY_ID)
+
+    expect(result?.providerId).toBeNull()
+    expect(result?.id).toBe('eq-2')
   })
 })
 

@@ -17,6 +17,7 @@ import { ReportCommentModel } from '../../report-comment/models/report-comment.m
 import { ReportResultModel } from '../../report-result/models/report-result.model'
 import { UserModel } from '../../user/models/user.model'
 import type { EqualityReportDto } from '../dto/equality-report.dto'
+import type { EqualityReportSummaryDto } from '../dto/equality-report-summary.dto'
 import type { ReportDto } from '../dto/report.dto'
 import { ReportListItemDto } from '../dto/report-list-item.dto'
 import {
@@ -394,6 +395,28 @@ export class ReportModel extends MutableModel<
 
   @HasOne(() => ReportResultModel, { foreignKey: 'reportId', as: 'result' })
   result?: ReportResultModel | null
+
+  /**
+   * Slim, applicant-facing view of an equality report.
+   *
+   * `providerId` is only surfaced for island.is-originated reports: it is the
+   * handle `GET /application/reports/:providerId` resolves against, and that
+   * route filters on `providerType = ISLAND_IS`. An admin- or Excel-created
+   * report has no applicant-facing content route, so the handle is null rather
+   * than a value the caller would only ever 404 on.
+   */
+  static toEqualitySummary(model: ReportModel): EqualityReportSummaryDto {
+    return {
+      id: model.id,
+      identifier: model.identifier,
+      providerId:
+        model.providerType === ReportProviderEnum.ISLAND_IS
+          ? model.providerId
+          : null,
+      approvedAt: model.approvedAt,
+      validUntil: model.validUntil,
+    }
+  }
 
   static fromModel(model: ReportModel): ReportDto {
     return {

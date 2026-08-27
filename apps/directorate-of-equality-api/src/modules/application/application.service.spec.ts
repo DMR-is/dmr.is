@@ -323,6 +323,7 @@ describe('ApplicationService', () => {
       const summary = {
         id: 'eq-1',
         identifier: 'EQ-2025-001',
+        providerId: 'island-is-application-eq-1',
         approvedAt: new Date('2025-01-01T00:00:00Z'),
         validUntil: new Date('2028-01-01T00:00:00Z'),
       }
@@ -488,6 +489,7 @@ describe('ApplicationService', () => {
     const activeEquality = {
       id: 'eq-1',
       identifier: 'EQ-2025-001',
+      providerId: 'island-is-application-eq-1',
       approvedAt: new Date('2025-01-01T00:00:00Z'),
       validUntil: new Date('2028-01-01T00:00:00Z'),
     }
@@ -663,6 +665,7 @@ describe('ApplicationService', () => {
     const REPORT_ID = '00000000-0000-0000-0000-0000000000aa'
     const PROVIDER_ID = 'island-is-application-aa'
     const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-0000000000bb'
+    const EQUALITY_PROVIDER_ID = 'island-is-application-bb'
 
     it('throws NotFoundException when no report matches the providerId', async () => {
       reportFindOne.mockResolvedValueOnce(null)
@@ -716,6 +719,8 @@ describe('ApplicationService', () => {
         type: ReportTypeEnum.EQUALITY,
         status: ReportStatusEnum.APPROVED,
         identifier: 'EQ-2025-001',
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: EQUALITY_PROVIDER_ID,
         approvedAt,
         validUntil,
       })
@@ -774,9 +779,12 @@ describe('ApplicationService', () => {
         denialReason: null,
       })
       expect(result.companies).toHaveLength(2)
+      // `providerId` is carried through so the portal can fetch the linked
+      // equality report's own detail via `GET /application/reports/:providerId`.
       expect(result.equalityReport).toEqual({
         id: EQUALITY_REPORT_ID,
         identifier: 'EQ-2025-001',
+        providerId: EQUALITY_PROVIDER_ID,
         approvedAt,
         validUntil,
       })
