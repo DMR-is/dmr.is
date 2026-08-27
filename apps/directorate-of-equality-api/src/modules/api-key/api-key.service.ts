@@ -212,7 +212,9 @@ export class ApiKeyService implements IApiKeyService {
     const unknown = scopes.filter((scope) => !known.has(scope))
 
     if (unknown.length > 0) {
-      throw new BadRequestException(`Unknown API key scopes: ${unknown.join(', ')}`)
+      throw new BadRequestException(
+        `Unknown API key scopes: ${unknown.join(', ')}`,
+      )
     }
 
     return [...new Set(scopes)]

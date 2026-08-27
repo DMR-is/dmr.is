@@ -92,7 +92,9 @@ export const CompanyApiKeysTab = ({ companyId }: Props) => {
     onError: (error) => {
       const translated = error.data?.translatedMessage
       toast.error(
-        translated ? `${t.revokeErrorToast} - ${translated}` : t.revokeErrorToast,
+        translated
+          ? `${t.revokeErrorToast} - ${translated}`
+          : t.revokeErrorToast,
         { autoClose: 5000 },
       )
       setPendingRevoke(null)

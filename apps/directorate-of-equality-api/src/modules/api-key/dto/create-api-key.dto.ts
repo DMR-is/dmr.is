@@ -1,4 +1,8 @@
-import { ApiOptionalArray, ApiOptionalDateTime, ApiOptionalString } from '@dmr.is/decorators'
+import {
+  ApiOptionalArray,
+  ApiOptionalDateTime,
+  ApiOptionalString,
+} from '@dmr.is/decorators'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
 /**

@@ -8,10 +8,7 @@ import { ApiKeyService } from './api-key.service'
 import { IApiKeyService } from './api-key.service.interface'
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([ApiKeyModel]),
-    CompanyEventCoreModule,
-  ],
+  imports: [SequelizeModule.forFeature([ApiKeyModel]), CompanyEventCoreModule],
   providers: [
     {
       provide: IApiKeyService,
