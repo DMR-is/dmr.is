@@ -4,7 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 
-import { CommunicationStatusEnum } from '../report/models/report.model'
+import {
+  CommunicationStatusEnum,
+  ReportProviderEnum,
+} from '../report/models/report.model'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -36,13 +39,20 @@ describe('ReportCommentService', () => {
     sendExternalCommentNotification: jest.fn(),
   }
 
+  const applicationSystemService = {
+    notifyEdited: jest.fn(),
+  }
+
   // A loaded report record the service can read `communicationStatus` off and
-  // call `.update()` on to move the directional sub-state.
+  // call `.update()` on to move the directional sub-state. Sourced from
+  // island.is by default so the outbound edit notification is in play.
   const makeReport = (
     communicationStatus: CommunicationStatusEnum = CommunicationStatusEnum.NOT_STARTED,
   ) => ({
     id: 'report-1',
     communicationStatus,
+    providerType: ReportProviderEnum.ISLAND_IS,
+    providerId: 'application-1',
     update: jest.fn(),
   })
 
@@ -63,6 +73,7 @@ describe('ReportCommentService', () => {
       reportCommentModel as never,
       reportModel as never,
       mailService as never,
+      applicationSystemService as never,
     )
     reviewerContext = {
       reportId: 'report-1',
@@ -220,7 +231,7 @@ describe('ReportCommentService', () => {
   })
 
   it('sends an external comment notification when a reviewer posts an external comment', async () => {
-    const report = makeReport(CommunicationStatusEnum.OPEN)
+    const report = makeReport()
     const commentRecord = makeComment('comment-3')
 
     reportModel.findByPk.mockResolvedValue(report)
@@ -237,19 +248,24 @@ describe('ReportCommentService', () => {
     )
   })
 
-  it('rejects a reviewer external comment when communication is not open', async () => {
-    reportModel.findByPk.mockResolvedValue(
-      makeReport(CommunicationStatusEnum.NOT_STARTED),
+  // A reviewer's external comment IS the change request: no separate open
+  // action, no separate send-to-edit button.
+  it('opens a NOT_STARTED thread and reopens the island.is application', async () => {
+    const report = makeReport(CommunicationStatusEnum.NOT_STARTED)
+    reportModel.findByPk.mockResolvedValue(report)
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-3c'))
+
+    await service.create(reviewerContext, {
+      visibility: CommentVisibilityEnum.EXTERNAL,
+      body: 'First message to the applicant',
+    })
+
+    expect(report.update).toHaveBeenCalledWith({
+      communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+    })
+    expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
+      'application-1',
     )
-
-    await expect(
-      service.create(reviewerContext, {
-        visibility: CommentVisibilityEnum.EXTERNAL,
-        body: 'This should be blocked',
-      }),
-    ).rejects.toBeInstanceOf(ForbiddenException)
-
-    expect(reportCommentModel.create).not.toHaveBeenCalled()
   })
 
   it('flips an open thread back to AWAITING_RESPONSE on a reviewer external reply', async () => {
@@ -265,25 +281,55 @@ describe('ReportCommentService', () => {
     expect(report.update).toHaveBeenCalledWith({
       communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
     })
+    // Asserted positively: this is a genuine transition, so island.is must be
+    // re-driven. Without this a gate narrowed to "only from NOT_STARTED" would
+    // still pass every test in this file while stranding the applicant.
+    expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
+      'application-1',
+    )
   })
 
-  it('flips OPEN to AWAITING_RESPONSE on a reviewer external comment', async () => {
-    const report = makeReport(CommunicationStatusEnum.OPEN)
+  // A follow-up sent before the applicant has replied is a second message on a
+  // conversation already handed over, not a second change request.
+  it('does not re-drive island.is when the thread is already AWAITING_RESPONSE', async () => {
+    const report = makeReport(CommunicationStatusEnum.AWAITING_RESPONSE)
+    const commentRecord = makeComment('comment-3d')
     reportModel.findByPk.mockResolvedValue(report)
-    reportCommentModel.create.mockResolvedValue(makeComment('comment-3c'))
+    reportCommentModel.create.mockResolvedValue(commentRecord)
 
     await service.create(reviewerContext, {
       visibility: CommentVisibilityEnum.EXTERNAL,
-      body: 'First message to the applicant',
+      body: 'Just a nudge',
     })
 
-    expect(report.update).toHaveBeenCalledWith({
-      communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
-    })
+    expect(report.update).not.toHaveBeenCalled()
+    expect(applicationSystemService.notifyEdited).not.toHaveBeenCalled()
+    // The applicant still hears about the message itself.
+    expect(mailService.sendExternalCommentNotification).toHaveBeenCalledWith(
+      report,
+      commentRecord,
+    )
   })
 
-  it('does not send mail for reviewer internal comments', async () => {
+  it('rejects a reviewer external comment when the report is not in review', async () => {
     reportModel.findByPk.mockResolvedValue(makeReport())
+
+    await expect(
+      service.create(
+        { ...reviewerContext, reportStatus: 'SUBMITTED' as never },
+        {
+          visibility: CommentVisibilityEnum.EXTERNAL,
+          body: 'This should be blocked',
+        },
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException)
+
+    expect(reportCommentModel.create).not.toHaveBeenCalled()
+  })
+
+  it('keeps a reviewer internal note silent — no mail, no status move, no edit dispatch', async () => {
+    const report = makeReport()
+    reportModel.findByPk.mockResolvedValue(report)
     reportCommentModel.create.mockResolvedValue(makeComment('comment-4'))
 
     await service.create(reviewerContext, {
@@ -292,6 +338,23 @@ describe('ReportCommentService', () => {
     })
 
     expect(mailService.sendExternalCommentNotification).not.toHaveBeenCalled()
+    expect(report.update).not.toHaveBeenCalled()
+    expect(applicationSystemService.notifyEdited).not.toHaveBeenCalled()
+  })
+
+  it('does not fail the comment when the outbound edit notification throws', async () => {
+    reportModel.findByPk.mockResolvedValue(makeReport())
+    reportCommentModel.create.mockResolvedValue(makeComment('comment-5'))
+    applicationSystemService.notifyEdited.mockRejectedValueOnce(
+      new Error('island.is is down'),
+    )
+
+    await expect(
+      service.create(reviewerContext, {
+        visibility: CommentVisibilityEnum.EXTERNAL,
+        body: 'Please update the report',
+      }),
+    ).resolves.toEqual({ id: 'comment-5' })
   })
 
   it('allows reviewers to delete their own comments only', async () => {

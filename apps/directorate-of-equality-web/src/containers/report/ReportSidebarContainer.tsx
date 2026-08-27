@@ -7,11 +7,11 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { AlertMessage } from '@island.is/island-ui/core'
 
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
-import { ReportCommunicationControl } from '../../components/report/report-sidebar/ReportCommunicationControl'
+import { ReportCommunicationStatus } from '../../components/report/report-sidebar/ReportCommunicationStatus'
 import { ReportFormStepper } from '../../components/report/report-sidebar/ReportFormStepper'
 import { ReportSidebar } from '../../components/report/report-sidebar/ReportSidebar'
 import { ReportStatusSelect } from '../../components/report/report-sidebar/ReportStatusSelect'
-import { ReportDetailDto, ReportStatusEnum } from '../../gen/fetch'
+import { ReportDetailDto } from '../../gen/fetch'
 import { companiesText, reportText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -69,10 +69,8 @@ export function ReportSidebarContainer({
       <Box paddingTop={1}>
         <Divider />
       </Box>
-      <ReportCommunicationControl
-        reportId={data.id}
+      <ReportCommunicationStatus
         communicationStatus={data.communicationStatus}
-        disabled={data.status !== ReportStatusEnum.IN_REVIEW}
       />
       <Box paddingTop={1}>
         <Divider />

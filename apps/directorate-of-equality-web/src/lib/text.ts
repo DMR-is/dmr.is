@@ -210,12 +210,15 @@ export const reportText = {
     heading: 'Athugasemdir',
     label: 'Athugasemd',
     placeholder: 'Bættu við athugasemd',
-    sendToApplicant: 'Senda á innsendanda',
-    externalDisabledHint: 'Opnaðu samskipti til að senda innsendanda skilaboð.',
+    sendToApplicant: 'Sýnilegt innsendanda',
+    externalDisabledHint:
+      'Aðeins skýrslur í vinnslu er hægt að senda til innsendanda.',
     submit: 'Vista athugasemd',
     visibleToApplicant: 'Sýnileg innsendanda',
     seeAllComments: 'Sjá allar athugasemdir',
     createError: 'Villa við að vista athugasemd',
+    externalSuccess:
+      'Athugasemd send til innsendanda. Skýrslan er opin til breytinga á Ísland.is.',
     deleteError: 'Villa við að eyða athugasemd',
     deleteSuccess: 'Athugasemd eytt',
   },
@@ -226,23 +229,17 @@ export const reportText = {
     approveButton: 'Samþykkja',
     denyButton: 'Hafna',
   },
-  communicationControl: {
+  communicationStatus: {
     label: 'Staða samskipta',
-    successToast: 'Uppfærsla á samskiptum tókst.',
-    errorToast:
-      'Villa við að uppfæra samskipti. Vinsamlegast reyndu aftur síðar.',
-    openButton: 'Opna',
-    closeButton: 'Loka',
-    sendToEditButton: 'Breytingar',
   },
-  sendToEditModal: {
-    heading: 'Senda skýrslu í breytingar',
+  externalCommentModal: {
+    heading: 'Senda athugasemd til innsendanda',
     description:
-      'Vinsamlegast gerðu grein fyrir hvað þarf að laga. Athugasemdin er sýnileg innsendanda og samskipti verða opnuð svo hægt sé að svara.',
+      'Athugasemdin er sýnileg innsendanda og skýrslan verður opnuð til breytinga. Þú getur breytt textanum hér áður en hann er sendur.',
     warningTitle: 'Athugið',
     warningMessage: 'Innsendandi fær skýrsluna opna til breytinga á Ísland.is.',
-    reasonLabel: 'Ástæða',
-    submitButton: 'Senda í breytingar',
+    bodyLabel: 'Athugasemd',
+    submitButton: 'Senda til innsendanda',
   },
   employeeSelect: {
     label: 'Starfsmaður',
@@ -615,6 +612,8 @@ export const reportText = {
     unassignedOtherSuffix: 'af málinu',
     movesToStatus: 'færir mál í stöðuna:',
     edited: 'gerði breytingar á skýrslu',
+    // Retired event types — nothing emits these any more, but rows logged
+    // before communication status became silent still render in the timeline.
     communicationOpened: 'opnaði á samskipti við innsendanda',
     communicationClosed: 'lokaði á samskipti við innsendanda',
     companyCreated: 'Fyrirtæki skráð',

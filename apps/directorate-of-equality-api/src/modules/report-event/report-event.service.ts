@@ -159,40 +159,4 @@ export class ReportEventService implements IReportEventService {
       relatedReportId,
     })
   }
-
-  async emitCommunicationOpened(
-    reportId: string,
-    reportStatus: ReportStatusEnum,
-    actorUserId?: string | null,
-  ): Promise<void> {
-    this.logger.info(
-      `Emitting COMMUNICATION_OPENED event for report ${reportId}`,
-      { context: LOGGING_CONTEXT, reportId: reportId },
-    )
-
-    await this.reportEventModel.create({
-      reportId,
-      eventType: ReportEventTypeEnum.COMMUNICATION_OPENED,
-      actorUserId: actorUserId ?? null,
-      reportStatus,
-    })
-  }
-
-  async emitCommunicationClosed(
-    reportId: string,
-    reportStatus: ReportStatusEnum,
-    actorUserId?: string | null,
-  ): Promise<void> {
-    this.logger.info(
-      `Emitting COMMUNICATION_CLOSED event for report ${reportId}`,
-      { context: LOGGING_CONTEXT, reportId: reportId },
-    )
-
-    await this.reportEventModel.create({
-      reportId,
-      eventType: ReportEventTypeEnum.COMMUNICATION_CLOSED,
-      actorUserId: actorUserId ?? null,
-      reportStatus,
-    })
-  }
 }

@@ -437,6 +437,8 @@ export class ApplicationService implements IApplicationService {
       { where: { id: report.id } },
     )
 
+    await this.markApplicantResponded(report.id)
+
     await this.reportEventService.emitEdited(
       report.id,
       report.status,
@@ -500,28 +502,12 @@ export class ApplicationService implements IApplicationService {
     )
 
     // A withdrawn report accepts no further messages — force the conversation
-    // closed from any state. The audit event only fires when it was open (a
-    // never-opened thread flips NOT_STARTED -> CLOSED silently).
-    if (report.communicationStatus !== CommunicationStatusEnum.CLOSED) {
-      const wasOpen =
-        report.communicationStatus === CommunicationStatusEnum.OPEN ||
-        report.communicationStatus ===
-          CommunicationStatusEnum.AWAITING_RESPONSE ||
-        report.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
-
-      await this.reportModel.update(
-        { communicationStatus: CommunicationStatusEnum.CLOSED },
-        { where: { id: report.id } },
-      )
-
-      if (wasOpen) {
-        await this.reportEventService.emitCommunicationClosed(
-          report.id,
-          ReportStatusEnum.WITHDRAWN,
-          null,
-        )
-      }
-    }
+    // closed from any state. Silent: the WITHDRAWN event above already records
+    // why the thread closed.
+    await this.reportModel.update(
+      { communicationStatus: CommunicationStatusEnum.CLOSED },
+      { where: { id: report.id } },
+    )
   }
 
   /**
@@ -693,9 +679,42 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
+    await this.markApplicantResponded(report.id)
+
     await this.reportEventService.emitEdited(report.id, newStatus, company.id)
 
     return this.getReport(providerId, company)
+  }
+
+  /**
+   * Hands the applicant conversation back to the reviewer when the applicant
+   * edits rather than replies.
+   *
+   * Editing the report IS a response — usually *the* response, since the
+   * reviewer asked for changes and the applicant made them. Without this the
+   * thread sits at AWAITING_RESPONSE forever unless the applicant also writes a
+   * comment, which has two costs: the reviewer sees "Beðið eftir svörum" on a
+   * report that has already been fixed, and `ReportCommentService.create` reads
+   * AWAITING_RESPONSE as "island.is is still open for editing" and skips the
+   * outbound EDIT on the next change request — leaving the applicant emailed
+   * about changes they cannot make.
+   *
+   * Scoped to AWAITING_RESPONSE in the WHERE clause rather than written
+   * unconditionally. `editOutliers` also runs on POSTPONED reports whose thread
+   * may never have been opened, and NOT_STARTED → RESPONSE_RECEIVED would
+   * report "Svör hafa borist" on a conversation that never happened. CLOSED
+   * must not reopen either. One statement, so there is no read-then-write race.
+   */
+  private async markApplicantResponded(reportId: string): Promise<void> {
+    await this.reportModel.update(
+      { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+      {
+        where: {
+          id: reportId,
+          communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+        },
+      },
+    )
   }
 
   /**

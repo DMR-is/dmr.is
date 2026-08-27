@@ -28,20 +28,12 @@ describe('ReportWorkflowService', () => {
     emitStatusChanged: jest.fn(),
     emitSuperseded: jest.fn(),
     emitEdited: jest.fn(),
-    emitCommunicationOpened: jest.fn(),
-    emitCommunicationClosed: jest.fn(),
   }
 
   const applicationSystemService = {
     notifyApproved: jest.fn(),
     notifyDenied: jest.fn(),
     notifyEdited: jest.fn(),
-  }
-
-  const reportCommentService = {
-    getByReportId: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
   }
 
   const reportModel = {
@@ -90,7 +82,6 @@ describe('ReportWorkflowService', () => {
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
-      reportCommentService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -468,66 +459,20 @@ describe('ReportWorkflowService', () => {
       )
     })
 
-    it('closes an open communication thread and emits COMMUNICATION_CLOSED', async () => {
+    // Silent from any prior state — the STATUS_CHANGED event for the denial is
+    // the audit record of why the thread closed.
+    it('closes the communication thread without a separate audit event', async () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
-        update,
-      })
 
       await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
         denialReason: 'reason',
       })
 
-      expect(update).toHaveBeenCalledWith({
-        communicationStatus: CommunicationStatusEnum.CLOSED,
-      })
-      expect(reportEventService.emitCommunicationClosed).toHaveBeenCalledWith(
-        'report-1',
-        ReportStatusEnum.DENIED,
-        'reviewer-1',
+      expect(reportModel.update).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.CLOSED },
+        { where: { id: 'report-1' } },
       )
-    })
-
-    it('forces a never-opened thread to CLOSED without an audit event', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.NOT_STARTED,
-        update,
-      })
-
-      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
-        denialReason: 'reason',
-      })
-
-      expect(update).toHaveBeenCalledWith({
-        communicationStatus: CommunicationStatusEnum.CLOSED,
-      })
-      expect(reportEventService.emitCommunicationClosed).not.toHaveBeenCalled()
-    })
-
-    it('leaves an already-CLOSED thread untouched', async () => {
-      reportModel.update.mockResolvedValue([1])
-      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.CLOSED,
-        update,
-      })
-
-      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
-        denialReason: 'reason',
-      })
-
-      expect(update).not.toHaveBeenCalled()
-      expect(reportEventService.emitCommunicationClosed).not.toHaveBeenCalled()
     })
 
     it('does not notify the application system for non-island.is reports', async () => {
@@ -699,9 +644,9 @@ describe('ReportWorkflowService', () => {
           }),
         }),
       )
-      // Only the initial APPROVED transition update ran — no supersede update,
-      // no SUPERSEDED event emitted for the EQUALITY sibling.
-      expect(reportModel.update).toHaveBeenCalledTimes(1)
+      // Only the APPROVED transition and the communication close ran — no
+      // supersede update, no SUPERSEDED event for the EQUALITY sibling.
+      expect(reportModel.update).toHaveBeenCalledTimes(2)
       expect(reportEventService.emitSuperseded).not.toHaveBeenCalled()
     })
 
@@ -715,7 +660,8 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
-      expect(reportModel.update).toHaveBeenCalledTimes(1)
+      // APPROVED transition + communication close, nothing else.
+      expect(reportModel.update).toHaveBeenCalledTimes(2)
       expect(reportEventService.emitSuperseded).not.toHaveBeenCalled()
     })
 
@@ -789,86 +735,6 @@ describe('ReportWorkflowService', () => {
         expect.objectContaining({ status: ReportStatusEnum.APPROVED }),
         { where: { id: 'report-1' } },
       )
-    })
-  })
-
-  describe('openCommunication', () => {
-    it('opens a NOT_STARTED thread to OPEN and emits COMMUNICATION_OPENED', async () => {
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.NOT_STARTED,
-        update,
-      })
-
-      await service.openCommunication(
-        reviewerContext(ReportStatusEnum.IN_REVIEW),
-      )
-
-      expect(update).toHaveBeenCalledWith({
-        communicationStatus: CommunicationStatusEnum.OPEN,
-      })
-      expect(reportEventService.emitCommunicationOpened).toHaveBeenCalledWith(
-        'report-1',
-        ReportStatusEnum.IN_REVIEW,
-        'reviewer-1',
-      )
-    })
-
-    it('is a no-op when already open', async () => {
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED,
-        update,
-      })
-
-      await service.openCommunication(
-        reviewerContext(ReportStatusEnum.IN_REVIEW),
-      )
-
-      expect(update).not.toHaveBeenCalled()
-      expect(reportEventService.emitCommunicationOpened).not.toHaveBeenCalled()
-    })
-
-    it('rejects when the report is not IN_REVIEW', async () => {
-      await expect(
-        service.openCommunication(reviewerContext(ReportStatusEnum.SUBMITTED)),
-      ).rejects.toBeInstanceOf(BadRequestException)
-
-      expect(reportModel.findByPk).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('closeCommunication', () => {
-    it('closes an open thread and emits COMMUNICATION_CLOSED', async () => {
-      const update = jest.fn()
-      reportModel.findByPk.mockResolvedValue({
-        id: 'report-1',
-        communicationStatus: CommunicationStatusEnum.OPEN,
-        update,
-      })
-
-      await service.closeCommunication(
-        reviewerContext(ReportStatusEnum.IN_REVIEW),
-      )
-
-      expect(update).toHaveBeenCalledWith({
-        communicationStatus: CommunicationStatusEnum.CLOSED,
-      })
-      expect(reportEventService.emitCommunicationClosed).toHaveBeenCalledWith(
-        'report-1',
-        ReportStatusEnum.IN_REVIEW,
-        'reviewer-1',
-      )
-    })
-
-    it('rejects when the report is not IN_REVIEW', async () => {
-      await expect(
-        service.closeCommunication(reviewerContext(ReportStatusEnum.APPROVED)),
-      ).rejects.toBeInstanceOf(BadRequestException)
-
-      expect(reportModel.findByPk).not.toHaveBeenCalled()
     })
   })
 })

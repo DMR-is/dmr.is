@@ -25,6 +25,7 @@ import {
 import { reportText, sharedText } from '../../../../lib/text'
 import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
 import { CohortSummary } from './CohortSummary'
+import * as styles from './SalaryDistributionChart.css'
 function formatSalary(v: number) {
   return new Intl.NumberFormat('is-IS')
     .format(Math.round(v))
@@ -502,7 +503,11 @@ export function SalaryDistributionChart({
         <CohortSummary totals={data.totals} />
       </Box>
 
-      <ResponsiveContainer width="100%" height={420}>
+      <ResponsiveContainer
+        width="100%"
+        height={420}
+        className={styles.chartFocus}
+      >
         {/*
           ⚠️ `ScatterChart`, NOT `ComposedChart`, and the reason is not stylistic.
           `ComposedChart` declares `allowedTooltipTypes = ['axis']`, so recharts
@@ -513,10 +518,7 @@ export function SalaryDistributionChart({
           that dot's card. `ScatterChart` declares `['item']`, which is the only
           way to get a tooltip bound to the symbol the pointer is actually over.
         */}
-        <ScatterChart
-          margin={{ top: 24, right: 0, left: 0, bottom: 24 }}
-          style={{ outline: 'none' }}
-        >
+        <ScatterChart margin={{ top: 24, right: 0, left: 0, bottom: 24 }}>
           <CartesianGrid vertical={false} stroke={theme.color.blue200} />
           <XAxis
             type="number"

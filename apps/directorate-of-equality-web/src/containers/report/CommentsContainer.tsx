@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -8,7 +8,6 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 import { CommentsForm } from '../../components/report/report-tabs/comments/CommentsForm'
 import {
   CommentVisibilityEnum,
-  CommunicationStatusEnum,
   ReportStatusEnum,
 } from '../../gen/fetch/types.gen'
 import { reportText } from '../../lib/text'
@@ -25,6 +24,7 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   const queryClient = useQueryClient()
   const [body, setBody] = useState('')
   const [isExternal, setIsExternal] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
   const { data: report } = useQuery(
     trpc.reports.getById.queryOptions({ id: reportId }),
@@ -34,11 +34,24 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
 
   const { mutate: createComment, isPending } = useMutation({
     ...trpc.reportComments.create.mutationOptions(),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       setBody('')
       setIsExternal(false)
+      setIsConfirmOpen(false)
+      // An external comment is not undoable — it has emailed the applicant and
+      // reopened their island.is application — so say plainly that it left.
+      // An internal note is visible in the timeline the moment it lands and
+      // needs no announcement.
+      if (variables.visibility === CommentVisibilityEnum.EXTERNAL) {
+        toast.success(reportText.comments.externalSuccess)
+      }
       queryClient.invalidateQueries({
         queryKey: trpc.reports.getById.queryKey({ id: reportId }),
+      })
+      // The communication status moved as a side effect of the comment, and the
+      // overview surfaces it — refresh the list too.
+      queryClient.invalidateQueries({
+        queryKey: trpc.reports.list.queryKey(),
       })
     },
     onError: () => toast.error(reportText.comments.createError),
@@ -56,25 +69,46 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
   })
 
   // Internal notes are allowed on any report a reviewer can open (everything
-  // but a draft). Messaging the applicant (external) is only possible while the
-  // communication thread is open — opening/closing is an explicit action in the
-  // sidebar, no longer a side effect of commenting.
+  // but a draft). Messaging the applicant reopens their island.is application,
+  // so it is only offered while the report is actually under review.
   const isDraft = report?.status === ReportStatusEnum.DRAFT
-  const canSendExternal =
-    report?.communicationStatus === CommunicationStatusEnum.OPEN ||
-    report?.communicationStatus ===
-      CommunicationStatusEnum.AWAITING_RESPONSE ||
-    report?.communicationStatus === CommunicationStatusEnum.RESPONSE_RECEIVED
+  const canSendExternal = report?.status === ReportStatusEnum.IN_REVIEW
+
+  // The sidebar can move the report out of review while the reviewer is mid
+  // comment. The checkbox disables itself, but a tick left standing behind it
+  // would re-appear on its own if the status came back — drop it instead, so
+  // sending to the applicant is always something the reviewer just chose.
+  useEffect(() => {
+    if (!canSendExternal) {
+      setIsExternal(false)
+      setIsConfirmOpen(false)
+    }
+  }, [canSendExternal])
 
   const handleSubmit = () => {
     if (!body.trim()) return
+
+    // Visible to the applicant means "send this report back for changes" —
+    // confirm the wording before it leaves.
+    if (isExternal && canSendExternal) {
+      setIsConfirmOpen(true)
+      return
+    }
+
     createComment({
       reportId,
       body,
-      visibility:
-        isExternal && canSendExternal
-          ? CommentVisibilityEnum.EXTERNAL
-          : CommentVisibilityEnum.INTERNAL,
+      visibility: CommentVisibilityEnum.INTERNAL,
+    })
+  }
+
+  const handleConfirmExternal = () => {
+    if (!body.trim()) return
+
+    createComment({
+      reportId,
+      body,
+      visibility: CommentVisibilityEnum.EXTERNAL,
     })
   }
 
@@ -92,9 +126,20 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       body={body}
       isExternal={isExternal && canSendExternal}
       isPending={isPending}
+      isConfirmOpen={isConfirmOpen}
       onBodyChange={setBody}
       onExternalChange={setIsExternal}
       onSubmit={handleSubmit}
+      onConfirmExternal={handleConfirmExternal}
+      // Always follows the dialog down, even mid-send. `Modal` hardcodes
+      // hideOnEsc/hideOnClickOutside and `ModalBase` syncs `isVisible` through
+      // an effect keyed on that prop alone, so by the time this runs the native
+      // <dialog> is already closed. Refusing here would leave isConfirmOpen
+      // true against a shut dialog, the effect would never re-run, and the next
+      // open would be a no-op — wedging external comments until a remount.
+      // Blocking dismissal in flight would have to happen inside Modal, which
+      // does not forward those flags today.
+      onCancelExternal={() => setIsConfirmOpen(false)}
       onDelete={handleDelete}
     />
   )
