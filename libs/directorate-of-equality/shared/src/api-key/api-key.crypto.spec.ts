@@ -37,8 +37,12 @@ describe('api-key crypto', () => {
     })
 
     it('rejects an environment that would make the key ambiguous to parse', () => {
-      expect(() => generateApiKey('live_extra')).toThrow(/Invalid API key environment/)
-      expect(() => generateApiKey('LIVE')).toThrow(/Invalid API key environment/)
+      expect(() => generateApiKey('live_extra')).toThrow(
+        /Invalid API key environment/,
+      )
+      expect(() => generateApiKey('LIVE')).toThrow(
+        /Invalid API key environment/,
+      )
       expect(() => generateApiKey('')).toThrow(/Invalid API key environment/)
     })
   })
@@ -161,7 +165,13 @@ describe('api-key crypto', () => {
       const { secret } = generateApiKey('live')
       const stored = hashApiKeySecret(secret, PEPPER)
 
-      expect(verifyApiKeySecret(secret, stored, 'rotated-pepper-also-long-enough-to-pass-ok')).toBe(false)
+      expect(
+        verifyApiKeySecret(
+          secret,
+          stored,
+          'rotated-pepper-also-long-enough-to-pass-ok',
+        ),
+      ).toBe(false)
     })
 
     it('rejects a stored hash of the wrong length instead of throwing', () => {

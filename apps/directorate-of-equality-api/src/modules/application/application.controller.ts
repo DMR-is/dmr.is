@@ -132,9 +132,7 @@ export class ApplicationController {
     operationId: 'importApplicationSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  async importWorkbook(
-    @Body() body: ImportKeyDto,
-  ): Promise<ParsedReportDto> {
+  async importWorkbook(@Body() body: ImportKeyDto): Promise<ParsedReportDto> {
     const buffer = await this.importUploadService.fetchWorkbook(
       body.key,
       ImportUploadBoundary.APPLICATION,
@@ -181,7 +179,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'getApplicationSalaryReportEligibility',
     description:
-      "Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.",
+      'Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.',
     type: SalaryReportEligibilityDto,
   })
   async getSalaryReportEligibility(
@@ -463,14 +461,15 @@ export class ApplicationController {
   @ApiParam({
     name: 'id',
     type: String,
-    description: 'The key\'s `id` as listed, not the `keyId` inside the credential.',
+    description:
+      "The key's `id` as listed, not the `keyId` inside the credential.",
   })
   @DoeResponse({
     operationId: 'revokeApplicationApiKey',
     type: ApiKeyDto,
     include404: true,
     description:
-      'Revokes one of the authenticated company\'s keys. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail. A key belonging to another company answers 404, not 403.',
+      "Revokes one of the authenticated company's keys. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail. A key belonging to another company answers 404, not 403.",
   })
   async revokeApiKey(
     @Param('id') id: string,
