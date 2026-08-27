@@ -155,7 +155,7 @@ export class ApplicationController {
     operationId: 'getApplicationActiveEqualityReport',
     include404: true,
     description:
-      "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report.",
+      "Returns the resolved company's currently-APPROVED equality report (if any). The application portal references the returned `id` as `equalityReportId` when submitting a salary report, and passes the returned `providerId` to `GET /application/reports/:providerId` to read the report itself. Neither `id` nor `identifier` is a lookup handle here: `id` only resolves against the admin-only `GET /reports/:id`, and `identifier` is a human-facing display code.",
     type: EqualityReportSummaryDto,
   })
   async getActiveEqualityReport(

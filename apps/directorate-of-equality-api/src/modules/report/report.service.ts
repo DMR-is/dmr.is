@@ -511,12 +511,7 @@ export class ReportService implements IReportService {
       return null
     }
 
-    return {
-      id: report.id,
-      identifier: report.identifier,
-      approvedAt: report.approvedAt,
-      validUntil: report.validUntil,
-    }
+    return ReportModel.toEqualitySummary(report)
   }
 
   private async buildTimeline(
