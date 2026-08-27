@@ -134,6 +134,24 @@ export const hashApiKeySecret = (secret: string, pepper: string): string => {
 /**
  * Constant-time comparison of a presented secret against a stored hash.
  *
+ * ⚠️ **This answers "is this the right secret", NOT "may this key be used".**
+ * A `true` here says only that the bytes match the digest on the row. It does
+ * not look at `revokedAt` or `expiresAt`, because it never reads the row — it
+ * takes the hash alone. A caller that treats this as authorisation accepts
+ * revoked and expired keys forever.
+ *
+ * So an authenticating caller MUST also reject the row when:
+ *   - `revokedAt` is set — an admin has withdrawn it, and the whole point of
+ *     the revoke button is that it takes effect;
+ *   - `expiresAt` is set and in the past — the admin chose a lifetime at issue
+ *     time and `CompanyApiKeysTab` already renders the key as expired.
+ *
+ * Spelled out because both columns are, at the time of writing, only ever
+ * *displayed*: nothing in this repo calls this function yet — the verifying
+ * side is the partner API — so the badges in the admin UI are a promise no
+ * code keeps until that guard is written. Checking the hash alone would compile,
+ * pass tests, and quietly make revocation cosmetic.
+ *
  * Both sides are fixed-length hex, so lengths normally match; a stored hash of
  * the wrong length means a corrupt row rather than a wrong secret, and is
  * rejected without reaching `timingSafeEqual` (which throws on length

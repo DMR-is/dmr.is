@@ -843,6 +843,13 @@ export const companiesText = {
         labelPlaceholder: 'T.d. nafn launakerfisins',
         labelHint:
           'Heitið er eingöngu til að greina lykla að — það hefur engin áhrif á aðgang.',
+        expiresLabel: 'Gildistími',
+        expiresHint:
+          'Lykillinn hættir að virka að gildistíma loknum. Hægt er að afturkalla hann hvenær sem er.',
+        expires90Days: '90 dagar',
+        expires1Year: '1 ár',
+        expires2Years: '2 ár',
+        expiresNever: 'Ótímabundinn',
         createButton: 'Búa til lykil',
         cancelButton: 'Hætta við',
         createErrorToast: 'Villa við að búa til aðgangslykil',
