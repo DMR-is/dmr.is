@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common'
 
+import { PartnerApiModule } from '../partner/partner.api.module'
+
 /**
  * The public third-party surface — the aggregate backing the `swagger/partner`
  * document, and the runtime registration point for it.
  *
- * Empty until the partner controllers land. Kept as the single place both
+ * Kept as the single place both
  * `AppModule` and `SWAGGER_CONFIG` name, so a controller cannot be routed
  * without appearing in the published document. That is the arrangement
  * `swagger-coverage.spec.ts` enforces in the sibling app, and the partner surface
@@ -17,6 +19,6 @@ import { Module } from '@nestjs/common'
  * the document.
  */
 @Module({
-  imports: [],
+  imports: [PartnerApiModule],
 })
 export class PartnerSwaggerModule {}
