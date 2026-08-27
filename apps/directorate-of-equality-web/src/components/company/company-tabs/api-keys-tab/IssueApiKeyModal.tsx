@@ -7,6 +7,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
+import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
@@ -18,6 +19,34 @@ import { useTRPC } from '../../../../lib/trpc/client/trpc'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView.apiKeys
+
+/**
+ * Offered lifetimes, in days. `null` is "ótímabundinn" — still reachable,
+ * because an integration nobody will be around to re-key is a real situation,
+ * but it now has to be chosen rather than being what you get by saying nothing.
+ *
+ * Durations rather than a date picker: the question an admin can actually
+ * answer is "how long should this last", not "what is the date 365 days from
+ * now". It also removes the whole class of typo — a key expiring in 2025, or in
+ * 2125 — that a free date field invites.
+ */
+const EXPIRY_OPTIONS: { label: string; value: number | null }[] = [
+  { label: t.modal.expires90Days, value: 90 },
+  { label: t.modal.expires1Year, value: 365 },
+  { label: t.modal.expires2Years, value: 730 },
+  { label: t.modal.expiresNever, value: null },
+]
+
+/** One year. A credential that outlives the integration it was cut for is the
+ *  common failure, so the default is finite. */
+const DEFAULT_EXPIRY_DAYS = 365
+
+const expiryToIso = (days: number | null): string | undefined => {
+  if (days === null) return undefined
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return date.toISOString()
+}
 
 type Props = {
   companyId: string
@@ -42,12 +71,16 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
   const queryClient = useQueryClient()
 
   const [label, setLabel] = useState('')
+  const [expiryDays, setExpiryDays] = useState<number | null>(
+    DEFAULT_EXPIRY_DAYS,
+  )
   const [issuedKey, setIssuedKey] = useState<string | null>(null)
 
-  // Reopening must not show the previous key or the previous label.
+  // Reopening must not show the previous key, label or lifetime.
   useEffect(() => {
     if (isOpen) {
       setLabel('')
+      setExpiryDays(DEFAULT_EXPIRY_DAYS)
       setIssuedKey(null)
     }
   }, [isOpen])
@@ -129,6 +162,20 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
             {t.modal.labelHint}
           </Text>
 
+          <Select
+            name="api-key-expiry"
+            size="xs"
+            label={t.modal.expiresLabel}
+            options={EXPIRY_OPTIONS}
+            value={EXPIRY_OPTIONS.find((o) => o.value === expiryDays) ?? null}
+            onChange={(opt) => {
+              if (opt) setExpiryDays(opt.value)
+            }}
+          />
+          <Text variant="small" color="dark400">
+            {t.modal.expiresHint}
+          </Text>
+
           <Inline space={2} justifyContent="flexEnd">
             <Button variant="ghost" size="small" onClick={onClose}>
               {t.modal.cancelButton}
@@ -140,6 +187,7 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
                 issue.mutate({
                   companyId,
                   label: label.trim() === '' ? undefined : label.trim(),
+                  expiresAt: expiryToIso(expiryDays),
                 })
               }
             >
