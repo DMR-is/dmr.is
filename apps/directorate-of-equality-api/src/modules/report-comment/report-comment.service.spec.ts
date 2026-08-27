@@ -281,6 +281,12 @@ describe('ReportCommentService', () => {
     expect(report.update).toHaveBeenCalledWith({
       communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
     })
+    // Asserted positively: this is a genuine transition, so island.is must be
+    // re-driven. Without this a gate narrowed to "only from NOT_STARTED" would
+    // still pass every test in this file while stranding the applicant.
+    expect(applicationSystemService.notifyEdited).toHaveBeenCalledWith(
+      'application-1',
+    )
   })
 
   // A follow-up sent before the applicant has replied is a second message on a

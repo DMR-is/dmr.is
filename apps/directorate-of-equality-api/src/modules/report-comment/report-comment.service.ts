@@ -177,10 +177,18 @@ export class ReportCommentService implements IReportCommentService {
 
     // Only the comment that actually *moves* the thread into AWAITING_RESPONSE
     // is a change request. A reviewer following up before the applicant has
-    // replied is a second message on a conversation already handed over: the
-    // island.is application is still open for editing, so re-driving it would
-    // add nothing but a duplicate "sent for changes" row on the timeline and a
-    // redundant EDIT the far-side state machine may well reject.
+    // done anything is a second message on a conversation already handed over,
+    // and the island.is application is still open for editing, so re-driving it
+    // would add only a redundant EDIT.
+    //
+    // This is sound ONLY because AWAITING_RESPONSE means "the applicant has not
+    // responded yet" in every path, not just the comment one. Both applicant
+    // edit endpoints lift it to RESPONSE_RECEIVED via
+    // `ApplicationService.markApplicantResponded`, so an applicant who fixes
+    // the report and resubmits without commenting still moves the thread and
+    // the next change request still reaches island.is. If a future write path
+    // lets the applicant respond without moving this column, this gate silently
+    // starts skipping EDITs again.
     const isChangeRequest =
       isExternalFromReviewer &&
       previousStatus !== CommunicationStatusEnum.AWAITING_RESPONSE
@@ -193,11 +201,17 @@ export class ReportCommentService implements IReportCommentService {
     // genuinely edits (`editEqualityContent`, `editOutliers`), where the label
     // is true and is the only audit signal that they responded.
     //
-    // Every DB write the request makes lands before the outbound calls below.
-    // The request runs inside one CLS transaction (`CLSMiddleware` is applied
-    // to all routes and rolls it back on a non-2xx response), so a throw here
-    // takes the comment and the status move with it — but nothing recalls an
-    // email or an island.is application already reopened.
+    // Every DB write the request makes lands before the outbound calls below,
+    // which is ordering rather than durability. The request runs inside one CLS
+    // transaction, so a throw takes the comment and the status move with it —
+    // but `CLSMiddleware` commits on `res.on('finish')`, i.e. AFTER the
+    // response, while both calls below fire inside the handler. A failure after
+    // this point — `comment.reload()` is the only candidate — rolls the DB back
+    // with the applicant already emailed and their application already
+    // reopened. Narrow, and the inverse of the old hazard rather than a new
+    // class of one: nothing is lost that was promised, only promised that was
+    // then lost. Closing it properly means an after-commit hook, which this
+    // module has nowhere to hang.
     if (isExternalFromReviewer) {
       // Mail is not gated on the transition: a follow-up message is still a
       // message the applicant should hear about.

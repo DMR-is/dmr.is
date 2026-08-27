@@ -1141,6 +1141,18 @@ describe('ApplicationService', () => {
         COMPANY.id,
       )
       expect(emitStatusChanged).not.toHaveBeenCalled()
+      // Editing IS the applicant's response. Scoped to AWAITING_RESPONSE in the
+      // WHERE clause so a thread that was never opened is not reported as
+      // answered, and a CLOSED one is not reopened.
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+        {
+          where: {
+            id: REPORT_ID,
+            communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+          },
+        },
+      )
       expect(result.id).toBe(REPORT_ID)
     })
 
@@ -1427,6 +1439,18 @@ describe('ApplicationService', () => {
         ReportStatusEnum.SUBMITTED,
         COMPANY.id,
       )
+      // The handover is attempted here too, but the WHERE clause is what keeps
+      // it harmless on a POSTPONED report whose thread was never opened: only a
+      // row already sitting at AWAITING_RESPONSE matches.
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+        {
+          where: {
+            id: REPORT_ID,
+            communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+          },
+        },
+      )
     })
 
     it('IN_REVIEW correction: replaces groups, preserves status, emits EDITED only', async () => {
@@ -1460,8 +1484,19 @@ describe('ApplicationService', () => {
 
       expect(outlierGroupCreate).toHaveBeenCalledTimes(1)
       expect(outlierUpdate).toHaveBeenCalledTimes(1)
-      // Status is NOT updated — only the grouping is.
-      expect(reportUpdate).not.toHaveBeenCalled()
+      // Status is NOT updated. Pinned by naming the only write rather than by
+      // "reportUpdate was never called", which stopped meaning "status
+      // preserved" once the communication handover started writing here too.
+      expect(reportUpdate).toHaveBeenCalledTimes(1)
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { communicationStatus: CommunicationStatusEnum.RESPONSE_RECEIVED },
+        {
+          where: {
+            id: REPORT_ID,
+            communicationStatus: CommunicationStatusEnum.AWAITING_RESPONSE,
+          },
+        },
+      )
       expect(emitStatusChanged).not.toHaveBeenCalled()
       expect(emitEdited).toHaveBeenCalledWith(
         REPORT_ID,
