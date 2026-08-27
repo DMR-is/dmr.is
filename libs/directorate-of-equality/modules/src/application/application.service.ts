@@ -84,6 +84,10 @@ import {
   SUB_CRITERION_GENERAL_SCALE,
 } from './sub-criterion-catalog/sub-criterion-catalog.data'
 import { IApplicationService } from './application.service.interface'
+import {
+  REPORT_PROVIDER_CHANNEL,
+  type ReportProviderChannel,
+} from './provider-channel'
 
 const LOGGING_CONTEXT = 'ApplicationService'
 
@@ -92,7 +96,6 @@ const LOGGING_CONTEXT = 'ApplicationService'
  * provider channels — when they exist — get their own controllers; we don't
  * branch within this one.
  */
-const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
 
 /**
  * Outliers are listed grouped by role — role title first, then the employee's
@@ -114,6 +117,8 @@ const OUTLIER_ORDER: Order = [
 @Injectable()
 export class ApplicationService implements IApplicationService {
   constructor(
+    @Inject(REPORT_PROVIDER_CHANNEL)
+    private readonly channel: ReportProviderChannel,
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IConfigService) private readonly configService: IConfigService,
     @Inject(ICompanyService) private readonly companyService: ICompanyService,
@@ -274,7 +279,10 @@ export class ApplicationService implements IApplicationService {
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     const report = await this.reportModel.findOne({
-      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
+      where: {
+        providerType: this.channel.providerType,
+        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+      },
     })
 
     if (!report) {
@@ -367,7 +375,10 @@ export class ApplicationService implements IApplicationService {
     })
 
     const report = await this.reportModel.findOne({
-      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
+      where: {
+        providerType: this.channel.providerType,
+        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+      },
     })
 
     if (!report) {
@@ -729,7 +740,10 @@ export class ApplicationService implements IApplicationService {
     company: CompanyDto,
   ): Promise<ReportModel> {
     const report = await this.reportModel.findOne({
-      where: { providerType: APPLICATION_REPORT_PROVIDER, providerId },
+      where: {
+        providerType: this.channel.providerType,
+        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+      },
     })
 
     if (!report) {
@@ -759,8 +773,11 @@ export class ApplicationService implements IApplicationService {
     return {
       equalityReportId: input.equalityReportId,
       importedFromExcel: input.importedFromExcel,
-      providerType: APPLICATION_REPORT_PROVIDER,
-      providerId: input.providerId,
+      providerType: this.channel.providerType,
+      providerId: this.channel.buildProviderId(
+        input.providerId,
+        company.nationalId,
+      ),
       companyAdminName: input.companyAdminName,
       companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,
@@ -787,8 +804,11 @@ export class ApplicationService implements IApplicationService {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      providerType: APPLICATION_REPORT_PROVIDER,
-      providerId: input.providerId,
+      providerType: this.channel.providerType,
+      providerId: this.channel.buildProviderId(
+        input.providerId,
+        company.nationalId,
+      ),
       companyAdminName: input.companyAdminName,
       companyAdminTitle: input.companyAdminTitle ?? null,
       companyAdminEmail: input.companyAdminEmail,

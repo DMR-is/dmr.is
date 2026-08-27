@@ -7,6 +7,7 @@
  */
 
 export * from './application.core.module'
+export * from './provider-channel'
 export * from './application.service.interface'
 export * from './dto/application-report-comment.dto'
 export * from './dto/application-report-detail.dto'
