@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { Tabs } from '@island.is/island-ui/core'
 
+import { CompanyApiKeysTab } from '../../components/company/company-tabs/api-keys-tab/CompanyApiKeysTab'
 import { CompanyDetailInfoTab } from '../../components/company/company-tabs/info-tab/CompanyDetailInfoTab'
 import { CompanyReportsTab } from '../../components/company/company-tabs/reports-tab/CompanyReportsTab'
 import { CompanyDto } from '../../gen/fetch'
@@ -28,6 +29,11 @@ export function CompanyTabsContainer({ company }: CompanyTabsContainerProps) {
       id: 'skyrslur',
       label: t.tabReports,
       content: <CompanyReportsTab companyId={company.id} />,
+    },
+    {
+      id: 'adgangslyklar',
+      label: t.tabApiKeys,
+      content: <CompanyApiKeysTab companyId={company.id} />,
     },
   ]
 
