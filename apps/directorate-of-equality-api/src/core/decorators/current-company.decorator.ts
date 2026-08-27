@@ -4,9 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import {
-  CompanyDto,
-} from '@dmr.is/doe-modules'
+import { CompanyDto } from '@dmr.is/doe-modules/company'
 import { getLogger } from '@dmr.is/logging'
 
 import { CompanyResourceRequest } from '../guards/company-resource/company-resource.guard'

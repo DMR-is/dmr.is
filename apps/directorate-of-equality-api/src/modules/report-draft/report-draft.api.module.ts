@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common'
 
-import {
-  CompanyCoreModule,
-  ReportDraftCoreModule,
-} from '@dmr.is/doe-modules'
+import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
+import { ReportDraftCoreModule } from '@dmr.is/doe-modules/report-draft'
 
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
 import { ReportDraftController } from './report-draft.controller'

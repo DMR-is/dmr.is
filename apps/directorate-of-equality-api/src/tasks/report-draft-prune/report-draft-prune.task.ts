@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 
-import {
-  IReportDraftService,
-} from '@dmr.is/doe-modules'
+import { IReportDraftService } from '@dmr.is/doe-modules/report-draft'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { AdvisoryLockService } from '@dmr.is/shared-modules'
 

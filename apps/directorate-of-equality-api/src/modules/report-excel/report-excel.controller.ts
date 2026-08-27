@@ -13,9 +13,11 @@ import {
   IImportUploadService,
   ImportKeyDto,
   ImportUploadBoundary,
+} from '@dmr.is/doe-modules/import-upload'
+import {
   IReportExcelService,
   ParsedReportDto,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-excel'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

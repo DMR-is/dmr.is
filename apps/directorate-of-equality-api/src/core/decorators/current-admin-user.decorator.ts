@@ -4,9 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import {
-  UserModel,
-} from '@dmr.is/doe-modules'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { getLogger } from '@dmr.is/logging'
 
 

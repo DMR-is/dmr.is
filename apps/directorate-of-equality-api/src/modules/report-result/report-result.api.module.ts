@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common'
 
-import {
-  AuthorizationCoreModule,
-  ReportResultCoreModule,
-} from '@dmr.is/doe-modules'
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { ReportResultCoreModule } from '@dmr.is/doe-modules/report-result'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { ReportResultController } from './report-result.controller'

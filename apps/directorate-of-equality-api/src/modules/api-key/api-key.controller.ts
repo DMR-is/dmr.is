@@ -16,9 +16,9 @@ import {
   CreateApiKeyDto,
   GetApiKeysResponseDto,
   IApiKeyService,
-  ICompanyService,
-  UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/api-key'
+import { ICompanyService } from '@dmr.is/doe-modules/company'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import {
   ApiKeyDto,
   ApiKeyOriginEnum,

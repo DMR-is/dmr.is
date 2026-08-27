@@ -2,20 +2,22 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 import {
-  computePayDispersion,
   GenderEnum,
-  PAY_DISPERSION_MIN_COHORT,
-  PAY_DISPERSION_THRESHOLD,
-  PayDispersionBlockerEnum,
-  PayDispersionPopulationEnum,
   PayStatusEnum,
   PooledReferenceModeEnum,
-  studentizedResiduals,
   WageGapDecompositionMethodEnum,
   type WageGapDecompositionSnapshot,
   WageGapDirectionEnum,
   type WageGapEmployeeSnapshot,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report'
+import {
+  computePayDispersion,
+  PAY_DISPERSION_MIN_COHORT,
+  PAY_DISPERSION_THRESHOLD,
+  PayDispersionBlockerEnum,
+  PayDispersionPopulationEnum,
+  studentizedResiduals,
+} from '@dmr.is/doe-modules/report-statistics'
 
 /**
  * Lives in the app, not beside `computePayDispersion` in `@dmr.is/doe-modules`,

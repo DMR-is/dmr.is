@@ -10,27 +10,35 @@ import {
   CompanyEventModel,
   CompanyModel,
   CompanyReportModel,
-  ConfigModel,
   IsatCategoryModel,
   IsatSectionModel,
+} from '@dmr.is/doe-modules/company'
+import { ConfigModel } from '@dmr.is/doe-modules/config'
+import {
   PostcodeModel,
-  PublicReportModel,
   RegionModel,
-  ReportCommentModel,
+} from '@dmr.is/doe-modules/location'
+import { PublicReportModel } from '@dmr.is/doe-modules/public-report'
+import {
+  ReportEventModel,
+  ReportModel,
+} from '@dmr.is/doe-modules/report'
+import { ReportCommentModel } from '@dmr.is/doe-modules/report-comment'
+import {
   ReportCriterionModel,
+  ReportSubCriterionModel,
+  ReportSubCriterionStepModel,
+} from '@dmr.is/doe-modules/report-criterion'
+import {
   ReportEmployeeModel,
   ReportEmployeeOutlierModel,
   ReportEmployeePersonalCriterionStepModel,
   ReportEmployeeRoleCriterionStepModel,
   ReportEmployeeRoleModel,
-  ReportEventModel,
-  ReportModel,
   ReportOutlierGroupModel,
-  ReportResultModel,
-  ReportSubCriterionModel,
-  ReportSubCriterionStepModel,
-  UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-employee'
+import { ReportResultModel } from '@dmr.is/doe-modules/report-result'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { ApiKeyModel } from '@dmr.is/doe-shared'
 import { LoggingModule } from '@dmr.is/logging'
 import {

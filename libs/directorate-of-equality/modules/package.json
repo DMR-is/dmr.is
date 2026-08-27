@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "exports": {
-    ".": "./src/index.ts"
+    "./constants": "./src/constants.ts",
+    "./*": "./src/*/index.ts"
   },
   "peerDependencies": {
     "@nestjs/cache-manager": "3.0.1",

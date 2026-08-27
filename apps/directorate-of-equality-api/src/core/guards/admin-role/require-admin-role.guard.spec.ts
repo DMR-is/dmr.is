@@ -3,9 +3,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import {
-  DoeUserRole,
-} from '@dmr.is/doe-modules'
+import { DoeUserRole } from '@dmr.is/doe-modules/user'
 
 import { RequireAdminRoleGuard } from './require-admin-role.guard'
 

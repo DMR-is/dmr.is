@@ -20,11 +20,9 @@ import {
   CompanyLookupDto,
   CompanyRskPreviewDto,
   CompanyTimelineItemDto,
-  CreateCompanyCommentDto,
   CreateCompanyDto,
   GetCompaniesQueryDto,
   GetCompaniesResponseDto,
-  ICompanyCommentService,
   ICompanyService,
   IsatCategoryDto,
   IsatSectionDto,
@@ -35,8 +33,12 @@ import {
   UpdateCompanyQuarantineDto,
   UpdateCompanySectorDto,
   UpdateCompanyStatusDto,
-  UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/company'
+import {
+  CreateCompanyCommentDto,
+  ICompanyCommentService,
+} from '@dmr.is/doe-modules/company-comment'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentAdminUser } from '../../core/decorators/current-admin-user.decorator'

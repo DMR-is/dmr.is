@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common'
 
-import {
-  ApiKeyCoreModule,
-  AuthorizationCoreModule,
-  CompanyCoreModule,
-} from '@dmr.is/doe-modules'
+import { ApiKeyCoreModule } from '@dmr.is/doe-modules/api-key'
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { RequireAdminRoleGuard } from '../../core/guards/admin-role/require-admin-role.guard'

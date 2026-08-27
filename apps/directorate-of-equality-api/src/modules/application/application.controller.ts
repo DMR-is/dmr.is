@@ -18,33 +18,41 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
 import { CurrentUser } from '@dmr.is/decorators'
 import {
+  CreateApiKeyDto,
+  GetApiKeysResponseDto,
+  IApiKeyService,
+  resolveActorNationalId,
+} from '@dmr.is/doe-modules/api-key'
+import {
   ApplicationReportCommentDto,
   ApplicationReportDetailDto,
-  CompanyDto,
-  CreateApiKeyDto,
-  CreateReportResponseDto,
   EditEqualityContentDto,
   EditOutliersDto,
-  EqualityReportSummaryDto,
-  GetApiKeysResponseDto,
-  GetReportOutliersResponseDto,
   GetSubCriterionCatalogResponseDto,
-  IApiKeyService,
   IApplicationService,
-  IImportUploadService,
-  ImportKeyDto,
-  ImportUploadBoundary,
-  IReportExcelService,
-  ParsedReportDto,
-  PresignUploadResponseDto,
-  resolveActorNationalId,
-  SalaryAnalysisRequestDto,
-  SalaryAnalysisResponseDto,
   SalaryReportEligibilityDto,
   SubmitApplicationReportCommentDto,
   SubmitEqualityReportDto,
   SubmitSalaryReportDto,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/application'
+import { CompanyDto } from '@dmr.is/doe-modules/company'
+import {
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+  PresignUploadResponseDto,
+} from '@dmr.is/doe-modules/import-upload'
+import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
+import {
+  IReportExcelService,
+  ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
+import {
+  SalaryAnalysisRequestDto,
+  SalaryAnalysisResponseDto,
+} from '@dmr.is/doe-modules/report-statistics'
 import {
   ApiKeyDto,
   ApiKeyOriginEnum,

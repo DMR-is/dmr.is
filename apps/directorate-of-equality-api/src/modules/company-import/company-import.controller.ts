@@ -4,11 +4,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import {
   CompanyImportResultDto,
   ICompanyImportService,
+} from '@dmr.is/doe-modules/company-import'
+import {
   IImportUploadService,
   ImportKeyDto,
   ImportUploadBoundary,
-  UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/import-upload'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentAdminUser } from '../../core/decorators/current-admin-user.decorator'
