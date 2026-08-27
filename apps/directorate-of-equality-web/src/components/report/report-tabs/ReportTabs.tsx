@@ -71,6 +71,7 @@ export function ReportTabs({ report, salaryStats }: ReportTabsProps) {
         contactPerson={{
           email: report.contactEmail ?? undefined,
           name: report.contactName ?? undefined,
+          jobTitle: report.contactTitle ?? undefined,
           phone: report.contactPhone ?? undefined,
         }}
         employees={{

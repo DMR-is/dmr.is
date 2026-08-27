@@ -75,6 +75,7 @@ const EMPTY_FORM = {
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
+  contactTitle: '',
   contactEmail: '',
   contactPhone: '',
   averageEmployeeMaleCount: '',
@@ -325,6 +326,7 @@ export const CreateSalaryReportDrawer = () => {
       companyAdminEmail: form.companyAdminEmail,
       companyAdminGender: form.companyAdminGender,
       contactName: form.contactName,
+      contactTitle: form.contactTitle || null,
       contactEmail: form.contactEmail,
       contactPhone: form.contactPhone,
       averageEmployeeMaleCount: Number(form.averageEmployeeMaleCount),
@@ -674,6 +676,16 @@ export const CreateSalaryReportDrawer = () => {
               size="xs"
               value={form.contactName}
               onChange={(e) => set('contactName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="contactTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.contactTitle}
+              onChange={(e) => set('contactTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>

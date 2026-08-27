@@ -53,6 +53,12 @@ export class ReportDto {
   @ApiOptionalString({ nullable: true })
   contactName!: string | null
 
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company contact (tengiliður).',
+  })
+  contactTitle!: string | null
+
   @ApiOptionalString({ nullable: true })
   companyNationalId!: string | null
 
