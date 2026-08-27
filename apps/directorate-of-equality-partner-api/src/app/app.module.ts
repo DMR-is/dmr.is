@@ -14,6 +14,7 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { DeclaredAccessGuard } from '../core/guards/declared-access/declared-access.guard'
 import { IpThrottlerGuard } from '../core/guards/ip-throttler/ip-throttler.guard'
 import { PER_IP_THROTTLER, PER_KEY_THROTTLER } from '../core/guards/throttlers'
 import { ApiKeyCoreModule } from '../modules/api-key/api-key.core.module'
@@ -101,9 +102,23 @@ import { HealthController } from './health.controller'
     // included. That ordering is the entire reason it exists: a guard declared
     // after ApiKeyGuard is unreachable on the 401 path, so nothing else on this
     // surface can count a request that failed to authenticate.
+    //
+    // First of the two global guards on purpose. Nest runs them in registration
+    // order, so counting happens before DeclaredAccessGuard can refuse a route
+    // — otherwise a flood at an undeclared path would cost us the refusal on
+    // every request without ever being bounded.
     {
       provide: APP_GUARD,
       useClass: IpThrottlerGuard,
+    },
+    // Default-deny for every route. Runs before any controller or route guard
+    // and refuses anything whose @UseGuards chain does not state who may call
+    // it. Authorization is opt-out, not opt-in — which matters more here than on
+    // the sibling app, because an undeclared route on this surface is exposed to
+    // the internet and can write to the register.
+    {
+      provide: APP_GUARD,
+      useClass: DeclaredAccessGuard,
     },
     {
       provide: APP_FILTER,
