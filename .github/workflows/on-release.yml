@@ -29,6 +29,7 @@ jobs:
             legal-gazette-application-web,
             legal-gazette-public-web,
             directorate-of-equality-api,
+            directorate-of-equality-partner-api,
             directorate-of-equality-web,
           ]
     steps:
