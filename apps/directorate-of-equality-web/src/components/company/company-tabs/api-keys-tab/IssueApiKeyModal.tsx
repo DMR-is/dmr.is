@@ -121,6 +121,14 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       }}
       toggleClose={onClose}
       width="small"
+      // The lifetime dropdown renders inline, not in a portal — island-ui's
+      // Select lists every prop it forwards to react-select and menuPortalTarget
+      // is not among them — so the modal's own `overflowY: auto` clipped the
+      // open menu at the bottom edge. `allowOverflow` swaps that for `visible`,
+      // which is what it exists for. Safe here because this modal is two fields
+      // tall: with overflow visible the 80vh cap no longer scrolls, so anything
+      // taller would spill instead.
+      allowOverflow
     >
       {issuedKey ? (
         <Stack space={3}>
