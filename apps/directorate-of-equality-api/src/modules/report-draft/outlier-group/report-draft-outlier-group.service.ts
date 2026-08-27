@@ -199,26 +199,22 @@ export class ReportDraftOutlierGroupService
   /**
    * Upserts an employee's outlier-group membership from a sync command. Both
    * the employee and the group are validated against the draft (404 either
-   * way); the detected-outlier set is derived once by the caller and passed in.
+   * way).
    *
-   * Returns `false`, writing nothing, when the employee is not currently an
-   * outlier. That is deliberately not a 400: the applicant's client built the
-   * command from the previous calculation and the same batch carries the edits
-   * that invalidated it, so rejecting would roll those edits back and leave the
-   * applicant looping on the same error. The caller decides what to report.
+   * Whether the employee is currently a detected outlier is deliberately NOT
+   * checked here: detection is a property of the whole draft, sync is chunked,
+   * and the applicant's client legitimately sends a grouping built from the
+   * previous calculation. `ReportDraftSubmitService.pruneStaleMemberships`
+   * reconciles the rows against the detected set at submit, where the draft is
+   * complete.
    */
   async setEmployeeGroup(
     report: ReportModel,
     employeeId: string,
     groupId: string,
-    detectedIds: Set<string>,
-  ): Promise<boolean> {
+  ): Promise<void> {
     await this.assertEmployeeInReport(report.id, employeeId)
     await this.findOwnedGroup(report.id, groupId)
-
-    if (!detectedIds.has(employeeId)) {
-      return false
-    }
 
     const existing = await this.outlierModel.findOne({
       where: { reportEmployeeId: employeeId },
@@ -231,8 +227,6 @@ export class ReportDraftOutlierGroupService
         groupId,
       })
     }
-
-    return true
   }
 
   async clearEmployeeGroup(
@@ -241,53 +235,9 @@ export class ReportDraftOutlierGroupService
   ): Promise<void> {
     await this.assertEmployeeInReport(report.id, employeeId)
 
-    await this.clearEmployeeGroups(report, [employeeId])
-  }
-
-  /** The report's employees that currently sit in an outlier group. */
-  async getMemberEmployeeIds(report: ReportModel): Promise<string[]> {
-    const groupIds = await this.getGroupIds(report.id)
-    if (groupIds.length === 0) {
-      return []
-    }
-
-    const rows = await this.outlierModel.findAll({
-      where: { groupId: groupIds },
-      attributes: ['reportEmployeeId'],
-    })
-
-    return rows.map((row) => row.reportEmployeeId)
-  }
-
-  /**
-   * Bulk-clears membership for the given employees — the delete every clearing
-   * path goes through. Scoped through the report's own groups, so an id from
-   * another report can never delete a row here; the singular entry point adds
-   * the 404 on an employee that is not in the draft.
-   */
-  async clearEmployeeGroups(
-    report: ReportModel,
-    employeeIds: string[],
-  ): Promise<void> {
-    if (employeeIds.length === 0) {
-      return
-    }
-    const groupIds = await this.getGroupIds(report.id)
-    if (groupIds.length === 0) {
-      return
-    }
-
     await this.outlierModel.destroy({
-      where: { reportEmployeeId: employeeIds, groupId: groupIds },
+      where: { reportEmployeeId: employeeId },
     })
-  }
-
-  private async getGroupIds(reportId: string): Promise<string[]> {
-    const groups = await this.groupModel.findAll({
-      where: { reportId },
-      attributes: ['id'],
-    })
-    return groups.map((group) => group.id)
   }
 
   private async findOwnedGroup(

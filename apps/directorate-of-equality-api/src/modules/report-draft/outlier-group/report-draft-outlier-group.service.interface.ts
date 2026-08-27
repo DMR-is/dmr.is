@@ -6,12 +6,14 @@ import { EmployeeOutlierGroupDto } from './dto/employee-outlier-group.dto'
 
 /**
  * Outlier groups (the improvement-plan explanation buckets) of a DRAFT report
- * and per-employee group membership. Applicant-facing reads go through the
- * draft ownership resolver; everything the sync batch uses — its appliers and
- * the reads they are driven from — takes an already-resolved draft (`report`),
- * so the whole batch shares one ownership check and one transaction. Outliers
- * themselves are derived (see the analysis service); a member must be a
- * currently-detected outlier.
+ * and per-employee group membership. Reads go through the draft ownership
+ * resolver; writes are sync appliers that take an already-resolved draft
+ * (`report`) so the whole batch shares one ownership check and one transaction.
+ *
+ * Membership records what the applicant did with an outlier; it is not checked
+ * against the derived outlier set here. Sync is chunked, so mid-batch that set
+ * describes a half-applied draft — `ReportDraftSubmitService` reconciles the
+ * rows at submit instead.
  */
 export interface IReportDraftOutlierGroupService {
   listGroups(
@@ -43,24 +45,17 @@ export interface IReportDraftOutlierGroupService {
   ): Promise<EmployeeOutlierGroupDto>
 
   /**
-   * Set an employee's outlier-group membership from a sync command. Resolves
-   * `false` without writing when the employee is not in `detectedIds`.
+   * Set an employee's outlier-group membership from a sync command. 404s when
+   * either the employee or the group is not part of the draft.
    */
   setEmployeeGroup(
     report: ReportModel,
     employeeId: string,
     groupId: string,
-    detectedIds: Set<string>,
-  ): Promise<boolean>
+  ): Promise<void>
 
   /** Clear an employee's outlier-group membership from a sync command. */
   clearEmployeeGroup(report: ReportModel, employeeId: string): Promise<void>
-
-  /** The report's employees that currently sit in an outlier group. */
-  getMemberEmployeeIds(report: ReportModel): Promise<string[]>
-
-  /** Bulk-clear membership for the given employees of the report (no 404). */
-  clearEmployeeGroups(report: ReportModel, employeeIds: string[]): Promise<void>
 }
 
 export const IReportDraftOutlierGroupService = Symbol(

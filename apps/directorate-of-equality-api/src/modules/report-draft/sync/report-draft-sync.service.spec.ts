@@ -8,7 +8,6 @@ import { Test, TestingModule } from '@nestjs/testing'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ReportModel } from '../../report/models/report.model'
-import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftAssignmentService } from '../assignment/report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from '../criterion/report-draft-criterion.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -26,7 +25,6 @@ const REPORT = { id: 'report-1' } as ReportModel
 describe('ReportDraftSyncService', () => {
   let service: ReportDraftSyncService
   let reportDraft: { findOwnedDraft: jest.Mock; touchDraft: jest.Mock }
-  let analysis: { getDetectedOutlierEmployeeIds: jest.Mock }
   let criterion: Record<string, jest.Mock>
   let subCriterion: Record<string, jest.Mock>
   let step: Record<string, jest.Mock>
@@ -39,11 +37,6 @@ describe('ReportDraftSyncService', () => {
     reportDraft = {
       findOwnedDraft: jest.fn().mockResolvedValue(REPORT),
       touchDraft: jest.fn().mockResolvedValue(undefined),
-    }
-    analysis = {
-      getDetectedOutlierEmployeeIds: jest
-        .fn()
-        .mockResolvedValue(new Set<string>()),
     }
     criterion = {
       createCriterion: jest.fn(),
@@ -79,10 +72,8 @@ describe('ReportDraftSyncService', () => {
       createGroup: jest.fn(),
       updateGroup: jest.fn(),
       removeGroup: jest.fn(),
-      setEmployeeGroup: jest.fn().mockResolvedValue(true),
+      setEmployeeGroup: jest.fn(),
       clearEmployeeGroup: jest.fn(),
-      clearEmployeeGroups: jest.fn(),
-      getMemberEmployeeIds: jest.fn().mockResolvedValue([]),
     }
 
     const module: TestingModule = await Test.createTestingModule({
@@ -90,7 +81,6 @@ describe('ReportDraftSyncService', () => {
         ReportDraftSyncService,
         { provide: LOGGER_PROVIDER, useValue: { info: jest.fn() } },
         { provide: IReportDraftService, useValue: reportDraft },
-        { provide: IReportDraftAnalysisService, useValue: analysis },
         { provide: IReportDraftCriterionService, useValue: criterion },
         { provide: IReportDraftSubCriterionService, useValue: subCriterion },
         { provide: IReportDraftStepService, useValue: step },
@@ -159,8 +149,7 @@ describe('ReportDraftSyncService', () => {
     ])
   })
 
-  it('clears membership before removals and sets it after outlier detection', async () => {
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
+  it('routes a null membership to the clear applier and a group id to the set applier', async () => {
     await service.syncDraft('prov-1', COMPANY, {
       employees: [
         {
@@ -175,65 +164,20 @@ describe('ReportDraftSyncService', () => {
         },
       ],
     })
+
+    expect(outlierGroup.clearEmployeeGroup).toHaveBeenCalledTimes(1)
     expect(outlierGroup.clearEmployeeGroup).toHaveBeenCalledWith(REPORT, 'e1')
-    expect(analysis.getDetectedOutlierEmployeeIds).toHaveBeenCalledWith(
-      'report-1',
-    )
+    // A null clear must never reach setEmployeeGroup — it would look up a
+    // group with a null id and 404 the most ordinary grouping edit there is.
+    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledTimes(1)
     expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledWith(
       REPORT,
       'e2',
       'g1',
-      new Set(['e2']),
     )
   })
 
-  it('does not derive outliers when nothing needs them', async () => {
-    await service.syncDraft('prov-1', COMPANY, {
-      employees: [{ method: SyncMethodEnum.CREATE, id: 'e1', data: {} }],
-    })
-    expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
-  })
-
-  // The whole point of re-deriving here: edits can push an employee out of the
-  // lágmarksmengi, and submit rejects a membership for a non-outlier, so the
-  // row has to go with them.
-  it('drops memberships of employees the recalculation cleared', async () => {
-    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1', 'e2'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
-
-    await service.syncDraft('prov-1', COMPANY, {
-      outlierGroups: [
-        { method: SyncMethodEnum.UPDATE, id: 'g1', data: { name: 'A' } },
-      ],
-    })
-
-    expect(outlierGroup.clearEmployeeGroups).toHaveBeenCalledWith(REPORT, ['e1'])
-  })
-
-  it('keeps memberships of employees that are still outliers', async () => {
-    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e1']))
-
-    await service.syncDraft('prov-1', COMPANY, {
-      employees: [
-        {
-          method: SyncMethodEnum.UPDATE,
-          id: 'e1',
-          data: { outlierGroupId: 'g1' },
-        },
-      ],
-    })
-
-    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
-  })
-
-  // The prune is an irreversible delete and membership is a property of the
-  // SET, so a batch that is still rewriting the population — one chunk of a
-  // >1000-command edit — must not evict employees it never touched.
-  it('does not prune on a batch that moved a scoring input', async () => {
-    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
-
+  it('leaves an employee without an outlierGroupId key alone', async () => {
     await service.syncDraft('prov-1', COMPANY, {
       employees: [
         {
@@ -244,44 +188,14 @@ describe('ReportDraftSyncService', () => {
       ],
     })
 
-    expect(outlierGroup.getMemberEmployeeIds).not.toHaveBeenCalled()
-    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
+    expect(outlierGroup.setEmployeeGroup).not.toHaveBeenCalled()
+    expect(outlierGroup.clearEmployeeGroup).not.toHaveBeenCalled()
   })
 
-  it.each([
-    ['an employee create', { employees: [{ method: SyncMethodEnum.CREATE, id: 'e9', data: {} }] }],
-    ['an employee remove', { employees: [{ method: SyncMethodEnum.REMOVE, id: 'e9' }] }],
-    ['a step edit', { steps: [{ method: SyncMethodEnum.UPDATE, id: 's1', data: { score: 5 } }] }],
-    ['a role edit', { roles: [{ method: SyncMethodEnum.UPDATE, id: 'r1', data: { title: 'R' } }] }],
-    [
-      'a personal step assignment',
-      {
-        employees: [
-          {
-            method: SyncMethodEnum.UPDATE,
-            id: 'e1',
-            data: { stepIds: ['s1'], outlierGroupId: 'g1' },
-          },
-        ],
-      },
-    ],
-  ])('does not prune on a batch carrying %s', async (_label, input) => {
-    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
-
-    await service.syncDraft('prov-1', COMPANY, input)
-
-    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
-  })
-
-  // Stale client state, not a client error — 400ing would roll back the very
-  // edits that made the employee a non-outlier.
-  it('commits the batch when a membership set is no longer applicable', async () => {
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
-    outlierGroup.setEmployeeGroup.mockImplementation(
-      async (_report: unknown, employeeId: string) => employeeId === 'e2',
-    )
-
+  // Membership is recorded as the client sent it. Detection is a property of
+  // the whole draft and this endpoint is chunked, so mid-batch it would only
+  // describe a half-applied population — submit reconciles instead.
+  it('records membership without consulting outlier detection', async () => {
     await service.syncDraft('prov-1', COMPANY, {
       employees: [
         {
@@ -289,22 +203,17 @@ describe('ReportDraftSyncService', () => {
           id: 'e1',
           data: { outlierGroupId: 'g1' },
         },
-        {
-          method: SyncMethodEnum.UPDATE,
-          id: 'e2',
-          data: { outlierGroupId: 'g1' },
-        },
       ],
     })
 
-    // Both go to the applier — it owns the 404s on an unknown employee or
-    // group, and reports the non-outlier rather than throwing.
-    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledTimes(2)
-    expect(reportDraft.touchDraft).toHaveBeenCalledWith('report-1')
+    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledWith(
+      REPORT,
+      'e1',
+      'g1',
+    )
   })
 
   it('propagates a 404 from a membership set', async () => {
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e1']))
     outlierGroup.setEmployeeGroup.mockRejectedValue(
       new NotFoundException('Employee "ghost" not found'),
     )
@@ -324,17 +233,11 @@ describe('ReportDraftSyncService', () => {
   })
 
   // removeGroup refuses to orphan members, so a group only reads as empty
-  // after the prune and after the batch's own sets moved its members out.
-  it('removes outlier groups after the prune and the sets', async () => {
-    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
+  // after the batch's own sets have moved its members out.
+  it('removes outlier groups after the batch\'s own membership sets', async () => {
     const order: string[] = []
-    outlierGroup.clearEmployeeGroups.mockImplementation(() => {
-      order.push('clear')
-    })
     outlierGroup.setEmployeeGroup.mockImplementation(() => {
       order.push('set')
-      return true
     })
     outlierGroup.removeGroup.mockImplementation(() => {
       order.push('remove')
@@ -344,26 +247,17 @@ describe('ReportDraftSyncService', () => {
       employees: [
         {
           method: SyncMethodEnum.UPDATE,
-          id: 'e2',
+          id: 'e1',
           data: { outlierGroupId: 'g2' },
         },
       ],
       outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
     })
 
-    expect(order).toEqual(['clear', 'set', 'remove'])
+    expect(order).toEqual(['set', 'remove'])
   })
 
-  it('removes outlier groups even when no detection is needed', async () => {
-    await service.syncDraft('prov-1', COMPANY, {
-      outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
-    })
-
-    expect(outlierGroup.removeGroup).toHaveBeenCalledWith(REPORT, 'g1')
-    expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
-  })
-
-  // The invariant the ordering exists to serve: a group with members left in
+  // The invariant that ordering exists to serve: a group with members left in
   // it still aborts the whole batch.
   it('aborts the batch when a group still has members', async () => {
     outlierGroup.removeGroup.mockRejectedValue(

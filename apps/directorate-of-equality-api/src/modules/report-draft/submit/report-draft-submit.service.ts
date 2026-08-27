@@ -148,19 +148,20 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
   }
 
   /**
-   * Validates the persisted outlier grouping against the freshly-detected
+   * Reconciles the persisted outlier grouping against the freshly-detected
    * outlier set and returns the landing status:
-   *  - every detected outlier must be assigned to a group, and no non-detected
-   *    employee may be (400 otherwise);
+   *  - a membership for an employee who is NOT a detected outlier is dropped
+   *    (see `pruneStaleMemberships`);
+   *  - every detected outlier must then be assigned to a group (400 otherwise);
    *  - referenced groups must be uniformly explained (→ SUBMITTED) or uniformly
    *    unexplained (→ POSTPONED); a mix is rejected.
    * No detected outliers → SUBMITTED.
    *
    * `outliersPostponed` is the applicant's explicit "defer the explanations"
-   * choice. It relaxes the first rule — unassigned detected outliers are
-   * backfilled into a default group instead of rejected — and the second, since
-   * an explicit choice leaves nothing to infer from a mixed set. It does NOT
-   * force POSTPONED: the status is still read off the resulting explanation
+   * choice. It relaxes the assignment rule — unassigned detected outliers are
+   * backfilled into a default group instead of rejected — and the uniformity
+   * rule, since an explicit choice leaves nothing to infer from a mixed set. It
+   * does NOT force POSTPONED: the status is still read off the resulting explanation
    * state, because POSTPONED cannot be assigned (`ReportWorkflowService.assign`
    * takes SUBMITTED/IN_REVIEW only) and therefore cannot be approved. Parking a
    * fully-explained report there would leave a reviewer no move but denial.
@@ -179,25 +180,17 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       })
     ).map((row) => row.id)
 
-    let memberships = await this.loadOutlierMemberships(employeeIds)
+    let memberships = await this.pruneStaleMemberships(
+      reportId,
+      await this.loadOutlierMemberships(employeeIds),
+      detected,
+    )
     const assignedIds = new Set(memberships.map((m) => m.reportEmployeeId))
 
     if (outliersPostponed) {
       if (detected.size === 0) {
         throw new BadRequestException(
           'Cannot postpone outlier explanations because this salary report has no detected outliers.',
-        )
-      }
-
-      // Stale assignments are rejected in this path too, not just below. A row
-      // for an employee who is no longer an outlier is referenced by no group
-      // the applicant will later submit through the outliers edit endpoint, so
-      // it never gets re-pointed and blocks that endpoint's group cleanup on the
-      // NOT NULL group_id FK.
-      const extra = [...assignedIds].filter((id) => !detected.has(id))
-      if (extra.length > 0) {
-        throw new BadRequestException(
-          `Only detected outliers may be assigned to outlier groups (${extra.length} non-outlier assignment(s))`,
         )
       }
 
@@ -219,12 +212,6 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
         `Every detected outlier must be assigned to an outlier group before submitting (${missing.length} unassigned)`,
       )
     }
-    const extra = [...assignedIds].filter((id) => !detected.has(id))
-    if (extra.length > 0) {
-      throw new BadRequestException(
-        `Only detected outliers may be assigned to outlier groups (${extra.length} non-outlier assignment(s))`,
-      )
-    }
 
     if (detected.size === 0) {
       return ReportStatusEnum.SUBMITTED
@@ -243,6 +230,50 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
     throw new BadRequestException(
       'Outlier groups must be either all explained (submit) or all unexplained (postpone)',
     )
+  }
+
+  /**
+   * Drops memberships for employees who are no longer detected outliers, and
+   * returns the surviving rows.
+   *
+   * The applicant groups outliers while drafting, then goes back and edits the
+   * data. Because the lágmarksmengi is a property of the SET rather than of the
+   * person (see `selectMinimumSet`), that reshuffles who is in it, and a
+   * membership recorded before the edit can describe someone who is now out.
+   * The applicant cannot clear it themselves — the grouping step no longer
+   * shows that employee — so rejecting the submit would be a dead end.
+   *
+   * Reconciling HERE rather than in `syncDraft` is deliberate: sync is a
+   * chunked protocol (`MAX_EMPLOYEE_COMMANDS`), so any single batch may be one
+   * chunk of a larger edit and the population it would prune against is
+   * half-applied. Submit is the one point where the draft is complete, so it is
+   * the only place this delete is safe.
+   *
+   * A group left empty by the prune is not removed: `loadReferencedGroups`
+   * reads groups through the surviving memberships, so an empty one simply
+   * drops out of the uniformity check.
+   */
+  private async pruneStaleMemberships(
+    reportId: string,
+    memberships: ReportEmployeeOutlierModel[],
+    detected: Set<string>,
+  ): Promise<ReportEmployeeOutlierModel[]> {
+    const stale = memberships.filter((m) => !detected.has(m.reportEmployeeId))
+    if (stale.length === 0) {
+      return memberships
+    }
+
+    const staleEmployeeIds = stale.map((m) => m.reportEmployeeId)
+    await this.outlierModel.destroy({
+      where: { reportEmployeeId: staleEmployeeIds },
+    })
+
+    this.logger.info(
+      `Dropped ${stale.length} stale outlier membership(s) while submitting draft "${reportId}"`,
+      { context: LOGGING_CONTEXT, reportId, employeeIds: staleEmployeeIds },
+    )
+
+    return memberships.filter((m) => detected.has(m.reportEmployeeId))
   }
 
   /** Outlier-group memberships of the given employees (empty for no employees). */

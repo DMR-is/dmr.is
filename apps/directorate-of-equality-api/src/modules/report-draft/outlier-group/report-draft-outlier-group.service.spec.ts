@@ -36,9 +36,7 @@ describe('ReportDraftOutlierGroupService', () => {
   let groupFindByPk: jest.Mock
   let groupBuild: jest.Mock
   let groupSave: jest.Mock
-  let groupFindAll: jest.Mock
   let outlierFindOne: jest.Mock
-  let outlierFindAll: jest.Mock
   let outlierCreate: jest.Mock
   let outlierCount: jest.Mock
   let outlierDestroy: jest.Mock
@@ -54,9 +52,7 @@ describe('ReportDraftOutlierGroupService', () => {
       ...attrs,
       save: groupSave,
     }))
-    groupFindAll = jest.fn().mockResolvedValue([])
     outlierFindOne = jest.fn().mockResolvedValue(null)
-    outlierFindAll = jest.fn().mockResolvedValue([])
     outlierCreate = jest.fn()
     outlierCount = jest.fn().mockResolvedValue(0)
     outlierDestroy = jest.fn()
@@ -70,7 +66,7 @@ describe('ReportDraftOutlierGroupService', () => {
         {
           provide: getModelToken(ReportOutlierGroupModel),
           useValue: {
-            findAll: groupFindAll,
+            findAll: jest.fn().mockResolvedValue([]),
             findOne: groupFindOne,
             findByPk: groupFindByPk,
             build: groupBuild,
@@ -80,7 +76,7 @@ describe('ReportDraftOutlierGroupService', () => {
           provide: getModelToken(ReportEmployeeOutlierModel),
           useValue: {
             findOne: outlierFindOne,
-            findAll: outlierFindAll,
+            findAll: jest.fn().mockResolvedValue([]),
             create: outlierCreate,
             count: outlierCount,
             destroy: outlierDestroy,
@@ -168,17 +164,10 @@ describe('ReportDraftOutlierGroupService', () => {
   })
 
   describe('setEmployeeGroup', () => {
-    it('assigns a detected outlier to a group (creates the join row)', async () => {
+    it('creates the join row', async () => {
       outlierFindOne.mockResolvedValueOnce(null)
 
-      await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          GROUP_ID,
-          new Set([EMPLOYEE_ID]),
-        ),
-      ).resolves.toBe(true)
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
 
       expect(outlierCreate).toHaveBeenCalledWith({
         reportEmployeeId: EMPLOYEE_ID,
@@ -190,129 +179,36 @@ describe('ReportDraftOutlierGroupService', () => {
       const update = jest.fn()
       outlierFindOne.mockResolvedValueOnce({ id: 'o-1', update })
 
-      await service.setEmployeeGroup(
-        report,
-        EMPLOYEE_ID,
-        GROUP_ID,
-        new Set([EMPLOYEE_ID]),
-      )
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
 
       expect(update).toHaveBeenCalledWith({ groupId: GROUP_ID })
       expect(outlierCreate).not.toHaveBeenCalled()
     })
 
-    // Reported, not thrown: the caller is mid-batch and a 400 would roll back
-    // the edits that made this employee a non-outlier in the first place.
-    it('reports false and writes nothing for a non-detected employee', async () => {
-      await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          GROUP_ID,
-          new Set<string>(),
-        ),
-      ).resolves.toBe(false)
-      expect(outlierCreate).not.toHaveBeenCalled()
-      expect(outlierDestroy).not.toHaveBeenCalled()
+    // Detection is NOT consulted here — sync is chunked, so mid-batch it would
+    // only describe a half-applied draft. Submit reconciles the rows instead.
+    it('records a membership for an employee that is not a detected outlier', async () => {
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
+
+      expect(outlierCreate).toHaveBeenCalled()
     })
 
-    it('404s an unknown employee even when it is not a detected outlier', async () => {
+    it('404s an employee that is not in the draft', async () => {
       employeeFindOne.mockResolvedValueOnce(null)
 
       await expect(
-        service.setEmployeeGroup(
-          report,
-          'ghost',
-          GROUP_ID,
-          new Set<string>(),
-        ),
+        service.setEmployeeGroup(report, 'ghost', GROUP_ID),
       ).rejects.toThrow(NotFoundException)
-    })
-
-    it('404s an unknown group even when the employee is not detected', async () => {
-      groupFindOne.mockResolvedValueOnce(null)
-
-      await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          'ghost-group',
-          new Set<string>(),
-        ),
-      ).rejects.toThrow(NotFoundException)
+      expect(outlierCreate).not.toHaveBeenCalled()
     })
 
     it('404s when the group is not in the draft', async () => {
       groupFindOne.mockResolvedValueOnce(null)
 
       await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          GROUP_ID,
-          new Set([EMPLOYEE_ID]),
-        ),
+        service.setEmployeeGroup(report, EMPLOYEE_ID, 'ghost-group'),
       ).rejects.toThrow(NotFoundException)
-    })
-  })
-
-  describe('getMemberEmployeeIds', () => {
-    it('lists the employees sitting in one of the draft\'s groups', async () => {
-      groupFindAll.mockResolvedValueOnce([{ id: GROUP_ID }, { id: 'group-2' }])
-      outlierFindAll.mockResolvedValueOnce([
-        { reportEmployeeId: EMPLOYEE_ID },
-        { reportEmployeeId: 'emp-2' },
-      ])
-
-      await expect(service.getMemberEmployeeIds(report)).resolves.toEqual([
-        EMPLOYEE_ID,
-        'emp-2',
-      ])
-      expect(outlierFindAll).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { groupId: [GROUP_ID, 'group-2'] } }),
-      )
-    })
-
-    it('skips the membership query when the draft has no groups', async () => {
-      groupFindAll.mockResolvedValueOnce([])
-
-      await expect(service.getMemberEmployeeIds(report)).resolves.toEqual([])
-      expect(outlierFindAll).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('clearEmployeeGroups', () => {
-    it('deletes the membership rows scoped to the draft\'s own groups', async () => {
-      groupFindAll.mockResolvedValueOnce([{ id: GROUP_ID }])
-
-      await service.clearEmployeeGroups(report, [EMPLOYEE_ID, 'emp-2'])
-
-      // The scoping this method's safety rests on: the group ids it ANDs
-      // against are looked up by this report, not taken from the caller.
-      expect(groupFindAll).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { reportId: REPORT_ID } }),
-      )
-      expect(outlierDestroy).toHaveBeenCalledWith({
-        where: {
-          reportEmployeeId: [EMPLOYEE_ID, 'emp-2'],
-          groupId: [GROUP_ID],
-        },
-      })
-    })
-
-    it('is a no-op for an empty id list', async () => {
-      await service.clearEmployeeGroups(report, [])
-
-      expect(groupFindAll).not.toHaveBeenCalled()
-      expect(outlierDestroy).not.toHaveBeenCalled()
-    })
-
-    it('is a no-op when the draft has no groups to scope against', async () => {
-      groupFindAll.mockResolvedValueOnce([])
-
-      await service.clearEmployeeGroups(report, [EMPLOYEE_ID])
-
-      expect(outlierDestroy).not.toHaveBeenCalled()
+      expect(outlierCreate).not.toHaveBeenCalled()
     })
   })
 
@@ -326,13 +222,11 @@ describe('ReportDraftOutlierGroupService', () => {
       expect(outlierDestroy).not.toHaveBeenCalled()
     })
 
-    it('deletes through the same scoped bulk path as the plural', async () => {
-      groupFindAll.mockResolvedValueOnce([{ id: GROUP_ID }])
-
+    it('deletes the employee\'s membership row', async () => {
       await service.clearEmployeeGroup(report, EMPLOYEE_ID)
 
       expect(outlierDestroy).toHaveBeenCalledWith({
-        where: { reportEmployeeId: [EMPLOYEE_ID], groupId: [GROUP_ID] },
+        where: { reportEmployeeId: EMPLOYEE_ID },
       })
     })
   })
