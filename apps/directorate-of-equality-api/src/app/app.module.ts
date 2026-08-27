@@ -5,41 +5,7 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
-import {
-  CompanyCommentModel,
-  CompanyEventModel,
-  CompanyModel,
-  CompanyReportModel,
-  IsatCategoryModel,
-  IsatSectionModel,
-} from '@dmr.is/doe-modules/company'
-import { ConfigModel } from '@dmr.is/doe-modules/config'
-import {
-  PostcodeModel,
-  RegionModel,
-} from '@dmr.is/doe-modules/location'
-import { PublicReportModel } from '@dmr.is/doe-modules/public-report'
-import {
-  ReportEventModel,
-  ReportModel,
-} from '@dmr.is/doe-modules/report'
-import { ReportCommentModel } from '@dmr.is/doe-modules/report-comment'
-import {
-  ReportCriterionModel,
-  ReportSubCriterionModel,
-  ReportSubCriterionStepModel,
-} from '@dmr.is/doe-modules/report-criterion'
-import {
-  ReportEmployeeModel,
-  ReportEmployeeOutlierModel,
-  ReportEmployeePersonalCriterionStepModel,
-  ReportEmployeeRoleCriterionStepModel,
-  ReportEmployeeRoleModel,
-  ReportOutlierGroupModel,
-} from '@dmr.is/doe-modules/report-employee'
-import { ReportResultModel } from '@dmr.is/doe-modules/report-result'
-import { UserModel } from '@dmr.is/doe-modules/user'
-import { ApiKeyModel } from '@dmr.is/doe-shared'
+import { DOE_MODELS } from '@dmr.is/doe-modules/models'
 import { LoggingModule } from '@dmr.is/logging'
 import {
   GlobalExceptionFilter,
@@ -71,33 +37,9 @@ import { HealthController } from './health.controller'
           clsNamespace: CLS_NAMESPACE,
           debugLog: process.env.DB_DEBUG === 'true',
           autoLoadModels: false,
-          models: [
-            UserModel,
-            RegionModel,
-            PostcodeModel,
-            IsatSectionModel,
-            IsatCategoryModel,
-            CompanyModel,
-            ApiKeyModel,
-            ReportEmployeeRoleModel,
-            ReportModel,
-            CompanyReportModel,
-            ReportCriterionModel,
-            ReportSubCriterionModel,
-            ReportSubCriterionStepModel,
-            ReportEmployeeModel,
-            ReportEmployeeOutlierModel,
-            ReportOutlierGroupModel,
-            ReportEmployeeRoleCriterionStepModel,
-            ReportEmployeePersonalCriterionStepModel,
-            ReportResultModel,
-            PublicReportModel,
-            ReportEventModel,
-            ReportCommentModel,
-            CompanyEventModel,
-            CompanyCommentModel,
-            ConfigModel,
-          ],
+          // One registration list for the whole schema, shared with the
+          // partner API. Two hand-maintained lists would drift.
+          models: DOE_MODELS,
         }),
       ],
       useFactory: (configService: DMRSequelizeConfigService) =>

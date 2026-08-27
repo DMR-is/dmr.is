@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     "./constants": "./src/constants.ts",
+    "./models": "./src/models.ts",
     "./*": "./src/*/index.ts"
   },
   "peerDependencies": {
