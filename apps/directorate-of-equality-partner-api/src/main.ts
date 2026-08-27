@@ -3,6 +3,7 @@ import { WinstonModule } from 'nest-winston'
 
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { NestExpressApplication } from '@nestjs/platform-express'
 
 import { apmInit } from '@dmr.is/apm'
 import { logger } from '@dmr.is/logging'
@@ -13,9 +14,22 @@ import { setupSwaggerDocument } from './setupSwaggerDocument'
 import { SWAGGER_CONFIG } from './swagger.config'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  // Typed as the Express application because `trust proxy` below is an Express
+  // setting; the generic INestApplication does not expose `set`.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger({ instance: logger }),
   })
+
+  // One proxy in front: the ALB. Without this, `req.ip` is the socket peer --
+  // the ALB itself -- so the per-IP throttler would collapse every caller in
+  // the world into a single bucket, and one flood would throttle everyone.
+  //
+  // The count must be exact rather than `true`. Trusting the whole chain would
+  // let a caller prepend its own X-Forwarded-For and rotate a fake address per
+  // request, which defeats the limit silently. At 1, Express takes the entry the
+  // ALB appended, which is the real peer and not client-supplied. If a CDN is
+  // ever put in front of this service, this number changes with it.
+  app.set('trust proxy', 1)
 
   // A submitted salary report carries the whole parsed workbook inline, and a
   // large employer's payload runs to megabytes. 8mb rather than the sibling

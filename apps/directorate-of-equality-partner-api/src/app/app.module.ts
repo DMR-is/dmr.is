@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
 import { ThrottlerModule } from '@nestjs/throttler'
 
@@ -14,6 +14,8 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { IpThrottlerGuard } from '../core/guards/ip-throttler/ip-throttler.guard'
+import { PER_IP_THROTTLER, PER_KEY_THROTTLER } from '../core/guards/throttlers'
 import { ApiKeyCoreModule } from '../modules/api-key/api-key.core.module'
 import { PartnerSwaggerModule } from '../modules/swagger/partner.swagger.module'
 import { HealthController } from './health.controller'
@@ -40,15 +42,31 @@ import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
-    // Per-key rather than per-IP; see ApiKeyThrottlerGuard. The window is
-    // generous because a legitimate integrator submits a handful of reports a
-    // year per customer — this is a backstop against a broken retry loop or a
-    // credential-stuffing sweep, not a commercial quota.
+    // Two buckets, because one cannot cover both halves of the traffic: the
+    // per-key one runs after authentication and so never sees a rejected
+    // credential, and the per-IP one runs before it and so cannot know the
+    // tenant. See core/guards/throttlers.ts.
     ThrottlerModule.forRoot([
       {
-        name: 'default',
+        // Per key, across the whole surface. Generous because a legitimate
+        // integrator submits a handful of reports a year per customer — this is
+        // a backstop against a broken retry loop, not a commercial quota.
+        name: PER_KEY_THROTTLER,
         ttl: 3600000, // 1 hour
         limit: 5000,
+      },
+      {
+        // Per client IP, counted before anything is authenticated. Set well
+        // above any real integrator's burst: its job is to put a ceiling on
+        // what an unauthenticated flood can cost us, not to police legitimate
+        // callers, who are bounded by their key instead.
+        name: PER_IP_THROTTLER,
+        ttl: 60000, // 1 minute
+        limit: 600,
+        // Headers suppressed: the per-key bucket owns the published
+        // X-RateLimit contract, and a second suffixed set on every response
+        // would only tell a caller about a limit they are not the subject of.
+        setHeaders: false,
       },
     ]),
     ApiKeyCoreModule,
@@ -79,6 +97,14 @@ import { HealthController } from './health.controller'
   ],
   controllers: [HealthController],
   providers: [
+    // Global so it runs BEFORE every controller-level guard, ApiKeyGuard
+    // included. That ordering is the entire reason it exists: a guard declared
+    // after ApiKeyGuard is unreachable on the 401 path, so nothing else on this
+    // surface can count a request that failed to authenticate.
+    {
+      provide: APP_GUARD,
+      useClass: IpThrottlerGuard,
+    },
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
