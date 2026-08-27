@@ -14,7 +14,7 @@ import {
   CreateReportDto,
   CreateReportResponseDto,
   IReportCreateService,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-create'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

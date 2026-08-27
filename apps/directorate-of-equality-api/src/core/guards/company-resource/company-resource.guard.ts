@@ -10,7 +10,7 @@ import { Reflector } from '@nestjs/core'
 import {
   CompanyDto,
   ICompanyService,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/company'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 

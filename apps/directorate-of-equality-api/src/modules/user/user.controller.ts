@@ -23,7 +23,7 @@ import {
   UpdateUserBodyDto,
   UserDto,
   UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/user'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 

@@ -11,9 +11,7 @@ import {
 } from '@nestjs/common'
 import { ApiExcludeController } from '@nestjs/swagger'
 
-import {
-  IImportUploadService,
-} from '@dmr.is/doe-modules'
+import { IImportUploadService } from '@dmr.is/doe-modules/import-upload'
 
 import { PublicRoute } from '../../core/decorators/public-route.decorator'
 

@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common'
 
-import {
-  AuthorizationCoreModule,
-  CompanyCommentCoreModule,
-  CompanyCoreModule,
-} from '@dmr.is/doe-modules'
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { CompanyCoreModule } from '@dmr.is/doe-modules/company'
+import { CompanyCommentCoreModule } from '@dmr.is/doe-modules/company-comment'
 
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
 import { CompanyController } from './company.controller'

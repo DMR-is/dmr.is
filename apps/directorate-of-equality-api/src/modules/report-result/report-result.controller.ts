@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import {
   IReportResultService,
   ReportResultDto,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-result'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

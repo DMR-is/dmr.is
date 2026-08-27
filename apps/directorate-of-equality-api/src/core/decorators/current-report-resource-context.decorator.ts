@@ -4,9 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
-import {
-  ReportResourceContext,
-} from '@dmr.is/doe-modules'
+import { ReportResourceContext } from '@dmr.is/doe-modules/report'
 import { getLogger } from '@dmr.is/logging'
 
 

@@ -8,12 +8,12 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { type ReportResourceContext } from '@dmr.is/doe-modules/report'
 import {
   AssignReportDto,
   DenyReportDto,
   IReportWorkflowService,
-  type ReportResourceContext,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-workflow'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { CurrentReportResourceContext } from '../../core/decorators/current-report-resource-context.decorator'

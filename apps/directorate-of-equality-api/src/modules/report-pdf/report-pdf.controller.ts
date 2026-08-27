@@ -11,9 +11,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
-import {
-  IReportPdfService,
-} from '@dmr.is/doe-modules'
+import { IReportPdfService } from '@dmr.is/doe-modules/report-pdf'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

@@ -14,16 +14,22 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 import {
   AdminEqualityReportDto,
   AdminSalaryReportDto,
-  CreateReportResponseDto,
   IAdminReportService,
+} from '@dmr.is/doe-modules/admin-report'
+import {
   IImportUploadService,
   ImportKeyDto,
   ImportUploadBoundary,
+} from '@dmr.is/doe-modules/import-upload'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import {
   IReportExcelService,
   ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
+import {
   SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-statistics'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'

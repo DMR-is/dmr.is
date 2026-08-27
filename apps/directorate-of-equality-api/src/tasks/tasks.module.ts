@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common'
 import { SequelizeModule } from '@nestjs/sequelize'
 
-import {
-  CompanyEventCoreModule,
-  CompanyModel,
-  DoeMailModule,
-  ReportDraftCoreModule,
-} from '@dmr.is/doe-modules'
+import { CompanyModel } from '@dmr.is/doe-modules/company'
+import { CompanyEventCoreModule } from '@dmr.is/doe-modules/company-event'
+import { DoeMailModule } from '@dmr.is/doe-modules/mail'
+import { ReportDraftCoreModule } from '@dmr.is/doe-modules/report-draft'
 import { AdvisoryLockModule } from '@dmr.is/shared-modules'
 
 import { ReportDeadlineReminderService } from './report-deadline-reminder/report-deadline-reminder.service'

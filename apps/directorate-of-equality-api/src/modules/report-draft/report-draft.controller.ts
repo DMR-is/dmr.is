@@ -14,10 +14,12 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { ImportKeyDto } from '@dmr.is/doe-modules/import-upload'
+import { ReportProviderEnum } from '@dmr.is/doe-modules/report'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import {
-  CompanyDto,
   CreateDraftReportDto,
-  CreateReportResponseDto,
   DraftAssignmentDto,
   DraftDetailDto,
   EmployeeOutlierGroupDto,
@@ -30,7 +32,6 @@ import {
   GetDraftRolesWithStepsResponseDto,
   GetDraftStepsResponseDto,
   GetDraftSubCriteriaResponseDto,
-  ImportKeyDto,
   IReportDraftAnalysisService,
   IReportDraftAssignmentService,
   IReportDraftCriterionService,
@@ -43,12 +44,11 @@ import {
   IReportDraftSubCriterionService,
   IReportDraftSubmitService,
   IReportDraftSyncService,
-  ReportProviderEnum,
-  SalaryAnalysisResponseDto,
   SubmitDraftDto,
   SyncDraftDto,
   UpdateDraftDto,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report-draft'
+import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 

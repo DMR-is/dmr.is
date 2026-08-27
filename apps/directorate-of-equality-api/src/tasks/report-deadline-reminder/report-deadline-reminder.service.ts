@@ -9,10 +9,10 @@ import {
   CompanyModel,
   CompanyReminderTierEnum,
   CompanyStatusEnum,
-  ICompanyEventService,
-  IDoeMailService,
-  ReportTypeEnum,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/company'
+import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
+import { IDoeMailService } from '@dmr.is/doe-modules/mail'
+import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT } from '../constants'

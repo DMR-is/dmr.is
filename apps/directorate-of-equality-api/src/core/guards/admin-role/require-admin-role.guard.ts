@@ -9,7 +9,7 @@ import {
 import {
   DoeUserRole,
   UserModel,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/user'
 
 
 @Injectable()

@@ -4,7 +4,7 @@ import { ForbiddenException } from '@nestjs/common'
 import {
   ReportRoleEnum,
   ReportStatusEnum,
-} from '@dmr.is/doe-modules'
+} from '@dmr.is/doe-modules/report'
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 
 import { ReportResourceGuard } from './report-resource.guard'
