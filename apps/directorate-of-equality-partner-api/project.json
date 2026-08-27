@@ -13,7 +13,10 @@
         ],
         "cwd": "apps/directorate-of-equality-partner-api",
         "forwardAllArgs": false
-      }
+      },
+      "dependsOn": [
+        "^codegen"
+      ]
     },
     "test": {
       "executor": "@nx/jest:jest",
@@ -46,7 +49,8 @@
         "production": {}
       },
       "dependsOn": [
-        "^build"
+        "^build",
+        "^codegen"
       ]
     },
     "format": {
