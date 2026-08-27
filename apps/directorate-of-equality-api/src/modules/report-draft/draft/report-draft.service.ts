@@ -126,6 +126,7 @@ export class ReportDraftService implements IReportDraftService {
       salaryDataBasis: report.salaryDataBasis,
       salaryDataPeriod: report.salaryDataPeriod,
       equalityReportContent: report.equalityReportContent,
+      importedFromExcel: report.importedFromExcel,
       counts: { employees, criteria, outlierGroups },
       createdAt: report.createdAt ?? null,
       updatedAt: report.updatedAt ?? null,
@@ -196,16 +197,39 @@ export class ReportDraftService implements IReportDraftService {
    * Marks the report row as active without changing any column, so
    * `pruneStaleDrafts` sees child-only edits as activity.
    *
-   * Bulk sync and workbook import write employees / criteria / roles / groups —
-   * never the report row — so without this a draft built entirely through
-   * `POST …/draft/sync` or `POST …/draft/import` ages toward deletion exactly as
-   * if it had been abandoned. `updated_at` is set explicitly (`silent` keeps
-   * Sequelize from also managing it) because a no-column update would otherwise
-   * issue no query at all.
+   * Bulk sync writes employees / criteria / roles / groups — never the report
+   * row — so without this a draft built entirely through `POST …/draft/sync`
+   * ages toward deletion exactly as if it had been abandoned. `updated_at` is
+   * set explicitly (`silent` keeps Sequelize from also managing it) because a
+   * no-column update would otherwise issue no query at all.
+   *
+   * Workbook import is the other child-only path, but it calls
+   * `markImportedFromExcel` instead — that writes a column of its own and
+   * bumps `updated_at` in the same statement.
    */
   async touchDraft(reportId: string): Promise<void> {
     await this.reportModel.update(
       { updatedAt: new Date() },
+      { where: { id: reportId }, silent: true },
+    )
+  }
+
+  /**
+   * Flags the draft as workbook-derived. Called by the Excel seed once the
+   * parser has run and its output is persisted, which is the only point in the
+   * application flow where the server actually knows how the applicant entered
+   * their data: `POST …/draft/import` went through the parser, the sync and
+   * per-entity endpoints are the portal UI keying it in by hand.
+   *
+   * Sticky — see the interface. A re-import of an already-flagged draft writes
+   * the same value again on purpose: the statement is unconditional, so
+   * `updated_at` still moves and the abandoned-draft reaper does not count a
+   * draft the employer just re-populated as inactive. `updated_at` is set
+   * explicitly for the same reason `touchDraft` does it.
+   */
+  async markImportedFromExcel(reportId: string): Promise<void> {
+    await this.reportModel.update(
+      { importedFromExcel: true, updatedAt: new Date() },
       { where: { id: reportId }, silent: true },
     )
   }

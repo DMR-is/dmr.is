@@ -1,4 +1,5 @@
 import {
+  ApiBoolean,
   ApiDto,
   ApiEnum,
   ApiNumber,
@@ -102,6 +103,12 @@ export class DraftDetailDto {
 
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiBoolean({
+    description:
+      "Whether this draft's scoring content was uploaded as an Excel workbook (`POST …/draft/import`) rather than keyed in through the portal UI. Set by the server when the parser runs; sticky, so hand-editing rows afterwards does not clear it. False on a draft that has never been imported.",
+  })
+  importedFromExcel!: boolean
 
   @ApiDto(DraftCountsDto)
   counts!: DraftCountsDto

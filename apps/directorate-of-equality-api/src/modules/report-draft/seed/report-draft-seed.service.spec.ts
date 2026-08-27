@@ -77,7 +77,7 @@ describe('ReportDraftSeedService', () => {
   let service: ReportDraftSeedService
   let findOwnedDraft: jest.Mock
   let clearDraftChildren: jest.Mock
-  let touchDraft: jest.Mock
+  let markImportedFromExcel: jest.Mock
   let getDraftDetail: jest.Mock
   let persistParsedChildren: jest.Mock
   let importWorkbook: jest.Mock
@@ -89,7 +89,7 @@ describe('ReportDraftSeedService', () => {
       .fn()
       .mockResolvedValue({ id: REPORT_ID, type: ReportTypeEnum.SALARY })
     clearDraftChildren = jest.fn().mockResolvedValue(undefined)
-    touchDraft = jest.fn().mockResolvedValue(undefined)
+    markImportedFromExcel = jest.fn().mockResolvedValue(undefined)
     getDraftDetail = jest.fn().mockResolvedValue({ id: REPORT_ID })
     persistParsedChildren = jest
       .fn()
@@ -110,7 +110,7 @@ describe('ReportDraftSeedService', () => {
           useValue: {
             findOwnedDraft,
             clearDraftChildren,
-            touchDraft,
+            markImportedFromExcel,
             getDraftDetail,
           },
         },
@@ -140,12 +140,30 @@ describe('ReportDraftSeedService', () => {
     )
   })
 
-  it('touches the report row so the reaper sees the import as activity', async () => {
-    // An import writes children only. Without the touch, a draft populated
-    // from a workbook ages toward hard deletion as if abandoned.
+  it('flags the draft as workbook-derived once the parser has run', async () => {
+    // The whole point of `report.imported_from_excel`: this draft's content came
+    // out of a spreadsheet, not the portal UI. This is the only place the server
+    // can observe that, so the flag is set here or it is never set at all.
     await service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY)
 
-    expect(touchDraft).toHaveBeenCalledWith(REPORT_ID)
+    expect(markImportedFromExcel).toHaveBeenCalledWith(REPORT_ID)
+  })
+
+  it('flags only after the parsed content is persisted', async () => {
+    // Ordering matters: a persist that throws must leave the draft claiming no
+    // workbook origin, so the flag cannot be written ahead of the content.
+    const order: string[] = []
+    persistParsedChildren.mockImplementationOnce(async () => {
+      order.push('persist')
+      return { employeeOrdinalToId: new Map() }
+    })
+    markImportedFromExcel.mockImplementationOnce(async () => {
+      order.push('mark')
+    })
+
+    await service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY)
+
+    expect(order).toEqual(['persist', 'mark'])
   })
 
   it('cleans up the staged object even if parsing fails', async () => {
@@ -156,8 +174,9 @@ describe('ReportDraftSeedService', () => {
     ).rejects.toThrow('bad workbook')
     expect(cleanup).toHaveBeenCalledWith(KEY)
     expect(persistParsedChildren).not.toHaveBeenCalled()
-    // Nothing was written, so nothing counts as activity.
-    expect(touchDraft).not.toHaveBeenCalled()
+    // Nothing was written, so nothing counts as activity and no workbook
+    // origin is claimed.
+    expect(markImportedFromExcel).not.toHaveBeenCalled()
   })
 
   it('400s on an equality draft (no clearing/persisting)', async () => {
