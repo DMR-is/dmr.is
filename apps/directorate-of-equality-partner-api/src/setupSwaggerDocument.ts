@@ -31,7 +31,22 @@ export const buildSwaggerDocument = (
     .setTitle(options.swaggerTitle)
     .setDescription(options.swaggerDescription)
     .setVersion('1.0')
-    .addBearerAuth()
+    // The credential travels as `Authorization: Bearer doe_<env>_<keyId>.<secret>`,
+    // so http/bearer is the honest scheme even though it is not a JWT — hence
+    // the explicit bearerFormat, which is what an integrator reads to find out
+    // what to put there. Named `apiKey` so `@ApiSecurity('apiKey')` on the
+    // controller resolves: a name that is referenced but never declared leaves
+    // the document telling a generated client nothing about how to authenticate.
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'DoE API key',
+        description:
+          'The API key issued to the employer, presented verbatim. Server-to-server only — a key cannot be kept secret in a browser.',
+      },
+      'apiKey',
+    )
     .build()
 
   const document = SwaggerModule.createDocument(app, openApi, {
