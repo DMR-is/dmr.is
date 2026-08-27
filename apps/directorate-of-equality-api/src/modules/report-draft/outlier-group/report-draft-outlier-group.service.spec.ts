@@ -36,9 +36,12 @@ describe('ReportDraftOutlierGroupService', () => {
   let groupFindByPk: jest.Mock
   let groupBuild: jest.Mock
   let groupSave: jest.Mock
+  let groupFindAll: jest.Mock
   let outlierFindOne: jest.Mock
+  let outlierFindAll: jest.Mock
   let outlierCreate: jest.Mock
   let outlierCount: jest.Mock
+  let outlierDestroy: jest.Mock
   let employeeFindOne: jest.Mock
 
   beforeEach(async () => {
@@ -51,9 +54,12 @@ describe('ReportDraftOutlierGroupService', () => {
       ...attrs,
       save: groupSave,
     }))
+    groupFindAll = jest.fn().mockResolvedValue([])
     outlierFindOne = jest.fn().mockResolvedValue(null)
+    outlierFindAll = jest.fn().mockResolvedValue([])
     outlierCreate = jest.fn()
     outlierCount = jest.fn().mockResolvedValue(0)
+    outlierDestroy = jest.fn()
     employeeFindOne = jest.fn().mockResolvedValue({ id: EMPLOYEE_ID })
 
     const module = await Test.createTestingModule({
@@ -64,7 +70,7 @@ describe('ReportDraftOutlierGroupService', () => {
         {
           provide: getModelToken(ReportOutlierGroupModel),
           useValue: {
-            findAll: jest.fn().mockResolvedValue([]),
+            findAll: groupFindAll,
             findOne: groupFindOne,
             findByPk: groupFindByPk,
             build: groupBuild,
@@ -74,9 +80,10 @@ describe('ReportDraftOutlierGroupService', () => {
           provide: getModelToken(ReportEmployeeOutlierModel),
           useValue: {
             findOne: outlierFindOne,
+            findAll: outlierFindAll,
             create: outlierCreate,
             count: outlierCount,
-            destroy: jest.fn(),
+            destroy: outlierDestroy,
           },
         },
         {
@@ -215,6 +222,53 @@ describe('ReportDraftOutlierGroupService', () => {
           new Set([EMPLOYEE_ID]),
         ),
       ).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('getMemberEmployeeIds', () => {
+    it('lists the employees sitting in one of the draft\'s groups', async () => {
+      groupFindAll.mockResolvedValueOnce([{ id: GROUP_ID }, { id: 'group-2' }])
+      outlierFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: EMPLOYEE_ID },
+        { reportEmployeeId: 'emp-2' },
+      ])
+
+      await expect(service.getMemberEmployeeIds(report)).resolves.toEqual([
+        EMPLOYEE_ID,
+        'emp-2',
+      ])
+      expect(outlierFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { groupId: [GROUP_ID, 'group-2'] } }),
+      )
+    })
+
+    it('skips the membership query when the draft has no groups', async () => {
+      groupFindAll.mockResolvedValueOnce([])
+
+      await expect(service.getMemberEmployeeIds(report)).resolves.toEqual([])
+      expect(outlierFindAll).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('clearEmployeeGroups', () => {
+    it('deletes the membership rows scoped to the draft\'s own groups', async () => {
+      groupFindAll.mockResolvedValueOnce([{ id: GROUP_ID }])
+
+      await service.clearEmployeeGroups(report, [EMPLOYEE_ID, 'emp-2'])
+
+      expect(outlierDestroy).toHaveBeenCalledWith({
+        where: {
+          reportEmployeeId: [EMPLOYEE_ID, 'emp-2'],
+          groupId: [GROUP_ID],
+        },
+      })
+    })
+
+    it('is a no-op for an empty id list', async () => {
+      await service.clearEmployeeGroups(report, [])
+
+      expect(groupFindAll).not.toHaveBeenCalled()
+      expect(outlierDestroy).not.toHaveBeenCalled()
     })
   })
 })

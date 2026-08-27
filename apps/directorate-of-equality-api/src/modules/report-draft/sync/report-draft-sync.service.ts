@@ -3,6 +3,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { ReportModel } from '../../report/models/report.model'
 import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftAssignmentService } from '../assignment/report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from '../criterion/report-draft-criterion.service.interface'
@@ -65,8 +66,8 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
    *   3. apply folded step assignments (role + employee `stepIds`)
    *   4. create/update outlier groups
    *   5. clear folded outlier-group membership (`outlierGroupId: null`)
-   *   6. removals, dependents first (employees → steps → sub → criteria → roles → groups)
-   *   7. derive outliers, then apply membership sets (validated against the set)
+   *   6. removals, dependents first (employees → steps → sub → criteria → roles)
+   *   7. derive outliers, then drop stale memberships, remove groups, apply sets
    *   8. touch the report row so the prune cron sees child-only edits
    * Any failure throws and the CLS transaction rolls the whole batch back.
    * Referential integrity is enforced inline by the appliers (role/group remove
@@ -171,7 +172,9 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       }
     }
 
-    // 6. Removals — dependents first.
+    // 6. Removals — dependents first. Outlier groups are held back to step 7:
+    //    a group the recalculation has just emptied must have its stale members
+    //    pruned before `removeGroup` will accept it.
     for (const id of employees.removes) {
       await this.employeeService.removeEmployee(report, id)
     }
@@ -187,25 +190,18 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
     for (const id of roles.removes) {
       await this.roleService.removeRole(report, id)
     }
-    for (const id of groups.removes) {
-      await this.outlierGroupService.removeGroup(report, id)
-    }
 
-    // 7. Membership sets — validated against the freshly-derived outlier set.
-    const sets = membership.filter((c) => typeof c.data.outlierGroupId === 'string')
-    if (sets.length > 0) {
-      const detected = await this.analysisService.getDetectedOutlierEmployeeIds(
-        report.id,
-      )
-      for (const c of sets) {
-        await this.outlierGroupService.setEmployeeGroup(
-          report,
-          c.id,
-          c.data.outlierGroupId as string,
-          detected,
-        )
-      }
-    }
+    // 7. Outlier membership and group removals — see `applyOutlierChanges`.
+    await this.applyOutlierChanges(
+      report,
+      membership
+        .filter((c) => typeof c.data.outlierGroupId === 'string')
+        .map((c) => ({
+          employeeId: c.id,
+          groupId: c.data.outlierGroupId as string,
+        })),
+      groups.removes,
+    )
 
     // Everything above writes children only. Touch the report row so the
     // abandoned-draft reaper sees an actively-edited draft as active.
@@ -215,6 +211,76 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
+  }
+
+  /**
+   * The tail of a sync: everything that depends on who is an outlier *after*
+   * the batch. Detection is derived from the persisted rows, so it can only be
+   * known once every edit above has landed — the salary figures, the step
+   * scores and the step assignments all move the lágmarksmengi.
+   *
+   * Three things happen here, in this order:
+   *  1. memberships whose employee the recalculation just dropped out of the
+   *     set are cleared. Leaving them would strand the draft — submit rejects a
+   *     membership for a non-outlier, and the applicant never sees that
+   *     employee on the grouping step again, so nothing else would clear it.
+   *  2. group removals, which is why they wait for step 6's dependents: a group
+   *     the applicant sees as empty is only actually empty after (1).
+   *  3. the batch's own membership sets, skipping employees that are no longer
+   *     outliers — that command is stale client state (built from the previous
+   *     calculation, invalidated by this very batch), not a bad request. A 400
+   *     would roll back the edits that invalidated it together with the prune,
+   *     leaving the applicant stuck on the same error forever.
+   *
+   * Detection is skipped entirely when nothing needs it: no sets in the batch
+   * and no membership rows on the draft.
+   */
+  private async applyOutlierChanges(
+    report: ReportModel,
+    sets: { employeeId: string; groupId: string }[],
+    groupRemovals: string[],
+  ): Promise<void> {
+    const memberIds = await this.outlierGroupService.getMemberEmployeeIds(report)
+
+    const detected =
+      sets.length > 0 || memberIds.length > 0
+        ? await this.analysisService.getDetectedOutlierEmployeeIds(report.id)
+        : null
+
+    if (detected) {
+      const stale = memberIds.filter((id) => !detected.has(id))
+      if (stale.length > 0) {
+        await this.outlierGroupService.clearEmployeeGroups(report, stale)
+        this.logger.info(
+          `Dropped ${stale.length} stale outlier membership(s) from draft "${report.id}"`,
+          { context: LOGGING_CONTEXT, reportId: report.id },
+        )
+      }
+    }
+
+    for (const id of groupRemovals) {
+      await this.outlierGroupService.removeGroup(report, id)
+    }
+
+    if (!detected) {
+      return
+    }
+
+    const applicable = sets.filter((c) => detected.has(c.employeeId))
+    if (applicable.length < sets.length) {
+      this.logger.info(
+        `Skipped ${sets.length - applicable.length} outlier-group assignment(s) for employees that are no longer outliers in draft "${report.id}"`,
+        { context: LOGGING_CONTEXT, reportId: report.id },
+      )
+    }
+    for (const c of applicable) {
+      await this.outlierGroupService.setEmployeeGroup(
+        report,
+        c.employeeId,
+        c.groupId,
+        detected,
+      )
+    }
   }
 
   /**

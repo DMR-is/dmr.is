@@ -77,6 +77,8 @@ describe('ReportDraftSyncService', () => {
       removeGroup: jest.fn(),
       setEmployeeGroup: jest.fn(),
       clearEmployeeGroup: jest.fn(),
+      clearEmployeeGroups: jest.fn(),
+      getMemberEmployeeIds: jest.fn().mockResolvedValue([]),
     }
 
     const module: TestingModule = await Test.createTestingModule({
@@ -181,10 +183,113 @@ describe('ReportDraftSyncService', () => {
     )
   })
 
-  it('does not derive outliers when no membership set is requested', async () => {
+  it('does not derive outliers when nothing needs them', async () => {
     await service.syncDraft('prov-1', COMPANY, {
       employees: [{ method: SyncMethodEnum.CREATE, id: 'e1', data: {} }],
     })
+    expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
+  })
+
+  // The whole point of re-deriving here: edits in this batch can push an
+  // employee out of the lágmarksmengi, and submit rejects a membership for a
+  // non-outlier, so the row has to go with them.
+  it('drops memberships of employees the recalculation cleared', async () => {
+    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1', 'e2'])
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
+
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e1',
+          data: { baseSalary: 900000 },
+        },
+      ],
+    })
+
+    expect(outlierGroup.clearEmployeeGroups).toHaveBeenCalledWith(REPORT, ['e1'])
+  })
+
+  it('keeps memberships of employees that are still outliers', async () => {
+    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e1']))
+
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e1',
+          data: { baseSalary: 900000 },
+        },
+      ],
+    })
+
+    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
+  })
+
+  // Stale client state, not a client error — 400ing would roll back the very
+  // edits that made the employee a non-outlier.
+  it('skips a membership set for an employee that is no longer an outlier', async () => {
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
+
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e1',
+          data: { outlierGroupId: 'g1' },
+        },
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e2',
+          data: { outlierGroupId: 'g1' },
+        },
+      ],
+    })
+
+    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledTimes(1)
+    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledWith(
+      REPORT,
+      'e2',
+      'g1',
+      new Set(['e2']),
+    )
+    expect(reportDraft.touchDraft).toHaveBeenCalledWith('report-1')
+  })
+
+  // removeGroup refuses to orphan members, so a group the applicant sees as
+  // emptied by the recalculation is only removable after the prune.
+  it('removes outlier groups after the stale memberships are dropped', async () => {
+    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
+    const order: string[] = []
+    outlierGroup.clearEmployeeGroups.mockImplementation(() => {
+      order.push('clear')
+    })
+    outlierGroup.removeGroup.mockImplementation(() => {
+      order.push('remove')
+    })
+
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e1',
+          data: { baseSalary: 900000 },
+        },
+      ],
+      outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
+    })
+
+    expect(order).toEqual(['clear', 'remove'])
+  })
+
+  it('removes outlier groups even when no detection is needed', async () => {
+    await service.syncDraft('prov-1', COMPANY, {
+      outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
+    })
+
+    expect(outlierGroup.removeGroup).toHaveBeenCalledWith(REPORT, 'g1')
     expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
   })
 

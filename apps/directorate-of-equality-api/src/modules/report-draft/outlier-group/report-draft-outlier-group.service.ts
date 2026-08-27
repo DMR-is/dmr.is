@@ -240,6 +240,50 @@ export class ReportDraftOutlierGroupService
     })
   }
 
+  /** The report's employees that currently sit in an outlier group. */
+  async getMemberEmployeeIds(report: ReportModel): Promise<string[]> {
+    const groupIds = await this.getGroupIds(report.id)
+    if (groupIds.length === 0) {
+      return []
+    }
+
+    const rows = await this.outlierModel.findAll({
+      where: { groupId: groupIds },
+      attributes: ['reportEmployeeId'],
+    })
+
+    return rows.map((row) => row.reportEmployeeId)
+  }
+
+  /**
+   * Bulk-clears membership for the given employees. Scoped through the report's
+   * own groups, so an id from another report can never delete a row here.
+   */
+  async clearEmployeeGroups(
+    report: ReportModel,
+    employeeIds: string[],
+  ): Promise<void> {
+    if (employeeIds.length === 0) {
+      return
+    }
+    const groupIds = await this.getGroupIds(report.id)
+    if (groupIds.length === 0) {
+      return
+    }
+
+    await this.outlierModel.destroy({
+      where: { reportEmployeeId: employeeIds, groupId: groupIds },
+    })
+  }
+
+  private async getGroupIds(reportId: string): Promise<string[]> {
+    const groups = await this.groupModel.findAll({
+      where: { reportId },
+      attributes: ['id'],
+    })
+    return groups.map((group) => group.id)
+  }
+
   private async findOwnedGroup(
     reportId: string,
     groupId: string,

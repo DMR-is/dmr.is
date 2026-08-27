@@ -51,6 +51,12 @@ export interface IReportDraftOutlierGroupService {
 
   /** Clear an employee's outlier-group membership from a sync command. */
   clearEmployeeGroup(report: ReportModel, employeeId: string): Promise<void>
+
+  /** The report's employees that currently sit in an outlier group. */
+  getMemberEmployeeIds(report: ReportModel): Promise<string[]>
+
+  /** Bulk-clear membership for the given employees of the report. */
+  clearEmployeeGroups(report: ReportModel, employeeIds: string[]): Promise<void>
 }
 
 export const IReportDraftOutlierGroupService = Symbol(
