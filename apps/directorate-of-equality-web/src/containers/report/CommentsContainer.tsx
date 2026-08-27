@@ -131,12 +131,15 @@ export function CommentsContainer({ reportId }: CommentsContainerProps) {
       onExternalChange={setIsExternal}
       onSubmit={handleSubmit}
       onConfirmExternal={handleConfirmExternal}
-      onCancelExternal={() => {
-        // The send is already on its way; closing now would hide the only
-        // spinner the reviewer has and invite a second click.
-        if (isPending) return
-        setIsConfirmOpen(false)
-      }}
+      // Always follows the dialog down, even mid-send. `Modal` hardcodes
+      // hideOnEsc/hideOnClickOutside and `ModalBase` syncs `isVisible` through
+      // an effect keyed on that prop alone, so by the time this runs the native
+      // <dialog> is already closed. Refusing here would leave isConfirmOpen
+      // true against a shut dialog, the effect would never re-run, and the next
+      // open would be a no-op — wedging external comments until a remount.
+      // Blocking dismissal in flight would have to happen inside Modal, which
+      // does not forward those flags today.
+      onCancelExternal={() => setIsConfirmOpen(false)}
       onDelete={handleDelete}
     />
   )

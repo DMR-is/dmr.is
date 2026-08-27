@@ -39,20 +39,22 @@ globalStyle(`${chartFocus} :focus`, {
 })
 
 /**
- * Keyboard focus stays visible, on the one element that is a real tab stop.
+ * Keyboard focus stays visible.
  *
- * The `<svg>` is the only descendant recharts gives `tabIndex={0}`, and
- * arrow-key navigation of the data points is exactly what it is for, so those
- * users still need to see where they are. Everything else is `tabIndex={-1}` —
- * reachable by script or click but never by Tab — so it is owed no indicator.
+ * Scoped as widely as the reset above on purpose. Only the `<svg>` is a tab
+ * stop today — recharts gives everything else `tabIndex={-1}` — so matching
+ * `.recharts-surface` alone would behave identically right now. But
+ * `chartFocus` sits on the ResponsiveContainer, which also wraps the legend and
+ * the tooltip, so the first focusable control added in either would inherit the
+ * reset and ship with no focus indicator at all. Pairing the two rules at the
+ * same breadth means that cannot happen quietly.
  *
- * Higher specificity than the reset above, so it wins regardless of order.
- * Stated as its own rule rather than narrowing the reset to
- * `:focus:not(:focus-visible)`, because whether a click matches
- * `:focus-visible` on a `role="application"` svg is a browser heuristic and
- * differs between them.
+ * Widening it also levelled the specificity — both selectors are now (0,2,0),
+ * where the narrower `.recharts-surface` form outranked the reset. So this rule
+ * wins on source order alone and MUST stay below the reset. vanilla-extract
+ * emits `globalStyle` calls in file order, which is what keeps that true.
  */
-globalStyle(`${chartFocus} .recharts-surface:focus-visible`, {
+globalStyle(`${chartFocus} :focus-visible`, {
   outline: `3px solid ${theme.color.blue400}`,
   outlineOffset: 2,
 })
