@@ -75,7 +75,7 @@ jobs:
       # When there is no baseline at all -- first run after a rename, or run
       # history aged out -- the action reports noPreviousBuild instead of us
       # guessing. That case is handled explicitly below by treating every
-      # container as affected: rebuilding all eleven is wasteful but always
+      # container as affected: rebuilding all twelve is wasteful but always
       # correct, where HEAD~1 is cheap and sometimes wrong. Fail safe, not
       # fail closed, so a missing baseline never blocks a deploy either.
       #
@@ -105,7 +105,8 @@ jobs:
             {"name":"legal-gazette-application-web",     "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"legal-gazette-public-web",          "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"directorate-of-equality-api",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
+            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
+            {"name":"directorate-of-equality-partner-api","account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
           ]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1

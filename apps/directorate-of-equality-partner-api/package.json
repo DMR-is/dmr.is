@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@dmr.is/apm": "*",
+    "@dmr.is/constants": "*",
     "@dmr.is/db": "*",
     "@dmr.is/decorators": "*",
     "@dmr.is/doe-modules": "*",
