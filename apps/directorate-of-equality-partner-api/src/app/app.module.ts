@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER } from '@nestjs/core'
 import { SequelizeModule } from '@nestjs/sequelize'
+import { ThrottlerModule } from '@nestjs/throttler'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
@@ -13,6 +14,7 @@ import {
 } from '@dmr.is/shared-filters'
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
+import { ApiKeyCoreModule } from '../modules/api-key/api-key.core.module'
 import { PartnerSwaggerModule } from '../modules/swagger/partner.swagger.module'
 import { HealthController } from './health.controller'
 
@@ -38,6 +40,18 @@ import { HealthController } from './health.controller'
 @Module({
   imports: [
     LoggingModule,
+    // Per-key rather than per-IP; see ApiKeyThrottlerGuard. The window is
+    // generous because a legitimate integrator submits a handful of reports a
+    // year per customer — this is a backstop against a broken retry loop or a
+    // credential-stuffing sweep, not a commercial quota.
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 3600000, // 1 hour
+        limit: 5000,
+      },
+    ]),
+    ApiKeyCoreModule,
     SequelizeModule.forRootAsync({
       imports: [
         DMRSequelizeConfigModule.register({
