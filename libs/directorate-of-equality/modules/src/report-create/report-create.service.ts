@@ -113,6 +113,7 @@ export class ReportCreateService implements IReportCreateService {
       input.providerType,
       input.providerId,
       submittingCompany.companyId,
+      ReportTypeEnum.SALARY,
     )
     if (replay) {
       return replay
@@ -289,6 +290,7 @@ export class ReportCreateService implements IReportCreateService {
       input.providerType,
       input.providerId,
       submittingCompany.companyId,
+      ReportTypeEnum.EQUALITY,
     )
     if (replay) {
       return replay
@@ -370,6 +372,7 @@ export class ReportCreateService implements IReportCreateService {
     providerType: ReportProviderEnum,
     providerId: string | null,
     submittingCompanyId: string,
+    expectedType: ReportTypeEnum,
   ): Promise<CreateReportResponseDto | null> {
     if (providerId === null) {
       return null
@@ -388,6 +391,24 @@ export class ReportCreateService implements IReportCreateService {
     if (!existingParent || existingParent.companyId !== submittingCompanyId) {
       throw new ConflictException(
         `Provider tuple (${providerType}, "${providerId}") is already registered for a different company`,
+      )
+    }
+
+    // A tuple is bound to one report type for good. Without this, reusing a
+    // provider id across the equality and salary calls replays the FIRST
+    // report: the second call returned 201 with the other report's id and filed
+    // nothing, and a follow-up read by provider id returned that same report,
+    // so the loss was invisible from the caller's side.
+    //
+    // The lookup stays type-agnostic on purpose rather than gaining `type` in
+    // the where clause. The unique index is on (provider_type, provider_id)
+    // alone, and every read of a tuple — including the partner API's GET by
+    // provider id — is type-agnostic too. Adding `type` here would make the
+    // lookup miss, the insert collide with that index, and the caller receive a
+    // 400 blaming its payload. One row per tuple is the contract; say so.
+    if (existing.type !== expectedType) {
+      throw new ConflictException(
+        `Provider tuple (${providerType}, "${providerId}") is already registered for a ${existing.type} report`,
       )
     }
 
