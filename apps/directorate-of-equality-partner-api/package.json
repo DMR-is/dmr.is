@@ -1,0 +1,37 @@
+{
+  "name": "directorate-of-equality-partner-api",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@dmr.is/apm": "*",
+    "@dmr.is/db": "*",
+    "@dmr.is/decorators": "*",
+    "@dmr.is/doe-modules": "*",
+    "@dmr.is/doe-shared": "*",
+    "@dmr.is/logging": "*",
+    "@dmr.is/shared-dto": "*",
+    "@dmr.is/shared-filters": "*",
+    "@dmr.is/shared-middleware": "*",
+    "@dmr.is/shared-modules": "*",
+    "@nestjs/common": "^11.1.29",
+    "@nestjs/core": "^11.1.29",
+    "@nestjs/platform-express": "^11.1.29",
+    "@nestjs/sequelize": "^11.0.0",
+    "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "6.5.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "express": "^5.2.1",
+    "nest-winston": "^1.9.4",
+    "pg": "8.13.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.0",
+    "sequelize": "6.37.8",
+    "sequelize-typescript": "2.1.6",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.29",
+    "@types/express": "^5.0.0"
+  }
+}

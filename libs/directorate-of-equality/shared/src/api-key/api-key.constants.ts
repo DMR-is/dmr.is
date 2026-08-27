@@ -1,9 +1,9 @@
 /**
  * Physical table name.
  *
- * The DoE app names its tables through the `DoeModels` enum in
- * `apps/directorate-of-equality-api/src/core/constants.ts`, but this model lives
- * in a lib that both APIs consume, so it cannot reach into an app for the name.
+ * The DoE schema names its tables through the `DoeModels` enum in
+ * `@dmr.is/doe-modules/constants`. This model lives one library below that one,
+ * so it cannot reach up for the name.
  * The literal is declared here instead and the app has no `DoeModels` entry for
  * it — there is exactly one source of truth either way.
  */
