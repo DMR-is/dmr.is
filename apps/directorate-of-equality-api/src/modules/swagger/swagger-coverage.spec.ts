@@ -133,6 +133,14 @@ const PUBLIC_ROUTE_ALLOWLIST: ReadonlySet<string> = new Set([
  * management to every reviewer.
  */
 const ADMIN_ONLY_HANDLERS: readonly string[] = [
+  // Issuing a credential that can submit on a company's behalf, and revoking
+  // one, are administrative acts rather than reviewer actions, so both are
+  // pinned. Reading the key list deliberately is NOT: it carries no secret, and
+  // seeing that a key exists is part of reviewing a company. Mirrors
+  // UserController, where listing is open to any active reviewer and only the
+  // writes are ADMIN.
+  'ApiKeyController.issueApiKey',
+  'ApiKeyController.revokeApiKey',
   'ConfigController.updateByKey',
   'UserController.createUser',
   'UserController.deleteUser',
@@ -687,7 +695,7 @@ describe('swagger document coverage', () => {
       expect(unlisted).toEqual([])
     })
 
-    it('restricts the ADMIN role requirement to user management and config', () => {
+    it('restricts the ADMIN role requirement to user management, config and API keys', () => {
       const adminOnly = routedHandlers(app)
         .filter(([controller, method]) =>
           guardsForHandler(controller, method).includes(RequireAdminRoleGuard),
