@@ -19,6 +19,10 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_COOKIE_SECURE: "false"
 
+      # Production build in a local container, so the schema's "deployed" default
+      # would apply. Written literally -- an exported empty string is a failure.
+      DMR_RUNTIME: local
+
       # URLs — production env var names, set to development values.
       # BASE_URL is the app's own origin and is now the single name for it;
       # LG_WEB_URL existed only so this app could hold a different value from

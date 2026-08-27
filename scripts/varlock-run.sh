@@ -75,8 +75,8 @@ fi
 # A declared key is normally the app's to decide, never the shell's. These are
 # the exception: they are ambient SESSION IDENTITY, not app configuration. In a
 # container they come from the ECS task role; on a laptop they come from the
-# developer's AWS session. No secret store holds them in either world -- the
-# infra repo sets AWS_REGION on none of the services.
+# developer's AWS session. No secret store holds them in either world, and no
+# deployed service sets AWS_REGION.
 #
 # Scrubbing them does not fail loudly, which is why this list exists. See
 # libs/shared/modules/src/lib/aws/aws.service.ts: a missing AWS_CREDENTIALS_SOURCE
@@ -119,6 +119,11 @@ if [ -n "${VARLOCK_FRESH:-}" ]; then
   echo "varlock-run: clearing cache before resolving $app" >&2
 fi
 
+# DMR_RUNTIME=local exempts a laptop from the forEnv(deployed) markers in the app
+# schemas, which default it to "deployed" so a bypassed wrapper fails closed. Set
+# after the scrub deliberately: env applies -u before assignments, so the value
+# survives even though the schemas declare the key. A local container runs its own
+# process, so each web docker-compose.yml sets it too.
 cd "$here"
 # shellcheck disable=SC2086  # deliberate word-splitting; keys match [A-Z0-9_]
-exec env $scrub "$varlock" run --path "$config_dir" $fresh -- "$@"
+exec env $scrub DMR_RUNTIME=local "$varlock" run --path "$config_dir" $fresh -- "$@"
