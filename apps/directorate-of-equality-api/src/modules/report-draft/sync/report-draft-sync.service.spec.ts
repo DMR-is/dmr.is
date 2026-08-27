@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -75,7 +79,7 @@ describe('ReportDraftSyncService', () => {
       createGroup: jest.fn(),
       updateGroup: jest.fn(),
       removeGroup: jest.fn(),
-      setEmployeeGroup: jest.fn(),
+      setEmployeeGroup: jest.fn().mockResolvedValue(true),
       clearEmployeeGroup: jest.fn(),
       clearEmployeeGroups: jest.fn(),
       getMemberEmployeeIds: jest.fn().mockResolvedValue([]),
@@ -190,20 +194,16 @@ describe('ReportDraftSyncService', () => {
     expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
   })
 
-  // The whole point of re-deriving here: edits in this batch can push an
-  // employee out of the lágmarksmengi, and submit rejects a membership for a
-  // non-outlier, so the row has to go with them.
+  // The whole point of re-deriving here: edits can push an employee out of the
+  // lágmarksmengi, and submit rejects a membership for a non-outlier, so the
+  // row has to go with them.
   it('drops memberships of employees the recalculation cleared', async () => {
     outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1', 'e2'])
     analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
 
     await service.syncDraft('prov-1', COMPANY, {
-      employees: [
-        {
-          method: SyncMethodEnum.UPDATE,
-          id: 'e1',
-          data: { baseSalary: 900000 },
-        },
+      outlierGroups: [
+        { method: SyncMethodEnum.UPDATE, id: 'g1', data: { name: 'A' } },
       ],
     })
 
@@ -219,7 +219,7 @@ describe('ReportDraftSyncService', () => {
         {
           method: SyncMethodEnum.UPDATE,
           id: 'e1',
-          data: { baseSalary: 900000 },
+          data: { outlierGroupId: 'g1' },
         },
       ],
     })
@@ -227,10 +227,60 @@ describe('ReportDraftSyncService', () => {
     expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
   })
 
+  // The prune is an irreversible delete and membership is a property of the
+  // SET, so a batch that is still rewriting the population — one chunk of a
+  // >1000-command edit — must not evict employees it never touched.
+  it('does not prune on a batch that moved a scoring input', async () => {
+    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
+
+    await service.syncDraft('prov-1', COMPANY, {
+      employees: [
+        {
+          method: SyncMethodEnum.UPDATE,
+          id: 'e1',
+          data: { baseSalary: 900000 },
+        },
+      ],
+    })
+
+    expect(outlierGroup.getMemberEmployeeIds).not.toHaveBeenCalled()
+    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['an employee create', { employees: [{ method: SyncMethodEnum.CREATE, id: 'e9', data: {} }] }],
+    ['an employee remove', { employees: [{ method: SyncMethodEnum.REMOVE, id: 'e9' }] }],
+    ['a step edit', { steps: [{ method: SyncMethodEnum.UPDATE, id: 's1', data: { score: 5 } }] }],
+    ['a role edit', { roles: [{ method: SyncMethodEnum.UPDATE, id: 'r1', data: { title: 'R' } }] }],
+    [
+      'a personal step assignment',
+      {
+        employees: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'e1',
+            data: { stepIds: ['s1'], outlierGroupId: 'g1' },
+          },
+        ],
+      },
+    ],
+  ])('does not prune on a batch carrying %s', async (_label, input) => {
+    outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
+
+    await service.syncDraft('prov-1', COMPANY, input)
+
+    expect(outlierGroup.clearEmployeeGroups).not.toHaveBeenCalled()
+  })
+
   // Stale client state, not a client error — 400ing would roll back the very
   // edits that made the employee a non-outlier.
-  it('skips a membership set for an employee that is no longer an outlier', async () => {
+  it('commits the batch when a membership set is no longer applicable', async () => {
     analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
+    outlierGroup.setEmployeeGroup.mockImplementation(
+      async (_report: unknown, employeeId: string) => employeeId === 'e2',
+    )
 
     await service.syncDraft('prov-1', COMPANY, {
       employees: [
@@ -247,24 +297,44 @@ describe('ReportDraftSyncService', () => {
       ],
     })
 
-    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledTimes(1)
-    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledWith(
-      REPORT,
-      'e2',
-      'g1',
-      new Set(['e2']),
-    )
+    // Both go to the applier — it owns the 404s on an unknown employee or
+    // group, and reports the non-outlier rather than throwing.
+    expect(outlierGroup.setEmployeeGroup).toHaveBeenCalledTimes(2)
     expect(reportDraft.touchDraft).toHaveBeenCalledWith('report-1')
   })
 
-  // removeGroup refuses to orphan members, so a group the applicant sees as
-  // emptied by the recalculation is only removable after the prune.
-  it('removes outlier groups after the stale memberships are dropped', async () => {
+  it('propagates a 404 from a membership set', async () => {
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e1']))
+    outlierGroup.setEmployeeGroup.mockRejectedValue(
+      new NotFoundException('Employee "ghost" not found'),
+    )
+
+    await expect(
+      service.syncDraft('prov-1', COMPANY, {
+        employees: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'ghost',
+            data: { outlierGroupId: 'g1' },
+          },
+        ],
+      }),
+    ).rejects.toThrow(NotFoundException)
+    expect(reportDraft.touchDraft).not.toHaveBeenCalled()
+  })
+
+  // removeGroup refuses to orphan members, so a group only reads as empty
+  // after the prune and after the batch's own sets moved its members out.
+  it('removes outlier groups after the prune and the sets', async () => {
     outlierGroup.getMemberEmployeeIds.mockResolvedValue(['e1'])
-    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set<string>())
+    analysis.getDetectedOutlierEmployeeIds.mockResolvedValue(new Set(['e2']))
     const order: string[] = []
     outlierGroup.clearEmployeeGroups.mockImplementation(() => {
       order.push('clear')
+    })
+    outlierGroup.setEmployeeGroup.mockImplementation(() => {
+      order.push('set')
+      return true
     })
     outlierGroup.removeGroup.mockImplementation(() => {
       order.push('remove')
@@ -274,14 +344,14 @@ describe('ReportDraftSyncService', () => {
       employees: [
         {
           method: SyncMethodEnum.UPDATE,
-          id: 'e1',
-          data: { baseSalary: 900000 },
+          id: 'e2',
+          data: { outlierGroupId: 'g2' },
         },
       ],
       outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
     })
 
-    expect(order).toEqual(['clear', 'remove'])
+    expect(order).toEqual(['clear', 'set', 'remove'])
   })
 
   it('removes outlier groups even when no detection is needed', async () => {
@@ -291,6 +361,21 @@ describe('ReportDraftSyncService', () => {
 
     expect(outlierGroup.removeGroup).toHaveBeenCalledWith(REPORT, 'g1')
     expect(analysis.getDetectedOutlierEmployeeIds).not.toHaveBeenCalled()
+  })
+
+  // The invariant the ordering exists to serve: a group with members left in
+  // it still aborts the whole batch.
+  it('aborts the batch when a group still has members', async () => {
+    outlierGroup.removeGroup.mockRejectedValue(
+      new ConflictException('still has 1 member(s)'),
+    )
+
+    await expect(
+      service.syncDraft('prov-1', COMPANY, {
+        outlierGroups: [{ method: SyncMethodEnum.REMOVE, id: 'g1' }],
+      }),
+    ).rejects.toThrow(ConflictException)
+    expect(reportDraft.touchDraft).not.toHaveBeenCalled()
   })
 
   // Sync only ever writes children, so without this the abandoned-draft reaper

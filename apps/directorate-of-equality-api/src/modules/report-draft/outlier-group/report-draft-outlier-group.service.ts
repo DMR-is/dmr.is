@@ -197,23 +197,27 @@ export class ReportDraftOutlierGroupService
   }
 
   /**
-   * Upserts an employee's outlier-group membership from a sync command. The
-   * detected-outlier set is derived once by the caller and passed in; only a
-   * currently-detected outlier may be acknowledged into a group.
+   * Upserts an employee's outlier-group membership from a sync command. Both
+   * the employee and the group are validated against the draft (404 either
+   * way); the detected-outlier set is derived once by the caller and passed in.
+   *
+   * Returns `false`, writing nothing, when the employee is not currently an
+   * outlier. That is deliberately not a 400: the applicant's client built the
+   * command from the previous calculation and the same batch carries the edits
+   * that invalidated it, so rejecting would roll those edits back and leave the
+   * applicant looping on the same error. The caller decides what to report.
    */
   async setEmployeeGroup(
     report: ReportModel,
     employeeId: string,
     groupId: string,
     detectedIds: Set<string>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     await this.assertEmployeeInReport(report.id, employeeId)
     await this.findOwnedGroup(report.id, groupId)
 
     if (!detectedIds.has(employeeId)) {
-      throw new BadRequestException(
-        `Employee "${employeeId}" is not a detected outlier`,
-      )
+      return false
     }
 
     const existing = await this.outlierModel.findOne({
@@ -227,6 +231,8 @@ export class ReportDraftOutlierGroupService
         groupId,
       })
     }
+
+    return true
   }
 
   async clearEmployeeGroup(
@@ -235,9 +241,7 @@ export class ReportDraftOutlierGroupService
   ): Promise<void> {
     await this.assertEmployeeInReport(report.id, employeeId)
 
-    await this.outlierModel.destroy({
-      where: { reportEmployeeId: employeeId },
-    })
+    await this.clearEmployeeGroups(report, [employeeId])
   }
 
   /** The report's employees that currently sit in an outlier group. */
@@ -256,8 +260,10 @@ export class ReportDraftOutlierGroupService
   }
 
   /**
-   * Bulk-clears membership for the given employees. Scoped through the report's
-   * own groups, so an id from another report can never delete a row here.
+   * Bulk-clears membership for the given employees — the delete every clearing
+   * path goes through. Scoped through the report's own groups, so an id from
+   * another report can never delete a row here; the singular entry point adds
+   * the 404 on an employee that is not in the draft.
    */
   async clearEmployeeGroups(
     report: ReportModel,
