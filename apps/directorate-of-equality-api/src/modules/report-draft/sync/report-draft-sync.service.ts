@@ -3,7 +3,6 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
-import { IReportDraftAnalysisService } from '../analysis/report-draft-analysis.service.interface'
 import { IReportDraftAssignmentService } from '../assignment/report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from '../criterion/report-draft-criterion.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
@@ -40,8 +39,6 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
     @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
     @Inject(IReportDraftService)
     private readonly reportDraftService: IReportDraftService,
-    @Inject(IReportDraftAnalysisService)
-    private readonly analysisService: IReportDraftAnalysisService,
     @Inject(IReportDraftCriterionService)
     private readonly criterionService: IReportDraftCriterionService,
     @Inject(IReportDraftSubCriterionService)
@@ -65,12 +62,19 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
    *   3. apply folded step assignments (role + employee `stepIds`)
    *   4. create/update outlier groups
    *   5. clear folded outlier-group membership (`outlierGroupId: null`)
-   *   6. removals, dependents first (employees → steps → sub → criteria → roles → groups)
-   *   7. derive outliers, then apply membership sets (validated against the set)
+   *   6. removals, dependents first (employees → steps → sub → criteria → roles)
+   *   7. apply outlier-group membership, then remove groups
    *   8. touch the report row so the prune cron sees child-only edits
    * Any failure throws and the CLS transaction rolls the whole batch back.
    * Referential integrity is enforced inline by the appliers (role/group remove
-   * refuse to orphan; membership requires a detected outlier) plus DB FKs.
+   * refuse to orphan; membership must name an employee and a group of this
+   * draft) plus DB FKs.
+   *
+   * Sync deliberately does NOT judge membership against the detected-outlier
+   * set. Detection is derived from the whole draft and this endpoint is chunked
+   * (`MAX_EMPLOYEE_COMMANDS`), so mid-batch any answer it gave would be about a
+   * half-applied population — see `ReportDraftSubmitService.pruneStaleMemberships`,
+   * which reconciles at submit, the one point where the draft is complete.
    */
   async syncDraft(
     providerId: string,
@@ -160,8 +164,8 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       await this.outlierGroupService.updateGroup(report, c.id, c.data)
     }
 
-    // 5. Membership clears (no detection needed) — before group removals so an
-    //    emptied group can be removed in the same batch.
+    // 5. Membership clears — before group removals so an emptied group can be
+    //    removed in the same batch.
     const membership = [...employees.creates, ...employees.updates].filter(
       (c) => c.data.outlierGroupId !== undefined,
     )
@@ -171,7 +175,9 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       }
     }
 
-    // 6. Removals — dependents first.
+    // 6. Removals — dependents first. Outlier groups are held back to step 7,
+    //    after the batch's own membership sets have had their say about who is
+    //    still in them.
     for (const id of employees.removes) {
       await this.employeeService.removeEmployee(report, id)
     }
@@ -187,24 +193,21 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
     for (const id of roles.removes) {
       await this.roleService.removeRole(report, id)
     }
-    for (const id of groups.removes) {
-      await this.outlierGroupService.removeGroup(report, id)
-    }
 
-    // 7. Membership sets — validated against the freshly-derived outlier set.
-    const sets = membership.filter((c) => typeof c.data.outlierGroupId === 'string')
-    if (sets.length > 0) {
-      const detected = await this.analysisService.getDetectedOutlierEmployeeIds(
-        report.id,
-      )
-      for (const c of sets) {
+    // 7. Membership sets, then group removals — `removeGroup` refuses to orphan
+    //    members, so a group only reads as empty once the batch's own sets have
+    //    moved everyone out of it.
+    for (const c of membership) {
+      if (typeof c.data.outlierGroupId === 'string') {
         await this.outlierGroupService.setEmployeeGroup(
           report,
           c.id,
-          c.data.outlierGroupId as string,
-          detected,
+          c.data.outlierGroupId,
         )
       }
+    }
+    for (const id of groups.removes) {
+      await this.outlierGroupService.removeGroup(report, id)
     }
 
     // Everything above writes children only. Touch the report row so the

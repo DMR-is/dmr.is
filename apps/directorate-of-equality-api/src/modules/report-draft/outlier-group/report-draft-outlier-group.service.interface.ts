@@ -9,8 +9,11 @@ import { EmployeeOutlierGroupDto } from './dto/employee-outlier-group.dto'
  * and per-employee group membership. Reads go through the draft ownership
  * resolver; writes are sync appliers that take an already-resolved draft
  * (`report`) so the whole batch shares one ownership check and one transaction.
- * Outliers themselves are derived (see the analysis service); a member must be a
- * currently-detected outlier.
+ *
+ * Membership records what the applicant did with an outlier; it is not checked
+ * against the derived outlier set here. Sync is chunked, so mid-batch that set
+ * describes a half-applied draft — `ReportDraftSubmitService` reconciles the
+ * rows at submit instead.
  */
 export interface IReportDraftOutlierGroupService {
   listGroups(
@@ -41,12 +44,14 @@ export interface IReportDraftOutlierGroupService {
     employeeId: string,
   ): Promise<EmployeeOutlierGroupDto>
 
-  /** Set an employee's outlier-group membership from a sync command. */
+  /**
+   * Set an employee's outlier-group membership from a sync command. 404s when
+   * either the employee or the group is not part of the draft.
+   */
   setEmployeeGroup(
     report: ReportModel,
     employeeId: string,
     groupId: string,
-    detectedIds: Set<string>,
   ): Promise<void>
 
   /** Clear an employee's outlier-group membership from a sync command. */

@@ -90,6 +90,7 @@ describe('ReportDraftSubmitService', () => {
   let employeeFindAll: jest.Mock
   let outlierFindAll: jest.Mock
   let outlierBulkCreate: jest.Mock
+  let outlierDestroy: jest.Mock
   let groupFindAll: jest.Mock
   let groupCreate: jest.Mock
 
@@ -131,6 +132,7 @@ describe('ReportDraftSubmitService', () => {
     employeeFindAll = jest.fn().mockResolvedValue([])
     outlierFindAll = jest.fn().mockResolvedValue([])
     outlierBulkCreate = jest.fn().mockResolvedValue([])
+    outlierDestroy = jest.fn().mockResolvedValue(1)
     groupFindAll = jest.fn().mockResolvedValue([])
     groupCreate = jest.fn().mockResolvedValue({ id: 'default-group-1' })
 
@@ -175,7 +177,11 @@ describe('ReportDraftSubmitService', () => {
         },
         {
           provide: getModelToken(ReportEmployeeOutlierModel),
-          useValue: { findAll: outlierFindAll, bulkCreate: outlierBulkCreate },
+          useValue: {
+            findAll: outlierFindAll,
+            bulkCreate: outlierBulkCreate,
+            destroy: outlierDestroy,
+          },
         },
         {
           provide: getModelToken(ReportOutlierGroupModel),
@@ -390,6 +396,90 @@ describe('ReportDraftSubmitService', () => {
     ).rejects.toThrow(BadRequestException)
   })
 
+  // The applicant groups an outlier, then edits the data until that employee
+  // leaves the lágmarksmengi. They cannot clear the row themselves — the
+  // grouping step no longer shows that employee — so submit drops it instead
+  // of dead-ending on a 400.
+  it('drops a membership for an employee who is no longer a detected outlier', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
+    employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+    outlierFindAll.mockResolvedValueOnce([
+      { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+      { reportEmployeeId: 'emp-2', groupId: 'g-1' },
+    ])
+    groupFindAll.mockResolvedValueOnce([{ id: 'g-1', reason: 'explained' }])
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(outlierDestroy).toHaveBeenCalledWith({
+      where: { reportEmployeeId: ['emp-2'] },
+    })
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+    )
+  })
+
+  it('leaves the memberships alone when every one is still detected', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
+    employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }])
+    outlierFindAll.mockResolvedValueOnce([
+      { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+    ])
+    groupFindAll.mockResolvedValueOnce([{ id: 'g-1', reason: 'explained' }])
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(outlierDestroy).not.toHaveBeenCalled()
+  })
+
+  // A draft whose outliers all disappeared: every membership is stale, so the
+  // prune empties the grouping entirely and there is nothing left to explain.
+  it('submits a draft whose detected set emptied out from under its groups', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set<string>())
+    employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }])
+    outlierFindAll.mockResolvedValueOnce([
+      { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+    ])
+
+    await service.submitDraft(PROVIDER_ID, COMPANY, salaryBody())
+
+    expect(outlierDestroy).toHaveBeenCalledWith({
+      where: { reportEmployeeId: ['emp-1'] },
+    })
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: ReportStatusEnum.SUBMITTED }),
+    )
+  })
+
+  it('drops stale memberships on the postponed path too', async () => {
+    findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
+    getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
+    employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
+    outlierFindAll.mockResolvedValueOnce([
+      { reportEmployeeId: 'emp-1', groupId: 'g-1' },
+      { reportEmployeeId: 'emp-2', groupId: 'g-1' },
+    ])
+    groupFindAll.mockResolvedValueOnce([{ id: 'g-1', reason: null }])
+
+    await service.submitDraft(
+      PROVIDER_ID,
+      COMPANY,
+      salaryBody({ outliersPostponed: true }),
+    )
+
+    expect(outlierDestroy).toHaveBeenCalledWith({
+      where: { reportEmployeeId: ['emp-2'] },
+    })
+    // emp-1 is still assigned, so nothing needs backfilling into a default group.
+    expect(outlierBulkCreate).not.toHaveBeenCalled()
+    expect(reportUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: ReportStatusEnum.POSTPONED }),
+    )
+  })
+
   it('lands POSTPONED when all detected outliers are assigned to unexplained groups', async () => {
     findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
     getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
@@ -594,8 +684,8 @@ describe('ReportDraftSubmitService', () => {
 
     // A row for an employee who is no longer an outlier would never be
     // re-pointed by the outliers edit endpoint and would block its group
-    // cleanup on the NOT NULL group_id FK.
-    it('400s a stale assignment to a no-longer-detected employee', async () => {
+    // cleanup on the NOT NULL group_id FK — so it is dropped, not rejected.
+    it('drops a stale assignment and backfills the real outlier', async () => {
       findOwnedDraft.mockResolvedValueOnce(makeReport(ReportTypeEnum.SALARY))
       getDetectedOutlierEmployeeIds.mockResolvedValueOnce(new Set(['emp-1']))
       employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
@@ -603,14 +693,21 @@ describe('ReportDraftSubmitService', () => {
         { reportEmployeeId: 'emp-2', groupId: 'g-1' },
       ])
 
-      await expect(
-        service.submitDraft(
-          PROVIDER_ID,
-          COMPANY,
-          salaryBody({ outliersPostponed: true }),
-        ),
-      ).rejects.toThrow(BadRequestException)
-      expect(groupCreate).not.toHaveBeenCalled()
+      await service.submitDraft(
+        PROVIDER_ID,
+        COMPANY,
+        salaryBody({ outliersPostponed: true }),
+      )
+
+      expect(outlierDestroy).toHaveBeenCalledWith({
+        where: { reportEmployeeId: ['emp-2'] },
+      })
+      // emp-1 was left unassigned once the stale row went, so it is backfilled
+      // into the default group rather than submitted ungrouped.
+      expect(groupCreate).toHaveBeenCalled()
+      expect(outlierBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeId: 'emp-1', groupId: 'default-group-1' },
+      ])
     })
 
     it('400s on an equality draft, which has no outliers to defer', async () => {

@@ -16,7 +16,7 @@ import { ChangeSubCriterionDto } from './change-sub-criterion.dto'
  * the same batch (e.g. an employee assigned to a just-created role). The server
  * applies collections in dependency order: criteria → sub-criteria → steps →
  * roles → employees → outlier groups, then removals, then outlier-group
- * membership (after detection). Any failure rolls the whole batch back.
+ * membership and group removals. Any failure rolls the whole batch back.
  */
 export class SyncDraftDto {
   @ApiOptionalDtoArray(ChangeCriterionDto)

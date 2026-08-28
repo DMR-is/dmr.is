@@ -25,8 +25,8 @@ import { SyncMethodEnum } from '../sync-method.enum'
  * client-set — ordinal is server-assigned, score derived at submit.
  *
  * `stepIds`, when present, REPLACES the employee's personal step-assignment set.
- * `outlierGroupId` sets/clears outlier-group membership (null clears) and is
- * applied after outlier detection — the employee must be a detected outlier.
+ * `outlierGroupId` sets/clears outlier-group membership (null clears); it is
+ * recorded as sent and reconciled against the detected-outlier set at submit.
  */
 export class EmployeeChangeDataDto {
   @ApiOptionalUUID({ description: 'Id of a role on the same draft.' })
@@ -86,7 +86,7 @@ export class EmployeeChangeDataDto {
   @ApiOptionalUUID({
     nullable: true,
     description:
-      'Outlier-group membership (null clears). Applied after detection; the employee must be a currently-detected outlier.',
+      'Outlier-group membership (null clears). Recorded as sent; a membership for an employee who is no longer a detected outlier is dropped at submit.',
   })
   outlierGroupId?: string | null
 }

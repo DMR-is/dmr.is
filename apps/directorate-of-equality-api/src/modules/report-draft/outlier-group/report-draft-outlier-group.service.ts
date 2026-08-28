@@ -197,24 +197,24 @@ export class ReportDraftOutlierGroupService
   }
 
   /**
-   * Upserts an employee's outlier-group membership from a sync command. The
-   * detected-outlier set is derived once by the caller and passed in; only a
-   * currently-detected outlier may be acknowledged into a group.
+   * Upserts an employee's outlier-group membership from a sync command. Both
+   * the employee and the group are validated against the draft (404 either
+   * way).
+   *
+   * Whether the employee is currently a detected outlier is deliberately NOT
+   * checked here: detection is a property of the whole draft, sync is chunked,
+   * and the applicant's client legitimately sends a grouping built from the
+   * previous calculation. `ReportDraftSubmitService.pruneStaleMemberships`
+   * reconciles the rows against the detected set at submit, where the draft is
+   * complete.
    */
   async setEmployeeGroup(
     report: ReportModel,
     employeeId: string,
     groupId: string,
-    detectedIds: Set<string>,
   ): Promise<void> {
     await this.assertEmployeeInReport(report.id, employeeId)
     await this.findOwnedGroup(report.id, groupId)
-
-    if (!detectedIds.has(employeeId)) {
-      throw new BadRequestException(
-        `Employee "${employeeId}" is not a detected outlier`,
-      )
-    }
 
     const existing = await this.outlierModel.findOne({
       where: { reportEmployeeId: employeeId },

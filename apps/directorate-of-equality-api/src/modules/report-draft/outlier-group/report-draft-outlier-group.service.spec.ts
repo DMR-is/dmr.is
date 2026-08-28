@@ -39,6 +39,7 @@ describe('ReportDraftOutlierGroupService', () => {
   let outlierFindOne: jest.Mock
   let outlierCreate: jest.Mock
   let outlierCount: jest.Mock
+  let outlierDestroy: jest.Mock
   let employeeFindOne: jest.Mock
 
   beforeEach(async () => {
@@ -54,6 +55,7 @@ describe('ReportDraftOutlierGroupService', () => {
     outlierFindOne = jest.fn().mockResolvedValue(null)
     outlierCreate = jest.fn()
     outlierCount = jest.fn().mockResolvedValue(0)
+    outlierDestroy = jest.fn()
     employeeFindOne = jest.fn().mockResolvedValue({ id: EMPLOYEE_ID })
 
     const module = await Test.createTestingModule({
@@ -74,9 +76,10 @@ describe('ReportDraftOutlierGroupService', () => {
           provide: getModelToken(ReportEmployeeOutlierModel),
           useValue: {
             findOne: outlierFindOne,
+            findAll: jest.fn().mockResolvedValue([]),
             create: outlierCreate,
             count: outlierCount,
-            destroy: jest.fn(),
+            destroy: outlierDestroy,
           },
         },
         {
@@ -161,15 +164,10 @@ describe('ReportDraftOutlierGroupService', () => {
   })
 
   describe('setEmployeeGroup', () => {
-    it('assigns a detected outlier to a group (creates the join row)', async () => {
+    it('creates the join row', async () => {
       outlierFindOne.mockResolvedValueOnce(null)
 
-      await service.setEmployeeGroup(
-        report,
-        EMPLOYEE_ID,
-        GROUP_ID,
-        new Set([EMPLOYEE_ID]),
-      )
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
 
       expect(outlierCreate).toHaveBeenCalledWith({
         reportEmployeeId: EMPLOYEE_ID,
@@ -181,26 +179,26 @@ describe('ReportDraftOutlierGroupService', () => {
       const update = jest.fn()
       outlierFindOne.mockResolvedValueOnce({ id: 'o-1', update })
 
-      await service.setEmployeeGroup(
-        report,
-        EMPLOYEE_ID,
-        GROUP_ID,
-        new Set([EMPLOYEE_ID]),
-      )
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
 
       expect(update).toHaveBeenCalledWith({ groupId: GROUP_ID })
       expect(outlierCreate).not.toHaveBeenCalled()
     })
 
-    it('400s when the employee is not a detected outlier', async () => {
+    // Detection is NOT consulted here — sync is chunked, so mid-batch it would
+    // only describe a half-applied draft. Submit reconciles the rows instead.
+    it('records a membership for an employee that is not a detected outlier', async () => {
+      await service.setEmployeeGroup(report, EMPLOYEE_ID, GROUP_ID)
+
+      expect(outlierCreate).toHaveBeenCalled()
+    })
+
+    it('404s an employee that is not in the draft', async () => {
+      employeeFindOne.mockResolvedValueOnce(null)
+
       await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          GROUP_ID,
-          new Set<string>(),
-        ),
-      ).rejects.toThrow(BadRequestException)
+        service.setEmployeeGroup(report, 'ghost', GROUP_ID),
+      ).rejects.toThrow(NotFoundException)
       expect(outlierCreate).not.toHaveBeenCalled()
     })
 
@@ -208,13 +206,28 @@ describe('ReportDraftOutlierGroupService', () => {
       groupFindOne.mockResolvedValueOnce(null)
 
       await expect(
-        service.setEmployeeGroup(
-          report,
-          EMPLOYEE_ID,
-          GROUP_ID,
-          new Set([EMPLOYEE_ID]),
-        ),
+        service.setEmployeeGroup(report, EMPLOYEE_ID, 'ghost-group'),
       ).rejects.toThrow(NotFoundException)
+      expect(outlierCreate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('clearEmployeeGroup', () => {
+    it('404s an employee that is not in the draft', async () => {
+      employeeFindOne.mockResolvedValueOnce(null)
+
+      await expect(service.clearEmployeeGroup(report, 'ghost')).rejects.toThrow(
+        NotFoundException,
+      )
+      expect(outlierDestroy).not.toHaveBeenCalled()
+    })
+
+    it('deletes the employee\'s membership row', async () => {
+      await service.clearEmployeeGroup(report, EMPLOYEE_ID)
+
+      expect(outlierDestroy).toHaveBeenCalledWith({
+        where: { reportEmployeeId: EMPLOYEE_ID },
+      })
     })
   })
 })
