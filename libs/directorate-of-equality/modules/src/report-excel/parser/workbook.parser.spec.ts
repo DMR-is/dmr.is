@@ -186,6 +186,13 @@ const addSubCriterion = (
   subTitle: string,
   weightPct: number,
   stepDescriptions: string[],
+  /**
+   * `Fjöldi þrepa` as DECLARED in column G. Defaults to the number of
+   * descriptions written, which is the consistent case; pass a different
+   * value to exercise the step bound, which reads column G rather than
+   * counting descriptions (matching `Starfsmat!G$8`'s own validation).
+   */
+  declaredNumSteps: number = stepDescriptions.length,
 ) => {
   const s = wb.getWorksheet('Undirviðmið')!
   s.getCell(`B${undirviðmiðRow}`).value = parentTitle
@@ -194,7 +201,7 @@ const addSubCriterion = (
   // E/F/G are Skilgreining / Vægi (%) / Fjöldi þrepa.
   s.getCell(`E${undirviðmiðRow}`).value = `${subTitle} description`
   s.getCell(`F${undirviðmiðRow}`).value = weightPct
-  s.getCell(`G${undirviðmiðRow}`).value = stepDescriptions.length
+  s.getCell(`G${undirviðmiðRow}`).value = declaredNumSteps
   // Step descriptions live in columns J…Q (Þrep 1…8). Col index 10 = J.
   stepDescriptions.forEach((desc, i) => {
     s.getCell(undirviðmiðRow, 10 + i).value = desc
@@ -1126,6 +1133,225 @@ describe('parseWorkbook', () => {
       starfsmat.getCell('G6').value = 'Ábyrgð á gæðum'
       starfsmat.getCell('M5').value = 'Hæfni'
       starfsmat.getCell('M6').value = 'Formleg menntun'
+
+      const report = await parseWorkbook(await serialize(wb))
+      expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+  })
+
+  /**
+   * A slot on the matrices is allocated by Undirviðmið's computed `Tegund`
+   * column, which resolves through `MATCH` against the Viðmið *cell* — not
+   * through whether the parser accepted that row. So a row either sheet
+   * rejects must still consume its column pair, or every later column in the
+   * bucket shifts and lands on the wrong sub-criterion.
+   *
+   * Each test below writes the cached column headers, which makes the
+   * alignment guard active: a shift shows up as a guard error naming the
+   * wrong column, so these fail loudly if the placeholder is dropped.
+   */
+  describe('rejected rows still reserve their column slot', () => {
+    const EMPLOYEE = {
+      name: 'Nafn 1',
+      role: 'Forstöðumaður',
+      gender: 'Kona',
+      paidHours: 173.33,
+      baseSalary: 900000,
+      additionalFixedOvertime: 0,
+      additionalFixedCarAllowance: null,
+      bonusOccasionalCarAllowance: null,
+      bonusOccasionalOvertime: null,
+      bonusPayments: null,
+      bonusOther: null,
+      field: 'Stjórnun',
+      department: 'Framkvæmd',
+      startDate: new Date('2023-01-01'),
+    }
+
+    /**
+     * `fillCriteriaAndSubCriteria` writes Undirviðmið rows 6…9 in Viðmið
+     * order, so the job-based columns are G / I / K / M. Writing the headers
+     * they *should* carry turns any shift into a guard error.
+     */
+    const writeStarfsmatHeaders = (wb: ExcelJS.Workbook) => {
+      const sheet = wb.getWorksheet('Starfsmat')!
+      const expected: [string, string, string][] = [
+        ['G', 'Ábyrgð', 'Ábyrgð á gæðum'],
+        ['I', 'Álag', 'Álag í starfi'],
+        ['K', 'Vinnuaðstæður', 'Vinnuumhverfi'],
+        ['M', 'Hæfni', 'Formleg menntun'],
+      ]
+      expected.forEach(([col, criterion, sub]) => {
+        sheet.getCell(`${col}5`).value = criterion
+        sheet.getCell(`${col}6`).value = sub
+      })
+    }
+
+    const alignmentErrors = (errors: { message: string }[]) =>
+      errors.filter((e) => e.message.includes('samkvæmt röð undirviðmiðanna'))
+
+    it('keeps later columns aligned when a middle Undirviðmið row is rejected', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, EMPLOYEE)
+      fillCriteriaAndSubCriteria(wb)
+      // Row 7 is Álag → column I. Blanking Skilgreining makes the parser
+      // reject it, but the sheet still allocates its column pair.
+      wb.getWorksheet('Undirviðmið')!.getCell('E7').value = null
+      writeStarfsmatHeaders(wb)
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      // The row reports its own problem, and nothing else moves.
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Undirviðmið',
+            row: 7,
+            message: expect.stringContaining('Röð vantar yfirviðmið'),
+          }),
+        ]),
+      )
+      expect(alignmentErrors(errors)).toHaveLength(0)
+    })
+
+    it('does not blame Undirviðmið when its parent Viðmið row was the rejected one', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, EMPLOYEE)
+      fillCriteriaAndSubCriteria(wb)
+      // Viðmið row 8 is Vinnuaðstæður. Blanking its Lýsing rejects the
+      // criterion while leaving the title in place, so `MATCH` still
+      // resolves and Undirviðmið row 8 keeps column K.
+      wb.getWorksheet('Viðmið')!.getCell('D8').value = null
+      writeStarfsmatHeaders(wb)
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Viðmið',
+            row: 8,
+            message: 'Röð vantar heiti eða lýsingu',
+          }),
+        ]),
+      )
+      // The sub-criterion row is a casualty of the Viðmið error, not a
+      // second independent problem: saying its parent "was not found" would
+      // point the user at the wrong sheet.
+      expect(
+        errors.filter((e) => e.message.includes('fannst ekki á blaðinu')),
+      ).toHaveLength(0)
+      expect(alignmentErrors(errors)).toHaveLength(0)
+    })
+  })
+
+  describe('step bound comes from the declared Fjöldi þrepa', () => {
+    it('accepts a step order above the description count when column G declares it', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      setCriterionWeight(wb, 6, 30)
+      setCriterionWeight(wb, 7, 20)
+      setCriterionWeight(wb, 8, 20)
+      setCriterionWeight(wb, 9, 20)
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+      // Declares 5 steps but describes only 3. Excel's own cell validation
+      // caps input at column G, so a 5 is a value the user was allowed to
+      // type — the missing descriptions are the actual defect, and the step
+      // bound must not report a second, invented one.
+      addSubCriterion(
+        wb,
+        6,
+        'Ábyrgð',
+        'Ábyrgð á gæðum',
+        30,
+        FIVE_STEPS.slice(0, 3),
+        5,
+      )
+      // Þrep 4/5 (columns M/N) ship as autofill formulas with no cached
+      // result. Blank them so the row is short on *descriptions* rather than
+      // on formula caches, which is the case under test.
+      const undirviðmið = wb.getWorksheet('Undirviðmið')!
+      undirviðmið.getCell(6, 13).value = null
+      undirviðmið.getCell(6, 14).value = null
+      addSubCriterion(wb, 7, 'Álag', 'Álag í starfi', 20, FIVE_STEPS)
+      addSubCriterion(wb, 8, 'Vinnuaðstæður', 'Vinnuumhverfi', 20, FIVE_STEPS)
+      addSubCriterion(wb, 9, 'Hæfni', 'Formleg menntun', 20, FIVE_STEPS)
+      addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
+
+      fillRoleClassification(wb, [[5, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors.map((e) => e.message)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('Lýsingu vantar fyrir þrep 4'),
+          expect.stringContaining('Lýsingu vantar fyrir þrep 5'),
+        ]),
+      )
+      // `steps.length` (3) as the bound would reject the 5 as out of range.
+      expect(
+        errors.filter((e) => e.message.includes('utan leyfilegs bils')),
+      ).toHaveLength(0)
+    })
+  })
+
+  describe('unreadable column headers', () => {
+    it('treats a non-text header as unverifiable rather than a mismatch', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // A row inserted between the header rows and the grid slides the
+      // header offsets onto the numeric Vægi row. `readString` would
+      // stringify that to e.g. "30" and reject every column; the workbook
+      // itself is fine, so the guard must stand down instead.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 30
+      starfsmat.getCell('G6').value = 30
 
       const report = await parseWorkbook(await serialize(wb))
       expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)

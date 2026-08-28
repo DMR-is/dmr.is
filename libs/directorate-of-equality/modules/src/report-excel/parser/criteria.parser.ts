@@ -125,6 +125,20 @@ export type ParsedCriteriaResult = {
   sheetOrder: SubCriteriaSheetOrder
 }
 
+/** Which of {@link SubCriteriaSheetOrder}'s two lists a row's slot belongs to. */
+type SlotBucket = keyof SubCriteriaSheetOrder
+
+/**
+ * What one pass over Viðmið yields: the criteria that passed validation, plus
+ * the slot bucket of every titled row whether or not it passed. The second map
+ * exists because column allocation and parser acceptance are decided by
+ * different things — see the note at the `slotBucketByTitle.set` call.
+ */
+type CriteriaSheetScan = {
+  criteria: ParsedCriterionDto[]
+  slotBucketByTitle: Map<string, SlotBucket>
+}
+
 /** `'AB'` → 28. */
 const colToNum = (letters: string): number =>
   letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
@@ -180,15 +194,16 @@ const parseCriteriaSheet = (
   workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
   errors: ErrorBag,
-): ParsedCriterionDto[] => {
+): CriteriaSheetScan => {
   const criteria: ParsedCriterionDto[] = []
+  const slotBucketByTitle = new Map<string, SlotBucket>()
   const range = readNamedRange(workbook, NAMED_RANGES.CRITERIA_TABLE)
   if (!range || range.lastCol - range.firstCol < 2 || range.firstCol <= 1) {
     errors.add(
       SHEETS.CRITERIA,
       `Nafngreint svæði „${NAMED_RANGES.CRITERIA_TABLE}“ vantar eða er gallað`,
     )
-    return criteria
+    return { criteria, slotBucketByTitle }
   }
 
   const lastRow = Math.min(
@@ -222,6 +237,19 @@ const parseCriteriaSheet = (
     // blank rows employers may fill in later. Skip silently.
     if (tegund === CRITERION_TEGUND.PERSONAL && !title) continue
 
+    // Record which matrix the row's sub-criteria will occupy BEFORE any gate
+    // below can `continue`. Undirviðmið's computed `Tegund` column matches on
+    // the Viðmið *cell* (`MATCH(B6,Viðmið!$C$6:$C$10,0)`), not on parser
+    // acceptance, so a row rejected below still has its column pairs
+    // allocated by the matrices. Keying off acceptance instead would leave
+    // those slots unreserved and shift every later column in the bucket.
+    if (title) {
+      slotBucketByTitle.set(
+        title,
+        tegund === CRITERION_TEGUND.PERSONAL ? 'personal' : 'jobBased',
+      )
+    }
+
     if (!title || !description) {
       errors.add(SHEETS.CRITERIA, 'Röð vantar heiti eða lýsingu', {
         row: r,
@@ -248,7 +276,7 @@ const parseCriteriaSheet = (
     })
   }
 
-  return criteria
+  return { criteria, slotBucketByTitle }
 }
 
 /**
@@ -302,11 +330,11 @@ const resolveCriterionType = (
 const parseSubCriteriaSheet = (
   workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
-  criteria: ParsedCriterionDto[],
+  scan: CriteriaSheetScan,
   errors: ErrorBag,
 ): SubCriteriaSheetOrder => {
   const sheetOrder: SubCriteriaSheetOrder = { jobBased: [], personal: [] }
-  const criterionByTitle = new Map(criteria.map((c) => [c.title, c]))
+  const criterionByTitle = new Map(scan.criteria.map((c) => [c.title, c]))
   const range = readNamedRange(workbook, NAMED_RANGES.SUB_PARENT)
   if (!range) {
     errors.add(
@@ -344,11 +372,10 @@ const parseSubCriteriaSheet = (
     // rejected further down still consumes its slot. `bucket` is the list that
     // slot belongs to; null means the row is not addressable at all.
     const parent = parentTitle ? criterionByTitle.get(parentTitle) : undefined
-    const bucket = parent
-      ? parent.type === ReportCriterionTypeEnum.PERSONAL
-        ? sheetOrder.personal
-        : sheetOrder.jobBased
-      : null
+    const slotBucket = parentTitle
+      ? scan.slotBucketByTitle.get(parentTitle)
+      : undefined
+    const bucket = slotBucket ? sheetOrder[slotBucket] : null
 
     const missingRequiredFields = [
       { value: parentTitle, cell: parentCell, label: 'Yfirviðmið' },
@@ -411,11 +438,19 @@ const parseSubCriteriaSheet = (
     }
 
     if (!parent || !bucket) {
-      errors.add(
-        SHEETS.SUB_CRITERIA,
-        `Yfirviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
-        { row: r, column: SUB_CRITERIA_COLS.parent },
-      )
+      // Only report when the title is absent from Viðmið altogether. If the
+      // row is there but was rejected, it has already raised its own error;
+      // naming this row too would be the misattributed cascade the
+      // placeholder scheme exists to prevent. Either way the slot is
+      // reserved when the sheet allocated one.
+      if (!bucket) {
+        errors.add(
+          SHEETS.SUB_CRITERIA,
+          `Yfirviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
+          { row: r, column: SUB_CRITERIA_COLS.parent },
+        )
+      }
+      bucket?.push(null)
       continue
     }
 
@@ -483,12 +518,12 @@ export const parseCriteriaTree = (
     return { criteria: [], sheetOrder: empty }
   }
 
-  const criteria = parseCriteriaSheet(workbook, viðmiðSheet, errors)
+  const scan = parseCriteriaSheet(workbook, viðmiðSheet, errors)
   const sheetOrder = parseSubCriteriaSheet(
     workbook,
     undirviðmiðSheet,
-    criteria,
+    scan,
     errors,
   )
-  return { criteria, sheetOrder }
+  return { criteria: scan.criteria, sheetOrder }
 }
