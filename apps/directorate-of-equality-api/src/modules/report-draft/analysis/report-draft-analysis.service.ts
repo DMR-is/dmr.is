@@ -26,6 +26,7 @@ import { ReportSubCriterionModel } from '../../report-criterion/models/report-su
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeePersonalCriterionStepModel } from '../../report-employee/models/report-employee-personal-criterion-step.model'
+import { ReportEmployeeRoleModel } from '../../report-employee/models/report-employee-role.model'
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { SalaryAnalysisResponseDto } from '../../report-statistics/dto/salary-analysis.response.dto'
 import {
@@ -47,6 +48,8 @@ export type ScoredEmployee = {
   ordinal: number
   score: number
   gender: GenderEnum
+  /** Starf. Null when the row's role association was not loaded or is missing. */
+  roleTitle: string | null
 } & RegularHourlyWageInput
 
 /** The salary fields the scoring needs off each employee row. */
@@ -55,6 +58,8 @@ type ScorableEmployee = {
   ordinal: number
   gender: GenderEnum
   reportEmployeeRoleId: string
+  /** Loaded `role` association, when the caller eager-loaded it. */
+  role?: { title: string } | null
 } & RegularHourlyWageInput
 
 /**
@@ -85,6 +90,7 @@ export function deriveEmployeeScores(
       ordinal: employee.ordinal,
       score,
       gender: employee.gender,
+      roleTitle: employee.role?.title ?? null,
       paidHours: employee.paidHours,
       baseSalary: employee.baseSalary,
       additionalSalary: employee.additionalSalary,
@@ -144,8 +150,12 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
       gender: e.gender,
     }))
 
+    const roleTitleByOrdinal = new Map<number, string | null>(
+      scored.map((e) => [e.ordinal, e.roleTitle]),
+    )
+
     return {
-      outliers: toMinimumSetDtos(decomposition),
+      outliers: toMinimumSetDtos(decomposition, roleTitleByOrdinal),
       regularHourlyWageByScoreAll: buildChartFromEmployeePoints(chartPoints),
       wageGapDecomposition: decomposition,
       // Ábendingar — informational, no obligation. Derived from the same
@@ -246,6 +256,18 @@ export class ReportDraftAnalysisService implements IReportDraftAnalysisService {
     const employees = await this.employeeModel.findAll({
       where: { reportId },
       order: [['ordinal', 'ASC']],
+      // Starf, for the `roleTitle` denormalised onto each outlier row. Eager-
+      // loaded here rather than fetched by the client from `/draft/roles`,
+      // because the report states that surface this analysis are not all
+      // granted the draft role/employee reads.
+      include: [
+        {
+          model: ReportEmployeeRoleModel,
+          as: 'role',
+          attributes: ['id', 'title'],
+          required: false,
+        },
+      ],
     })
     if (employees.length === 0) {
       return []
