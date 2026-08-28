@@ -143,6 +143,19 @@ erDiagram
         timestamp updated_at "unused; present for ParanoidModel fit"
         timestamp deleted_at "nullable, soft delete"
     }
+    doe_api_key {
+        uuid id PK
+        uuid company_id FK
+        text company_national_id "denormalised"
+        text key_id "unique, public half"
+        text secret_hash
+        text_array scopes
+        ApiKeyOriginEnum created_via
+        uuid created_by_user_id FK "nullable, ADMIN path"
+        text created_by_national_id "nullable, ISLAND_IS path"
+        timestamptz last_used_at "nullable"
+        timestamptz revoked_at "nullable"
+    }
     company_event {
         uuid id PK
         uuid company_id FK
@@ -204,6 +217,9 @@ erDiagram
     report ||--o{ report_comment : "report_id"
     doe_user |o--o{ report_comment : "author_user_id"
 
+    company ||--o{ doe_api_key : "company_id"
+    doe_user |o--o{ doe_api_key : "created_by_user_id"
+    doe_user |o--o{ doe_api_key : "revoked_by_user_id"
     company ||--o{ company_event : "company_id"
     doe_user |o--o{ company_event : "actor_user_id"
     company ||--o{ company_comment : "company_id"

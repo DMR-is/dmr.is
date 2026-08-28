@@ -9,6 +9,7 @@
     "@dmr.is/constants": "*",
     "@dmr.is/db": "*",
     "@dmr.is/decorators": "*",
+    "@dmr.is/doe-shared": "*",
     "@dmr.is/island-auth-nest": "*",
     "@dmr.is/logging": "*",
     "@dmr.is/pipelines": "*",

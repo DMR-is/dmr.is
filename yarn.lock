@@ -3989,6 +3989,7 @@ __metadata:
     "@dmr.is/constants": "npm:*"
     "@dmr.is/db": "npm:*"
     "@dmr.is/decorators": "npm:*"
+    "@dmr.is/doe-shared": "npm:*"
     "@dmr.is/island-auth-nest": "npm:*"
     "@dmr.is/logging": "npm:*"
     "@dmr.is/pipelines": "npm:*"
@@ -4035,6 +4036,20 @@ __metadata:
     validator: "npm:13.15.22"
     winston: "npm:^3.11.0"
     zod: "npm:4.1.11"
+  languageName: unknown
+  linkType: soft
+
+"@dmr.is/doe-shared@npm:*, @dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared":
+  version: 0.0.0-use.local
+  resolution: "@dmr.is/doe-shared@workspace:libs/directorate-of-equality/shared"
+  dependencies:
+    "@dmr.is/decorators": "npm:*"
+    "@dmr.is/shared-models-base": "npm:*"
+  peerDependencies:
+    "@nestjs/common": ^11.1.29
+    "@nestjs/swagger": ^11.4.6
+    sequelize: 6.37.3
+    sequelize-typescript: 2.1.6
   languageName: unknown
   linkType: soft
 
