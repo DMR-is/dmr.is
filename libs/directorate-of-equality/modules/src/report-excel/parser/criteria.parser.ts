@@ -73,6 +73,72 @@ type RectangularRange = {
   lastCol: number
 }
 
+/**
+ * One sub-criterion, as the Flokkun matrices address it: by title, with the
+ * step count that bounds a valid assignment.
+ */
+export type SubCriterionRef = {
+  criterionTitle: string
+  subTitle: string
+  numSteps: number
+}
+
+/**
+ * Sub-criteria in **Undirviðmið row order**, split into the two buckets the
+ * classification matrices index by.
+ *
+ * ## Why this exists — the tree cannot supply it
+ *
+ * `Starfsmat` and `Einstaklingsmat` derive each step-input column from a
+ * pointer formula on row 4:
+ *
+ * ```
+ * Starfsmat!G4 = SMALL(IF(Undirviðmið!$D$6:$D$205="Starfsbundið",
+ *                         ROW(Undirviðmið!$D$6:$D$205)-5), (COLUMN()-5)/2)
+ * ```
+ *
+ * So **column pair N ↔ the Nth matching Undirviðmið row, in row order**.
+ * Nothing groups by parent criterion. Walking `ParsedCriterionDto[]` and
+ * flattening `subCriteria` produces a criterion-GROUPED order instead, which
+ * only coincides with row order when the employer happens to have entered
+ * their Undirviðmið rows sorted by the Viðmið criterion order. Nothing in the
+ * template requires that, and a workbook that does not honour it had every
+ * assignment read from the wrong column — silently where the shifted column's
+ * step count was wide enough to accept the value.
+ *
+ * ## Reserved slots
+ *
+ * A `null` entry is a row the matrices DO allocate a column for (its
+ * `Yfirviðmið` resolves, so the sheet's `Tegund` filter counts it) but which
+ * failed validation, so there is no ref to assign against. Keeping the
+ * placeholder preserves the position of every column after it; the upload
+ * fails on the row's own error regardless, and swallowing the slot would bury
+ * that error under a cascade of misattributed ones.
+ */
+export type SubCriteriaSheetOrder = {
+  jobBased: (SubCriterionRef | null)[]
+  personal: (SubCriterionRef | null)[]
+}
+
+export type ParsedCriteriaResult = {
+  criteria: ParsedCriterionDto[]
+  sheetOrder: SubCriteriaSheetOrder
+}
+
+/** Which of {@link SubCriteriaSheetOrder}'s two lists a row's slot belongs to. */
+type SlotBucket = keyof SubCriteriaSheetOrder
+
+/**
+ * What one pass over Viðmið yields: the criteria that passed validation, plus
+ * the slot bucket of every titled row whether or not it passed. The second map
+ * exists because column allocation and parser acceptance are decided by
+ * different things — see the note at the `slotBucketByTitle.set` call.
+ */
+type CriteriaSheetScan = {
+  criteria: ParsedCriterionDto[]
+  slotBucketByTitle: Map<string, SlotBucket>
+}
+
 /** `'AB'` → 28. */
 const colToNum = (letters: string): number =>
   letters.split('').reduce((n, ch) => n * 26 + (ch.charCodeAt(0) - 64), 0)
@@ -128,15 +194,16 @@ const parseCriteriaSheet = (
   workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
   errors: ErrorBag,
-): ParsedCriterionDto[] => {
+): CriteriaSheetScan => {
   const criteria: ParsedCriterionDto[] = []
+  const slotBucketByTitle = new Map<string, SlotBucket>()
   const range = readNamedRange(workbook, NAMED_RANGES.CRITERIA_TABLE)
   if (!range || range.lastCol - range.firstCol < 2 || range.firstCol <= 1) {
     errors.add(
       SHEETS.CRITERIA,
       `Nafngreint svæði „${NAMED_RANGES.CRITERIA_TABLE}“ vantar eða er gallað`,
     )
-    return criteria
+    return { criteria, slotBucketByTitle }
   }
 
   const lastRow = Math.min(
@@ -170,6 +237,19 @@ const parseCriteriaSheet = (
     // blank rows employers may fill in later. Skip silently.
     if (tegund === CRITERION_TEGUND.PERSONAL && !title) continue
 
+    // Record which matrix the row's sub-criteria will occupy BEFORE any gate
+    // below can `continue`. Undirviðmið's computed `Tegund` column matches on
+    // the Viðmið *cell* (`MATCH(B6,Viðmið!$C$6:$C$10,0)`), not on parser
+    // acceptance, so a row rejected below still has its column pairs
+    // allocated by the matrices. Keying off acceptance instead would leave
+    // those slots unreserved and shift every later column in the bucket.
+    if (title) {
+      slotBucketByTitle.set(
+        title,
+        tegund === CRITERION_TEGUND.PERSONAL ? 'personal' : 'jobBased',
+      )
+    }
+
     if (!title || !description) {
       errors.add(SHEETS.CRITERIA, 'Röð vantar heiti eða lýsingu', {
         row: r,
@@ -196,7 +276,7 @@ const parseCriteriaSheet = (
     })
   }
 
-  return criteria
+  return { criteria, slotBucketByTitle }
 }
 
 /**
@@ -242,21 +322,26 @@ const resolveCriterionType = (
  * Read Undirviðmið sheet → list of sub-criteria, attach each to its parent
  * criterion by title lookup. Step descriptions read from the first
  * `numSteps` columns; any extras are ignored. Step scores computed here.
+ *
+ * Also returns the Undirviðmið **row order** of the sub-criteria, split into
+ * the two buckets the classification matrices index by — see
+ * {@link SubCriteriaSheetOrder} for why the tree alone cannot supply it.
  */
 const parseSubCriteriaSheet = (
   workbook: ExcelJS.Workbook,
   sheet: ExcelJS.Worksheet,
-  criteria: ParsedCriterionDto[],
+  scan: CriteriaSheetScan,
   errors: ErrorBag,
-): void => {
-  const criterionByTitle = new Map(criteria.map((c) => [c.title, c]))
+): SubCriteriaSheetOrder => {
+  const sheetOrder: SubCriteriaSheetOrder = { jobBased: [], personal: [] }
+  const criterionByTitle = new Map(scan.criteria.map((c) => [c.title, c]))
   const range = readNamedRange(workbook, NAMED_RANGES.SUB_PARENT)
   if (!range) {
     errors.add(
       SHEETS.SUB_CRITERIA,
       `Nafngreint svæði „${NAMED_RANGES.SUB_PARENT}“ vantar eða er gallað`,
     )
-    return
+    return sheetOrder
   }
 
   const lastRow = Math.min(
@@ -279,6 +364,18 @@ const parseSubCriteriaSheet = (
     const numSteps = readInteger(numStepsCell)
 
     if (!parentTitle && !title && rawWeight == null && !numSteps) continue
+
+    // Resolve the parent BEFORE any validation gate below can `continue`.
+    // Whether this row occupies a column pair on the classification matrices
+    // is decided by the parent alone (that is what Undirviðmið's computed
+    // `Tegund` column looks up, and the matrices filter on `Tegund`), so a row
+    // rejected further down still consumes its slot. `bucket` is the list that
+    // slot belongs to; null means the row is not addressable at all.
+    const parent = parentTitle ? criterionByTitle.get(parentTitle) : undefined
+    const slotBucket = parentTitle
+      ? scan.slotBucketByTitle.get(parentTitle)
+      : undefined
+    const bucket = slotBucket ? sheetOrder[slotBucket] : null
 
     const missingRequiredFields = [
       { value: parentTitle, cell: parentCell, label: 'Yfirviðmið' },
@@ -306,6 +403,7 @@ const parseSubCriteriaSheet = (
           },
         )
       }
+      bucket?.push(null)
       continue
     }
 
@@ -317,6 +415,7 @@ const parseSubCriteriaSheet = (
           row: r,
         },
       )
+      bucket?.push(null)
       continue
     }
 
@@ -324,6 +423,7 @@ const parseSubCriteriaSheet = (
       hasFormulaWithoutCachedResult(weightCell)
     if (formulaWeightHasNoCachedResult) {
       addFormulaCacheError(weightCell, 'Vægi', errors)
+      bucket?.push(null)
       continue
     }
 
@@ -333,16 +433,24 @@ const parseSubCriteriaSheet = (
         `Fjöldi þrepa ${numSteps} er utan leyfilegs bils ${MIN_STEPS}–${MAX_STEPS}`,
         { row: r, column: SUB_CRITERIA_COLS.numSteps },
       )
+      bucket?.push(null)
       continue
     }
 
-    const parent = criterionByTitle.get(parentTitle)
-    if (!parent) {
-      errors.add(
-        SHEETS.SUB_CRITERIA,
-        `Yfirviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
-        { row: r, column: SUB_CRITERIA_COLS.parent },
-      )
+    if (!parent || !bucket) {
+      // Only report when the title is absent from Viðmið altogether. If the
+      // row is there but was rejected, it has already raised its own error;
+      // naming this row too would be the misattributed cascade the
+      // placeholder scheme exists to prevent. Either way the slot is
+      // reserved when the sheet allocated one.
+      if (!bucket) {
+        errors.add(
+          SHEETS.SUB_CRITERIA,
+          `Yfirviðmið „${parentTitle}“ fannst ekki á blaðinu ${SHEETS.CRITERIA}`,
+          { row: r, column: SUB_CRITERIA_COLS.parent },
+        )
+      }
+      bucket?.push(null)
       continue
     }
 
@@ -375,28 +483,47 @@ const parseSubCriteriaSheet = (
       steps,
     }
     parent.subCriteria.push(sub)
+    // `numSteps` as DECLARED in column G, not `steps.length`. The matrices'
+    // own cell validation caps input at column G (`Starfsmat!G$8` etc.), so
+    // matching it keeps the parser's step-range error consistent with what
+    // Excel allowed the user to type. A row with a missing step description
+    // has already been reported above, and reporting it a second time as an
+    // out-of-range step would name a bound the user never saw.
+    bucket.push({
+      criterionTitle: parent.title,
+      subTitle: title,
+      numSteps,
+    })
   }
+
+  return sheetOrder
 }
 
 export const parseCriteriaTree = (
   workbook: ExcelJS.Workbook,
   errors: ErrorBag,
-): ParsedCriterionDto[] => {
+): ParsedCriteriaResult => {
+  const empty: SubCriteriaSheetOrder = { jobBased: [], personal: [] }
   const viðmiðSheet = workbook.getWorksheet(SHEETS.CRITERIA)
   const undirviðmiðSheet = workbook.getWorksheet(SHEETS.SUB_CRITERIA)
   if (!viðmiðSheet) {
     errors.add(SHEETS.CRITERIA, `Nauðsynlegt blað „${SHEETS.CRITERIA}“ vantar`)
-    return []
+    return { criteria: [], sheetOrder: empty }
   }
   if (!undirviðmiðSheet) {
     errors.add(
       SHEETS.SUB_CRITERIA,
       `Nauðsynlegt blað „${SHEETS.SUB_CRITERIA}“ vantar`,
     )
-    return []
+    return { criteria: [], sheetOrder: empty }
   }
 
-  const criteria = parseCriteriaSheet(workbook, viðmiðSheet, errors)
-  parseSubCriteriaSheet(workbook, undirviðmiðSheet, criteria, errors)
-  return criteria
+  const scan = parseCriteriaSheet(workbook, viðmiðSheet, errors)
+  const sheetOrder = parseSubCriteriaSheet(
+    workbook,
+    undirviðmiðSheet,
+    scan,
+    errors,
+  )
+  return { criteria: scan.criteria, sheetOrder }
 }

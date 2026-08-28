@@ -22,6 +22,14 @@
  *     order personal subs appear on Undirviðmið (same every-second-column
  *     interleaving).
  *
+ * ⚠️ **"The order they appear on Undirviðmið" means ROW order** — not the
+ * criterion tree flattened parent-by-parent. The two differ whenever the
+ * employer's Undirviðmið rows are not already sorted into the Viðmið criterion
+ * order, and nothing in the template asks them to be. The column order is
+ * therefore supplied by {@link SubCriteriaSheetOrder}, built while walking the
+ * sheet, and cross-checked against each column's own cached header by
+ * {@link assertColumnAlignment} before a single value is read.
+ *
  * The row/column geometry of each step-input region is read from the
  * `ROLE_STEP_INPUTS` / `EMP_STEP_INPUTS` named ranges (see
  * {@link readStepInputGrid}) rather than hard-coded.
@@ -42,15 +50,14 @@
 
 import ExcelJS from 'exceljs'
 
-import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import {
-  ParsedCriterionDto,
   ParsedEmployeeDto,
   ParsedRoleDto,
   ParsedStepAssignmentDto,
 } from '../dto/parsed-report.dto'
 import { NAMED_RANGES, SHEETS } from '../workbook.schema'
-import { readInteger } from './cell'
+import { readInteger, readString } from './cell'
+import { SubCriteriaSheetOrder, SubCriterionRef } from './criteria.parser'
 import { ErrorBag } from './errors'
 
 /**
@@ -108,41 +115,120 @@ const readStepInputGrid = (
   }
 }
 
-type FlatSubRef = {
-  criterionTitle: string
-  subTitle: string
-  numSteps: number
+/**
+ * Rows above a matrix's step-input grid that label each column pair, as
+ * offsets from the grid's first data row (row 11 on both sheets, so these
+ * resolve to rows 5 and 6). Both are `INDEX(Undirviðmið!…, <col>$4)` formulas
+ * — the sheet's own statement of which sub-criterion a column belongs to.
+ *
+ * The offsets are relative because `grid.firstRow` comes from a named range
+ * Excel rewrites on row insert, and the header rows move with it. That holds
+ * only for rows inserted above the headers; one inserted *between* them and
+ * the grid slides the offsets onto the Vægi row instead, which is why
+ * {@link readHeaderLabel} refuses to read a non-text header.
+ */
+const HEADER_ROW_OFFSET = {
+  criterionTitle: -6,
+  subTitle: -5,
+} as const
+
+/**
+ * Read a column header, treating anything that is not text as absent.
+ *
+ * `readString` stringifies numbers, so without this a header offset that has
+ * slid onto the numeric Vægi row would yield e.g. `"30"` — a confident,
+ * wrong answer that reads as a mismatch on every column and hard-rejects a
+ * workbook that would otherwise parse. A header we cannot identify is not
+ * evidence of a mismatch, so it is reported as unverifiable instead.
+ */
+const readHeaderLabel = (cell: ExcelJS.Cell): string | null => {
+  const raw = cell.value
+  const inner =
+    raw && typeof raw === 'object' && 'formula' in raw ? raw.result : raw
+  if (typeof inner === 'number' || typeof inner === 'boolean') return null
+  return readString(cell)
 }
 
 /**
- * Flatten the criterion tree into the two filtered lists the Flokkun sheets
- * index into. Order is preserved from the nested input — that's the same
- * order the sheets use.
+ * Verify that the sub-criterion the parser resolved for each column pair is
+ * the one the column's own header names, and refuse to read the matrix if not.
+ *
+ * This is the backstop for the whole positional scheme. Column identity is
+ * derived (from Undirviðmið row order) rather than read, so a wrong derivation
+ * does not fail loudly — it lands every assignment one or more columns off,
+ * and only the subset whose step value happens to exceed the wrong column's
+ * step count produces an error. The rest is silent corruption. Comparing
+ * against the cached headers turns that entire failure class into one message.
+ *
+ * Skips any column whose header carries no cached value: the shipped template
+ * stores these as formulas with no result, and ExcelJS does not evaluate
+ * formulas. An unverifiable header is not evidence of a mismatch.
+ *
+ * @returns `true` when every checkable column agrees.
  */
-const flattenSubRefs = (
-  criteria: ParsedCriterionDto[],
-): { jobBased: FlatSubRef[]; personal: FlatSubRef[] } => {
-  const jobBased: FlatSubRef[] = []
-  const personal: FlatSubRef[] = []
-  for (const c of criteria) {
-    for (const s of c.subCriteria) {
-      const ref: FlatSubRef = {
-        criterionTitle: c.title,
-        subTitle: s.title,
-        numSteps: s.steps.length,
-      }
-      if (c.type === ReportCriterionTypeEnum.PERSONAL) {
-        personal.push(ref)
-      } else {
-        jobBased.push(ref)
-      }
+const assertColumnAlignment = (
+  sheet: ExcelJS.Worksheet,
+  grid: StepInputGrid,
+  refs: readonly (SubCriterionRef | null)[],
+  sheetName: string,
+  errors: ErrorBag,
+): boolean => {
+  const mismatches: {
+    column: string
+    sheetLabel: string
+    ref: SubCriterionRef
+  }[] = []
+
+  refs.forEach((ref, subIdx) => {
+    if (!ref) return
+    const col = grid.firstCol + 2 * subIdx
+    const sheetSubTitle = readHeaderLabel(
+      sheet.getCell(grid.firstRow + HEADER_ROW_OFFSET.subTitle, col),
+    )
+    if (!sheetSubTitle) return
+
+    const sheetCriterionTitle = readHeaderLabel(
+      sheet.getCell(grid.firstRow + HEADER_ROW_OFFSET.criterionTitle, col),
+    )
+    if (
+      sheetSubTitle === ref.subTitle &&
+      (!sheetCriterionTitle || sheetCriterionTitle === ref.criterionTitle)
+    ) {
+      return
     }
-  }
-  return { jobBased, personal }
+
+    mismatches.push({
+      column: sheet.getColumn(col).letter,
+      sheetLabel: [sheetCriterionTitle, sheetSubTitle]
+        .filter(Boolean)
+        .join(' → '),
+      ref,
+    })
+  })
+
+  if (mismatches.length === 0) return true
+
+  // One message, not one per column: a single-slot shift misaligns every
+  // column after it, and the cause is shared. The first mismatch names what
+  // went wrong; the rest are listed as columns only.
+  const [first, ...rest] = mismatches
+  const alsoAffected = rest.length
+    ? ` Sömu skekkju er að finna í dálkunum ${rest.map((m) => m.column).join(', ')}.`
+    : ''
+  errors.add(
+    sheetName,
+    `Dálkurinn er merktur „${first.sheetLabel}“ en samkvæmt röð undirviðmiðanna á blaðinu ${SHEETS.SUB_CRITERIA} ætti hann að vera „${first.ref.criterionTitle} → ${first.ref.subTitle}“ — raðaðu undirviðmiðunum í upprunalega röð eða sæktu nýtt eyðublað${alsoAffected ? '.' + alsoAffected : ''}`,
+    {
+      row: grid.firstRow + HEADER_ROW_OFFSET.subTitle,
+      column: first.column,
+    },
+  )
+
+  return false
 }
 
 const buildAssignment = (
-  ref: FlatSubRef,
+  ref: SubCriterionRef,
   stepOrder: number,
   sheetName: string,
   cellAddress: string,
@@ -169,7 +255,7 @@ const buildAssignment = (
 
 export const parseRoleClassifications = (
   workbook: ExcelJS.Workbook,
-  criteria: ParsedCriterionDto[],
+  sheetOrder: SubCriteriaSheetOrder,
   roles: ParsedRoleDto[],
   errors: ErrorBag,
 ): void => {
@@ -182,7 +268,7 @@ export const parseRoleClassifications = (
     return
   }
 
-  const { jobBased } = flattenSubRefs(criteria)
+  const jobBased = sheetOrder.jobBased
 
   const grid = readStepInputGrid(workbook, NAMED_RANGES.ROLE_STEP_INPUTS)
   if (!grid) {
@@ -209,9 +295,25 @@ export const parseRoleClassifications = (
     return
   }
 
+  if (
+    !assertColumnAlignment(
+      sheet,
+      grid,
+      jobBased,
+      SHEETS.ROLE_CLASSIFICATION,
+      errors,
+    )
+  ) {
+    return
+  }
+
   roles.forEach((role, roleIdx) => {
     const row = grid.firstRow + roleIdx
     jobBased.forEach((ref, subIdx) => {
+      // Reserved slot: the column exists but its Undirviðmið row was
+      // rejected, so there is nothing to assign against. The row's own error
+      // already fails the upload.
+      if (!ref) return
       const col = grid.firstCol + 2 * subIdx
       const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
@@ -230,7 +332,7 @@ export const parseRoleClassifications = (
 
 export const parseEmployeeClassifications = (
   workbook: ExcelJS.Workbook,
-  criteria: ParsedCriterionDto[],
+  sheetOrder: SubCriteriaSheetOrder,
   employees: ParsedEmployeeDto[],
   errors: ErrorBag,
 ): void => {
@@ -243,12 +345,14 @@ export const parseEmployeeClassifications = (
     return
   }
 
-  const { personal } = flattenSubRefs(criteria)
+  const personal = sheetOrder.personal
 
-  // No personal sub-criteria ⇒ nothing on this sheet is read, so its geometry
-  // is irrelevant. Returning early matters: the row check below would otherwise
-  // reject a large submission over a sheet it never needed to touch.
-  if (personal.length === 0) return
+  // Nothing readable on this sheet ⇒ its geometry is irrelevant. Returning
+  // early matters: the row check below would otherwise reject a large
+  // submission over a sheet it never needed to touch. Reserved (null) slots
+  // count as nothing to read — their Undirviðmið rows already failed, so the
+  // upload is rejected on those errors rather than on this sheet's extent.
+  if (!personal.some(Boolean)) return
 
   const grid = readStepInputGrid(workbook, NAMED_RANGES.EMP_STEP_INPUTS)
   if (!grid) {
@@ -264,6 +368,18 @@ export const parseEmployeeClassifications = (
       SHEETS.EMPLOYEE_CLASSIFICATION,
       `Að hámarki ${grid.columnPairCapacity} persónubundin undirviðmið eru studd; fjöldi var ${personal.length}`,
     )
+    return
+  }
+
+  if (
+    !assertColumnAlignment(
+      sheet,
+      grid,
+      personal,
+      SHEETS.EMPLOYEE_CLASSIFICATION,
+      errors,
+    )
+  ) {
     return
   }
 
@@ -296,6 +412,8 @@ export const parseEmployeeClassifications = (
   employees.forEach((employee, empIdx) => {
     const row = grid.firstRow + empIdx
     personal.forEach((ref, subIdx) => {
+      // Reserved slot — see `parseRoleClassifications`.
+      if (!ref) return
       const col = grid.firstCol + 2 * subIdx
       const cell = sheet.getCell(row, col)
       const stepOrder = readInteger(cell)
