@@ -4039,6 +4039,11 @@
         "properties": {
           "employeeOrdinal": { "type": "number" },
           "gender": { "type": "string", "enum": ["MALE", "FEMALE", "NEUTRAL"] },
+          "roleTitle": {
+            "type": "string",
+            "nullable": true,
+            "description": "Starf — the title of the employee's role, denormalized here so the úrbótaáætlun table needs no client-side join against the draft roles list. Mirrors `ReportEmployeeOutlierDto.roleTitle`, which the submitted-report endpoints already carry. Null only when the caller could not resolve a title for the ordinal."
+          },
           "score": { "type": "number" },
           "regularHourlyWage": {
             "type": "number",

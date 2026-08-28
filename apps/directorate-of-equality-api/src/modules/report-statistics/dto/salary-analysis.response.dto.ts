@@ -4,6 +4,7 @@ import {
   ApiEnum,
   ApiNumber,
   ApiOptionalNumber,
+  ApiOptionalString,
 } from '@dmr.is/decorators'
 
 import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
@@ -33,6 +34,13 @@ export class SalaryAnalysisOutlierDto {
 
   @ApiEnum(GenderEnum)
   gender!: GenderEnum
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      "Starf — the title of the employee's role, denormalized here so the úrbótaáætlun table needs no client-side join against the draft roles list. Mirrors `ReportEmployeeOutlierDto.roleTitle`, which the submitted-report endpoints already carry. Null only when the caller could not resolve a title for the ordinal.",
+  })
+  roleTitle!: string | null
 
   @ApiNumber()
   score!: number

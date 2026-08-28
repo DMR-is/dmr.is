@@ -77,8 +77,15 @@ export function analyzeSalaryPayload(
     gender: employee.gender,
   }))
 
+  // Starf per ordinal, so the úrbótaáætlun table can render it without joining
+  // the roles list client-side. The parsed payload already denormalises the
+  // title onto each employee row, so no lookup through `parsed.roles` is needed.
+  const roleTitleByOrdinal = new Map<number, string | null>(
+    parsed.employees.map((employee) => [employee.ordinal, employee.roleTitle]),
+  )
+
   return {
-    outliers: toMinimumSetDtos(wageGapDecomposition),
+    outliers: toMinimumSetDtos(wageGapDecomposition, roleTitleByOrdinal),
     regularHourlyWageByScoreAll: buildChartFromEmployeePoints(chartPoints),
     wageGapDecomposition,
     // 6. Ábendingar — derived from the decomposition above, never stored. A

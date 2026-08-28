@@ -71,9 +71,17 @@ export function minimumSetOrdinals(
  * Shared by every path that surfaces it — the applicant preview, the admin
  * create-flow preview and the draft analysis — because three copies of this
  * mapping is how one screen starts disagreeing with another.
+ *
+ * `roleTitleByOrdinal` supplies Starf per employee. It is REQUIRED rather than
+ * optional on purpose: the decomposition snapshot is a numeric artifact and
+ * carries no labels, so an optional lookup would let a new call site compile
+ * while returning `roleTitle: null` on every row — silently, and
+ * indistinguishably from a genuinely unknown role. Callers that legitimately
+ * have no titles pass an empty map and say so.
  */
 export function toMinimumSetDtos(
   snapshot: WageGapDecompositionSnapshot,
+  roleTitleByOrdinal: ReadonlyMap<number, string | null>,
 ): SalaryAnalysisOutlierDto[] {
   // 2dp on rates, not whole krónur. Rounding to 1 kr is 8×10⁻⁷ relative on a
   // 650.000 monthly salary but 2×10⁻⁴ on a ~4.000 kr./klst. rate, and the error
@@ -83,6 +91,7 @@ export function toMinimumSetDtos(
   return selectMinimumSet(snapshot).map((employee) => ({
     employeeOrdinal: employee.ordinal,
     gender: employee.gender,
+    roleTitle: roleTitleByOrdinal.get(employee.ordinal) ?? null,
     score: employee.score,
     regularHourlyWage: round2(employee.hourlyWage),
     expectedHourlyWage: round2(employee.expectedHourlyWage),

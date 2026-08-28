@@ -149,6 +149,36 @@ describe('analyzeSalaryPayload', () => {
       }
     })
 
+    /**
+     * Starf on every row, not just the first one.
+     *
+     * The client used to build this column by fetching `/draft/roles` and
+     * joining it to `/draft/employees` on `reportEmployeeRoleId`; on dev that
+     * join produced a title for the first row and a dash for the rest. The
+     * column is denormalised onto the outlier now, so the assertion is per-row
+     * on purpose — a mapping that resolves only the first ordinal is exactly
+     * the regression this guards.
+     */
+    it('carries each outlier’s Starf, on every row', () => {
+      const parsed = makeMixedPayload()
+      const result = analyzeSalaryPayload(parsed, THRESHOLD_PERCENT)
+
+      const roleTitleByOrdinal = new Map(
+        parsed.employees.map((employee) => [
+          employee.ordinal,
+          employee.roleTitle,
+        ]),
+      )
+
+      expect(result.outliers.length).toBeGreaterThan(0)
+      for (const outlier of result.outliers) {
+        expect(outlier.roleTitle).toBe(
+          roleTitleByOrdinal.get(outlier.employeeOrdinal),
+        )
+        expect(outlier.roleTitle).not.toBeNull()
+      }
+    })
+
     // A compliant company needs no úrbótaáætlun at all. Under the band it could
     // still have flagged employees, which is the failure decision #13 names.
     it('is empty when the company is already under the benchmark', () => {
