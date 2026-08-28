@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseUUIDPipe,
   Post,
   UseGuards,
 } from '@nestjs/common'
@@ -78,7 +79,7 @@ export class ApiKeyController {
       'Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback when a company has lost its key and has no open island.is application to mint a new one from.',
   })
   async issueApiKey(
-    @Param('companyId') companyId: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
     @CurrentAdminUser() adminUser: UserModel,
     @Body() input: CreateApiKeyDto,
   ): Promise<IssuedApiKeyDto> {
@@ -104,8 +105,15 @@ export class ApiKeyController {
       'Every API key a company holds, newest first. Revoked and expired keys are included so the list doubles as an audit view — it shows who minted each key and when it was last used. Never contains a secret; none is recoverable.',
   })
   async getApiKeys(
-    @Param('companyId') companyId: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
   ): Promise<GetApiKeysResponseDto> {
+    // Resolve first, even though the list query does not need it. Without this
+    // an unknown companyId answers 200 with an empty list while POST and DELETE
+    // on the same path 404 — three co-located operations disagreeing about what
+    // an unknown id means — and the 404 this operation advertises to the
+    // generated client could never be produced.
+    await this.companyService.getById(companyId)
+
     return { apiKeys: await this.apiKeyService.list(companyId) }
   }
 
@@ -126,8 +134,8 @@ export class ApiKeyController {
       'Revokes one of the company’s keys. Requires the ADMIN role. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail.',
   })
   async revokeApiKey(
-    @Param('companyId') companyId: string,
-    @Param('id') id: string,
+    @Param('companyId', ParseUUIDPipe) companyId: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentAdminUser() adminUser: UserModel,
   ): Promise<ApiKeyDto> {
     const company = await this.companyService.getById(companyId)

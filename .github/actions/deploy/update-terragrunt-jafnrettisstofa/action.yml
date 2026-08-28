@@ -80,7 +80,8 @@ runs:
           --commit false \
           --ignore-dirty true \
           --service doe_api:doe_api_version_tag \
-          --service doe_web:doe_web_version_tag
+          --service doe_web:doe_web_version_tag \
+          --service doe_partner_api:doe_partner_api_version_tag
 
         echo "✅ All DOE services deployed successfully!"
 

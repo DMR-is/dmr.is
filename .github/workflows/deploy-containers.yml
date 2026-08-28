@@ -75,7 +75,7 @@ jobs:
       # When there is no baseline at all -- first run after a rename, or run
       # history aged out -- the action reports noPreviousBuild instead of us
       # guessing. That case is handled explicitly below by treating every
-      # container as affected: rebuilding all eleven is wasteful but always
+      # container as affected: rebuilding all twelve is wasteful but always
       # correct, where HEAD~1 is cheap and sometimes wrong. Fail safe, not
       # fail closed, so a missing baseline never blocks a deploy either.
       #
@@ -94,6 +94,18 @@ jobs:
           BASE_SHA: ${{ steps.set-shas.outputs.base }}
           REBUILD_ALL: ${{ inputs.rebuild-all }}
         run: |
+          # directorate-of-equality-partner-api is deliberately NOT in this list
+          # yet. Its ECS service does not exist in the DMR-Jafnrettisstofa
+          # terragrunt tree, so deploying it would fail on
+          # `aws ecs wait services-stable` and take every other container in the
+          # run down with it. Re-add it here and in on-release.yml in the same PR
+          # as the terragrunt service definition -- not before. Two things that
+          # PR needs: the partner API must sit on the PUBLIC alb, not the
+          # internal one directorate-of-equality-api uses, because payroll
+          # vendors call it from the internet; and of its twelve required
+          # variables only DOE_API_KEY_HMAC_SECRET is new -- the other eleven are
+          # already SSM parameters for directorate-of-equality-api and should be
+          # referenced, not duplicated, so the shared pepper cannot drift.
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},

@@ -57,6 +57,11 @@ import {
   SUB_CRITERION_GENERAL_SCALE,
 } from './sub-criterion-catalog/sub-criterion-catalog.data'
 import { ApplicationService } from './application.service'
+import {
+  EXTERNAL_PROVIDER_CHANNEL,
+  ISLAND_IS_PROVIDER_CHANNEL,
+  REPORT_PROVIDER_CHANNEL,
+} from './provider-channel'
 
 const mockLogger = {
   debug: jest.fn(),
@@ -150,6 +155,12 @@ describe('ApplicationService', () => {
     const module = await Test.createTestingModule({
       providers: [
         ApplicationService,
+        // These assertions were written for the island.is channel: provider_type
+        // ISLAND_IS and provider_id stored exactly as given.
+        {
+          provide: REPORT_PROVIDER_CHANNEL,
+          useValue: ISLAND_IS_PROVIDER_CHANNEL,
+        },
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: IConfigService,

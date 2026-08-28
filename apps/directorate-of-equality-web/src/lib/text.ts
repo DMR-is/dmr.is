@@ -860,6 +860,8 @@ export const companiesText = {
           'Afritaðu lykilinn núna. Hann er ekki geymdur og verður ekki sýndur aftur — ef hann týnist þarf að búa til nýjan.',
         copyButton: 'Afrita',
         copiedToast: 'Lykill afritaður',
+        copyError:
+          'Ekki var unnt að afrita lykilinn. Afritaðu hann handvirkt áður en þú lokar.',
         doneButton: 'Loka',
       },
     },
