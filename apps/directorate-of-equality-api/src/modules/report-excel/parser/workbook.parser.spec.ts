@@ -965,6 +965,232 @@ describe('parseWorkbook', () => {
     })
   })
 
+  /**
+   * The classification matrices lay out one column pair per Undirviðmið row,
+   * in ROW order (`Starfsmat!G4` = `SMALL(IF(Undirviðmið!$D$6:$D$205=
+   * "Starfsbundið", ROW(…)-5), (COLUMN()-5)/2)`). `fillCriteriaAndSubCriteria`
+   * happens to enter its sub-criteria already sorted by the Viðmið criterion
+   * order, so a parser that flattened the criterion TREE instead read the
+   * right columns by luck. Nothing in the template requires that sorting.
+   */
+  describe('Undirviðmið row order drives the matrix columns', () => {
+    // Viðmið rows 6–9 are the fixed job-based criteria in this order:
+    // Ábyrgð, Álag, Vinnuaðstæður, Hæfni. These sub-criteria are entered in a
+    // DIFFERENT order, so criterion-grouped order ≠ sheet column order.
+    const SHUFFLED_SUBS = [
+      { parent: 'Hæfni', sub: 'Formleg menntun', weight: 20 },
+      { parent: 'Vinnuaðstæður', sub: 'Vinnuumhverfi', weight: 20 },
+      { parent: 'Ábyrgð', sub: 'Ábyrgð á gæðum', weight: 30 },
+      { parent: 'Álag', sub: 'Álag í starfi', weight: 20 },
+    ]
+
+    const buildShuffled = async (): Promise<Buffer> => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+
+      setCriterionWeight(wb, 6, 30) // Ábyrgð
+      setCriterionWeight(wb, 7, 20) // Álag
+      setCriterionWeight(wb, 8, 20) // Vinnuaðstæður
+      setCriterionWeight(wb, 9, 20) // Hæfni
+      addPersonalCriterion(wb, 10, 'Sérhæfing', 10)
+
+      SHUFFLED_SUBS.forEach(({ parent, sub, weight }, i) => {
+        addSubCriterion(wb, 6 + i, parent, sub, weight, FIVE_STEPS)
+      })
+      addSubCriterion(wb, 10, 'Sérhæfing', 'Tungumál', 10, FIVE_STEPS)
+
+      // One distinct value per column, so a shifted read is unambiguous:
+      // column G→1, I→2, K→3, M→4.
+      fillRoleClassification(wb, [[1, 2, 3, 4]])
+      fillEmployeeClassification(wb, [[1]])
+
+      return serialize(wb)
+    }
+
+    it('maps each column to the sub-criterion its own header names', async () => {
+      const report = await parseWorkbook(await buildShuffled())
+      const role = report.roles.find((r) => r.title === 'Forstöðumaður')
+
+      // Undirviðmið rows 6…9 → columns G / I / K / M, which were filled with
+      // 1 / 2 / 3 / 4. Criterion-grouped order would shift every one of them.
+      expect(role?.stepAssignments).toEqual([
+        { criterionTitle: 'Hæfni', subTitle: 'Formleg menntun', stepOrder: 1 },
+        {
+          criterionTitle: 'Vinnuaðstæður',
+          subTitle: 'Vinnuumhverfi',
+          stepOrder: 2,
+        },
+        { criterionTitle: 'Ábyrgð', subTitle: 'Ábyrgð á gæðum', stepOrder: 3 },
+        { criterionTitle: 'Álag', subTitle: 'Álag í starfi', stepOrder: 4 },
+      ])
+    })
+  })
+
+  /**
+   * Column identity is DERIVED (from Undirviðmið row order), not read, so a
+   * wrong derivation lands values on the wrong sub-criterion instead of
+   * failing — and only the subset exceeding the wrong column's step count
+   * errors at all. The cached header on each column pair is the independent
+   * check that turns that silent class into one message.
+   */
+  describe('column alignment guard', () => {
+    it('refuses to read Starfsmat when a column header contradicts the resolved sub-criterion', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // Starfsmat rows 5/6 label each column pair (`INDEX(Undirviðmið!…, G$4)`).
+      // The shipped template stores them as formulas with no cached result;
+      // writing a stale pair simulates a workbook saved without recalculating.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 'Hæfni'
+      starfsmat.getCell('G6').value = 'Eitthvað allt annað'
+
+      const { errors } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sheet: 'Starfsmat',
+            column: 'G',
+            message: expect.stringContaining('Eitthvað allt annað'),
+          }),
+        ]),
+      )
+      // Bails instead of reading the matrix, so no per-cell cascade.
+      expect(
+        errors.filter((e) => e.message.includes('utan leyfilegs bils')),
+      ).toHaveLength(0)
+    })
+
+    it('accepts headers that agree with the resolved sub-criterion', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'Nafn 1',
+        role: 'Forstöðumaður',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 900000,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'Stjórnun',
+        department: 'Framkvæmd',
+        startDate: new Date('2023-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[1, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      // `fillCriteriaAndSubCriteria` writes Undirviðmið rows 6…9 as
+      // Ábyrgð / Álag / Vinnuaðstæður / Hæfni → columns G / I / K / M.
+      const starfsmat = wb.getWorksheet('Starfsmat')!
+      starfsmat.getCell('G5').value = 'Ábyrgð'
+      starfsmat.getCell('G6').value = 'Ábyrgð á gæðum'
+      starfsmat.getCell('M5').value = 'Hæfni'
+      starfsmat.getCell('M6').value = 'Formleg menntun'
+
+      const report = await parseWorkbook(await serialize(wb))
+      expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
+    })
+  })
+
+  /**
+   * The user-facing `details` list is these lines verbatim, so the sheet has
+   * to be identifiable at a glance. Several sheet names double as domain terms
+   * inside the messages (Starfsmat, Viðmið, Undirviðmið), which made a bare
+   * leading `Starfsmat:` read as part of the sentence.
+   */
+  describe('error line formatting', () => {
+    // `expectBadRequest` types `message` as the single-string case; the
+    // error-list paths put one formatted line per problem in an array.
+    const lines = (message: string): string[] => message as unknown as string[]
+
+    it('labels the sheet, with no location to report', async () => {
+      const { message } = await expectBadRequest(
+        parseWorkbook(templateBuffer()),
+      )
+
+      expect(lines(message)).toEqual(
+        expect.arrayContaining([
+          'Blað: Launagögn – Að minnsta kosti eitt starf er nauðsynlegt',
+        ]),
+      )
+    })
+
+    it('labels the sheet and keeps the column location', async () => {
+      const wb = await loadTemplate()
+      writeEmployeeRow(wb, 1, {
+        name: 'X',
+        role: 'R',
+        gender: 'Kona',
+        paidHours: 173.33,
+        baseSalary: 1,
+        additionalFixedOvertime: 0,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        field: 'X',
+        department: 'X',
+        startDate: new Date('2024-01-01'),
+      })
+      fillCriteriaAndSubCriteria(wb)
+      fillRoleClassification(wb, [[99, 1, 1, 1]])
+      fillEmployeeClassification(wb, [[1]])
+
+      const { message } = await expectBadRequest(
+        parseWorkbook(await serialize(wb)),
+      )
+
+      expect(lines(message)).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(
+            /^Blað: Starfsmat \(dálkur G\) – Þrep 99 er utan leyfilegs bils/,
+          ),
+        ]),
+      )
+    })
+  })
+
   it('rejects a non-xlsx payload with a descriptive error', async () => {
     const { message } = await expectBadRequest(
       parseWorkbook(Buffer.from('not a workbook')),

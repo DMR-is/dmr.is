@@ -79,6 +79,20 @@ const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
  * `message` array so the shared HttpExceptionFilter forwards them as
  * `details`, which the web client surfaces to the user (the structured
  * `errors` array only survives in server logs).
+ *
+ * ## Why the sheet name is labelled
+ *
+ * A bare `Starfsmat: …` prefix is ambiguous to the reader: several sheet names
+ * are also domain terms that appear inside the messages themselves (Starfsmat,
+ * Viðmið, Undirviðmið), so an unlabelled leading word reads as part of the
+ * sentence rather than as a location. A page of them is hard to scan for
+ * *which sheet do I open*. `Blað:` names the thing explicitly, and separating
+ * the location from the message with an en dash keeps one colon per line.
+ *
+ * "Blað" (not "skjal") because that is the word the messages themselves
+ * already use for a sheet — `Nauðsynlegt blað „Starfsmat“ vantar`,
+ * `fannst ekki á blaðinu Viðmið` — while the file as a whole is the
+ * "vinnubók".
  */
 const formatImportError = (e: ImportErrorDto): string => {
   const location = [
@@ -88,9 +102,8 @@ const formatImportError = (e: ImportErrorDto): string => {
     .filter(Boolean)
     .join(', ')
 
-  return location
-    ? `${e.sheet} (${location}): ${e.message}`
-    : `${e.sheet}: ${e.message}`
+  const where = location ? `${e.sheet} (${location})` : e.sheet
+  return `Blað: ${where} – ${e.message}`
 }
 
 export const parseWorkbook = async (
@@ -137,10 +150,13 @@ export const parseWorkbook = async (
     })
   }
 
-  const criteria = parseCriteriaTree(workbook, errors)
+  // `sheetOrder` carries the sub-criteria in Undirviðmið ROW order — the order
+  // the classification matrices lay their columns out in, which the criterion
+  // tree does not preserve. See `SubCriteriaSheetOrder`.
+  const { criteria, sheetOrder } = parseCriteriaTree(workbook, errors)
   const { employees, roles } = parseEmployees(workbook, errors)
-  parseRoleClassifications(workbook, criteria, roles, errors)
-  parseEmployeeClassifications(workbook, criteria, employees, errors)
+  parseRoleClassifications(workbook, sheetOrder, roles, errors)
+  parseEmployeeClassifications(workbook, sheetOrder, employees, errors)
 
   const report: ParsedReportDto = { criteria, roles, employees }
 
