@@ -8,10 +8,7 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import {
-  ApiKeyOriginEnum,
-  ApiKeyScopeEnum,
-} from '../api-key.constants'
+import { ApiKeyOriginEnum, ApiKeyScopeEnum } from '../api-key.constants'
 
 /**
  * A key as it can be shown after issuance.

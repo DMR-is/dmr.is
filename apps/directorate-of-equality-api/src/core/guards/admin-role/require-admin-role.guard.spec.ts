@@ -3,7 +3,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 
-import { DoeUserRole } from '../../../modules/user/types/user-role'
+import { DoeUserRole } from '@dmr.is/doe-modules/user'
+
 import { RequireAdminRoleGuard } from './require-admin-role.guard'
 
 const createExecutionContext = (request: Record<string, unknown>) =>

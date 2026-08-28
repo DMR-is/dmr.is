@@ -1,14 +1,16 @@
 import { Controller, Get, Inject, Param, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  BenefitsBreakdownDto,
+  GenderWageGapDto,
+  IReportStatisticsService,
+  SalaryByGenderAndScoreDto,
+} from '@dmr.is/doe-modules/report-statistics'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { BenefitsBreakdownDto } from './dto/benefits-breakdown.dto'
-import { GenderWageGapDto } from './dto/gender-wage-gap.dto'
-import { SalaryByGenderAndScoreDto } from './dto/salary-by-gender-and-score.dto'
-import { IReportStatisticsService } from './report-statistics.service.interface'
 
 @Controller({
   path: 'reports/:reportId/statistics',

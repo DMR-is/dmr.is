@@ -5,6 +5,40 @@ import { SequelizeModule } from '@nestjs/sequelize'
 
 import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { DMRSequelizeConfigModule, DMRSequelizeConfigService } from '@dmr.is/db'
+import {
+  CompanyCommentModel,
+  CompanyEventModel,
+  CompanyModel,
+  CompanyReportModel,
+  IsatCategoryModel,
+  IsatSectionModel,
+} from '@dmr.is/doe-modules/company'
+import { ConfigModel } from '@dmr.is/doe-modules/config'
+import {
+  PostcodeModel,
+  RegionModel,
+} from '@dmr.is/doe-modules/location'
+import { PublicReportModel } from '@dmr.is/doe-modules/public-report'
+import {
+  ReportEventModel,
+  ReportModel,
+} from '@dmr.is/doe-modules/report'
+import { ReportCommentModel } from '@dmr.is/doe-modules/report-comment'
+import {
+  ReportCriterionModel,
+  ReportSubCriterionModel,
+  ReportSubCriterionStepModel,
+} from '@dmr.is/doe-modules/report-criterion'
+import {
+  ReportEmployeeModel,
+  ReportEmployeeOutlierModel,
+  ReportEmployeePersonalCriterionStepModel,
+  ReportEmployeeRoleCriterionStepModel,
+  ReportEmployeeRoleModel,
+  ReportOutlierGroupModel,
+} from '@dmr.is/doe-modules/report-employee'
+import { ReportResultModel } from '@dmr.is/doe-modules/report-result'
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { ApiKeyModel } from '@dmr.is/doe-shared'
 import { LoggingModule } from '@dmr.is/logging'
 import {
@@ -15,32 +49,8 @@ import {
 import { CLSMiddleware, LogRequestMiddleware } from '@dmr.is/shared-middleware'
 
 import { DeclaredAccessGuard } from '../core/guards/declared-access/declared-access.guard'
-import { CompanyModel } from '../modules/company/models/company.model'
-import { CompanyCommentModel } from '../modules/company/models/company-comment.model'
-import { CompanyEventModel } from '../modules/company/models/company-event.model'
-import { CompanyReportModel } from '../modules/company/models/company-report.model'
-import { IsatCategoryModel } from '../modules/company/models/isat-category.model'
-import { IsatSectionModel } from '../modules/company/models/isat-section.model'
-import { ConfigModel } from '../modules/config/models/config.model'
-import { PostcodeModel } from '../modules/location/models/postcode.model'
-import { RegionModel } from '../modules/location/models/region.model'
-import { PublicReportModel } from '../modules/public-report/models/public-report.model'
-import { ReportModel } from '../modules/report/models/report.model'
-import { ReportEventModel } from '../modules/report/models/report-event.model'
-import { ReportCommentModel } from '../modules/report-comment/models/report-comment.model'
-import { ReportCriterionModel } from '../modules/report-criterion/models/report-criterion.model'
-import { ReportSubCriterionModel } from '../modules/report-criterion/models/report-sub-criterion.model'
-import { ReportSubCriterionStepModel } from '../modules/report-criterion/models/report-sub-criterion-step.model'
-import { ReportEmployeeModel } from '../modules/report-employee/models/report-employee.model'
-import { ReportEmployeeOutlierModel } from '../modules/report-employee/models/report-employee-outlier.model'
-import { ReportEmployeePersonalCriterionStepModel } from '../modules/report-employee/models/report-employee-personal-criterion-step.model'
-import { ReportEmployeeRoleModel } from '../modules/report-employee/models/report-employee-role.model'
-import { ReportEmployeeRoleCriterionStepModel } from '../modules/report-employee/models/report-employee-role-criterion-step.model'
-import { ReportOutlierGroupModel } from '../modules/report-employee/models/report-outlier-group.model'
-import { ReportResultModel } from '../modules/report-result/models/report-result.model'
 import { DoeApplicationSwaggerModule } from '../modules/swagger/doe-application.swagger.module'
 import { DoeWebSwaggerModule } from '../modules/swagger/doe-web.swagger.module'
-import { UserModel } from '../modules/user/models/user.model'
 import { TasksModule } from '../tasks/tasks.module'
 import { HealthController } from './health.controller'
 @Module({

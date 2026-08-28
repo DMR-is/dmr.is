@@ -11,11 +11,11 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import { IReportPdfService } from '@dmr.is/doe-modules/report-pdf'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { IReportPdfService } from './report-pdf.service.interface'
 
 @Controller({ path: 'reports/:reportId/pdf', version: '1' })
 @ApiTags('Report PDF')

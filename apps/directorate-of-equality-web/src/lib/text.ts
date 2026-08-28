@@ -619,6 +619,8 @@ export const reportText = {
     companyCreated: 'Fyrirtæki skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
+    apiKeyIssued: 'Aðgangslykill búinn til',
+    apiKeyRevoked: 'Aðgangslykill afturkallaður',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
     reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
@@ -755,6 +757,7 @@ export const companiesText = {
     heading: 'Upplýsingar um fyrirtæki',
     tabInfo: 'Upplýsingar',
     tabReports: 'Skýrslur',
+    tabApiKeys: 'Aðgangslyklar',
     tabsLabel: 'Fyrirtækjaflippar',
     timelineHeading: 'Saga fyrirtækis',
     sidebarTitle: 'Staða fyrirtækis',
@@ -801,6 +804,65 @@ export const companiesText = {
     emailCancelButton: 'Hætta við',
     emailSavedToast: 'Netfang uppfært',
     emailErrorToast: 'Villa við að uppfæra netfang',
+
+    apiKeys: {
+      heading: 'Aðgangslyklar',
+      intro:
+        'Aðgangslyklar leyfa hugbúnaði fyrirtækisins að skila skýrslum sjálfvirkt. Fyrirtæki býr yfirleitt til sinn eigin lykil í umsókn á island.is — þessi síða er til vara, til dæmis ef lykill hefur týnst og engin umsókn er opin.',
+      issueButton: 'Búa til nýjan lykil',
+      empty: 'Engir aðgangslyklar skráðir',
+      loadError: 'Villa við að hlaða aðgangslykla',
+
+      // Column headings
+      colLabel: 'Heiti',
+      colKeyId: 'Lyklanúmer',
+      colCreated: 'Búinn til',
+      colCreatedBy: 'Búinn til af',
+      colLastUsed: 'Síðast notaður',
+      colStatus: 'Staða',
+      colActions: '',
+
+      statusActive: 'Í gildi',
+      statusRevoked: 'Afturkallaður',
+      statusExpired: 'Útrunninn',
+      neverUsed: 'Aldrei notaður',
+      createdViaIslandIs: 'island.is',
+      createdViaAdmin: 'Jafnréttisstofa',
+
+      revokeButton: 'Afturkalla',
+      revokeConfirmTitle: 'Afturkalla aðgangslykil?',
+      revokeConfirmMessage:
+        'Lykillinn hættir samstundis að virka og ekki er unnt að taka það til baka. Hugbúnaður sem notar hann getur ekki skilað skýrslum fyrr en nýr lykill hefur verið settur upp.',
+      revokeConfirmButton: 'Afturkalla lykil',
+      revokedToast: 'Aðgangslykill afturkallaður',
+      revokeErrorToast: 'Villa við að afturkalla aðgangslykil',
+
+      modal: {
+        title: 'Búa til aðgangslykil',
+        labelLabel: 'Heiti (valfrjálst)',
+        labelPlaceholder: 'T.d. nafn launakerfisins',
+        labelHint:
+          'Heitið er eingöngu til að greina lykla að — það hefur engin áhrif á aðgang.',
+        expiresLabel: 'Gildistími',
+        expiresHint:
+          'Lykillinn hættir að virka að gildistíma loknum. Hægt er að afturkalla hann hvenær sem er.',
+        expires90Days: '90 dagar',
+        expires1Year: '1 ár',
+        expires2Years: '2 ár',
+        expiresNever: 'Ótímabundinn',
+        createButton: 'Búa til lykil',
+        cancelButton: 'Hætta við',
+        createErrorToast: 'Villa við að búa til aðgangslykil',
+
+        // The one-time reveal
+        createdTitle: 'Lykillinn var búinn til',
+        createdWarning:
+          'Afritaðu lykilinn núna. Hann er ekki geymdur og verður ekki sýndur aftur — ef hann týnist þarf að búa til nýjan.',
+        copyButton: 'Afrita',
+        copiedToast: 'Lykill afritaður',
+        doneButton: 'Loka',
+      },
+    },
 
     comments: {
       label: 'Athugasemdir',

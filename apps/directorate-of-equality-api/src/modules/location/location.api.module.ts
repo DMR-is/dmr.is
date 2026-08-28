@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common'
 
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { LocationCoreModule } from '@dmr.is/doe-modules/location'
+
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
 import { LocationController } from './location.controller'
-import { LocationCoreModule } from './location.core.module'
 
 @Module({
   imports: [LocationCoreModule, AuthorizationCoreModule],

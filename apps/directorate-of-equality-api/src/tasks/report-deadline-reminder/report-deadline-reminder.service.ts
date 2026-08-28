@@ -3,18 +3,18 @@ import { Op, WhereOptions } from 'sequelize'
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
-import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { CompanyStatusEnum } from '../../modules/company/models/company.enums'
-import { CompanyModel } from '../../modules/company/models/company.model'
 import {
   CompanyDeadlineReminderEventType,
   CompanyEventTypeEnum,
+  CompanyModel,
   CompanyReminderTierEnum,
-} from '../../modules/company/models/company-event.model'
-import { ICompanyEventService } from '../../modules/company-event/company-event.service.interface'
-import { IDoeMailService } from '../../modules/mail/doe-mail.service.interface'
-import { ReportTypeEnum } from '../../modules/report/models/report.enums'
+  CompanyStatusEnum,
+} from '@dmr.is/doe-modules/company'
+import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
+import { IDoeMailService } from '@dmr.is/doe-modules/mail'
+import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
+import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { REPORT_DEADLINE_REMINDER_LOGGING_CONTEXT } from '../constants'
 import { IReportDeadlineReminderService } from './report-deadline-reminder.service.interface'
 

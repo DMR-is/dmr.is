@@ -326,6 +326,222 @@
         "tags": ["Admin Report"]
       }
     },
+    "/api/v1/companies/{companyId}/api-keys": {
+      "post": {
+        "description": "Issues an API key on a company’s behalf. Requires the ADMIN role. **The secret is shown exactly once** — it is stored only as a hash, cannot be retrieved again, and has to be delivered to the company from this response. Intended as the fallback when a company has lost its key and has no open island.is application to mint a new one from.",
+        "operationId": "issueCompanyApiKey",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApiKeyDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IssuedApiKeyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      },
+      "get": {
+        "description": "Every API key a company holds, newest first. Revoked and expired keys are included so the list doubles as an audit view — it shows who minted each key and when it was last used. Never contains a secret; none is recoverable.",
+        "operationId": "getCompanyApiKeys",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetApiKeysResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      }
+    },
+    "/api/v1/companies/{companyId}/api-keys/{id}": {
+      "delete": {
+        "description": "Revokes one of the company’s keys. Requires the ADMIN role. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail.",
+        "operationId": "revokeCompanyApiKey",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "The key’s `id` as listed, not the `keyId` inside the credential.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiKeyDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["API keys"]
+      }
+    },
     "/api/v1/companies": {
       "get": {
         "operationId": "getCompanies",
@@ -4696,6 +4912,151 @@
           "equalityReportContent"
         ]
       },
+      "CreateApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "description": "Free-text label to tell this key apart from the others in a list, e.g. the name of the payroll system it was issued for."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "Narrows what the key may do. Omit to grant the full set. An unrecognised scope is rejected rather than stored.",
+            "items": {
+              "type": "string",
+              "enum": ["salary:submit", "equality:submit", "report:read"]
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Omit for no expiry."
+          }
+        }
+      },
+      "IssuedApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The full plaintext key. Shown exactly once — it cannot be retrieved again, only replaced."
+          },
+          "id": { "type": "string", "format": "uuid" },
+          "keyId": { "type": "string" },
+          "label": { "type": "string", "nullable": true },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["salary:submit", "equality:submit", "report:read"]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": ["key", "id", "keyId", "scopes", "createdAt"]
+      },
+      "ApiKeyOriginEnum": {
+        "type": "string",
+        "enum": ["ISLAND_IS", "ADMIN"],
+        "description": "Which issuance path minted the key — self-service through island.is, or a DoE reviewer."
+      },
+      "ApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "keyId": {
+            "type": "string",
+            "description": "Public half of the key, as it appears in the issued credential. Not a secret."
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "description": "Free-text label set by whoever issued the key."
+          },
+          "scopes": {
+            "type": "array",
+            "description": "What this key is permitted to do.",
+            "items": {
+              "type": "string",
+              "enum": ["salary:submit", "equality:submit", "report:read"]
+            }
+          },
+          "createdVia": {
+            "description": "Which issuance path minted the key — self-service through island.is, or a DoE reviewer.",
+            "allOf": [{ "$ref": "#/components/schemas/ApiKeyOriginEnum" }]
+          },
+          "createdByNationalId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kennitala of the person who minted the key on the island.is path. Null on the admin path, where `createdByUserId` names the reviewer instead."
+          },
+          "createdByUserId": {
+            "type": "string",
+            "nullable": true,
+            "description": "DoE reviewer who minted the key. Null on the island.is path."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the key stops being accepted. Null means no expiry."
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "Last time the key authenticated a request. Written at most once a minute per key, so it is an activity indicator rather than an exact timestamp."
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          },
+          "revokedByNationalId": { "type": "string", "nullable": true },
+          "revokedByUserId": { "type": "string", "nullable": true },
+          "revokedReason": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "keyId",
+          "scopes",
+          "createdVia",
+          "createdAt"
+        ]
+      },
+      "GetApiKeysResponseDto": {
+        "type": "object",
+        "properties": {
+          "apiKeys": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ApiKeyDto" }
+          }
+        },
+        "required": ["apiKeys"]
+      },
       "CompanySizeEnum": {
         "type": "string",
         "enum": ["UNKNOWN", "SMALL", "MEDIUM", "LARGE"]
@@ -5072,7 +5433,9 @@
           "EQUALITY_REPORT_DEADLINE_REMINDER_SENT",
           "SALARY_REPORT_DEADLINE_REMINDER_SENT",
           "EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
-          "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL"
+          "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
+          "API_KEY_ISSUED",
+          "API_KEY_REVOKED"
         ]
       },
       "CompanyReminderTierEnum": {

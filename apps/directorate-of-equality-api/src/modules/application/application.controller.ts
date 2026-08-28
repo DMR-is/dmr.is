@@ -16,6 +16,49 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { CurrentUser } from '@dmr.is/decorators'
+import {
+  CreateApiKeyDto,
+  GetApiKeysResponseDto,
+  IApiKeyService,
+  resolveActorNationalId,
+} from '@dmr.is/doe-modules/api-key'
+import {
+  ApplicationReportCommentDto,
+  ApplicationReportDetailDto,
+  EditEqualityContentDto,
+  EditOutliersDto,
+  GetSubCriterionCatalogResponseDto,
+  IApplicationService,
+  SalaryReportEligibilityDto,
+  SubmitApplicationReportCommentDto,
+  SubmitEqualityReportDto,
+  SubmitSalaryReportDto,
+} from '@dmr.is/doe-modules/application'
+import { CompanyDto } from '@dmr.is/doe-modules/company'
+import {
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+  PresignUploadResponseDto,
+} from '@dmr.is/doe-modules/import-upload'
+import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
+import {
+  IReportExcelService,
+  ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
+import {
+  SalaryAnalysisRequestDto,
+  SalaryAnalysisResponseDto,
+} from '@dmr.is/doe-modules/report-statistics'
+import {
+  ApiKeyDto,
+  ApiKeyOriginEnum,
+  IssuedApiKeyDto,
+} from '@dmr.is/doe-shared'
+import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -23,30 +66,6 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
-import { CompanyDto } from '../company/dto/company.dto'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from '../import-upload/import-upload.service.interface'
-import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
-import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
-import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
-import { IReportExcelService } from '../report-excel/report-excel.service.interface'
-import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
-import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import { ApplicationReportCommentDto } from './dto/application-report-comment.dto'
-import { ApplicationReportDetailDto } from './dto/application-report-detail.dto'
-import { EditEqualityContentDto } from './dto/edit-equality-content.dto'
-import { EditOutliersDto } from './dto/edit-outliers.dto'
-import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
-import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
-import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
-import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
-import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
-import { IApplicationService } from './application.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -68,6 +87,8 @@ export class ApplicationController {
     private readonly reportExcelService: IReportExcelService,
     @Inject(IImportUploadService)
     private readonly importUploadService: IImportUploadService,
+    @Inject(IApiKeyService)
+    private readonly apiKeyService: IApiKeyService,
   ) {}
 
   @Get('company')
@@ -119,9 +140,7 @@ export class ApplicationController {
     operationId: 'importApplicationSalaryReportWorkbook',
     type: ParsedReportDto,
   })
-  async importWorkbook(
-    @Body() body: ImportKeyDto,
-  ): Promise<ParsedReportDto> {
+  async importWorkbook(@Body() body: ImportKeyDto): Promise<ParsedReportDto> {
     const buffer = await this.importUploadService.fetchWorkbook(
       body.key,
       ImportUploadBoundary.APPLICATION,
@@ -168,7 +187,7 @@ export class ApplicationController {
   @DoeResponse({
     operationId: 'getApplicationSalaryReportEligibility',
     description:
-      "Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.",
+      'Pre-flight check of whether the resolved company may submit a salary report right now, with a machine-readable `reason` when blocked so the application portal can gate entry into the flow. Two preconditions are checked: (1) the company must have an APPROVED, in-force equality report (`MISSING_EQUALITY_REPORT`, checked first — a salary report must reference one); and (2) the 3-year renewal window must be open, i.e. the current report is due in 6 months or less (`RENEWAL_WINDOW_NOT_OPEN`). The renewal rule is also enforced as a 409 on `POST reports/salary`, and the equality precondition as a 404.',
     type: SalaryReportEligibilityDto,
   })
   async getSalaryReportEligibility(
@@ -393,5 +412,82 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<void> {
     return this.applicationService.withdraw(providerId, company)
+  }
+
+  // ---------------------------------------------------------------------------
+  // API keys for the third-party integration.
+  //
+  // Self-service issuance: a company mints its own credential from an optional
+  // screen in the island.is application, then pastes it into whichever payroll
+  // system submits on its behalf. The DoE admin surface has the same three
+  // operations as a fallback for a company that has lost its key and has no open
+  // application to reach this screen from.
+  //
+  // These endpoints issue a credential for the PARTNER api; nothing here
+  // authenticates with one. The company always comes from the authenticated
+  // context, so a caller cannot mint or list a credential for anyone else.
+  // ---------------------------------------------------------------------------
+
+  @Post('api-keys')
+  @HttpCode(HttpStatus.CREATED)
+  @DoeResponse({
+    operationId: 'issueApplicationApiKey',
+    status: HttpStatus.CREATED,
+    type: IssuedApiKeyDto,
+    description:
+      'Mints an API key for the authenticated company and returns it with the plaintext secret. **The secret is shown exactly once** — it is stored only as a hash and cannot be retrieved again, so a lost key is replaced rather than recovered. Several live keys per company are allowed, which is how a credential is rotated without downtime.',
+  })
+  async issueApiKey(
+    @CurrentCompany() company: CompanyDto,
+    @CurrentUser() user: DMRUser,
+    @Body() input: CreateApiKeyDto,
+  ): Promise<IssuedApiKeyDto> {
+    return this.apiKeyService.issue({
+      company,
+      createdVia: ApiKeyOriginEnum.ISLAND_IS,
+      actorNationalId: resolveActorNationalId(user),
+      label: input.label,
+      scopes: input.scopes,
+      expiresAt: input.expiresAt,
+    })
+  }
+
+  @Get('api-keys')
+  @DoeResponse({
+    operationId: 'getApplicationApiKeys',
+    type: GetApiKeysResponseDto,
+    description:
+      'Every API key the authenticated company holds, newest first. Revoked and expired keys are included so the list doubles as an audit view. Never contains a secret — none is recoverable.',
+  })
+  async getApiKeys(
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<GetApiKeysResponseDto> {
+    return { apiKeys: await this.apiKeyService.list(company.id) }
+  }
+
+  @Delete('api-keys/:id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description:
+      "The key's `id` as listed, not the `keyId` inside the credential.",
+  })
+  @DoeResponse({
+    operationId: 'revokeApplicationApiKey',
+    type: ApiKeyDto,
+    include404: true,
+    description:
+      "Revokes one of the authenticated company's keys. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail. A key belonging to another company answers 404, not 403.",
+  })
+  async revokeApiKey(
+    @Param('id') id: string,
+    @CurrentCompany() company: CompanyDto,
+    @CurrentUser() user: DMRUser,
+  ): Promise<ApiKeyDto> {
+    return this.apiKeyService.revoke({
+      id,
+      company,
+      actorNationalId: resolveActorNationalId(user),
+    })
   }
 }
