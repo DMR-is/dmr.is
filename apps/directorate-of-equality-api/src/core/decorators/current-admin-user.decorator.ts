@@ -4,9 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 
+import { UserModel } from '@dmr.is/doe-modules/user'
 import { getLogger } from '@dmr.is/logging'
 
-import { UserModel } from '../../modules/user/models/user.model'
 
 /**
  * Resolves the acting admin (doe_user) that `AdminGuard` attached to the

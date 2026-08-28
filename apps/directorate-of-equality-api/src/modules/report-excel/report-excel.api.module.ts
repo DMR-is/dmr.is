@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common'
 
+import { AuthorizationCoreModule } from '@dmr.is/doe-modules/authorization'
+import { ImportUploadCoreModule } from '@dmr.is/doe-modules/import-upload'
+import { ReportExcelCoreModule } from '@dmr.is/doe-modules/report-excel'
+
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { AuthorizationCoreModule } from '../authorization/authorization.core.module'
-import { ImportUploadCoreModule } from '../import-upload/import-upload.core.module'
 import { ReportExcelController } from './report-excel.controller'
-import { ReportExcelCoreModule } from './report-excel.core.module'
 
 @Module({
   imports: [

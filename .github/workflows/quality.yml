@@ -61,7 +61,8 @@ jobs:
 
   generated-files:
     # The DoE salary-report workbook feeds two committed TS files that no build
-    # step regenerates: the base64-inlined template bytes and Jafnréttisstofa's
+    # step regenerates. Both now live in @dmr.is/doe-modules; the generators stay
+    # in the app, since they are repo maintenance rather than either app's runtime: the base64-inlined template bytes and Jafnréttisstofa's
     # sub-criterion catalog served to the island.is portal. Both generators are
     # deterministic and prettier-format their own output, so re-running them on a
     # clean tree must be a no-op. Without this gate a new template.xlsx committed
@@ -93,8 +94,8 @@ jobs:
       - name: Fail if regenerating changed anything
         run: |
           git diff --exit-code -- \
-            apps/directorate-of-equality-api/src/modules/report-excel/template-data.ts \
-            apps/directorate-of-equality-api/src/modules/application/sub-criterion-catalog/sub-criterion-catalog.data.ts \
+            libs/directorate-of-equality/modules/src/report-excel/template-data.ts \
+            libs/directorate-of-equality/modules/src/application/sub-criterion-catalog/sub-criterion-catalog.data.ts \
             || {
               echo "::error::A committed generated file is out of date. Run both refresh scripts in apps/directorate-of-equality-api/scripts/ and commit the result."
               exit 1

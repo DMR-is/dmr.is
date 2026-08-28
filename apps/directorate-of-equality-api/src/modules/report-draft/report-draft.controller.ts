@@ -14,6 +14,41 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import { CompanyDto } from '@dmr.is/doe-modules/company'
+import { ImportKeyDto } from '@dmr.is/doe-modules/import-upload'
+import { ReportProviderEnum } from '@dmr.is/doe-modules/report'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import {
+  CreateDraftReportDto,
+  DraftAssignmentDto,
+  DraftDetailDto,
+  EmployeeOutlierGroupDto,
+  GetDraftCriteriaResponseDto,
+  GetDraftCriteriaTreeResponseDto,
+  GetDraftEmployeesResponseDto,
+  GetDraftEmployeesWithStepsResponseDto,
+  GetDraftOutlierGroupsResponseDto,
+  GetDraftRolesResponseDto,
+  GetDraftRolesWithStepsResponseDto,
+  GetDraftStepsResponseDto,
+  GetDraftSubCriteriaResponseDto,
+  IReportDraftAnalysisService,
+  IReportDraftAssignmentService,
+  IReportDraftCriterionService,
+  IReportDraftEmployeeService,
+  IReportDraftOutlierGroupService,
+  IReportDraftRoleService,
+  IReportDraftSeedService,
+  IReportDraftService,
+  IReportDraftStepService,
+  IReportDraftSubCriterionService,
+  IReportDraftSubmitService,
+  IReportDraftSyncService,
+  SubmitDraftDto,
+  SyncDraftDto,
+  UpdateDraftDto,
+} from '@dmr.is/doe-modules/report-draft'
+import { SalaryAnalysisResponseDto } from '@dmr.is/doe-modules/report-statistics'
 import { PagingQuery } from '@dmr.is/shared-dto'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
@@ -21,39 +56,6 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
-import { CompanyDto } from '../company/dto/company.dto'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import { ReportProviderEnum } from '../report/models/report.enums'
-import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import { IReportDraftAnalysisService } from './analysis/report-draft-analysis.service.interface'
-import { DraftAssignmentDto } from './assignment/dto/draft-assignment.dto'
-import { IReportDraftAssignmentService } from './assignment/report-draft-assignment.service.interface'
-import { GetDraftCriteriaResponseDto } from './criterion/dto/get-draft-criteria-response.dto'
-import { GetDraftCriteriaTreeResponseDto } from './criterion/dto/get-draft-criteria-tree-response.dto'
-import { IReportDraftCriterionService } from './criterion/report-draft-criterion.service.interface'
-import { CreateDraftReportDto } from './draft/dto/create-draft-report.dto'
-import { DraftDetailDto } from './draft/dto/draft-detail.dto'
-import { UpdateDraftDto } from './draft/dto/update-draft.dto'
-import { IReportDraftService } from './draft/report-draft.service.interface'
-import { GetDraftEmployeesResponseDto } from './employee/dto/get-draft-employees-response.dto'
-import { GetDraftEmployeesWithStepsResponseDto } from './employee/dto/get-draft-employees-with-steps-response.dto'
-import { IReportDraftEmployeeService } from './employee/report-draft-employee.service.interface'
-import { EmployeeOutlierGroupDto } from './outlier-group/dto/employee-outlier-group.dto'
-import { GetDraftOutlierGroupsResponseDto } from './outlier-group/dto/get-draft-outlier-groups-response.dto'
-import { IReportDraftOutlierGroupService } from './outlier-group/report-draft-outlier-group.service.interface'
-import { GetDraftRolesResponseDto } from './role/dto/get-draft-roles-response.dto'
-import { GetDraftRolesWithStepsResponseDto } from './role/dto/get-draft-roles-with-steps-response.dto'
-import { IReportDraftRoleService } from './role/report-draft-role.service.interface'
-import { IReportDraftSeedService } from './seed/report-draft-seed.service.interface'
-import { GetDraftStepsResponseDto } from './step/dto/get-draft-steps-response.dto'
-import { IReportDraftStepService } from './step/report-draft-step.service.interface'
-import { GetDraftSubCriteriaResponseDto } from './sub-criterion/dto/get-draft-sub-criteria-response.dto'
-import { IReportDraftSubCriterionService } from './sub-criterion/report-draft-sub-criterion.service.interface'
-import { SubmitDraftDto } from './submit/dto/submit-draft.dto'
-import { IReportDraftSubmitService } from './submit/report-draft-submit.service.interface'
-import { SyncDraftDto } from './sync/dto/sync-draft.dto'
-import { IReportDraftSyncService } from './sync/report-draft-sync.service.interface'
 
 /**
  * Applicant-facing draft surface bound to the island.is application portal.

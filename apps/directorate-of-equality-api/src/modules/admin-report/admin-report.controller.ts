@@ -11,23 +11,29 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 
+import {
+  AdminEqualityReportDto,
+  AdminSalaryReportDto,
+  IAdminReportService,
+} from '@dmr.is/doe-modules/admin-report'
+import {
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+} from '@dmr.is/doe-modules/import-upload'
+import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
+import {
+  IReportExcelService,
+  ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
+import {
+  SalaryAnalysisRequestDto,
+  SalaryAnalysisResponseDto,
+} from '@dmr.is/doe-modules/report-statistics'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from '../import-upload/import-upload.service.interface'
-import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
-import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
-import { IReportExcelService } from '../report-excel/report-excel.service.interface'
-import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
-import { SalaryAnalysisResponseDto } from '../report-statistics/dto/salary-analysis.response.dto'
-import { AdminEqualityReportDto } from './dto/admin-equality-report.dto'
-import { AdminSalaryReportDto } from './dto/admin-salary-report.dto'
-import { IAdminReportService } from './admin-report.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

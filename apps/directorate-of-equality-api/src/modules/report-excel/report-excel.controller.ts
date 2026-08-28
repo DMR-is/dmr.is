@@ -9,17 +9,19 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
+import {
+  IImportUploadService,
+  ImportKeyDto,
+  ImportUploadBoundary,
+} from '@dmr.is/doe-modules/import-upload'
+import {
+  IReportExcelService,
+  ParsedReportDto,
+} from '@dmr.is/doe-modules/report-excel'
 import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
-import { ImportKeyDto } from '../import-upload/dto/import-key.dto'
-import {
-  IImportUploadService,
-  ImportUploadBoundary,
-} from '../import-upload/import-upload.service.interface'
-import { ParsedReportDto } from './dto/parsed-report.dto'
-import { IReportExcelService } from './report-excel.service.interface'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

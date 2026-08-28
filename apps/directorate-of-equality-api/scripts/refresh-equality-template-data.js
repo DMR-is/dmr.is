@@ -13,11 +13,22 @@
 const fs = require('fs')
 const path = require('path')
 
+/**
+ * Output and source both live in `@dmr.is/doe-modules` now: the DoE domain layer
+ * moved into a library so the partner API can write reports in its own process.
+ * The generator stays here because it is a repo maintenance script, not part of
+ * either app's runtime — and the CI check that asserts it produces no diff lives
+ * in this app's pipeline.
+ */
 const TEMPLATE_DIR = path.join(
   __dirname,
   '..',
-  'src',
+  '..',
+  '..',
+  'libs',
+  'directorate-of-equality',
   'modules',
+  'src',
   'application',
   'equality-template',
 )

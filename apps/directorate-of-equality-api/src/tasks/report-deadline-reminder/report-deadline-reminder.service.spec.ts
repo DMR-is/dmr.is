@@ -3,17 +3,17 @@ import { Op } from 'sequelize'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
-import { LOGGER_PROVIDER } from '@dmr.is/logging'
-
-import { CompanyStatusEnum } from '../../modules/company/models/company.enums'
-import { CompanyModel } from '../../modules/company/models/company.model'
 import {
   CompanyEventTypeEnum,
+  CompanyModel,
   CompanyReminderTierEnum,
-} from '../../modules/company/models/company-event.model'
-import { ICompanyEventService } from '../../modules/company-event/company-event.service.interface'
-import { IDoeMailService } from '../../modules/mail/doe-mail.service.interface'
-import { ReportTypeEnum } from '../../modules/report/models/report.enums'
+  CompanyStatusEnum,
+} from '@dmr.is/doe-modules/company'
+import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
+import { IDoeMailService } from '@dmr.is/doe-modules/mail'
+import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { ReportDeadlineReminderService } from './report-deadline-reminder.service'
 
 const mockLogger = {

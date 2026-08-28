@@ -205,6 +205,8 @@ export function timelineEntryText(
   // arrive as plain strings at runtime.
   const eventTypeStr = eventType as unknown as string
   const COMPANY_EVENT_LABELS: Record<string, string> = {
+    API_KEY_ISSUED: reportText.timeline.apiKeyIssued,
+    API_KEY_REVOKED: reportText.timeline.apiKeyRevoked,
     CREATED: reportText.timeline.companyCreated,
     FINES_STARTED: reportText.timeline.finesStarted,
     FINES_STOPPED: reportText.timeline.finesStopped,
