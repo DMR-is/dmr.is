@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
-import { type ComponentRef, useEffect, useRef } from 'react'
+import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { Box } from '../../island-is/lib/Box'
@@ -38,11 +38,17 @@ export const ParallelModal = ({
 
   const dialogRef = useRef<ComponentRef<'dialog'>>(null)
 
+  // The portal below cannot render during SSR or on the first client render,
+  // so nothing may touch `document` or `dialogRef` until after mount.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  // Keyed on `mounted`: dialogRef is null until the portal exists.
   useEffect(() => {
-    if (!dialogRef.current?.open) {
+    if (mounted && !dialogRef.current?.open) {
       dialogRef.current?.showModal()
     }
-  }, [])
+  }, [mounted])
   function onDismiss() {
     router.back()
   }
@@ -54,6 +60,11 @@ export const ParallelModal = ({
     width === 'small'
       ? ['1/12', '1/12', '1/12', '3/12']
       : ['0', '0', '0', '1/12', '2/12']
+  // Rendering nothing until mounted also avoids the non-null assertion below
+  // throwing when #modal-root is absent.
+  const container = mounted ? document.getElementById('modal-root') : null
+  if (!container) return null
+
   return createPortal(
     <div className={styles.backdrop({ color: 'default' })}>
       <dialog
@@ -99,7 +110,6 @@ export const ParallelModal = ({
         </Box>
       </dialog>
     </div>,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    document.getElementById('modal-root')!,
+    container,
   )
 }
