@@ -29,7 +29,8 @@ jobs:
             legal-gazette-application-web,
             legal-gazette-public-web,
             directorate-of-equality-api,
-            directorate-of-equality-partner-api,
+            # directorate-of-equality-partner-api omitted until its ECS service
+            # exists in DMR-Jafnrettisstofa; re-add with the terragrunt definition.
             directorate-of-equality-web,
           ]
     steps:

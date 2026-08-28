@@ -94,6 +94,18 @@ jobs:
           BASE_SHA: ${{ steps.set-shas.outputs.base }}
           REBUILD_ALL: ${{ inputs.rebuild-all }}
         run: |
+          # directorate-of-equality-partner-api is deliberately NOT in this list
+          # yet. Its ECS service does not exist in the DMR-Jafnrettisstofa
+          # terragrunt tree, so deploying it would fail on
+          # `aws ecs wait services-stable` and take every other container in the
+          # run down with it. Re-add it here and in on-release.yml in the same PR
+          # as the terragrunt service definition -- not before. Two things that
+          # PR needs: the partner API must sit on the PUBLIC alb, not the
+          # internal one directorate-of-equality-api uses, because payroll
+          # vendors call it from the internet; and of its twelve required
+          # variables only DOE_API_KEY_HMAC_SECRET is new -- the other eleven are
+          # already SSM parameters for directorate-of-equality-api and should be
+          # referenced, not duplicated, so the shared pepper cannot drift.
           ALL_CONTAINERS='[
             {"name":"official-journal-api",              "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"official-journal-admin-api",        "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
@@ -105,8 +117,7 @@ jobs:
             {"name":"legal-gazette-application-web",     "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"legal-gazette-public-web",          "account_id":"${{ env.AWS_DEV_ACCOUNT_ID }}",                 "cluster":"dev-dmr-utgafa"},
             {"name":"directorate-of-equality-api",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"},
-            {"name":"directorate-of-equality-partner-api","account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
+            {"name":"directorate-of-equality-web",       "account_id":"${{ env.AWS_JAFNRETTISSTOFA_DEV_ACCOUNT_ID }}", "cluster":"dev-dmr-jafnrettisstofa"}
           ]'
 
           mkdir -p /tmp/nx-tmp && npm install --prefix /tmp/nx-tmp --no-save --ignore-scripts --legacy-peer-deps --no-audit --no-fund nx@22.5.1
