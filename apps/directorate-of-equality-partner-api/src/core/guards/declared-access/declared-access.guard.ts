@@ -11,6 +11,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
 import { ApiKeyGuard } from '../api-key/api-key.guard'
+import { RequireApiScopeGuard } from '../api-key-scope/require-api-scope.guard'
 import { PartnerCompanyGuard } from '../partner-company/partner-company.guard'
 
 const LOGGING_CONTEXT = 'DeclaredAccessGuard'
@@ -43,6 +44,22 @@ export const AUTHENTICATION_GUARD: unknown = ApiKeyGuard
  */
 export const IDENTITY_GUARDS: ReadonlyArray<unknown> = [PartnerCompanyGuard]
 
+/**
+ * The guard that enforces `@RequireApiScope`.
+ *
+ * Part of `declaresAccess` on purpose. Without it the chain could authenticate
+ * and identify a caller while ignoring the scope every handler declares — and
+ * that was the state until review caught it: `RequireApiScopeGuard` could be
+ * deleted from the controller and all twelve `@RequireApiScope` decorators
+ * became decoration with every test still green, because the coverage spec
+ * checked the metadata rather than the enforcement.
+ *
+ * A company narrowing a key is only meaningful if something refuses the calls it
+ * excludes, so on this surface enforcement is part of declaring access, not an
+ * extra.
+ */
+export const SCOPE_ENFORCEMENT_GUARD: unknown = RequireApiScopeGuard
+
 /** `@UseGuards` accepts classes and instances; compare on the class either way. */
 const guardType = (guard: unknown): unknown =>
   typeof guard === 'function' ? guard : guard?.constructor
@@ -60,7 +77,8 @@ export const declaresAccess = (guards: ReadonlyArray<unknown>): boolean => {
 
   return (
     types.includes(AUTHENTICATION_GUARD) &&
-    types.some((type) => IDENTITY_GUARDS.includes(type))
+    types.some((type) => IDENTITY_GUARDS.includes(type)) &&
+    types.includes(SCOPE_ENFORCEMENT_GUARD)
   )
 }
 
@@ -102,7 +120,7 @@ export class DeclaredAccessGuard implements CanActivate {
     // refused, while the fix reaches whoever is running the app. Returning it
     // would publish the guard architecture of a public surface.
     this.logger.error(
-      'Refused a route that declares no access policy. Add @UseGuards(ApiKeyGuard, PartnerCompanyGuard) — plus @RequireApiScope — or @PublicRoute(<reason>) if it is deliberately unauthenticated.',
+      'Refused a route that declares no access policy. Add @UseGuards(ApiKeyGuard, PartnerCompanyGuard, RequireApiScopeGuard) and a @RequireApiScope, or @PublicRoute(<reason>) if it is deliberately unauthenticated.',
       {
         context: LOGGING_CONTEXT,
         controller: context.getClass().name,

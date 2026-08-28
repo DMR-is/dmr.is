@@ -20,80 +20,23 @@ module.exports = {
     `)
   },
 
-  async down(queryInterface) {
-    // Postgres cannot drop an enum value, so reversing means rebuilding
-    // the type without the two added values.
+  async down() {
+    // Deliberately a no-op.
     //
-    // Two things about the member list below.
+    // Reversing this means rebuilding company_event_type_enum without the two
+    // values, and Postgres cannot drop an enum value in place — so the rebuild
+    // has to DELETE every API_KEY_ISSUED and API_KEY_REVOKED row first.
+    // company_event is append-only and is the only record that a machine
+    // credential was ever issued or revoked for a company. A down/up round trip
+    // would destroy exactly the audit trail this migration exists to create.
     //
-    // It is the FULL current set minus what this migration adds — not the
-    // list from whichever migration this was copied from.
-    // m-20260626-company-event-type-enum-fines-quarantine hardcoded the
-    // set as it stood then, and later migrations have since made that
-    // `down` lossy: running it today would silently drop four reminder
-    // values.
+    // Two leftover values on an enum cost nothing; a hole in the audit history
+    // cannot be recovered. m-20260511-add-unassigned-event-type and
+    // m-20260629-report-event-system-auto-review made the same call for the same
+    // reason.
     //
-    // And the ORDER is the physical order of the live type (i.e. the order
-    // the migrations added the values in), NOT the declaration order of
-    // CompanyEventTypeEnum. The two differ: m-20260623 added the
-    // ..._REMINDER_SENT pair before m-20260626 added the fines/quarantine
-    // ones, while the TS enum lists fines/quarantine first. Enum order
-    // decides how Postgres sorts the column (company.enums.ts calls this
-    // out as load-bearing), so rebuilding in declaration order would have
-    // `down` quietly change sort behaviour instead of restoring it.
-    // Verify against: SELECT unnest(enum_range(NULL::company_event_type_enum));
-    await queryInterface.sequelize.query(`
-    BEGIN;
-
-    -- company_event_status_changed_chk compares event_type against an enum
-    -- LITERAL, and that literal was bound to company_event_type_enum when the
-    -- constraint was created (m-20260616). Switching the column to TEXT leaves
-    -- the constraint comparing text to an enum, for which no operator exists,
-    -- and the ALTER fails with:
-    --   operator does not exist: text <> company_event_type_enum
-    -- So it has to come off before the swap and go back on after. The
-    -- migration this pattern was copied from
-    -- (m-20260626-company-event-type-enum-fines-quarantine) omits this, so its
-    -- own down cannot actually run — verified by running it.
-    ALTER TABLE company_event
-      DROP CONSTRAINT company_event_status_changed_chk;
-
-    ALTER TABLE company_event
-      ALTER COLUMN event_type TYPE TEXT;
-
-    DELETE FROM company_event
-      WHERE event_type IN ('API_KEY_ISSUED', 'API_KEY_REVOKED');
-
-    DROP TYPE company_event_type_enum;
-
-    CREATE TYPE company_event_type_enum AS ENUM (
-      'CREATED',
-      'STATUS_CHANGED',
-      'EQUALITY_REPORT_DEADLINE_REMINDER_SENT',
-      'SALARY_REPORT_DEADLINE_REMINDER_SENT',
-      'FINES_STARTED',
-      'FINES_STOPPED',
-      'QUARANTINED',
-      'UNQUARANTINED',
-      'EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
-      'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL'
-    );
-
-    ALTER TABLE company_event
-      ALTER COLUMN event_type TYPE company_event_type_enum
-        USING event_type::company_event_type_enum;
-
-    -- Restored verbatim from m-20260616.
-    ALTER TABLE company_event
-      ADD CONSTRAINT company_event_status_changed_chk CHECK (
-        event_type <> 'STATUS_CHANGED' OR (
-          from_status IS NOT NULL
-          AND to_status IS NOT NULL
-          AND status = to_status
-        )
-      );
-
-    COMMIT;
-    `)
+    // If the type genuinely has to be rebuilt, do it as its own migration with
+    // the row-preservation strategy stated explicitly, rather than as a
+    // side-effect of rolling this one back.
   },
 }

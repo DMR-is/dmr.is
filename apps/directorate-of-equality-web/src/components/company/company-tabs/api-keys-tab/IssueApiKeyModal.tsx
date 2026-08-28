@@ -59,9 +59,18 @@ type Props = {
  *
  * The second state exists because the plaintext secret is returned exactly once
  * — the API stores only a hash of it — so the admin has to be given a chance to
- * copy it before the modal closes. It deliberately has no cancel affordance and
- * does not close on its own: dismissing it is the only way out, and that has to
- * be a decision rather than a stray click.
+ * copy it before the modal closes.
+ *
+ * ⚠️ It is DISMISSABLE, and that is not a choice this component gets to make:
+ * the shared `Modal` hardcodes `hideOnEsc` and `hideOnClickOutside` and always
+ * renders a close button, so Esc, a backdrop click or the X destroys the only
+ * copy of an unrecoverable secret. An earlier version of this docblock claimed
+ * the reveal had no cancel affordance; it never did.
+ *
+ * Mitigated rather than prevented: the warning says the key will not be shown
+ * again, and losing it costs an issue-and-revoke cycle rather than anything
+ * unrecoverable. Preventing it properly means a Modal that can opt out of both
+ * behaviours, which is a change to shared UI and belongs in its own PR.
  *
  * The secret is held in component state and never written to the query cache,
  * so it does not survive a remount or reach any other screen.
@@ -91,6 +100,13 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
       queryClient.invalidateQueries({
         queryKey: trpc.apiKey.listForCompany.queryKey({ companyId }),
       })
+      // Issuing appends an API_KEY_ISSUED row to company_event, so "Saga
+      // fyrirtækis" is stale as well. The revoke path already did this; only
+      // this one was missed, which left the new key visible in the list but
+      // absent from the timeline until the next refetch.
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.getTimeline.queryKey({ id: companyId }),
+      })
       setIssuedKey(created.key)
     },
     onError: (error) => {
@@ -107,8 +123,15 @@ export const IssueApiKeyModal = ({ companyId, isOpen, onClose }: Props) => {
   const copy = async () => {
     if (!issuedKey) return
 
-    await navigator.clipboard.writeText(issuedKey)
-    toast.success(t.modal.copiedToast)
+    try {
+      await navigator.clipboard.writeText(issuedKey)
+      toast.success(t.modal.copiedToast)
+    } catch {
+      // Clipboard access can be refused outright. Silence here is the worst
+      // outcome: the admin believes they hold the only copy of a secret they do
+      // not, and it cannot be shown again.
+      toast.error(t.modal.copyError, { autoClose: 5000 })
+    }
   }
 
   return (

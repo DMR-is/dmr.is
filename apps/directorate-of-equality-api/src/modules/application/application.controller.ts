@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -480,7 +481,7 @@ export class ApplicationController {
       "Revokes one of the authenticated company's keys. Idempotent — re-revoking leaves the original actor and timestamp intact rather than overwriting the audit trail. A key belonging to another company answers 404, not 403.",
   })
   async revokeApiKey(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentCompany() company: CompanyDto,
     @CurrentUser() user: DMRUser,
   ): Promise<ApiKeyDto> {

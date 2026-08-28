@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -37,6 +41,7 @@ describe('ApiKeyService', () => {
   let create: jest.Mock
   let findAll: jest.Mock
   let findOne: jest.Mock
+  let count: jest.Mock
   let events: { emitApiKeyIssued: jest.Mock; emitApiKeyRevoked: jest.Mock }
 
   /** Stands in for a persisted row, echoing back what `create` was given. */
@@ -56,6 +61,7 @@ describe('ApiKeyService', () => {
     create = jest.fn().mockImplementation(async (attrs) => rowFrom(attrs))
     findAll = jest.fn().mockResolvedValue([])
     findOne = jest.fn().mockResolvedValue(null)
+    count = jest.fn().mockResolvedValue(0)
     events = { emitApiKeyIssued: jest.fn(), emitApiKeyRevoked: jest.fn() }
 
     const module = await Test.createTestingModule({
@@ -64,7 +70,7 @@ describe('ApiKeyService', () => {
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
           provide: getModelToken(ApiKeyModel),
-          useValue: { create, findAll, findOne },
+          useValue: { create, findAll, findOne, count },
         },
         { provide: ICompanyEventService, useValue: events },
       ],
@@ -257,7 +263,34 @@ describe('ApiKeyService', () => {
           createdVia: ApiKeyOriginEnum.ISLAND_IS,
           actorNationalId: '0101901234',
         }),
-      ).rejects.toThrow(/DOE_API_KEY_HMAC_SECRET/)
+      ).rejects.toBeInstanceOf(InternalServerErrorException)
+    })
+
+    it('does not name the env var in what the caller receives', async () => {
+      // HttpExceptionFilter genericises `message` but copies the exception's own
+      // message into `details`, which IS returned — so naming the variable here
+      // publishes a piece of our deployment configuration to anyone who can
+      // provoke the 500. The detail goes to the log instead.
+      delete process.env.DOE_API_KEY_HMAC_SECRET
+
+      try {
+        await service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+        })
+        throw new Error('expected issue() to throw')
+      } catch (error) {
+        const response = (error as InternalServerErrorException).getResponse?.()
+        expect(JSON.stringify(response ?? {})).not.toContain(
+          'DOE_API_KEY_HMAC_SECRET',
+        )
+      }
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('DOE_API_KEY_HMAC_SECRET'),
+        expect.anything(),
+      )
     })
 
     it('mints a distinct credential every time', async () => {
@@ -274,6 +307,88 @@ describe('ApiKeyService', () => {
 
       expect(first.key).not.toBe(second.key)
       expect(first.keyId).not.toBe(second.keyId)
+    })
+  })
+
+  describe('expiry', () => {
+    it('accepts an expiry in the future', async () => {
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+          expiresAt: new Date(Date.now() + 86_400_000),
+        }),
+      ).resolves.toBeDefined()
+    })
+
+    it('rejects an expiry already in the past', async () => {
+      // Otherwise the caller gets 201 and a plaintext secret no verifier will
+      // ever accept — a failure that looks exactly like success.
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+          expiresAt: new Date(Date.now() - 1000),
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('still treats no expiry as a valid choice', async () => {
+      // "ótímabundinn" is offered in the admin UI; null must stay meaningful.
+      await service.issue({
+        company: COMPANY,
+        createdVia: ApiKeyOriginEnum.ISLAND_IS,
+        actorNationalId: '0101901234',
+      })
+
+      expect(create.mock.calls[0][0].expiresAt).toBeNull()
+    })
+  })
+
+  describe('live key ceiling', () => {
+    it('counts only usable keys — revoked and expired never block issuing', async () => {
+      await service.issue({
+        company: COMPANY,
+        createdVia: ApiKeyOriginEnum.ISLAND_IS,
+        actorNationalId: '0101901234',
+      })
+
+      const where = count.mock.calls[0][0].where
+
+      expect(where.companyId).toBe(COMPANY.id)
+      expect(where.revokedAt).toBeNull()
+    })
+
+    it('refuses to mint beyond the ceiling', async () => {
+      // Nothing counted before this, so one principal could mint unbounded live
+      // bearer credentials for its own tenant in a loop.
+      count.mockResolvedValue(10)
+
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(create).not.toHaveBeenCalled()
+    })
+
+    it('allows issuing while below the ceiling, so rotation is never blocked', async () => {
+      count.mockResolvedValue(9)
+
+      await expect(
+        service.issue({
+          company: COMPANY,
+          createdVia: ApiKeyOriginEnum.ISLAND_IS,
+          actorNationalId: '0101901234',
+        }),
+      ).resolves.toBeDefined()
     })
   })
 

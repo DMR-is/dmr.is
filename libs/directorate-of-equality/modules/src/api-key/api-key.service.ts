@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import {
   BadRequestException,
   Inject,
@@ -33,14 +35,26 @@ const LOGGING_CONTEXT = 'ApiKeyService'
  * credential pasted into production is rejected on shape rather than after a
  * hash miss — a far clearer error to hand an integrator.
  *
- * Reuses `API_ENV` rather than declaring a variable of its own. That one is
- * already the app's deployment identity (it drives varlock's currentEnv), so
- * the prefix cannot disagree with the environment that minted the key, and
- * there is no second value to get wrong. Falls back to `dev`, the safe end to
- * be wrong on.
+ * ⚠️ The segment is a DIAGNOSTIC, not a control. Nothing compares it on the
+ * verifying side and it sits outside the HMAC, so a caller can edit it freely
+ * and the key still verifies. It exists so a human reading a key, a log line or
+ * a support ticket can tell which environment minted it — not to stop a staging
+ * key working in production. An earlier version of this docblock claimed it made
+ * such a key "fail on shape"; that was never true.
+ *
+ * Reuses `API_ENV` rather than declaring a variable of its own, and falls back
+ * to `dev`. Since no DoE app schema declares `API_ENV`, varlock will not warn
+ * when it is absent — which is tolerable precisely because the value is
+ * advisory. If it ever becomes load-bearing it needs declaring first.
  */
 const API_KEY_ENV_VAR = 'API_ENV'
 const DEFAULT_API_KEY_ENV = 'dev'
+
+/**
+ * Ceiling on usable keys per company. Generous enough that rotation and a
+ * second integrator are never blocked, low enough that a runaway loop stops.
+ */
+const MAX_LIVE_KEYS_PER_COMPANY = 10
 
 /** Server-side HMAC key. Absent means the API cannot issue or verify at all. */
 const API_KEY_HMAC_SECRET_VAR = 'DOE_API_KEY_HMAC_SECRET'
@@ -57,6 +71,8 @@ export class ApiKeyService implements IApiKeyService {
 
   async issue(input: IssueApiKeyInput): Promise<IssuedApiKeyDto> {
     const scopes = this.resolveScopes(input.scopes)
+    const expiresAt = this.resolveExpiry(input.expiresAt)
+    await this.assertLiveKeyBudget(input.company.id)
     const { actorUserId, actorNationalId } = this.resolveIssuer(input)
 
     const generated = generateApiKey(this.env())
@@ -72,7 +88,7 @@ export class ApiKeyService implements IApiKeyService {
       label: input.label ?? null,
       createdByUserId: actorUserId,
       createdByNationalId: actorNationalId,
-      expiresAt: input.expiresAt ?? null,
+      expiresAt,
     })
 
     // Deliberately logs keyId and never the secret: keyId is the public half,
@@ -170,6 +186,57 @@ export class ApiKeyService implements IApiKeyService {
   }
 
   /**
+   * Rejects an expiry that is already past.
+   *
+   * Without this the caller gets 201 and a plaintext secret that no verifier will
+   * ever accept — the worst possible answer, because it looks like success and
+   * the failure only appears when the integrator tries to use it. Null stays
+   * meaningful: no expiry is a documented choice, offered as "ótímabundinn" in
+   * the admin UI.
+   */
+  private resolveExpiry(expiresAt?: Date | null): Date | null {
+    if (!expiresAt) {
+      return null
+    }
+
+    if (expiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException(
+        'expiresAt must be in the future — a key that has already expired cannot be used',
+      )
+    }
+
+    return expiresAt
+  }
+
+  /**
+   * Caps how many usable keys one company may hold at once.
+   *
+   * Rotation needs two keys, not two thousand. Nothing counted before, so a
+   * caller could mint unbounded live bearer credentials for its own tenant in a
+   * loop — bounded in blast radius to that one company, but still credential
+   * sprawl and row growth with no ceiling. Revoked and expired rows are excluded
+   * so the audit history never blocks issuing.
+   */
+  private async assertLiveKeyBudget(companyId: string): Promise<void> {
+    const live = await this.apiKeyModel.count({
+      where: {
+        companyId,
+        revokedAt: null,
+        [Op.or]: [
+          { expiresAt: null },
+          { expiresAt: { [Op.gt]: new Date() } },
+        ],
+      },
+    })
+
+    if (live >= MAX_LIVE_KEYS_PER_COMPANY) {
+      throw new BadRequestException(
+        `A company may hold at most ${MAX_LIVE_KEYS_PER_COMPANY} usable API keys — revoke one before issuing another`,
+      )
+    }
+  }
+
+  /**
    * Which actor column to populate, derived from the issuance path rather than
    * taken on trust. `doe_api_key_created_actor_chk` enforces the same pairing in
    * the database; failing here first turns what would be a 500 from a constraint
@@ -242,9 +309,11 @@ export class ApiKeyService implements IApiKeyService {
         `Missing required environment variable: ${API_KEY_HMAC_SECRET_VAR}`,
         { context: LOGGING_CONTEXT },
       )
-      throw new InternalServerErrorException(
-        `Missing required environment variable: ${API_KEY_HMAC_SECRET_VAR}`,
-      )
+      // Logged, not returned. HttpExceptionFilter genericises `message` but
+      // copies the exception's own message into `details`, which IS sent — so
+      // naming the variable here publishes a piece of our deployment
+      // configuration to whoever provoked the 500.
+      throw new InternalServerErrorException()
     }
 
     return secret

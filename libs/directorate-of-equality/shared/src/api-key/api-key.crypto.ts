@@ -9,14 +9,24 @@ import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
  *
  * The key carries its own routing information so verification never has to
  * guess: `keyId` is the public half stored in `doe_api_key.key_id`, giving an
- * indexed single-row lookup, and only `secret` is ever hashed. `env` exists so
- * a staging key pasted into production fails on shape rather than on a hash
- * miss, which is a much clearer error to hand back to an integrator.
+ * indexed single-row lookup, and only `secret` is ever hashed.
+ *
+ * ⚠️ `env` is a DIAGNOSTIC and guarantees nothing. It is outside the HMAC and no
+ * verifier compares it, so a caller can edit it and the key still verifies. It
+ * is there so a human reading a key, a log line or a support ticket can tell
+ * which environment minted it. This docblock previously claimed it made a
+ * staging key "fail on shape" in production; it does not, and nothing in the
+ * repo ever read `parsed.env`.
  *
  * `keyId` is hex, not base64url, deliberately: the base64url alphabet contains
  * `_`, which is also the field separator here, so a base64url keyId would make
  * the format ambiguous to parse. The secret sits after the `.` and is taken
  * whole, so `_` and `-` inside it are harmless.
+ *
+ * `API_KEY_SECRET_LENGTH` below is the base64url length of
+ * `API_KEY_SECRET_BYTES` and is written out rather than derived, so changing the
+ * byte count without it silently stops `parseApiKey` matching newly minted keys.
+ * The spec covers that pairing.
  */
 export const API_KEY_PREFIX = 'doe'
 
