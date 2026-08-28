@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -163,6 +165,27 @@ export class CompanyEventService implements ICompanyEventService {
   ): Promise<boolean> {
     const existing = await this.companyEventModel.findOne({
       where: { companyId, eventType, reminderTier: tier, reason: dueDateIso },
+      attributes: ['id'],
+    })
+
+    return existing !== null
+  }
+
+  async hasDeadlineReminderEventOnDate(
+    companyId: string,
+    eventType: CompanyDeadlineReminderEventType,
+    tier: CompanyReminderTierEnum,
+    dueDateYmd: string,
+  ): Promise<boolean> {
+    const existing = await this.companyEventModel.findOne({
+      where: {
+        companyId,
+        eventType,
+        reminderTier: tier,
+        // `reason` is `dueDate.toISOString()`, which always begins with
+        // `YYYY-MM-DD`, so a prefix match on the date is exact.
+        reason: { [Op.startsWith]: dueDateYmd },
+      },
       attributes: ['id'],
     })
 

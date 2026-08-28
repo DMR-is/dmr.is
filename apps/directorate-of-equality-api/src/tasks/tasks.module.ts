@@ -6,6 +6,7 @@ import { AdvisoryLockModule } from '@dmr.is/shared-modules'
 import { CompanyModel } from '../modules/company/models/company.model'
 import { CompanyEventCoreModule } from '../modules/company-event/company-event.core.module'
 import { DoeMailModule } from '../modules/mail/doe-mail.module'
+import { PostholfCoreModule } from '../modules/postholf/postholf.core.module'
 import { ReportDraftCoreModule } from '../modules/report-draft/report-draft.core.module'
 import { ReportDeadlineReminderService } from './report-deadline-reminder/report-deadline-reminder.service'
 import { IReportDeadlineReminderService } from './report-deadline-reminder/report-deadline-reminder.service.interface'
@@ -18,6 +19,7 @@ import { ReportDraftPruneTask } from './report-draft-prune/report-draft-prune.ta
     AdvisoryLockModule,
     CompanyEventCoreModule,
     DoeMailModule,
+    PostholfCoreModule,
     ReportDraftCoreModule,
   ],
   providers: [

@@ -176,6 +176,20 @@ const DRAFT_LIFECYCLE: Readonly<Record<OperationKey, string>> = {
 
 const APPLICATION_DOC = 'swagger/application'
 const INTERNAL_DOC = 'swagger/internal'
+const POSTHOLF_DOC = 'swagger/postholf'
+
+/**
+ * The Skjalaveita operation, pinned by its absolute path.
+ *
+ * Unlike every other route in this app, this path is **registered with a third
+ * party**: Stafrænt Ísland stores `https://<doe-api>/api/v1/postholf` as the
+ * document-provider endpoint and appends `/{kennitala}/documents/{documentId}`.
+ * Renaming the controller path or bumping its version silently breaks every
+ * mailbox entry already delivered, with no local symptom — so it is asserted here
+ * rather than left to whatever the decorators happen to say.
+ */
+const SKJALAVEITA_OPERATION =
+  'GET /api/v1/postholf/{kennitala}/documents/{documentId}'
 
 /**
  * The applicant aggregate root, as a slash-or-end boundary rather than a literal
@@ -637,6 +651,21 @@ describe('swagger document coverage', () => {
     // `routed` is the no-`include` document, i.e. the whole container, which is
     // what makes this comparable to the container-side count.
     expect(routed.length).toBe(documentableHandlers(app).length)
+  })
+
+  it('serves the Skjalaveita callback at the exact path registered with Stafrænt Ísland', () => {
+    const postholf = documentFor(POSTHOLF_DOC)
+
+    expect([...postholf.keys()]).toEqual([SKJALAVEITA_OPERATION])
+    expect(postholf.get(SKJALAVEITA_OPERATION)).toBe('getPostholfDocument')
+  })
+
+  it('keeps the mailbox surface out of the web and applicant documents', () => {
+    // The web client is generated from `swagger/internal` only, and the applicant
+    // document is island.is's *application system* contract — a different
+    // consumer from the mailbox backend. Neither should carry this operation.
+    expect(documentFor(INTERNAL_DOC).has(SKJALAVEITA_OPERATION)).toBe(false)
+    expect(documentFor(APPLICATION_DOC).has(SKJALAVEITA_OPERATION)).toBe(false)
   })
 
   it('keeps the applicant and admin surfaces disjoint', () => {
