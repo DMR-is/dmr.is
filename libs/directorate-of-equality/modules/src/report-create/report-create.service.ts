@@ -28,6 +28,7 @@ import {
   ReportTypeEnum,
 } from '../report/models/report.model'
 import { IReportContentService } from '../report-content/report-content.service.interface'
+import { parseRemedyDate } from '../report-employee/lib/remedy-date'
 import { parsedRegularHourlyWage } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
@@ -212,6 +213,7 @@ export class ReportCreateService implements IReportCreateService {
               action: null,
               signatureName: null,
               signatureRole: null,
+              remedyDate: null,
               employeeOrdinals: detectedOrdinals,
             },
           ]
@@ -221,6 +223,9 @@ export class ReportCreateService implements IReportCreateService {
             action: group.action,
             signatureName: group.signatureName,
             signatureRole: group.signatureRole,
+            // Bounds the date as well as parsing it — an explained group must
+            // commit to a future date inside the next reporting cycle.
+            remedyDate: parseRemedyDate(group.remedyDate),
             employeeOrdinals: group.employeeOrdinals,
           }))
 
@@ -232,6 +237,7 @@ export class ReportCreateService implements IReportCreateService {
           action: group.action,
           signatureName: group.signatureName,
           signatureRole: group.signatureRole,
+          remedyDate: group.remedyDate,
         })
 
         await this.reportEmployeeOutlierModel.bulkCreate(

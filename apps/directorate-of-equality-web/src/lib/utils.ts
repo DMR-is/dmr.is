@@ -40,6 +40,26 @@ export const formatSalary = (v: number) =>
   new Intl.NumberFormat('is-IS').format(Math.round(v)).replaceAll(',', '.')
 
 /**
+ * A `DATEONLY` field off the API (`YYYY-MM-DD`) as `dd.mm.yyyy`.
+ *
+ * ⚠️ Splits the string rather than going through `new Date(...)`. An ISO
+ * date-only string parses as UTC midnight, so `toLocaleDateString` renders the
+ * PREVIOUS day for any viewer west of UTC — `2027-03-01` shows as 28.02.2027 in
+ * New York. Iceland is UTC+0 year-round so the bug is invisible locally, which
+ * is exactly why it survives. The value carries no time and no zone; treating
+ * it as an instant is the mistake.
+ *
+ * Mirrors `formatDate` in the API's `report-pdf/lib/format.ts` — change both
+ * together.
+ */
+export const formatIsoDate = (v: string | null | undefined) => {
+  if (!v) return '—'
+  const [year, month, day] = v.split('-')
+  if (!year || !month || !day) return '—'
+  return `${day}.${month}.${year}`
+}
+
+/**
  * A pay rate with its unit attached. Always prefer this to bare `formatSalary`
  * for tímakaup: `4.884` under a label like "Meðallaun" reads as a monthly salary
  * two orders of magnitude too low, and nothing on the page corrects the

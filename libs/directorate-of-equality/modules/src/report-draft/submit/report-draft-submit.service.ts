@@ -323,6 +323,7 @@ export class ReportDraftSubmitService implements IReportDraftSubmitService {
       action: null,
       signatureName: null,
       signatureRole: null,
+      remedyDate: null,
     })
 
     await this.outlierModel.bulkCreate(

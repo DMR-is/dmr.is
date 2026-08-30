@@ -36,4 +36,13 @@ export class ReportOutlierGroupDto {
 
   @ApiOptionalString({ nullable: true })
   signatureRole!: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    format: 'date',
+    example: '2027-03-01',
+    description:
+      'Date the company commits to having this group’s improvements completed by ("Dagsetning úrbóta"), as `YYYY-MM-DD`. Not a signature date, and distinct from the report-level `correctionDeadline`, which is the deadline imposed on the whole report. Null on the same terms as the rest of the explanation block.',
+  })
+  remedyDate!: string | null
 }

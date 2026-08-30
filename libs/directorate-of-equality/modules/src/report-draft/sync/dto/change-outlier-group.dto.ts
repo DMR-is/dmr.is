@@ -9,8 +9,9 @@ import { SyncMethodEnum } from '../sync-method.enum'
 
 /**
  * Editable fields of an outlier group in a sync batch. `name` is required for
- * CREATE. The four explanation fields are all-or-none (validated server-side):
- * provide all four non-empty (explained) or none (not-yet-explained).
+ * CREATE. The five explanation fields are all-or-none (validated server-side):
+ * provide all five, with the four texts non-empty (explained), or none
+ * (not-yet-explained).
  */
 export class OutlierGroupChangeDataDto {
   @ApiOptionalString({ minLength: 1 })
@@ -27,6 +28,15 @@ export class OutlierGroupChangeDataDto {
 
   @ApiOptionalString({ nullable: true })
   signatureRole?: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    format: 'date',
+    example: '2027-03-01',
+    description:
+      'Date the company commits to having this group’s improvements completed by ("Dagsetning úrbóta"), as `YYYY-MM-DD`. Must be in the future and no more than three years out.',
+  })
+  remedyDate?: string | null
 }
 
 /**

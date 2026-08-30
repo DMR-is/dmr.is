@@ -11,6 +11,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
 import { ReportModel } from '../../report/models/report.model'
+import { parseRemedyDate } from '../../report-employee/lib/remedy-date'
 import { ReportEmployeeModel } from '../../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../../report-employee/models/report-outlier-group.model'
@@ -27,6 +28,7 @@ type Explanation = {
   action: string | null
   signatureName: string | null
   signatureRole: string | null
+  remedyDate: string | null
 }
 
 @Injectable()
@@ -144,13 +146,14 @@ export class ReportDraftOutlierGroupService
     if (data.name !== undefined) {
       patch.name = data.name.trim()
     }
-    // The four explanation fields move as a unit — if any is present, all four
+    // The five explanation fields move as a unit — if any is present, all five
     // must be present and non-empty (keeps the row CHECK-valid).
     if (
       data.reason !== undefined ||
       data.action !== undefined ||
       data.signatureName !== undefined ||
-      data.signatureRole !== undefined
+      data.signatureRole !== undefined ||
+      data.remedyDate !== undefined
     ) {
       Object.assign(patch, resolveExplanationStrict(data))
     }
@@ -268,45 +271,69 @@ export class ReportDraftOutlierGroupService
 }
 
 /**
- * Create-side explanation resolution: all four fields present and non-empty
- * (explained) or none present (NULL block). A partial set throws 400.
+ * Create-side explanation resolution: all five fields present (the four texts
+ * non-empty) or none present (NULL block). A partial set throws 400.
+ *
+ * `remedyDate` counts towards the block like the rest: an explained group has
+ * to say when its úrbætur land, and a postponed one has not been asked yet. Its
+ * own format/range validation runs only once the block is known to be filled —
+ * on the empty branch there is nothing to validate.
  */
 function resolveExplanation(fields: {
   reason?: string | null
   action?: string | null
   signatureName?: string | null
   signatureRole?: string | null
+  remedyDate?: string | null
 }): Explanation {
   const reason = fields.reason?.trim() ?? ''
   const action = fields.action?.trim() ?? ''
   const signatureName = fields.signatureName?.trim() ?? ''
   const signatureRole = fields.signatureRole?.trim() ?? ''
-  const filledCount = [reason, action, signatureName, signatureRole].filter(
-    (v) => v.length > 0,
-  ).length
+  const remedyDate = fields.remedyDate?.trim() ?? ''
+  const filledCount = [
+    reason,
+    action,
+    signatureName,
+    signatureRole,
+    remedyDate,
+  ].filter((v) => v.length > 0).length
 
   if (filledCount === 0) {
-    return { reason: null, action: null, signatureName: null, signatureRole: null }
+    return {
+      reason: null,
+      action: null,
+      signatureName: null,
+      signatureRole: null,
+      remedyDate: null,
+    }
   }
-  if (filledCount === 4) {
-    return { reason, action, signatureName, signatureRole }
+  if (filledCount === 5) {
+    return {
+      reason,
+      action,
+      signatureName,
+      signatureRole,
+      remedyDate: parseRemedyDate(remedyDate),
+    }
   }
   throw new BadRequestException(
-    'reason, action, signatureName and signatureRole must all be provided together (non-empty) or all omitted',
+    'reason, action, signatureName, signatureRole and remedyDate must all be provided together (non-empty) or all omitted',
   )
 }
 
-/** Update-side: the explanation block was touched, so all four must be set. */
+/** Update-side: the explanation block was touched, so all five must be set. */
 function resolveExplanationStrict(fields: {
   reason?: string | null
   action?: string | null
   signatureName?: string | null
   signatureRole?: string | null
+  remedyDate?: string | null
 }): Explanation {
   const explanation = resolveExplanation(fields)
   if (explanation.reason === null) {
     throw new BadRequestException(
-      'reason, action, signatureName and signatureRole must all be provided together (non-empty)',
+      'reason, action, signatureName, signatureRole and remedyDate must all be provided together (non-empty)',
     )
   }
   return explanation

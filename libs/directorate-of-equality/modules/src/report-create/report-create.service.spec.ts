@@ -1,3 +1,4 @@
+import addMonths from 'date-fns/addMonths'
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
 import { UniqueConstraintError } from 'sequelize'
@@ -59,6 +60,10 @@ const EQUALITY_REPORT_ID = '00000000-0000-0000-0000-00000000eee1'
 const PERIOD_MONTH = format(subMonths(new Date(), 1), 'yyyy-MM')
 const PERIOD_INPUT = `${PERIOD_MONTH}-15`
 const PERIOD_STORED = `${PERIOD_MONTH}-01`
+// Same reasoning as PERIOD_MONTH above, in the other direction: `remedyDate`
+// only accepts a future date inside the next reporting cycle, so a literal
+// would pass today and start failing the day it went by.
+const REMEDY_DATE = format(addMonths(new Date(), 12), 'yyyy-MM-dd')
 const PARENT_COMPANY_ID = '00000000-0000-0000-0000-000000000c01'
 const SUBSIDIARY_COMPANY_ID = '00000000-0000-0000-0000-000000000c02'
 
@@ -485,6 +490,7 @@ describe('ReportCreateService', () => {
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
         signatureRole: 'HR Manager',
+        remedyDate: REMEDY_DATE,
         employeeOrdinals: [1],
       },
     ]
@@ -508,6 +514,7 @@ describe('ReportCreateService', () => {
         action: 'No adjustment, salary frozen for the period',
         signatureName: 'Anna Admin',
         signatureRole: 'HR Manager',
+        remedyDate: REMEDY_DATE,
       }),
     )
 
@@ -526,6 +533,7 @@ describe('ReportCreateService', () => {
         action: 'a',
         signatureName: 'n',
         signatureRole: 'role',
+        remedyDate: REMEDY_DATE,
         employeeOrdinals: [1],
       },
     ]
@@ -547,6 +555,7 @@ describe('ReportCreateService', () => {
         action: 'a',
         signatureName: 'n',
         signatureRole: 'role',
+        remedyDate: REMEDY_DATE,
         employeeOrdinals: [1],
       },
     ]
@@ -577,6 +586,7 @@ describe('ReportCreateService', () => {
         action: 'a',
         signatureName: 'n',
         signatureRole: 'role',
+        remedyDate: REMEDY_DATE,
         employeeOrdinals: [1],
       },
       {
@@ -646,6 +656,7 @@ describe('ReportCreateService', () => {
         action: null,
         signatureName: null,
         signatureRole: null,
+        remedyDate: null,
       }),
     )
 

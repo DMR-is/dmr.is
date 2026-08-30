@@ -50,6 +50,7 @@ import {
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { IReportCreateService } from '../report-create/report-create.service.interface'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
+import { parseRemedyDate } from '../report-employee/lib/remedy-date'
 import { ReportEmployeeModel } from '../report-employee/models/report-employee.model'
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportEmployeeRoleModel } from '../report-employee/models/report-employee-role.model'
@@ -649,6 +650,7 @@ export class ApplicationService implements IApplicationService {
         action: group.action,
         signatureName: group.signatureName,
         signatureRole: group.signatureRole,
+        remedyDate: parseRemedyDate(group.remedyDate),
       })
 
       for (const ordinal of group.employeeOrdinals) {
@@ -994,6 +996,7 @@ export class ApplicationService implements IApplicationService {
               'action',
               'signatureName',
               'signatureRole',
+              'remedyDate',
             ],
             required: true,
           },

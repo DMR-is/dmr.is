@@ -286,7 +286,7 @@ INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
 VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v3', '${salarySnap}', '${wageGapSnap}');
 
-INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role, remedy_date)
 VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við nýliðun',
   '${esc(
     'Laun þessara starfsmanna eru lægri en starfsmatsstig þeirra gefa til kynna. Rýni sýndi að launin voru ákveðin við nýliðun á tímabili þar sem launasetning var ekki samræmd milli deilda.',
@@ -294,7 +294,10 @@ VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við 
   '${esc(
     'Launasetning fyrirtækisins verður tekin til endurskoðunar í heild og viðmið um nýliðun sett í fastar skorður. Þau tilvik sem hér eru tilgreind verða leiðrétt í næstu launaákvörðun.',
   )}',
-  'Þórður Jónsson', 'Framkvæmdastjóri');
+  'Þórður Jónsson', 'Framkvæmdastjóri',
+  -- Relative to CURRENT_DATE, not a literal: remedy_date only accepts a future
+  -- date inside the next reporting cycle, so a fixed date would age out.
+  (CURRENT_DATE + INTERVAL '12 months')::date);
 
 INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES
 ${outlierSql};

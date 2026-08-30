@@ -73,7 +73,7 @@ export class ReportEmployeeOutlierModel extends MutableModel<
   /**
    * Project an outlier row to its DTO. The persisted row is a thin join
    * `(report_employee_id, group_id)`. The improvement-plan explanation
-   * (reason / action / signature) lives on the joined group and is
+   * (reason / action / signature / remedy date) lives on the joined group and is
    * denormalized onto each outlier in the projection — pass the row with its
    * `group` association loaded. While the report's outliers are still postponed
    * the group exists but its explanation fields are null.
@@ -103,6 +103,7 @@ export class ReportEmployeeOutlierModel extends MutableModel<
       action: model.group?.action ?? null,
       signatureName: model.group?.signatureName ?? null,
       signatureRole: model.group?.signatureRole ?? null,
+      remedyDate: model.group?.remedyDate ?? null,
       regularHourlyWage: analysis?.hourlyWage ?? null,
       expectedHourlyWage: analysis?.expectedHourlyWage ?? null,
       deviationPercent: analysis?.deviationPercent ?? null,

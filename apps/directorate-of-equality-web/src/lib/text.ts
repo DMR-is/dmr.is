@@ -180,6 +180,14 @@ export const overviewText = {
       actionLabel: 'Aðgerðir til úrbóta',
       signatureNameLabel: 'Nafn ábyrgðaraðila',
       signatureRoleLabel: 'Starfsheiti ábyrgðaraðila',
+      /**
+       * The date the company commits to for THIS group — not the report-wide
+       * 'Frestur til úrbóta' the Directorate imposes. The picker is bounded to
+       * the same window the API enforces (future, within the next reporting
+       * cycle), so an out-of-range date cannot be picked in the first place.
+       */
+      remedyDateLabel: 'Dagsetning úrbóta',
+      remedyDatePlaceholder: 'Veldu dagsetningu',
       unassignedWarning:
         'Öll frávik verða að tilheyra frávikahópi áður en hægt er að senda inn.',
       incompleteGroupWarning:
@@ -466,6 +474,13 @@ export const reportText = {
       actionLabel: 'Aðgerð',
       signatureNameLabel: 'Nafn undirritanda',
       signatureRoleLabel: 'Hlutverk undirritanda',
+      /**
+       * ⚠️ Distinct from `remedyDeadlineLabel` ('Frestur til úrbóta') further
+       * down, and the two sit close enough on screen to be confused. That one is
+       * the deadline imposed on the WHOLE report (`report.correctionDeadline`);
+       * this is the date the company itself committed to for THIS group.
+       */
+      remedyDateLabel: 'Dagsetning úrbóta',
       points: 'Stig',
       salary: 'Tímakaup',
       predictedSalary: 'Væntanlegt tímakaup',

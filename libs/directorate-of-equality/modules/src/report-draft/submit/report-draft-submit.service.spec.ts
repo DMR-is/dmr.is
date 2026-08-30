@@ -569,6 +569,7 @@ describe('ReportDraftSubmitService', () => {
         action: null,
         signatureName: null,
         signatureRole: null,
+        remedyDate: null,
       })
       expect(outlierBulkCreate).toHaveBeenCalledWith([
         { reportEmployeeId: 'emp-1', groupId: 'default-group-1' },
