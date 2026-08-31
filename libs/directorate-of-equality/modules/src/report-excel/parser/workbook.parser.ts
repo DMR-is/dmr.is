@@ -64,8 +64,24 @@ const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
  * capture, and matching it would mean another unbounded run after the value.
  * The digit run is bounded for the same reason the ceiling below exists — the
  * parsed index decides the size of an allocation.
+ *
+ * ## Why `<f>` is spelled out
+ *
+ * `<f>` is the only element `CT_Cell` allows before `<v>`, and both its forms
+ * are accepted here. Requiring whitespace instead would be correct for Excel
+ * — which writes computed string results as `t="str"`, never `t="s"` — but
+ * this guard exists for producers that emit `t="s"` without the table at all,
+ * which is already outside what the schema permits, so their other habits
+ * cannot be assumed either. Missing a cell is the harmful direction: the
+ * synthesized table comes out short and the load fails.
+ *
+ * Tolerating arbitrary content instead of naming `<f>` would be worse, not
+ * safer. A self-closing `<c t="s"/>` would then reach past itself into the
+ * next cell's `<v>`, and an ordinary ISK amount there is large enough to trip
+ * `MAX_SHARED_STRING_ENTRIES` and reject a workbook that was fine.
  */
-const SHARED_STRING_CELL_RE = /<c\b([^<>]{0,512})>\s{0,64}<v>(\d{1,9})<\/v>/g
+const SHARED_STRING_CELL_RE =
+  /<c\b([^<>]{0,512})>(?:<f\b[^<>]{0,512}(?:\/>|>[^<]{0,1024}<\/f>))?\s{0,64}<v>(\d{1,9})<\/v>/g
 const SHARED_STRING_TYPE_RE = /\bt="s"/
 
 /**
@@ -96,6 +112,39 @@ const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
  */
 const MAX_SHARED_STRING_ENTRIES = 65_536
 
+/**
+ * The member's uncompressed size as the archive declares it.
+ *
+ * jszip reads this from the central directory when the archive is opened, so
+ * it is available before anything is inflated — but it is not on the public
+ * `JSZipObject` type, and it is part of the archive, which makes it a claim
+ * rather than a measurement. Used only to refuse a member before paying to
+ * decompress it; what actually inflated is what gets counted.
+ */
+const declaredUncompressedSize = (entry: JSZip.JSZipObject): number | null => {
+  const { _data } = entry as unknown as {
+    _data?: { uncompressedSize?: number }
+  }
+  return typeof _data?.uncompressedSize === 'number'
+    ? _data.uncompressedSize
+    : null
+}
+
+const workbookTooLarge = (): BadRequestException =>
+  new BadRequestException({
+    message: 'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
+    errors: [
+      {
+        sheet: '(workbook)',
+        row: null,
+        column: null,
+        message: `Uppsafnað magn af blaðagögnum fer yfir ${
+          MAX_WORKSHEET_SCAN_BYTES / (1024 * 1024)
+        }MB.`,
+      },
+    ],
+  })
+
 const emptySharedStringsXml = (count: number): string => {
   const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${count}" uniqueCount="${count}">${items}</sst>`
@@ -118,19 +167,24 @@ const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || !WORKSHEET_XML_RE.test(entry.name)) continue
 
+    // Refuse before inflating. The upload limit upstream counts compressed
+    // bytes, so a member that is small in the archive says nothing about what
+    // it costs to hold — and the cost is paid the moment `async('string')`
+    // returns, not when a check further down notices.
+    const declared = declaredUncompressedSize(entry)
+    if (declared !== null && scannedBytes + declared > MAX_WORKSHEET_SCAN_BYTES) {
+      throw workbookTooLarge()
+    }
+
     const xml = await entry.async('string')
 
-    // Budget is cumulative, not per-entry: an archive may carry any number of
-    // `sheetN.xml` members, and it is the total this pass walks that has to
-    // stay bounded. Checking here also stops the loop before inflating the
-    // *next* entry, though the one in hand was materialized in full — bounding
-    // a single entry's decompression is archive-level size accounting and a
-    // separate concern from this scan.
-    scannedBytes += xml.length
+    // Then count what actually arrived, because the declared size is only as
+    // trustworthy as the archive it came from. Cumulative, not per-entry: an
+    // archive may carry any number of `sheetN.xml` members, and it is the
+    // total this pass walks that has to stay bounded.
+    scannedBytes += Buffer.byteLength(xml)
     if (scannedBytes > MAX_WORKSHEET_SCAN_BYTES) {
-      throw new BadRequestException(
-        'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
-      )
+      throw workbookTooLarge()
     }
 
     for (const [, attributes, index] of xml.matchAll(SHARED_STRING_CELL_RE)) {
@@ -142,9 +196,20 @@ const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
   if (maxSharedStringIndex < 0) return buffer
 
   if (maxSharedStringIndex >= MAX_SHARED_STRING_ENTRIES) {
-    throw new BadRequestException(
-      'Vinnubókin vísar í of margar strengjafærslur til að hægt sé að lesa hana.',
-    )
+    throw new BadRequestException({
+      message:
+        'Vinnubókin vísar í of margar strengjafærslur til að hægt sé að lesa hana.',
+      errors: [
+        {
+          sheet: '(workbook)',
+          row: null,
+          column: null,
+          message: `Hæsta strengjavísun er ${maxSharedStringIndex}, hámark er ${
+            MAX_SHARED_STRING_ENTRIES - 1
+          }.`,
+        },
+      ],
+    })
   }
 
   zip.file(SHARED_STRINGS_PATH, emptySharedStringsXml(maxSharedStringIndex + 1))
@@ -199,6 +264,14 @@ export const parseWorkbook = async (
     ) as ArrayBuffer
     await workbook.xlsx.load(arrayBuffer)
   } catch (e) {
+    // The guard above rejects on purpose, with a message that already says
+    // what is wrong. Re-wrapping it would replace that with "is this a valid
+    // xlsx file?" — which is both less useful and, for a workbook that is
+    // simply too large, untrue. Only genuine load failures get the generic
+    // message; `errors` does not reach the client, so the headline is the
+    // only part the user reads.
+    if (e instanceof BadRequestException) throw e
+
     throw new BadRequestException({
       message: 'Ekki tókst að lesa vinnubókina — er þetta gild xlsx skrá?',
       errors: [

@@ -1466,14 +1466,15 @@ describe('parseWorkbook', () => {
       // The index sizes the table `emptySharedStringsXml` builds, so one far
       // outside the range a real workbook uses has to be refused rather than
       // allocated for.
-      const { errors } = await expectBadRequest(
+      const { message, errors } = await expectBadRequest(
         parseWorkbook(await zipWithSheet('<c t="s"><v>999999999</v></c>')),
       )
 
+      // `errors` only reaches the server log, so the headline is what decides
+      // whether the user is told anything useful.
+      expect(message).toContain('of margar strengjafærslur')
       expect(errors.map((e) => e.message)).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('of margar strengjafærslur'),
-        ]),
+        expect.arrayContaining([expect.stringContaining('Hæsta strengjavísun')]),
       )
     })
 
@@ -1481,15 +1482,57 @@ describe('parseWorkbook', () => {
       // 72MB inflated, over the 64MB budget, from an archive well under the
       // 20MB compressed limit `ImportUploadService` enforces — compressed
       // size says little about what a sheet inflates to.
-      const { errors } = await expectBadRequest(
+      const { message } = await expectBadRequest(
         parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(9 * 1024 * 1024))),
       )
 
-      expect(errors.map((e) => e.message)).toEqual(
-        expect.arrayContaining([
-          expect.stringContaining('of stór til lestrar'),
-        ]),
+      // Not "is this a valid xlsx file?" — it is one, it is just too big.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('refuses an oversized member from its declared size, without inflating it', async () => {
+      // 320MB inflated in a single member. Reading the size the archive
+      // declares costs nothing; inflating first to discover the same thing
+      // costs the memory and the time, which is the whole point of checking
+      // before rather than after.
+      const payload = await zipWithSheet('<v>1</v>'.repeat(40 * 1024 * 1024))
+
+      const started = Date.now()
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).toContain('of stór til lestrar')
+      expect(Date.now() - started).toBeLessThan(1000)
+    })
+
+    it('counts a shared-string cell that carries a formula before its value', async () => {
+      // `<f>` is the only element the schema allows between `<c>` and `<v>`.
+      // Excel never pairs it with t="s", but this guard exists for producers
+      // that are already off-schema, and missing a cell is the harmful
+      // direction — the synthesized table comes out short and the load fails.
+      // An index over the ceiling is the observable proof the cell was seen.
+      for (const cell of [
+        '<c t="s"><f>A2</f><v>70000</v></c>',
+        '<c t="s"><f/><v>70000</v></c>',
+        '<c t="s"><f t="shared" si="0"/><v>70000</v></c>',
+      ]) {
+        const { message } = await expectBadRequest(
+          parseWorkbook(await zipWithSheet(cell)),
+        )
+        expect(message).toContain('of margar strengjafærslur')
+      }
+    })
+
+    it('does not read a value out of the cell after a self-closing one', async () => {
+      // The tolerance above must not reach past the cell it started in: an
+      // ISK amount in the next cell is easily large enough to trip the
+      // ceiling and reject a workbook that was fine.
+      const { message } = await expectBadRequest(
+        parseWorkbook(
+          await zipWithSheet('<c t="s"/><c t="n"><v>850000000</v></c>'),
+        ),
       )
+
+      expect(message).not.toContain('of margar strengjafærslur')
     })
 
     it('still repairs a workbook that legitimately lost its shared-strings table', async () => {
