@@ -176,7 +176,30 @@ export class ReportPdfService implements IReportPdfService {
     const browser = await getBrowser()
     try {
       const page = await browser.newPage()
-      await page.setContent(html, { waitUntil: 'networkidle0' })
+      /*
+       * ⚠️ `load`, NOT `networkidle0`.
+       *
+       * These documents are self-contained: the chart is inline SVG, the styles
+       * are injected below, and there is no image, font or script fetched from
+       * anywhere. So there is no network to go idle, and `networkidle0` waits for
+       * a 500ms silent window that some Chromium builds never report for such a
+       * page — it then fails the whole render with `Navigation timeout of 30000
+       * ms exceeded`. Verified locally: `networkidle0` and `networkidle2` both
+       * time out against `/Applications/Chromium.app`, while `load`,
+       * `domcontentloaded` and the default all finish in ~1.5s and produce a
+       * BYTE-IDENTICAL PDF. Waiting for network idle buys this renderer nothing.
+       *
+       * The stake is higher than a failed download: `notifyCompanyApproved`
+       * renders inside the reviewer's approve request and swallows failures, so a
+       * hang here costs 30s per document and ends with the company never being
+       * told its report was approved.
+       *
+       * The other PDF services in this repo (`legal-gazette-api`,
+       * `official-journal`) still pass `networkidle0`. They work in the deployed
+       * container, so its `/usr/bin/chromium-browser` does settle — but the same
+       * latent hang is one Chromium bump away for them. Not changed here.
+       */
+      await page.setContent(html, { waitUntil: 'load' })
       await page.addStyleTag({ content: pdfStyles })
 
       const pdfBuffer = await page.pdf({

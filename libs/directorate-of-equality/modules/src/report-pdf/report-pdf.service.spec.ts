@@ -14,10 +14,13 @@ jest.mock('./lib/browser', () => ({ getBrowser: jest.fn() }))
 const pdfMock = jest.fn(async () => new Uint8Array([1, 2, 3]))
 const closeMock = jest.fn(async () => undefined)
 
+/** Captures the `setContent` calls so the wait strategy can be asserted. */
+const setContentMock = jest.fn(async () => undefined)
+
 function mockBrowser() {
   ;(getBrowser as jest.Mock).mockResolvedValue({
     newPage: async () => ({
-      setContent: jest.fn(async () => undefined),
+      setContent: setContentMock,
       addStyleTag: jest.fn(async () => undefined),
       pdf: pdfMock,
     }),
@@ -230,6 +233,30 @@ describe('ReportPdfService', () => {
       await expect(service.generateReportPdf('r1')).rejects.toThrow('boom')
       expect(closeMock).toHaveBeenCalled()
     })
+  })
+
+  /**
+   * ⚠️ Regression guard. These documents are self-contained — inline SVG,
+   * injected styles, nothing fetched — so there is no network to go idle, and
+   * `networkidle0` waits for a silent window some Chromium builds never report
+   * for such a page. It then fails the render with `Navigation timeout of 30000
+   * ms exceeded`. Confirmed locally: `networkidle0`/`networkidle2` time out
+   * against `/Applications/Chromium.app` while `load` produces a byte-identical
+   * PDF in ~1.5s.
+   *
+   * This matters beyond a failed download: the approval path renders inside the
+   * reviewer's request and swallows failures, so a hang means the company is
+   * never told its report was approved.
+   */
+  it('waits for load, never for network idle', async () => {
+    const { service } = makeService()
+
+    await service.generateReportPdf('r1')
+
+    expect(setContentMock).toHaveBeenCalledWith(
+      expect.any(String),
+      { waitUntil: 'load' },
+    )
   })
 
   describe('generateImprovementPlanPdf', () => {
