@@ -276,7 +276,7 @@ describe('ReportDraftService', () => {
       companyAdminTitle: 'Framkvæmdastjóri',
       companyAdminEmail: 'admin@example.is',
       companyAdminGender: null,
-      contactName: 'Contact',
+      contactName: null,
       contactTitle: 'Starfsmannastjóri',
       contactEmail: null,
       contactPhone: null,
