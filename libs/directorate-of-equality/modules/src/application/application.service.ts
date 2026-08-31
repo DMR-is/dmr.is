@@ -179,18 +179,17 @@ export class ApplicationService implements IApplicationService {
     // here. Only the company-facing portal path is gated — admin/system
     // creation is not.
 
-    // !!!! -> COMMENTED OUT FOR TESTING PURPOSES <- !!!!
-    // SHOULD BE BACK IN PLACE FOR PRODUCTION RELEASE
-
-    // const renewal = evaluateSalaryRenewalEligibility(
-    // company.nextSalaryReportDueAt ?? null,
-    // new Date(),
-    //)
-    // if (!renewal.eligible) {
-    //   throw new ConflictException(
-    //     `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
-    //   )
-    // }
+    if (process.env.API_ENV === 'prod') {
+      const renewal = evaluateSalaryRenewalEligibility(
+        company.nextSalaryReportDueAt ?? null,
+        new Date(),
+      )
+      if (!renewal.eligible) {
+        throw new ConflictException(
+          `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
+        )
+      }
+    }
 
     const createInput = await this.createSalaryReportInput(input, company)
     return this.reportCreateService.createSalary(createInput)
@@ -281,7 +280,10 @@ export class ApplicationService implements IApplicationService {
     const report = await this.reportModel.findOne({
       where: {
         providerType: this.channel.providerType,
-        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+        providerId: this.channel.buildProviderId(
+          providerId,
+          company.nationalId,
+        ),
       },
     })
 
@@ -377,7 +379,10 @@ export class ApplicationService implements IApplicationService {
     const report = await this.reportModel.findOne({
       where: {
         providerType: this.channel.providerType,
-        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+        providerId: this.channel.buildProviderId(
+          providerId,
+          company.nationalId,
+        ),
       },
     })
 
@@ -742,7 +747,10 @@ export class ApplicationService implements IApplicationService {
     const report = await this.reportModel.findOne({
       where: {
         providerType: this.channel.providerType,
-        providerId: this.channel.buildProviderId(providerId, company.nationalId),
+        providerId: this.channel.buildProviderId(
+          providerId,
+          company.nationalId,
+        ),
       },
     })
 
