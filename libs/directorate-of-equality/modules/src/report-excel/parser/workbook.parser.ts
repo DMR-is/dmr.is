@@ -39,8 +39,62 @@ import { assertWorkbookLayout } from './layout.assert'
 
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
 const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
-const SHARED_STRING_CELL_RE =
-  /<c\b[^>]*\bt="s"[^>]*>[\s\S]*?<v>(\d+)<\/v>[\s\S]*?<\/c>/g
+
+/**
+ * A shared-string cell together with its value —
+ * `<c r="A1" s="3" t="s"><v>7</v></c>` — capturing the attribute run and the
+ * index separately. `t="s"` is then tested against that capture by
+ * `SHARED_STRING_TYPE_RE` rather than being matched inline.
+ *
+ * ## Why it is shaped like this
+ *
+ * This reads raw sheet XML before the workbook has been validated, so it has
+ * to stay predictable on markup no spreadsheet editor would produce. Every
+ * quantified run is bounded and excludes `<` and `>`, which keeps a match
+ * attempt inside the tag it started in; runs left unbounded either side of
+ * the value degrade badly on malformed input instead.
+ *
+ * Only one variable run precedes a literal (`[^<>]{0,512}`, then `>`), and
+ * because that run cannot itself consume a `>`, a failed attempt unwinds in
+ * one step rather than retrying every split. Keeping it to a single run —
+ * instead of matching `t="s"` inline between two of them — is what makes that
+ * hold, and is why the type test is a separate pass over the capture.
+ *
+ * A trailing `</c>` is deliberately not required: it never contributed to the
+ * capture, and matching it would mean another unbounded run after the value.
+ * The digit run is bounded for the same reason the ceiling below exists — the
+ * parsed index decides the size of an allocation.
+ */
+const SHARED_STRING_CELL_RE = /<c\b([^<>]{0,512})>\s{0,64}<v>(\d{1,9})<\/v>/g
+const SHARED_STRING_TYPE_RE = /\bt="s"/
+
+/**
+ * Total decompressed worksheet XML this guard will scan across one archive.
+ *
+ * The upload limit upstream (`ImportUploadService`) counts *compressed*
+ * bytes, and deflate ratios on repetitive cell markup are high enough that it
+ * says little about the inflated size. Capping the scan keeps this pass
+ * proportional to a number we picked.
+ *
+ * 64MB is deliberately generous: the empty template alone decompresses to
+ * ~9.4MB of worksheet XML, so a filled-in report needs real headroom above it.
+ */
+const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
+
+/**
+ * Ceiling on the blank shared-string table synthesized below.
+ *
+ * `emptySharedStringsXml` builds one array element per entry, so the index
+ * read out of the sheet decides how large an allocation this makes. Malformed
+ * markup can carry an index far past anything the workbook actually holds,
+ * and an allocation that size fails in a way no `try`/`catch` here can turn
+ * back into a 400 — so it is refused up front instead.
+ *
+ * 65536 is ~30x the template's own table (~2000 entries), so the limit is
+ * unreachable from a real report while keeping the synthesized document to
+ * about a megabyte.
+ */
+const MAX_SHARED_STRING_ENTRIES = 65_536
 
 const emptySharedStringsXml = (count: number): string => {
   const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
@@ -58,16 +112,40 @@ const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
   const zip = await JSZip.loadAsync(buffer)
   if (zip.file(SHARED_STRINGS_PATH)) return buffer
 
+  let scannedBytes = 0
   let maxSharedStringIndex = -1
+
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || !WORKSHEET_XML_RE.test(entry.name)) continue
+
     const xml = await entry.async('string')
-    for (const match of xml.matchAll(SHARED_STRING_CELL_RE)) {
-      maxSharedStringIndex = Math.max(maxSharedStringIndex, Number(match[1]))
+
+    // Budget is cumulative, not per-entry: an archive may carry any number of
+    // `sheetN.xml` members, and it is the total this pass walks that has to
+    // stay bounded. Checking here also stops the loop before inflating the
+    // *next* entry, though the one in hand was materialized in full — bounding
+    // a single entry's decompression is archive-level size accounting and a
+    // separate concern from this scan.
+    scannedBytes += xml.length
+    if (scannedBytes > MAX_WORKSHEET_SCAN_BYTES) {
+      throw new BadRequestException(
+        'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
+      )
+    }
+
+    for (const [, attributes, index] of xml.matchAll(SHARED_STRING_CELL_RE)) {
+      if (!SHARED_STRING_TYPE_RE.test(attributes)) continue
+      maxSharedStringIndex = Math.max(maxSharedStringIndex, Number(index))
     }
   }
 
   if (maxSharedStringIndex < 0) return buffer
+
+  if (maxSharedStringIndex >= MAX_SHARED_STRING_ENTRIES) {
+    throw new BadRequestException(
+      'Vinnubókin vísar í of margar strengjafærslur til að hægt sé að lesa hana.',
+    )
+  }
 
   zip.file(SHARED_STRINGS_PATH, emptySharedStringsXml(maxSharedStringIndex + 1))
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
