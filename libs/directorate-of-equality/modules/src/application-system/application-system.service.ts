@@ -6,6 +6,11 @@ import {
 } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  type ApplicationCallbackPath,
+  applicationCallbackUrl as buildApplicationCallbackUrl,
+  InvalidCallbackUrlError,
+} from '@dmr.is/utils-server/xroadUtils'
 
 import {
   ApplicationSystemEvent,
@@ -99,9 +104,38 @@ export class ApplicationSystemService implements IApplicationSystemService {
     })
   }
 
-  private applicationCallbackUrl(applicationId: string, path = ''): string {
-    const base = `${this.requireEnv('XROAD_ISLAND_IS_PATH')}/application-callback-v2/applications/${applicationId}`
-    return path ? `${base}/${path}` : base
+  /**
+   * Builds the island.is application-callback URL for one application id.
+   *
+   * `applicationId` is `report.provider_id` — a value the applicant supplied
+   * when the report was created — so it is treated as untrusted here even
+   * though the submit/draft DTOs now constrain it to a UUID: rows written
+   * before that validation existed are still in the table, and the partner API
+   * accepts a free-form provider id on any channel.
+   */
+  private applicationCallbackUrl(
+    applicationId: string,
+    path: ApplicationCallbackPath = '',
+  ): string {
+    try {
+      return buildApplicationCallbackUrl(
+        this.requireEnv('XROAD_ISLAND_IS_PATH'),
+        applicationId,
+        path,
+      )
+    } catch (error) {
+      if (error instanceof InvalidCallbackUrlError) {
+        this.logger.error(error.message, {
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+          applicationId,
+        })
+        throw new InternalServerErrorException(
+          'Invalid application callback URL',
+        )
+      }
+      throw error
+    }
   }
 
   private async authenticatedFetch(

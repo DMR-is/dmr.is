@@ -50,6 +50,11 @@ import {
   getTemplate,
   getTemplateDetails,
 } from '@dmr.is/utils-server/serverUtils'
+import {
+  type ApplicationCallbackPath,
+  applicationCallbackUrl as buildApplicationCallbackUrl,
+  InvalidCallbackUrlError,
+} from '@dmr.is/utils-server/xroadUtils'
 
 import { AdditionalPartiesService } from '../additional-parties'
 import { AdvertMainTypeModel, AdvertTypeModel } from '../advert-type/models'
@@ -144,12 +149,54 @@ export class ApplicationService implements IApplicationService {
     }
   }
 
+  /**
+   * Builds the island.is application-callback URL for one application id.
+   *
+   * Defence in depth, not a live hole: every caller today either runs the id
+   * through `UUIDValidationPipe` at the route or reads it from
+   * `case_case.application_id`, a `UUID NOT NULL` column. This makes the sink
+   * safe on its own so that stops being load-bearing — concatenated raw, a
+   * `..` payload would be normalised away by `fetch`'s URL parser and redirect
+   * an authenticated call, carrying the DMR service account's bearer token and
+   * `X-Road-Client` header, at any other service the X-Road gateway can route
+   * to. That is a live vulnerability in the sibling DoE flow, where the id is
+   * a free-form applicant-supplied column.
+   */
+  private applicationCallbackUrl(
+    id: string,
+    path: ApplicationCallbackPath = '',
+  ): string {
+    try {
+      return buildApplicationCallbackUrl(
+        `${process.env.XROAD_ISLAND_IS_PATH}`,
+        id,
+        path,
+      )
+    } catch (error) {
+      if (error instanceof InvalidCallbackUrlError) {
+        this.logger.error(error.message, {
+          category: LOGGING_CATEGORY,
+          applicationId: id,
+        })
+        // A missing or malformed XROAD_ISLAND_IS_PATH is our misconfiguration,
+        // not the caller's: reporting it as a 400 would send operators looking
+        // at the request instead of the deploy.
+        throw error.reason === 'invalid-base-path'
+          ? new InternalServerErrorException(
+              'Application system is not configured correctly',
+            )
+          : new BadRequestException('Invalid application id')
+      }
+      throw error
+    }
+  }
+
   @LogAndHandle()
   async getApplication(
     id: string,
   ): Promise<ResultWrapper<GetApplicationResponse>> {
     const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`, // localhost:3333
+      this.applicationCallbackUrl(id),
       {
         method: 'GET',
       },
@@ -185,7 +232,7 @@ export class ApplicationService implements IApplicationService {
     event: ApplicationEvent,
   ): Promise<ResultWrapper> {
     const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}/submit`,
+      this.applicationCallbackUrl(id, 'submit'),
       {
         method: 'PUT',
         body: new URLSearchParams({
@@ -222,7 +269,7 @@ export class ApplicationService implements IApplicationService {
     answers: UpdateApplicationBody,
   ): Promise<ResultWrapper> {
     const res = await this.authService.xroadFetch(
-      `${process.env.XROAD_ISLAND_IS_PATH}/application-callback-v2/applications/${id}`,
+      this.applicationCallbackUrl(id),
       {
         method: 'PUT',
         headers: {

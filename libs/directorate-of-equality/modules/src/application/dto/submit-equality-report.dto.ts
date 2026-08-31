@@ -9,6 +9,7 @@ import {
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
+  ApiUUID,
 } from '@dmr.is/decorators'
 
 import { GenderEnum } from '../../report/models/report.enums'
@@ -26,7 +27,10 @@ import {
  * for the island.is client change that pairs with its removal.
  */
 export class SubmitEqualityReportDto {
-  @ApiString()
+  @ApiUUID({
+    description:
+      'Upstream island.is application UUID, stored as the report provider_id.',
+  })
   providerId!: string
 
   @ApiString()
