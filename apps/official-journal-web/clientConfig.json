@@ -22,6 +22,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -53,54 +54,7 @@
             }
           }
         },
-        "summary": ""
-      }
-    },
-    "/api/v1/pdf/case/{id}/url": {
-      "get": {
-        "operationId": "getPdfUrlByCaseId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
-              }
-            }
-          }
-        },
-        "summary": ""
-      }
-    },
-    "/api/v1/pdf/application/{id}/url": {
-      "get": {
-        "operationId": "getPdfUrlByApplicationId",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/GetPdfUrlResponse" }
-              }
-            }
-          }
-        },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3086,6 +3040,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       },
       "delete": {
@@ -3111,6 +3066,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3138,6 +3094,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3167,6 +3124,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       },
       "delete": {
@@ -3186,6 +3144,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3201,6 +3160,7 @@
           }
         ],
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3224,6 +3184,7 @@
           }
         },
         "responses": { "204": { "description": "" } },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3248,6 +3209,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -3272,6 +3234,7 @@
             }
           }
         },
+        "security": [{ "bearer": [] }],
         "summary": ""
       }
     },
@@ -4110,11 +4073,6 @@
           "content": { "type": "string", "description": "Base64 encoded PDF" }
         },
         "required": ["content"]
-      },
-      "GetPdfUrlResponse": {
-        "type": "object",
-        "properties": { "url": { "type": "string" } },
-        "required": ["url"]
       },
       "CreateCaseChannelBody": {
         "type": "object",
