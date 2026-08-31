@@ -284,6 +284,10 @@ describe('ReportCreateService', () => {
         status: 'SUBMITTED',
         equalityReportId: EQUALITY_REPORT_ID,
         companyAdminEmail: 'admin@example.is',
+        // Snapshotted onto the row itself, not merely mapped into the create
+        // DTO — application.service.spec covers the mapping, nothing covered
+        // the write until here.
+        contactTitle: 'Starfsmannastjóri',
         companyNationalId: '5500000000',
         // Declared basis persisted, month normalised to the 1st.
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
@@ -690,6 +694,7 @@ describe('ReportCreateService', () => {
         status: 'SUBMITTED',
         importedFromExcel: false,
         equalityReportContent: 'A narrative gender-equality plan.',
+        contactTitle: 'Starfsmannastjóri',
         companyNationalId: '5500000000',
       }),
     )
@@ -1300,6 +1305,7 @@ function makeInput(): CreateReportDto {
     companyAdminEmail: 'admin@example.is',
     companyAdminGender: GenderEnum.FEMALE,
     contactName: 'Bjorn Contact',
+    contactTitle: 'Starfsmannastjóri',
     contactEmail: 'contact@example.is',
     contactPhone: '+354 555 0000',
     averageEmployeeMaleCount: 30,
@@ -1430,6 +1436,7 @@ function makeEqualityInput(): CreateEqualityReportDto {
     companyAdminEmail: 'admin@example.is',
     companyAdminGender: GenderEnum.FEMALE,
     contactName: 'Bjorn Contact',
+    contactTitle: 'Starfsmannastjóri',
     contactEmail: 'contact@example.is',
     contactPhone: '+354 555 0000',
     equalityReportContent: 'A narrative gender-equality plan.',

@@ -38,6 +38,7 @@ const EMPTY_FORM = {
   companyAdminEmail: '',
   companyAdminGender: GenderEnum.MALE,
   contactName: '',
+  contactTitle: '',
   contactEmail: '',
   contactPhone: '',
   equalityReportContent: '',
@@ -106,6 +107,7 @@ export const CreateEqualityReportDrawer = () => {
         companyAdminEmail: form.companyAdminEmail,
         companyAdminGender: form.companyAdminGender,
         contactName: form.contactName,
+        contactTitle: form.contactTitle || null,
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
         equalityReportContent: form.equalityReportContent,
@@ -232,6 +234,16 @@ export const CreateEqualityReportDrawer = () => {
               size="xs"
               value={form.contactName}
               onChange={(e) => set('contactName')(e.target.value)}
+              disabled={!companyId}
+            />
+          </GridColumn>
+          <GridColumn span={['12/12', '6/12']}>
+            <TextInput
+              name="contactTitle"
+              label={s.form.jobTitleLabel}
+              size="xs"
+              value={form.contactTitle}
+              onChange={(e) => set('contactTitle')(e.target.value)}
               disabled={!companyId}
             />
           </GridColumn>

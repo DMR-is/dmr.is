@@ -45,6 +45,12 @@ export class AdminSalaryReportDto {
   @ApiString()
   contactName!: string
 
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company contact (tengiliður).',
+  })
+  contactTitle?: string | null
+
   @ApiString()
   contactEmail!: string
 

@@ -799,9 +799,11 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `id`                             | `uuid` PK                                                                                                                      |
 | `type`                           | `ReportTypeEnum`                                                                                                               |
 | `company_admin_name`             | `text`                                                                                                                         |
+| `company_admin_title`            | `text` (nullable; job title of the company executive)                                                                          |
 | `company_admin_email`            | `text`                                                                                                                         |
 | `company_admin_gender`           | `GenderEnum`                                                                                                                   |
 | `contact_name`                   | `text`                                                                                                                         |
+| `contact_title`                  | `text` (nullable; job title of the company contact)                                                                            |
 | `company_national_id`            | `text` (nullable; cached submitter/company national ID when supplied)                                                          |
 | `contact_email`                  | `text`                                                                                                                         |
 | `contact_phone`                  | `text`                                                                                                                         |

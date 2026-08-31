@@ -30,6 +30,7 @@ function makeData(
     companyAdminEmail: 'jonina@mycompany.is',
     companyAdminGender: GenderEnum.FEMALE,
     contactName: 'Jón J. Jónsson',
+    contactTitle: 'Starfsmannastjóri',
     contactEmail: 'jon@mycompany.is',
     contactPhone: '+354 888-8888',
     averageEmployeeMaleCount: 25,
@@ -98,6 +99,7 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('Æðsti stjórnandi')
     expect(html).toContain('Framkvæmdastjóri')
     expect(html).toContain('Tengiliður')
+    expect(html).toContain('Starfsmannastjóri')
     expect(html).toContain('Meðalfjöldi starfsmanna á ársgrundvelli')
     expect(html).toContain('Dótturfyrirtæki')
     expect(html).toContain('Launagreining')

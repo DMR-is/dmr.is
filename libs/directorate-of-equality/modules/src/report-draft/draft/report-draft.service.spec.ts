@@ -277,6 +277,7 @@ describe('ReportDraftService', () => {
       companyAdminEmail: 'admin@example.is',
       companyAdminGender: null,
       contactName: null,
+      contactTitle: 'Starfsmannastjóri',
       contactEmail: null,
       contactPhone: null,
       companyNationalId: COMPANY_NATIONAL_ID,
@@ -307,6 +308,7 @@ describe('ReportDraftService', () => {
         // Printed on the generated PDF as "Starfsheiti", so the portal has to
         // be able to read it back as well as write it.
         companyAdminTitle: 'Framkvæmdastjóri',
+        contactTitle: 'Starfsmannastjóri',
         salaryDataBasis: SalaryDataBasisEnum.MONTH,
         salaryDataPeriod: '2026-03-01',
         // The portal has to be able to tell whether it is looking at a draft it
@@ -358,6 +360,7 @@ describe('ReportDraftService', () => {
       companyAdminEmail: null,
       companyAdminGender: null,
       contactName: null,
+      contactTitle: null,
       contactEmail: null,
       contactPhone: null,
       companyNationalId: COMPANY_NATIONAL_ID,
@@ -397,6 +400,20 @@ describe('ReportDraftService', () => {
 
       expect(reportUpdate).toHaveBeenCalledWith(
         { companyAdminTitle: 'Framkvæmdastjóri' },
+        { where: { id: REPORT_ID } },
+      )
+    })
+
+    it('patches the contact job title', async () => {
+      reportFindOne.mockResolvedValue(draftRow)
+      reportUpdate.mockResolvedValueOnce([1])
+
+      await service.updateDraft(PROVIDER_ID, COMPANY, {
+        contactTitle: 'Starfsmannastjóri',
+      })
+
+      expect(reportUpdate).toHaveBeenCalledWith(
+        { contactTitle: 'Starfsmannastjóri' },
         { where: { id: REPORT_ID } },
       )
     })

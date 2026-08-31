@@ -83,6 +83,7 @@ function contactSection(report: ReportDetailDto): string {
     'Tengiliður',
     `<div class="field-grid">
       ${field('Nafn', orDash(report.contactName))}
+      ${field('Starfsheiti', orDash(report.contactTitle))}
       ${field('Símanúmer', orDash(report.contactPhone))}
       ${field('Netfang', orDash(report.contactEmail))}
     </div>`,

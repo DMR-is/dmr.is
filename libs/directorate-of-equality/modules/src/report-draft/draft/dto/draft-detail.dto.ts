@@ -71,6 +71,12 @@ export class DraftDetailDto {
   @ApiOptionalString({ nullable: true })
   contactName!: string | null
 
+  @ApiOptionalString({
+    nullable: true,
+    description: 'Job title (starfsheiti) of the company contact (tengiliður).',
+  })
+  contactTitle!: string | null
+
   @ApiOptionalString({ nullable: true })
   contactEmail!: string | null
 
