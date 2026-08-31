@@ -61,17 +61,18 @@ export class ArchiveTooLargeError extends Error {
  * in the measurement, so the real headroom for a decorated report is lower
  * than 2.4x.
  *
- * ## What the "x 2" does and does not cover
+ * ## What the "x 2" covers
  *
- * The 2 is `MAX_CONCURRENT_PARSES`, and it gates `parseWorkbook` only — it is
- * a private semaphore inside `ReportExcelService`. `parseCompanyImport` also
- * uses this budget and runs through no gate at all, so each concurrent company
- * import adds ~260MB on top of the ~520MB accounted for above. It is reachable
- * by any authenticated DoE staff account, not only ADMINs — `AdminGuard`
- * resolves the user row and returns true rather than comparing a role, and the
- * controller does not add `RequireAdminRoleGuard`. Realistically serial, which
- * is why the number stands, but it is a gap in the derivation rather than
- * something it covers.
+ * The 2 is the shared parse gate in `ParseGateCoreModule`, and it means two
+ * parses *in the process*: `parseWorkbook` and `parseCompanyImport` both
+ * acquire from the same `Semaphore` instance, so no third concurrent parse of
+ * either kind can start. Both consumers are counted because a company import
+ * retains the same heap as a report import.
+ *
+ * The gate is deliberately one provider rather than one per module. Two gates
+ * of 2 would permit four concurrent parses and ~1040MB — the same figure that
+ * made a 64MB budget wrong above — while each module still read as correctly
+ * bounded on its own, which is what would make it hard to catch.
  *
  * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without

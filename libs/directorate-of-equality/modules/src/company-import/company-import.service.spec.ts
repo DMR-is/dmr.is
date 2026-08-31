@@ -1,3 +1,4 @@
+import { ServiceUnavailableException } from '@nestjs/common'
 import { getConnectionToken, getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -11,6 +12,8 @@ import { CompanyModel } from '../company/models/company.model'
 import { IsatCategoryModel } from '../company/models/isat-category.model'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
+import { PARSE_GATE } from '../parse-gate/parse-gate.token'
+import { Semaphore } from '../parse-gate/semaphore'
 import { CompanyImportOutcomeEnum } from './dto/company-import-result.dto'
 import { ParsedCompanyRow } from './dto/parsed-company-row.dto'
 import { CompanyImportService } from './company-import.service'
@@ -102,6 +105,11 @@ describe('CompanyImportService', () => {
           provide: ICompanyEventService,
           useValue: { emitCreated, emitStatusChanged },
         },
+        // A real gate rather than a stub, sized so it never blocks: these
+        // tests are about reconciliation, but the acquire/release path should
+        // still be the real one so a leaked slot would surface here as a hang
+        // rather than being mocked away.
+        { provide: PARSE_GATE, useValue: new Semaphore(2, 20) },
       ],
     }).compile()
 
@@ -300,6 +308,75 @@ describe('CompanyImportService', () => {
         'admin-1',
         expect.any(String),
       )
+    })
+  })
+
+  describe('parse gate', () => {
+    /**
+     * Build the service against a gate that is already exhausted, so the
+     * shed path is the only outcome available.
+     */
+    const buildWithGate = async (gate: Semaphore) => {
+      const module = await Test.createTestingModule({
+        providers: [
+          CompanyImportService,
+          { provide: LOGGER_PROVIDER, useValue: mockLogger },
+          { provide: getConnectionToken(), useValue: { transaction } },
+          {
+            provide: getModelToken(CompanyModel),
+            useValue: { findAll: companyFindAll, create: companyCreate },
+          },
+          {
+            provide: getModelToken(IsatCategoryModel),
+            useValue: { findAll: isatFindAll },
+          },
+          {
+            provide: getModelToken(PostcodeModel),
+            useValue: { findAll: postcodeFindAll },
+          },
+          {
+            provide: ICompanyEventService,
+            useValue: { emitCreated, emitStatusChanged },
+          },
+          { provide: PARSE_GATE, useValue: gate },
+        ],
+      }).compile()
+      return module.get(CompanyImportService)
+    }
+
+    it('sheds with a 503 rather than parsing when the gate is saturated', async () => {
+      // One slot, no queue — taking the slot leaves nothing to acquire.
+      const gate = new Semaphore(1, 0)
+      const held = await gate.acquire()
+      const gated = await buildWithGate(gate)
+
+      await expect(gated.preview(BUF)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      )
+      // The point of gating before parsing: the expensive call never happens.
+      expect(mockParse).not.toHaveBeenCalled()
+
+      held()
+    })
+
+    it('releases its slot after a parse so later imports still run', async () => {
+      const gate = new Semaphore(1, 0)
+      const gated = await buildWithGate(gate)
+
+      await gated.preview(BUF)
+      expect(gate.activeCount).toBe(0)
+
+      // A second import would deadlock on a leaked slot rather than fail.
+      await expect(gated.preview(BUF)).resolves.toBeDefined()
+    })
+
+    it('releases its slot when the parse throws', async () => {
+      const gate = new Semaphore(1, 0)
+      const gated = await buildWithGate(gate)
+      mockParse.mockRejectedValueOnce(new Error('unreadable workbook'))
+
+      await expect(gated.preview(BUF)).rejects.toThrow('unreadable workbook')
+      expect(gate.activeCount).toBe(0)
     })
   })
 })

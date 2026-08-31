@@ -8,26 +8,15 @@ import {
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ImportUploadBoundary } from '../import-upload/import-upload.service.interface'
+import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
+import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
 import { ImportErrorDto } from './dto/import-error.dto'
 import { ParsedReportDto } from './dto/parsed-report.dto'
-import { Semaphore, SemaphoreQueueFullError } from './lib/semaphore'
 import { parseWorkbook } from './parser/workbook.parser'
 import { IReportExcelService } from './report-excel.service.interface'
 import { TEMPLATE_BASE64 } from './template-data'
 
 const LOGGING_CONTEXT = 'ReportExcelService'
-
-/**
- * Parsing one workbook holds ~350MB of heap (exceljs model), so unbounded
- * concurrent imports OOM the container. These bound per-instance parse
- * concurrency: worst-case parse memory ≈ `maxConcurrent × ~350MB`. Both are
- * env-overridable so devops can retune against the task's heap without a
- * redeploy. Defaults are deliberately conservative (2 running, 20 waiting).
- */
-const MAX_CONCURRENT_PARSES = Number(
-  process.env.DOE_EXCEL_MAX_CONCURRENT_PARSES ?? 2,
-)
-const MAX_QUEUED_PARSES = Number(process.env.DOE_EXCEL_MAX_QUEUED_PARSES ?? 20)
 
 /** Searchable marker for uploads shed because the parse gate was saturated. */
 const EXCEL_IMPORT_BUSY = 'EXCEL_IMPORT_BUSY'
@@ -42,15 +31,15 @@ const EXCEL_IMPORT_VALIDATION_FAILED = 'EXCEL_IMPORT_VALIDATION_FAILED'
 
 @Injectable()
 export class ReportExcelService implements IReportExcelService {
-  // Shared across every import path (application / admin / bulk draft-seed) —
-  // they all funnel through importWorkbook, so one gate bounds total parse
-  // concurrency for the instance.
-  private readonly parseGate = new Semaphore(
-    MAX_CONCURRENT_PARSES,
-    MAX_QUEUED_PARSES,
-  )
-
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // Injected, not constructed. Every report import path (application /
+    // admin / bulk draft-seed) funnels through `importWorkbook`, but the
+    // company-import path does not — and it parses workbooks of the same
+    // cost. One gate for the process is what keeps the heap arithmetic in
+    // `import-upload/archive-budget.ts` true; see `ParseGateCoreModule`.
+    @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
+  ) {}
 
   async generateBlankTemplate(): Promise<Buffer> {
     this.logger.debug('Serving blank template', { context: LOGGING_CONTEXT })

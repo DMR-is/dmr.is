@@ -1,7 +1,11 @@
 import { Op } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 
-import { Inject, Injectable } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
@@ -14,6 +18,8 @@ import { CompanyModel } from '../company/models/company.model'
 import { IsatCategoryModel } from '../company/models/isat-category.model'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
+import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
+import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
 import {
   CompanyImportErrorDto,
   CompanyImportFieldChangeDto,
@@ -21,11 +27,22 @@ import {
   CompanyImportResultDto,
   CompanyImportRowResultDto,
 } from './dto/company-import-result.dto'
-import { ParsedCompanyRow } from './dto/parsed-company-row.dto'
+import {
+  ParsedCompanyImport,
+  ParsedCompanyRow,
+} from './dto/parsed-company-row.dto'
 import { parseCompanyImport } from './parser/company-import.parser'
 import { ICompanyImportService } from './company-import.service.interface'
 
 const LOGGING_CONTEXT = 'CompanyImportService'
+
+/**
+ * Searchable marker for company imports shed because the parse gate was
+ * saturated. Distinct from the report importer's `EXCEL_IMPORT_BUSY` even
+ * though both come from the same gate — facet on the two separately to see
+ * which importer is spending the shared allowance.
+ */
+const COMPANY_IMPORT_BUSY = 'COMPANY_IMPORT_BUSY'
 
 /** A planned write plus its result row, produced by reconcile and consumed by apply. */
 type CreatePlan = {
@@ -76,7 +93,58 @@ export class CompanyImportService implements ICompanyImportService {
     private readonly postcodeModel: typeof PostcodeModel,
     @Inject(ICompanyEventService)
     private readonly companyEventService: ICompanyEventService,
+    // The same gate `ReportExcelService` uses, not a second one. A company
+    // import costs the same heap as a report import, so both have to draw
+    // from one allowance for the budget in `import-upload/archive-budget.ts`
+    // to hold. See `ParseGateCoreModule`.
+    @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
   ) {}
+
+  /**
+   * Parse under the shared gate, holding a slot only for the parse itself.
+   *
+   * Deliberately not wrapped around `reconcile` or `apply`: the slot is scarce
+   * (2 by default across the whole process) and `apply` follows this with a
+   * Sequelize transaction. Holding a parse slot across DB work would block
+   * report imports on lock contention that has nothing to do with memory,
+   * which is the only thing this gate exists to bound.
+   */
+  private async parseGated(fileBuffer: Buffer): Promise<ParsedCompanyImport> {
+    const release = await this.acquireParseSlot()
+    try {
+      return await parseCompanyImport(fileBuffer)
+    } finally {
+      release()
+    }
+  }
+
+  /**
+   * Translate a saturated gate into a 503 the client can retry.
+   *
+   * Worded in English rather than Icelandic, and logged under its own marker,
+   * because this endpoint is staff-facing while the report importer is not —
+   * the same split `archive-budget.ts` makes for `ArchiveTooLargeError`. The
+   * two importers share a gate, so keeping their shed markers distinct is what
+   * makes it possible to tell which one is spending the allowance.
+   */
+  private async acquireParseSlot(): Promise<() => void> {
+    try {
+      return await this.parseGate.acquire()
+    } catch (e) {
+      if (e instanceof SemaphoreQueueFullError) {
+        this.logger.warn('Company import shed — parse gate saturated', {
+          context: LOGGING_CONTEXT,
+          errorCode: COMPANY_IMPORT_BUSY,
+          activeParses: this.parseGate.activeCount,
+          queuedParses: this.parseGate.queuedCount,
+        })
+        throw new ServiceUnavailableException(
+          'Workbook imports are busy right now. Try again shortly.',
+        )
+      }
+      throw e
+    }
+  }
 
   async preview(fileBuffer: Buffer): Promise<CompanyImportResultDto> {
     const plan = await this.reconcile(fileBuffer)
@@ -148,7 +216,7 @@ export class CompanyImportService implements ICompanyImportService {
 
   /** Pure planning: parse, validate ISAT, resolve postcodes, categorize. No writes. */
   private async reconcile(fileBuffer: Buffer): Promise<ReconcilePlan> {
-    const parsed = await parseCompanyImport(fileBuffer)
+    const parsed = await this.parseGated(fileBuffer)
     const errors: CompanyImportErrorDto[] = [...parsed.errors]
 
     // Validate ISAT codes against the reference table; reject unknowns.

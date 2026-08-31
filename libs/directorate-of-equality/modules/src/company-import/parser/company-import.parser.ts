@@ -58,8 +58,9 @@ const FIRST_DATA_ROW = 2
  * objects, a sub-kilobyte file declaring `<row r="2000000000">` used to drive a
  * synchronous allocating loop that blocked the only thread and exhausted the
  * heap — taking the whole API down for every user, from the cheapest possible
- * request. The endpoint needs no privilege beyond a logged-in DoE user, since
- * `AdminGuard` only resolves an active `doe_user` row and returns true.
+ * request. The bound is deliberately independent of how privileged the caller
+ * is: authentication narrows who can reach this, it does not bound what they
+ * can spend once here.
  *
  * The value is headroom, not a business rule: the Icelandic company register is
  * on the order of tens of thousands of rows, so 100 000 cannot reject a real
@@ -123,10 +124,9 @@ export const parseCompanyImport = async (
   try {
     // Same exposure as the report importer: the buffer comes from
     // `fetchWorkbook`, whose only size check counts compressed bytes, and
-    // `xlsx.load` will expand whatever it is given. Staff-authenticated rather
-    // than public — but not admin-restricted, whatever the route name implies:
-    // `AdminGuard` resolves the user row and returns true instead of comparing
-    // a role, and no `RequireAdminRoleGuard` is applied here.
+    // `xlsx.load` will expand whatever it is given. Authenticated rather than
+    // public, which narrows who can reach it but bounds nothing once here —
+    // that is this check's job, not the guard's.
     await assertArchiveWithinBudget(await JSZip.loadAsync(fileBuffer))
     await workbook.xlsx.load(fileBuffer)
   } catch (e) {
