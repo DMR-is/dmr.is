@@ -18,9 +18,7 @@ describe('PdfController route guards', () => {
 
   const routes = {
     getPdfByCaseId: PdfController.prototype.getPdfByCaseId,
-    getPdfUrlByCaseId: PdfController.prototype.getPdfUrlByCaseId,
     getPdfByApplicationId: PdfController.prototype.getPdfByApplicationId,
-    getPdfUrlByApplicationId: PdfController.prototype.getPdfUrlByApplicationId,
   }
 
   it.each(Object.entries(routes))(
@@ -31,22 +29,34 @@ describe('PdfController route guards', () => {
   )
 
   // Staff-only, and no caller — same stack as CaseController.
-  it.each([
-    ['getPdfByCaseId', routes.getPdfByCaseId],
-    ['getPdfUrlByCaseId', routes.getPdfUrlByCaseId],
-  ])('%s is restricted to Admin', (_name, handler) => {
-    expect(guardsOn(handler)).toContain(RoleGuard)
-    expect(rolesOn(handler)).toEqual([UserRoleEnum.Admin])
-  })
+  it.each([['getPdfByCaseId', routes.getPdfByCaseId]])(
+    '%s is restricted to Admin',
+    (_name, handler) => {
+      expect(guardsOn(handler)).toContain(RoleGuard)
+      expect(rolesOn(handler)).toEqual([UserRoleEnum.Admin])
+    },
+  )
 
   // Called by island.is for an applicant, who is not in the staff user table:
   // RoleGuard here would 403 the live consumer. Asserted so nobody "tightens"
   // these to match the case routes without understanding why they differ.
-  it.each([
-    ['getPdfByApplicationId', routes.getPdfByApplicationId],
-    ['getPdfUrlByApplicationId', routes.getPdfUrlByApplicationId],
-  ])('%s authenticates without a staff role check', (_name, handler) => {
-    expect(guardsOn(handler)).not.toContain(RoleGuard)
-    expect(rolesOn(handler)).toBeUndefined()
+  it.each([['getPdfByApplicationId', routes.getPdfByApplicationId]])(
+    '%s authenticates without a staff role check',
+    (_name, handler) => {
+      expect(guardsOn(handler)).not.toContain(RoleGuard)
+      expect(rolesOn(handler)).toBeUndefined()
+    },
+  )
+
+  it('no longer exposes the url companion routes', () => {
+    // Deleted rather than guarded: nothing called them, and the link they
+    // returned cannot carry the bearer header these routes now require.
+    expect(
+      (PdfController.prototype as Record<string, unknown>).getPdfUrlByCaseId,
+    ).toBeUndefined()
+    expect(
+      (PdfController.prototype as Record<string, unknown>)
+        .getPdfUrlByApplicationId,
+    ).toBeUndefined()
   })
 })

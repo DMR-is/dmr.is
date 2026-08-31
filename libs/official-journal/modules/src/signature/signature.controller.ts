@@ -40,8 +40,9 @@ import { ISignatureService } from './signature.service.interface'
  * `getCase` on that `@Roles(Admin)` controller, so an Editor cannot reach these
  * routes by any supported path anyway.
  *
- * These routes carried no guard at all until this commit, which left nine
- * mutating endpoints reachable unauthenticated on an internet-facing ALB.
+ * These routes carried no guard at all until this commit, which left all nine
+ * of them — seven of which mutate (2 PUT, 3 POST, 2 DELETE) — reachable
+ * unauthenticated on an internet-facing ALB.
  */
 @Controller({
   version: '1',
