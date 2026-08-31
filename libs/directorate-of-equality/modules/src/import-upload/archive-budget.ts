@@ -56,14 +56,22 @@ export class ArchiveTooLargeError extends Error {
  * line, which is acceptable: `employees.parser.ts` documents that row count as
  * "almost certainly a corrupt or adversarial upload".
  *
+ * That figure counts worksheet XML only. An embedded `xl/media` part — a
+ * customer's logo pasted into the workbook — spends the same budget and is not
+ * in the measurement, so the real headroom for a decorated report is lower
+ * than 2.4x.
+ *
  * ## What the "x 2" does and does not cover
  *
  * The 2 is `MAX_CONCURRENT_PARSES`, and it gates `parseWorkbook` only — it is
  * a private semaphore inside `ReportExcelService`. `parseCompanyImport` also
  * uses this budget and runs through no gate at all, so each concurrent company
- * import adds ~260MB on top of the ~520MB accounted for above. That path is
- * admin-only and realistically serial, which is why the number stands, but it
- * is a gap in the derivation rather than something it covers.
+ * import adds ~260MB on top of the ~520MB accounted for above. It is reachable
+ * by any authenticated DoE staff account, not only ADMINs — `AdminGuard`
+ * resolves the user row and returns true rather than comparing a role, and the
+ * controller does not add `RequireAdminRoleGuard`. Realistically serial, which
+ * is why the number stands, but it is a gap in the derivation rather than
+ * something it covers.
  *
  * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without
@@ -113,12 +121,28 @@ type AbortableByteStream = {
 }
 
 /**
- * Inflate one member, counting as it goes, and stop the moment it exceeds
- * what is left of the budget. Returns the bytes seen — which is at most
- * `remaining` plus one chunk, never the member's full size.
+ * Inflate one member, counting as it goes, and stop consuming once the count
+ * passes what is left of the budget. Returns the bytes seen, which is at most
+ * `remaining` plus one chunk.
  *
  * Discarding each chunk after counting is the point: this measures a member
  * without ever holding it.
+ *
+ * ## What `destroy()` does and does not do
+ *
+ * It stops delivery immediately — no `data` event arrives afterwards — but it
+ * does not halt the inflate worker on the spot. jszip's `nodeStream` adapter
+ * has no `_destroy` of its own, so the chain runs on until backpressure and
+ * EOF stop it, pushing chunks that the destroyed stream rejects (those surface
+ * as "push after EOF" on `error`, which the listener below absorbs — the
+ * promise has already settled, so `reject` is a no-op).
+ *
+ * The overshoot is a small multiple of the budget, not of the member.
+ * Measured on a 400MB member with a 32MB budget: 42.9MB actually inflated
+ * (~1.34x budget) and 41.6MB peak RSS growth, against a member that would
+ * otherwise have landed in full. Other runs of the same shape have reached
+ * ~2x. So the guarantee is "bounded by the budget times a small constant",
+ * which is what matters here — never "bounded by the member".
  */
 const countInflatedBytes = (
   entry: JSZip.JSZipObject,

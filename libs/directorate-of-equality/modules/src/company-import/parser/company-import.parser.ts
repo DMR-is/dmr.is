@@ -123,8 +123,10 @@ export const parseCompanyImport = async (
   try {
     // Same exposure as the report importer: the buffer comes from
     // `fetchWorkbook`, whose only size check counts compressed bytes, and
-    // `xlsx.load` will expand whatever it is given. Admin-only, so harder to
-    // reach — not a reason to leave the one path bounded and the other not.
+    // `xlsx.load` will expand whatever it is given. Staff-authenticated rather
+    // than public — but not admin-restricted, whatever the route name implies:
+    // `AdminGuard` resolves the user row and returns true instead of comparing
+    // a role, and no `RequireAdminRoleGuard` is applied here.
     await assertArchiveWithinBudget(await JSZip.loadAsync(fileBuffer))
     await workbook.xlsx.load(fileBuffer)
   } catch (e) {
