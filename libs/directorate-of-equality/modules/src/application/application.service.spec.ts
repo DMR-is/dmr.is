@@ -469,30 +469,62 @@ describe('ApplicationService', () => {
       expect(createSalary).not.toHaveBeenCalled()
     })
 
-    // !!!! -> COMMENTED OUT FOR TESTING PURPOSES <- !!!!!
-    // Should be uncommented before production release
+    // The renewal window is only enforced in production — everywhere else
+    // testers need to be able to re-submit at will.
+    describe('renewal window guard', () => {
+      const originalApiEnv = process.env.API_ENV
 
-    // it('blocks (409) when the renewal window is not open yet (due date > 6 months out)', async () => {
-    //   const input = makeSubmitSalaryInput()
-    //   const farFuture = new Date()
-    //   farFuture.setFullYear(farFuture.getFullYear() + 2)
-    //   const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
+      const companyDueIn = (years: number, months = 0) => {
+        const dueAt = new Date()
+        dueAt.setFullYear(dueAt.getFullYear() + years)
+        dueAt.setMonth(dueAt.getMonth() + months)
+        return { ...COMPANY, nextSalaryReportDueAt: dueAt }
+      }
 
-    //   await expect(service.submitSalary(input, company)).rejects.toThrow(
-    //     ConflictException,
-    //   )
-    //   expect(createSalary).not.toHaveBeenCalled()
-    // })
+      afterEach(() => {
+        if (originalApiEnv === undefined) {
+          delete process.env.API_ENV
+        } else {
+          process.env.API_ENV = originalApiEnv
+        }
+      })
 
-    it('allows submission when the due date is within 6 months', async () => {
-      const input = makeSubmitSalaryInput()
-      const soon = new Date()
-      soon.setMonth(soon.getMonth() + 3)
-      const company = { ...COMPANY, nextSalaryReportDueAt: soon }
+      it('blocks (409) when the renewal window is not open yet (due date > 6 months out)', async () => {
+        process.env.API_ENV = 'prod'
+        const input = makeSubmitSalaryInput()
 
-      await service.submitSalary(input, company)
+        await expect(
+          service.submitSalary(input, companyDueIn(2)),
+        ).rejects.toThrow(ConflictException)
+        expect(createSalary).not.toHaveBeenCalled()
+      })
 
-      expect(createSalary).toHaveBeenCalled()
+      it('allows submission when the due date is within 6 months', async () => {
+        process.env.API_ENV = 'prod'
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, companyDueIn(0, 3))
+
+        expect(createSalary).toHaveBeenCalled()
+      })
+
+      it('does not block outside prod even when the window is not open yet', async () => {
+        process.env.API_ENV = 'dev'
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, companyDueIn(2))
+
+        expect(createSalary).toHaveBeenCalled()
+      })
+
+      it('does not block when API_ENV is unset', async () => {
+        delete process.env.API_ENV
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, companyDueIn(2))
+
+        expect(createSalary).toHaveBeenCalled()
+      })
     })
   })
 
