@@ -1,6 +1,7 @@
 import {
   ReportModel,
   ReportProviderEnum,
+  ReportTypeEnum,
 } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import { DoeMailService } from './doe-mail.service'
@@ -161,6 +162,119 @@ describe('DoeMailService', () => {
 
     const [message] = aws.sendMail.mock.calls[0]
     expect(message.html).not.toContain('island.is/umsoknir/jafnrettisstofa')
+  })
+
+  describe('sendReportDenied', () => {
+    it('subjects an equality denial "Jafnréttisáætlun hafnað"', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.EQUALITY }),
+        'Vantar gögn',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.subject).toBe('Jafnréttisáætlun hafnað')
+    })
+
+    it('subjects a salary denial "Skýrslugjöf hafnað"', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        'Vantar gögn',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.subject).toBe('Skýrslugjöf hafnað')
+    })
+
+    it('carries the denial reason as the body', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        'Frávik voru ekki skýrð',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.html).toContain('Frávik voru ekki skýrð')
+      expect(message.text).toContain('Frávik voru ekki skýrð')
+    })
+
+    it('HTML-escapes the denial reason and keeps line breaks', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        '<script>alert("x")</script>\nlína tvö',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.html).not.toContain('<script>')
+      expect(message.html).toContain('&lt;script&gt;')
+      expect(message.html).toContain('<br/>')
+    })
+
+    /**
+     * `deny` closes the communication thread and does not reopen the island.is
+     * application, so any invitation to reply would point at a shut channel.
+     */
+    it('does not invite a reply or link the application', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({
+          type: ReportTypeEnum.EQUALITY,
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'abc-123',
+        }),
+        'reason',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.html).not.toContain('island.is/umsoknir')
+      expect(message.text).not.toContain('Skoða umsókn')
+    })
+
+    it('resolves the recipient the same way as the comment notification', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY, contactEmail: null }),
+        'reason',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.to).toBe('admin@example.is')
+    })
+
+    it('skips and warns when the report names no recipient', async () => {
+      await service.sendReportDenied(
+        makeReport({
+          type: ReportTypeEnum.SALARY,
+          contactEmail: null,
+          companyAdminEmail: null,
+        }),
+        'reason',
+      )
+
+      expect(aws.sendMail).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalled()
+    })
+
+    it('logs and swallows SES errors so the denial stands', async () => {
+      aws.sendMail.mockRejectedValue(new Error('SES is down'))
+
+      await expect(
+        service.sendReportDenied(
+          makeReport({ type: ReportTypeEnum.SALARY }),
+          'reason',
+        ),
+      ).resolves.toBeUndefined()
+
+      expect(logger.error).toHaveBeenCalled()
+    })
   })
 
   it('logs and swallows SES errors so callers never throw', async () => {

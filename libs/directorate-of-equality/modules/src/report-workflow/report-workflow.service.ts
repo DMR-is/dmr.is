@@ -11,6 +11,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { IDoeMailService } from '../mail/doe-mail.service.interface'
 import {
   CommunicationStatusEnum,
   ReportModel,
@@ -39,6 +40,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly reportEventService: IReportEventService,
     @Inject(IApplicationSystemService)
     private readonly applicationSystemService: IApplicationSystemService,
+    @Inject(IDoeMailService)
+    private readonly mailService: IDoeMailService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -211,6 +214,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
+    await this.notifyCompanyDenied(context.reportId, denialReason)
+
     await this.notifyApplicationSystem(
       context.reportId,
       ReportStatusEnum.DENIED,
@@ -285,6 +290,51 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { communicationStatus: CommunicationStatusEnum.CLOSED },
       { where: { id: reportId } },
     )
+  }
+
+  /**
+   * Tells the company its report was denied, with the reviewer's reason as the
+   * body.
+   *
+   * Loads its own narrow projection rather than taking a model from `deny`,
+   * which only ever issues an `update` and never holds an instance. The four
+   * attributes are exactly what the mail needs: `type` picks the subject noun,
+   * the two addresses resolve the recipient, `id` labels the log line.
+   *
+   * Best-effort in the same sense as `notifyApplicationSystem` below — the
+   * denial is committed and event-logged before this runs, so a mail failure
+   * must not fail it. `IDoeMailService.sendReportDenied` already swallows its
+   * own send errors; the try/catch here covers the load, so a missing or
+   * unreadable row cannot take the denial down with it either.
+   */
+  private async notifyCompanyDenied(
+    reportId: string,
+    denialReason: string,
+  ): Promise<void> {
+    try {
+      const report = await this.reportModel.findOne({
+        where: { id: reportId },
+        attributes: ['id', 'type', 'contactEmail', 'companyAdminEmail'],
+      })
+
+      if (!report) {
+        this.logger.warn(
+          `Denied report ${reportId} vanished before its notification could be sent`,
+          { context: LOGGING_CONTEXT },
+        )
+        return
+      }
+
+      await this.mailService.sendReportDenied(report, denialReason)
+    } catch (error) {
+      this.logger.error(
+        `Failed to notify company of denial for report ${reportId}`,
+        {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
   }
 
   /**

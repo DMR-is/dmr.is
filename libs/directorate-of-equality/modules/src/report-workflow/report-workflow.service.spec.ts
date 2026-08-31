@@ -36,6 +36,12 @@ describe('ReportWorkflowService', () => {
     notifyEdited: jest.fn(),
   }
 
+  const mailService = {
+    sendExternalCommentNotification: jest.fn(),
+    sendReportDenied: jest.fn(),
+    sendReportDeadlineReminder: jest.fn(),
+  }
+
   const reportModel = {
     update: jest.fn(),
     findOne: jest.fn(),
@@ -82,6 +88,7 @@ describe('ReportWorkflowService', () => {
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
+      mailService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -440,6 +447,64 @@ describe('ReportWorkflowService', () => {
         'reviewer-1',
         'Outliers never resolved',
       )
+    })
+
+    it('mails the company the trimmed denial reason', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      const report = {
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        contactEmail: 'contact@example.is',
+        companyAdminEmail: null,
+      }
+      reportModel.findOne.mockResolvedValue(report)
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: '  Vantar gögn  ',
+      })
+
+      expect(mailService.sendReportDenied).toHaveBeenCalledWith(
+        report,
+        'Vantar gögn',
+      )
+    })
+
+    // The denial is committed and event-logged before the mail runs, so a
+    // failure to even load the row must not surface to the reviewer.
+    it('still denies when the report cannot be loaded for the notification', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue(null)
+
+      await expect(
+        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          denialReason: 'reason',
+        }),
+      ).resolves.toBeUndefined()
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalled()
+    })
+
+    it('still denies when the notification load throws', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      // Only the notification's own load fails. `notifyApplicationSystem`
+      // issues its load OUTSIDE its try/catch, so a blanket rejection would
+      // fail `deny` there instead and prove nothing about this path.
+      reportModel.findOne
+        .mockRejectedValueOnce(new Error('db is down'))
+        .mockResolvedValue(null)
+
+      await expect(
+        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          denialReason: 'reason',
+        }),
+      ).resolves.toBeUndefined()
+
+      expect(logger.error).toHaveBeenCalled()
     })
 
     it('notifies the application system when the report is island.is-sourced', async () => {
