@@ -39,8 +39,111 @@ import { assertWorkbookLayout } from './layout.assert'
 
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
 const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
+
+/**
+ * A shared-string cell together with its value —
+ * `<c r="A1" s="3" t="s"><v>7</v></c>` — capturing the attribute run and the
+ * index separately. `t="s"` is then tested against that capture by
+ * `SHARED_STRING_TYPE_RE` rather than being matched inline.
+ *
+ * ## Why it is shaped like this
+ *
+ * This reads raw sheet XML before the workbook has been validated, so it has
+ * to stay predictable on markup no spreadsheet editor would produce. Every
+ * quantified run is bounded and excludes `<` and `>`, which keeps a match
+ * attempt inside the tag it started in; runs left unbounded either side of
+ * the value degrade badly on malformed input instead.
+ *
+ * Only one variable run precedes a literal (`[^<>]{0,512}`, then `>`), and
+ * because that run cannot itself consume a `>`, a failed attempt unwinds in
+ * one step rather than retrying every split. Keeping it to a single run —
+ * instead of matching `t="s"` inline between two of them — is what makes that
+ * hold, and is why the type test is a separate pass over the capture.
+ *
+ * A trailing `</c>` is deliberately not required: it never contributed to the
+ * capture, and matching it would mean another unbounded run after the value.
+ * The digit run is bounded for the same reason the ceiling below exists — the
+ * parsed index decides the size of an allocation.
+ *
+ * ## Why `<f>` is spelled out
+ *
+ * `<f>` is the only element `CT_Cell` allows before `<v>`, and both its forms
+ * are accepted here. Requiring whitespace instead would be correct for Excel
+ * — which writes computed string results as `t="str"`, never `t="s"` — but
+ * this guard exists for producers that emit `t="s"` without the table at all,
+ * which is already outside what the schema permits, so their other habits
+ * cannot be assumed either. Missing a cell is the harmful direction: the
+ * synthesized table comes out short and the load fails.
+ *
+ * Tolerating arbitrary content instead of naming `<f>` would be worse, not
+ * safer. A self-closing `<c t="s"/>` would then reach past itself into the
+ * next cell's `<v>`, and an ordinary ISK amount there is large enough to trip
+ * `MAX_SHARED_STRING_ENTRIES` and reject a workbook that was fine.
+ */
 const SHARED_STRING_CELL_RE =
-  /<c\b[^>]*\bt="s"[^>]*>[\s\S]*?<v>(\d+)<\/v>[\s\S]*?<\/c>/g
+  /<c\b([^<>]{0,512})>(?:<f\b[^<>]{0,512}(?:\/>|>[^<]{0,1024}<\/f>))?\s{0,64}<v>(\d{1,9})<\/v>/g
+const SHARED_STRING_TYPE_RE = /\bt="s"/
+
+/**
+ * Total decompressed worksheet XML this guard will scan across one archive.
+ *
+ * The upload limit upstream (`ImportUploadService`) counts *compressed*
+ * bytes, and deflate ratios on repetitive cell markup are high enough that it
+ * says little about the inflated size. Capping the scan keeps this pass
+ * proportional to a number we picked.
+ *
+ * 64MB is deliberately generous: the empty template alone decompresses to
+ * ~9.4MB of worksheet XML, so a filled-in report needs real headroom above it.
+ */
+const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
+
+/**
+ * Ceiling on the blank shared-string table synthesized below.
+ *
+ * `emptySharedStringsXml` builds one array element per entry, so the index
+ * read out of the sheet decides how large an allocation this makes. Malformed
+ * markup can carry an index far past anything the workbook actually holds,
+ * and an allocation that size fails in a way no `try`/`catch` here can turn
+ * back into a 400 — so it is refused up front instead.
+ *
+ * 65536 is ~30x the template's own table (~2000 entries), so the limit is
+ * unreachable from a real report while keeping the synthesized document to
+ * about a megabyte.
+ */
+const MAX_SHARED_STRING_ENTRIES = 65_536
+
+/**
+ * The member's uncompressed size as the archive declares it.
+ *
+ * jszip reads this from the central directory when the archive is opened, so
+ * it is available before anything is inflated — but it is not on the public
+ * `JSZipObject` type, and it is part of the archive, which makes it a claim
+ * rather than a measurement. Used only to refuse a member before paying to
+ * decompress it; what actually inflated is what gets counted.
+ */
+const declaredUncompressedSize = (entry: JSZip.JSZipObject): number | null => {
+  const { _data } = entry as unknown as {
+    _data?: { uncompressedSize?: number }
+  }
+  return typeof _data?.uncompressedSize === 'number'
+    ? _data.uncompressedSize
+    : null
+}
+
+const workbookTooLarge = (): BadRequestException =>
+  new BadRequestException({
+    message: 'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
+    errors: [
+      {
+        sheet: '(workbook)',
+        row: null,
+        column: null,
+        message: `Uppsafnað magn af blaðagögnum fer yfir ${
+          MAX_WORKSHEET_SCAN_BYTES / (1024 * 1024)
+        }MB.`,
+      },
+    ],
+  })
 
 const emptySharedStringsXml = (count: number): string => {
   const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
@@ -58,16 +161,56 @@ const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
   const zip = await JSZip.loadAsync(buffer)
   if (zip.file(SHARED_STRINGS_PATH)) return buffer
 
+  let scannedBytes = 0
   let maxSharedStringIndex = -1
+
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || !WORKSHEET_XML_RE.test(entry.name)) continue
+
+    // Refuse before inflating. The upload limit upstream counts compressed
+    // bytes, so a member that is small in the archive says nothing about what
+    // it costs to hold — and the cost is paid the moment `async('string')`
+    // returns, not when a check further down notices.
+    const declared = declaredUncompressedSize(entry)
+    if (declared !== null && scannedBytes + declared > MAX_WORKSHEET_SCAN_BYTES) {
+      throw workbookTooLarge()
+    }
+
     const xml = await entry.async('string')
-    for (const match of xml.matchAll(SHARED_STRING_CELL_RE)) {
-      maxSharedStringIndex = Math.max(maxSharedStringIndex, Number(match[1]))
+
+    // Then count what actually arrived, because the declared size is only as
+    // trustworthy as the archive it came from. Cumulative, not per-entry: an
+    // archive may carry any number of `sheetN.xml` members, and it is the
+    // total this pass walks that has to stay bounded.
+    scannedBytes += Buffer.byteLength(xml)
+    if (scannedBytes > MAX_WORKSHEET_SCAN_BYTES) {
+      throw workbookTooLarge()
+    }
+
+    for (const [, attributes, index] of xml.matchAll(SHARED_STRING_CELL_RE)) {
+      if (!SHARED_STRING_TYPE_RE.test(attributes)) continue
+      maxSharedStringIndex = Math.max(maxSharedStringIndex, Number(index))
     }
   }
 
   if (maxSharedStringIndex < 0) return buffer
+
+  if (maxSharedStringIndex >= MAX_SHARED_STRING_ENTRIES) {
+    throw new BadRequestException({
+      message:
+        'Vinnubókin vísar í of margar strengjafærslur til að hægt sé að lesa hana.',
+      errors: [
+        {
+          sheet: '(workbook)',
+          row: null,
+          column: null,
+          message: `Hæsta strengjavísun er ${maxSharedStringIndex}, hámark er ${
+            MAX_SHARED_STRING_ENTRIES - 1
+          }.`,
+        },
+      ],
+    })
+  }
 
   zip.file(SHARED_STRINGS_PATH, emptySharedStringsXml(maxSharedStringIndex + 1))
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
@@ -121,6 +264,14 @@ export const parseWorkbook = async (
     ) as ArrayBuffer
     await workbook.xlsx.load(arrayBuffer)
   } catch (e) {
+    // The guard above rejects on purpose, with a message that already says
+    // what is wrong. Re-wrapping it would replace that with "is this a valid
+    // xlsx file?" — which is both less useful and, for a workbook that is
+    // simply too large, untrue. Only genuine load failures get the generic
+    // message; `errors` does not reach the client, so the headline is the
+    // only part the user reads.
+    if (e instanceof BadRequestException) throw e
+
     throw new BadRequestException({
       message: 'Ekki tókst að lesa vinnubókina — er þetta gild xlsx skrá?',
       errors: [

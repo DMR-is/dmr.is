@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
@@ -1422,5 +1423,139 @@ describe('parseWorkbook', () => {
       parseWorkbook(Buffer.from('not a workbook')),
     )
     expect(message).toMatch(/Ekki tókst að lesa vinnubókina/)
+  })
+
+  /**
+   * The missing-shared-strings guard is the first thing an uploaded archive
+   * touches, before any workbook validation, and it only engages when
+   * `xl/sharedStrings.xml` is absent. It therefore has to stay well-behaved
+   * on markup no spreadsheet editor would produce — which is what these
+   * cover, as opposed to the valid-workbook cases above.
+   */
+  describe('archives with malformed shared-string markup', () => {
+    /**
+     * Deliberately not a valid xlsx: reaching the guard only needs a
+     * worksheet member and no shared-strings table. Anything that gets past
+     * it fails at `workbook.xlsx.load`, which is fine — the guard is not
+     * where a malformed upload should be spending its time.
+     */
+    const zipWithSheet = async (sheetXml: string): Promise<Buffer> => {
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/worksheets/sheet1.xml', sheetXml)
+      return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' })
+    }
+
+    it('scans a sheet whose cell markup never closes in linear time', async () => {
+      // A cell tag left open, followed by a long run of values. Matching this
+      // has to stay proportional to the sheet — a pattern that can re-scan
+      // per value instead grows with its square, and this sheet is large
+      // enough for the difference to be minutes rather than milliseconds. The
+      // bound below is orders of magnitude looser than the scan needs, so it
+      // fails on the behaviour rather than on CI timing noise.
+      const payload = await zipWithSheet(
+        '<c t="s">' + '<v>1</v>'.repeat(262144),
+      )
+
+      const started = Date.now()
+      await expectBadRequest(parseWorkbook(payload))
+      expect(Date.now() - started).toBeLessThan(5000)
+    })
+
+    it('rejects an out-of-range shared-string index instead of allocating for it', async () => {
+      // The index sizes the table `emptySharedStringsXml` builds, so one far
+      // outside the range a real workbook uses has to be refused rather than
+      // allocated for.
+      const { message, errors } = await expectBadRequest(
+        parseWorkbook(await zipWithSheet('<c t="s"><v>999999999</v></c>')),
+      )
+
+      // `errors` only reaches the server log, so the headline is what decides
+      // whether the user is told anything useful.
+      expect(message).toContain('of margar strengjafærslur')
+      expect(errors.map((e) => e.message)).toEqual(
+        expect.arrayContaining([expect.stringContaining('Hæsta strengjavísun')]),
+      )
+    })
+
+    it('rejects worksheet XML past the scan budget', async () => {
+      // 72MB inflated, over the 64MB budget, from an archive well under the
+      // 20MB compressed limit `ImportUploadService` enforces — compressed
+      // size says little about what a sheet inflates to.
+      const { message } = await expectBadRequest(
+        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(9 * 1024 * 1024))),
+      )
+
+      // Not "is this a valid xlsx file?" — it is one, it is just too big.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('refuses an oversized member from its declared size, without inflating it', async () => {
+      // 320MB inflated in a single member. Reading the size the archive
+      // declares costs nothing; inflating first to discover the same thing
+      // costs the memory and the time, which is the whole point of checking
+      // before rather than after.
+      const payload = await zipWithSheet('<v>1</v>'.repeat(40 * 1024 * 1024))
+
+      const started = Date.now()
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).toContain('of stór til lestrar')
+      expect(Date.now() - started).toBeLessThan(1000)
+    })
+
+    it('counts a shared-string cell that carries a formula before its value', async () => {
+      // `<f>` is the only element the schema allows between `<c>` and `<v>`.
+      // Excel never pairs it with t="s", but this guard exists for producers
+      // that are already off-schema, and missing a cell is the harmful
+      // direction — the synthesized table comes out short and the load fails.
+      // An index over the ceiling is the observable proof the cell was seen.
+      for (const cell of [
+        '<c t="s"><f>A2</f><v>70000</v></c>',
+        '<c t="s"><f/><v>70000</v></c>',
+        '<c t="s"><f t="shared" si="0"/><v>70000</v></c>',
+      ]) {
+        const { message } = await expectBadRequest(
+          parseWorkbook(await zipWithSheet(cell)),
+        )
+        expect(message).toContain('of margar strengjafærslur')
+      }
+    })
+
+    it('does not read a value out of the cell after a self-closing one', async () => {
+      // The tolerance above must not reach past the cell it started in: an
+      // ISK amount in the next cell is easily large enough to trip the
+      // ceiling and reject a workbook that was fine.
+      const { message } = await expectBadRequest(
+        parseWorkbook(
+          await zipWithSheet('<c t="s"/><c t="n"><v>850000000</v></c>'),
+        ),
+      )
+
+      expect(message).not.toContain('of margar strengjafærslur')
+    })
+
+    it('still repairs a workbook that legitimately lost its shared-strings table', async () => {
+      const zip = await JSZip.loadAsync(templateBuffer())
+      zip.remove('xl/sharedStrings.xml')
+      const stripped = await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })
+
+      // The template's cells do reference shared strings, so without an
+      // injected table exceljs dereferences undefined during load. The load
+      // failure path reports against the synthetic `(workbook)` sheet; real
+      // sheet names in the error list mean the archive was repaired, loaded,
+      // and got as far as layout validation — which then reports the headers
+      // as blank, because the strings genuinely are gone. That is the
+      // documented outcome: repair the structure, let validation report the
+      // missing data.
+      const { errors } = await expectBadRequest(parseWorkbook(stripped))
+
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors.map((e) => e.sheet)).not.toContain('(workbook)')
+      expect(errors.map((e) => e.sheet)).toContain('Launagögn')
+    })
   })
 })
