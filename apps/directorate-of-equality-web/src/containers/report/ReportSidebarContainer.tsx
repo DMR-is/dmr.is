@@ -8,6 +8,7 @@ import { AlertMessage } from '@island.is/island-ui/core'
 
 import { EmployeeSelect } from '../../components/report/report-sidebar/EmployeeSelect'
 import { ReportCommunicationStatus } from '../../components/report/report-sidebar/ReportCommunicationStatus'
+import { ReportDocuments } from '../../components/report/report-sidebar/ReportDocuments'
 import { ReportFormStepper } from '../../components/report/report-sidebar/ReportFormStepper'
 import { ReportSidebar } from '../../components/report/report-sidebar/ReportSidebar'
 import { ReportStatusSelect } from '../../components/report/report-sidebar/ReportStatusSelect'
@@ -72,6 +73,10 @@ export function ReportSidebarContainer({
       <ReportCommunicationStatus
         communicationStatus={data.communicationStatus}
       />
+      <Box paddingTop={1}>
+        <Divider />
+      </Box>
+      <ReportDocuments reportId={data.id} type={data.type} />
       <Box paddingTop={1}>
         <Divider />
       </Box>

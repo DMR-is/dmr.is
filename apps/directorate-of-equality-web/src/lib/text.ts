@@ -209,6 +209,17 @@ export const reportText = {
     'Forem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.',
   breadcrumbOverview: 'Yfirlit',
   sidebarTitle: 'Upplýsingar',
+  /**
+   * The two documents an approval emails to the company. Reviewers can open
+   * them at any status, which is the point: the document should be read before
+   * the approval that sends it, not after.
+   */
+  documents: {
+    heading: 'Skjöl',
+    report: 'Skoða skýrslu (PDF)',
+    improvementPlan: 'Skoða úrbótaáætlun (PDF)',
+    hint: 'Skjölin sem fyrirtækið fær í tölvupósti við afgreiðslu.',
+  },
   tabEquality: 'Jafnréttisáætlun',
   tabCompany: 'Fyrirtækið',
   tabSalary: 'Skýrslugjöf',
