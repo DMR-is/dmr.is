@@ -82,6 +82,14 @@ export class CompanyImportController {
       // Every other failure here is terminal for this key — an unreadable
       // workbook, a validation reject, a DB error on the transaction — so
       // those still clean up.
+      //
+      // Matching the whole exception class is deliberate, not lazy: it is
+      // broader than the shed path, so any other 503 raised here also keeps
+      // the object. That is the safe direction. Keeping an object nobody
+      // retries costs a stale file, which the bucket lifecycle rule reaps
+      // anyway (see `cleanup`); deleting one somebody is about to retry costs
+      // them the whole upload flow. Do not narrow this to a bespoke error
+      // type — that trades a cheap failure for an expensive one.
       if (!(e instanceof ServiceUnavailableException)) {
         await this.importUploadService.cleanup(body.key)
       }
