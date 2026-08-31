@@ -11,6 +11,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
+import { ICompanyFileService } from '../company-file/company-file.service.interface'
 import {
   IDoeMailService,
   ReportMailAttachment,
@@ -48,6 +49,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly mailService: IDoeMailService,
     @Inject(IReportPdfService)
     private readonly reportPdfService: IReportPdfService,
+    @Inject(ICompanyFileService)
+    private readonly companyFileService: ICompanyFileService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -326,6 +329,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
           'validUntil',
           'contactEmail',
           'companyAdminEmail',
+          'companyNationalId',
         ],
       })
 
@@ -340,6 +344,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
       const attachments = await this.buildApprovalAttachments(report.type, reportId)
 
       await this.mailService.sendReportApproved(report, attachments)
+
+      // ⚠️ **After the send, deliberately.** Archiving is secondary: the company
+      // having its documents is the point, keeping our own copy is the record.
+      // Uploading first would let an unset or misconfigured bucket stop the
+      // notification — the exact failure mode to avoid while the bucket is still
+      // being provisioned. `archive` never throws, so this cannot reach the
+      // catch below either.
+      await this.archiveApprovalDocuments(report, attachments)
     } catch (error) {
       this.logger.error(
         `Failed to notify company of approval for report ${reportId}`,
@@ -349,6 +361,47 @@ export class ReportWorkflowService implements IReportWorkflowService {
         },
       )
     }
+  }
+
+  /**
+   * Keeps the Directorate's own copy of what was sent, under the company's
+   * prefix in the company-files bucket.
+   *
+   * The key is `company-files/{companyNationalId}/{YYYY-MM-DD}-{filename}` and
+   * is fully reconstructible from the report — national id, `approvedAt` and the
+   * deterministic file names — which is why nothing is written to the database
+   * yet. A `s3_key` column can follow if retrieval ever needs to not recompute
+   * it.
+   *
+   * ⚠️ Skipped when the report carries no `companyNationalId` (the column is
+   * nullable). The prefix IS the retrieval path, so a document filed without one
+   * is a document nobody will find; a warn is more useful than an unreachable
+   * object, and the company still received it by mail.
+   */
+  private async archiveApprovalDocuments(
+    report: Pick<ReportModel, 'id' | 'companyNationalId'>,
+    attachments: ReportMailAttachment[],
+  ): Promise<void> {
+    const companyNationalId = report.companyNationalId
+
+    if (!companyNationalId) {
+      this.logger.warn(
+        `Not archiving approval documents for report ${report.id} — no companyNationalId to file them under`,
+        { context: LOGGING_CONTEXT },
+      )
+      return
+    }
+
+    const issuedAt = new Date()
+
+    await this.companyFileService.archive(
+      attachments.map((attachment) => ({
+        companyNationalId,
+        filename: attachment.filename,
+        content: attachment.content,
+        issuedAt,
+      })),
+    )
   }
 
   /**

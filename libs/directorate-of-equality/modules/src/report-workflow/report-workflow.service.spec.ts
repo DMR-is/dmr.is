@@ -48,6 +48,10 @@ describe('ReportWorkflowService', () => {
     generateImprovementPlanPdf: jest.fn(),
   }
 
+  const companyFileService = {
+    archive: jest.fn(),
+  }
+
   const reportModel = {
     update: jest.fn(),
     findOne: jest.fn(),
@@ -99,12 +103,14 @@ describe('ReportWorkflowService', () => {
     })
     // Null is the common case: a compliant company has no plan to attach.
     reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
+    companyFileService.archive.mockResolvedValue([])
     service = new ReportWorkflowService(
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
       mailService as never,
       reportPdfService as never,
+      companyFileService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -733,6 +739,96 @@ describe('ReportWorkflowService', () => {
           label: 'úrbótaáætlun',
         },
       ])
+    })
+
+    it('archives every attachment under the company national id', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.SALARY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      reportPdfService.generateReportPdf.mockResolvedValue({
+        pdf: Buffer.from('report-bytes'),
+        fileName: 'launagreining-report-1.pdf',
+      })
+      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
+        pdf: Buffer.from('plan-bytes'),
+        fileName: 'urbotaaetlun-report-1.pdf',
+      })
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(companyFileService.archive).toHaveBeenCalledWith([
+        expect.objectContaining({
+          companyNationalId: '5500000000',
+          filename: 'launagreining-report-1.pdf',
+          content: Buffer.from('report-bytes'),
+        }),
+        expect.objectContaining({
+          companyNationalId: '5500000000',
+          filename: 'urbotaaetlun-report-1.pdf',
+          content: Buffer.from('plan-bytes'),
+        }),
+      ])
+    })
+
+    /**
+     * ⚠️ Archiving runs AFTER the send. Uploading first would let an unset or
+     * misconfigured bucket stop the notification — the exact failure to avoid
+     * while the bucket is still being provisioned.
+     */
+    it('sends the mail before archiving', async () => {
+      const order: string[] = []
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      mailService.sendReportApproved.mockImplementation(async () => {
+        order.push('mail')
+      })
+      companyFileService.archive.mockImplementation(async () => {
+        order.push('archive')
+        return []
+      })
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(order).toEqual(['mail', 'archive'])
+    })
+
+    // The prefix IS the retrieval path, so a document filed without a national
+    // id is one nobody will find.
+    it('skips archiving and warns when the report has no companyNationalId', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        companyNationalId: null,
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+      expect(mailService.sendReportApproved).toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalled()
     })
 
     // A compliant company has no plan; the salary report carries that finding.
