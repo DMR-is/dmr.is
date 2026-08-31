@@ -90,12 +90,24 @@ function labelledRow(label: string, value: string): string {
 }
 
 /**
- * The group's explanation — what the company committed to.
+ * The group's explanation — what the company committed to, and when.
  *
  * `reason` and the rest are all-NULL or all-populated, enforced in the database
- * by `report_outlier_group_explanation_chk`: a postponed group has not been
- * asked yet. So one check on `reason` decides the whole block, and the postponed
- * case says which state it is in rather than printing four empty rows.
+ * by `report_outlier_group_explanation_chk` (five columns since #1461): a
+ * postponed group has not been asked yet. So one check on `reason` decides the
+ * whole block, and the postponed case says which state it is in rather than
+ * printing five empty rows.
+ *
+ * ⚠️ **`Dagsetning úrbóta` is the company's own commitment, not the
+ * Directorate's deadline.** `Frestur til úrbóta` in the Yfirlit above is
+ * `report.correctionDeadline`, imposed on the whole report; this is per group and
+ * named by the company. The two now sit on the same page, which is why the
+ * labels are deliberately different — the admin UI makes the same distinction.
+ *
+ * `remedyDate` is `DATEONLY` (`YYYY-MM-DD`), and `formatDate` splits such a
+ * string rather than parsing it: an ISO date-only value parses as UTC midnight,
+ * so reading local parts off it renders the previous day west of UTC. Iceland is
+ * UTC+0 year-round, which is exactly why that shift would ship unnoticed.
  */
 function explanationTable(group: ReportOutlierGroupDto): string {
   if (!group.reason) {
@@ -106,6 +118,7 @@ function explanationTable(group: ReportOutlierGroupDto): string {
       <tbody>
         ${labelledRow('Ástæða', orDash(group.reason))}
         ${labelledRow('Aðgerð', orDash(group.action))}
+        ${labelledRow('Dagsetning úrbóta', formatDate(group.remedyDate))}
         ${labelledRow('Nafn undirritanda', orDash(group.signatureName))}
         ${labelledRow('Hlutverk undirritanda', orDash(group.signatureRole))}
       </tbody>

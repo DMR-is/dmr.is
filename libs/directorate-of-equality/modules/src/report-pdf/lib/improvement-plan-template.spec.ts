@@ -12,7 +12,12 @@ describe('buildImprovementPlanHtml', () => {
   const report = {
     id: 'report-1',
     identifier: 'JLU-2026-0001',
-    correctionDeadline: new Date('2026-05-21T00:00:00.000Z'),
+    // ⚠️ Local-parts constructor, not an ISO string. `correctionDeadline` is a
+    // `DataType.DATE` instant, so `formatDate` reads its LOCAL parts — an
+    // `Date('2026-05-21T00:00:00.000Z')` fixture renders as 20.05.2026 west of
+    // UTC and makes this spec pass only in Iceland. Matches how
+    // `format.spec.ts` builds its instants.
+    correctionDeadline: new Date(2026, 4, 21),
     company: { name: 'Testing-hugbúnaður ehf.', nationalId: '000000-0000' },
   } as unknown as ReportDetailDto
 
@@ -43,6 +48,7 @@ describe('buildImprovementPlanHtml', () => {
       action: 'Laun verða jöfnuð við næstu endurskoðun',
       signatureName: 'Anna Jónsdóttir',
       signatureRole: 'Mannauðsstjóri',
+      remedyDate: '2027-03-01',
       ...overrides,
     }) as ReportOutlierGroupDto
 
@@ -80,6 +86,48 @@ describe('buildImprovementPlanHtml', () => {
     expect(html).toContain('Laun verða jöfnuð við næstu endurskoðun')
     expect(html).toContain('Anna Jónsdóttir')
     expect(html).toContain('Mannauðsstjóri')
+    expect(html).toContain('Dagsetning úrbóta')
+    expect(html).toContain('01.03.2027')
+  })
+
+  /**
+   * ⚠️ `remedyDate` is `DATEONLY`. Parsing `2027-03-01` as an instant and
+   * reading local parts renders **28.02.2027** for any viewer west of UTC.
+   * Iceland is UTC+0 year-round, so the shift would never show locally — which
+   * is exactly how it would ship. `formatDate` splits the string instead.
+   */
+  it('renders a DATEONLY remedy date without shifting it a day', () => {
+    const html = buildImprovementPlanHtml({
+      report,
+      groups: makeGroups({
+        group: group({ remedyDate: '2027-03-01' }),
+        members: [member()],
+      }),
+    })
+
+    expect(html).toContain('01.03.2027')
+    expect(html).not.toContain('28.02.2027')
+  })
+
+  /**
+   * The company's commitment and the Directorate's deadline are different dates
+   * and now sit on the same page, so the labels must not collapse into one.
+   */
+  it('distinguishes the company commitment from the imposed deadline', () => {
+    const html = buildImprovementPlanHtml({
+      report,
+      groups: makeGroups({
+        group: group({ remedyDate: '2027-03-01' }),
+        members: [member()],
+      }),
+    })
+
+    // Directorate-imposed, from report.correctionDeadline, in the Yfirlit.
+    expect(html).toContain('Frestur til úrbóta')
+    expect(html).toContain('21.05.2026')
+    // Company-committed, per group.
+    expect(html).toContain('Dagsetning úrbóta')
+    expect(html).toContain('01.03.2027')
   })
 
   it('keeps each group’s members under its own heading', () => {
@@ -159,6 +207,9 @@ describe('buildImprovementPlanHtml', () => {
           action: null,
           signatureName: null,
           signatureRole: null,
+          // All five columns move as a unit — the CHECK gained remedy_date as
+          // its fifth member in #1461.
+          remedyDate: null,
         }),
         members: [member()],
       }),
@@ -167,6 +218,7 @@ describe('buildImprovementPlanHtml', () => {
     expect(html).toContain('Skýring liggur ekki fyrir')
     expect(html).toContain('frestur var veittur')
     expect(html).not.toContain('Hlutverk undirritanda')
+    expect(html).not.toContain('Dagsetning úrbóta')
   })
 
   // A group with no members is a data fault, not an empty state: groups exist
