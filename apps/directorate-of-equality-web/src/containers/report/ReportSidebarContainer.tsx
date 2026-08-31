@@ -76,7 +76,11 @@ export function ReportSidebarContainer({
       <Box paddingTop={1}>
         <Divider />
       </Box>
-      <ReportDocuments reportId={data.id} type={data.type} />
+      <ReportDocuments
+        reportId={data.id}
+        type={data.type}
+        includesImprovementPlan={data.includesImprovementPlan}
+      />
       <Box paddingTop={1}>
         <Divider />
       </Box>

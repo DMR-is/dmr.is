@@ -219,6 +219,17 @@ export const reportText = {
     report: 'Skoða skýrslu (PDF)',
     improvementPlan: 'Skoða úrbótaáætlun (PDF)',
     hint: 'Skjölin sem fyrirtækið fær í tölvupósti við afgreiðslu.',
+    /**
+     * Shown instead of the úrbótaáætlun button when the report has no outlier
+     * groups, so the block still says what the company will receive.
+     *
+     * ⚠️ States only that no plan accompanies the report, never WHY. An empty
+     * lágmarksmengi has three distinct causes (under the benchmark, over it with
+     * no viable minimum set, or no computable gap at all) and the salary tab and
+     * the report PDF each spell out which. Guessing one here would contradict
+     * them.
+     */
+    noImprovementPlan: 'Engin úrbótaáætlun fylgir þessari skýrslu.',
   },
   tabEquality: 'Jafnréttisáætlun',
   tabCompany: 'Fyrirtækið',

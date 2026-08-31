@@ -57,13 +57,24 @@ export async function GET(
   )
 
   if (!res.ok) {
-    // The upstream status carries meaning worth preserving: 404 on the
-    // úrbótaáætlun means the report has no outlier groups (a compliant company),
-    // and 400 means it is an equality report. Both are answers, not faults.
-    return NextResponse.json(
-      { error: 'Failed to generate report PDF' },
-      { status: res.status },
-    )
+    /*
+     * ⚠️ The upstream status is an ANSWER, not always a fault, so it is not
+     * flattened into one message. 404 on the úrbótaáætlun means the report has no
+     * outlier groups; 400 means it is an equality report. Reporting either as
+     * "failed to generate" is what made a working 404 read as a broken feature.
+     *
+     * The sidebar now gates the button so neither should be reachable by
+     * clicking — this is the direct-URL path, and it should still say something
+     * true.
+     */
+    const message =
+      res.status === 404
+        ? 'Engin úrbótaáætlun fylgir þessari skýrslu.'
+        : res.status === 400
+          ? 'Þessi skýrsla hefur ekki úrbótaáætlun.'
+          : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
+
+    return NextResponse.json({ error: message }, { status: res.status })
   }
 
   const buffer = await res.arrayBuffer()
