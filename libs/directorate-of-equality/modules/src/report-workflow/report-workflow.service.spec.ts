@@ -45,6 +45,7 @@ describe('ReportWorkflowService', () => {
 
   const reportPdfService = {
     generateReportPdf: jest.fn(),
+    generateImprovementPlanPdf: jest.fn(),
   }
 
   const reportModel = {
@@ -96,6 +97,8 @@ describe('ReportWorkflowService', () => {
       pdf: Buffer.from('pdf-bytes'),
       fileName: 'jafnrettisaaetlun-report-1.pdf',
     })
+    // Null is the common case: a compliant company has no plan to attach.
+    reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
     service = new ReportWorkflowService(
       logger as never,
       reportEventService as never,
@@ -691,6 +694,86 @@ describe('ReportWorkflowService', () => {
           label: 'jafnréttisáætlun',
         },
       ])
+    })
+
+    it('attaches the úrbótaáætlun as a second document on a SALARY approval', async () => {
+      reportModel.update.mockResolvedValue([1])
+      const report = {
+        id: 'report-1',
+        type: ReportTypeEnum.SALARY,
+        validUntil: new Date('2029-08-31'),
+        contactEmail: 'contact@example.is',
+        companyAdminEmail: null,
+      }
+      reportModel.findOne.mockResolvedValue(report)
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      reportPdfService.generateReportPdf.mockResolvedValue({
+        pdf: Buffer.from('report-bytes'),
+        fileName: 'launagreining-report-1.pdf',
+      })
+      reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
+        pdf: Buffer.from('plan-bytes'),
+        fileName: 'urbotaaetlun-report-1.pdf',
+      })
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
+        {
+          filename: 'launagreining-report-1.pdf',
+          content: Buffer.from('report-bytes'),
+          label: 'jafnlaunaúttekt',
+        },
+        {
+          filename: 'urbotaaetlun-report-1.pdf',
+          content: Buffer.from('plan-bytes'),
+          label: 'úrbótaáætlun',
+        },
+      ])
+    })
+
+    // A compliant company has no plan; the salary report carries that finding.
+    it('sends only the report when there is no úrbótaáætlun', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.SALARY,
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      const [, attachments] = mailService.sendReportApproved.mock.calls[0]
+      expect(attachments).toHaveLength(1)
+    })
+
+    // An equality report has no outlier groups, so the plan must not be asked
+    // for at all.
+    it('does not ask for an úrbótaáætlun on an EQUALITY approval', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(
+        reportPdfService.generateImprovementPlanPdf,
+      ).not.toHaveBeenCalled()
     })
 
     // The approval, the due-date advance, the supersede and the audit event are

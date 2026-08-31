@@ -469,27 +469,27 @@ function improvementPlanSection(
     return section('Úrbótaáætlun', `<p class="empty-note">${emptyNote}</p>`)
   }
 
-  const rows = outliers
-    .map(
-      (o) =>
-        `<tr>
-          <td>${o.employeeOrdinal !== null ? `Starfsmaður ${o.employeeOrdinal}` : '—'}</td>
-          <td>${orDash(o.roleTitle)}</td>
-          <td>${genderLabel(o.gender)}</td>
-          <td>${formatHourlyRate(o.regularHourlyWage)}</td>
-          <td>${formatHourlyRate(o.expectedHourlyWage)}</td>
-          <td>${deviationCell(o)}</td>
-          <td>${formatPercent(o.contributionShare)}</td>
-        </tr>`,
-    )
-    .join('')
-
+  /*
+   * ⚠️ **The plan itself is NOT here — it is its own document.** See
+   * `improvement-plan-template.ts`.
+   *
+   * This section used to render every outlier in one flat table. That table had
+   * no group name, ástæða, aðgerð or signature, because `fetchAllOutliers` pages
+   * `getOutliers` without a `groupId` and flattens every group together — so the
+   * document of record showed the Directorate's imposed *Frestur til úrbóta* and
+   * none of what the company actually committed to.
+   *
+   * What stays behind is the count and the pointer. The count because a reader
+   * needs to know the plan is non-empty without opening the other file; the
+   * pointer because a heading over nothing reads as a finding that failed to
+   * print. The EMPTY case above stays in full: an empty lágmarksmengi is a
+   * finding, and no separate document is generated for it, so this is the only
+   * place it appears.
+   */
   return section(
     'Úrbótaáætlun',
-    `<table class="data-table">
-      <thead><tr><th>Starfsmaður</th><th>Starf</th><th>Kyn</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Hlutur af óskýrðu</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`,
+    `<p class="field__value">Starfsmenn í úrbótaáætlun: ${formatNumber(outliers.length)}.</p>
+    <p class="advisory-note">Úrbótaáætlunin fylgir þessari skýrslu sem sérstakt skjal, þar sem starfsmenn eru flokkaðir eftir hópum með ástæðu og aðgerðum hvers hóps.</p>`,
   )
 }
 

@@ -99,6 +99,7 @@ function makeService(reportOverrides = {}) {
         paging: makePaging(),
       }),
     ),
+    getOutlierGroups: jest.fn(async () => ({ groups: [] })),
   }
   const statisticsService = {
     getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
@@ -228,6 +229,54 @@ describe('ReportPdfService', () => {
 
       await expect(service.generateReportPdf('r1')).rejects.toThrow('boom')
       expect(closeMock).toHaveBeenCalled()
+    })
+  })
+
+  describe('generateImprovementPlanPdf', () => {
+    it('renders one outlier query per group, scoped by groupId', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({
+        groups: [
+          { id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' },
+          { id: 'g2', name: 'Hópur B', reason: 'r', action: 'a' },
+        ],
+      })
+
+      const result = await service.generateImprovementPlanPdf('r1')
+
+      expect(result).not.toBeNull()
+      expect(result?.fileName).toBe('urbotaaetlun-r1.pdf')
+      // ⚠️ The `groupId` is the whole reason this document exists: without it
+      // every group collapses into one flat table.
+      expect(reportService.getOutliers).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ groupId: 'g1' }),
+      )
+      expect(reportService.getOutliers).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ groupId: 'g2' }),
+      )
+    })
+
+    /**
+     * A compliant company has no plan to state, and its salary report already
+     * carries that as a finding. A page whose only content is "engir hópar"
+     * would read as a plan that failed to print.
+     */
+    it('returns null when the report has no outlier groups', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({ groups: [] })
+
+      await expect(service.generateImprovementPlanPdf('r1')).resolves.toBeNull()
+      expect(reportService.getOutliers).not.toHaveBeenCalled()
+    })
+
+    it('rejects an equality report, which has no outlier groups', async () => {
+      const { service } = makeService({ type: ReportTypeEnum.EQUALITY })
+
+      await expect(
+        service.generateImprovementPlanPdf('r1'),
+      ).rejects.toThrow(/not a salary report/)
     })
   })
 })

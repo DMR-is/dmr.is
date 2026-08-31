@@ -375,7 +375,17 @@ describe('buildSalaryReportHtml', () => {
     })
   })
 
-  it('renders lágmarksmengi rows with actual, expected, deviation and share', () => {
+  /**
+   * ⚠️ **The rows are NOT here any more — they are their own document.** See
+   * `improvement-plan-template.spec.ts`.
+   *
+   * This section used to render every outlier in one flat table with no group
+   * name, ástæða, aðgerð or signature, because `fetchAllOutliers` pages
+   * `getOutliers` without a `groupId`. What stays behind is the count (so a
+   * reader knows the plan is non-empty without opening the other file) and the
+   * pointer (so the heading is not left over nothing).
+   */
+  it('replaces the flat outlier table with a count and a pointer to the separate document', () => {
     const outliers = [
       {
         employeeOrdinal: 3,
@@ -387,9 +397,6 @@ describe('buildSalaryReportHtml', () => {
         payStatus: 'UNDERPAID',
         contributionShare: 42.5,
       },
-      // The other direction, in the same table. A PDF reader cannot ask which
-      // way a row runs, and both admin tables spell it out, so this one must
-      // too — the sign alone only works for a reader who knows the convention.
       {
         employeeOrdinal: 7,
         roleTitle: 'Deildarstjóri',
@@ -404,22 +411,15 @@ describe('buildSalaryReportHtml', () => {
 
     const html = buildSalaryReportHtml(makeData({ outliers }))
 
-    expect(html).toContain('Starfsmaður 3')
-    expect(html).toContain('Sérfræðingur')
-    // Units on the rates, not bare numbers — 4.750 alone reads as a monthly
-    // salary two orders of magnitude too low.
-    expect(html).toContain('4.750 kr./klst.')
-    expect(html).toContain('5.000 kr./klst.')
-    expect(html).toContain('42,5%')
-    expect(html).toContain('Hlutur af óskýrðu')
+    expect(html).toContain('Úrbótaáætlun')
+    expect(html).toContain('Starfsmenn í úrbótaáætlun: 2')
+    expect(html).toContain('sem sérstakt skjal')
+    // The empty-state finding must not appear on a report that has a plan.
     expect(html).not.toContain('Engar úrbætur nauðsynlegar')
-
-    // Direction in words on BOTH rows, beside the signed percentage. Asserted
-    // as the whole cell rather than as two separate substrings, so a regression
-    // that drops the word cannot pass on the percentage alone.
-    expect(html).toContain('-5,0% (undir)')
-    expect(html).toContain('+5,0% (yfir)')
-    expect(html).toContain('Deildarstjóri')
+    // The per-employee rows moved out; only the pay-dispersion advisory below
+    // still names individuals, and it is not fed by `outliers`.
+    expect(html).not.toContain('Sérfræðingur')
+    expect(html).not.toContain('Deildarstjóri')
   })
 
   describe('leiðréttur launamunur', () => {

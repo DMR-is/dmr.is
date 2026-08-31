@@ -9,6 +9,10 @@ import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee
 import { IReportStatisticsService } from '../report-statistics/report-statistics.service.interface'
 import { getBrowser } from './lib/browser'
 import { buildEqualityReportHtml } from './lib/equality-report-template'
+import {
+  buildImprovementPlanHtml,
+  ImprovementPlanGroup,
+} from './lib/improvement-plan-template'
 import { pdfStyles } from './lib/pdf.css'
 import { buildSalaryReportHtml } from './lib/salary-report-template'
 import {
@@ -54,6 +58,62 @@ export class ReportPdfService implements IReportPdfService {
     }
   }
 
+  async generateImprovementPlanPdf(
+    reportId: string,
+  ): Promise<ReportPdfResult | null> {
+    this.logger.debug('Generating improvement plan PDF', {
+      context: LOGGING_CONTEXT,
+      reportId,
+    })
+
+    const report = await this.reportService.getById(reportId)
+
+    if (report.type !== ReportTypeEnum.SALARY) {
+      throw new BadRequestException(
+        `Report "${reportId}" is not a salary report and has no improvement plan`,
+      )
+    }
+
+    const { groups } = await this.reportService.getOutlierGroups(reportId)
+
+    // No groups means no plan to state. Returning null rather than a document
+    // whose only content is "engir hópar" — see the interface note.
+    if (groups.length === 0) {
+      this.logger.debug('No outlier groups; skipping improvement plan PDF', {
+        context: LOGGING_CONTEXT,
+        reportId,
+      })
+      return null
+    }
+
+    /*
+     * One `getOutliers` call per group, with `groupId` set.
+     *
+     * ⚠️ This is the whole reason the úrbótaáætlun could not live in the salary
+     * report: `fetchAllOutliers` pages `getOutliers` WITHOUT a `groupId`, so
+     * every group collapsed into one flat table and the group name, ástæða,
+     * aðgerð and signature had nowhere to go.
+     *
+     * Sequential rather than `Promise.all`: a report with many groups would
+     * otherwise open a connection per group against the same pool this request
+     * is already holding, and the page count here is small.
+     */
+    const planGroups: ImprovementPlanGroup[] = []
+    for (const group of groups) {
+      planGroups.push({
+        group,
+        members: await this.fetchAllOutliers(reportId, group.id),
+      })
+    }
+
+    const html = buildImprovementPlanHtml({ report, groups: planGroups })
+
+    return {
+      pdf: await this.generatePdfFromHtml(html),
+      fileName: `urbotaaetlun-${reportId}.pdf`,
+    }
+  }
+
   private async buildSalaryReportPdf(report: ReportDetailDto): Promise<Buffer> {
     // `payComponents` is its own call for the same reason the admin screen
     // fetches it separately: these are monthly krónur, not rates, so they are
@@ -82,9 +142,13 @@ export class ReportPdfService implements IReportPdfService {
     return this.generatePdfFromHtml(html)
   }
 
-  /** Pages through `IReportService.getOutliers` to collect every row. */
+  /**
+   * Pages through `IReportService.getOutliers` to collect every row, optionally
+   * restricted to one group.
+   */
   private async fetchAllOutliers(
     reportId: string,
+    groupId?: string,
   ): Promise<ReportEmployeeOutlierDto[]> {
     const collected: ReportEmployeeOutlierDto[] = []
     let page = 1
@@ -93,7 +157,7 @@ export class ReportPdfService implements IReportPdfService {
     while (true) {
       const { outliers, paging } = await this.reportService.getOutliers(
         reportId,
-        { page, pageSize: OUTLIER_PAGE_SIZE },
+        { page, pageSize: OUTLIER_PAGE_SIZE, groupId },
       )
 
       collected.push(...outliers)

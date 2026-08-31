@@ -373,7 +373,26 @@ export class ReportWorkflowService implements IReportWorkflowService {
         type === ReportTypeEnum.SALARY ? 'jafnlaunaúttekt' : 'jafnréttisáætlun',
     }
 
-    return [reportAttachment]
+    if (type !== ReportTypeEnum.SALARY) {
+      return [reportAttachment]
+    }
+
+    // Null for a compliant company with no outlier groups — there is no plan to
+    // state, and the salary report itself carries that as a finding.
+    const plan = await this.reportPdfService.generateImprovementPlanPdf(reportId)
+
+    if (!plan) {
+      return [reportAttachment]
+    }
+
+    return [
+      reportAttachment,
+      {
+        filename: plan.fileName,
+        content: plan.pdf,
+        label: 'úrbótaáætlun',
+      },
+    ]
   }
 
   /**
