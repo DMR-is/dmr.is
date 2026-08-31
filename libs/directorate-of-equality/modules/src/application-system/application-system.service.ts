@@ -1,5 +1,3 @@
-import { isUUID } from 'class-validator'
-
 import {
   BadGatewayException,
   Inject,
@@ -8,6 +6,10 @@ import {
 } from '@nestjs/common'
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
+import {
+  applicationCallbackUrl as buildApplicationCallbackUrl,
+  InvalidCallbackUrlError,
+} from '@dmr.is/utils-server/xroadUtils'
 
 import {
   ApplicationSystemEvent,
@@ -107,54 +109,29 @@ export class ApplicationSystemService implements IApplicationSystemService {
    * `applicationId` is `report.provider_id` — a value the applicant supplied
    * when the report was created — so it is treated as untrusted here even
    * though the submit/draft DTOs now constrain it to a UUID: rows written
-   * before that validation existed are still in the table. It is re-validated,
-   * percent-encoded into a single path segment, and the resolved URL is
-   * checked to still sit under `XROAD_ISLAND_IS_PATH`.
-   *
-   * Without that, a `..` payload would be normalised away by `fetch`'s URL
-   * parser and redirect an authenticated `PUT` — carrying the DMR service
-   * account's bearer token and `X-Road-Client` header — at any other service
-   * the X-Road gateway can route to.
+   * before that validation existed are still in the table, and the partner API
+   * accepts a free-form provider id on any channel.
    */
   private applicationCallbackUrl(applicationId: string, path = ''): string {
-    if (!isUUID(applicationId)) {
-      this.logger.error(
-        'Refusing to build a callback URL for a non-UUID application id',
-        {
+    try {
+      return buildApplicationCallbackUrl(
+        this.requireEnv('XROAD_ISLAND_IS_PATH'),
+        applicationId,
+        path,
+      )
+    } catch (error) {
+      if (error instanceof InvalidCallbackUrlError) {
+        this.logger.error(error.message, {
           category: LOGGING_CATEGORY,
           context: LOGGING_CONTEXT,
           applicationId,
-        },
-      )
-      throw new InternalServerErrorException('Invalid application id')
+        })
+        throw new InternalServerErrorException(
+          'Invalid application callback URL',
+        )
+      }
+      throw error
     }
-
-    // The trailing slash matters: without it `new URL(relative, base)` drops
-    // the last segment of the configured X-Road path.
-    const configured = this.requireEnv('XROAD_ISLAND_IS_PATH')
-    const base = new URL(
-      configured.endsWith('/') ? configured : `${configured}/`,
-    )
-
-    const suffix = path ? `/${path}` : ''
-    const url = new URL(
-      `application-callback-v2/applications/${encodeURIComponent(applicationId)}${suffix}`,
-      base,
-    )
-
-    if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) {
-      this.logger.error(
-        'Refusing to call a URL outside the configured X-Road path',
-        {
-          category: LOGGING_CATEGORY,
-          context: LOGGING_CONTEXT,
-          applicationId,
-        },
-      )
-      throw new InternalServerErrorException('Invalid application callback URL')
-    }
-
-    return url.toString()
   }
 
   private async authenticatedFetch(
