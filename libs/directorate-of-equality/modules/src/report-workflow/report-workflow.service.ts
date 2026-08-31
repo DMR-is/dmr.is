@@ -29,7 +29,10 @@ import {
 } from '../report/types/report-resource-context'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
-import { IReportPdfService } from '../report-pdf/report-pdf.service.interface'
+import {
+  IReportPdfService,
+  ReportPdfResult,
+} from '../report-pdf/report-pdf.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
@@ -253,15 +256,43 @@ export class ReportWorkflowService implements IReportWorkflowService {
     const validUntil = new Date(now)
     validUntil.setFullYear(validUntil.getFullYear() + 3)
 
-    await this.reportModel.update(
+    /*
+     * ⚠️ **Compare-and-swap: the transition itself is the gate.**
+     *
+     * The status check above reads `context.reportStatus`, resolved earlier in
+     * the request. Two concurrent approvals both see IN_REVIEW; the second blocks
+     * on the row lock and then its `WHERE id = X` re-evaluates happily under READ
+     * COMMITTED. That used to be a near-idempotent duplicate write. It is not any
+     * more: a second approval now means a second email WITH ATTACHMENTS to the
+     * company, a second STATUS_CHANGED, a second due-date advance and a second S3
+     * object.
+     *
+     * Adding `status` to the WHERE and reading the affected-row count makes the
+     * update the only thing that decides whether this is the approval — and it
+     * costs nothing.
+     */
+    const [affected] = await this.reportModel.update(
       {
         status: ReportStatusEnum.APPROVED,
         approvedAt: now,
         validUntil,
         reviewerUserId: actorUserId,
       },
-      { where: { id: context.reportId } },
+      {
+        where: {
+          id: context.reportId,
+          status: ReportStatusEnum.IN_REVIEW,
+        },
+      },
     )
+
+    if (affected === 0) {
+      this.logger.info(
+        `Report ${context.reportId} was already moved out of IN_REVIEW; skipping duplicate approval`,
+        { context: LOGGING_CONTEXT },
+      )
+      return
+    }
 
     // Keep the company's next-due date in step with the report's validity. The
     // launch seed sets these dates initially (no reports exist yet); from then
@@ -315,9 +346,19 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * latency becomes a complaint, the fix is to share one browser across the two
    * salary PDFs before it is to introduce a queue.
    *
-   * Best-effort throughout, like `notifyCompanyDenied`: the approval, the due
-   * date advance, the supersede and the audit event are all committed before
-   * this runs, so neither a render failure nor a send failure may surface.
+   * Best-effort throughout, like `notifyCompanyDenied`: neither a render failure
+   * nor a send failure may surface to the reviewer.
+   *
+   * ⚠️ **They are written but NOT committed when this runs** — an earlier version
+   * of this comment claimed otherwise. The ambient CLS transaction commits in
+   * `res.on('finish')`, so the approval, the due-date advance, the supersede and
+   * the audit event are all still open here, and the renders below hold that
+   * transaction (and its pooled connection) for their whole duration. A 500
+   * raised after this point rolls all of it back with the company already
+   * holding a "samþykkt" mail and two PDFs.
+   *
+   * The fix is an after-commit hook, which needs the read paths to stop joining
+   * the committed transaction — see the PR discussion. Not papered over here.
    */
   private async notifyCompanyApproved(reportId: string): Promise<void> {
     try {
@@ -330,6 +371,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
           'contactEmail',
           'companyAdminEmail',
           'companyNationalId',
+          // Dates the S3 key — see `archiveApprovalDocuments`.
+          'approvedAt',
         ],
       })
 
@@ -379,7 +422,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * object, and the company still received it by mail.
    */
   private async archiveApprovalDocuments(
-    report: Pick<ReportModel, 'id' | 'companyNationalId'>,
+    report: Pick<ReportModel, 'id' | 'companyNationalId' | 'approvedAt'>,
     attachments: ReportMailAttachment[],
   ): Promise<void> {
     const companyNationalId = report.companyNationalId
@@ -392,7 +435,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
       return
     }
 
-    const issuedAt = new Date()
+    /*
+     * ⚠️ `approvedAt`, not `new Date()`. The key is justified as "reconstructible
+     * from the report", and the only date on the report is `approvedAt`. Since
+     * archiving happens after up to two renders, a wall-clock stamp files an
+     * approval made near midnight under the following day — and the retrieval
+     * story that excuses having no `s3_key` column then breaks silently.
+     */
+    const issuedAt = report.approvedAt ?? new Date()
 
     await this.companyFileService.archive(
       attachments.map((attachment) => ({
@@ -430,10 +480,36 @@ export class ReportWorkflowService implements IReportWorkflowService {
       return [reportAttachment]
     }
 
+    /*
+     * ⚠️ **Its own try/catch, so a failed plan render still mails the report.**
+     *
+     * `null` means "no plan to state" and was handled; a THROW was not. Because
+     * this runs before `sendReportApproved`, a single failing plan render —
+     * chromium dying, a malformed group — took the whole notification with it:
+     * no mail, no report PDF, nothing to the company, on an approval where the
+     * report itself had rendered perfectly.
+     *
+     * The report is the part the company must have, which is this feature's own
+     * stated priority, so the plan degrades to absent rather than fatal. Logged
+     * at error because unlike `null` this IS a fault: the plan exists and could
+     * not be produced.
+     */
+    let plan: ReportPdfResult | null = null
+
+    try {
+      plan = await this.reportPdfService.generateImprovementPlanPdf(reportId)
+    } catch (error) {
+      this.logger.error(
+        `Failed to render the úrbótaáætlun for report ${reportId} — mailing the report alone`,
+        {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
+
     // Null for a compliant company with no outlier groups — there is no plan to
     // state, and the salary report itself carries that as a finding.
-    const plan = await this.reportPdfService.generateImprovementPlanPdf(reportId)
-
     if (!plan) {
       return [reportAttachment]
     }
@@ -457,9 +533,15 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * attributes are exactly what the mail needs: `type` picks the subject noun,
    * the two addresses resolve the recipient, `id` labels the log line.
    *
-   * Best-effort in the same sense as `notifyApplicationSystem` below — the
-   * denial is committed and event-logged before this runs, so a mail failure
-   * must not fail it. `IDoeMailService.sendReportDenied` already swallows its
+   * Best-effort in the same sense as `notifyApplicationSystem` below.
+   *
+   * ⚠️ **"Committed" is wrong, and this comment used to say it.** `useCLS` plus
+   * `CLSMiddleware.forRoutes('*')` puts every query in one ambient transaction
+   * that commits in `res.on('finish')` — AFTER the response. So the denial is
+   * written but NOT committed when this runs, and a later throw in the handler
+   * rolls it back with the company already emailed. `report-comment.service.ts`
+   * documents the same hazard correctly and notes that closing it needs an
+   * after-commit hook. Tracked; see the PR discussion. `IDoeMailService.sendReportDenied` already swallows its
    * own send errors; the try/catch here covers the load, so a missing or
    * unreadable row cannot take the denial down with it either.
    */

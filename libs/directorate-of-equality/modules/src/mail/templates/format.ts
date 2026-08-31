@@ -5,9 +5,13 @@
  * three. They are here so a fix to the escaping reaches every outbound message
  * rather than the one that happened to be edited.
  *
- * Deliberately separate from `report-pdf/lib/format.ts`, which formats currency,
- * percentages and hourly rates for a document. These two overlap on dates only,
- * and the PDF module's helpers are internal to it.
+ * Kept separate from `report-pdf/lib/format.ts` because that module formats a
+ * document — currency, percentages, hourly rates — and its helpers are internal
+ * to it. Note the overlap is NOT dates only, as this comment used to claim:
+ * `escapeHtml` is functionally identical there too, and a third copy lives in
+ * `application/equality-template/template-html.ts`. Consolidating the three mail
+ * copies was the win available without reaching across modules; collapsing all
+ * four is a separate change.
  */
 
 export const escapeHtml = (value: string): string =>

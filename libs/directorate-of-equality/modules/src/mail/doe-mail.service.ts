@@ -120,11 +120,27 @@ export class DoeMailService implements IDoeMailService {
       html: buildReportDeadlineReminderHtml(input),
     }
 
-    // Intentionally not caught — the reminder task only records the event as
-    // sent when this resolves, so a failed send is retried on the next run.
-    // This is why the reminder does NOT go through `sendReportMail`, which
-    // swallows by design.
-    await this.aws.sendMail(message, LOGGING_CONTEXT)
+    /*
+     * ⚠️ Throws on an err RESULT, because `sendMail` does not reject.
+     *
+     * It is decorated `@LogAndHandle()`, whose catch *returns*
+     * `handleException(...)` — which yields `ResultWrapper.err` and never
+     * rethrows. So `await`ing it and relying on a rejection was wrong: a hard
+     * SES failure resolved, this method returned normally, and the reminder task
+     * recorded the event as SENT. The company then never got that tier's
+     * reminder and it was never retried, which is the precise opposite of what
+     * the previous comment here claimed.
+     *
+     * The task's contract is unchanged — a throw means "not sent, retry next
+     * run" — so the failure is converted into one here.
+     */
+    const sent = await this.aws.sendMail(message, LOGGING_CONTEXT)
+
+    if (sent.result.ok === false) {
+      throw new Error(
+        `Failed to send report deadline reminder: ${sent.result.error.message}`,
+      )
+    }
 
     this.logger.info('Sent report deadline reminder', {
       to,
@@ -170,7 +186,13 @@ export class DoeMailService implements IDoeMailService {
     kind: string,
     logFields: Record<string, unknown>,
   ): Promise<void> {
-    const to = report.contactEmail ?? report.companyAdminEmail
+    // ⚠️ Not `??`. `contactEmail` is `@ApiString()` — `IsString()` alone, no
+    // `@IsEmail`, no `MinLength` — so a stored `''` is valid, and `??` coalesces
+    // only null/undefined. An empty contact email therefore skipped the notice
+    // entirely while a perfectly good `companyAdminEmail` sat beside it.
+    const to = [report.contactEmail, report.companyAdminEmail]
+      .map((candidate) => candidate?.trim())
+      .find((candidate) => !!candidate)
 
     if (!to) {
       this.logger.warn(
@@ -181,19 +203,46 @@ export class DoeMailService implements IDoeMailService {
     }
 
     try {
-      await this.aws.sendMail(
+      const sent = await this.aws.sendMail(
         { ...this.envelope(), to, ...content },
         LOGGING_CONTEXT,
       )
+
+      /*
+       * ⚠️ **The result, not a rejection.** `sendMail` is decorated
+       * `@LogAndHandle()`, so its catch returns `ResultWrapper.err` rather than
+       * rethrowing — it cannot reject. Relying on the `catch` below meant a hard
+       * SES failure fell straight through to `logger.info('Sent ...')`: a report
+       * approved, its notice and both PDFs undelivered, and the only trace a log
+       * line claiming success.
+       *
+       * `CompanyFileService` branches on `uploadObject`'s result the same way;
+       * this path simply did not.
+       */
+      if (sent.result.ok === false) {
+        this.logger.error(`Failed to send ${kind}`, {
+          ...logFields,
+          context: LOGGING_CONTEXT,
+          errorCode: sent.result.error.code,
+          errorMessage: sent.result.error.message,
+        })
+        return
+      }
+
       this.logger.info(`Sent ${kind}`, {
         ...logFields,
         context: LOGGING_CONTEXT,
       })
     } catch (error) {
+      // Retained for a throw the decorator cannot intercept — building the
+      // message, or a future undecorated implementation. `message` is extracted
+      // rather than logging the raw Error: production formats with
+      // `format.json()`, and an Error has no enumerable own properties, so it
+      // serializes to `{}`.
       this.logger.error(`Failed to send ${kind}`, {
-        error,
         ...logFields,
         context: LOGGING_CONTEXT,
+        errorMessage: error instanceof Error ? error.message : String(error),
       })
     }
   }

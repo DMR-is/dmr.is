@@ -1,3 +1,5 @@
+import { ResultWrapper } from '@dmr.is/types'
+
 import {
   ReportModel,
   ReportProviderEnum,
@@ -51,7 +53,7 @@ describe('DoeMailService', () => {
     } as ReportCommentModel)
 
   it('sends to contactEmail when present', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(makeReport(), makeComment())
 
@@ -61,7 +63,7 @@ describe('DoeMailService', () => {
   })
 
   it('falls back to companyAdminEmail when contactEmail is null', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport({ contactEmail: null }),
@@ -84,7 +86,7 @@ describe('DoeMailService', () => {
 
   it('uses SEND_FROM_EMAIL_ADDRESS when set', async () => {
     process.env.SEND_FROM_EMAIL_ADDRESS = 'dev-mailbox@example.com'
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(makeReport(), makeComment())
 
@@ -94,7 +96,7 @@ describe('DoeMailService', () => {
   })
 
   it('falls back to noreply@jafnretti.is when env is unset', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(makeReport(), makeComment())
 
@@ -103,7 +105,7 @@ describe('DoeMailService', () => {
   })
 
   it('HTML-escapes the comment body', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport(),
@@ -116,7 +118,7 @@ describe('DoeMailService', () => {
   })
 
   it('includes the island.is application link when provider is ISLAND_IS', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport({
@@ -134,7 +136,7 @@ describe('DoeMailService', () => {
   })
 
   it('omits the application link for non-island.is providers', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport({
@@ -150,7 +152,7 @@ describe('DoeMailService', () => {
   })
 
   it('omits the application link when providerId is missing', async () => {
-    aws.sendMail.mockResolvedValue(undefined)
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport({
@@ -166,7 +168,7 @@ describe('DoeMailService', () => {
 
   describe('sendReportDenied', () => {
     it('subjects an equality denial "Jafnréttisáætlun hafnað"', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({ type: ReportTypeEnum.EQUALITY }),
@@ -178,7 +180,7 @@ describe('DoeMailService', () => {
     })
 
     it('subjects a salary denial "Skýrslugjöf hafnað"', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -190,7 +192,7 @@ describe('DoeMailService', () => {
     })
 
     it('carries the denial reason as the body', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -203,7 +205,7 @@ describe('DoeMailService', () => {
     })
 
     it('HTML-escapes the denial reason and keeps line breaks', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -221,7 +223,7 @@ describe('DoeMailService', () => {
      * application, so any invitation to reply would point at a shut channel.
      */
     it('does not invite a reply or link the application', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({
@@ -238,7 +240,7 @@ describe('DoeMailService', () => {
     })
 
     it('resolves the recipient the same way as the comment notification', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportDenied(
         makeReport({ type: ReportTypeEnum.SALARY, contactEmail: null }),
@@ -264,7 +266,9 @@ describe('DoeMailService', () => {
     })
 
     it('logs and swallows SES errors so the denial stands', async () => {
-      aws.sendMail.mockRejectedValue(new Error('SES is down'))
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES is down' }),
+      )
 
       await expect(
         service.sendReportDenied(
@@ -277,6 +281,108 @@ describe('DoeMailService', () => {
     })
   })
 
+  /**
+   * ⚠️ The reachable failure path. `sendMail` is `@LogAndHandle()`-decorated and
+   * resolves `ResultWrapper.err` instead of rejecting, so this — not a
+   * rejection — is what a hard SES failure looks like to this service. Before
+   * the fix it fell through to `logger.info('Sent ...')`, leaving an approved
+   * report with an undelivered notice and a log line claiming success.
+   */
+  describe('an err result from sendMail', () => {
+    it('logs an error and never claims the mail was sent', async () => {
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES rejected the message' }),
+      )
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.EQUALITY }),
+        [
+          {
+            filename: 'a.pdf',
+            content: Buffer.from('x'),
+            label: 'jafnréttisáætlun',
+          },
+        ],
+      )
+
+      expect(logger.error).toHaveBeenCalled()
+      const sentInfo = logger.info.mock.calls.filter(([msg]) =>
+        String(msg).startsWith('Sent '),
+      )
+      expect(sentInfo).toHaveLength(0)
+    })
+
+    it('carries the failure message, not an empty serialized Error', async () => {
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES rejected the message' }),
+      )
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        'reason',
+      )
+
+      const [, meta] = logger.error.mock.calls[0]
+      expect(meta.errorMessage).toBe('SES rejected the message')
+    })
+
+    /**
+     * The reminder task records the event as sent only when this resolves, so a
+     * failure has to surface as a throw or the company silently loses that tier.
+     */
+    it('throws from the deadline reminder so the task retries it', async () => {
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES is down' }),
+      )
+
+      await expect(
+        service.sendReportDeadlineReminder('to@example.is', {
+          companyName: 'Test ehf.',
+          reportType: ReportTypeEnum.SALARY,
+          tier: 'DUE',
+          dueDate: new Date(2026, 4, 21),
+        } as never),
+      ).rejects.toThrow(/SES is down/)
+    })
+  })
+
+  describe('recipient resolution', () => {
+    // `contactEmail` is `IsString()` only — no `@IsEmail`, no `MinLength` — so a
+    // stored '' is valid, and `??` would return it and skip the send.
+    it.each([
+      ['empty string', ''],
+      ['whitespace', '   '],
+    ])('falls back to companyAdminEmail when contactEmail is %s', async (
+      _label,
+      contactEmail,
+    ) => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendReportDenied(
+        makeReport({ type: ReportTypeEnum.SALARY, contactEmail }),
+        'reason',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.to).toBe('admin@example.is')
+    })
+
+    it('trims a padded recipient', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendReportDenied(
+        makeReport({
+          type: ReportTypeEnum.SALARY,
+          contactEmail: '  contact@example.is  ',
+        }),
+        'reason',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.to).toBe('contact@example.is')
+    })
+  })
+
   describe('sendReportApproved', () => {
     const pdf = (name: string) => ({
       filename: name,
@@ -285,7 +391,7 @@ describe('DoeMailService', () => {
     })
 
     it('subjects an equality approval "Jafnréttisáætlun samþykkt"', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.EQUALITY }),
@@ -297,7 +403,7 @@ describe('DoeMailService', () => {
     })
 
     it('subjects a salary approval "Skýrslugjöf samþykkt"', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -309,7 +415,7 @@ describe('DoeMailService', () => {
     })
 
     it('attaches the documents it is handed, stripped of the label', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -334,7 +440,7 @@ describe('DoeMailService', () => {
      * body enumerates what is attached.
      */
     it('names every attachment in the body', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.SALARY }),
@@ -347,7 +453,7 @@ describe('DoeMailService', () => {
     })
 
     it('states the validity period', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({
@@ -363,7 +469,7 @@ describe('DoeMailService', () => {
     })
 
     it('renders an em dash rather than Invalid Date when validUntil is absent', async () => {
-      aws.sendMail.mockResolvedValue(undefined)
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
       await service.sendReportApproved(
         makeReport({ type: ReportTypeEnum.EQUALITY, validUntil: null }),
@@ -390,7 +496,9 @@ describe('DoeMailService', () => {
     })
 
     it('logs and swallows SES errors so the approval stands', async () => {
-      aws.sendMail.mockRejectedValue(new Error('SES is down'))
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES is down' }),
+      )
 
       await expect(
         service.sendReportApproved(
@@ -404,8 +512,13 @@ describe('DoeMailService', () => {
   })
 
   it('logs and swallows SES errors so callers never throw', async () => {
-    const error = new Error('SES is down')
-    aws.sendMail.mockRejectedValue(error)
+    // ⚠️ Resolves an err RESULT, not a rejection: `sendMail` is decorated
+    // `@LogAndHandle()` and cannot reject. Asserting on a rejection passed while
+    // pinning the opposite of production, and is what made the swallow look
+    // covered.
+    aws.sendMail.mockResolvedValue(
+      ResultWrapper.err({ code: 500, message: 'SES is down' }),
+    )
 
     await expect(
       service.sendExternalCommentNotification(makeReport(), makeComment()),

@@ -269,6 +269,13 @@ describe('ReportPdfService', () => {
         ],
       })
 
+      // Groups must actually have members — a memberless set is the data-fault
+      // state the service now declines to render.
+      reportService.getOutliers.mockResolvedValue({
+        outliers: [{ employeeOrdinal: 1 }],
+        paging: makePaging(),
+      })
+
       const result = await service.generateImprovementPlanPdf('r1')
 
       expect(result).not.toBeNull()
@@ -296,6 +303,25 @@ describe('ReportPdfService', () => {
 
       await expect(service.generateImprovementPlanPdf('r1')).resolves.toBeNull()
       expect(reportService.getOutliers).not.toHaveBeenCalled()
+    })
+
+    /**
+     * Groups with nothing assigned is a data fault, not a plan. Attaching a
+     * document reading "Engir starfsmenn skráðir í þennan hóp" beside a salary
+     * report rendering "Engar úrbætur nauðsynlegar" would tell the company two
+     * different things in one email.
+     */
+    it('returns null when groups exist but none has members', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({
+        groups: [{ id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' }],
+      })
+      reportService.getOutliers.mockResolvedValue({
+        outliers: [],
+        paging: makePaging(),
+      })
+
+      await expect(service.generateImprovementPlanPdf('r1')).resolves.toBeNull()
     })
 
     it('rejects an equality report, which has no outlier groups', async () => {

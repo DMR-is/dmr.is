@@ -1,3 +1,5 @@
+'use client'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'

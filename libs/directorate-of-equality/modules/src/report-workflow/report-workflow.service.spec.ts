@@ -644,12 +644,19 @@ describe('ReportWorkflowService', () => {
 
       await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
 
+      // The status guard is the point: it is what makes a concurrent second
+      // approval a no-op rather than a second email with attachments.
       expect(reportModel.update).toHaveBeenCalledWith(
         expect.objectContaining({
           status: ReportStatusEnum.APPROVED,
           reviewerUserId: 'reviewer-1',
         }),
-        { where: { id: 'report-1' } },
+        {
+          where: {
+            id: 'report-1',
+            status: ReportStatusEnum.IN_REVIEW,
+          },
+        },
       )
       expect(reportModel.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -741,6 +748,24 @@ describe('ReportWorkflowService', () => {
       ])
     })
 
+    /**
+     * ⚠️ The compare-and-swap is what stops a concurrent or retried approve from
+     * mailing the company a second set of attachments and writing a second S3
+     * object. Before it, the status check read a value resolved earlier in the
+     * request and the write was keyed on `id` alone.
+     */
+    it('does nothing further when the status guard matches no row', async () => {
+      reportModel.update.mockResolvedValue([0])
+      reportModel.findAll.mockResolvedValue([])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+      expect(companyModel.update).not.toHaveBeenCalled()
+    })
+
     it('archives every attachment under the company national id', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
@@ -829,6 +854,40 @@ describe('ReportWorkflowService', () => {
       expect(companyFileService.archive).not.toHaveBeenCalled()
       expect(mailService.sendReportApproved).toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalled()
+    })
+
+    /**
+     * ⚠️ A failing plan render must not cost the company its report. It used to:
+     * the throw propagated past `sendReportApproved`, so an approval whose report
+     * PDF rendered perfectly sent nothing at all.
+     */
+    it('mails the report alone when the úrbótaáætlun render throws', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.SALARY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      reportPdfService.generateReportPdf.mockResolvedValue({
+        pdf: Buffer.from('report-bytes'),
+        fileName: 'launagreining-report-1.pdf',
+      })
+      reportPdfService.generateImprovementPlanPdf.mockRejectedValue(
+        new Error('chromium died'),
+      )
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
+      const [, attachments] = mailService.sendReportApproved.mock.calls[0]
+      expect(attachments).toHaveLength(1)
+      expect(attachments[0].label).toBe('jafnlaunaúttekt')
+      expect(logger.error).toHaveBeenCalled()
     })
 
     // A compliant company has no plan; the salary report carries that finding.
@@ -1049,7 +1108,12 @@ describe('ReportWorkflowService', () => {
       expect(reportOutlierGroupModel.findOne).toHaveBeenCalledTimes(1)
       expect(reportModel.update).toHaveBeenCalledWith(
         expect.objectContaining({ status: ReportStatusEnum.APPROVED }),
-        { where: { id: 'report-1' } },
+        {
+          where: {
+            id: 'report-1',
+            status: ReportStatusEnum.IN_REVIEW,
+          },
+        },
       )
     })
   })

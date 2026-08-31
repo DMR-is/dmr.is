@@ -52,12 +52,18 @@ export class CompanyFileService implements ICompanyFileService {
       // rather than erroring on every approval, mirroring how
       // `ImportUploadService` treats an absent bucket as "not configured here".
       //
-      // ⚠️ Debug, not warn: unset is the declared configuration today, not a
-      // fault. It becomes one once the bucket exists — the env schema carries a
-      // note to make the variable required when deployed at that point, which is
-      // the check that catches archiving being off in production.
-      this.logger.debug(
-        'Skipping company file archive — AWS_DOE_COMPANY_FILES_BUCKET is not set',
+      /*
+       * ⚠️ **Warn, not debug.** Production `LOG_LEVEL` is `info`, so a debug line
+       * meant a deployed API archived nothing and said nothing about it — "did we
+       * keep a copy of what we sent?" was unanswerable from the logs.
+       *
+       * Deliberately noisy until the bucket is provisioned: one line per
+       * approval, each one true. The permanent fix is making the variable
+       * required when deployed, which the env schema carries a note for; this is
+       * what surfaces the gap in the meantime.
+       */
+      this.logger.warn(
+        'Not archiving company files — AWS_DOE_COMPANY_FILES_BUCKET is not set, so no copy of the documents just sent is being kept',
         { context: LOGGING_CONTEXT, fileCount: uploads.length },
       )
       return []

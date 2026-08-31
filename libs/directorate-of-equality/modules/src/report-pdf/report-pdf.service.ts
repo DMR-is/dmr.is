@@ -106,6 +106,21 @@ export class ReportPdfService implements IReportPdfService {
       })
     }
 
+    /*
+     * ⚠️ Gate on MEMBERS, not just on group count. Groups existing with nothing
+     * assigned is the state `improvement-plan-template.ts` itself calls a data
+     * fault; attaching a document that reads "Engir starfsmenn skráðir í þennan
+     * hóp" beside a salary report rendering its "Engar úrbætur nauðsynlegar"
+     * branch tells the company two different things in one email.
+     */
+    if (planGroups.every((entry) => entry.members.length === 0)) {
+      this.logger.warn(
+        'Outlier groups exist but none has members; skipping improvement plan PDF',
+        { context: LOGGING_CONTEXT, reportId, groupCount: planGroups.length },
+      )
+      return null
+    }
+
     const html = buildImprovementPlanHtml({ report, groups: planGroups })
 
     return {

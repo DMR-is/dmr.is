@@ -87,8 +87,10 @@ describe('CompanyFileService', () => {
 
     expect(aws.uploadObject).not.toHaveBeenCalled()
     expect(keys).toEqual([])
-    // Not configured is the declared state today, not a fault.
+    // Not an error — but it must be visible at production's `info` level, or a
+    // deployed API silently keeps no copy of what it sent.
     expect(logger.error).not.toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalled()
   })
 
   // A padded value should archive to the intended bucket, not fail at S3 with an

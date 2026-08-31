@@ -22,6 +22,19 @@ const isDocumentKey = (value: string | null): value is DocumentKey =>
   value !== null && value in DOCUMENTS
 
 /**
+ * ⚠️ `reportId` is interpolated into the upstream URL, and Next percent-decodes
+ * route params before they reach here — so `..%2Fcompanies%3Fq%3Dx` arrives
+ * already decoded and the WHATWG URL parser collapses the traversal, turning
+ * this into an authenticated GET proxy onto arbitrary paths of a server-only API
+ * carrying the caller's own token. Per-endpoint guards still apply and the origin
+ * is fixed, so this is lateral reach rather than a bypass — but the upstream
+ * `ParseUUIDPipe` only protects the path we intended to call, and a check here
+ * costs nothing.
+ */
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+/**
  * Streams a report PDF to the admin, so a reviewer can read exactly what the
  * company receives on approval before approving.
  *
@@ -42,6 +55,11 @@ export async function GET(
   }
 
   const { reportId } = await params
+
+  if (!UUID.test(reportId)) {
+    return NextResponse.json({ error: 'Invalid report id' }, { status: 400 })
+  }
+
   const requested = req.nextUrl.searchParams.get('doc') ?? 'skyrsla'
 
   if (!isDocumentKey(requested)) {
@@ -67,12 +85,19 @@ export async function GET(
      * clicking — this is the direct-URL path, and it should still say something
      * true.
      */
+    // ⚠️ Keyed on `requested` as well as the status. These messages used to
+    // ignore it, so a failed *skýrsla* request reported a missing úrbótaáætlun —
+    // and a rejected id claimed the same for either document. The goal stated in
+    // this handler's own comment is to say something true; that needs both.
+    const isPlan = requested === 'urbotaaetlun'
     const message =
-      res.status === 404
+      isPlan && res.status === 404
         ? 'Engin úrbótaáætlun fylgir þessari skýrslu.'
-        : res.status === 400
+        : isPlan && res.status === 400
           ? 'Þessi skýrsla hefur ekki úrbótaáætlun.'
-          : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
+          : res.status === 404
+            ? 'Skýrslan fannst ekki.'
+            : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
 
     return NextResponse.json({ error: message }, { status: res.status })
   }
