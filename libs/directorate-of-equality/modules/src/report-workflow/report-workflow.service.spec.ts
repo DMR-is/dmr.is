@@ -39,7 +39,12 @@ describe('ReportWorkflowService', () => {
   const mailService = {
     sendExternalCommentNotification: jest.fn(),
     sendReportDenied: jest.fn(),
+    sendReportApproved: jest.fn(),
     sendReportDeadlineReminder: jest.fn(),
+  }
+
+  const reportPdfService = {
+    generateReportPdf: jest.fn(),
   }
 
   const reportModel = {
@@ -84,11 +89,19 @@ describe('ReportWorkflowService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    // A working renderer is the default so the existing approve cases exercise
+    // the happy path rather than silently falling into the notification's
+    // catch-and-log.
+    reportPdfService.generateReportPdf.mockResolvedValue({
+      pdf: Buffer.from('pdf-bytes'),
+      fileName: 'jafnrettisaaetlun-report-1.pdf',
+    })
     service = new ReportWorkflowService(
       logger as never,
       reportEventService as never,
       applicationSystemService as never,
       mailService as never,
+      reportPdfService as never,
       reportModel as never,
       companyReportModel as never,
       companyModel as never,
@@ -653,6 +666,59 @@ describe('ReportWorkflowService', () => {
       )
     })
 
+    it('mails the company the report PDF on an EQUALITY approval', async () => {
+      reportModel.update.mockResolvedValue([1])
+      const report = {
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        validUntil: new Date('2029-08-31'),
+        contactEmail: 'contact@example.is',
+        companyAdminEmail: null,
+      }
+      reportModel.findOne.mockResolvedValue(report)
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(reportPdfService.generateReportPdf).toHaveBeenCalledWith('report-1')
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(report, [
+        {
+          filename: 'jafnrettisaaetlun-report-1.pdf',
+          content: Buffer.from('pdf-bytes'),
+          label: 'jafnréttisáætlun',
+        },
+      ])
+    })
+
+    // The approval, the due-date advance, the supersede and the audit event are
+    // all committed before the notification runs.
+    it('still approves when the PDF cannot be rendered', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        contactEmail: 'contact@example.is',
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      reportPdfService.generateReportPdf.mockRejectedValue(
+        new Error('chromium is missing'),
+      )
+
+      await expect(
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      ).resolves.toBeUndefined()
+
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
     it('advances the parent company next_salary_report_due_at to the new validUntil on a SALARY approval', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
@@ -738,6 +804,12 @@ describe('ReportWorkflowService', () => {
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
         // supersede type lookup
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
+        // company-notification lookup
+        .mockResolvedValueOnce({
+          id: 'report-1',
+          type: ReportTypeEnum.EQUALITY,
+          contactEmail: 'contact@example.is',
+        })
         // notify provider lookup
         .mockResolvedValueOnce({
           providerType: ReportProviderEnum.ISLAND_IS,

@@ -11,6 +11,11 @@ import {
   buildExternalCommentText,
 } from './templates/external-comment.template'
 import {
+  buildReportApprovedHtml,
+  buildReportApprovedSubject,
+  buildReportApprovedText,
+} from './templates/report-approved.template'
+import {
   buildReportDeadlineReminderHtml,
   buildReportDeadlineReminderSubject,
   buildReportDeadlineReminderText,
@@ -21,7 +26,10 @@ import {
   buildReportDeniedSubject,
   buildReportDeniedText,
 } from './templates/report-denied.template'
-import { IDoeMailService } from './doe-mail.service.interface'
+import {
+  IDoeMailService,
+  ReportMailAttachment,
+} from './doe-mail.service.interface'
 
 const LOGGING_CONTEXT = 'DoeMailService'
 const FALLBACK_FROM_ADDRESS = 'noreply@jafnretti.is'
@@ -32,6 +40,7 @@ type MailContent = {
   subject: string
   text: string
   html: string
+  attachments?: { filename: string; content: Buffer }[]
 }
 
 @Injectable()
@@ -70,6 +79,32 @@ export class DoeMailService implements IDoeMailService {
       },
       'report denied notification',
       { reportId: report.id, reportType: report.type },
+    )
+  }
+
+  async sendReportApproved(
+    report: ReportModel,
+    attachments: ReportMailAttachment[],
+  ): Promise<void> {
+    const labels = attachments.map((attachment) => attachment.label)
+
+    await this.sendReportMail(
+      report,
+      {
+        subject: buildReportApprovedSubject(report),
+        text: buildReportApprovedText(report, labels),
+        html: buildReportApprovedHtml(report, labels),
+        attachments: attachments.map(({ filename, content }) => ({
+          filename,
+          content,
+        })),
+      },
+      'report approved notification',
+      {
+        reportId: report.id,
+        reportType: report.type,
+        attachmentCount: attachments.length,
+      },
     )
   }
 

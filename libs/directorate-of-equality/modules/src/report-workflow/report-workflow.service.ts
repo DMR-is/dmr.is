@@ -11,7 +11,10 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
 import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
-import { IDoeMailService } from '../mail/doe-mail.service.interface'
+import {
+  IDoeMailService,
+  ReportMailAttachment,
+} from '../mail/doe-mail.service.interface'
 import {
   CommunicationStatusEnum,
   ReportModel,
@@ -25,6 +28,7 @@ import {
 } from '../report/types/report-resource-context'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { IReportEventService } from '../report-event/report-event.service.interface'
+import { IReportPdfService } from '../report-pdf/report-pdf.service.interface'
 import { UserModel } from '../user/models/user.model'
 import { AssignReportDto } from './dto/assign-report.dto'
 import { DenyReportDto } from './dto/deny-report.dto'
@@ -42,6 +46,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
     private readonly applicationSystemService: IApplicationSystemService,
     @Inject(IDoeMailService)
     private readonly mailService: IDoeMailService,
+    @Inject(IReportPdfService)
+    private readonly reportPdfService: IReportPdfService,
     @InjectModel(ReportModel)
     private readonly reportModel: typeof ReportModel,
     @InjectModel(CompanyReportModel)
@@ -271,6 +277,8 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
+    await this.notifyCompanyApproved(context.reportId)
+
     await this.notifyApplicationSystem(
       context.reportId,
       ReportStatusEnum.APPROVED,
@@ -290,6 +298,82 @@ export class ReportWorkflowService implements IReportWorkflowService {
       { communicationStatus: CommunicationStatusEnum.CLOSED },
       { where: { id: reportId } },
     )
+  }
+
+  /**
+   * Tells the company its report was approved, with the approved document(s)
+   * attached.
+   *
+   * ⚠️ **This renders PDFs inside the reviewer's request.** `generateReportPdf`
+   * launches and closes a headless browser, so approving costs seconds, not
+   * milliseconds. That is accepted deliberately: there is no queue in this repo
+   * (only `@nestjs/schedule` + `AdvisoryLockService`), and a deferred send would
+   * need a pending-state column and a third task to carry it. If approval
+   * latency becomes a complaint, the fix is to share one browser across the two
+   * salary PDFs before it is to introduce a queue.
+   *
+   * Best-effort throughout, like `notifyCompanyDenied`: the approval, the due
+   * date advance, the supersede and the audit event are all committed before
+   * this runs, so neither a render failure nor a send failure may surface.
+   */
+  private async notifyCompanyApproved(reportId: string): Promise<void> {
+    try {
+      const report = await this.reportModel.findOne({
+        where: { id: reportId },
+        attributes: [
+          'id',
+          'type',
+          'validUntil',
+          'contactEmail',
+          'companyAdminEmail',
+        ],
+      })
+
+      if (!report) {
+        this.logger.warn(
+          `Approved report ${reportId} vanished before its notification could be sent`,
+          { context: LOGGING_CONTEXT },
+        )
+        return
+      }
+
+      const attachments = await this.buildApprovalAttachments(report.type, reportId)
+
+      await this.mailService.sendReportApproved(report, attachments)
+    } catch (error) {
+      this.logger.error(
+        `Failed to notify company of approval for report ${reportId}`,
+        {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+    }
+  }
+
+  /**
+   * The documents an approval mails, by report kind.
+   *
+   * An equality approval carries the report. A salary approval carries the
+   * report and the úrbótaáætlun as two documents, because the second is what the
+   * company committed to rather than what the Directorate assessed, and filing
+   * them together would bury it.
+   */
+  private async buildApprovalAttachments(
+    type: ReportTypeEnum,
+    reportId: string,
+  ): Promise<ReportMailAttachment[]> {
+    const { pdf, fileName } =
+      await this.reportPdfService.generateReportPdf(reportId)
+
+    const reportAttachment: ReportMailAttachment = {
+      filename: fileName,
+      content: pdf,
+      label:
+        type === ReportTypeEnum.SALARY ? 'jafnlaunaúttekt' : 'jafnréttisáætlun',
+    }
+
+    return [reportAttachment]
   }
 
   /**

@@ -1,5 +1,6 @@
 import { CompanyReminderTierEnum } from '../../company/models/company-event.model'
 import { ReportTypeEnum } from '../../report/models/report.enums'
+import { escapeHtml, formatDate } from './format'
 
 export type ReportDeadlineReminderInput = {
   companyName: string
@@ -10,23 +11,9 @@ export type ReportDeadlineReminderInput = {
   dueDate: Date
 }
 
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-
 /** Icelandic name for each report kind, in the accusative used in the copy. */
 const reportLabel = (type: ReportTypeEnum): string =>
   type === ReportTypeEnum.SALARY ? 'jafnlaunaskýrslu' : 'jafnréttisskýrslu'
-
-const formatDate = (date: Date): string => {
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  return `${day}.${month}.${date.getFullYear()}`
-}
 
 /**
  * Lead sentence per tier. The phrasing tracks the tier's band (e.g. the

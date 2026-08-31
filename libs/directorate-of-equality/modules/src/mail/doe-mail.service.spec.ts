@@ -277,6 +277,132 @@ describe('DoeMailService', () => {
     })
   })
 
+  describe('sendReportApproved', () => {
+    const pdf = (name: string) => ({
+      filename: name,
+      content: Buffer.from(`${name}-bytes`),
+      label: name.replace('.pdf', ''),
+    })
+
+    it('subjects an equality approval "Jafnréttisáætlun samþykkt"', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.EQUALITY }),
+        [pdf('jafnréttisáætlun.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.subject).toBe('Jafnréttisáætlun samþykkt')
+    })
+
+    it('subjects a salary approval "Skýrslugjöf samþykkt"', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        [pdf('jafnlaunaúttekt.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.subject).toBe('Skýrslugjöf samþykkt')
+    })
+
+    it('attaches the documents it is handed, stripped of the label', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        [pdf('jafnlaunaúttekt.pdf'), pdf('úrbótaáætlun.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.attachments).toEqual([
+        {
+          filename: 'jafnlaunaúttekt.pdf',
+          content: Buffer.from('jafnlaunaúttekt.pdf-bytes'),
+        },
+        {
+          filename: 'úrbótaáætlun.pdf',
+          content: Buffer.from('úrbótaáætlun.pdf-bytes'),
+        },
+      ])
+    })
+
+    /**
+     * An unnamed second attachment reads as a duplicate of the first, so the
+     * body enumerates what is attached.
+     */
+    it('names every attachment in the body', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.SALARY }),
+        [pdf('jafnlaunaúttekt.pdf'), pdf('úrbótaáætlun.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.text).toContain('jafnlaunaúttekt, úrbótaáætlun')
+      expect(message.html).toContain('jafnlaunaúttekt, úrbótaáætlun')
+    })
+
+    it('states the validity period', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({
+          type: ReportTypeEnum.EQUALITY,
+          validUntil: new Date('2029-08-31T00:00:00.000Z'),
+        }),
+        [pdf('jafnréttisáætlun.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.text).toContain('gildir til 31.08.2029')
+      expect(message.html).toContain('gildir til 31.08.2029')
+    })
+
+    it('renders an em dash rather than Invalid Date when validUntil is absent', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await service.sendReportApproved(
+        makeReport({ type: ReportTypeEnum.EQUALITY, validUntil: null }),
+        [pdf('jafnréttisáætlun.pdf')],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.text).toContain('gildir til —')
+      expect(message.text).not.toContain('Invalid Date')
+    })
+
+    it('skips and warns when the report names no recipient', async () => {
+      await service.sendReportApproved(
+        makeReport({
+          type: ReportTypeEnum.EQUALITY,
+          contactEmail: null,
+          companyAdminEmail: null,
+        }),
+        [pdf('jafnréttisáætlun.pdf')],
+      )
+
+      expect(aws.sendMail).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalled()
+    })
+
+    it('logs and swallows SES errors so the approval stands', async () => {
+      aws.sendMail.mockRejectedValue(new Error('SES is down'))
+
+      await expect(
+        service.sendReportApproved(
+          makeReport({ type: ReportTypeEnum.EQUALITY }),
+          [pdf('jafnréttisáætlun.pdf')],
+        ),
+      ).resolves.toBeUndefined()
+
+      expect(logger.error).toHaveBeenCalled()
+    })
+  })
+
   it('logs and swallows SES errors so callers never throw', async () => {
     const error = new Error('SES is down')
     aws.sendMail.mockRejectedValue(error)
