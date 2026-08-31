@@ -24,9 +24,15 @@ const KEY_PREFIX = 'company-files'
  *
  * Read at call time, not module load, so a deployment can turn archiving on with
  * a restart and tests can exercise both paths.
+ *
+ * Set means archive, unset means skip — and "unset" covers the three shapes the
+ * value actually arrives in: `undefined` (absent), `''` (declared with no value,
+ * which is how the schema itself writes it), and whitespace. Trimming also means
+ * a space-padded name from a task definition archives to the intended bucket
+ * rather than failing at S3 with an obscure name error.
  */
 const bucket = (): string | undefined =>
-  process.env.AWS_DOE_COMPANY_FILES_BUCKET
+  process.env.AWS_DOE_COMPANY_FILES_BUCKET?.trim() || undefined
 
 /** `YYYY-MM-DD` from an instant's UTC parts. */
 const issuedOn = (date: Date): string => date.toISOString().slice(0, 10)
@@ -45,6 +51,11 @@ export class CompanyFileService implements ICompanyFileService {
       // Unset locally and until infra provisions the bucket. Archiving is off
       // rather than erroring on every approval, mirroring how
       // `ImportUploadService` treats an absent bucket as "not configured here".
+      //
+      // ⚠️ Debug, not warn: unset is the declared configuration today, not a
+      // fault. It becomes one once the bucket exists — the env schema carries a
+      // note to make the variable required when deployed at that point, which is
+      // the check that catches archiving being off in production.
       this.logger.debug(
         'Skipping company file archive — AWS_DOE_COMPANY_FILES_BUCKET is not set',
         { context: LOGGING_CONTEXT, fileCount: uploads.length },

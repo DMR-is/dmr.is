@@ -70,14 +70,41 @@ describe('CompanyFileService', () => {
    * Unset locally and until infra provisions the bucket. Archiving is off rather
    * than erroring on every approval.
    */
-  it('does nothing when the bucket is not configured', async () => {
-    delete process.env.AWS_DOE_COMPANY_FILES_BUCKET
+  it.each([
+    ['absent', undefined],
+    // How the schema itself writes the key, so this is the shape a declared but
+    // unpopulated variable arrives in.
+    ['empty', ''],
+    ['whitespace', '   '],
+  ])('does nothing when the bucket is %s', async (_label, value) => {
+    if (value === undefined) {
+      delete process.env.AWS_DOE_COMPANY_FILES_BUCKET
+    } else {
+      process.env.AWS_DOE_COMPANY_FILES_BUCKET = value
+    }
 
     const keys = await service.archive([upload()])
 
     expect(aws.uploadObject).not.toHaveBeenCalled()
     expect(keys).toEqual([])
+    // Not configured is the declared state today, not a fault.
     expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  // A padded value should archive to the intended bucket, not fail at S3 with an
+  // obscure name error.
+  it('trims a padded bucket name rather than using it verbatim', async () => {
+    process.env.AWS_DOE_COMPANY_FILES_BUCKET = '  doe-company-files  '
+    aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ignored-url'))
+
+    await service.archive([upload()])
+
+    expect(aws.uploadObject).toHaveBeenCalledWith(
+      'doe-company-files',
+      expect.any(String),
+      expect.any(String),
+      expect.any(Buffer),
+    )
   })
 
   /**
