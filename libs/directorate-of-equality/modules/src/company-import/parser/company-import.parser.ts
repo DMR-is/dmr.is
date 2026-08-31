@@ -12,11 +12,17 @@
  */
 
 import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
 import { isValid as isValidKennitala, sanitize } from 'kennitala'
 
 import { BadRequestException } from '@nestjs/common'
 
 import { CompanySizeEnum } from '../../company/models/company.enums'
+import {
+  ArchiveTooLargeError,
+  assertArchiveWithinBudget,
+  MAX_INFLATED_ARCHIVE_BYTES,
+} from '../../import-upload/archive-budget'
 import { readInteger, readString } from '../../report-excel/parser/cell'
 import { CompanyImportErrorDto } from '../dto/company-import-result.dto'
 import {
@@ -115,8 +121,20 @@ export const parseCompanyImport = async (
 ): Promise<ParsedCompanyImport> => {
   const workbook = new ExcelJS.Workbook()
   try {
+    // Same exposure as the report importer: the buffer comes from
+    // `fetchWorkbook`, whose only size check counts compressed bytes, and
+    // `xlsx.load` will expand whatever it is given. Admin-only, so harder to
+    // reach — not a reason to leave the one path bounded and the other not.
+    await assertArchiveWithinBudget(await JSZip.loadAsync(fileBuffer))
     await workbook.xlsx.load(fileBuffer)
-  } catch {
+  } catch (e) {
+    if (e instanceof ArchiveTooLargeError) {
+      throw new BadRequestException(
+        `The uploaded workbook expands beyond the ${
+          MAX_INFLATED_ARCHIVE_BYTES / (1024 * 1024)
+        }MB limit`,
+      )
+    }
     throw new BadRequestException(
       'Could not read the uploaded file as an .xlsx workbook',
     )

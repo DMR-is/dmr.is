@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs'
+import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
@@ -219,4 +220,41 @@ describe('company-import parser', () => {
       parseCompanyImport(await buildBook([], badHeader)),
     ).rejects.toThrow(BadRequestException)
   })
+
+  describe('archive inflation bound', () => {
+    /**
+     * This path takes its buffer from the same `fetchWorkbook` as the report
+     * importer, whose only size check counts compressed bytes — so `xlsx.load`
+     * here was expanding whatever it was handed. Admin-only, which makes it
+     * harder to reach, not bounded.
+     */
+    // Building and deflating a fixture this size is heavy enough to pass the
+    // 5000ms default under a parallel full-suite run, the same contention the
+    // report-excel parser spec documents. Nothing here hangs.
+    it('rejects an archive that inflates past the budget', async () => {
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      zip.file('xl/worksheets/sheet1.xml', '<v>1</v>'.repeat(5 * 1024 * 1024))
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      // One call, then inspect — asserting twice would parse the fixture twice.
+      const thrown = await parseCompanyImport(payload).then(
+        () => null,
+        (e: unknown) => e,
+      )
+
+      expect(thrown).toBeInstanceOf(BadRequestException)
+      expect((thrown as Error).message).toMatch(/expands beyond the \d+MB limit/)
+    }, 20000)
+
+    it('still parses a workbook well inside the budget', async () => {
+      const result = await parseCompanyImport(await buildBook([row()]))
+      expect(result.rows).toHaveLength(1)
+    })
+  })
+
 })

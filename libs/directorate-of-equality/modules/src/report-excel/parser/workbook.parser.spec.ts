@@ -1479,11 +1479,11 @@ describe('parseWorkbook', () => {
     })
 
     it('rejects an archive that inflates past the budget', async () => {
-      // 72MB inflated, over the 64MB budget, from an archive well under the
+      // 40MB inflated, over the 32MB budget, from an archive well under the
       // 20MB compressed limit `ImportUploadService` enforces — compressed
       // size says little about what a sheet inflates to.
       const { message } = await expectBadRequest(
-        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(9 * 1024 * 1024))),
+        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(5 * 1024 * 1024))),
       )
 
       // Not "is this a valid xlsx file?" — it is one, it is just too big.
@@ -1491,11 +1491,11 @@ describe('parseWorkbook', () => {
     })
 
     it('refuses an oversized member from its declared size, without inflating it', async () => {
-      // 320MB inflated in a single member. Reading the size the archive
+      // 80MB inflated in a single member. Reading the size the archive
       // declares costs nothing; inflating first to discover the same thing
       // costs the memory and the time, which is the whole point of checking
       // before rather than after.
-      const payload = await zipWithSheet('<v>1</v>'.repeat(40 * 1024 * 1024))
+      const payload = await zipWithSheet('<v>1</v>'.repeat(10 * 1024 * 1024))
 
       const started = Date.now()
       const { message } = await expectBadRequest(parseWorkbook(payload))
@@ -1535,10 +1535,73 @@ describe('parseWorkbook', () => {
       expect(message).not.toContain('of margar strengjafærslur')
     })
 
+    /**
+     * Rewrite one member's uncompressed-size fields to `claimed`.
+     *
+     * Walked structurally rather than by scanning for `PK` signatures: a
+     * deflate stream contains those bytes by coincidence — on the fixture
+     * below, 5 hits each against 3 real members — so a scan finds offsets
+     * inside the compressed payload and can corrupt it. That failure would
+     * surface as an inflate error and read like a regression in the bound
+     * rather than a broken fixture.
+     *
+     * So: locate the end-of-central-directory record, walk the central
+     * directory by each entry's declared name/extra/comment lengths, and
+     * follow the matching entry's pointer to its local file header.
+     */
+    const understateSize = (
+      archive: Buffer,
+      member: string,
+      claimed: number,
+    ): Buffer => {
+      const out = Buffer.from(archive)
+
+      let eocd = -1
+      for (let i = out.length - 22; i >= 0; i--) {
+        if (out.readUInt32LE(i) === 0x06054b50) {
+          eocd = i
+          break
+        }
+      }
+      if (eocd < 0) throw new Error('fixture: no end-of-central-directory')
+
+      let cursor = out.readUInt32LE(eocd + 16)
+      const count = out.readUInt16LE(eocd + 10)
+      let rewritten = 0
+
+      for (let i = 0; i < count; i++) {
+        if (out.readUInt32LE(cursor) !== 0x02014b50) {
+          throw new Error('fixture: central directory entry expected')
+        }
+        const nameLen = out.readUInt16LE(cursor + 28)
+        const extraLen = out.readUInt16LE(cursor + 30)
+        const commentLen = out.readUInt16LE(cursor + 32)
+        const name = out.subarray(cursor + 46, cursor + 46 + nameLen).toString()
+
+        if (name === member) {
+          out.writeUInt32LE(claimed, cursor + 24)
+          const lfh = out.readUInt32LE(cursor + 42)
+          if (out.readUInt32LE(lfh) !== 0x04034b50) {
+            throw new Error('fixture: local file header expected')
+          }
+          out.writeUInt32LE(claimed, lfh + 22)
+          rewritten++
+        }
+        cursor += 46 + nameLen + extraLen + commentLen
+      }
+
+      // Loud if the walk ever stops finding the member, rather than silently
+      // testing an unmodified archive.
+      if (rewritten !== 1) {
+        throw new Error(`fixture: rewrote ${rewritten} entries, expected 1`)
+      }
+      return out
+    }
+
     it('bounds a member that under-declares its size in the central directory', async () => {
       // The declared size is part of the archive, and jszip only compares it
       // against reality once the member has fully inflated. Trusting it would
-      // mean a member claiming 1KB and delivering 400MB is paid for in full
+      // mean a member claiming 1KB and delivering 80MB is paid for in full
       // before anything objects, so the bound has to come from counting bytes
       // as they arrive.
       const zip = new JSZip()
@@ -1546,32 +1609,20 @@ describe('parseWorkbook', () => {
       zip.file('xl/sharedStrings.xml', '<sst/>')
       zip.file(
         'xl/worksheets/sheet1.xml',
-        Buffer.alloc(400 * 1024 * 1024, '<v>1</v>'),
+        Buffer.alloc(80 * 1024 * 1024, '<v>1</v>'),
       )
       const honest = (await zip.generateAsync({
         type: 'nodebuffer',
         compression: 'DEFLATE',
       })) as Buffer
 
-      // Rewrite both size fields to claim 1KB, in the local file header
-      // (PK\x03\x04, offset 22) and the central directory (PK\x01\x02,
-      // offset 24).
-      const lying = Buffer.from(honest)
-      for (let i = 0; i < lying.length - 4; i++) {
-        if (lying[i] !== 0x50 || lying[i + 1] !== 0x4b) continue
-        if (lying[i + 2] === 0x03 && lying[i + 3] === 0x04) {
-          if (lying.readUInt32LE(i + 22) > 1024) lying.writeUInt32LE(1024, i + 22)
-        }
-        if (lying[i + 2] === 0x01 && lying[i + 3] === 0x02) {
-          if (lying.readUInt32LE(i + 24) > 1024) lying.writeUInt32LE(1024, i + 24)
-        }
-      }
+      const lying = understateSize(honest, 'xl/worksheets/sheet1.xml', 1024)
 
       const { message } = await expectBadRequest(parseWorkbook(lying))
 
       // The message is what distinguishes the two outcomes. Counting as the
       // bytes arrive stops this at the budget and reports it as too large.
-      // Trusting the declared 1KB instead lets all 400MB through to exceljs,
+      // Trusting the declared 1KB instead lets all 80MB through to exceljs,
       // which inflates it and only then notices the size mismatch — so the
       // upload still fails, but as an unreadable file, after the memory has
       // been spent. Asserting only that it was rejected cannot tell those
@@ -1580,13 +1631,13 @@ describe('parseWorkbook', () => {
     })
 
     it('bounds an archive whose members are individually small', async () => {
-      // The budget is the archive's, not any one member's — 20 sheets of
-      // 8MB each clear every per-member check and still total 160MB.
+      // The budget is the archive's, not any one member's — 10 sheets of
+      // 4MB each clear every per-member check and still total 40MB.
       const zip = new JSZip()
       zip.file('[Content_Types].xml', '<Types/>')
       zip.file('xl/sharedStrings.xml', '<sst/>')
-      for (let i = 1; i <= 20; i++) {
-        zip.file(`xl/worksheets/sheet${i}.xml`, '<v>1</v>'.repeat(1024 * 1024))
+      for (let i = 1; i <= 10; i++) {
+        zip.file(`xl/worksheets/sheet${i}.xml`, '<v>1</v>'.repeat(512 * 1024))
       }
       const payload = (await zip.generateAsync({
         type: 'nodebuffer',

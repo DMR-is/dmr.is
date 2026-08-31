@@ -25,6 +25,11 @@ import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
+import {
+  ArchiveTooLargeError,
+  assertArchiveWithinBudget,
+  MAX_INFLATED_ARCHIVE_BYTES,
+} from '../../import-upload/archive-budget'
 import { ImportErrorDto } from '../dto/import-error.dto'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { validateSemantics } from '../validators/semantic.validator'
@@ -85,19 +90,6 @@ const SHARED_STRING_CELL_RE =
 const SHARED_STRING_TYPE_RE = /\bt="s"/
 
 /**
- * Total inflated size allowed for one uploaded archive, across every member.
- *
- * The upload limit upstream (`ImportUploadService`) counts *compressed*
- * bytes, and deflate reaches ~400:1 on repetitive cell markup, so 20MB
- * accepted there permits several GB in process. This is the only number that
- * bounds what a single import can cost.
- *
- * 64MB is deliberately generous: the empty template alone inflates to ~9.4MB
- * of worksheet XML, so a filled-in report needs real headroom above it.
- */
-const MAX_INFLATED_ARCHIVE_BYTES = 64 * 1024 * 1024
-
-/**
  * Ceiling on the blank shared-string table synthesized below.
  *
  * `emptySharedStringsXml` builds one array element per entry, so the index
@@ -112,34 +104,10 @@ const MAX_INFLATED_ARCHIVE_BYTES = 64 * 1024 * 1024
  */
 const MAX_SHARED_STRING_ENTRIES = 65_536
 
-/**
- * The member's uncompressed size as the archive declares it.
- *
- * jszip reads this from the central directory when the archive is opened, so
- * it is available before anything is inflated — but it is not on the public
- * `JSZipObject` type, and it is part of the archive, which makes it a claim
- * rather than a measurement.
- *
- * jszip does compare the claim against reality, but only on `end`
- * (`compressedObject.js`, "uncompressed data size mismatch") — its length
- * probe counts and never interrupts. A member that under-declares is
- * therefore inflated in full before the mismatch surfaces, which is exactly
- * the cost we are trying not to pay. So this is a cheap way to refuse an
- * archive that admits it is too large, and nothing more; the bound itself
- * comes from counting bytes as they arrive.
- */
-const declaredUncompressedSize = (entry: JSZip.JSZipObject): number | null => {
-  const { _data } = entry as unknown as {
-    _data?: { uncompressedSize?: number }
-  }
-  return typeof _data?.uncompressedSize === 'number'
-    ? _data.uncompressedSize
-    : null
-}
-
 const workbookTooLarge = (): BadRequestException =>
   new BadRequestException({
-    message: 'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
+    message:
+      'Vinnubókin er of stór til lestrar — of mikið af gögnum í skránni.',
     errors: [
       {
         sheet: '(workbook)',
@@ -151,88 +119,6 @@ const workbookTooLarge = (): BadRequestException =>
       },
     ],
   })
-
-/**
- * What `nodeStream` hands back, described by the two members used here.
- *
- * jszip's own typings stop at `ReadableStream`, which has no `destroy`, and
- * the object is not an instance of Node's `Readable` either — jszip bundles
- * its own copy of `readable-stream`, so `instanceof` fails even though the
- * constructor reports that name. Casting to Node's `Readable` would therefore
- * assert something untrue; naming the two methods keeps the cast narrow.
- */
-type AbortableByteStream = {
-  on(event: 'data', listener: (chunk: Buffer) => void): unknown
-  on(event: 'end', listener: () => void): unknown
-  on(event: 'error', listener: (error: Error) => void): unknown
-  destroy(): void
-}
-
-/**
- * Inflate one member, counting as it goes, and stop the moment it exceeds
- * what is left of the budget. Returns the bytes seen — which is at most
- * `remaining + one chunk`, never the member's full size.
- *
- * Discarding each chunk after counting is the point: this measures a member
- * without ever holding it.
- */
-const countInflatedBytes = (
-  entry: JSZip.JSZipObject,
-  remaining: number,
-): Promise<number> =>
-  new Promise((resolve, reject) => {
-    let seen = 0
-    const stream = entry.nodeStream(
-      'nodebuffer',
-    ) as unknown as AbortableByteStream
-    stream.on('data', (chunk: Buffer) => {
-      seen += chunk.length
-      if (seen > remaining) {
-        stream.destroy()
-        resolve(seen)
-      }
-    })
-    stream.on('end', () => resolve(seen))
-    stream.on('error', reject)
-  })
-
-/**
- * Refuse an archive that inflates past the budget, before anything inflates
- * it for real.
- *
- * This runs for *every* upload, which is the whole reason it is separate from
- * `guardMissingSharedStrings` — that guard returns immediately for any
- * workbook carrying a shared-strings table, i.e. everything Excel writes, so
- * nothing inside it can bound the common path. `workbook.xlsx.load` has no
- * ceiling of its own and uses this same jszip, so an archive that gets past
- * here is one exceljs can afford to expand.
- *
- * The cost is one extra inflate pass over a legitimate upload — ~25ms for the
- * template — and it is capped at the budget for everything else.
- */
-const assertArchiveWithinBudget = async (zip: JSZip): Promise<void> => {
-  let inflatedBytes = 0
-
-  for (const entry of Object.values(zip.files)) {
-    if (entry.dir) continue
-
-    const declared = declaredUncompressedSize(entry)
-    if (
-      declared !== null &&
-      inflatedBytes + declared > MAX_INFLATED_ARCHIVE_BYTES
-    ) {
-      throw workbookTooLarge()
-    }
-
-    inflatedBytes += await countInflatedBytes(
-      entry,
-      MAX_INFLATED_ARCHIVE_BYTES - inflatedBytes,
-    )
-    if (inflatedBytes > MAX_INFLATED_ARCHIVE_BYTES) {
-      throw workbookTooLarge()
-    }
-  }
-}
 
 const emptySharedStringsXml = (count: number): string => {
   const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
@@ -348,6 +234,7 @@ export const parseWorkbook = async (
     // simply too large, untrue. Only genuine load failures get the generic
     // message; `errors` does not reach the client, so the headline is the
     // only part the user reads.
+    if (e instanceof ArchiveTooLargeError) throw workbookTooLarge()
     if (e instanceof BadRequestException) throw e
 
     throw new BadRequestException({
