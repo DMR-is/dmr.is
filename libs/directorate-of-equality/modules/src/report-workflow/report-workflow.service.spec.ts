@@ -1,4 +1,8 @@
+import { createNamespace, destroyNamespace } from 'cls-hooked'
+
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
+
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 
 import {
   CommunicationStatusEnum,
@@ -1115,6 +1119,144 @@ describe('ReportWorkflowService', () => {
           },
         },
       )
+    })
+  })
+
+  /**
+   * The outbound work must not happen until the request's transaction has
+   * actually committed. Everything else in this spec runs with no ambient
+   * transaction and therefore takes `runAfterCommit`'s inline path, which is
+   * what keeps those cases meaningful — this block is the only one that
+   * exercises the deferral.
+   */
+  describe('after-commit deferral', () => {
+    /** Stands in for the transaction `CLSMiddleware` puts in the CLS namespace. */
+    const makeFakeTransaction = () => {
+      const hooks: (() => Promise<void>)[] = []
+      return {
+        transaction: { afterCommit: (fn: () => Promise<void>) => hooks.push(fn) },
+        /** What `Transaction.commit` does once the COMMIT has landed. */
+        commit: async () => {
+          for (const hook of hooks) await hook()
+        },
+        hookCount: () => hooks.length,
+      }
+    }
+
+    const withAmbientTransaction = async (
+      fake: ReturnType<typeof makeFakeTransaction>,
+      run: () => Promise<void>,
+    ) => {
+      const ns = createNamespace(CLS_NAMESPACE)
+      try {
+        await new Promise<void>((resolve, reject) => {
+          ns.run(() => {
+            ns.set('transaction', fake.transaction)
+            run().then(resolve, reject)
+          })
+        })
+      } finally {
+        destroyNamespace(CLS_NAMESPACE)
+      }
+    }
+
+    const seedApprovableReport = () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+        providerType: ReportProviderEnum.SYSTEM,
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+    }
+
+    it('does not mail on approve until the transaction commits', async () => {
+      seedApprovableReport()
+      const fake = makeFakeTransaction()
+
+      await withAmbientTransaction(fake, () =>
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      )
+
+      // The status write and the audit event have happened; the irrevocable part
+      // has not.
+      expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(reportPdfService.generateReportPdf).not.toHaveBeenCalled()
+      expect(fake.hookCount()).toBe(1)
+
+      await fake.commit()
+
+      expect(mailService.sendReportApproved).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not mail on deny until the transaction commits', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.SALARY,
+        contactEmail: 'contact@example.is',
+        providerType: ReportProviderEnum.SYSTEM,
+      })
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      const fake = makeFakeTransaction()
+
+      await withAmbientTransaction(fake, () =>
+        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          denialReason: 'Vantar gögn',
+        }),
+      )
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+
+      await fake.commit()
+
+      expect(mailService.sendReportDenied).toHaveBeenCalledWith(
+        expect.anything(),
+        'Vantar gögn',
+      )
+    })
+
+    /**
+     * ⚠️ Load-bearing. Sequelize awaits these hooks inside `commit()`'s
+     * `finally`, and `CLSMiddleware` calls `commit()` from an un-awaited
+     * `res.on('finish')` callback — so a rejection escaping the hook becomes an
+     * unhandled rejection with no request left to fail.
+     */
+    it('never lets the hook reject, whatever the work throws', async () => {
+      seedApprovableReport()
+      mailService.sendReportApproved.mockRejectedValue(
+        new Error('everything is on fire'),
+      )
+      const fake = makeFakeTransaction()
+
+      await withAmbientTransaction(fake, () =>
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      )
+
+      await expect(fake.commit()).resolves.toBeUndefined()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    // A rolled-back transaction never runs its after-commit hooks, so a denial
+    // that did not persist cannot have told the company it did.
+    it('sends nothing if the transaction never commits', async () => {
+      seedApprovableReport()
+      const fake = makeFakeTransaction()
+
+      await withAmbientTransaction(fake, () =>
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      )
+
+      // No commit() — this is the rollback path.
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+      expect(applicationSystemService.notifyApproved).not.toHaveBeenCalled()
     })
   })
 })

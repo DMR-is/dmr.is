@@ -1,3 +1,6 @@
+import { getNamespace } from 'cls-hooked'
+import { Transaction } from 'sequelize'
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
+import { CLS_NAMESPACE } from '@dmr.is/constants'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { IApplicationSystemService } from '../application-system/application-system.service.interface'
@@ -167,6 +171,68 @@ export class ReportWorkflowService implements IReportWorkflowService {
     }
   }
 
+  /**
+   * Defers irrevocable outbound work — email, S3, island.is — until the
+   * request's transaction has actually committed.
+   *
+   * **Why this is needed at all.** `Sequelize.useCLS` plus
+   * `CLSMiddleware.forRoutes('*')` puts every query in one ambient transaction
+   * that the middleware commits in `res.on('finish')`, i.e. AFTER the response.
+   * Sending inside that window meant a company could be emailed "samþykkt" and
+   * then have the approval rolled back underneath it — a 500 raised later in the
+   * handler (or a failing commit) discards the writes while the mail, the S3
+   * object and the island.is callback all stand.
+   *
+   * **Why the reads inside the hook are safe.** `Transaction.commit` runs
+   * `cleanup()` → `_clearCls()` BEFORE it awaits these hooks, which nulls the
+   * CLS `transaction` entry and releases the connection. So queries made from
+   * here take a fresh pooled connection with no ambient transaction, rather than
+   * joining a finished one.
+   *
+   * **Why it also fixes the latency.** `res.on('finish')` fires after the
+   * response is flushed, so the reviewer's approve returns before the PDFs
+   * render instead of waiting seconds for them.
+   *
+   * ⚠️ **The callback MUST NOT THROW.** Sequelize awaits these hooks inside
+   * `commit()`'s `finally`, and `CLSMiddleware` calls `commit()` from an
+   * un-awaited `res.on('finish')` callback — so a rejection here becomes an
+   * unhandled rejection with no request left to attach it to. Hence the
+   * catch-all below; do not remove it, and do not rely on callers being
+   * total.
+   *
+   * ⚠️ **Still no durable record.** If the process dies between commit and send,
+   * the report is approved and the company was never told, with nothing to retry
+   * from. Closing that needs the intent-to-send persisted inside the
+   * transaction; tracked separately.
+   */
+  private async runAfterCommit(
+    label: string,
+    work: () => Promise<void>,
+  ): Promise<void> {
+    const transaction = getNamespace(CLS_NAMESPACE)?.get('transaction') as
+      | Transaction
+      | undefined
+
+    if (!transaction) {
+      // No ambient transaction: a unit test, or a caller outside the HTTP
+      // pipeline. There is nothing to wait for, so the old inline behaviour is
+      // still the correct one.
+      await work()
+      return
+    }
+
+    transaction.afterCommit(async () => {
+      try {
+        await work()
+      } catch (error) {
+        this.logger.error(`Post-commit ${label} failed`, {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
+    })
+  }
+
   private async getReviewerUserId(reportId: string): Promise<string | null> {
     const report = await this.reportModel.findOne({
       where: { id: reportId },
@@ -226,12 +292,15 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
-    await this.notifyCompanyDenied(context.reportId, denialReason)
-
-    await this.notifyApplicationSystem(
-      context.reportId,
-      ReportStatusEnum.DENIED,
-    )
+    // Both outbound calls are irrevocable, so neither may happen before the
+    // denial is durable. See `runAfterCommit`.
+    await this.runAfterCommit('denial notification', async () => {
+      await this.notifyCompanyDenied(context.reportId, denialReason)
+      await this.notifyApplicationSystem(
+        context.reportId,
+        ReportStatusEnum.DENIED,
+      )
+    })
   }
 
   async approve(context: ReportResourceContext): Promise<void> {
@@ -311,12 +380,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     await this.forceCloseCommunication(context.reportId)
 
-    await this.notifyCompanyApproved(context.reportId)
-
-    await this.notifyApplicationSystem(
-      context.reportId,
-      ReportStatusEnum.APPROVED,
-    )
+    // Two PDF renders, an email, an S3 upload and the island.is callback — every
+    // one irrevocable, and none of them may happen until the approval is
+    // durable. See `runAfterCommit`.
+    await this.runAfterCommit('approval notification', async () => {
+      await this.notifyCompanyApproved(context.reportId)
+      await this.notifyApplicationSystem(
+        context.reportId,
+        ReportStatusEnum.APPROVED,
+      )
+    })
 
     // TODO: insert public_report row as part of approval pipeline
   }
@@ -346,19 +419,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * latency becomes a complaint, the fix is to share one browser across the two
    * salary PDFs before it is to introduce a queue.
    *
-   * Best-effort throughout, like `notifyCompanyDenied`: neither a render failure
-   * nor a send failure may surface to the reviewer.
+   * Runs from `runAfterCommit`, which changes two things that used to be wrong.
    *
-   * ⚠️ **They are written but NOT committed when this runs** — an earlier version
-   * of this comment claimed otherwise. The ambient CLS transaction commits in
-   * `res.on('finish')`, so the approval, the due-date advance, the supersede and
-   * the audit event are all still open here, and the renders below hold that
-   * transaction (and its pooled connection) for their whole duration. A 500
-   * raised after this point rolls all of it back with the company already
-   * holding a "samþykkt" mail and two PDFs.
+   * The approval, the due-date advance, the supersede and the audit event are all
+   * **committed** before this executes, so the mail can no longer be rolled back
+   * out from under the company. And the renders no longer hold the request's
+   * transaction or its pooled connection — the response has already been sent, so
+   * the seconds they cost are nobody's latency.
    *
-   * The fix is an after-commit hook, which needs the read paths to stop joining
-   * the committed transaction — see the PR discussion. Not papered over here.
+   * Best-effort throughout: neither a render failure nor a send failure may
+   * surface, and per `runAfterCommit` nothing here may throw.
    */
   private async notifyCompanyApproved(reportId: string): Promise<void> {
     try {
@@ -533,15 +603,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * attributes are exactly what the mail needs: `type` picks the subject noun,
    * the two addresses resolve the recipient, `id` labels the log line.
    *
-   * Best-effort in the same sense as `notifyApplicationSystem` below.
+   * Runs from `runAfterCommit`, so the denial IS committed by the time this is
+   * called — the ambient CLS transaction has already been committed and its
+   * connection released. That is what makes emailing the company safe here: it
+   * cannot be rolled back underneath the mail.
    *
-   * ⚠️ **"Committed" is wrong, and this comment used to say it.** `useCLS` plus
-   * `CLSMiddleware.forRoutes('*')` puts every query in one ambient transaction
-   * that commits in `res.on('finish')` — AFTER the response. So the denial is
-   * written but NOT committed when this runs, and a later throw in the handler
-   * rolls it back with the company already emailed. `report-comment.service.ts`
-   * documents the same hazard correctly and notes that closing it needs an
-   * after-commit hook. Tracked; see the PR discussion. `IDoeMailService.sendReportDenied` already swallows its
+   * Still best-effort. The denial is durable, so a failed send must not surface
+   * to the reviewer; it is logged. And it must not throw at all — see the
+   * warning on `runAfterCommit`. `IDoeMailService.sendReportDenied` already swallows its
    * own send errors; the try/catch here covers the load, so a missing or
    * unreadable row cannot take the denial down with it either.
    */
@@ -589,30 +658,37 @@ export class ReportWorkflowService implements IReportWorkflowService {
     reportId: string,
     status: ReportStatusEnum.APPROVED | ReportStatusEnum.DENIED,
   ): Promise<void> {
-    const report = await this.reportModel.findOne({
-      where: { id: reportId },
-      attributes: ['providerType', 'providerId'],
-    })
-
-    if (
-      report?.providerType !== ReportProviderEnum.ISLAND_IS ||
-      !report.providerId
-    ) {
-      return
-    }
-
     try {
+      // ⚠️ Inside the try, deliberately. This load used to sit outside it, so a
+      // DB error here became a 500 — which, before `runAfterCommit`, rolled the
+      // decision back after the company had already been emailed. It now runs
+      // post-commit inside an after-commit hook, where a throw would instead
+      // become an unhandled rejection. Either way it belongs in the catch.
+      const report = await this.reportModel.findOne({
+        where: { id: reportId },
+        attributes: ['providerType', 'providerId'],
+      })
+
+      if (
+        report?.providerType !== ReportProviderEnum.ISLAND_IS ||
+        !report.providerId
+      ) {
+        return
+      }
+
       if (status === ReportStatusEnum.APPROVED) {
         await this.applicationSystemService.notifyApproved(report.providerId)
       } else {
         await this.applicationSystemService.notifyDenied(report.providerId)
       }
     } catch (error) {
+      // `applicationId` is gone from the meta: `report` is scoped to the try
+      // now, and the load itself is one of the things that can fail. The report
+      // id in the message is enough to find the application.
       this.logger.error(
         `Failed to notify application system for report ${reportId} (${status})`,
         {
           context: LOGGING_CONTEXT,
-          applicationId: report.providerId,
           message: error instanceof Error ? error.message : String(error),
         },
       )
