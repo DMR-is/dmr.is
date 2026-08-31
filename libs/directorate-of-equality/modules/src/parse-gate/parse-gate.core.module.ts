@@ -43,10 +43,18 @@ const readInt = (
   raw: string | undefined,
   fallback: number,
   min: number,
+  max: number,
 ): number => {
-  if (raw === undefined || raw.trim() === '') return fallback
-  const parsed = Number(raw)
-  return Number.isInteger(parsed) && parsed >= min ? parsed : fallback
+  if (raw === undefined) return fallback
+
+  // Digits only, deliberately narrower than `Number`. `Number('0x10')` is 16
+  // and `Number('1e3')` is 1000 — both are whole numbers in range, so every
+  // check below would pass a value nobody meant to write.
+  const trimmed = raw.trim()
+  if (!/^\d+$/.test(trimmed)) return fallback
+
+  const parsed = Number(trimmed)
+  return parsed >= min && parsed <= max ? parsed : fallback
 }
 
 /**
@@ -59,6 +67,20 @@ export const DEFAULT_MAX_CONCURRENT_PARSES = 2
 
 /** Callers allowed to wait for a slot before further uploads are shed. */
 export const DEFAULT_MAX_QUEUED_PARSES = 20
+
+/**
+ * Ceilings, so a typo cannot quietly defeat the thing this module exists for.
+ *
+ * A floor alone is not enough: `DOE_EXCEL_MAX_CONCURRENT_PARSES=64` is a
+ * perfectly valid positive integer that implies ~16GB of worst-case parse heap
+ * against a 1152MB ceiling. Anything above these is treated as a mistake and
+ * the default is used instead, which is the safe direction to fail.
+ *
+ * 8 is already well past what the heap supports; it exists so a deliberate,
+ * considered bump does not require a code change, not as a usable setting.
+ */
+const MAX_ALLOWED_CONCURRENT_PARSES = 8
+const MAX_ALLOWED_QUEUED_PARSES = 200
 
 @Module({
   providers: [
@@ -74,6 +96,7 @@ export const DEFAULT_MAX_QUEUED_PARSES = 20
             process.env.DOE_EXCEL_MAX_CONCURRENT_PARSES,
             DEFAULT_MAX_CONCURRENT_PARSES,
             1,
+            MAX_ALLOWED_CONCURRENT_PARSES,
           ),
           // Zero is a legitimate setting here — it sheds instead of queueing —
           // so the floor is 0, not 1.
@@ -81,6 +104,7 @@ export const DEFAULT_MAX_QUEUED_PARSES = 20
             process.env.DOE_EXCEL_MAX_QUEUED_PARSES,
             DEFAULT_MAX_QUEUED_PARSES,
             0,
+            MAX_ALLOWED_QUEUED_PARSES,
           ),
         ),
     },

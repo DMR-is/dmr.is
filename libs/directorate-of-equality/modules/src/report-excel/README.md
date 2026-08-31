@@ -17,8 +17,9 @@ stay with the app-system's auth context and are never echoed back.
 | `GET`  | `/api/v1/reports/excel/template` | Streams the blank salary-report xlsx                                                          |
 | `POST` | `/api/v1/reports/excel/import`   | Multipart upload (`file` field) → `ParsedReportDto` JSON, or `400` with structured error list |
 
-The `TokenJwtAuthGuard` is currently commented out on the controller for
-local development — re-enable before shipping.
+Both routes are behind `TokenJwtAuthGuard` and `AdminGuard`
+(`report-excel.controller.ts`). An earlier note here said the auth guard was
+commented out for local development; it is not, and had not been for some time.
 
 ## Local testing
 

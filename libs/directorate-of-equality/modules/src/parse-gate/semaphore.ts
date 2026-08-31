@@ -1,15 +1,24 @@
 /**
  * Bounds how many callers may hold a slot at once, with a cap on how many may
- * wait for one. Used to gate the memory-heavy exceljs parse: loading one of
- * these workbooks costs ~350MB of heap regardless of employee count (it's the
- * exceljs model for the wide, styled, multi-sheet template — not the data), so
- * a burst of simultaneous uploads would otherwise stack parses until the
- * container OOMs. Capping concurrency pins worst-case parse memory to
- * `maxConcurrent × ~350MB`; excess callers queue, and once the queue is full
- * they're rejected fast (mapped to a 503 upstream) rather than piling up.
+ * wait for one. Used to gate the memory-heavy exceljs parse: a burst of
+ * simultaneous uploads would otherwise stack parses until the container OOMs.
+ * Capping concurrency pins worst-case parse memory; excess callers queue, and
+ * once the queue is full they're rejected fast (mapped to a 503 upstream)
+ * rather than piling up.
+ *
+ * Two heap figures appear around this code and they are not in conflict:
+ * ~350MB is what the real template *measured* at, dominated by the exceljs
+ * model for a wide, styled, multi-sheet workbook rather than by the data;
+ * ~256MB is the *derived* bound, `MAX_INFLATED_ARCHIVE_BYTES` times exceljs's
+ * ~8x retention. The derived number is the one the budget is built from,
+ * because it is the one an upload cannot exceed — see
+ * `import-upload/archive-budget.ts`. The measured number is the sanity check
+ * that it is the right order of magnitude.
  *
  * Pure and framework-free so it's trivially unit-testable — the NestJS mapping
- * to `ServiceUnavailableException` lives in the caller.
+ * to `ServiceUnavailableException` lives in the caller. Consumers inject the
+ * shared instance via `PARSE_GATE`; constructing one directly makes a second,
+ * unshared gate.
  */
 export class SemaphoreQueueFullError extends Error {
   constructor(maxQueued: number) {

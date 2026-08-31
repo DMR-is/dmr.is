@@ -64,10 +64,16 @@ export class ArchiveTooLargeError extends Error {
  * ## What the "x 2" covers
  *
  * The 2 is the shared parse gate in `ParseGateCoreModule`, and it means two
- * parses *in the process*: `parseWorkbook` and `parseCompanyImport` both
- * acquire from the same `Semaphore` instance, so no third concurrent parse of
- * either kind can start. Both consumers are counted because a company import
- * retains the same heap as a report import.
+ * parses *per process*: `parseWorkbook` and `parseCompanyImport` both acquire
+ * from the same `Semaphore` instance, so no third concurrent parse of either
+ * kind can start. Both consumers are counted because a company import retains
+ * the same heap as a report import.
+ *
+ * Per process, not per deployment. `directorate-of-equality-partner-api` is a
+ * separate task that also imports `ReportExcelCoreModule` and reads the same
+ * env var, so it carries its own gate of 2 against its own heap. The budget
+ * holds because each task is sized independently — but a change to
+ * `doe_api_memory` has to be checked against both.
  *
  * The gate is deliberately one provider rather than one per module. Two gates
  * of 2 would permit four concurrent parses and ~1040MB — the same figure that

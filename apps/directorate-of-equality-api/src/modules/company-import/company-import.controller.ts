@@ -1,4 +1,11 @@
-import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Inject,
+  Post,
+  ServiceUnavailableException,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import {
@@ -61,9 +68,24 @@ export class CompanyImportController {
       ImportUploadBoundary.ADMIN,
     )
     try {
-      return await this.companyImportService.apply(buffer, admin.id)
-    } finally {
+      const result = await this.companyImportService.apply(buffer, admin.id)
       await this.importUploadService.cleanup(body.key)
+      return result
+    } catch (e) {
+      // Not a `finally`. A saturated parse gate answers 503 and tells the
+      // caller to retry, and the staged object is what they would retry with —
+      // deleting it turns a retryable shed into "redo the presign, the PUT and
+      // the preview". `import-upload.service.ts` states the same rule for its
+      // own error path: only a terminal outcome may destroy the caller's
+      // upload, never a transient one.
+      //
+      // Every other failure here is terminal for this key — an unreadable
+      // workbook, a validation reject, a DB error on the transaction — so
+      // those still clean up.
+      if (!(e instanceof ServiceUnavailableException)) {
+        await this.importUploadService.cleanup(body.key)
+      }
+      throw e
     }
   }
 }

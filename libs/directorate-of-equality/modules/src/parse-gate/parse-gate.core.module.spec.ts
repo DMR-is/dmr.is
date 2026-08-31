@@ -1,6 +1,8 @@
 import { Inject, Injectable, Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
+import { CompanyImportCoreModule } from '../company-import/company-import.core.module'
+import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import {
   DEFAULT_MAX_CONCURRENT_PARSES,
   DEFAULT_MAX_QUEUED_PARSES,
@@ -35,16 +37,39 @@ class FirstConsumerModule {}
 @Module({ imports: [ParseGateCoreModule], providers: [SecondConsumer] })
 class SecondConsumerModule {}
 
+/**
+ * Two things this deliberately does NOT do, both verified in Node rather than
+ * assumed:
+ *
+ * `Object.assign(process.env, { X: undefined })` stores the *string*
+ * `"undefined"`, not an absent key — so it would exercise the malformed-value
+ * branch while claiming to test the unset one, and `readInt`'s
+ * `raw === undefined` guard would have no coverage at all. Unset means
+ * `delete`.
+ *
+ * `process.env = saved` swaps Node's env for a plain object and permanently
+ * disables its string coercion for the rest of the worker, which Jest shares
+ * across files. Restore key by key.
+ */
 const buildWithEnv = async (env: Record<string, string | undefined>) => {
-  const saved = { ...process.env }
-  Object.assign(process.env, env)
+  const keys = Object.keys(env)
+  const saved = new Map(keys.map((k) => [k, process.env[k]]))
+
+  for (const [k, v] of Object.entries(env)) {
+    if (v === undefined) delete process.env[k]
+    else process.env[k] = v
+  }
+
   try {
     const moduleRef = await Test.createTestingModule({
       imports: [ParseGateCoreModule],
     }).compile()
     return moduleRef.get<Semaphore>(PARSE_GATE)
   } finally {
-    process.env = saved
+    for (const [k, v] of saved) {
+      if (v === undefined) delete process.env[k]
+      else process.env[k] = v
+    }
   }
 }
 
@@ -103,6 +128,46 @@ describe('ParseGateCoreModule', () => {
     })
   })
 
+  describe('the real modules, not stand-ins', () => {
+    /**
+     * The tests above use synthetic consumer modules, which means a mutation
+     * that removes `ParseGateCoreModule` from a *real* core module and drops
+     * in its own `PARSE_GATE` provider leaves them all green while the process
+     * quietly runs at double the concurrency the budget is derived from.
+     *
+     * Asserted on the modules' own metadata rather than by booting them: both
+     * pull in Sequelize models and a logger, and standing that up would test
+     * the fixture more than the wiring. What matters is exactly this — each
+     * core module takes the gate from the shared provider, and neither
+     * declares one of its own.
+     */
+    const importsOf = (target: unknown): Array<unknown> =>
+      Reflect.getMetadata('imports', target as object) ?? []
+
+    const providersOf = (target: unknown): Array<unknown> =>
+      Reflect.getMetadata('providers', target as object) ?? []
+
+    it.each([
+      ['CompanyImportCoreModule', CompanyImportCoreModule],
+      ['ReportExcelCoreModule', ReportExcelCoreModule],
+    ])('%s takes the gate from the shared provider', (_name, mod) => {
+      expect(importsOf(mod)).toContain(ParseGateCoreModule)
+    })
+
+    it.each([
+      ['CompanyImportCoreModule', CompanyImportCoreModule],
+      ['ReportExcelCoreModule', ReportExcelCoreModule],
+    ])('%s does not provide a gate of its own', (_name, mod) => {
+      const ownGate = providersOf(mod).some(
+        (p) =>
+          typeof p === 'object' &&
+          p !== null &&
+          (p as { provide?: unknown }).provide === PARSE_GATE,
+      )
+      expect(ownGate).toBe(false)
+    })
+  })
+
   describe('environment', () => {
     it('runs on defaults when nothing is set, so infra need not supply them', async () => {
       const gate = await buildWithEnv({
@@ -140,6 +205,41 @@ describe('ParseGateCoreModule', () => {
      * an unparseable value would not throw, it would queue every parse and
      * then shed the lot with a 503. Falling back has to be the behaviour.
      */
+    /**
+     * A floor alone would accept any large integer. `64` is valid input and
+     * implies ~16GB of worst-case parse heap against a 1152MB ceiling, so one
+     * task-definition typo would defeat the module entirely and silently.
+     *
+     * `0x10` and `1e3` are here because `Number` accepts both (16 and 1000);
+     * the digits-only test is what rejects them.
+     */
+    it.each([['64'], ['1000'], ['0x10'], ['1e3']])(
+      'ignores the out-of-range or non-decimal value %p and keeps the default',
+      async (raw) => {
+        const gate = await buildWithEnv({
+          DOE_EXCEL_MAX_CONCURRENT_PARSES: raw,
+        })
+
+        const releases = []
+        for (let i = 0; i < DEFAULT_MAX_CONCURRENT_PARSES; i++) {
+          releases.push(await gate.acquire())
+        }
+
+        // Taking the default number of slots proves nothing on its own — with
+        // a limit of 64 the counts look identical. The limit only shows itself
+        // on the request *past* it, which must queue rather than resolve.
+        let extraResolved = false
+        void gate.acquire().then(() => {
+          extraResolved = true
+        })
+        await Promise.resolve()
+        expect(extraResolved).toBe(false)
+        expect(gate.queuedCount).toBe(1)
+
+        releases.forEach((r) => r())
+      },
+    )
+
     it.each([['two'], ['0'], ['-1'], ['1.5'], ['']])(
       'ignores the unusable concurrency value %p and keeps the default',
       async (raw) => {
