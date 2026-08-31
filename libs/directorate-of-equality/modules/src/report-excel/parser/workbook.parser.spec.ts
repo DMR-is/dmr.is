@@ -21,6 +21,13 @@ jest.setTimeout(20000)
 const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
 
 /**
+ * The uncompressed size jszip reads out of the central directory. Not on the
+ * public `JSZipObject` type — `workbook.parser.ts` reaches for the same field,
+ * and the guard under test is the reason it does.
+ */
+type DeclaredSize = { uncompressedSize: number }
+
+/**
  * A Node `Buffer` may be a view into a larger shared pool, so `.buffer` alone
  * can hand exceljs bytes beyond this buffer's own region. Slice to the exact
  * range — same guard the parser applies (see `parseWorkbook`). Passing the raw
@@ -1474,7 +1481,9 @@ describe('parseWorkbook', () => {
       // whether the user is told anything useful.
       expect(message).toContain('of margar strengjafærslur')
       expect(errors.map((e) => e.message)).toEqual(
-        expect.arrayContaining([expect.stringContaining('Hæsta strengjavísun')]),
+        expect.arrayContaining([
+          expect.stringContaining('Hæsta strengjavísun'),
+        ]),
       )
     })
 
@@ -1491,17 +1500,57 @@ describe('parseWorkbook', () => {
     })
 
     it('refuses an oversized member from its declared size, without inflating it', async () => {
-      // 80MB inflated in a single member. Reading the size the archive
-      // declares costs nothing; inflating first to discover the same thing
-      // costs the memory and the time, which is the whole point of checking
-      // before rather than after.
-      const payload = await zipWithSheet('<v>1</v>'.repeat(10 * 1024 * 1024))
+      // A member declaring 320MB. Reading the size the archive declares costs
+      // nothing; inflating first to discover the same thing costs the memory
+      // and the time, which is the whole point of checking before rather than
+      // after.
+      //
+      // The size is stated rather than built. It is a number in the central
+      // directory, so a hostile archive can claim anything — which is the case
+      // this guard exists for, and the parser's own comment says as much. An
+      // earlier version allocated a real 320MB string and inferred "did not
+      // inflate" from finishing inside 1000ms; that made it the slowest test in
+      // the file and tied it to how loaded the runner is, on a file that
+      // already raises the Jest timeout for exactly that reason. Recording the
+      // inflate calls asserts the property directly.
+      //
+      // Both entry points are recorded. `async` is how the shared-strings scan
+      // reads a member; `nodeStream` is how the budget counts one. Watching
+      // only `async` would leave the assertion true for a reason unrelated to
+      // the guard, since the counting path never calls it.
+      const payload = await zipWithSheet('<v>1</v>')
+      const inflated: string[] = []
 
-      const started = Date.now()
+      const loadAsync = JSZip.loadAsync.bind(JSZip)
+      jest
+        .spyOn(JSZip, 'loadAsync')
+        .mockImplementation(async (...args: Parameters<typeof loadAsync>) => {
+          const zip = await loadAsync(...args)
+          for (const entry of Object.values(zip.files)) {
+            if (entry.dir) continue
+
+            const data = (entry as unknown as { _data: DeclaredSize })._data
+            data.uncompressedSize = 320 * 1024 * 1024
+
+            const inflate = entry.async.bind(entry)
+            entry.async = ((...call: Parameters<typeof inflate>) => {
+              inflated.push(entry.name)
+              return inflate(...call)
+            }) as typeof entry.async
+
+            const stream = entry.nodeStream.bind(entry)
+            entry.nodeStream = ((...call: Parameters<typeof stream>) => {
+              inflated.push(entry.name)
+              return stream(...call)
+            }) as typeof entry.nodeStream
+          }
+          return zip
+        })
+
       const { message } = await expectBadRequest(parseWorkbook(payload))
 
       expect(message).toContain('of stór til lestrar')
-      expect(Date.now() - started).toBeLessThan(1000)
+      expect(inflated).toEqual([])
     })
 
     it('counts a shared-string cell that carries a formula before its value', async () => {

@@ -7,14 +7,18 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common'
 import {
+  ApiBearerAuth,
   ApiNoContentResponse,
   ApiOperation,
   ApiParam,
   ApiResponse,
 } from '@nestjs/swagger'
 
+import { UserRoleEnum } from '@dmr.is/constants'
+import { Roles } from '@dmr.is/decorators'
 import { EnumValidationPipe, UUIDValidationPipe } from '@dmr.is/pipelines'
 import {
   CreateSignature,
@@ -22,15 +26,31 @@ import {
   UpdateSignatureMember,
   UpdateSignatureRecord,
 } from '@dmr.is/shared-dto'
+import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 import { ResultWrapper } from '@dmr.is/types'
 
+import { RoleGuard } from '../guards/auth'
 import { MemberTypeEnum } from './lib/types'
 import { ISignatureService } from './signature.service.interface'
 
+/**
+ * Editorial signature records for a case. Registered only by the admin API's
+ * `CaseModule`, alongside `CaseController`, and guarded to match it: the
+ * signature UI is rendered inside the case-update screen, which loads through
+ * `getCase` on that `@Roles(Admin)` controller, so an Editor cannot reach these
+ * routes by any supported path anyway.
+ *
+ * These routes carried no guard at all until this commit, which left all nine
+ * of them — seven of which mutate (2 PUT, 3 POST, 2 DELETE) — reachable
+ * unauthenticated on an internet-facing ALB.
+ */
 @Controller({
   version: '1',
   path: 'signatures',
 })
+@ApiBearerAuth()
+@UseGuards(TokenJwtAuthGuard, RoleGuard)
+@Roles(UserRoleEnum.Admin)
 export class SignatureController {
   constructor(
     @Inject(ISignatureService)
