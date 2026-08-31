@@ -58,6 +58,11 @@ type WorksheetModelWithTables = ExcelJS.Worksheet['model'] & {
   tables?: Array<{ style?: ExcelJS.TableStyleProperties | null }>
 }
 
+/**
+ * Surfaces as `Cannot read properties of null (reading 'theme')` on
+ * `writeBuffer()` — named here because the message points at themes and the
+ * cause is a null table style, which costs anyone debugging it real time.
+ */
 const normaliseTableStylesForExcelJsWrite = (wb: ExcelJS.Workbook): void => {
   for (const ws of wb.worksheets) {
     // exceljs can load table XML with `style: null`, but its writer assumes a
