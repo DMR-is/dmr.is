@@ -4,6 +4,7 @@ import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
+import { MAX_INFLATED_ARCHIVE_BYTES } from '../../import-upload'
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
@@ -1695,6 +1696,36 @@ describe('parseWorkbook', () => {
 
       const { message } = await expectBadRequest(parseWorkbook(payload))
       expect(message).toContain('of stór til lestrar')
+    })
+
+    it('accepts an archive that lands exactly on the budget', async () => {
+      // The check is `>`, not `>=`, so the budget is inclusive. Left untested
+      // that choice is invisible, and an off-by-one here rejects a workbook
+      // for being exactly as large as it is allowed to be.
+      const filler = 'x'.repeat(MAX_INFLATED_ARCHIVE_BYTES - '<Types/>'.length)
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', filler)
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      // Rejected as an unreadable workbook (it is one) — not for its size.
+      expect(message).not.toContain('of stór til lestrar')
+    })
+
+    it('does not reject an archive with no members', async () => {
+      const payload = (await new JSZip().generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).not.toContain('of stór til lestrar')
     })
 
     it('still repairs a workbook that legitimately lost its shared-strings table', async () => {

@@ -6,6 +6,7 @@
  * Exporting the class would let a caller bypass that indirection.
  */
 
+export * from './archive-budget'
 export * from './dto/import-key.dto'
 export * from './dto/presign-upload-response.dto'
 export * from './import-upload.core.module'

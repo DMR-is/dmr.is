@@ -29,7 +29,7 @@ import {
   ArchiveTooLargeError,
   assertArchiveWithinBudget,
   MAX_INFLATED_ARCHIVE_BYTES,
-} from '../../import-upload/archive-budget'
+} from '../../import-upload'
 import { ImportErrorDto } from '../dto/import-error.dto'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { validateSemantics } from '../validators/semantic.validator'

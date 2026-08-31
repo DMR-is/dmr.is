@@ -6,9 +6,11 @@
  * upstream says almost nothing about what a workbook costs once opened. This
  * is the limit that does.
  *
- * It lives beside `MAX_UPLOAD_BYTES` because the two are the same decision
- * measured at different points, and every parser that takes a buffer from
- * `fetchWorkbook` needs the second one as much as the first.
+ * It sits in this module because the two are the same decision measured at
+ * different points, and every parser taking a buffer from `fetchWorkbook`
+ * needs the second as much as the first. Note the two are only co-located, not
+ * linked: `MAX_UPLOAD_BYTES` is private to `import-upload.service.ts` and
+ * nothing here reads it, so changing one does not prompt a look at the other.
  */
 import JSZip from 'jszip'
 
@@ -36,9 +38,8 @@ export class ArchiveTooLargeError extends Error {
  * sets `--max-old-space-size` to 75% of that, so the heap ceiling is 1152MB.
  *
  * exceljs does not hold the XML, it holds an object graph built from it:
- * measured against the real template, 9.0MB of inflated XML retains 73.6MB of
- * heap after `xlsx.load`, so roughly **8x**. `MAX_CONCURRENT_PARSES` allows 2
- * imports in flight at once.
+ * measured against the real template, 9.2MB of inflated XML retains 73.6MB of
+ * heap after `xlsx.load`, so roughly **8x**.
  *
  *     32MB x 8 x 2 parses = ~520MB, or about 45% of the 1152MB heap
  *
@@ -46,10 +47,25 @@ export class ArchiveTooLargeError extends Error {
  * ~1040MB across two parses — nearly the whole ceiling, with the process
  * dying rather than answering 400.
  *
- * Headroom is still comfortable: the empty template inflates to ~9MB, so a
- * report has ~3.5x room above it.
+ * ## Headroom
  *
- * ⚠️ This is coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
+ * Measured on the real template, not guessed: it inflates to 9.2MB empty, and
+ * a realistic employee row costs ~450 bytes of worksheet XML. At
+ * `MAX_EMPLOYEES` (10 000) that is **13.5MB — about 2.4x under this budget**.
+ * `ABSOLUTE_MAX_EMPLOYEE_ROWS` (50 000) extrapolates to ~31MB and sits on the
+ * line, which is acceptable: `employees.parser.ts` documents that row count as
+ * "almost certainly a corrupt or adversarial upload".
+ *
+ * ## What the "x 2" does and does not cover
+ *
+ * The 2 is `MAX_CONCURRENT_PARSES`, and it gates `parseWorkbook` only — it is
+ * a private semaphore inside `ReportExcelService`. `parseCompanyImport` also
+ * uses this budget and runs through no gate at all, so each concurrent company
+ * import adds ~260MB on top of the ~520MB accounted for above. That path is
+ * admin-only and realistically serial, which is why the number stands, but it
+ * is a gap in the derivation rather than something it covers.
+ *
+ * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without
  * revisiting this number spends heap that was accounted for here.
  */

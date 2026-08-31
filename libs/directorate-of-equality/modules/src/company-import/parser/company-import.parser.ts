@@ -22,7 +22,7 @@ import {
   ArchiveTooLargeError,
   assertArchiveWithinBudget,
   MAX_INFLATED_ARCHIVE_BYTES,
-} from '../../import-upload/archive-budget'
+} from '../../import-upload'
 import { readInteger, readString } from '../../report-excel/parser/cell'
 import { CompanyImportErrorDto } from '../dto/company-import-result.dto'
 import {
