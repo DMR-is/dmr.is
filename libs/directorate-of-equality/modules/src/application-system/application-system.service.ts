@@ -1,3 +1,5 @@
+import { isUUID } from 'class-validator'
+
 import {
   BadGatewayException,
   Inject,
@@ -99,9 +101,60 @@ export class ApplicationSystemService implements IApplicationSystemService {
     })
   }
 
+  /**
+   * Builds the island.is application-callback URL for one application id.
+   *
+   * `applicationId` is `report.provider_id` — a value the applicant supplied
+   * when the report was created — so it is treated as untrusted here even
+   * though the submit/draft DTOs now constrain it to a UUID: rows written
+   * before that validation existed are still in the table. It is re-validated,
+   * percent-encoded into a single path segment, and the resolved URL is
+   * checked to still sit under `XROAD_ISLAND_IS_PATH`.
+   *
+   * Without that, a `..` payload would be normalised away by `fetch`'s URL
+   * parser and redirect an authenticated `PUT` — carrying the DMR service
+   * account's bearer token and `X-Road-Client` header — at any other service
+   * the X-Road gateway can route to.
+   */
   private applicationCallbackUrl(applicationId: string, path = ''): string {
-    const base = `${this.requireEnv('XROAD_ISLAND_IS_PATH')}/application-callback-v2/applications/${applicationId}`
-    return path ? `${base}/${path}` : base
+    if (!isUUID(applicationId)) {
+      this.logger.error(
+        'Refusing to build a callback URL for a non-UUID application id',
+        {
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+          applicationId,
+        },
+      )
+      throw new InternalServerErrorException('Invalid application id')
+    }
+
+    // The trailing slash matters: without it `new URL(relative, base)` drops
+    // the last segment of the configured X-Road path.
+    const configured = this.requireEnv('XROAD_ISLAND_IS_PATH')
+    const base = new URL(
+      configured.endsWith('/') ? configured : `${configured}/`,
+    )
+
+    const suffix = path ? `/${path}` : ''
+    const url = new URL(
+      `application-callback-v2/applications/${encodeURIComponent(applicationId)}${suffix}`,
+      base,
+    )
+
+    if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) {
+      this.logger.error(
+        'Refusing to call a URL outside the configured X-Road path',
+        {
+          category: LOGGING_CATEGORY,
+          context: LOGGING_CONTEXT,
+          applicationId,
+        },
+      )
+      throw new InternalServerErrorException('Invalid application callback URL')
+    }
+
+    return url.toString()
   }
 
   private async authenticatedFetch(

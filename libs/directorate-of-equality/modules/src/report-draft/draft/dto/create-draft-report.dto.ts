@@ -2,7 +2,7 @@ import {
   ApiEnum,
   ApiOptionalDto,
   ApiOptionalString,
-  ApiString,
+  ApiUUID,
 } from '@dmr.is/decorators'
 
 import { ReportTypeEnum } from '../../../report/models/report.enums'
@@ -42,7 +42,7 @@ export class CreateDraftReportDto {
   @ApiEnum(ReportTypeEnum)
   type!: ReportTypeEnum
 
-  @ApiString({
+  @ApiUUID({
     description:
       'Upstream island.is application UUID, stored as the report provider_id.',
   })
