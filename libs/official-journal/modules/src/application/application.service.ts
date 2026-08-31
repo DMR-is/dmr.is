@@ -51,6 +51,7 @@ import {
   getTemplateDetails,
 } from '@dmr.is/utils-server/serverUtils'
 import {
+  type ApplicationCallbackPath,
   applicationCallbackUrl as buildApplicationCallbackUrl,
   InvalidCallbackUrlError,
 } from '@dmr.is/utils-server/xroadUtils'
@@ -161,7 +162,10 @@ export class ApplicationService implements IApplicationService {
    * to. That is a live vulnerability in the sibling DoE flow, where the id is
    * a free-form applicant-supplied column.
    */
-  private applicationCallbackUrl(id: string, path = ''): string {
+  private applicationCallbackUrl(
+    id: string,
+    path: ApplicationCallbackPath = '',
+  ): string {
     try {
       return buildApplicationCallbackUrl(
         `${process.env.XROAD_ISLAND_IS_PATH}`,
@@ -174,7 +178,14 @@ export class ApplicationService implements IApplicationService {
           category: LOGGING_CATEGORY,
           applicationId: id,
         })
-        throw new BadRequestException(`Invalid application id<${id}>`)
+        // A missing or malformed XROAD_ISLAND_IS_PATH is our misconfiguration,
+        // not the caller's: reporting it as a 400 would send operators looking
+        // at the request instead of the deploy.
+        throw error.reason === 'invalid-base-path'
+          ? new InternalServerErrorException(
+              'Application system is not configured correctly',
+            )
+          : new BadRequestException('Invalid application id')
       }
       throw error
     }

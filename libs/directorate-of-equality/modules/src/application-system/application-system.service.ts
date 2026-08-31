@@ -7,6 +7,7 @@ import {
 
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import {
+  type ApplicationCallbackPath,
   applicationCallbackUrl as buildApplicationCallbackUrl,
   InvalidCallbackUrlError,
 } from '@dmr.is/utils-server/xroadUtils'
@@ -112,7 +113,10 @@ export class ApplicationSystemService implements IApplicationSystemService {
    * before that validation existed are still in the table, and the partner API
    * accepts a free-form provider id on any channel.
    */
-  private applicationCallbackUrl(applicationId: string, path = ''): string {
+  private applicationCallbackUrl(
+    applicationId: string,
+    path: ApplicationCallbackPath = '',
+  ): string {
     try {
       return buildApplicationCallbackUrl(
         this.requireEnv('XROAD_ISLAND_IS_PATH'),
