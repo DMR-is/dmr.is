@@ -25,6 +25,11 @@ import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
+import {
+  ArchiveTooLargeError,
+  assertArchiveWithinBudget,
+  MAX_INFLATED_ARCHIVE_BYTES,
+} from '../../import-upload'
 import { ImportErrorDto } from '../dto/import-error.dto'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { validateSemantics } from '../validators/semantic.validator'
@@ -85,19 +90,6 @@ const SHARED_STRING_CELL_RE =
 const SHARED_STRING_TYPE_RE = /\bt="s"/
 
 /**
- * Total decompressed worksheet XML this guard will scan across one archive.
- *
- * The upload limit upstream (`ImportUploadService`) counts *compressed*
- * bytes, and deflate ratios on repetitive cell markup are high enough that it
- * says little about the inflated size. Capping the scan keeps this pass
- * proportional to a number we picked.
- *
- * 64MB is deliberately generous: the empty template alone decompresses to
- * ~9.4MB of worksheet XML, so a filled-in report needs real headroom above it.
- */
-const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
-
-/**
  * Ceiling on the blank shared-string table synthesized below.
  *
  * `emptySharedStringsXml` builds one array element per entry, so the index
@@ -112,34 +104,17 @@ const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
  */
 const MAX_SHARED_STRING_ENTRIES = 65_536
 
-/**
- * The member's uncompressed size as the archive declares it.
- *
- * jszip reads this from the central directory when the archive is opened, so
- * it is available before anything is inflated — but it is not on the public
- * `JSZipObject` type, and it is part of the archive, which makes it a claim
- * rather than a measurement. Used only to refuse a member before paying to
- * decompress it; what actually inflated is what gets counted.
- */
-const declaredUncompressedSize = (entry: JSZip.JSZipObject): number | null => {
-  const { _data } = entry as unknown as {
-    _data?: { uncompressedSize?: number }
-  }
-  return typeof _data?.uncompressedSize === 'number'
-    ? _data.uncompressedSize
-    : null
-}
-
 const workbookTooLarge = (): BadRequestException =>
   new BadRequestException({
-    message: 'Vinnubókin er of stór til lestrar — of mikið af gögnum í blöðum.',
+    message:
+      'Vinnubókin er of stór til lestrar — of mikið af gögnum í skránni.',
     errors: [
       {
         sheet: '(workbook)',
         row: null,
         column: null,
-        message: `Uppsafnað magn af blaðagögnum fer yfir ${
-          MAX_WORKSHEET_SCAN_BYTES / (1024 * 1024)
+        message: `Uppsafnað magn afþjappaðra gagna fer yfir ${
+          MAX_INFLATED_ARCHIVE_BYTES / (1024 * 1024)
         }MB.`,
       },
     ],
@@ -157,35 +132,22 @@ const emptySharedStringsXml = (count: number): string => {
  * The original strings are unrecoverable at that point, so inject blank shared
  * string entries and let normal validation report the missing data.
  */
-const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
-  const zip = await JSZip.loadAsync(buffer)
+const guardMissingSharedStrings = async (
+  zip: JSZip,
+  buffer: Buffer,
+): Promise<Buffer> => {
   if (zip.file(SHARED_STRINGS_PATH)) return buffer
 
-  let scannedBytes = 0
   let maxSharedStringIndex = -1
 
+  // No size accounting here any more. `assertArchiveWithinBudget` has already
+  // bounded every member of this archive, so what this loop can inflate is
+  // capped before it starts — and one budget in one place beats two that have
+  // to be kept in step.
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || !WORKSHEET_XML_RE.test(entry.name)) continue
 
-    // Refuse before inflating. The upload limit upstream counts compressed
-    // bytes, so a member that is small in the archive says nothing about what
-    // it costs to hold — and the cost is paid the moment `async('string')`
-    // returns, not when a check further down notices.
-    const declared = declaredUncompressedSize(entry)
-    if (declared !== null && scannedBytes + declared > MAX_WORKSHEET_SCAN_BYTES) {
-      throw workbookTooLarge()
-    }
-
     const xml = await entry.async('string')
-
-    // Then count what actually arrived, because the declared size is only as
-    // trustworthy as the archive it came from. Cumulative, not per-entry: an
-    // archive may carry any number of `sheetN.xml` members, and it is the
-    // total this pass walks that has to stay bounded.
-    scannedBytes += Buffer.byteLength(xml)
-    if (scannedBytes > MAX_WORKSHEET_SCAN_BYTES) {
-      throw workbookTooLarge()
-    }
 
     for (const [, attributes, index] of xml.matchAll(SHARED_STRING_CELL_RE)) {
       if (!SHARED_STRING_TYPE_RE.test(attributes)) continue
@@ -254,7 +216,9 @@ export const parseWorkbook = async (
 ): Promise<ParsedReportDto> => {
   const workbook = new ExcelJS.Workbook()
   try {
-    const guardedBuffer = await guardMissingSharedStrings(fileBuffer)
+    const zip = await JSZip.loadAsync(fileBuffer)
+    await assertArchiveWithinBudget(zip)
+    const guardedBuffer = await guardMissingSharedStrings(zip, fileBuffer)
     // exceljs declares its own `Buffer extends ArrayBuffer` shape that
     // conflicts with Node 20's `Buffer extends Uint8Array<ArrayBufferLike>`.
     // Hand it the underlying ArrayBuffer slice to satisfy both contracts.
@@ -270,6 +234,7 @@ export const parseWorkbook = async (
     // simply too large, untrue. Only genuine load failures get the generic
     // message; `errors` does not reach the client, so the headline is the
     // only part the user reads.
+    if (e instanceof ArchiveTooLargeError) throw workbookTooLarge()
     if (e instanceof BadRequestException) throw e
 
     throw new BadRequestException({

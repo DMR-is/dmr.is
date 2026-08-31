@@ -4,6 +4,7 @@ import JSZip from 'jszip'
 
 import { BadRequestException } from '@nestjs/common'
 
+import { MAX_INFLATED_ARCHIVE_BYTES } from '../../import-upload'
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
@@ -57,6 +58,17 @@ type WorksheetModelWithTables = ExcelJS.Worksheet['model'] & {
   tables?: Array<{ style?: ExcelJS.TableStyleProperties | null }>
 }
 
+/**
+ * Surfaces as `Cannot read properties of null (reading 'theme')` on
+ * `writeBuffer()` — named here because the message points at themes and the
+ * cause is a null table style, which costs anyone debugging it real time.
+ */
+/**
+ * Surfaces as `Cannot read properties of null (reading 'theme')` from
+ * `writeBuffer()`. Named here because the message points at themes and the
+ * cause is a null table style, so anyone re-serializing the template chases
+ * the wrong thing.
+ */
 const normaliseTableStylesForExcelJsWrite = (wb: ExcelJS.Workbook): void => {
   for (const ws of wb.worksheets) {
     // exceljs can load table XML with `style: null`, but its writer assumes a
@@ -1487,12 +1499,12 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects worksheet XML past the scan budget', async () => {
-      // 72MB inflated, over the 64MB budget, from an archive well under the
+    it('rejects an archive that inflates past the budget', async () => {
+      // 40MB inflated, over the 32MB budget, from an archive well under the
       // 20MB compressed limit `ImportUploadService` enforces — compressed
       // size says little about what a sheet inflates to.
       const { message } = await expectBadRequest(
-        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(9 * 1024 * 1024))),
+        parseWorkbook(await zipWithSheet('<v>1</v>'.repeat(5 * 1024 * 1024))),
       )
 
       // Not "is this a valid xlsx file?" — it is one, it is just too big.
@@ -1507,12 +1519,17 @@ describe('parseWorkbook', () => {
       //
       // The size is stated rather than built. It is a number in the central
       // directory, so a hostile archive can claim anything — which is the case
-      // this guard exists for, and the parser's own comment says as much. The
-      // earlier version of this test allocated a real 320MB string and inferred
-      // "did not inflate" from finishing inside 1000ms; that made it the
-      // slowest test in the file and tied it to how loaded the runner is, on a
-      // file that already raises the Jest timeout for exactly that reason.
-      // Recording the inflate calls asserts the property directly.
+      // this guard exists for, and the parser's own comment says as much. An
+      // earlier version allocated a real 320MB string and inferred "did not
+      // inflate" from finishing inside 1000ms; that made it the slowest test in
+      // the file and tied it to how loaded the runner is, on a file that
+      // already raises the Jest timeout for exactly that reason. Recording the
+      // inflate calls asserts the property directly.
+      //
+      // Both entry points are recorded. `async` is how the shared-strings scan
+      // reads a member; `nodeStream` is how the budget counts one. Watching
+      // only `async` would leave the assertion true for a reason unrelated to
+      // the guard, since the counting path never calls it.
       const payload = await zipWithSheet('<v>1</v>')
       const inflated: string[] = []
 
@@ -1532,6 +1549,12 @@ describe('parseWorkbook', () => {
               inflated.push(entry.name)
               return inflate(...call)
             }) as typeof entry.async
+
+            const stream = entry.nodeStream.bind(entry)
+            entry.nodeStream = ((...call: Parameters<typeof stream>) => {
+              inflated.push(entry.name)
+              return stream(...call)
+            }) as typeof entry.nodeStream
           }
           return zip
         })
@@ -1571,6 +1594,149 @@ describe('parseWorkbook', () => {
       )
 
       expect(message).not.toContain('of margar strengjafærslur')
+    })
+
+    /**
+     * Rewrite one member's uncompressed-size fields to `claimed`.
+     *
+     * Walked structurally rather than by scanning for `PK` signatures: a
+     * deflate stream contains those bytes by coincidence — on the fixture
+     * below, 5 hits each against 3 real members — so a scan finds offsets
+     * inside the compressed payload and can corrupt it. That failure would
+     * surface as an inflate error and read like a regression in the bound
+     * rather than a broken fixture.
+     *
+     * So: locate the end-of-central-directory record, walk the central
+     * directory by each entry's declared name/extra/comment lengths, and
+     * follow the matching entry's pointer to its local file header.
+     */
+    const understateSize = (
+      archive: Buffer,
+      member: string,
+      claimed: number,
+    ): Buffer => {
+      const out = Buffer.from(archive)
+
+      let eocd = -1
+      for (let i = out.length - 22; i >= 0; i--) {
+        if (out.readUInt32LE(i) === 0x06054b50) {
+          eocd = i
+          break
+        }
+      }
+      if (eocd < 0) throw new Error('fixture: no end-of-central-directory')
+
+      let cursor = out.readUInt32LE(eocd + 16)
+      const count = out.readUInt16LE(eocd + 10)
+      let rewritten = 0
+
+      for (let i = 0; i < count; i++) {
+        if (out.readUInt32LE(cursor) !== 0x02014b50) {
+          throw new Error('fixture: central directory entry expected')
+        }
+        const nameLen = out.readUInt16LE(cursor + 28)
+        const extraLen = out.readUInt16LE(cursor + 30)
+        const commentLen = out.readUInt16LE(cursor + 32)
+        const name = out.subarray(cursor + 46, cursor + 46 + nameLen).toString()
+
+        if (name === member) {
+          out.writeUInt32LE(claimed, cursor + 24)
+          const lfh = out.readUInt32LE(cursor + 42)
+          if (out.readUInt32LE(lfh) !== 0x04034b50) {
+            throw new Error('fixture: local file header expected')
+          }
+          out.writeUInt32LE(claimed, lfh + 22)
+          rewritten++
+        }
+        cursor += 46 + nameLen + extraLen + commentLen
+      }
+
+      // Loud if the walk ever stops finding the member, rather than silently
+      // testing an unmodified archive.
+      if (rewritten !== 1) {
+        throw new Error(`fixture: rewrote ${rewritten} entries, expected 1`)
+      }
+      return out
+    }
+
+    it('bounds a member that under-declares its size in the central directory', async () => {
+      // The declared size is part of the archive, and jszip only compares it
+      // against reality once the member has fully inflated. Trusting it would
+      // mean a member claiming 1KB and delivering 80MB is paid for in full
+      // before anything objects, so the bound has to come from counting bytes
+      // as they arrive.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      zip.file(
+        'xl/worksheets/sheet1.xml',
+        Buffer.alloc(80 * 1024 * 1024, '<v>1</v>'),
+      )
+      const honest = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const lying = understateSize(honest, 'xl/worksheets/sheet1.xml', 1024)
+
+      const { message } = await expectBadRequest(parseWorkbook(lying))
+
+      // The message is what distinguishes the two outcomes. Counting as the
+      // bytes arrive stops this at the budget and reports it as too large.
+      // Trusting the declared 1KB instead lets all 80MB through to exceljs,
+      // which inflates it and only then notices the size mismatch — so the
+      // upload still fails, but as an unreadable file, after the memory has
+      // been spent. Asserting only that it was rejected cannot tell those
+      // apart; asserting on the reason can.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('bounds an archive whose members are individually small', async () => {
+      // The budget is the archive's, not any one member's — 10 sheets of
+      // 4MB each clear every per-member check and still total 40MB.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      for (let i = 1; i <= 10; i++) {
+        zip.file(`xl/worksheets/sheet${i}.xml`, '<v>1</v>'.repeat(512 * 1024))
+      }
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('accepts an archive that lands exactly on the budget', async () => {
+      // The check is `>`, not `>=`, so the budget is inclusive. Left untested
+      // that choice is invisible, and an off-by-one here rejects a workbook
+      // for being exactly as large as it is allowed to be.
+      const filler = 'x'.repeat(MAX_INFLATED_ARCHIVE_BYTES - '<Types/>'.length)
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', filler)
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      // Rejected as an unreadable workbook (it is one) — not for its size.
+      expect(message).not.toContain('of stór til lestrar')
+    })
+
+    it('does not reject an archive with no members', async () => {
+      const payload = (await new JSZip().generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+
+      expect(message).not.toContain('of stór til lestrar')
     })
 
     it('still repairs a workbook that legitimately lost its shared-strings table', async () => {
