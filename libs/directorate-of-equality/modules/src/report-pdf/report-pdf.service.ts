@@ -55,12 +55,21 @@ export class ReportPdfService implements IReportPdfService {
   }
 
   private async buildSalaryReportPdf(report: ReportDetailDto): Promise<Buffer> {
-    const [statistics, outliers] = await Promise.all([
+    // `payComponents` is its own call for the same reason the admin screen
+    // fetches it separately: these are monthly krónur, not rates, so they are
+    // not part of the chart payload.
+    const [statistics, outliers, payComponents] = await Promise.all([
       this.reportStatisticsService.getRegularHourlyWageByScoreAll(report.id),
       this.fetchAllOutliers(report.id),
+      this.reportStatisticsService.getBenefitsBreakdown(report.id),
     ])
 
-    const html = buildSalaryReportHtml({ report, statistics, outliers })
+    const html = buildSalaryReportHtml({
+      report,
+      statistics,
+      outliers,
+      payComponents,
+    })
 
     return this.generatePdfFromHtml(html)
   }

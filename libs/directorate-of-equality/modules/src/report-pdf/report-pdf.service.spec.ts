@@ -102,6 +102,31 @@ function makeService(reportOverrides = {}) {
   }
   const statisticsService = {
     getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
+    // Monthly krónur, fetched separately from the rate statistics — see the
+    // note on `payComponents` in the salary template.
+    getBenefitsBreakdown: jest.fn(async () => ({
+      male: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      female: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      overall: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      additionalWageGapPercent: null,
+      bonusWageGapPercent: null,
+      totalWageGapPercent: null,
+    })),
   }
 
   const service = new ReportPdfService(

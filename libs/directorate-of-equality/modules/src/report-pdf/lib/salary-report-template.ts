@@ -1,8 +1,17 @@
 import { CompanySizeEnum } from '../../company/models/company.enums'
 import { ReportDetailDto } from '../../report/dto/report-detail.dto'
-import { PayStatusEnum } from '../../report/lib/wage-gap-decomposition'
+import {
+  PayStatusEnum,
+  WageGapBlockerEnum,
+  WageGapWarningEnum,
+} from '../../report/lib/wage-gap-decomposition'
+import { SalaryDataBasisEnum } from '../../report/models/report.enums'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import { type WageGapDecompositionDto } from '../../report-result/dto/report-result.dto'
+import {
+  type BenefitsBreakdownDto,
+  type GenderBenefitsDto,
+} from '../../report-statistics/dto/benefits-breakdown.dto'
 import {
   PayDispersionBlockerEnum,
   type PayDispersionDto,
@@ -11,8 +20,10 @@ import {
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
 import {
   escapeHtml,
+  formatCurrency,
   formatDate,
   formatHourlyRate,
+  formatMonthYear,
   formatNumber,
   formatPercent,
   genderLabel,
@@ -24,6 +35,12 @@ export interface SalaryReportPdfData {
   report: ReportDetailDto
   statistics: SalaryByGenderAndScoreDto
   outliers: ReportEmployeeOutlierDto[]
+  /**
+   * Viðbótarlaun / aukagreiðslur per gender. Its own fetch rather than part of
+   * `statistics` because these are monthly krónur, not rates — the admin screen
+   * fetches it separately for the same reason.
+   */
+  payComponents?: BenefitsBreakdownDto | null
 }
 
 const COMPANY_SIZE_LABELS: Record<CompanySizeEnum, string> = {
@@ -138,7 +155,124 @@ function disfavourLabel(
   return ''
 }
 
+/**
+ * Copy for the decomposition's hard blockers and soft warnings.
+ *
+ * ⚠️ **Mirrors `reportText.salaryTab.blockers` / `.warnings` in the admin web
+ * app — change both together.** The API emits enum codes only, so every surface
+ * carries its own mapping. The fallback prints the raw code rather than dropping
+ * it: an unexplained finding is better than a silently missing one.
+ */
+const WAGE_GAP_BLOCKER_TEXT: Record<WageGapBlockerEnum, string> = {
+  [WageGapBlockerEnum.EMPTY_MALE_COHORT]:
+    'Engir karlar í skýrslunni, því er ekki unnt að reikna launamun milli kynja.',
+  [WageGapBlockerEnum.EMPTY_FEMALE_COHORT]:
+    'Engar konur í skýrslunni, því er ekki unnt að reikna launamun milli kynja.',
+}
+
+const WAGE_GAP_WARNING_TEXT: Record<WageGapWarningEnum, string> = {
+  [WageGapWarningEnum.ROWS_EXCLUDED_NON_POSITIVE_WAGE]:
+    'Starfsmenn með ógilt tímakaup voru undanskildir útreikningi.',
+  [WageGapWarningEnum.NO_SCORE_OVERLAP]:
+    'Starfsmatsstig kynjanna skarast ekki. Það er raunveruleg niðurstaða — algjör kynjaskipting starfa — en leiðrétta talan byggir þá á framreikningi utan gagnasviðs.',
+  [WageGapWarningEnum.NO_SCORE_VARIATION]:
+    'Öll starfsmatsstig eru eins, því er ekki unnt að greina hvað stig skýra.',
+}
+
+/** What period the submitted figures describe, qualifying every rate above it. */
+function salaryDataBasisField(report: ReportDetailDto): string {
+  const value =
+    report.salaryDataBasis === SalaryDataBasisEnum.MONTH
+      ? report.salaryDataPeriod
+        ? `Tiltekinn mánuður — ${formatMonthYear(report.salaryDataPeriod)}`
+        : 'Tiltekinn mánuður'
+      : report.salaryDataBasis === SalaryDataBasisEnum.AVERAGE
+        ? 'Tólf mánaða meðaltal'
+        : // Older reports predate the declaration. "The company never told us" is
+          // itself the answer, so it is stated rather than hidden.
+          'Ekki tilgreint'
+
+  return field('Viðmiðunartímabil launagagna', escapeHtml(value))
+}
+
+function subsection(title: string, lead: string, body: string): string {
+  return `
+    <div class="subsection">
+      <p class="subsection__title">${title}</p>
+      <p class="subsection__lead">${lead}</p>
+      ${body}
+    </div>`
+}
+
+/**
+ * **Leiðréttur launamunur** — the compliance figure, and the one thing this
+ * document was missing outright.
+ *
+ * Splits on `oskyrtAvailable`, not on the figure being null: unavailable is a
+ * state the engine reports *with reasons*, and those reasons are the actionable
+ * half of the message ("you have 0 women, we need at least one"). Same split the
+ * admin screen makes.
+ *
+ * ⚠️ `oskyrtWithinBenchmark !== true`, deliberately, NOT `=== false`. The flag
+ * is nullable — a snapshot frozen before it existed reads `null`, and
+ * `null === false` is `false`, which would print *Undir viðmiði* over a live
+ * gap. Only an explicit `true` may claim compliance. The web card and the
+ * auto-review rule fail closed the same way, and this is the surface whose
+ * reader cannot ask a follow-up question.
+ */
+function adjustedGapBlock(decomposition: WageGapDecompositionDto): string {
+  if (!decomposition.oskyrtAvailable) {
+    // ⚠️ `?? []` and `?? null` throughout, on fields the DTO types as required.
+    // These come off a FROZEN snapshot, so a report result computed before a
+    // field existed genuinely arrives without it — the same reason
+    // `oskyrtWithinBenchmark` is read as `!== true`. Throwing here would fail the
+    // whole PDF, and the PDF is now attached to the approval email, so a
+    // render failure means the company is told nothing at all.
+    const reasons = (decomposition.oskyrtBlockers ?? [])
+      .map(
+        (code) =>
+          `<p class="advisory-note">${escapeHtml(WAGE_GAP_BLOCKER_TEXT[code] ?? code)}</p>`,
+      )
+      .join('')
+
+    // Counts stay real even when the figures cannot be — this is the actionable
+    // half of the message.
+    const counts = `<p class="advisory-note">Fjöldi í greiningu: ${formatNumber(
+      decomposition.counts?.male ?? null,
+    )} karlar, ${formatNumber(decomposition.counts?.female ?? null)} konur.</p>`
+
+    return `<p class="advisory-note advisory-note--lead">Ekki hægt að reikna</p>${reasons}${counts}`
+  }
+
+  const exceeded = decomposition.oskyrtWithinBenchmark !== true
+
+  const warnings = (decomposition.warnings ?? [])
+    .map(
+      (code) =>
+        `<p class="advisory-note">${escapeHtml(WAGE_GAP_WARNING_TEXT[code] ?? code)}</p>`,
+    )
+    .join('')
+
+  return `<div class="stat-cards stat-cards--pair">
+      <div class="stat-card stat-card--accent">
+        <p class="stat-card__label">Leiðréttur launamunur</p>
+        <p class="stat-card__value">${
+          decomposition.oskyrtPercent == null
+            ? '—'
+            : `${formatPercent(decomposition.oskyrtPercent)} ${disfavourLabel(decomposition.oskyrtDirection)}`.trim()
+        }</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card__label">Viðmið</p>
+        <p class="stat-card__value">${formatPercent(decomposition.benchmarkPercent)} · ${
+          exceeded ? 'Yfir viðmiði' : 'Undir viðmiði'
+        }</p>
+      </div>
+    </div>${warnings}`
+}
+
 function salaryAnalysisSection(
+  report: ReportDetailDto,
   statistics: SalaryByGenderAndScoreDto,
   decomposition?: WageGapDecompositionDto | null,
 ): string {
@@ -152,9 +286,19 @@ function salaryAnalysisSection(
     decomposition?.pooledFit,
   )
 
-  return section(
-    'Launagreining',
-    `<div class="chart-wrap">${chart}</div>
+  /*
+   * Two sub-blocks, deliberately apart rather than five cards in a row — the
+   * same split the admin screen makes, for the same reason. Óleiðréttur sits
+   * with the two averages it is computed from, so a reader can subtract them and
+   * arrive at it. Leiðréttur sits alone because it is the figure that decides
+   * something, and because the two do NOT nest: leiðréttur can legitimately
+   * exceed óleiðréttur when the job-score mix favours the lower-paid group, so
+   * placing them adjacent invites a comparison that does not hold.
+   */
+  const unadjusted = subsection(
+    'Meðaltímakaup og hrátt bil',
+    'Munur á meðaltímakaupi karla og kvenna, án leiðréttingar. Ekki borið við viðmið.',
+    `<div class="field-grid">${salaryDataBasisField(report)}</div>
     <div class="stat-cards">
       <div class="stat-card">
         <p class="stat-card__label">Meðaltímakaup karla</p>
@@ -173,6 +317,90 @@ function salaryAnalysisSection(
         }</p>
       </div>
     </div>`,
+  )
+
+  // Absent for a report whose result was never computed. The block then does not
+  // render at all, which is honest: there is no figure, not a figure of zero.
+  const adjusted = decomposition
+    ? subsection(
+        'Leiðréttur launamunur',
+        'Sá hluti launamunar sem starfsmatsstig skýra ekki. Þetta er talan sem borin er við viðmiðið.',
+        adjustedGapBlock(decomposition),
+      )
+    : ''
+
+  return section(
+    'Launagreining',
+    `<div class="chart-wrap">${chart}</div>${unadjusted}${adjusted}`,
+  )
+}
+
+/**
+ * **Viðbótarlaun og aukagreiðslur** — monthly krónur, not rates.
+ *
+ * ⚠️ Every other pay figure in this document is kr./klst. This block is the one
+ * that is not, which is why the lead says so and why it formats with
+ * `formatCurrency` rather than `formatHourlyRate`. The API returns these raw and
+ * deliberately does not divide by greiddar stundir: dividing would double-count
+ * the hours already inside the tímakaup figures above.
+ *
+ * The bottom row is the **óleiðrétti** gap per component — a plain difference of
+ * means, no decomposition, no compliance role. It can reach magnitudes like
+ * −300% on small denominators, which is not an error, and is exactly why it is
+ * kept away from the leiðréttur figure that decides something.
+ */
+function payComponentsSection(
+  payComponents?: BenefitsBreakdownDto | null,
+): string {
+  if (!payComponents) return ''
+
+  const { male, female, overall } = payComponents
+
+  // Three rows of zeros reads as a finding ("nobody gets overtime") rather than
+  // as an empty section.
+  if (overall.averageTotal === 0 && overall.count > 0) {
+    return section(
+      'Viðbótarlaun og aukagreiðslur',
+      '<p class="empty-note">Engar viðbótarlaunagreiðslur skráðar</p>',
+    )
+  }
+
+  /*
+   * ⚠️ `0 kr.` and "nobody to average" are different statements. The API
+   * averages over a cohort, so an absent gender comes back as `0` with
+   * `count: 0` — indistinguishable, once printed, from a cohort that genuinely
+   * receives nothing. On a single-gender workforce the whole row would have read
+   * as zeros, asserting something about people who are not there.
+   */
+  const cell = (value: number, count: number): string =>
+    count === 0 ? '—' : formatCurrency(value)
+
+  const genderRow = (label: string, row: GenderBenefitsDto): string =>
+    `<tr>
+      <td>${label}</td>
+      <td>${cell(row.averageAdditionalSalary, row.count)}</td>
+      <td>${cell(row.averageBonusSalary, row.count)}</td>
+      <td>${cell(row.averageTotal, row.count)}</td>
+    </tr>`
+
+  return section(
+    'Viðbótarlaun og aukagreiðslur',
+    `<p class="subsection__lead">Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum.</p>
+    <table class="data-table">
+      <thead><tr><th>Kyn</th><th>Viðbótarlaun</th><th>Aukagreiðslur</th><th>Samtals</th></tr></thead>
+      <tbody>
+        ${genderRow('Karl', male)}
+        ${genderRow('Kona', female)}
+        ${genderRow('Allir', overall)}
+        <tr>
+          <td>Óleiðréttur launamunur</td>
+          <td>${formatPercent(payComponents.additionalWageGapPercent, { signed: true })}</td>
+          <td>${formatPercent(payComponents.bonusWageGapPercent, { signed: true })}</td>
+          <td>${formatPercent(payComponents.totalWageGapPercent, { signed: true })}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="advisory-note">Hlutfallslegur munur á meðaltali karla og kvenna fyrir hvern lið. Ekki leiðrétt fyrir starfsmatsstigum og ekki borið við viðmið.</p>`,
   )
 }
 
@@ -391,7 +619,7 @@ function deadlineSection(report: ReportDetailDto): string {
  * fetched report detail, salary statistics and outlier rows.
  */
 export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
-  const { report, statistics, outliers } = data
+  const { report, statistics, outliers, payComponents } = data
   const title = `Jafnlaunaúttekt — ${escapeHtml(report.company?.name ?? '')}`
 
   return `<!DOCTYPE html>
@@ -408,7 +636,8 @@ export function buildSalaryReportHtml(data: SalaryReportPdfData): string {
     ${contactSection(report)}
     ${averageEmployeesSection(report)}
     ${subsidiariesSection(report)}
-    ${salaryAnalysisSection(statistics, report.result?.wageGapDecomposition)}
+    ${salaryAnalysisSection(report, statistics, report.result?.wageGapDecomposition)}
+    ${payComponentsSection(payComponents)}
     ${improvementPlanSection(outliers, report.result?.wageGapDecomposition)}
     ${payDispersionSection(report.result?.payDispersion)}
     ${deadlineSection(report)}

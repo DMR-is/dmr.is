@@ -5,6 +5,7 @@ import {
   GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
+  SalaryDataBasisEnum,
 } from '../../report/models/report.enums'
 import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-employee-outlier.dto'
 import {
@@ -59,6 +60,17 @@ function makeData(
         // reads this flag, so leaving it out would make the compliant copy the
         // fixture's accident instead of its subject.
         oskyrtWithinBenchmark: true,
+        // Stated for the same reason: the leiðréttur block splits on
+        // `oskyrtAvailable`, so omitting it silently put the default fixture —
+        // a company with a computed, compliant gap — down the "cannot compute"
+        // branch.
+        oskyrtAvailable: true,
+        oskyrtPercent: 2.1,
+        oskyrtDirection: 'FEMALE',
+        benchmarkPercent: 3.9,
+        oskyrtBlockers: [],
+        warnings: [],
+        counts: { male: 8, female: 6, excluded: 0 },
       },
     },
   } as unknown as ReportDetailDto
@@ -408,5 +420,250 @@ describe('buildSalaryReportHtml', () => {
     expect(html).toContain('-5,0% (undir)')
     expect(html).toContain('+5,0% (yfir)')
     expect(html).toContain('Deildarstjóri')
+  })
+
+  describe('leiðréttur launamunur', () => {
+    it('renders the compliance figure and the benchmark verdict', () => {
+      const html = buildSalaryReportHtml(makeData())
+
+      expect(html).toContain('Leiðréttur launamunur')
+      expect(html).toContain('2,1%')
+      expect(html).toContain('3,9%')
+      expect(html).toContain('Undir viðmiði')
+      expect(html).not.toContain('Yfir viðmiði')
+    })
+
+    /**
+     * ⚠️ Only an explicit `true` may claim compliance. `oskyrtWithinBenchmark` is
+     * nullable on a snapshot frozen before it existed, and `null === false` is
+     * `false` — a `=== false` test would print *Undir viðmiði* over a live gap.
+     */
+    it('reads a missing compliance flag as over the benchmark', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            result: {
+              wageGapDecomposition: {
+                ...makeData().report.result?.wageGapDecomposition,
+                oskyrtWithinBenchmark: undefined,
+              },
+            },
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).toContain('Yfir viðmiði')
+      expect(html).not.toContain('Undir viðmiði')
+    })
+
+    /**
+     * Unavailable is a state the engine reports WITH REASONS, and the reasons
+     * are the actionable half of the message. The counts stay real even when the
+     * figures cannot be.
+     */
+    it('explains why the gap cannot be computed, with the real cohort counts', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            result: {
+              wageGapDecomposition: {
+                oskyrtAvailable: false,
+                oskyrtBlockers: ['EMPTY_FEMALE_COHORT'],
+                counts: { male: 9, female: 0, excluded: 0 },
+              },
+            },
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).toContain('Ekki hægt að reikna')
+      expect(html).toContain('Engar konur í skýrslunni')
+      expect(html).toContain('9 karlar, 0 konur')
+      // Never a figure of zero for a gap that could not be measured.
+      expect(html).not.toContain('Undir viðmiði')
+    })
+
+    it('surfaces soft warnings alongside a computed figure', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            result: {
+              wageGapDecomposition: {
+                ...makeData().report.result?.wageGapDecomposition,
+                warnings: ['NO_SCORE_OVERLAP'],
+              },
+            },
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).toContain('Starfsmatsstig kynjanna skarast ekki')
+      expect(html).toContain('Undir viðmiði')
+    })
+
+    // A frozen snapshot predating these arrays must not fail the whole document
+    // — the PDF is attached to the approval email, so a render failure means the
+    // company hears nothing.
+    it('renders a legacy snapshot missing the blocker and warning arrays', () => {
+      expect(() =>
+        buildSalaryReportHtml(
+          makeData({
+            report: {
+              ...makeData().report,
+              result: {
+                wageGapDecomposition: { oskyrtAvailable: false },
+              },
+            } as unknown as ReportDetailDto,
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    it('omits the block entirely when no result was computed', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            result: null,
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).not.toContain('Sá hluti launamunar sem starfsmatsstig')
+    })
+  })
+
+  describe('viðmiðunartímabil launagagna', () => {
+    it('names the payroll month for a MONTH basis', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            salaryDataBasis: SalaryDataBasisEnum.MONTH,
+            salaryDataPeriod: '2026-05-01',
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).toContain('Viðmiðunartímabil launagagna')
+      expect(html).toContain('Tiltekinn mánuður — maí 2026')
+    })
+
+    it('renders the twelve-month average', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          report: {
+            ...makeData().report,
+            salaryDataBasis: SalaryDataBasisEnum.AVERAGE,
+          } as unknown as ReportDetailDto,
+        }),
+      )
+
+      expect(html).toContain('Tólf mánaða meðaltal')
+    })
+
+    // "The company never told us" is itself the answer, so it is stated rather
+    // than hidden.
+    it('says so outright when the basis was never declared', () => {
+      const html = buildSalaryReportHtml(makeData())
+
+      expect(html).toContain('Ekki tilgreint')
+    })
+  })
+
+  describe('viðbótarlaun og aukagreiðslur', () => {
+    const payComponents = {
+      male: {
+        averageAdditionalSalary: 50000,
+        averageBonusSalary: 20000,
+        averageTotal: 70000,
+        count: 8,
+      },
+      female: {
+        averageAdditionalSalary: 30000,
+        averageBonusSalary: 10000,
+        averageTotal: 40000,
+        count: 6,
+      },
+      overall: {
+        averageAdditionalSalary: 41429,
+        averageBonusSalary: 15714,
+        averageTotal: 57143,
+        count: 14,
+      },
+      additionalWageGapPercent: 40,
+      bonusWageGapPercent: 50,
+      totalWageGapPercent: 42.9,
+    }
+
+    /**
+     * ⚠️ Monthly krónur, not kr./klst. Every other pay figure in the document is
+     * a rate, so this block must not borrow `formatHourlyRate`.
+     */
+    it('renders monthly krónur, never an hourly rate', () => {
+      const html = buildSalaryReportHtml(makeData({ payComponents }))
+
+      expect(html).toContain('Viðbótarlaun og aukagreiðslur')
+      expect(html).toContain('50.000 kr.')
+      expect(html).toContain('70.000 kr.')
+      expect(html).not.toContain('50.000 kr./klst.')
+      expect(html).toContain('Krónur á mánuði')
+    })
+
+    it('signs the per-component gap row', () => {
+      const html = buildSalaryReportHtml(makeData({ payComponents }))
+
+      expect(html).toContain('+40,0%')
+      expect(html).toContain('+50,0%')
+      expect(html).toContain('+42,9%')
+    })
+
+    /**
+     * ⚠️ `0 kr.` and "nobody to average" are different statements. An absent
+     * gender comes back as `0` with `count: 0`, which printed as a real figure
+     * would assert something about people who are not there.
+     */
+    it('dashes a gender with nobody in it rather than printing 0 kr.', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          payComponents: {
+            ...payComponents,
+            female: {
+              averageAdditionalSalary: 0,
+              averageBonusSalary: 0,
+              averageTotal: 0,
+              count: 0,
+            },
+          },
+        }),
+      )
+
+      expect(html).not.toContain('<td>0 kr.</td>')
+    })
+
+    // Three rows of zeros reads as a finding ("nobody gets overtime") rather
+    // than as an empty section.
+    it('states the empty case instead of tabling zeros', () => {
+      const html = buildSalaryReportHtml(
+        makeData({
+          payComponents: {
+            ...payComponents,
+            overall: { ...payComponents.overall, averageTotal: 0 },
+          },
+        }),
+      )
+
+      expect(html).toContain('Engar viðbótarlaunagreiðslur skráðar')
+      expect(html).not.toContain('Krónur á mánuði')
+    })
+
+    it('renders no section at all when the breakdown is absent', () => {
+      const html = buildSalaryReportHtml(makeData())
+
+      expect(html).not.toContain('Viðbótarlaun og aukagreiðslur')
+    })
   })
 })

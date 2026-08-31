@@ -104,3 +104,32 @@ export function orDash(value: string | null | undefined): string {
   const trimmed = value?.trim()
   return trimmed ? escapeHtml(trimmed) : '—'
 }
+
+const IS_MONTHS = [
+  'janúar',
+  'febrúar',
+  'mars',
+  'apríl',
+  'maí',
+  'júní',
+  'júlí',
+  'ágúst',
+  'september',
+  'október',
+  'nóvember',
+  'desember',
+]
+
+/**
+ * `YYYY-MM-01` as "maí 2026", mirroring the admin's `formatMonthYearIS`.
+ *
+ * ⚠️ Splits the string rather than constructing a `Date`. The value is a
+ * calendar month, and `new Date('2026-05-01').getMonth()` returns April for any
+ * viewer west of UTC — the same class of bug `formatIsoDate` exists to avoid.
+ */
+export function formatMonthYear(value: string | null | undefined): string {
+  if (!value) return '—'
+  const [year, month] = value.split('-')
+  const name = IS_MONTHS[Number(month) - 1]
+  return name ? `${name} ${year}` : value
+}

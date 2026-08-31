@@ -124,6 +124,28 @@ export const pdfStyles = `
     color: #6a2ea0;
   }
 
+  /* Two figures rather than three — the leiðréttur group. */
+  .stat-cards--pair {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .subsection {
+    margin-top: 20px;
+  }
+
+  .subsection__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #00003c;
+    margin: 0 0 4px 0;
+  }
+
+  .subsection__lead {
+    font-size: 11px;
+    color: #43425a;
+    margin: 0;
+  }
+
   .chart-wrap {
     margin-top: 12px;
   }
