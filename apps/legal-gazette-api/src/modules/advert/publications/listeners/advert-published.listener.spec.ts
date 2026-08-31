@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing'
 
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/shared-modules'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { AdvertModel } from '../../../../models/advert.model'
 import { AdvertVersionEnum } from '../../../../models/advert-publication.model'
@@ -362,7 +363,17 @@ describe('AdvertPublishedListener', () => {
         )
       })
       it('should succeed when email sending succeeds', async () => {
-        sesService.sendMail.mockResolvedValue(undefined)
+        // `sendMail` is typed `Promise<ResultWrapper<SentMessageInfo>>` — it
+        // resolves an err result on failure rather than rejecting, because its
+        // implementation is `@LogAndHandle()`-decorated. Shape-only change here.
+        //
+        // ⚠️ Note the sibling cases still use `mockRejectedValue` to exercise
+        // this listener's `.catch()`. Per the same decorator that catch is
+        // unreachable in production, so a failed advert-published email is
+        // silently logged as sent — the same defect fixed on the DoE side in
+        // this PR. Left alone deliberately: changing it alters Legal Gazette
+        // behaviour and belongs to its owners, not a DoE change.
+        sesService.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
         const event = createMockEvent()
         await listener.sendEmailNotification(event)
         expect(sesService.sendMail).toHaveBeenCalledWith(
