@@ -7,7 +7,6 @@
  */
 
 export * from './dto/get-report-outliers-response.dto'
-export * from './lib/remedy-date'
 export * from './dto/report-employee-outlier.dto'
 export * from './dto/report-employee-role.dto'
 export * from './dto/report-employee.dto'

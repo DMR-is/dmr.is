@@ -49,8 +49,10 @@ export const formatSalary = (v: number) =>
  * is exactly why it survives. The value carries no time and no zone; treating
  * it as an instant is the mistake.
  *
- * Mirrors `formatDate` in the API's `report-pdf/lib/format.ts` — change both
- * together.
+ * The API's `formatDate` in `report-pdf/lib/format.ts` handles both shapes: it
+ * splits a `YYYY-MM-DD` string the same way, and keeps a local-parts path for
+ * the real instants it also receives (`report.correction_deadline`). This
+ * helper is date-only by construction — do not widen it to accept a `Date`.
  */
 export const formatIsoDate = (v: string | null | undefined) => {
   if (!v) return '—'

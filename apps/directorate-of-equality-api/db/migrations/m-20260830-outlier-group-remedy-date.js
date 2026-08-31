@@ -27,6 +27,16 @@
  * cycle lands the value inside the same future window the service enforces on
  * new writes, rather than importing a date that has already elapsed.
  *
+ * ⚠️ The backfilled value is a date the company never named, and the admin UI
+ * renders it under "Dagsetning úrbóta" as though it had. That is acceptable
+ * only because production holds no explained groups at the time of writing —
+ * the table dates from 2026-06-16 and every explained group so far is dev
+ * data, so this UPDATE is defensive and touches nothing real. Were it to run
+ * against a populated table it would fabricate visible commitments, and the
+ * right answer would be to take `remedy_date` out of the all-or-none block
+ * instead (an independent nullable, required at the API layer for new writes
+ * only) so history stays NULL.
+ *
  * ⚠️ Also note `report.correction_deadline`, which is a DIFFERENT date: the
  * deadline the Directorate imposes on the report as a whole ("Frestur til
  * úrbóta"). This one is per group and committed to by the company.
@@ -45,6 +55,8 @@ module.exports = {
 
       -- Explained groups predate the column; land them inside the same future
       -- window the service enforces rather than at an already-elapsed date.
+      -- No-op against production (no explained groups exist); see the header
+      -- note before letting this run against a populated table.
       UPDATE report_outlier_group
         SET remedy_date = (updated_at::date + INTERVAL '3 years')::date
         WHERE reason IS NOT NULL

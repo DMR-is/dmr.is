@@ -322,7 +322,17 @@ function resolveExplanation(fields: {
   )
 }
 
-/** Update-side: the explanation block was touched, so all five must be set. */
+/**
+ * Update-side: the explanation block was touched, so all five must be set.
+ *
+ * Note the consequence for a group whose `remedyDate` has already elapsed:
+ * because the block is all-or-none, revising `reason` alone still resends the
+ * stored date, and `parseRemedyDate` rejects it. That is deliberate — a group
+ * being revised after its committed date has passed has to name a new one — not
+ * an oversight of the point-of-write bound. Short-lived drafts rarely hit it; a
+ * second revision through `PUT /application/reports/{providerId}/outliers`
+ * does.
+ */
 function resolveExplanationStrict(fields: {
   reason?: string | null
   action?: string | null

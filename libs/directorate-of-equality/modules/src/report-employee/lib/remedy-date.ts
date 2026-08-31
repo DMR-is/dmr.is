@@ -57,8 +57,13 @@ export function parseRemedyDate(value: string): string {
 
   const today = startOfUtcToday()
   if (parsed <= today) {
+    // Reached on an edit as well as a create: the explanation block is
+    // all-or-none, so revising a group's `reason` resends its stored date, and
+    // a date that has since elapsed lands here. Forcing a fresh commitment is
+    // the intent — say so, or the admin reads a 400 about a field they did not
+    // touch.
     throw new BadRequestException(
-      `remedyDate must be in the future, got "${trimmed}"`,
+      `remedyDate must be in the future — a group whose committed date has passed must commit to a new one, got "${trimmed}"`,
     )
   }
 
