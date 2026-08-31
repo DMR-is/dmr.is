@@ -85,17 +85,17 @@ const SHARED_STRING_CELL_RE =
 const SHARED_STRING_TYPE_RE = /\bt="s"/
 
 /**
- * Total decompressed worksheet XML this guard will scan across one archive.
+ * Total inflated size allowed for one uploaded archive, across every member.
  *
  * The upload limit upstream (`ImportUploadService`) counts *compressed*
- * bytes, and deflate ratios on repetitive cell markup are high enough that it
- * says little about the inflated size. Capping the scan keeps this pass
- * proportional to a number we picked.
+ * bytes, and deflate reaches ~400:1 on repetitive cell markup, so 20MB
+ * accepted there permits several GB in process. This is the only number that
+ * bounds what a single import can cost.
  *
- * 64MB is deliberately generous: the empty template alone decompresses to
- * ~9.4MB of worksheet XML, so a filled-in report needs real headroom above it.
+ * 64MB is deliberately generous: the empty template alone inflates to ~9.4MB
+ * of worksheet XML, so a filled-in report needs real headroom above it.
  */
-const MAX_WORKSHEET_SCAN_BYTES = 64 * 1024 * 1024
+const MAX_INFLATED_ARCHIVE_BYTES = 64 * 1024 * 1024
 
 /**
  * Ceiling on the blank shared-string table synthesized below.
@@ -118,8 +118,15 @@ const MAX_SHARED_STRING_ENTRIES = 65_536
  * jszip reads this from the central directory when the archive is opened, so
  * it is available before anything is inflated — but it is not on the public
  * `JSZipObject` type, and it is part of the archive, which makes it a claim
- * rather than a measurement. Used only to refuse a member before paying to
- * decompress it; what actually inflated is what gets counted.
+ * rather than a measurement.
+ *
+ * jszip does compare the claim against reality, but only on `end`
+ * (`compressedObject.js`, "uncompressed data size mismatch") — its length
+ * probe counts and never interrupts. A member that under-declares is
+ * therefore inflated in full before the mismatch surfaces, which is exactly
+ * the cost we are trying not to pay. So this is a cheap way to refuse an
+ * archive that admits it is too large, and nothing more; the bound itself
+ * comes from counting bytes as they arrive.
  */
 const declaredUncompressedSize = (entry: JSZip.JSZipObject): number | null => {
   const { _data } = entry as unknown as {
@@ -138,12 +145,94 @@ const workbookTooLarge = (): BadRequestException =>
         sheet: '(workbook)',
         row: null,
         column: null,
-        message: `Uppsafnað magn af blaðagögnum fer yfir ${
-          MAX_WORKSHEET_SCAN_BYTES / (1024 * 1024)
+        message: `Uppsafnað magn afþjappaðra gagna fer yfir ${
+          MAX_INFLATED_ARCHIVE_BYTES / (1024 * 1024)
         }MB.`,
       },
     ],
   })
+
+/**
+ * What `nodeStream` hands back, described by the two members used here.
+ *
+ * jszip's own typings stop at `ReadableStream`, which has no `destroy`, and
+ * the object is not an instance of Node's `Readable` either — jszip bundles
+ * its own copy of `readable-stream`, so `instanceof` fails even though the
+ * constructor reports that name. Casting to Node's `Readable` would therefore
+ * assert something untrue; naming the two methods keeps the cast narrow.
+ */
+type AbortableByteStream = {
+  on(event: 'data', listener: (chunk: Buffer) => void): unknown
+  on(event: 'end', listener: () => void): unknown
+  on(event: 'error', listener: (error: Error) => void): unknown
+  destroy(): void
+}
+
+/**
+ * Inflate one member, counting as it goes, and stop the moment it exceeds
+ * what is left of the budget. Returns the bytes seen — which is at most
+ * `remaining + one chunk`, never the member's full size.
+ *
+ * Discarding each chunk after counting is the point: this measures a member
+ * without ever holding it.
+ */
+const countInflatedBytes = (
+  entry: JSZip.JSZipObject,
+  remaining: number,
+): Promise<number> =>
+  new Promise((resolve, reject) => {
+    let seen = 0
+    const stream = entry.nodeStream(
+      'nodebuffer',
+    ) as unknown as AbortableByteStream
+    stream.on('data', (chunk: Buffer) => {
+      seen += chunk.length
+      if (seen > remaining) {
+        stream.destroy()
+        resolve(seen)
+      }
+    })
+    stream.on('end', () => resolve(seen))
+    stream.on('error', reject)
+  })
+
+/**
+ * Refuse an archive that inflates past the budget, before anything inflates
+ * it for real.
+ *
+ * This runs for *every* upload, which is the whole reason it is separate from
+ * `guardMissingSharedStrings` — that guard returns immediately for any
+ * workbook carrying a shared-strings table, i.e. everything Excel writes, so
+ * nothing inside it can bound the common path. `workbook.xlsx.load` has no
+ * ceiling of its own and uses this same jszip, so an archive that gets past
+ * here is one exceljs can afford to expand.
+ *
+ * The cost is one extra inflate pass over a legitimate upload — ~25ms for the
+ * template — and it is capped at the budget for everything else.
+ */
+const assertArchiveWithinBudget = async (zip: JSZip): Promise<void> => {
+  let inflatedBytes = 0
+
+  for (const entry of Object.values(zip.files)) {
+    if (entry.dir) continue
+
+    const declared = declaredUncompressedSize(entry)
+    if (
+      declared !== null &&
+      inflatedBytes + declared > MAX_INFLATED_ARCHIVE_BYTES
+    ) {
+      throw workbookTooLarge()
+    }
+
+    inflatedBytes += await countInflatedBytes(
+      entry,
+      MAX_INFLATED_ARCHIVE_BYTES - inflatedBytes,
+    )
+    if (inflatedBytes > MAX_INFLATED_ARCHIVE_BYTES) {
+      throw workbookTooLarge()
+    }
+  }
+}
 
 const emptySharedStringsXml = (count: number): string => {
   const items = Array.from({ length: count }, () => '<si><t></t></si>').join('')
@@ -157,35 +246,22 @@ const emptySharedStringsXml = (count: number): string => {
  * The original strings are unrecoverable at that point, so inject blank shared
  * string entries and let normal validation report the missing data.
  */
-const guardMissingSharedStrings = async (buffer: Buffer): Promise<Buffer> => {
-  const zip = await JSZip.loadAsync(buffer)
+const guardMissingSharedStrings = async (
+  zip: JSZip,
+  buffer: Buffer,
+): Promise<Buffer> => {
   if (zip.file(SHARED_STRINGS_PATH)) return buffer
 
-  let scannedBytes = 0
   let maxSharedStringIndex = -1
 
+  // No size accounting here any more. `assertArchiveWithinBudget` has already
+  // bounded every member of this archive, so what this loop can inflate is
+  // capped before it starts — and one budget in one place beats two that have
+  // to be kept in step.
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || !WORKSHEET_XML_RE.test(entry.name)) continue
 
-    // Refuse before inflating. The upload limit upstream counts compressed
-    // bytes, so a member that is small in the archive says nothing about what
-    // it costs to hold — and the cost is paid the moment `async('string')`
-    // returns, not when a check further down notices.
-    const declared = declaredUncompressedSize(entry)
-    if (declared !== null && scannedBytes + declared > MAX_WORKSHEET_SCAN_BYTES) {
-      throw workbookTooLarge()
-    }
-
     const xml = await entry.async('string')
-
-    // Then count what actually arrived, because the declared size is only as
-    // trustworthy as the archive it came from. Cumulative, not per-entry: an
-    // archive may carry any number of `sheetN.xml` members, and it is the
-    // total this pass walks that has to stay bounded.
-    scannedBytes += Buffer.byteLength(xml)
-    if (scannedBytes > MAX_WORKSHEET_SCAN_BYTES) {
-      throw workbookTooLarge()
-    }
 
     for (const [, attributes, index] of xml.matchAll(SHARED_STRING_CELL_RE)) {
       if (!SHARED_STRING_TYPE_RE.test(attributes)) continue
@@ -254,7 +330,9 @@ export const parseWorkbook = async (
 ): Promise<ParsedReportDto> => {
   const workbook = new ExcelJS.Workbook()
   try {
-    const guardedBuffer = await guardMissingSharedStrings(fileBuffer)
+    const zip = await JSZip.loadAsync(fileBuffer)
+    await assertArchiveWithinBudget(zip)
+    const guardedBuffer = await guardMissingSharedStrings(zip, fileBuffer)
     // exceljs declares its own `Buffer extends ArrayBuffer` shape that
     // conflicts with Node 20's `Buffer extends Uint8Array<ArrayBufferLike>`.
     // Hand it the underlying ArrayBuffer slice to satisfy both contracts.

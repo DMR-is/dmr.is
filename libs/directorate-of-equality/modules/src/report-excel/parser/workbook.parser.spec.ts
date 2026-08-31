@@ -1478,7 +1478,7 @@ describe('parseWorkbook', () => {
       )
     })
 
-    it('rejects worksheet XML past the scan budget', async () => {
+    it('rejects an archive that inflates past the budget', async () => {
       // 72MB inflated, over the 64MB budget, from an archive well under the
       // 20MB compressed limit `ImportUploadService` enforces — compressed
       // size says little about what a sheet inflates to.
@@ -1533,6 +1533,68 @@ describe('parseWorkbook', () => {
       )
 
       expect(message).not.toContain('of margar strengjafærslur')
+    })
+
+    it('bounds a member that under-declares its size in the central directory', async () => {
+      // The declared size is part of the archive, and jszip only compares it
+      // against reality once the member has fully inflated. Trusting it would
+      // mean a member claiming 1KB and delivering 400MB is paid for in full
+      // before anything objects, so the bound has to come from counting bytes
+      // as they arrive.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      zip.file(
+        'xl/worksheets/sheet1.xml',
+        Buffer.alloc(400 * 1024 * 1024, '<v>1</v>'),
+      )
+      const honest = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      // Rewrite both size fields to claim 1KB, in the local file header
+      // (PK\x03\x04, offset 22) and the central directory (PK\x01\x02,
+      // offset 24).
+      const lying = Buffer.from(honest)
+      for (let i = 0; i < lying.length - 4; i++) {
+        if (lying[i] !== 0x50 || lying[i + 1] !== 0x4b) continue
+        if (lying[i + 2] === 0x03 && lying[i + 3] === 0x04) {
+          if (lying.readUInt32LE(i + 22) > 1024) lying.writeUInt32LE(1024, i + 22)
+        }
+        if (lying[i + 2] === 0x01 && lying[i + 3] === 0x02) {
+          if (lying.readUInt32LE(i + 24) > 1024) lying.writeUInt32LE(1024, i + 24)
+        }
+      }
+
+      const { message } = await expectBadRequest(parseWorkbook(lying))
+
+      // The message is what distinguishes the two outcomes. Counting as the
+      // bytes arrive stops this at the budget and reports it as too large.
+      // Trusting the declared 1KB instead lets all 400MB through to exceljs,
+      // which inflates it and only then notices the size mismatch — so the
+      // upload still fails, but as an unreadable file, after the memory has
+      // been spent. Asserting only that it was rejected cannot tell those
+      // apart; asserting on the reason can.
+      expect(message).toContain('of stór til lestrar')
+    })
+
+    it('bounds an archive whose members are individually small', async () => {
+      // The budget is the archive's, not any one member's — 20 sheets of
+      // 8MB each clear every per-member check and still total 160MB.
+      const zip = new JSZip()
+      zip.file('[Content_Types].xml', '<Types/>')
+      zip.file('xl/sharedStrings.xml', '<sst/>')
+      for (let i = 1; i <= 20; i++) {
+        zip.file(`xl/worksheets/sheet${i}.xml`, '<v>1</v>'.repeat(1024 * 1024))
+      }
+      const payload = (await zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+      })) as Buffer
+
+      const { message } = await expectBadRequest(parseWorkbook(payload))
+      expect(message).toContain('of stór til lestrar')
     })
 
     it('still repairs a workbook that legitimately lost its shared-strings table', async () => {
