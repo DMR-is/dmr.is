@@ -94,3 +94,19 @@ export const MAX_PAID_HOURS_PER_MONTH = 750
  * only one default group).
  */
 export const DEFAULT_OUTLIER_GROUP_NAME = 'Sjálfgefinn hópur'
+
+/**
+ * How long an approved report stays valid, and therefore how far apart a
+ * company's submissions fall.
+ *
+ * Used here as the upper bound on `report_outlier_group.remedy_date`: a company
+ * may commit to úrbætur any time between now and its next report, but a date
+ * beyond that belongs to a reporting period this report cannot speak for.
+ *
+ * ⚠️ `ReportWorkflowService.approve` computes `validUntil` with the same three
+ * years written inline. The two are the same number for the same reason and
+ * should move together — this constant is where that number belongs, but
+ * rewiring the workflow service was deliberately left out of the change that
+ * introduced it.
+ */
+export const REPORT_VALIDITY_YEARS = 3

@@ -640,6 +640,7 @@ export class ReportService implements IReportService {
               'action',
               'signatureName',
               'signatureRole',
+              'remedyDate',
             ],
             required: true,
           },

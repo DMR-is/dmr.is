@@ -4783,6 +4783,12 @@
           "action": { "type": "string", "minLength": 1 },
           "signatureName": { "type": "string", "minLength": 1 },
           "signatureRole": { "type": "string", "minLength": 1 },
+          "remedyDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the company commits to having this group’s improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Required alongside the rest of the explanation. Must be in the future and no more than three years out — the next reporting cycle, beyond which the date belongs to a period this report cannot speak for."
+          },
           "employeeOrdinals": {
             "description": "Ordinals of the employees in `parsed.employees[]` this group covers.",
             "type": "array",
@@ -4794,6 +4800,7 @@
           "action",
           "signatureName",
           "signatureRole",
+          "remedyDate",
           "employeeOrdinals"
         ]
       },
@@ -6529,6 +6536,13 @@
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
           "signatureRole": { "type": "string", "nullable": true },
+          "remedyDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the group commits to having its improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Denormalized from the outlier group like the rest of the explanation — every outlier in the same group carries the same value."
+          },
           "regularHourlyWage": {
             "type": "number",
             "nullable": true,
@@ -6584,7 +6598,14 @@
           },
           "action": { "type": "string", "nullable": true },
           "signatureName": { "type": "string", "nullable": true },
-          "signatureRole": { "type": "string", "nullable": true }
+          "signatureRole": { "type": "string", "nullable": true },
+          "remedyDate": {
+            "type": "string",
+            "nullable": true,
+            "format": "date",
+            "example": "2027-03-01",
+            "description": "Date the company commits to having this group’s improvements completed by (\"Dagsetning úrbóta\"), as `YYYY-MM-DD`. Not a signature date, and distinct from the report-level `correctionDeadline`, which is the deadline imposed on the whole report. Null on the same terms as the rest of the explanation block."
+          }
         },
         "required": ["id", "reportId", "name"]
       },

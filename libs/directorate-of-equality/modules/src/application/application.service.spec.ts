@@ -1,3 +1,4 @@
+import addMonths from 'date-fns/addMonths'
 import format from 'date-fns/format'
 import subMonths from 'date-fns/subMonths'
 
@@ -1409,12 +1410,18 @@ describe('ApplicationService', () => {
     const detectedSnapshot = (ordinals: number[]) =>
       makeReportResultDto(REPORT_ID, ordinals)
 
+    // Derived from the clock, not a literal: `remedyDate` only accepts a
+    // future date inside the next reporting cycle, so a hardcoded one would
+    // pass today and start failing the day it went by.
+    const REMEDY_DATE = format(addMonths(new Date(), 12), 'yyyy-MM-dd')
+
     const validGroup = (...ordinals: number[]) => ({
       name: 'Group',
       reason: 'Parental leave, salary frozen',
       action: 'No adjustment, frozen for the period',
       signatureName: 'Anna Admin',
       signatureRole: 'HR',
+      remedyDate: REMEDY_DATE,
       employeeOrdinals: ordinals,
     })
 
@@ -1464,6 +1471,7 @@ describe('ApplicationService', () => {
           action: 'No adjustment, frozen for the period',
           signatureName: 'Anna Admin',
           signatureRole: 'HR',
+          remedyDate: REMEDY_DATE,
         }),
       )
       // ...outlier row re-pointed at it...
@@ -1923,6 +1931,7 @@ function makeOutlierRow(
       action: 'Action',
       signatureName: 'Anna Admin',
       signatureRole: 'HR',
+      remedyDate: '2027-03-01',
     },
     reportEmployee: {
       gender: GenderEnum.FEMALE,

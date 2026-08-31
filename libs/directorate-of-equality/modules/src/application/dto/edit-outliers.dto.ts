@@ -9,7 +9,7 @@ import {
 
 /**
  * One outlier group in the edit payload. The applicant supplies the shared
- * explanation (all four fields, non-empty) plus the ordinals of the detected
+ * explanation (all five fields; the four texts non-empty) plus the ordinals of the detected
  * outliers this group covers. Across the whole payload every detected outlier
  * must be covered by exactly one group (the service enforces the set-match and
  * no-ordinal-in-two-groups invariants before persisting).
@@ -32,6 +32,14 @@ export class EditOutlierGroupDto {
 
   @ApiString({ minLength: 1 })
   signatureRole!: string
+
+  @ApiString({
+    format: 'date',
+    example: '2027-03-01',
+    description:
+      'Date the company commits to having this group’s improvements completed by ("Dagsetning úrbóta"), as `YYYY-MM-DD`. Required alongside the rest of the explanation. Must be in the future and no more than three years out.',
+  })
+  remedyDate!: string
 
   @ApiArray({
     type: [Number],

@@ -20,6 +20,7 @@ type ReportOutlierGroupAttributes = {
   action: string | null
   signatureName: string | null
   signatureRole: string | null
+  remedyDate: string | null
 }
 
 type ReportOutlierGroupCreateAttributes = {
@@ -29,14 +30,16 @@ type ReportOutlierGroupCreateAttributes = {
   action?: string | null
   signatureName?: string | null
   signatureRole?: string | null
+  remedyDate?: string | null
 }
 
 /**
- * Owns the improvement-plan explanation (reason / action / signature) shared by
- * the detected outliers assigned to it. See `report-outlier-group.dto.ts` for
- * the lifecycle. The four explanation columns are all-or-none (DB CHECK): all
- * NULL while the report is postponed / not yet filled, or all non-empty once
- * explained. `name` is always set.
+ * Owns the improvement-plan explanation (reason / action / signature / remedy
+ * date) shared by the detected outliers assigned to it. See
+ * `report-outlier-group.dto.ts` for the lifecycle. The five explanation columns
+ * are all-or-none (DB CHECK): all NULL while the report is postponed / not yet
+ * filled, or all populated once explained (the four texts non-empty).
+ * `name` is always set.
  */
 @MutableTable({ tableName: DoeModels.REPORT_OUTLIER_GROUP })
 export class ReportOutlierGroupModel extends MutableModel<
@@ -62,6 +65,17 @@ export class ReportOutlierGroupModel extends MutableModel<
   @Column({ type: DataType.TEXT, allowNull: true, field: 'signature_role' })
   signatureRole!: string | null
 
+  /**
+   * When the group's úrbætur will be completed, as `YYYY-MM-DD`.
+   *
+   * `DATEONLY` (so `string`, not `Date`) because the value is a calendar date
+   * the company names, not an instant — serialising it through a timestamp
+   * would attach a timezone it does not have and can shift it across a day
+   * boundary. Mirrors `report.salaryDataPeriod`.
+   */
+  @Column({ type: DataType.DATEONLY, allowNull: true, field: 'remedy_date' })
+  remedyDate!: string | null
+
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
   report?: ReportModel
 
@@ -80,6 +94,7 @@ export class ReportOutlierGroupModel extends MutableModel<
       action: model.action,
       signatureName: model.signatureName,
       signatureRole: model.signatureRole,
+      remedyDate: model.remedyDate,
     }
   }
 

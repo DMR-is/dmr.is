@@ -19,6 +19,18 @@ const REPORT_ID = 'report-id-1'
 const GROUP_ID = 'group-id-1'
 const EMPLOYEE_ID = 'emp-1'
 
+/**
+ * A valid `remedyDate`, computed rather than written out: the field only
+ * accepts a future date inside the next reporting cycle, so a literal would
+ * pass today and start failing the day it went by.
+ */
+const futureDate = (monthsOut: number): string => {
+  const d = new Date()
+  d.setUTCMonth(d.getUTCMonth() + monthsOut)
+  return d.toISOString().slice(0, 10)
+}
+const REMEDY_DATE = futureDate(12)
+
 // Appliers take an already-resolved draft (no findOwnedDraft).
 const report = { id: REPORT_ID } as ReportModel
 
@@ -104,6 +116,7 @@ describe('ReportDraftOutlierGroupService', () => {
           action: null,
           signatureName: null,
           signatureRole: null,
+          remedyDate: null,
         }),
       )
       expect(groupSave).toHaveBeenCalled()
@@ -131,12 +144,70 @@ describe('ReportDraftOutlierGroupService', () => {
         action: 'a',
         signatureName: 's',
         signatureRole: 'role',
+        remedyDate: REMEDY_DATE,
       })
 
       expect(groupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ reason: 'r', signatureRole: 'role' }),
+        expect.objectContaining({
+          reason: 'r',
+          signatureRole: 'role',
+          remedyDate: REMEDY_DATE,
+        }),
       )
       expect(groupSave).toHaveBeenCalled()
+    })
+
+    // remedyDate is part of the all-or-none block, so the four texts without it
+    // is a partial explanation — not an explained group with a missing extra.
+    it('400s when the explanation is complete but remedyDate is absent', async () => {
+      await expect(
+        service.createGroup(report, GROUP_ID, {
+          name: 'A',
+          reason: 'r',
+          action: 'a',
+          signatureName: 's',
+          signatureRole: 'role',
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('400s on a remedyDate in the past', async () => {
+      await expect(
+        service.createGroup(report, GROUP_ID, {
+          name: 'A',
+          reason: 'r',
+          action: 'a',
+          signatureName: 's',
+          signatureRole: 'role',
+          remedyDate: futureDate(-1),
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('400s on a remedyDate beyond the next reporting cycle', async () => {
+      await expect(
+        service.createGroup(report, GROUP_ID, {
+          name: 'A',
+          reason: 'r',
+          action: 'a',
+          signatureName: 's',
+          signatureRole: 'role',
+          remedyDate: futureDate(37),
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('400s on a malformed remedyDate', async () => {
+      await expect(
+        service.createGroup(report, GROUP_ID, {
+          name: 'A',
+          reason: 'r',
+          action: 'a',
+          signatureName: 's',
+          signatureRole: 'role',
+          remedyDate: '01.03.2027',
+        }),
+      ).rejects.toThrow(BadRequestException)
     })
   })
 

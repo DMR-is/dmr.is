@@ -15,7 +15,11 @@ import {
 } from '../../../../gen/fetch'
 import { reportText as r, sharedText } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
-import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
+import {
+  formatHourlyRate,
+  formatIsoDate,
+  formatPercent,
+} from '../../../../lib/utils'
 
 import { keepPreviousData } from '@tanstack/react-query'
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
@@ -148,7 +152,9 @@ const ExpandedRow = ({ row }: { row: ReportEmployeeOutlierDto }) => (
   </Box>
 )
 
-// Group reason/action/signature shown beneath the table (was in ExpandedRow).
+// Group reason/action/signature/remedy date shown beneath the table (was in
+// ExpandedRow). All five move together — the API's CHECK is all-or-none, so
+// either every row here has a value or none does.
 const GroupMetadata = ({ group }: { group: ReportOutlierGroupDto }) => (
   <Box marginTop={2}>
     <LabelValueRows
@@ -157,6 +163,13 @@ const GroupMetadata = ({ group }: { group: ReportOutlierGroupDto }) => (
         { label: o.actionLabel, value: group.action },
         { label: o.signatureNameLabel, value: group.signatureName },
         { label: o.signatureRoleLabel, value: group.signatureRole },
+        {
+          label: o.remedyDateLabel,
+          // `formatIsoDate`, not `toLocaleDateString` — the value is a bare
+          // calendar date and parsing it as an instant moves it a day west of
+          // UTC. See the note on the helper.
+          value: group.remedyDate ? formatIsoDate(group.remedyDate) : null,
+        },
       ]}
     />
   </Box>

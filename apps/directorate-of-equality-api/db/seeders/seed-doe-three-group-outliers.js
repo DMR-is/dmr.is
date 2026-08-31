@@ -432,6 +432,11 @@ function outliersSql() {
       action: 'Yfirfarið við næstu launaviðræður stjórnenda.',
       signatureName: 'Þóra Þórsdóttir',
       signatureRole: 'Framkvæmdastjóri',
+      // Months out from CURRENT_DATE, not a literal date — remedy_date only
+      // accepts a future date inside the next reporting cycle, so a fixed date
+      // would age out of the window. Varied across the groups so the admin UI
+      // shows three distinct dates rather than three copies of one.
+      remedyMonths: 6,
     },
     {
       id: newUid(),
@@ -440,6 +445,7 @@ function outliersSql() {
       action: 'Markaðsgreining launa gerð á næsta ársfjórðungi.',
       signatureName: 'Jón Jónsson',
       signatureRole: 'Mannauðsstjóri',
+      remedyMonths: 12,
     },
     {
       id: newUid(),
@@ -448,6 +454,7 @@ function outliersSql() {
       action: 'Starfsþróunarsamtöl bókuð fyrir árslok.',
       signatureName: 'Anna Annadóttir',
       signatureRole: 'Deildarstjóri',
+      remedyMonths: 18,
     },
   ]
 
@@ -455,7 +462,9 @@ function outliersSql() {
     (g) =>
       `  (${escStr(g.id)}, ${escStr(SAL_REPORT_ID)}, ${escStr(g.name)}, ${escStr(
         g.reason,
-      )}, ${escStr(g.action)}, ${escStr(g.signatureName)}, ${escStr(g.signatureRole)})`,
+      )}, ${escStr(g.action)}, ${escStr(g.signatureName)}, ${escStr(
+        g.signatureRole,
+      )}, (CURRENT_DATE + INTERVAL '${g.remedyMonths} months')::date)`,
   )
 
   const outlierValues = filtered.map((o, i) => {
@@ -469,7 +478,7 @@ function outliersSql() {
   return `
 BEGIN;
 
-INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role) VALUES
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role, remedy_date) VALUES
 ${groupValues.join(',\n')};
 
 INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES

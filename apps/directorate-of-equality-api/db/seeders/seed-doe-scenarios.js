@@ -613,9 +613,14 @@ VALUES ('${resultId}', '${reportId}', 3.90, 'v3', '${salarySnap}', '${wageGapSna
 
   if (hasOutliers) {
     const groupId = uid(base + 81)
+    // ⚠️ `remedy_date` is part of the all-or-none block, so it moves with the
+    // other four. Computed in SQL relative to CURRENT_DATE rather than written
+    // as a literal: the column only accepts a future date within the next
+    // reporting cycle, and a hardcoded date would quietly age out of that
+    // window and start failing validation on any subsequent edit.
     const exp = outliersExplained
-      ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri'`
-      : `NULL, NULL, NULL, NULL`
+      ? `'Starfsmaður hefur sérfræðiþekkingu sem réttlætir hærra laun.', 'Endurskoðun launa í næstu launaviðræðum.', 'Jón Gunnarsson', 'Framkvæmdastjóri', (CURRENT_DATE + INTERVAL '12 months')::date`
+      : `NULL, NULL, NULL, NULL, NULL`
     // ⚠️ Membership is derived from the snapshot's `inMinimumSet`, NOT hardcoded,
     // and it has now changed PEOPLE twice — which is the whole argument for
     // deriving it.
@@ -639,7 +644,7 @@ VALUES ('${resultId}', '${reportId}', 3.90, 'v3', '${salarySnap}', '${wageGapSna
       .join(',\n')
 
     sql += `
-INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role)
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role, remedy_date)
 VALUES ('${groupId}', '${reportId}', 'Útlagar', ${exp});
 
 INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES

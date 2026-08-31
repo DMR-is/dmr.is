@@ -59,6 +59,15 @@ export class ReportEmployeeOutlierDto {
   @ApiOptionalString({ nullable: true })
   signatureRole!: string | null
 
+  @ApiOptionalString({
+    nullable: true,
+    format: 'date',
+    example: '2027-03-01',
+    description:
+      'Date the group commits to having its improvements completed by ("Dagsetning úrbóta"), as `YYYY-MM-DD`. Denormalized from the outlier group like the rest of the explanation — every outlier in the same group carries the same value.',
+  })
+  remedyDate!: string | null
+
   @ApiOptionalNumber({
     nullable: true,
     description:

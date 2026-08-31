@@ -28,6 +28,15 @@ export class DraftOutlierGroupDto {
   @ApiOptionalString({ nullable: true })
   signatureRole!: string | null
 
+  @ApiOptionalString({
+    nullable: true,
+    format: 'date',
+    example: '2027-03-01',
+    description:
+      'Date the company commits to having this group’s improvements completed by ("Dagsetning úrbóta"), as `YYYY-MM-DD`.',
+  })
+  remedyDate!: string | null
+
   @ApiArray({ type: [String], description: 'Ids of the employees in this group.' })
   memberEmployeeIds!: string[]
 }

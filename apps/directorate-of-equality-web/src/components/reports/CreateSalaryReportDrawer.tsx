@@ -11,6 +11,7 @@ import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Checkbox } from '@dmr.is/ui/components/island-is/Checkbox'
+import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridContainer } from '@dmr.is/ui/components/island-is/GridContainer'
@@ -91,6 +92,8 @@ type OutlierGroupForm = {
   action: string
   signatureName: string
   signatureRole: string
+  /** `YYYY-MM-DD`, or '' while unset. See `toIsoDate` for why not a `Date`. */
+  remedyDate: string
   ordinals: number[]
 }
 
@@ -100,8 +103,51 @@ const makeGroup = (id: string): OutlierGroupForm => ({
   action: '',
   signatureName: '',
   signatureRole: '',
+  remedyDate: '',
   ordinals: [],
 })
+
+/**
+ * The window the API accepts for `remedyDate`: strictly future, and no further
+ * out than the next reporting cycle. Bounding the picker means an out-of-range
+ * date cannot be chosen at all, rather than being rejected on submit with a
+ * message pointing at one field inside one accordion item.
+ *
+ * ⚠️ Mirrors `parseRemedyDate` in the API (`report-employee/lib/remedy-date.ts`)
+ * — change both together. The client bound is a convenience; the API's is the
+ * one that decides.
+ */
+const remedyDateBounds = () => {
+  const min = new Date()
+  min.setHours(0, 0, 0, 0)
+  min.setDate(min.getDate() + 1)
+  const max = new Date()
+  max.setHours(0, 0, 0, 0)
+  max.setFullYear(max.getFullYear() + 3)
+  return { min, max }
+}
+
+/**
+ * A picked `Date` as `YYYY-MM-DD`, read off its LOCAL parts.
+ *
+ * ⚠️ Not `toISOString().slice(0, 10)`. The picker hands back local midnight, so
+ * in any timezone ahead of UTC that serialises to the previous day — a company
+ * west of the date line aside, an Icelandic reviewer is at UTC+0 and would
+ * never see it, which is precisely how it would ship.
+ */
+const toIsoDate = (date: Date): string => {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+/** Inverse of `toIsoDate` — builds a LOCAL date, so it round-trips exactly. */
+const fromIsoDate = (value: string): Date | undefined => {
+  if (!value) return undefined
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+  return new Date(year, month - 1, day)
+}
 
 function parseOutlierOrdinals(message: string): number[] | null {
   const match = message.match(/employee ordinal\(s\): ([\d,\s]+)/)
@@ -303,7 +349,11 @@ export const CreateSalaryReportDrawer = () => {
       g.reason.trim() &&
       g.action.trim() &&
       g.signatureName.trim() &&
-      g.signatureRole.trim(),
+      g.signatureRole.trim() &&
+      // Part of the API's all-or-none block, so an otherwise complete group
+      // with no date is still an incomplete explanation, not a complete one
+      // missing an optional extra.
+      g.remedyDate.trim(),
   )
   const explanationsValid =
     activeGroups.length > 0 && allOutliersAssigned && groupsComplete
@@ -347,6 +397,7 @@ export const CreateSalaryReportDrawer = () => {
               action: g.action,
               signatureName: g.signatureName,
               signatureRole: g.signatureRole,
+              remedyDate: g.remedyDate,
               employeeOrdinals: g.ordinals,
             }))
           : undefined,
@@ -875,6 +926,11 @@ const OutlierEditor = ({
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [page, setPage] = useState(1)
 
+  // Computed once per mount rather than per render: the bounds move only with
+  // the calendar day, and a fresh pair of Dates each render would reset the
+  // picker's internal state on every keystroke elsewhere in the form.
+  const remedyBounds = useMemo(remedyDateBounds, [])
+
   // Once an outlier is put into a group it leaves the table — the group card
   // below owns it from then on. Removing a group frees its members back here.
   const unassignedOutliers = outliers.filter(
@@ -1144,6 +1200,24 @@ const OutlierEditor = ({
                       value={group.signatureRole}
                       onChange={(e) =>
                         updateGroup(group.id, { signatureRole: e.target.value })
+                      }
+                    />
+                  </GridColumn>
+                  <GridColumn span={['12/12', '6/12']}>
+                    <DatePicker
+                      name={`remedyDate-${group.id}`}
+                      label={d.remedyDateLabel}
+                      placeholderText={d.remedyDatePlaceholder}
+                      locale="is"
+                      size="xs"
+                      icon={{ name: 'calendar', type: 'outline' }}
+                      minDate={remedyBounds.min}
+                      maxDate={remedyBounds.max}
+                      selected={fromIsoDate(group.remedyDate)}
+                      handleChange={(date) =>
+                        updateGroup(group.id, {
+                          remedyDate: date ? toIsoDate(date) : '',
+                        })
                       }
                     />
                   </GridColumn>

@@ -393,7 +393,7 @@ COMMIT;
 // 8. Úrbótaáætlun: the lágmarksmengi, split across two groups ---------------
 // The explanation (reason / action / signature) lives on an outlier group; each
 // outlier row is a thin join referencing its group_id. Two groups here: one
-// "explained" (all four fields populated) and one "unexplained" (all four NULL)
+// "explained" (all five fields populated) and one "unexplained" (all five NULL)
 // — both satisfy the group CHECK and exercise both UI branches.
 //
 // ⚠️ Membership is the lágmarksmengi, read off this report's OWN frozen
@@ -422,10 +422,10 @@ function outliersSql() {
       'Sérfræðiþekking og reynsla starfsmanns réttlætir frávikið.',
     )}, ${escStr('Endurmat við næstu launaviðræður.')}, ${escStr(
       'Sigrún Sigrúnardóttir',
-    )}, ${escStr('Framkvæmdastjóri')})`,
+    )}, ${escStr('Framkvæmdastjóri')}, (CURRENT_DATE + INTERVAL '12 months')::date)`,
     `  (${escStr(unexplainedGroupId)}, ${escStr(RICH_SAL)}, ${escStr(
       'Óútskýrður hópur',
-    )}, NULL, NULL, NULL, NULL)`,
+    )}, NULL, NULL, NULL, NULL, NULL)`,
   ]
 
   const outlierValues = filtered.map((o, i) => {
@@ -439,7 +439,7 @@ function outliersSql() {
   return `
 BEGIN;
 
-INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role) VALUES
+INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role, remedy_date) VALUES
 ${groupValues.join(',\n')};
 
 INSERT INTO report_employee_outlier (id, report_employee_id, group_id) VALUES

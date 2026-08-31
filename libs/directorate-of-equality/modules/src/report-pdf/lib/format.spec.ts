@@ -50,6 +50,21 @@ describe('report-pdf format helpers', () => {
       expect(formatDate(new Date(2026, 0, 9))).toBe('09.01.2026')
     })
 
+    it('splits a DATEONLY string instead of parsing it as an instant', () => {
+      // `new Date('2027-03-01')` is UTC midnight; reading local parts off it
+      // yields 28.02.2027 west of UTC. `remedy_date` is DATEONLY, so the
+      // string arm must never take that path. Invisible from Iceland (UTC+0),
+      // which is why it is asserted rather than eyeballed.
+      expect(formatDate('2027-03-01')).toBe('01.03.2027')
+      expect(formatDate('2026-01-09')).toBe('09.01.2026')
+    })
+
+    it('keeps the instant path for values carrying a time', () => {
+      expect(formatDate('2026-05-21T22:30:00.000Z')).toBe(
+        formatDate(new Date('2026-05-21T22:30:00.000Z')),
+      )
+    })
+
     it('handles invalid and nullish input', () => {
       expect(formatDate('not-a-date')).toBe('—')
       expect(formatDate(null)).toBe('—')

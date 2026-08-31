@@ -44,9 +44,30 @@ export function formatPercent(
   return `${sign}${formatted}%`
 }
 
-/** dd.MM.yyyy, matching the admin overview (e.g. 21.05.2026). */
+/** `YYYY-MM-DD`, the `DATEONLY` wire format — a calendar date, not an instant. */
+const ISO_DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/
+
+/**
+ * dd.MM.yyyy, matching the admin overview (e.g. 21.05.2026).
+ *
+ * A `YYYY-MM-DD` string is split rather than parsed. Such a string parses as
+ * UTC midnight, and the `getDate()`/`getMonth()` below read LOCAL parts off
+ * that instant — so the previous day renders for any viewer west of UTC.
+ * Iceland is UTC+0 year-round, which is precisely why the shift would ship
+ * unnoticed. `report_outlier_group.remedy_date` is `DATEONLY` and reaches this
+ * function once the úrbótaáætlun section renders per group. The local-parts
+ * path is correct only for a real instant (`report.correction_deadline`, a
+ * `DataType.DATE`), so keep it for `Date` values and strings carrying a time.
+ */
 export function formatDate(value: Date | string | null | undefined): string {
   if (!value) return '—'
+  if (typeof value === 'string') {
+    const dateOnly = ISO_DATE_ONLY.exec(value.trim())
+    if (dateOnly) {
+      const [, year, month, day] = dateOnly
+      return `${day}.${month}.${year}`
+    }
+  }
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   const day = String(date.getDate()).padStart(2, '0')
