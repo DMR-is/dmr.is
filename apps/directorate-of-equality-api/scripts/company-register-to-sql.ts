@@ -56,7 +56,9 @@
  *                                         falling back to Stærðarflokkur
  *   Staða                               → company.status + company.quarantined
  *   Tegund                              → company.sector
- *   Gildistími vottunar/staðfestingar   → company.next_salary_report_due_at
+ *   Gildistími vottunar/staðfestingar   → company.next_salary_report_due_at,
+ *                                         but only for 50+ companies — see
+ *                                         "Before you run this" below
  *   Gildistíma jafnréttisáætlunar       → company.next_equality_report_due_at
  *   Breytingar / Áður flokkað           → company_comment (is_system)
  *   everything else of substance        → legacy_report
@@ -67,6 +69,33 @@
  * `endurnyjun` is days-until-`Gildistími`, and every `nyttinn` is `889.41xx`).
  * The summary prints every column it saw and ignored, so a column that ought to
  * be carried is visible rather than silently lost.
+ *
+ * ## Before you run this: the load arms the deadline mailer
+ *
+ * `ReportDeadlineReminderTask` walks four tiers — six months, two months, two
+ * weeks, and due (back to 30 days overdue) — and selects companies on
+ * `status = ACTIVE`, `quarantined = false` and the due-date column alone. It
+ * does not look at `salary_report_required`, at `employee_count_category`, or
+ * at whether a `report` exists; per-tier dedup is keyed on
+ * `*_REPORT_DEADLINE_REMINDER_SENT` events, which this load does not write.
+ *
+ * So the first run of that task after this load mails every seeded company
+ * whose deadline lands in one of those bands. Long-run that is the point of the
+ * column. On day one it is a mass mailing to companies that have never heard of
+ * this system, some of them holding a certificate the register still calls
+ * valid — the archive-not-convert decision keeps the certificate out of
+ * `report`, but the mailer only ever sees the date.
+ *
+ * **Keep `EMAIL_REMINDER_JOB_ENABLED` off across the load and turn it back on
+ * deliberately.** It is strict opt-in (`tasks/constants.ts` — only the exact
+ * string `"true"` arms it), so leaving it unset is enough. Suppression
+ * `*_DEADLINE_REMINDER_SENT` events were considered instead and rejected: they
+ * would put "reminder sent" on a timeline for a reminder nobody sent, which is
+ * the same fiction as minting APPROVED reports for legacy certificates.
+ *
+ * The salary side is narrowed at the source as well: `Gildistími` is only
+ * written onto `next_salary_report_due_at` for companies the regulation
+ * actually asks for a salary report — see `owesSalaryReport`.
  *
  * ## Staða is two of our columns, not one
  *
@@ -414,8 +443,22 @@ const BATCH_SIZE = 500
 
 type Cell = ExcelJS.Cell
 
+/**
+ * Unwrap a formula cell to its cached result.
+ *
+ * Both formula shapes have to be tested. ExcelJS gives a shared formula's
+ * MASTER cell `{formula, result, ref, shareType}` but every SLAVE cell in the
+ * range `{result, sharedFormula}` — `Cell._copyModel` copies only the keys it
+ * finds, so a slave carries no `formula` key at all. Testing `'formula' in
+ * value` alone returns the wrapper object for every slave, which then matches
+ * no branch in the readers below and silently reads as null — and because the
+ * diagnostics are keyed on the raw string being truthy, nothing would report
+ * it. Verified against the pinned exceljs 4.4.0.
+ */
 const scalar = (value: ExcelJS.CellValue): ExcelJS.CellValue =>
-  value && typeof value === 'object' && 'formula' in value
+  value &&
+  typeof value === 'object' &&
+  ('formula' in value || 'sharedFormula' in value)
     ? value.result ?? null
     : value
 
@@ -841,10 +884,19 @@ const COMPANY_COLUMNS = [
  *   name / size / status  → the register is authoritative; overwrite.
  *   email / address / …   → the sheet fills gaps but never clears; COALESCE
  *                           the incoming value over the stored one.
- *   quarantined           → OR. The sheet can put a company in quarantine
- *                           (undanþága); only an admin takes it out, and a
- *                           later export that has moved on from undanþága is
- *                           not that admin.
+ *   quarantined           → set once, on a first halt only. The sheet can put
+ *                           a company in quarantine (undanþága); only an admin
+ *                           takes it out, and a later export that has moved on
+ *                           from undanþága is not that admin. A plain OR would
+ *                           deliver the first half and defeat the second: it
+ *                           re-halts a company an admin released through
+ *                           `PATCH /companies/:id/quarantine`, and because
+ *                           `quarantineEvents` skips a company that already has
+ *                           a QUARANTINED event, the timeline would still read
+ *                           UNQUARANTINED while everything outbound stopped
+ *                           again. So the flag is guarded by the same NOT
+ *                           EXISTS the event is: state and timeline can only
+ *                           move together.
  *   sector                → the sheet wins UNLESS an admin has set
  *                           `sector_override`, which this load never sets
  *                           itself. See `readSector` for why.
@@ -864,7 +916,12 @@ const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
   name                        = EXCLUDED.name,
   employee_count_category     = EXCLUDED.employee_count_category,
   status                      = EXCLUDED.status,
-  quarantined                 = company.quarantined OR EXCLUDED.quarantined,
+  quarantined                 = company.quarantined
+                                OR (EXCLUDED.quarantined AND NOT EXISTS (
+                                     SELECT 1 FROM company_event e
+                                      WHERE e.company_id = company.id
+                                        AND e.event_type = 'QUARANTINED'
+                                   )),
   sector                      = CASE
                                   WHEN company.sector_override THEN company.sector
                                   ELSE EXCLUDED.sector
@@ -994,6 +1051,20 @@ type Row = {
 const dueTimestamp = (d: Day | null): string =>
   d == null ? 'NULL' : `${sqlStr(dayToTimestamp(d))}::timestamptz`
 
+/**
+ * Whether the register says this company owes a salary report at all.
+ *
+ * Same rule as `company_sync_salary_report_required()`, which derives
+ * `salary_report_required` from `employee_count_category = 'LARGE'` — deliberately
+ * restated here rather than inferred, because this decides whether a date is
+ * written and the trigger only decides a boolean.
+ *
+ * The `salary_report_required_override` case is not mirrored: the load never
+ * sets it, and where an admin has, the upsert's COALESCE already leaves that
+ * company's stored due date alone.
+ */
+const owesSalaryReport = (size: CompanySize): boolean => size === 'LARGE'
+
 const companyTuple = (r: Row): string =>
   '  (' +
   [
@@ -1007,7 +1078,17 @@ const companyTuple = (r: Row): string =>
     sqlStr(r.address),
     postcodeSubselect(r.postcode),
     sqlStr(r.isat),
-    dueTimestamp(r.salaryDueAt),
+    // Gildistími is the certificate's expiry, and the sheet carries one for
+    // companies of every size. next_salary_report_due_at is not that column:
+    // in the running system it is written only by the approval flow
+    // (`advanceCompanyReportDueDate`) once a SALARY report is approved, which
+    // a company below 50 employees never files. Seeding it from the
+    // certificate would hand a live salary deadline to companies the
+    // regulation asks nothing of — and ReportDeadlineReminderTask, which
+    // consults neither size nor salary_report_required, would mail them about
+    // it. The date is not lost: legacy_report.salary_valid_until holds it
+    // verbatim for every row, which is what the archive is for.
+    dueTimestamp(owesSalaryReport(r.size) ? r.salaryDueAt : null),
     dueTimestamp(r.equalityDueAt),
   ].join(', ') +
   ')'
@@ -1086,6 +1167,14 @@ SELECT c.id, 'QUARANTINED', c.status, 'Undanþága í fyrirtækjaskrá Jafnrétt
  * the "Áður flokkað" half of the column, a previous size classification — and
  * they are left as they are rather than dressed up, because the archive row on
  * `legacy_report` holds the same string and the two must match.
+ *
+ * A note an admin has deleted stays deleted. `company_comment` is paranoid and
+ * `CompanyCommentService.delete` soft-deletes without checking `is_system`, so
+ * a reviewer can remove a seeded note through the shipped endpoint; the
+ * cleanup DELETE above spares those rows and this NOT EXISTS declines to write
+ * a fresh copy over the top of one. Without it a re-run resurrects every note
+ * the Directorate has since taken down, with a new `created_at` — the same
+ * class of bug as re-asserting `sector_override`.
  */
 const systemComments = (
   entries: { nationalId: string; body: string }[],
@@ -1094,7 +1183,14 @@ const systemComments = (
   entries
     .map((e) => `    (${sqlStr(e.nationalId)}, ${sqlStr(e.body)})`)
     .join(',\n') +
-  `\n  ) AS v (national_id, body)\n  JOIN company c ON c.national_id = v.national_id;\n`
+  `\n  ) AS v (national_id, body)\n  JOIN company c ON c.national_id = v.national_id\n` +
+  ` WHERE NOT EXISTS (\n` +
+  `         SELECT 1 FROM company_comment cc\n` +
+  `          WHERE cc.company_id = c.id\n` +
+  `            AND cc.is_system = true\n` +
+  `            AND cc.deleted_at IS NOT NULL\n` +
+  `            AND cc.body = v.body\n` +
+  `       );\n`
 
 const legacyDate = (d: Day | null): string => sqlStr(d ? dayToDate(d) : null)
 const legacyInstant = (d: Day | null): string =>
@@ -1552,7 +1648,15 @@ const main = async (): Promise<void> => {
   const sectorDefaulted = finalRows.filter((r) => !r.sectorStated).length
   const inactiveCount = finalRows.filter((r) => r.status === 'INACTIVE').length
   const quarantinedRows = finalRows.filter((r) => r.quarantined)
-  const salaryDueCount = finalRows.filter((r) => r.salaryDueAt).length
+  const salaryDueCount = finalRows.filter(
+    (r) => r.salaryDueAt && owesSalaryReport(r.size),
+  ).length
+  // Rows holding a Gildistími that is deliberately not written onto the
+  // company. Reported so the gap between the sheet and the company table is
+  // stated rather than discovered — the archive still carries every one.
+  const salaryDueWithheld = finalRows.filter(
+    (r) => r.salaryDueAt && !owesSalaryReport(r.size),
+  ).length
   const equalityDueCount = finalRows.filter((r) => r.equalityDueAt).length
   const commentRows = finalRows.filter((r) => r.notesBody)
 
@@ -1593,6 +1697,8 @@ const main = async (): Promise<void> => {
 -- Inactive:   ${inactiveCount} (Staða = hætt)
 -- Quarantine: ${quarantinedRows.length} (Staða = undanþága)
 -- Due dates:  ${salaryDueCount} salary, ${equalityDueCount} equality
+--             (${salaryDueWithheld} Gildistími withheld: company is not 50+, so it
+--              owes no salary report; archived on legacy_report either way)
 -- Postcodes added: ${newPostcodes.size}
 --
 -- company upserts on national_id. name/employee_count_category/status are
@@ -1601,19 +1707,48 @@ const main = async (): Promise<void> => {
 -- salary_report_required is left to company_sync_salary_report_required_trg,
 -- and Skylda is deliberately not read — see the script header.
 --
--- quarantined is ORed, never cleared: the sheet can halt a company, only an
--- admin lifts it. sector comes from Tegund unless an admin has set
--- sector_override, which this file never sets itself.
+-- quarantined is set on a first halt only and never cleared: the sheet can
+-- halt a company, only an admin lifts it, and a re-run does not undo that lift
+-- (the flag is guarded on the same QUARANTINED event the timeline entry is).
+-- sector comes from Tegund unless an admin has set sector_override, which this
+-- file never sets itself.
 --
 -- The two next_*_report_due_at columns COALESCE the OTHER way: whatever the
 -- database holds wins, because the approval flow advances them after launch.
 -- Re-running this file never rolls a company back to its seeded deadline.
 --
 -- legacy_report and the system comments are replaced wholesale (nothing else
--- writes either); the timeline events insert only where none exists yet.
+-- writes either) — the two DELETEs run even when this file has no rows to put
+-- back, so the two can never disagree. A system comment an admin soft-deleted
+-- is neither deleted nor rewritten, so the deletion survives. The timeline
+-- events insert only where none exists yet.
+--
+-- ⚠️ THE DEADLINE MAILER. This file seeds next_salary_report_due_at and
+-- next_equality_report_due_at, and ReportDeadlineReminderTask selects on
+-- status/quarantined/due-date alone — no report, no certificate, nothing
+-- else — with per-tier dedup keyed on *_DEADLINE_REMINDER_SENT events this
+-- load does not write. So the first run of that task after this load will mail
+-- every seeded company whose deadline falls in one of its four bands, up to
+-- six months out. That is the intended long-run behaviour, but it is not an
+-- acceptable way to introduce the system to 1 700 companies on day one. Keep
+-- EMAIL_REMINDER_JOB_ENABLED off (it is strict opt-in: only the exact string
+-- "true" arms it) across this load and turn it on deliberately, once the
+-- Directorate has decided who should hear from it first.
 --
 -- A postcode still unresolved after the top-up below leaves postcode_id NULL
 -- rather than failing the load.
+
+-- Stop at the first error. Without this psql feeds every remaining statement
+-- into the aborted transaction, prints a screen of "current transaction is
+-- aborted", ends in ROLLBACK — and still exits 0. For a one-shot irreversible
+-- load, "loaded everything" and "loaded nothing" must not be told apart by
+-- scrolling.
+\\set ON_ERROR_STOP on
+
+-- sqlStr escapes by doubling quotes, which is only sufficient while this is
+-- on. It is the default; asserted here rather than inherited from whatever
+-- the invoking session happens to hold.
+SET standard_conforming_strings = on;
 
 BEGIN;
 `)
@@ -1659,34 +1794,39 @@ BEGIN;
     )
   }
 
-  if (commentRows.length) {
+  // Both DELETEs are emitted unconditionally, OUTSIDE the `length` guard that
+  // wraps their INSERTs. "Replaced wholesale" has to hold at zero too: an
+  // export whose notes column has been cleared or renamed yields no comment
+  // rows, and a guarded DELETE would then refill `legacy_report` with
+  // `notes IS NULL` while the previous run's comments stayed on every
+  // timeline — text whose archive row no longer exists, which this file's own
+  // doc says must match it.
+  chunks.push(
+    `\n-- 4. The Directorate's own notes, as system comments.\n` +
+      `--    Replaced wholesale: is_system marks exactly the rows this file\n` +
+      `--    writes. Rows an admin has soft-deleted are left alone here and\n` +
+      `--    not rewritten below, so a deletion survives a re-run.\n\n` +
+      'DELETE FROM company_comment WHERE is_system = true AND deleted_at IS NULL;\n',
+  )
+  for (let i = 0; i < commentRows.length; i += BATCH_SIZE) {
     chunks.push(
-      `\n-- 4. The Directorate's own notes, as system comments.\n` +
-        `--    Replaced wholesale: is_system marks exactly the rows this file writes.\n\n` +
-        'DELETE FROM company_comment WHERE is_system = true;\n',
+      '\n' +
+        systemComments(
+          commentRows.slice(i, i + BATCH_SIZE).map((r) => ({
+            nationalId: r.nationalId,
+            // Non-null by the filter above; narrowed for the compiler.
+            body: r.notesBody as string,
+          })),
+        ),
     )
-    for (let i = 0; i < commentRows.length; i += BATCH_SIZE) {
-      chunks.push(
-        '\n' +
-          systemComments(
-            commentRows.slice(i, i + BATCH_SIZE).map((r) => ({
-              nationalId: r.nationalId,
-              // Non-null by the filter above; narrowed for the compiler.
-              body: r.notesBody as string,
-            })),
-          ),
-      )
-    }
   }
 
-  if (archivedRows.length) {
-    chunks.push(
-      '\n-- 5. The archive: every sheet row, verbatim.\n\n' +
-        'DELETE FROM legacy_report;\n',
-    )
-    for (let i = 0; i < archivedRows.length; i += BATCH_SIZE) {
-      chunks.push('\n' + legacyRows(archivedRows.slice(i, i + BATCH_SIZE)))
-    }
+  chunks.push(
+    '\n-- 5. The archive: every sheet row, verbatim.\n\n' +
+      'DELETE FROM legacy_report;\n',
+  )
+  for (let i = 0; i < archivedRows.length; i += BATCH_SIZE) {
+    chunks.push('\n' + legacyRows(archivedRows.slice(i, i + BATCH_SIZE)))
   }
 
   chunks.push('\nCOMMIT;\n')
@@ -1778,6 +1918,11 @@ BEGIN;
   line('sector PRIVATE by default:', `${sectorDefaulted} (Tegund blank)`)
   line('quarantined (undanþága):', quarantinedRows.length)
   line('due dates:', `${salaryDueCount} salary, ${equalityDueCount} equality`)
+  if (salaryDueWithheld)
+    line(
+      'Gildistími withheld:',
+      `${salaryDueWithheld} (company not 50+, owes no salary report; archived either way)`,
+    )
   line(
     'skipped:',
     `${skipped.length}${skipped.length ? ` → ${output}.skipped.csv` : ''}`,
@@ -1826,10 +1971,32 @@ BEGIN;
   if (notes.emailDropped)
     line('Netfang values that are not email:', notes.emailDropped)
   if (ignored.length) line('columns ignored:', ignored.join(' | '))
+
+  // Printed last, unconditionally, because it is the one thing about this load
+  // that cannot be fixed after the fact. See "Before you run this" at the top.
+  if (salaryDueCount || equalityDueCount) {
+    console.log('')
+    console.log(
+      `  ⚠ ${salaryDueCount + equalityDueCount} deadlines seeded. ReportDeadlineReminderTask selects on`,
+    )
+    console.log(
+      `    status/quarantined/due-date alone, so its next run mails all of them.`,
+    )
+    console.log(
+      `    Keep EMAIL_REMINDER_JOB_ENABLED off across the load and re-enable it`,
+    )
+    console.log(`    deliberately.`)
+  }
   console.log('')
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// `require.main` keeps the CLI behaviour unchanged when the file is run
+// directly, while letting `company-register-to-sql.spec.ts` import the readers
+// above without running a load. Same shape as
+// `refresh-sub-criterion-catalog.js` next door.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
