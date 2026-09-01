@@ -112,13 +112,13 @@ export const EditChangeModal = ({
       setDiffHtml(null)
       return
     }
-    const [{ default: dirtyClean }, { getDiff }] = await Promise.all([
-      import('@dmr.is/regulations-tools/dirtyClean-browser'),
+    const [{ getDiff }, { simpleSanitize }] = await Promise.all([
       import('@dmr.is/regulations-tools/html'),
+      import('@dmr.is/utils-server/cleanLegacyHtml'),
     ])
     const result = getDiff(
-      dirtyClean(originalText as HTMLText),
-      dirtyClean(editorText as HTMLText),
+      simpleSanitize(originalText) as HTMLText,
+      simpleSanitize(editorText) as HTMLText,
     )
     setDiffHtml(result.diff)
   }, [])
@@ -166,13 +166,13 @@ export const EditChangeModal = ({
     let diff: string | undefined
     const originalText = originalRegulationRef.current?.text
     if (originalText && text) {
-      const [{ default: dirtyClean }, { getDiff }] = await Promise.all([
-        import('@dmr.is/regulations-tools/dirtyClean-browser'),
+      const [{ getDiff }, { simpleSanitize }] = await Promise.all([
         import('@dmr.is/regulations-tools/html'),
+        import('@dmr.is/utils-server/cleanLegacyHtml'),
       ])
       const result = getDiff(
-        dirtyClean(originalText as HTMLText),
-        dirtyClean(text as HTMLText),
+        simpleSanitize(originalText) as HTMLText,
+        simpleSanitize(text) as HTMLText,
       )
       diff = result.diff as string
     } else {
