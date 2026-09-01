@@ -66,21 +66,7 @@ export interface IAWSService {
     hash?: string,
   ): Promise<ResultWrapper<string>>
 
-  /**
-   * ⚠️ **Resolves an err result on failure — it does NOT reject.** The
-   * implementation is decorated `@LogAndHandle()`, whose catch *returns*
-   * `handleException(...)`, and `handleException` returns `ResultWrapper.err`
-   * on every branch without rethrowing. The declared type used to be a bare
-   * `SentMessageInfo`, which read as "this throws on failure" and produced
-   * exactly that bug in every caller: a `try/catch` or `.catch()` around it is
-   * dead code, and a hard SES failure looks like a successful send.
-   *
-   * Branch on `result.ok === false`.
-   */
-  sendMail(
-    message: Mail.Options,
-    context?: string,
-  ): Promise<ResultWrapper<SentMessageInfo>>
+  sendMail(message: Mail.Options, context?: string): Promise<SentMessageInfo>
   replaceAdvertPdf(
     key: string,
     file: Express.Multer.File,

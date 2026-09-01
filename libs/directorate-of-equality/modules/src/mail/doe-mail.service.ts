@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common'
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { IAWSService } from '@dmr.is/shared-modules'
+import { ResultWrapper } from '@dmr.is/types'
 
 import { ReportModel } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
@@ -134,7 +135,7 @@ export class DoeMailService implements IDoeMailService {
      * The task's contract is unchanged — a throw means "not sent, retry next
      * run" — so the failure is converted into one here.
      */
-    const sent = await this.aws.sendMail(message, LOGGING_CONTEXT)
+    const sent = await this.sendMailResult(message)
 
     if (sent.result.ok === false) {
       throw new Error(
@@ -147,6 +148,36 @@ export class DoeMailService implements IDoeMailService {
       reportType: input.reportType,
       context: LOGGING_CONTEXT,
     })
+  }
+
+  /**
+   * The one place this lib takes `IAWSService.sendMail` at its word about what
+   * a failure looks like.
+   *
+   * ⚠️ **It resolves an err result — it does NOT reject.** The implementation
+   * is decorated `@LogAndHandle()`, whose catch *returns* `handleException(...)`,
+   * and `handleException` yields `ResultWrapper.err` on every branch without
+   * rethrowing. Confirmed by executing a decorated method, not by reading it.
+   *
+   * The declared return type is a bare `SentMessageInfo`, which
+   * `@types/nodemailer` defines as `any` — so it reads as "this throws on
+   * failure" and type-checks either way. That is precisely the bug it produced:
+   * a `try/catch` around the call is unreachable, and a hard SES failure looks
+   * like a successful send.
+   *
+   * Correcting the declaration is the real fix, but `sendMail` is shared with
+   * the Official Journal and the Legal Gazette, both of which have the same dead
+   * catch — so it is a cross-product change with its own blast radius and does
+   * not belong in this PR. This narrows it at DoE's boundary instead, in one
+   * place, so no caller in this lib repeats the assertion.
+   */
+  private async sendMailResult(
+    message: Parameters<IAWSService['sendMail']>[0],
+  ): Promise<ResultWrapper<unknown>> {
+    return (await this.aws.sendMail(
+      message,
+      LOGGING_CONTEXT,
+    )) as ResultWrapper<unknown>
   }
 
   /**
@@ -203,10 +234,11 @@ export class DoeMailService implements IDoeMailService {
     }
 
     try {
-      const sent = await this.aws.sendMail(
-        { ...this.envelope(), to, ...content },
-        LOGGING_CONTEXT,
-      )
+      const sent = await this.sendMailResult({
+        ...this.envelope(),
+        to,
+        ...content,
+      })
 
       /*
        * ⚠️ **The result, not a rejection.** `sendMail` is decorated

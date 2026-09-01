@@ -456,16 +456,8 @@ export class AWSService implements IAWSService {
     return ResultWrapper.ok(buffer)
   }
 
-  // `logArgs: false` because `Mail.Options.attachments[].content` carries raw
-  // Buffers and `filterArgs` only drops args that are themselves Buffer-like, so
-  // a nested attachment would be serialized into `logger.debug` in full. The DoE
-  // approval mail attaches PDFs of employee salary and gender data. Mirrors
-  // `uploadObject`, which carries the same option for the same reason.
-  @LogAndHandle({ logArgs: false })
-  async sendMail(
-    message: Mail.Options,
-    context = 'S3Service',
-  ): Promise<ResultWrapper<SentMessageInfo>> {
+  @LogAndHandle()
+  async sendMail(message: Mail.Options, context = 'S3Service'): Promise<SentMessageInfo> {
     this.logger.info('Sending email with SES', {
       category: LOGGING_CATEGORY,
       context: context,
