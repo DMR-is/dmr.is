@@ -5,7 +5,9 @@ import { join } from 'path'
 import {
   BadRequestException,
   HttpException,
+  HttpStatus,
   PayloadTooLargeException,
+  ServiceUnavailableException,
 } from '@nestjs/common'
 
 import { IAWSService } from '@dmr.is/shared-modules'
@@ -253,7 +255,7 @@ describe('ImportUploadService', () => {
     it('deletes the staged object from the DOE imports bucket', async () => {
       aws.deleteObject.mockResolvedValue(ResultWrapper.ok())
 
-      await service.cleanup(ADMIN_KEY, ImportUploadBoundary.ADMIN)
+      await service.cleanupAfter(ADMIN_KEY, ImportUploadBoundary.ADMIN)
 
       expect(aws.deleteObject).toHaveBeenCalledWith(ADMIN_KEY, BUCKET)
     })
@@ -265,7 +267,7 @@ describe('ImportUploadService', () => {
      * travel from the request body straight to `deleteObject`.
      */
     it('refuses a key outside the boundary prefix instead of deleting it', async () => {
-      await service.cleanup(
+      await service.cleanupAfter(
         'doe-imports/admin/../../etc/passwd',
         ImportUploadBoundary.ADMIN,
       )
@@ -276,7 +278,7 @@ describe('ImportUploadService', () => {
 
     /** Cross-boundary too: an admin route may not delete an application upload. */
     it('refuses a well-formed key from a different boundary', async () => {
-      await service.cleanup(
+      await service.cleanupAfter(
         'doe-imports/application/11111111-2222-3333-4444-555555555555.xlsx',
         ImportUploadBoundary.ADMIN,
       )
@@ -290,15 +292,105 @@ describe('ImportUploadService', () => {
      */
     it('does not throw on a refused key', async () => {
       await expect(
-        service.cleanup('nope', ImportUploadBoundary.ADMIN),
+        service.cleanupAfter('nope', ImportUploadBoundary.ADMIN),
       ).resolves.toBeUndefined()
+    })
+
+    /**
+     * Terminal-vs-transient, one case per branch.
+     *
+     * This is the rule five controllers got wrong with a bare `finally` and the
+     * sixth got half-right by exempting `ServiceUnavailableException` alone. It
+     * is written as an allow-list of *deletes* so an unrecognised failure keeps
+     * the caller's upload; each case below is mutation-checked rather than
+     * assumed to discriminate.
+     */
+    describe('terminal vs transient', () => {
+      beforeEach(() => aws.deleteObject.mockResolvedValue(ResultWrapper.ok()))
+
+      it('deletes on success', async () => {
+        await service.cleanupAfter(ADMIN_KEY, ImportUploadBoundary.ADMIN)
+        expect(aws.deleteObject).toHaveBeenCalled()
+      })
+
+      it('deletes on 413 — an oversized upload can never become importable', async () => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new PayloadTooLargeException('too big'),
+        )
+        expect(aws.deleteObject).toHaveBeenCalled()
+      })
+
+      it('deletes on 400 — an unreadable workbook is terminal for this key', async () => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new BadRequestException('unreadable'),
+        )
+        expect(aws.deleteObject).toHaveBeenCalled()
+      })
+
+      /** The shed the 503 tells the caller to retry with. */
+      it('keeps on 503', async () => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new ServiceUnavailableException('busy'),
+        )
+        expect(aws.deleteObject).not.toHaveBeenCalled()
+      })
+
+      /**
+       * The half that was invisible. A transient S3 failure arrives from
+       * `ResultWrapper.unwrap` as a plain `HttpException`, not a 503, so the
+       * old "exempt ServiceUnavailableException" rule deleted the upload.
+       */
+      it('keeps on a non-503 5xx', async () => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new HttpException('S3 unavailable', HttpStatus.INTERNAL_SERVER_ERROR),
+        )
+        expect(aws.deleteObject).not.toHaveBeenCalled()
+      })
+
+      /** A bare Error is a 500 — "we do not know", the worst moment to delete. */
+      it('keeps on a non-HTTP error', async () => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new Error('parser blew up'),
+        )
+        expect(aws.deleteObject).not.toHaveBeenCalled()
+      })
+
+      /**
+       * The two guards have to interact, and nothing else pins that they do.
+       *
+       * An invalid key produces a 400, which the predicate treats as terminal —
+       * so the *only* thing standing between a caller-supplied key and
+       * `deleteObject` is the pattern re-check inside the delete path. If a
+       * future reader decides that re-check is redundant because every caller
+       * validates first, this is the test that stops them.
+       */
+      it('reaches the delete path on an invalid-key 400 and is refused there', async () => {
+        await service.cleanupAfter(
+          'doe-imports/admin/../../etc/passwd',
+          ImportUploadBoundary.ADMIN,
+          new BadRequestException('Invalid import upload key'),
+        )
+
+        expect(aws.deleteObject).not.toHaveBeenCalled()
+        expect(mockLogger.warn).toHaveBeenCalled()
+      })
     })
 
     it('swallows delete failures (best-effort) and logs a warning', async () => {
       aws.deleteObject.mockRejectedValue(new Error('S3 down'))
 
       await expect(
-        service.cleanup(ADMIN_KEY, ImportUploadBoundary.ADMIN),
+        service.cleanupAfter(ADMIN_KEY, ImportUploadBoundary.ADMIN),
       ).resolves.toBeUndefined()
       expect(mockLogger.warn).toHaveBeenCalled()
     })
@@ -333,7 +425,7 @@ describe('ImportUploadService', () => {
       expect(fetched.equals(data)).toBe(true)
       expect(aws.getObjectBuffer).not.toHaveBeenCalled()
 
-      await service.cleanup(key, ImportUploadBoundary.ADMIN)
+      await service.cleanupAfter(key, ImportUploadBoundary.ADMIN)
       await expect(
         service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
       ).rejects.toBeInstanceOf(BadRequestException)

@@ -4,6 +4,37 @@ import { Semaphore, SemaphoreQueueFullError } from './semaphore'
 const tick = () => new Promise<void>((r) => setImmediate(r))
 
 describe('Semaphore', () => {
+  /**
+   * `< 1` alone was not enough. `NaN < 1` is false, so a `NaN` limit
+   * constructed cleanly and then made every `active < maxConcurrent`
+   * comparison false — every acquire queued, the queue filled, and the gate
+   * shed everything with a 503 rather than throwing at startup. `readInt`
+   * keeps that out of the DI path, but the class is constructible directly.
+   */
+  describe('constructor rejects limits that would wedge it', () => {
+    it.each([
+      ['NaN concurrency', NaN, 20],
+      ['fractional concurrency', 1.5, 20],
+      ['zero concurrency', 0, 20],
+      ['Infinity concurrency', Infinity, 20],
+    ])('rejects %s', (_label, concurrent, queued) => {
+      expect(() => new Semaphore(concurrent, queued)).toThrow(/maxConcurrent/)
+    })
+
+    it.each([
+      ['NaN queue', 2, NaN],
+      ['fractional queue', 2, 1.5],
+      ['negative queue', 2, -1],
+    ])('rejects %s', (_label, concurrent, queued) => {
+      expect(() => new Semaphore(concurrent, queued)).toThrow(/maxQueued/)
+    })
+
+    /** Zero is a legitimate queue: it sheds instead of waiting. */
+    it('accepts a queue of zero', () => {
+      expect(() => new Semaphore(1, 0)).not.toThrow()
+    })
+  })
+
   it('allows up to maxConcurrent slots without queueing', async () => {
     const s = new Semaphore(2, 10)
     await s.acquire()

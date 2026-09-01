@@ -15,7 +15,7 @@ stay with the app-system's auth context and are never echoed back.
 | Method | Path                             | What it does                                                                                  |
 | ------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
 | `GET`  | `/api/v1/reports/excel/template` | Streams the blank salary-report xlsx                                                          |
-| `POST` | `/api/v1/reports/excel/import`   | Multipart upload (`file` field) → `ParsedReportDto` JSON, or `400` with structured error list |
+| `POST` | `/api/v1/reports/excel/import`   | `ImportKeyDto` JSON (`{ "key": … }`, from the presign endpoint) → `ParsedReportDto`, or `400` with structured error list |
 
 Both routes are behind `TokenJwtAuthGuard` and `AdminGuard`
 (`report-excel.controller.ts`). An earlier note here said the auth guard was
@@ -50,11 +50,31 @@ on parse.
 
 ### Import a filled workbook
 
+The route takes a **key**, not the file. Upload the workbook to the presigned
+URL first, then import by key — the API downloads it itself, under the parse
+gate, so the bytes are never in memory without a slot.
+
 ```bash
+# 1. ask for somewhere to put it
+PRESIGN=$(curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  http://localhost:5100/api/v1/imports/presign)
+URL=$(echo "$PRESIGN" | jq -r .url)
+KEY=$(echo "$PRESIGN" | jq -r .key)
+
+# 2. PUT the workbook there
+curl -s -X PUT --upload-file /tmp/doe-template-filled.xlsx "$URL"
+
+# 3. import it by key
 curl -s -X POST \
-  -F "file=@/tmp/doe-template-filled.xlsx" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d "{\"key\":\"$KEY\"}" \
   http://localhost:5100/api/v1/reports/excel/import | jq
 ```
+
+Both routes are guarded, so the bearer token is not optional — the examples
+above omitted it while the paragraph above said the guards were live.
 
 On success you'll get a `ParsedReportDto` tree. On failure, `400` with:
 

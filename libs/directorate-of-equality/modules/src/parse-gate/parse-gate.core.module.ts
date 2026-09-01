@@ -34,7 +34,7 @@ const LOGGING_CONTEXT = 'ParseGateCoreModule'
  * `EXCEL_IMPORT_BUSY` and `COMPANY_IMPORT_BUSY` use, so a discarded
  * configuration is alertable rather than only greppable.
  */
-const PARSE_GATE_CONFIG_REJECTED = 'PARSE_GATE_CONFIG_REJECTED'
+export const PARSE_GATE_CONFIG_REJECTED = 'PARSE_GATE_CONFIG_REJECTED'
 
 /**
  * The outcome of reading one variable: the value the gate will use, plus the

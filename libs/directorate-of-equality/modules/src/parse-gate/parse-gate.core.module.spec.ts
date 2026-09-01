@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from 'fs'
+import { join, relative } from 'path'
+
 import { Inject, Injectable, Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
@@ -8,6 +11,7 @@ import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import {
   DEFAULT_MAX_CONCURRENT_PARSES,
   DEFAULT_MAX_QUEUED_PARSES,
+  PARSE_GATE_CONFIG_REJECTED,
   ParseGateCoreModule,
 } from './parse-gate.core.module'
 import { PARSE_GATE } from './parse-gate.token'
@@ -198,6 +202,38 @@ describe('ParseGateCoreModule', () => {
     })
   })
 
+  /**
+   * The hand-maintained `it.each` above names the two modules that exist today.
+   * It cannot catch a *third* consumer declaring its own `PARSE_GATE`, which is
+   * exactly the failure this module exists to prevent — two gates of 2 permit
+   * four concurrent workbooks and ~1040MB against a 1152MB heap, while every
+   * module still reads as correctly bounded on its own.
+   *
+   * A text scan rather than importing all 28 core modules: importing them pulls
+   * Sequelize models and app wiring, and buys nothing this does not.
+   */
+  describe('no other module may provide the gate', () => {
+    it('is the only core module declaring PARSE_GATE', () => {
+      const modulesDir = join(__dirname, '..')
+      const offenders = readdirSync(modulesDir, { withFileTypes: true })
+        .filter((e) => e.isDirectory())
+        .flatMap((dir) =>
+          readdirSync(join(modulesDir, dir.name))
+            .filter((f) => f.endsWith('.core.module.ts'))
+            .map((f) => join(modulesDir, dir.name, f)),
+        )
+        .filter((file) => {
+          const src = readFileSync(file, 'utf8')
+          // `provide: PARSE_GATE` is the declaration; importing the module or
+          // injecting the token is what consumers are supposed to do.
+          return /provide:\s*PARSE_GATE/.test(src)
+        })
+        .map((file) => relative(modulesDir, file))
+
+      expect(offenders).toEqual(['parse-gate/parse-gate.core.module.ts'])
+    })
+  })
+
   describe('environment', () => {
     it('runs on defaults when nothing is set, so infra need not supply them', async () => {
       const gate = await buildWithEnv({
@@ -210,8 +246,26 @@ describe('ParseGateCoreModule', () => {
         releases.push(await gate.acquire())
       }
       expect(gate.activeCount).toBe(DEFAULT_MAX_CONCURRENT_PARSES)
-      expect(DEFAULT_MAX_QUEUED_PARSES).toBeGreaterThan(0)
+
+      // `expect(DEFAULT_MAX_QUEUED_PARSES).toBeGreaterThan(0)` stood here and
+      // asserted a constant against itself — it passed with the gate built at
+      // any queue depth, including the ceiling of 200 while the log reported
+      // 20. Fill the queue to the default and prove the next caller is shed.
+      const queued = []
+      for (let i = 0; i < DEFAULT_MAX_QUEUED_PARSES; i++) {
+        queued.push(gate.acquire())
+      }
+      await Promise.resolve()
+      expect(gate.queuedCount).toBe(DEFAULT_MAX_QUEUED_PARSES)
+      await expect(gate.acquire()).rejects.toThrow(/queue is full/i)
+
+      // Drain sequentially. `release` hands its slot straight to the next
+      // waiter rather than decrementing, so releasing the two active slots
+      // wakes exactly two waiters — `Promise.all` on the rest would hang.
       releases.forEach((r) => r())
+      for (const pending of queued) {
+        ;(await pending)()
+      }
     })
 
     it('honours an override', async () => {
@@ -240,8 +294,12 @@ describe('ParseGateCoreModule', () => {
     it.each([['64'], ['1000'], ['0x10'], ['1e3']])(
       'ignores the out-of-range or non-decimal value %p and keeps the default',
       async (raw) => {
+        // Both vars are pinned, never just the one under test. Neither is set
+        // in any environment today, but a test that reads whatever the shell
+        // happens to export fails for a reason it does not name.
         const gate = await buildWithEnv({
           DOE_EXCEL_MAX_CONCURRENT_PARSES: raw,
+          DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
         })
 
         const releases = []
@@ -253,9 +311,14 @@ describe('ParseGateCoreModule', () => {
         // a limit of 64 the counts look identical. The limit only shows itself
         // on the request *past* it, which must queue rather than resolve.
         let extraResolved = false
-        void gate.acquire().then(() => {
-          extraResolved = true
-        })
+        void gate
+          .acquire()
+          .then(() => {
+            extraResolved = true
+          })
+          // Without this an unexpected rejection becomes an unhandled promise
+          // rejection that Jest attributes to whatever runs next.
+          .catch(() => undefined)
         await Promise.resolve()
         expect(extraResolved).toBe(false)
         expect(gate.queuedCount).toBe(1)
@@ -275,6 +338,7 @@ describe('ParseGateCoreModule', () => {
       async (raw) => {
         const gate = await buildWithEnv({
           DOE_EXCEL_MAX_CONCURRENT_PARSES: raw,
+          DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
         })
 
         const releases = []
@@ -373,7 +437,7 @@ describe('ParseGateCoreModule', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'Parse gate ignored a configured value',
         expect.objectContaining({
-          errorCode: 'PARSE_GATE_CONFIG_REJECTED',
+          errorCode: PARSE_GATE_CONFIG_REJECTED,
           rejectedOverrides: ['DOE_EXCEL_MAX_CONCURRENT_PARSES=64'],
         }),
       )

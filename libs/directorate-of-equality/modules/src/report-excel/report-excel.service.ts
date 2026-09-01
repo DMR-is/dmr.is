@@ -72,6 +72,18 @@ export class ReportExcelService implements IReportExcelService {
     try {
       // Inside the gate, deliberately. This is the allocation the slot is
       // permission for; see `import-upload/archive-budget.ts`.
+      //
+      // ⚠️ Known, and deliberately not fixed here: this read has no deadline.
+      // `getObjectBuffer` takes only `maxBytes` and passes no `abortSignal` to
+      // `client.send`, and the AWS client sets no `requestTimeout` — so a
+      // stalled S3 read holds its slot indefinitely, and at the default of two
+      // slots two stalls shed every workbook import in the process until it
+      // restarts. A deadline scoped to here would be worse than the wedge: it
+      // would release the slot while the download continued, putting the
+      // allocation outside the bound the gate exists to hold. The fix belongs
+      // in `aws.service.ts` (a `requestTimeout` or a threaded `AbortSignal`)
+      // and touches every caller across OJOI, LG and regulations, so it ships
+      // on its own rather than inside a `fix(doe)` diff.
       const fileBuffer = await this.importUpload.fetchWorkbook(key, boundary)
       return await parseWorkbook(fileBuffer)
     } catch (e) {

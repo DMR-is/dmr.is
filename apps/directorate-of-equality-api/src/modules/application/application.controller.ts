@@ -142,18 +142,29 @@ export class ApplicationController {
     type: ParsedReportDto,
   })
   async importWorkbook(@Body() body: ImportKeyDto): Promise<ParsedReportDto> {
+    // Not a `finally`. The download happens inside `importWorkbook` now, so a
+    // transient S3 failure reaches this scope — and deleting the staged object
+    // there destroys the only copy of an upload the caller can still retry.
+    // `cleanupAfter` owns which outcomes are terminal; see `import-upload`.
     try {
       // The key, not a buffer: the service downloads under the parse gate so
       // the workbook is never in memory without a slot.
-      return await this.reportExcelService.importWorkbook(
+      const parsed = await this.reportExcelService.importWorkbook(
         body.key,
         ImportUploadBoundary.APPLICATION,
       )
-    } finally {
-      await this.importUploadService.cleanup(
+      await this.importUploadService.cleanupAfter(
         body.key,
         ImportUploadBoundary.APPLICATION,
       )
+      return parsed
+    } catch (e) {
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.APPLICATION,
+        e,
+      )
+      throw e
     }
   }
 

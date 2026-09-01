@@ -57,11 +57,20 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
         key,
         ImportUploadBoundary.APPLICATION,
       )
-    } finally {
-      await this.importUploadService.cleanup(
+      await this.importUploadService.cleanupAfter(
         key,
         ImportUploadBoundary.APPLICATION,
       )
+    } catch (e) {
+      // Not a `finally`: the download is inside `importWorkbook`, so a
+      // transient storage failure lands here and must not destroy an upload
+      // this employer can still retry with.
+      await this.importUploadService.cleanupAfter(
+        key,
+        ImportUploadBoundary.APPLICATION,
+        e,
+      )
+      throw e
     }
 
     // Reject a malformed workbook (duplicate titles/ordinals, bad step counts,

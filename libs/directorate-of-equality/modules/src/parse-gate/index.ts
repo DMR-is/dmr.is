@@ -11,4 +11,10 @@
 
 export * from './parse-gate.core.module'
 export * from './parse-gate.token'
-export * from './semaphore'
+
+// `Semaphore` is deliberately NOT re-exported. Publishing the constructor from
+// the barrel is publishing the `new Semaphore(...)` this module exists to
+// prevent — a second, unshared gate that leaves both importers looking bounded
+// while the process holds twice the budgeted heap. The two specs that need the
+// class reach it by relative path; nothing outside this directory should.
+export { SemaphoreQueueFullError } from './semaphore'

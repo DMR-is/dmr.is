@@ -85,7 +85,7 @@ describe('ReportDraftSeedService', () => {
   let persistParsedChildren: jest.Mock
   let importWorkbook: jest.Mock
   let fetchWorkbook: jest.Mock
-  let cleanup: jest.Mock
+  let cleanupAfter: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest
@@ -99,7 +99,7 @@ describe('ReportDraftSeedService', () => {
       .mockResolvedValue({ employeeOrdinalToId: new Map() })
     importWorkbook = jest.fn().mockResolvedValue(validParsed())
     fetchWorkbook = jest.fn().mockResolvedValue(Buffer.from('x'))
-    cleanup = jest.fn().mockResolvedValue(undefined)
+    cleanupAfter = jest.fn().mockResolvedValue(undefined)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -122,7 +122,10 @@ describe('ReportDraftSeedService', () => {
           useValue: { persistParsedChildren },
         },
         { provide: IReportExcelService, useValue: { importWorkbook } },
-        { provide: IImportUploadService, useValue: { fetchWorkbook, cleanup } },
+        {
+          provide: IImportUploadService,
+          useValue: { fetchWorkbook, cleanupAfter },
+        },
       ],
     }).compile()
 
@@ -139,7 +142,10 @@ describe('ReportDraftSeedService', () => {
       ImportUploadBoundary.APPLICATION,
     )
     expect(fetchWorkbook).not.toHaveBeenCalled()
-    expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.APPLICATION)
+    expect(cleanupAfter).toHaveBeenCalledWith(
+      KEY,
+      ImportUploadBoundary.APPLICATION,
+    )
     // clear must happen before persist (replace semantics).
     expect(clearDraftChildren).toHaveBeenCalledWith(REPORT_ID)
     expect(persistParsedChildren).toHaveBeenCalledWith(
@@ -175,13 +181,26 @@ describe('ReportDraftSeedService', () => {
     expect(order).toEqual(['persist', 'mark'])
   })
 
-  it('cleans up the staged object even if parsing fails', async () => {
-    importWorkbook.mockRejectedValueOnce(new Error('bad workbook'))
+  /**
+   * Renamed, because the old name ("cleans up the staged object even if
+   * parsing fails") asserted the rule this branch removed. A bare `Error`
+   * reaches the client as a 500 — "we do not know what happened" — which is
+   * the worst moment to destroy the employer's only copy of the upload. The
+   * decision is delegated: this pins that the failure is *reported* to
+   * `cleanupAfter`, not that the object is deleted.
+   */
+  it('hands a failed parse to cleanupAfter to judge, rather than deleting', async () => {
+    const failure = new Error('bad workbook')
+    importWorkbook.mockRejectedValueOnce(failure)
 
     await expect(
       service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY),
     ).rejects.toThrow('bad workbook')
-    expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.APPLICATION)
+    expect(cleanupAfter).toHaveBeenCalledWith(
+      KEY,
+      ImportUploadBoundary.APPLICATION,
+      failure,
+    )
     expect(persistParsedChildren).not.toHaveBeenCalled()
     // Nothing was written, so nothing counts as activity and no workbook
     // origin is claimed.

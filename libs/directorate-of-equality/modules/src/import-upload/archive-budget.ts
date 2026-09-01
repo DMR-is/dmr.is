@@ -90,7 +90,11 @@ export class ArchiveTooLargeError extends Error {
  * key rather than a buffer. A caller waiting for a slot holds its pending HTTP
  * request and nothing else.
  *
- * That is what makes the figure above the *whole* cost rather than part of it.
+ * That is what makes the figure above the *dominant* cost rather than one term
+ * among several. Not the whole cost — the compressed upload (up to 20MB) stays
+ * live alongside the object graph inside the gated region, and that is not in
+ * the 32 x 8 x 2 derivation either. It is bounded and small next to ~256MB per
+ * parse, which is why it is named rather than added.
  * It was not always true: while the controllers downloaded first, every queued
  * caller held up to `MAX_UPLOAD_BYTES` (20MB) for the length of its wait, so
  * the default queue of 20 quietly added ~400MB beside the ~520MB here — ~80% of

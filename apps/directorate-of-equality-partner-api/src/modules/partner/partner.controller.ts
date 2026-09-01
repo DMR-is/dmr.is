@@ -188,21 +188,31 @@ export class PartnerController {
   async importSalaryReportWorkbook(
     @Body() input: ImportKeyDto,
   ): Promise<ParsedReportDto> {
+    // Not a `finally`, and no longer "cleaned up whether it succeeded or
+    // threw" — that rule was written when the download happened before this
+    // scope, so a transient storage failure could never reach it. It can now.
+    // A vendor whose upload is deleted on an S3 blip has to redo the presign,
+    // the PUT and the parse; the storage cost of keeping it is one lifecycle
+    // sweep. `cleanupAfter` decides which outcomes are terminal.
     try {
       // The key, not a buffer: the service downloads under the parse gate so
       // the workbook is never in memory without a slot.
-      return await this.reportExcelService.importWorkbook(
+      const parsed = await this.reportExcelService.importWorkbook(
         input.key,
         ImportUploadBoundary.APPLICATION,
       )
-    } finally {
-      // Cleaned up whether the parse succeeded or threw: a staged workbook that
-      // failed to parse is no more use than one that succeeded, and leaving it
-      // behind means paying for storage of files nobody will read.
-      await this.importUploadService.cleanup(
+      await this.importUploadService.cleanupAfter(
         input.key,
         ImportUploadBoundary.APPLICATION,
       )
+      return parsed
+    } catch (e) {
+      await this.importUploadService.cleanupAfter(
+        input.key,
+        ImportUploadBoundary.APPLICATION,
+        e,
+      )
+      throw e
     }
   }
 

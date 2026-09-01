@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Inject,
-  Post,
-  ServiceUnavailableException,
-  UseGuards,
-} from '@nestjs/common'
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 
 import {
@@ -63,40 +56,32 @@ export class CompanyImportController {
   ): Promise<CompanyImportResultDto> {
     try {
       const result = await this.companyImportService.apply(body.key, admin.id)
-      await this.importUploadService.cleanup(
+      await this.importUploadService.cleanupAfter(
         body.key,
         ImportUploadBoundary.ADMIN,
       )
       return result
     } catch (e) {
-      // Not a `finally`. A saturated parse gate answers 503 and tells the
-      // caller to retry, and the staged object is what they would retry with —
-      // deleting it turns a retryable shed into "redo the presign, the PUT and
-      // the preview". `import-upload.service.ts` states the same rule for its
-      // own error path: only a terminal outcome may destroy the caller's
-      // upload, never a transient one.
+      // Not a `finally`, and no longer a local rule. This used to exempt
+      // `ServiceUnavailableException` only, which reads as "keep it when the
+      // failure was transient" and is not the same thing: a transient S3 error
+      // arrives from `ResultWrapper.unwrap` as a plain `HttpException`, so it
+      // fell straight through to the delete. The download moving inside
+      // `apply` made that reachable rather than theoretical.
       //
-      // Every other failure here is terminal for this key — an unreadable
-      // workbook, a validation reject, a DB error on the transaction — so
-      // those still clean up.
+      // `cleanupAfter` now owns the decision, as an allow-list of terminal
+      // outcomes, so a status nobody has thought of yet keeps the upload
+      // instead of destroying it. The reasoning lives with the rule in
+      // `import-upload.service.ts`.
       //
-      // Matching the whole exception class is deliberate, not lazy: it is
-      // broader than the shed path, so any other 503 raised here also keeps
-      // the object. That is the safe direction. Keeping an object nobody
-      // retries costs a stale file, which the bucket lifecycle rule reaps
-      // anyway (see `cleanup`); deleting one somebody is about to retry costs
-      // them the whole upload flow. Do not narrow this to a bespoke error
-      // type — that trades a cheap failure for an expensive one.
-      //
-      // The fetch now happens inside `apply`, so this block is also reachable
-      // with a key that failed validation. `cleanup` re-checks it against the
-      // boundary for that reason — do not assume the key here is trusted.
-      if (!(e instanceof ServiceUnavailableException)) {
-        await this.importUploadService.cleanup(
-          body.key,
-          ImportUploadBoundary.ADMIN,
-        )
-      }
+      // This block is also reachable with a key that failed validation, which
+      // is why the delete path re-checks the key against the boundary — do not
+      // assume the key here is trusted, and do not collapse the two guards.
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+        e,
+      )
       throw e
     }
   }

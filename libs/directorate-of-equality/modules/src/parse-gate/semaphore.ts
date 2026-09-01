@@ -40,8 +40,17 @@ export class Semaphore {
     private readonly maxConcurrent: number,
     private readonly maxQueued: number,
   ) {
-    if (maxConcurrent < 1) throw new Error('maxConcurrent must be >= 1')
-    if (maxQueued < 0) throw new Error('maxQueued must be >= 0')
+    // `Number.isInteger` rather than `< 1`, because `NaN < 1` is false: a
+    // `NaN` limit would construct cleanly and then make every
+    // `active < maxConcurrent` comparison false, wedging every acquire in the
+    // queue and shedding the lot. `readInt` keeps that out of the DI path, but
+    // this class is constructible directly in tests.
+    if (!Number.isInteger(maxConcurrent) || maxConcurrent < 1) {
+      throw new Error('maxConcurrent must be an integer >= 1')
+    }
+    if (!Number.isInteger(maxQueued) || maxQueued < 0) {
+      throw new Error('maxQueued must be an integer >= 0')
+    }
   }
 
   get activeCount(): number {

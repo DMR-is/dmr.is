@@ -34,14 +34,23 @@ export interface IImportUploadService {
   fetchWorkbook(key: string, boundary: ImportUploadBoundary): Promise<Buffer>
 
   /**
-   * Best-effort delete of a staged object once it has been consumed.
+   * Best-effort delete of a staged object, but only when `error` says the
+   * outcome was terminal for it. Omit `error` to record success.
    *
-   * Takes the boundary because it validates the key itself. Callers reach this
-   * from `catch`/`finally` blocks that can now be entered on the invalid-key
-   * path, so it must not treat a caller-supplied key as trustworthy. Never
+   * The single entry point for cleanup, so the terminal-vs-transient rule has
+   * one definition rather than one per controller. It was six copies of a
+   * `finally` before, and five of them were wrong.
+   *
+   * Takes the boundary because it validates the key itself: the download moved
+   * inside the gated service call, so `catch` blocks are now reachable on the
+   * invalid-key path and a caller-supplied key must not be trusted here. Never
    * throws — it runs while another error is in flight.
    */
-  cleanup(key: string, boundary: ImportUploadBoundary): Promise<void>
+  cleanupAfter(
+    key: string,
+    boundary: ImportUploadBoundary,
+    error?: unknown,
+  ): Promise<void>
 
   /**
    * Local-development only: accept raw workbook bytes and stage them on disk

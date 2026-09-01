@@ -14,7 +14,10 @@ import {
 import { CompanyModel } from '../company/models/company.model'
 import { IsatCategoryModel } from '../company/models/isat-category.model'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
-import { IImportUploadService } from '../import-upload/import-upload.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { PARSE_GATE } from '../parse-gate/parse-gate.token'
 import { Semaphore } from '../parse-gate/semaphore'
@@ -457,6 +460,27 @@ describe('CompanyImportService', () => {
 
       // It downloads once it actually holds the slot, not before.
       expect(mockFetchWorkbook).toHaveBeenCalledTimes(2)
+    })
+
+    /**
+     * Company imports are staff-only, so they read from the ADMIN prefix. Both
+     * the pre-gate assertion and the download take a boundary and would mutate
+     * together if it were wrong, which is why neither is pinned by the tests
+     * above.
+     */
+    it('reads from the admin prefix, not the application one', async () => {
+      const gated = await buildWithGate(new Semaphore(2, 20))
+
+      await gated.preview(KEY)
+
+      expect(mockAssertKey).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+      )
+      expect(mockFetchWorkbook).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+      )
     })
 
     /**

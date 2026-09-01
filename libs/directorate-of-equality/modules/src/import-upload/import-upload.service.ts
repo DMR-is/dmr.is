@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { mkdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -25,11 +25,51 @@ import {
 const LOGGING_CONTEXT = 'ImportUploadService'
 
 /**
- * Facet on `@errorCode:IMPORT_CLEANUP_KEY_REFUSED` to find a caller that tried
- * to delete outside its own prefix. Nothing should produce this; if it appears,
- * a call site is passing a key it has not validated.
+ * Facet on `@errorCode:IMPORT_CLEANUP_KEY_REFUSED` to find a delete attempted
+ * outside a boundary's own prefix.
+ *
+ * This is client-reachable, not impossible: `ImportKeyDto` validates only
+ * length, so any authenticated caller POSTing `{"key":"x"}` fails
+ * `assertKeyWithinBoundary`, and the resulting 400 is terminal — so the delete
+ * path runs and refuses here. A pattern on the DTO would not help; the DTO does
+ * not know the caller's boundary, so it could only carry a weaker second copy
+ * of the rule.
+ *
+ * What is worth investigating is this firing for a *well-formed* key, which
+ * means a call site passed one it had not validated against its own boundary.
+ * Kept at `warn` rather than `debug` for that: a detector switched off in
+ * production catches nothing.
  */
 const IMPORT_CLEANUP_KEY_REFUSED = 'IMPORT_CLEANUP_KEY_REFUSED'
+
+/**
+ * The outcomes after which a staged upload may be destroyed.
+ *
+ * Deliberately an allow-list of *deletes* rather than a deny-list of keeps, and
+ * that direction is the whole point. Every status invented later — a retryable
+ * `429`, an ownership `403` — lands outside this set and keeps the object,
+ * which is the cheap failure. A stale object costs one bucket-lifecycle sweep;
+ * deleting one the caller is about to retry with costs them the presign, the
+ * PUT and the preview over again.
+ *
+ * The earlier rule here was "not a `ServiceUnavailableException`", which reads
+ * as the same idea and is not: a transient S3 error arrives from
+ * `ResultWrapper.unwrap` as a plain `HttpException`, so it fell through to the
+ * delete.
+ *
+ * `BAD_REQUEST` covers both an unreadable workbook and a key that failed
+ * validation. The second is safe to have in this set only because `cleanup`
+ * re-checks the key and refuses — do not collapse the two guards.
+ */
+const TERMINAL_STATUSES: ReadonlySet<number> = new Set([
+  HttpStatus.BAD_REQUEST,
+  HttpStatus.PAYLOAD_TOO_LARGE,
+])
+
+/** No `error` means the import succeeded, which is terminal for the object. */
+const isTerminalForUpload = (error?: unknown): boolean =>
+  error === undefined ||
+  (error instanceof HttpException && TERMINAL_STATUSES.has(error.getStatus()))
 
 const KEY_PREFIX = 'doe-imports'
 const ONE_MB = 1024 * 1024
@@ -48,6 +88,10 @@ const keyPattern = (boundary: ImportUploadBoundary) =>
 const anyKeyPattern = new RegExp(
   `^${KEY_PREFIX}/(${Object.values(ImportUploadBoundary).join('|')})/${UUID}\\.xlsx$`,
 )
+
+/** Short, stable digest so a refused key can be correlated but not echoed. */
+const hashKey = (key: string): string =>
+  createHash('sha256').update(key).digest('hex').slice(0, 12)
 
 /** Where local-mode uploads are staged on disk instead of S3. */
 const LOCAL_UPLOAD_DIR = join(tmpdir(), 'doe-import-uploads')
@@ -180,7 +224,34 @@ export class ImportUploadService implements IImportUploadService {
     }
   }
 
-  async cleanup(key: string, boundary: ImportUploadBoundary): Promise<void> {
+  async cleanupAfter(
+    key: string,
+    boundary: ImportUploadBoundary,
+    error?: unknown,
+  ): Promise<void> {
+    if (!isTerminalForUpload(error)) {
+      // Debug, not warn: this is the *designed* outcome of a transient
+      // failure, not an anomaly. It fires on every shed 503.
+      this.logger.debug('Keeping the staged upload after a transient failure', {
+        context: LOGGING_CONTEXT,
+        boundary,
+        keyHash: hashKey(key),
+      })
+      return
+    }
+
+    await this.cleanup(key, boundary)
+  }
+
+  /**
+   * Unconditional delete. Private so the terminal-vs-transient decision cannot
+   * be bypassed by reaching past {@link cleanupAfter}; `fetchWorkbook`'s 413
+   * path is the one internal caller that has already established terminality.
+   */
+  private async cleanup(
+    key: string,
+    boundary: ImportUploadBoundary,
+  ): Promise<void> {
     // The controllers' cleanup paths are reachable on the invalid-key path now
     // that the download happens inside the service call rather than ahead of
     // it, so this can be handed a key that never passed `fetchWorkbook`'s
@@ -194,7 +265,10 @@ export class ImportUploadService implements IImportUploadService {
         context: LOGGING_CONTEXT,
         errorCode: IMPORT_CLEANUP_KEY_REFUSED,
         boundary,
-        key,
+        // Not the key itself: it is up to 256 bytes of caller-controlled text
+        // on a line somebody may alert on. The hash correlates repeats without
+        // putting request input in the log.
+        keyHash: hashKey(key),
       })
       return
     }

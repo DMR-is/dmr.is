@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   ServiceUnavailableException,
 } from '@nestjs/common'
 
@@ -12,73 +14,90 @@ const KEY = 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx'
 const ADMIN = { id: 'admin-1' } as UserModel
 
 const build = (applyImpl: jest.Mock) => {
-  const cleanup = jest.fn().mockResolvedValue(undefined)
+  const cleanupAfter = jest.fn().mockResolvedValue(undefined)
   const fetchWorkbook = jest.fn().mockResolvedValue(Buffer.from('x'))
   const controller = new CompanyImportController(
     { preview: jest.fn(), apply: applyImpl },
-    { fetchWorkbook, cleanup } as never,
+    { fetchWorkbook, cleanupAfter } as never,
   )
-  return { controller, cleanup, fetchWorkbook }
+  return { controller, cleanupAfter, fetchWorkbook }
 }
 
 describe('CompanyImportController', () => {
-  describe('apply — when the staged upload may be deleted', () => {
-    it('deletes the staged object once the import commits', async () => {
-      const { controller, cleanup } = build(
+  /**
+   * This controller used to decide for itself which failures may destroy the
+   * staged upload, exempting `ServiceUnavailableException` and deleting on
+   * everything else. That read as "keep it when the failure was transient" and
+   * was not: a transient S3 error arrives as a plain `HttpException`, so it
+   * fell through to the delete — and once the download moved inside `apply`,
+   * that path became reachable rather than theoretical.
+   *
+   * The rule now lives in one place. What belongs here is that the outcome is
+   * *reported* faithfully, not which outcomes delete — that is pinned in
+   * `import-upload.service.spec.ts`, against the real predicate.
+   */
+  describe('apply — reports the outcome and lets cleanupAfter judge it', () => {
+    it('reports success with no error', async () => {
+      const { controller, cleanupAfter } = build(
         jest.fn().mockResolvedValue({ committed: true }),
       )
 
       await controller.apply({ key: KEY }, ADMIN)
 
-      expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.ADMIN)
+      expect(cleanupAfter).toHaveBeenCalledWith(KEY, ImportUploadBoundary.ADMIN)
+    })
+
+    it('hands a shed 503 to cleanupAfter rather than deleting', async () => {
+      const shed = new ServiceUnavailableException('busy')
+      const { controller, cleanupAfter } = build(
+        jest.fn().mockRejectedValue(shed),
+      )
+
+      await expect(controller.apply({ key: KEY }, ADMIN)).rejects.toBe(shed)
+
+      expect(cleanupAfter).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+        shed,
+      )
+    })
+
+    it('hands a terminal failure to cleanupAfter too', async () => {
+      const bad = new BadRequestException('unreadable')
+      const { controller, cleanupAfter } = build(
+        jest.fn().mockRejectedValue(bad),
+      )
+
+      await expect(controller.apply({ key: KEY }, ADMIN)).rejects.toBe(bad)
+
+      expect(cleanupAfter).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+        bad,
+      )
     })
 
     /**
-     * The reason this controller does not use a `finally`.
-     *
-     * A saturated parse gate answers 503 and tells the caller to retry — and
-     * the staged object is the thing they would retry with. Deleting it turns
-     * a retryable shed into "redo the presign, the PUT and the preview", and
-     * the retry fails inside `fetchWorkbook` as an opaque storage error rather
-     * than as anything the message prepared them for.
-     *
-     * `import-upload.service.ts` states the same rule for its own error path:
-     * only a terminal outcome may destroy the caller's upload.
+     * The regression that made this rewrite necessary: a transient storage
+     * failure is not a 503, so the old local rule deleted the upload. The
+     * controller must not filter — it passes the error on whatever it is.
      */
-    it('keeps the staged object when the import is shed with a 503', async () => {
-      const { controller, cleanup } = build(
-        jest.fn().mockRejectedValue(new ServiceUnavailableException('busy')),
+    it('does not swallow a transient storage error before reporting it', async () => {
+      const blip = new HttpException('S3 unavailable', HttpStatus.BAD_GATEWAY)
+      const { controller, cleanupAfter } = build(
+        jest.fn().mockRejectedValue(blip),
       )
 
-      await expect(
-        controller.apply({ key: KEY }, ADMIN),
-      ).rejects.toBeInstanceOf(ServiceUnavailableException)
+      await expect(controller.apply({ key: KEY }, ADMIN)).rejects.toBe(blip)
 
-      expect(cleanup).not.toHaveBeenCalled()
-    })
-
-    it('still deletes the staged object on a terminal failure', async () => {
-      const { controller, cleanup } = build(
-        jest.fn().mockRejectedValue(new BadRequestException('unreadable')),
+      expect(cleanupAfter).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+        blip,
       )
-
-      await expect(
-        controller.apply({ key: KEY }, ADMIN),
-      ).rejects.toBeInstanceOf(BadRequestException)
-
-      // A workbook that cannot be read is not worth keeping — the distinction
-      // being drawn is retryable versus terminal, not error versus success.
-      expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.ADMIN)
     })
   })
 
-  /**
-   * The controller used to download the workbook and hand the service a
-   * buffer, which meant a caller queued for a parse slot was already holding
-   * up to the 20MB upload cap. The service owns the download now so it happens
-   * under the gate; if this ever regresses, the queue silently starts costing
-   * as much as the parses do. See `import-upload/archive-budget.ts`.
-   */
   describe('does not fetch ahead of the gate', () => {
     it('hands the key to the service and never downloads itself', async () => {
       const apply = jest.fn().mockResolvedValue({ committed: true })
@@ -92,11 +111,11 @@ describe('CompanyImportController', () => {
 
     it('previews by key too', async () => {
       const preview = jest.fn().mockResolvedValue({ committed: false })
-      const cleanup = jest.fn().mockResolvedValue(undefined)
+      const cleanupAfter = jest.fn().mockResolvedValue(undefined)
       const fetchWorkbook = jest.fn()
       const controller = new CompanyImportController(
         { preview, apply: jest.fn() },
-        { fetchWorkbook, cleanup } as never,
+        { fetchWorkbook, cleanupAfter } as never,
       )
 
       await controller.preview({ key: KEY })
