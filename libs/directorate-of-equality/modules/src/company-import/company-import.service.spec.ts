@@ -1,3 +1,7 @@
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common'
 import { getConnectionToken, getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -10,7 +14,13 @@ import {
 import { CompanyModel } from '../company/models/company.model'
 import { IsatCategoryModel } from '../company/models/isat-category.model'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
+import { PARSE_GATE } from '../parse-gate/parse-gate.token'
+import { Semaphore } from '../parse-gate/semaphore'
 import { CompanyImportOutcomeEnum } from './dto/company-import-result.dto'
 import { ParsedCompanyRow } from './dto/parsed-company-row.dto'
 import { CompanyImportService } from './company-import.service'
@@ -30,6 +40,20 @@ const mockLogger = {
 }
 
 const BUF = Buffer.from('x')
+
+/** A well-formed admin-boundary key; the service validates before gating. */
+const KEY = 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx'
+
+/**
+ * Stands in for `IImportUploadService`. `fetchWorkbook` is the allocation the
+ * gate exists to bound, so these tests assert on *when* it is called, not only
+ * that the parse happened.
+ */
+let mockFetchWorkbook: jest.Mock
+let mockAssertKey: jest.Mock
+
+/** Flush the microtask queue *and* the timer phase, so pending awaits settle. */
+const tick = () => new Promise((r) => setImmediate(r))
 
 const makeRow = (o: Partial<ParsedCompanyRow> = {}): ParsedCompanyRow => ({
   row: 2,
@@ -79,6 +103,8 @@ describe('CompanyImportService', () => {
     emitStatusChanged = jest.fn()
     transaction = jest.fn(async (cb: () => Promise<unknown>) => cb())
 
+    mockFetchWorkbook = jest.fn().mockResolvedValue(BUF)
+    mockAssertKey = jest.fn()
     mockParse.mockResolvedValue({ rows: [], errors: [], year: 2025 })
 
     const module = await Test.createTestingModule({
@@ -102,6 +128,18 @@ describe('CompanyImportService', () => {
           provide: ICompanyEventService,
           useValue: { emitCreated, emitStatusChanged },
         },
+        // A real gate rather than a stub, sized so it never blocks: these
+        // tests are about reconciliation, but the acquire/release path should
+        // still be the real one so a leaked slot would surface here as a hang
+        // rather than being mocked away.
+        { provide: PARSE_GATE, useValue: new Semaphore(2, 20) },
+        {
+          provide: IImportUploadService,
+          useValue: {
+            assertKeyWithinBoundary: mockAssertKey,
+            fetchWorkbook: mockFetchWorkbook,
+          },
+        },
       ],
     }).compile()
 
@@ -112,7 +150,7 @@ describe('CompanyImportService', () => {
     mockParse.mockResolvedValue({ rows: [makeRow()], errors: [], year: 2025 })
     companyFindAll.mockResolvedValue([])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.committed).toBe(false)
     expect(result.created).toHaveLength(1)
@@ -123,7 +161,7 @@ describe('CompanyImportService', () => {
     mockParse.mockResolvedValue({ rows: [makeRow()], errors: [], year: 2025 })
     companyFindAll.mockResolvedValue([makeCompany()])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.unchanged).toHaveLength(1)
     expect(result.updated).toHaveLength(0)
@@ -137,7 +175,7 @@ describe('CompanyImportService', () => {
     })
     companyFindAll.mockResolvedValue([makeCompany()])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.updated).toHaveLength(1)
     const fields = result.updated[0].changedFields.map((c) => c.field)
@@ -150,7 +188,7 @@ describe('CompanyImportService', () => {
       makeCompany({ status: CompanyStatusEnum.INACTIVE }),
     ])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.reactivated).toHaveLength(1)
     expect(result.reactivated[0].changedFields[0]).toMatchObject({
@@ -166,7 +204,7 @@ describe('CompanyImportService', () => {
       makeCompany({ nationalId: '4101680229' }),
     ])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.deactivated).toHaveLength(1)
     expect(result.deactivated[0].outcome).toBe(
@@ -188,7 +226,7 @@ describe('CompanyImportService', () => {
       }),
     ])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.deactivated).toHaveLength(0)
   })
@@ -202,7 +240,7 @@ describe('CompanyImportService', () => {
     isatFindAll.mockResolvedValue([]) // 99999 not known
     companyFindAll.mockResolvedValue([])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.created).toHaveLength(0)
     expect(result.invalid).toHaveLength(1)
@@ -218,7 +256,7 @@ describe('CompanyImportService', () => {
     postcodeFindAll.mockResolvedValue([]) // 999 not found
     companyFindAll.mockResolvedValue([])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.created).toHaveLength(1)
     expect(result.created[0].note).toContain('999')
@@ -235,7 +273,7 @@ describe('CompanyImportService', () => {
     })
     companyFindAll.mockResolvedValue([makeCompany()])
 
-    const result = await service.preview(BUF)
+    const result = await service.preview(KEY)
 
     expect(result.deactivated).toHaveLength(0)
   })
@@ -245,7 +283,7 @@ describe('CompanyImportService', () => {
       mockParse.mockResolvedValue({ rows: [makeRow()], errors: [], year: 2025 })
       companyFindAll.mockResolvedValue([])
 
-      const result = await service.apply(BUF, 'admin-1')
+      const result = await service.apply(KEY, 'admin-1')
 
       expect(transaction).toHaveBeenCalledTimes(1)
       expect(companyCreate).toHaveBeenCalledTimes(1)
@@ -266,7 +304,7 @@ describe('CompanyImportService', () => {
       })
       companyFindAll.mockResolvedValue([company])
 
-      await service.apply(BUF, 'admin-1')
+      await service.apply(KEY, 'admin-1')
 
       expect(company.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -288,7 +326,7 @@ describe('CompanyImportService', () => {
       mockParse.mockResolvedValue({ rows: [], errors: [], year: 2025 })
       companyFindAll.mockResolvedValue([company])
 
-      await service.apply(BUF, 'admin-1')
+      await service.apply(KEY, 'admin-1')
 
       expect(company.update).toHaveBeenCalledWith({
         status: CompanyStatusEnum.INACTIVE,
@@ -300,6 +338,178 @@ describe('CompanyImportService', () => {
         'admin-1',
         expect.any(String),
       )
+    })
+  })
+
+  describe('parse gate', () => {
+    /**
+     * Build the service against a gate that is already exhausted, so the
+     * shed path is the only outcome available.
+     */
+    const buildWithGate = async (gate: Semaphore) => {
+      const module = await Test.createTestingModule({
+        providers: [
+          CompanyImportService,
+          { provide: LOGGER_PROVIDER, useValue: mockLogger },
+          { provide: getConnectionToken(), useValue: { transaction } },
+          {
+            provide: getModelToken(CompanyModel),
+            useValue: { findAll: companyFindAll, create: companyCreate },
+          },
+          {
+            provide: getModelToken(IsatCategoryModel),
+            useValue: { findAll: isatFindAll },
+          },
+          {
+            provide: getModelToken(PostcodeModel),
+            useValue: { findAll: postcodeFindAll },
+          },
+          {
+            provide: ICompanyEventService,
+            useValue: { emitCreated, emitStatusChanged },
+          },
+          { provide: PARSE_GATE, useValue: gate },
+          {
+            provide: IImportUploadService,
+            useValue: {
+              assertKeyWithinBoundary: mockAssertKey,
+              fetchWorkbook: mockFetchWorkbook,
+            },
+          },
+        ],
+      }).compile()
+      return module.get(CompanyImportService)
+    }
+
+    it('sheds with a 503 rather than parsing when the gate is saturated', async () => {
+      // One slot, no queue — taking the slot leaves nothing to acquire.
+      const gate = new Semaphore(1, 0)
+      const held = await gate.acquire()
+      const gated = await buildWithGate(gate)
+
+      await expect(gated.preview(KEY)).rejects.toBeInstanceOf(
+        ServiceUnavailableException,
+      )
+      // The point of gating before parsing: the expensive call never happens.
+      expect(mockParse).not.toHaveBeenCalled()
+
+      held()
+    })
+
+    it('releases its slot after a parse so later imports still run', async () => {
+      const gate = new Semaphore(1, 0)
+      const gated = await buildWithGate(gate)
+
+      await gated.preview(KEY)
+      expect(gate.activeCount).toBe(0)
+
+      // A second import would deadlock on a leaked slot rather than fail.
+      await expect(gated.preview(KEY)).resolves.toBeDefined()
+    })
+
+    it('releases its slot when the parse throws', async () => {
+      const gate = new Semaphore(1, 0)
+      const gated = await buildWithGate(gate)
+      mockParse.mockRejectedValueOnce(new Error('unreadable workbook'))
+
+      await expect(gated.preview(KEY)).rejects.toThrow('unreadable workbook')
+      expect(gate.activeCount).toBe(0)
+    })
+
+    /**
+     * The property the whole ordering change exists for.
+     *
+     * A caller waiting for a slot must not already be holding its workbook.
+     * When the download ran in the controller, every queued caller held up to
+     * the 20MB upload cap for the length of its wait — at the default queue of
+     * 20 that is ~400MB of heap doing nothing, on top of the ~520MB the parses
+     * are budgeted for. Downloading inside the gate is what makes the figure in
+     * `import-upload/archive-budget.ts` the whole cost rather than part of it.
+     *
+     * Asserting on the call count of `fetchWorkbook` rather than on memory is
+     * the closest a unit test gets: the download is the allocation.
+     */
+    it('does not download while it is queued for a slot', async () => {
+      const gate = new Semaphore(1, 5)
+      const gated = await buildWithGate(gate)
+
+      // Hold the only slot open with an in-flight parse.
+      let finishFirstParse: () => void = () => undefined
+      mockParse.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishFirstParse = () =>
+              resolve({ rows: [], errors: [], year: 2025 })
+          }),
+      )
+
+      const first = gated.preview(KEY)
+      await tick()
+      expect(mockFetchWorkbook).toHaveBeenCalledTimes(1)
+
+      const second = gated.preview(KEY)
+      await tick()
+
+      // Queued, and — the point — it has not fetched anything yet.
+      expect(gate.queuedCount).toBe(1)
+      expect(mockFetchWorkbook).toHaveBeenCalledTimes(1)
+
+      finishFirstParse()
+      await first
+      await second
+
+      // It downloads once it actually holds the slot, not before.
+      expect(mockFetchWorkbook).toHaveBeenCalledTimes(2)
+    })
+
+    /**
+     * Company imports are staff-only, so they read from the ADMIN prefix. Both
+     * the pre-gate assertion and the download take a boundary and would mutate
+     * together if it were wrong, which is why neither is pinned by the tests
+     * above.
+     */
+    it('reads from the admin prefix, not the application one', async () => {
+      const gated = await buildWithGate(new Semaphore(2, 20))
+
+      await gated.preview(KEY)
+
+      expect(mockAssertKey).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+      )
+      expect(mockFetchWorkbook).toHaveBeenCalledWith(
+        KEY,
+        ImportUploadBoundary.ADMIN,
+      )
+    })
+
+    /**
+     * A malformed key costs nothing to reject, so it must not take a slot or a
+     * place in the queue — otherwise a caller could fill the queue with junk
+     * keys and shed real uploads without ever uploading anything.
+     */
+    it('rejects an invalid key before acquiring a slot', async () => {
+      // The gate must be *saturated* for this to prove anything. On an idle
+      // gate, validating after acquiring looks identical from outside — the
+      // acquire succeeds, the throw happens, the `finally` releases, and every
+      // count returns to zero. Holding the only slot with no queue is what
+      // separates the two orderings: validation first yields a 400, validation
+      // second sheds the request as a 503 before ever looking at the key.
+      const gate = new Semaphore(1, 0)
+      const held = await gate.acquire()
+      const gated = await buildWithGate(gate)
+      mockAssertKey.mockImplementationOnce(() => {
+        throw new BadRequestException('Invalid import upload key')
+      })
+
+      await expect(gated.preview('nonsense')).rejects.toBeInstanceOf(
+        BadRequestException,
+      )
+
+      expect(mockFetchWorkbook).not.toHaveBeenCalled()
+      expect(mockParse).not.toHaveBeenCalled()
+
+      held()
     })
   })
 })

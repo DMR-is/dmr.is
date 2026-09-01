@@ -61,17 +61,50 @@ export class ArchiveTooLargeError extends Error {
  * in the measurement, so the real headroom for a decorated report is lower
  * than 2.4x.
  *
- * ## What the "x 2" does and does not cover
+ * ## What the "x 2" covers
  *
- * The 2 is `MAX_CONCURRENT_PARSES`, and it gates `parseWorkbook` only — it is
- * a private semaphore inside `ReportExcelService`. `parseCompanyImport` also
- * uses this budget and runs through no gate at all, so each concurrent company
- * import adds ~260MB on top of the ~520MB accounted for above. It is reachable
- * by any authenticated DoE staff account, not only ADMINs — `AdminGuard`
- * resolves the user row and returns true rather than comparing a role, and the
- * controller does not add `RequireAdminRoleGuard`. Realistically serial, which
- * is why the number stands, but it is a gap in the derivation rather than
- * something it covers.
+ * The 2 is the shared parse gate in `ParseGateCoreModule`, and it means two
+ * workbooks *per process*: `parseWorkbook` and `parseCompanyImport` both
+ * acquire from the same `Semaphore` instance, and each holds its slot from the
+ * download through to the end of the parse, so no third workbook of either
+ * kind can be in memory at once. Both consumers are counted because a company import retains
+ * the same heap as a report import.
+ *
+ * Per process, not per deployment. `directorate-of-equality-partner-api` is a
+ * separate task that also imports `ReportExcelCoreModule` and reads the same
+ * env var, so it carries its own gate of 2 against its own heap. The budget
+ * holds because each task is sized independently — but a change to
+ * `doe_api_memory` has to be checked against both.
+ *
+ * The gate is deliberately one provider rather than one per module. Two gates
+ * of 2 would permit four concurrent parses and ~1040MB — the same figure that
+ * made a 64MB budget wrong above — while each module still read as correctly
+ * bounded on its own, which is what would make it hard to catch.
+ *
+ * ## Why the queue costs nothing
+ *
+ * A slot is permission to *hold a workbook in memory*, not permission to burn
+ * CPU — so the gate has to start where the allocation does. `fetchWorkbook` is
+ * therefore called inside the gated region, by `ReportExcelService` and
+ * `CompanyImportService` themselves, and the controllers hand those services a
+ * key rather than a buffer. A caller waiting for a slot holds its pending HTTP
+ * request and nothing else.
+ *
+ * That is what makes the figure above the *dominant* cost rather than one term
+ * among several. Not the whole cost — the compressed upload (up to 20MB) stays
+ * live alongside the object graph inside the gated region, and that is not in
+ * the 32 x 8 x 2 derivation either. It is bounded and small next to ~256MB per
+ * parse, which is why it is named rather than added.
+ * It was not always true: while the controllers downloaded first, every queued
+ * caller held up to `MAX_UPLOAD_BYTES` (20MB) for the length of its wait, so
+ * the default queue of 20 quietly added ~400MB beside the ~520MB here — ~80% of
+ * the ceiling, none of it in this derivation. `company-import.service.spec.ts`
+ * pins the ordering ("does not download while it is queued for a slot"),
+ * because nothing else about the code makes it visible.
+ *
+ * The trade is that a slot is now held across the S3 read as well as the parse,
+ * which costs some parse throughput at only two slots. Worth it: the
+ * alternative is an accounting that is wrong by ~400MB.
  *
  * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without

@@ -7,27 +7,19 @@ import {
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { ImportUploadBoundary } from '../import-upload/import-upload.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
+import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
+import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
 import { ImportErrorDto } from './dto/import-error.dto'
 import { ParsedReportDto } from './dto/parsed-report.dto'
-import { Semaphore, SemaphoreQueueFullError } from './lib/semaphore'
 import { parseWorkbook } from './parser/workbook.parser'
 import { IReportExcelService } from './report-excel.service.interface'
 import { TEMPLATE_BASE64 } from './template-data'
 
 const LOGGING_CONTEXT = 'ReportExcelService'
-
-/**
- * Parsing one workbook holds ~350MB of heap (exceljs model), so unbounded
- * concurrent imports OOM the container. These bound per-instance parse
- * concurrency: worst-case parse memory ≈ `maxConcurrent × ~350MB`. Both are
- * env-overridable so devops can retune against the task's heap without a
- * redeploy. Defaults are deliberately conservative (2 running, 20 waiting).
- */
-const MAX_CONCURRENT_PARSES = Number(
-  process.env.DOE_EXCEL_MAX_CONCURRENT_PARSES ?? 2,
-)
-const MAX_QUEUED_PARSES = Number(process.env.DOE_EXCEL_MAX_QUEUED_PARSES ?? 20)
 
 /** Searchable marker for uploads shed because the parse gate was saturated. */
 const EXCEL_IMPORT_BUSY = 'EXCEL_IMPORT_BUSY'
@@ -42,15 +34,21 @@ const EXCEL_IMPORT_VALIDATION_FAILED = 'EXCEL_IMPORT_VALIDATION_FAILED'
 
 @Injectable()
 export class ReportExcelService implements IReportExcelService {
-  // Shared across every import path (application / admin / bulk draft-seed) —
-  // they all funnel through importWorkbook, so one gate bounds total parse
-  // concurrency for the instance.
-  private readonly parseGate = new Semaphore(
-    MAX_CONCURRENT_PARSES,
-    MAX_QUEUED_PARSES,
-  )
-
-  constructor(@Inject(LOGGER_PROVIDER) private readonly logger: Logger) {}
+  constructor(
+    @Inject(LOGGER_PROVIDER) private readonly logger: Logger,
+    // Injected, not constructed. Every report import path (application /
+    // admin / bulk draft-seed) funnels through `importWorkbook`, but the
+    // company-import path does not — and it parses workbooks of the same
+    // cost. One gate for the process is what keeps the heap arithmetic in
+    // `import-upload/archive-budget.ts` true; see `ParseGateCoreModule`.
+    @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
+    // The download happens inside the gated region, so this service owns it
+    // rather than the controllers. A caller that fetched first would be holding
+    // the workbook while it waited for a slot, which is the memory the gate is
+    // supposed to bound.
+    @Inject(IImportUploadService)
+    private readonly importUpload: IImportUploadService,
+  ) {}
 
   async generateBlankTemplate(): Promise<Buffer> {
     this.logger.debug('Serving blank template', { context: LOGGING_CONTEXT })
@@ -58,17 +56,35 @@ export class ReportExcelService implements IReportExcelService {
   }
 
   async importWorkbook(
-    fileBuffer: Buffer,
+    key: string,
     boundary: ImportUploadBoundary,
   ): Promise<ParsedReportDto> {
+    // Ahead of the gate: rejecting a malformed key costs nothing and allocates
+    // nothing, so it must not consume a slot or a place in the queue.
+    this.importUpload.assertKeyWithinBoundary(key, boundary)
+
     this.logger.debug('Importing workbook', {
       context: LOGGING_CONTEXT,
-      size: fileBuffer.length,
       boundary,
     })
 
     const release = await this.acquireParseSlot(boundary)
     try {
+      // Inside the gate, deliberately. This is the allocation the slot is
+      // permission for; see `import-upload/archive-budget.ts`.
+      //
+      // ⚠️ Known, and deliberately not fixed here: this read has no deadline.
+      // `getObjectBuffer` takes only `maxBytes` and passes no `abortSignal` to
+      // `client.send`, and the AWS client sets no `requestTimeout` — so a
+      // stalled S3 read holds its slot indefinitely, and at the default of two
+      // slots two stalls shed every workbook import in the process until it
+      // restarts. A deadline scoped to here would be worse than the wedge: it
+      // would release the slot while the download continued, putting the
+      // allocation outside the bound the gate exists to hold. The fix belongs
+      // in `aws.service.ts` (a `requestTimeout` or a threaded `AbortSignal`)
+      // and touches every caller across OJOI, LG and regulations, so it ships
+      // on its own rather than inside a `fix(doe)` diff.
+      const fileBuffer = await this.importUpload.fetchWorkbook(key, boundary)
       return await parseWorkbook(fileBuffer)
     } catch (e) {
       if (e instanceof BadRequestException) {

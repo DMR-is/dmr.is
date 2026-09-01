@@ -40,11 +40,9 @@ export class CompanyImportController {
     type: CompanyImportResultDto,
   })
   async preview(@Body() body: ImportKeyDto): Promise<CompanyImportResultDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
-    return this.companyImportService.preview(buffer)
+    // The key, not a buffer: the service downloads under the parse gate so the
+    // workbook is never in memory without a slot. See `archive-budget.ts`.
+    return this.companyImportService.preview(body.key)
   }
 
   @Post('apply')
@@ -56,14 +54,35 @@ export class CompanyImportController {
     @Body() body: ImportKeyDto,
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyImportResultDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
     try {
-      return await this.companyImportService.apply(buffer, admin.id)
-    } finally {
-      await this.importUploadService.cleanup(body.key)
+      const result = await this.companyImportService.apply(body.key, admin.id)
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+      )
+      return result
+    } catch (e) {
+      // Not a `finally`, and no longer a local rule. This used to exempt
+      // `ServiceUnavailableException` only, which reads as "keep it when the
+      // failure was transient" and is not the same thing: a transient S3 error
+      // arrives from `ResultWrapper.unwrap` as a plain `HttpException`, so it
+      // fell straight through to the delete. The download moving inside
+      // `apply` made that reachable rather than theoretical.
+      //
+      // `cleanupAfter` now owns the decision, as an allow-list of terminal
+      // outcomes, so a status nobody has thought of yet keeps the upload
+      // instead of destroying it. The reasoning lives with the rule in
+      // `import-upload.service.ts`.
+      //
+      // This block is also reachable with a key that failed validation, which
+      // is why the delete path re-checks the key against the boundary — do not
+      // assume the key here is trusted, and do not collapse the two guards.
+      await this.importUploadService.cleanupAfter(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+        e,
+      )
+      throw e
     }
   }
 }
