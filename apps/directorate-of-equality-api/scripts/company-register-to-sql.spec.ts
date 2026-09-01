@@ -55,12 +55,10 @@ describe('readDay — formula cells', () => {
 
   it('reads a shared formula through both the master and its slave cells', async () => {
     const sheet = await roundTrip((s) => {
-      s.getCell('A1').value = {
-        formula: 'B1',
-        result: DUE,
-        shareType: 'shared',
-        ref: 'A1:A2',
-      }
+      // Only the slave names its master. exceljs's writer derives the shared
+      // group from that reference, so the master needs no `ref`/`shareType`
+      // here — and its published typings do not describe those keys anyway.
+      s.getCell('A1').value = { formula: 'B1', result: DUE }
       s.getCell('A2').value = { sharedFormula: 'A1', result: DUE }
     })
 
@@ -87,12 +85,7 @@ describe('readDay — formula cells', () => {
 
   it('reads a shared-formula slave holding text rather than a date', async () => {
     const sheet = await roundTrip((s) => {
-      s.getCell('A1').value = {
-        formula: 'B1',
-        result: '31.12.2027',
-        shareType: 'shared',
-        ref: 'A1:A2',
-      }
+      s.getCell('A1').value = { formula: 'B1', result: '31.12.2027' }
       s.getCell('A2').value = { sharedFormula: 'A1', result: '31.12.2027' }
     })
 
