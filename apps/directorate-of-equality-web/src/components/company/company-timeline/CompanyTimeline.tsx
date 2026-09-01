@@ -55,20 +55,20 @@ type Props = {
 
 function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
   return items.map((item) => ({
-    kind: (item.kind as unknown) as ReportTimelineItemKindEnum,
+    kind: item.kind as unknown as ReportTimelineItemKindEnum,
     createdAt: item.createdAt,
     event: item.event
       ? {
           id: item.event.id,
           reportId: item.event.companyId,
-          eventType: (item.event.eventType as unknown) as never,
+          eventType: item.event.eventType as unknown as never,
           actorUserId: item.event.actorUserId ?? null,
           actorName: item.event.actorName ?? null,
-          reportStatus: (item.event.status as unknown) as ReportStatusEnum,
+          reportStatus: item.event.status as unknown as ReportStatusEnum,
           fromStatus:
-            ((item.event.fromStatus as unknown) as ReportStatusEnum) ?? null,
+            (item.event.fromStatus as unknown as ReportStatusEnum) ?? null,
           toStatus:
-            ((item.event.toStatus as unknown) as ReportStatusEnum) ?? null,
+            (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
           reason: eventBody(item.event),
           createdAt: item.event.createdAt,
         }

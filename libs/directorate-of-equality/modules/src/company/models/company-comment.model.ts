@@ -20,11 +20,27 @@ type CompanyCommentAttributes = {
   isSystem: boolean
 }
 
+/**
+ * `isSystem` is deliberately absent, even though the column exists and is
+ * readable above.
+ *
+ * The only writer of a system comment is the company-register load
+ * (`scripts/company-register-to-sql.ts`), which is raw SQL and never touches
+ * this model. That load also owns `is_system` as its re-run marker: it clears
+ * its previous notes with an unscoped `DELETE FROM company_comment WHERE
+ * is_system = true`. So the first feature to set the flag through `create()`
+ * would have its rows silently deleted by the next register re-run. Leaving the
+ * attribute off makes that unreachable rather than merely documented.
+ *
+ * Whoever needs it next should give the load a marker of its own — a provenance
+ * column, or a distinct author kind — and narrow that DELETE onto it, then add
+ * `isSystem` back here. See
+ * `m-20260901-company-comment-system-author.js`.
+ */
 type CompanyCommentCreateAttributes = {
   companyId: string
   authorUserId?: string | null
   body: string
-  isSystem?: boolean
 }
 
 @ParanoidTable({ tableName: DoeModels.COMPANY_COMMENT })

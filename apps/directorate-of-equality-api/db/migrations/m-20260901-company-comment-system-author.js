@@ -50,13 +50,18 @@
  * (`scripts/company-register-to-sql.ts`) replaces its seeded notes wholesale
  * with an unscoped `DELETE FROM company_comment WHERE is_system = true AND
  * deleted_at IS NULL`, so today this column doubles as that load's ownership
- * marker. `CompanyCommentCreateAttributes.isSystem` is a public create
- * attribute, so the first other feature to set it would have its rows deleted
- * by the next register re-run. The answer then is to give the load a marker of
- * its own — a provenance column, or a distinct author kind — and narrow that
- * DELETE onto it. Narrowing the DELETE to the sheet's national IDs is NOT the
- * answer: it would leave a seeded note behind for any company dropped from a
- * corrected export, with no archive row behind it.
+ * marker: anything else that sets the flag would have its rows deleted by the
+ * next register re-run.
+ *
+ * `CompanyCommentModel` therefore exposes `isSystem` on its READ attributes
+ * only and deliberately omits it from `CompanyCommentCreateAttributes`, which
+ * makes that footgun unreachable through the model rather than merely
+ * documented — the load is raw SQL and needs no create attribute. Before adding
+ * it back, give the load a marker of its own — a provenance column, or a
+ * distinct author kind — and narrow that DELETE onto it. Narrowing the DELETE
+ * to the sheet's national IDs is NOT the answer: it would leave a seeded note
+ * behind for any company dropped from a corrected export, with no archive row
+ * behind it.
  *
  * @type {import('sequelize-cli').Migration}
  */

@@ -1,6 +1,11 @@
 import * as ExcelJS from 'exceljs'
 
-import { readDay } from './company-register-to-sql'
+import {
+  bucketFromLabel,
+  COMPANY_ON_CONFLICT,
+  normalizeIsatCode,
+  readDay,
+} from './company-register-to-sql'
 
 /**
  * Pins the cell reader against Excel's two formula shapes.
@@ -120,5 +125,109 @@ describe('readDay — formula cells', () => {
       month: 12,
       day: 31,
     })
+  })
+})
+
+/**
+ * The two mappings where a wrong answer is a different REAL value rather than a
+ * null, which is why they are pinned and the rest of the readers are not: a
+ * null shows up in the summary's diagnostics, a plausible wrong value does not.
+ */
+describe('bucketFromLabel', () => {
+  it('reads the bands by their numbers, not their text', () => {
+    expect(bucketFromLabel('0-24')).toBe('SMALL')
+    expect(bucketFromLabel('0')).toBe('SMALL')
+    // En dash, which this sheet uses interchangeably with a hyphen.
+    expect(bucketFromLabel('25–49')).toBe('MEDIUM')
+    expect(bucketFromLabel('50+')).toBe('LARGE')
+    expect(bucketFromLabel('50 eða fleiri')).toBe('LARGE')
+  })
+
+  it("collapses the old column's finer bands upwards", () => {
+    expect(bucketFromLabel('50-89')).toBe('LARGE')
+    expect(bucketFromLabel('90-149')).toBe('LARGE')
+    expect(bucketFromLabel('150-249')).toBe('LARGE')
+    expect(bucketFromLabel('>249')).toBe('LARGE')
+  })
+
+  it('reads a range by its top, except 25-49 which is its own band', () => {
+    // The upper bound of "25-49" is 49, and bucketFromCount(49) would be
+    // MEDIUM anyway — but "0-24" must not become SMALL by accident of 24 < 25
+    // while "25-49" is decided by a special case. Pinned so the special case
+    // cannot be dropped without a failure.
+    expect(bucketFromLabel('25-49')).toBe('MEDIUM')
+    expect(bucketFromLabel('49')).toBe('MEDIUM')
+    expect(bucketFromLabel('24')).toBe('SMALL')
+  })
+
+  it('returns null for nothing to read, and never guesses SMALL', () => {
+    expect(bucketFromLabel(null)).toBeNull()
+    expect(bucketFromLabel('')).toBeNull()
+    // The whole reason this is not the import parser: an unreadable label is
+    // not a claim that the company is small. The caller turns null into
+    // UNKNOWN and reports it, and the upsert's CASE carves UNKNOWN out of
+    // clearing next_salary_report_due_at on that strength.
+    expect(bucketFromLabel('óskilgreint')).toBeNull()
+    expect(bucketFromLabel('n/a')).toBeNull()
+  })
+})
+
+describe('normalizeIsatCode', () => {
+  // The rule that matters: the same four digits mean two different real
+  // industries depending on whether the cell carried a dot.
+  it('pads plain digits left and dotted codes right', () => {
+    expect(normalizeIsatCode('1071')).toBe('01071')
+    expect(normalizeIsatCode('10.71')).toBe('10710')
+  })
+
+  it('leaves an already-normalized code alone in either form', () => {
+    expect(normalizeIsatCode('01110')).toBe('01110')
+    expect(normalizeIsatCode('10.71.0')).toBe('10710')
+  })
+
+  it('returns null when there is nothing to normalize', () => {
+    expect(normalizeIsatCode(null)).toBeNull()
+    expect(normalizeIsatCode('')).toBeNull()
+    expect(normalizeIsatCode('engin')).toBeNull()
+  })
+
+  it('hands back an over-long value so the caller can report it', () => {
+    expect(normalizeIsatCode('123456')).toBe('123456')
+  })
+})
+
+/**
+ * Pins the one branch of the upsert that can destroy live data on a re-run.
+ *
+ * `next_salary_report_due_at` is cleared when the register states a size below
+ * LARGE. UNKNOWN is not such a statement — it is "we could not read the
+ * bucket" — so an earlier `<> 'LARGE'` let one blank stærðarflokkur cell in a
+ * later export null out a deadline `advanceCompanyReportDueDate` had written
+ * after a real approval. A string assertion is thin, but this clause has no
+ * cheaper home: the alternative is a live Postgres, and the regression is a
+ * single operator.
+ */
+describe('COMPANY_ON_CONFLICT', () => {
+  it('does not clear the salary deadline on an unreadable size', () => {
+    expect(COMPANY_ON_CONFLICT).toContain(
+      "EXCLUDED.employee_count_category NOT IN ('LARGE', 'UNKNOWN')",
+    )
+    expect(COMPANY_ON_CONFLICT).not.toContain(
+      "EXCLUDED.employee_count_category <> 'LARGE'",
+    )
+  })
+
+  it('still lets an admin override outrank the clearing', () => {
+    expect(COMPANY_ON_CONFLICT).toContain(
+      'company.salary_report_required_override IS NOT TRUE',
+    )
+  })
+
+  it('reads sector_override but never assigns it', () => {
+    // It means "an admin corrected this in the admin UI". Setting it here made
+    // a re-run silently revert those corrections — the exact thing the column
+    // exists to prevent.
+    expect(COMPANY_ON_CONFLICT).toContain('WHEN company.sector_override THEN')
+    expect(COMPANY_ON_CONFLICT).not.toMatch(/^\s*sector_override\s*=/m)
   })
 })

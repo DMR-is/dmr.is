@@ -108,8 +108,8 @@ export function timelineEntryText(
 
     const isCompany = comment?.authorKind === ReportRoleEnum.COMPANY
     const authorName = isCompany
-      ? companyName ?? reportText.timeline.company
-      : comment?.authorName ?? reportText.timeline.employee
+      ? (companyName ?? reportText.timeline.company)
+      : (comment?.authorName ?? reportText.timeline.employee)
     return (
       <>
         <Bold>{authorName}</Bold> {reportText.timeline.registersMessage}
@@ -119,13 +119,8 @@ export function timelineEntryText(
 
   if (!item.event) return null
 
-  const {
-    eventType,
-    actorName,
-    assignedUserName,
-    toStatus,
-    systemDecision,
-  } = item.event
+  const { eventType, actorName, assignedUserName, toStatus, systemDecision } =
+    item.event
 
   if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
     // Soft auto-review verdict — system actor, no name. The `reason` renders as
@@ -239,7 +234,7 @@ export function timelineEntryText(
 
   // Company-specific event types are cast as `never` in the adapter but
   // arrive as plain strings at runtime.
-  const eventTypeStr = (eventType as unknown) as string
+  const eventTypeStr = eventType as unknown as string
   const COMPANY_EVENT_LABELS: Record<string, string> = {
     API_KEY_ISSUED: reportText.timeline.apiKeyIssued,
     API_KEY_REVOKED: reportText.timeline.apiKeyRevoked,

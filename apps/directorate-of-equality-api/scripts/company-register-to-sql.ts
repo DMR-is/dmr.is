@@ -19,7 +19,7 @@
  * ## Usage
  *
  *   yarn nx run directorate-of-equality-api:company-register-to-sql -- \
- *     "../../tmp/Adda eftirlit Gagnasafn.xlsx" [out.sql] [--sheet=<name|index>]
+ *     "../../tmp/Adda eftirlit Gagnasafn.xlsx" [out.sql] [--sheet=<name|position>]
  *
  * ⚠️ The `--` is load-bearing, and so is the `../../`: nx splits `--args=...`
  * on whitespace, which breaks a path with a space in it, and the command runs
@@ -38,7 +38,16 @@
  *   3. `company_event`  — a CREATED row, and a QUARANTINED row where the sheet
  *                         says undanþága, for companies that have none.
  *   4. `company_comment`— the sheet's free-text note as a system comment.
- *   5. `legacy_report`  — every sheet row, verbatim, as the archive.
+ *   5. `legacy_report`  — the archive: every sheet row that named a loadable
+ *                         company, verbatim, winners and duplicate losers
+ *                         alike.
+ *
+ * ⚠️ "Every sheet row" stops short of the rows refused for a missing `Nafn` or
+ * a kennitala that is not 10 digits. Those never become a row at all, and
+ * `legacy_report.company_id` is NOT NULL so the table could not hold them if
+ * they did. They are preserved in `<out>.skipped.csv`, which is the only record
+ * of them — worth knowing, because the archive's whole purpose is to keep what
+ * the register drops.
  *
  * Statements 3–5 resolve `company.id` through a `national_id` join rather than
  * a returned id, so the whole file stays a plain script that can be read,
@@ -465,7 +474,7 @@ const scalar = (value: ExcelJS.CellValue): ExcelJS.CellValue =>
   value &&
   typeof value === 'object' &&
   ('formula' in value || 'sharedFormula' in value)
-    ? value.result ?? null
+    ? (value.result ?? null)
     : value
 
 const readString = (cell: Cell | undefined): string | null => {
@@ -487,6 +496,28 @@ const readString = (cell: Cell | undefined): string | null => {
     return typeof v.text === 'string' ? v.text.trim() || null : null
   }
   return null
+}
+
+/**
+ * The Excel error a cell holds, if any — `#REF!`, `#N/A`, `#VALUE!`.
+ *
+ * Every reader above returns null for an error cell, which is the right value:
+ * there is nothing to read. The problem is that it is SILENT. The diagnostics
+ * are all shaped `raw && !parsed`, and `readString` returns null for an error
+ * cell too, so `raw` is null and the row reports nothing — the same invisible
+ * failure mode as the shared-formula slave bug, one cell shape over. On a
+ * one-shot irreversible load a column that quietly arrives empty has to be
+ * louder than that, so the scan collects these per row and the summary names
+ * them.
+ *
+ * Both shapes are covered: a literal error cell is `{error}`, and a formula
+ * whose cached result errored is `{formula, result: {error}}`, which `scalar`
+ * has already unwrapped to the same object.
+ */
+const errorText = (cell: Cell | undefined): string | null => {
+  if (!cell) return null
+  const v = scalar(cell.value)
+  return v && typeof v === 'object' && 'error' in v ? String(v.error) : null
 }
 
 const readNumber = (cell: Cell | undefined): number | null => {
@@ -672,10 +703,11 @@ const looksLikeEmail = (v: string): boolean =>
  *
  * Two rows hold two people's addresses in one cell, separated by a slash and by
  * a semicolon. `company.email` is singular — it addresses one recipient, and the
- * reminder task reads it — so the first address wins and the cell survives in
- * full on `legacy_report` only if... it does not: the sheet's own column is
- * single-valued by intent. Both addresses stay visible in the source file, and
- * the summary reports how many cells were split.
+ * reminder task reads it — so the first address wins. The second is not carried
+ * anywhere: `Netfang` is not one of the archived columns, and `legacy_report`
+ * has no email of its own, so the full cell survives only in the source
+ * workbook. The summary reports how many cells were not taken verbatim, so the
+ * loss is stated rather than discovered.
  */
 const firstEmail = (raw: string | null): string | null => {
   if (!raw) return null
@@ -907,11 +939,11 @@ const COMPANY_COLUMNS = [
  *                           `sector_override`, which this load never sets
  *                           itself. See `readSector` for why.
  *   next_salary_report_due_at
- *                         → cleared when the register says the company owes no
+ *                         → cleared when the register SAYS the company owes no
  *                           salary report. Withholding the date on the way in
  *                           only governs the FIRST load: the COALESCE below is
- *                           stored-wins and nothing here ever writes NULL, so a
- *                           re-export correcting 50+ → 25-49 would set
+ *                           stored-wins, so without this CASE a re-export
+ *                           correcting 50+ → 25-49 would set
  *                           employee_count_category = MEDIUM, let the trigger
  *                           clear salary_report_required, and leave run 1's
  *                           deadline standing — which the reminder task, which
@@ -919,6 +951,20 @@ const COMPANY_COLUMNS = [
  *                           while the generator's summary called the date
  *                           withheld. An admin's
  *                           `salary_report_required_override` still wins.
+ *
+ *                           ⚠️ UNKNOWN is carved out of that clearing, and the
+ *                           carve-out is load-bearing. UNKNOWN is not "the
+ *                           register says this company owes nothing" — it is
+ *                           "we could not read the bucket", which is why
+ *                           `bucketFromLabel` refuses to default it to SMALL.
+ *                           Clearing on it would let one blank or garbled
+ *                           `stærðarflokkur` cell in a later export destroy a
+ *                           live deadline — including one
+ *                           `advanceCompanyReportDueDate` wrote after a real
+ *                           approval, which is precisely the roll-back the
+ *                           COALESCE exists to prevent. A size we cannot read
+ *                           therefore changes nothing about the deadline; the
+ *                           summary reports it instead.
  *   the two due dates     → the DATABASE is authoritative once a report has
  *                           been approved (`advanceCompanyReportDueDate`), so
  *                           the COALESCE runs the other way and the sheet only
@@ -931,7 +977,7 @@ const COMPANY_COLUMNS = [
  * `company_sync_salary_report_required_trg` trigger derives it from
  * `employee_count_category` on both INSERT and UPDATE.
  */
-const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
+export const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
   name                        = EXCLUDED.name,
   employee_count_category     = EXCLUDED.employee_count_category,
   status                      = EXCLUDED.status,
@@ -950,7 +996,7 @@ const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
   postcode_id                 = COALESCE(EXCLUDED.postcode_id, company.postcode_id),
   isat_category_code          = COALESCE(EXCLUDED.isat_category_code, company.isat_category_code),
   next_salary_report_due_at   = CASE
-                                  WHEN EXCLUDED.employee_count_category <> 'LARGE'
+                                  WHEN EXCLUDED.employee_count_category NOT IN ('LARGE', 'UNKNOWN')
                                    AND company.salary_report_required_override IS NOT TRUE
                                   THEN NULL
                                   ELSE COALESCE(company.next_salary_report_due_at, EXCLUDED.next_salary_report_due_at)
@@ -1061,7 +1107,7 @@ type Row = {
     postcodeUnknown: string | null
     postcodeUnresolvable: string | null
     emailDropped: boolean
-    emailSplit: boolean
+    emailNotVerbatim: boolean
     statusLabel: string | null
     statusUnrecognized: string | null
     sectorUnrecognized: string | null
@@ -1069,6 +1115,8 @@ type Row = {
     nameCorrected: string | null
     salaryDueUnreadable: string | null
     equalityDueUnreadable: string | null
+    /** `field=#REF!` for every mapped cell on this row holding an Excel error. */
+    errorCells: string | null
   }
 }
 
@@ -1221,14 +1269,35 @@ SELECT c.id, 'QUARANTINED', c.status, 'Undanþága í fyrirtækjaskrá Jafnrétt
  * the Directorate has since taken down, with a new `created_at` — the same
  * class of bug as re-asserting `sector_override`.
  */
+/**
+ * `created_at` is emitted rather than left to the column default, for two
+ * reasons that point the same way.
+ *
+ * Re-run stability: this INSERT is preceded by an unconditional DELETE, so
+ * every surviving note is written afresh on each load. Taking
+ * `CURRENT_TIMESTAMP` would restamp all of them to the moment of the load, and
+ * the timeline sorts on `createdAt` — so every legacy note would migrate to the
+ * bottom of every company's timeline on every re-run. That is the same defect
+ * the soft-delete guard below exists to prevent, one column over.
+ *
+ * Honesty: the sheet says when the Directorate actually wrote the note.
+ * `Modified` is preferred over `Created` because the note is the SharePoint
+ * item's current text, not its original. Both are day-precision, and a row
+ * missing both falls back to the default rather than inventing a date.
+ */
 const systemComments = (
-  entries: { nationalId: string; body: string }[],
+  entries: { nationalId: string; body: string; writtenAt: string | null }[],
 ): string =>
-  `INSERT INTO company_comment (company_id, author_user_id, body, is_system)\nSELECT c.id, NULL, v.body, true\n  FROM (VALUES\n` +
+  `INSERT INTO company_comment (company_id, author_user_id, body, is_system, created_at)\nSELECT c.id, NULL, v.body, true, COALESCE(v.created_at::timestamptz, CURRENT_TIMESTAMP)\n  FROM (VALUES\n` +
   entries
-    .map((e) => `    (${sqlStr(e.nationalId)}, ${sqlStr(e.body)})`)
+    .map(
+      (e) =>
+        `    (${sqlStr(e.nationalId)}, ${sqlStr(e.body)}, ${sqlStr(
+          e.writtenAt,
+        )})`,
+    )
     .join(',\n') +
-  `\n  ) AS v (national_id, body)\n  JOIN company c ON c.national_id = v.national_id\n` +
+  `\n  ) AS v (national_id, body, created_at)\n  JOIN company c ON c.national_id = v.national_id\n` +
   ` WHERE NOT EXISTS (\n` +
   `         SELECT 1 FROM company_comment cc\n` +
   `          WHERE cc.company_id = c.id\n` +
@@ -1238,8 +1307,9 @@ const systemComments = (
   `       );\n`
 
 const legacyDate = (d: Day | null): string => sqlStr(d ? dayToDate(d) : null)
-const legacyInstant = (d: Day | null): string =>
-  sqlStr(d ? dayToInstant(d) : null)
+const legacyInstantValue = (d: Day | null): string | null =>
+  d ? dayToInstant(d) : null
+const legacyInstant = (d: Day | null): string => sqlStr(legacyInstantValue(d))
 
 /**
  * The archive rows.
@@ -1351,7 +1421,7 @@ const main = async (): Promise<void> => {
   const input = positional[0]
   if (!input) {
     console.error(
-      'Usage: company-register-to-sql <register.xlsx> [out.sql] [--sheet=<name|index>]',
+      'Usage: company-register-to-sql <register.xlsx> [out.sql] [--sheet=<name|position>]',
     )
     process.exit(1)
   }
@@ -1363,10 +1433,15 @@ const main = async (): Promise<void> => {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.readFile(input)
 
+  // A numeric --sheet is a 1-based POSITION in the workbook, which is what
+  // anyone counting tabs means. `getWorksheet(number)` would resolve it as a
+  // worksheet *id* instead — usually the same number, but not after a tab has
+  // been deleted, and pointing this load at the wrong sheet is how you get an
+  // empty or nonsense register.
   const sheet = sheetFlag
-    ? workbook.getWorksheet(
-        /^\d+$/.test(sheetFlag) ? Number(sheetFlag) : sheetFlag,
-      ) ?? undefined
+    ? /^\d+$/.test(sheetFlag)
+      ? workbook.worksheets[Number(sheetFlag) - 1]
+      : (workbook.getWorksheet(sheetFlag) ?? undefined)
     : workbook.worksheets[0]
   if (!sheet) {
     console.error(
@@ -1404,6 +1479,20 @@ const main = async (): Promise<void> => {
     return col ? sheet.getRow(rowNo).getCell(col) : undefined
   }
 
+  /**
+   * Every mapped column on one row that holds an Excel error, named by the
+   * `HEADERS` key so the summary says which field was lost rather than only
+   * that something was. See `errorText`.
+   */
+  const errorCellsOnRow = (rowNo: number): string | null => {
+    const hits: string[] = []
+    for (const [field, key] of Object.entries(HEADERS)) {
+      const err = errorText(cell(rowNo, key))
+      if (err) hits.push(`${field}=${err}`)
+    }
+    return hits.length ? hits.join(' ') : null
+  }
+
   const rows: Row[] = []
   const skipped: Skip[] = []
 
@@ -1435,7 +1524,7 @@ const main = async (): Promise<void> => {
 
     // Corrections come before validation: two of the three kennitölur below
     // would otherwise be refused for being 9 digits long.
-    const sanitized = rawKt ? sanitize(rawKt) ?? rawKt.trim() : null
+    const sanitized = rawKt ? (sanitize(rawKt) ?? rawKt.trim()) : null
     const correction = KENNITALA_CORRECTIONS.find(
       (c) =>
         c.sheet === (sanitized ?? '') &&
@@ -1473,7 +1562,7 @@ const main = async (): Promise<void> => {
 
     // ÍSAT: an unknown code would fail the FK, so drop it to NULL and report.
     const isatCell = readString(cell(rowNo, HEADERS.isat))
-    const isatFixed = isatCell ? ISAT_CORRECTIONS[isatCell] ?? null : null
+    const isatFixed = isatCell ? (ISAT_CORRECTIONS[isatCell] ?? null) : null
     const isatRaw = isatFixed ?? normalizeIsatCode(isatCell)
     const isat = isatRaw && knownIsat.has(isatRaw) ? isatRaw : null
 
@@ -1569,7 +1658,8 @@ const main = async (): Promise<void> => {
         postcodeUnresolvable:
           postcodeMissing && !canTopUpPostcode ? postcode : null,
         emailDropped: !!emailRaw && !email,
-        emailSplit: !!emailRaw && !!email && emailRaw.toLowerCase() !== email,
+        emailNotVerbatim:
+          !!emailRaw && !!email && emailRaw.toLowerCase() !== email,
         statusLabel,
         statusUnrecognized: statusReading.recognized ? null : statusLabel,
         sectorUnrecognized:
@@ -1581,6 +1671,7 @@ const main = async (): Promise<void> => {
         salaryDueUnreadable: salaryDueRaw && !salaryDueAt ? salaryDueRaw : null,
         equalityDueUnreadable:
           equalityDueRaw && !equalityDueAt ? equalityDueRaw : null,
+        errorCells: errorCellsOnRow(rowNo),
       },
     })
   }
@@ -1629,9 +1720,9 @@ const main = async (): Promise<void> => {
 
     const preferred = PREFERRED_ROWS.find((p) => p.nationalId === nationalId)
     const winner = preferred
-      ? group.find(
+      ? (group.find(
           (r) => headerKey(r.sheetName) === headerKey(preferred.sheetName),
-        ) ?? null
+        ) ?? null)
       : [...group].sort(
           (a, b) => modifiedRank(b) - modifiedRank(a) || a.row - b.row,
         )[0]
@@ -1736,6 +1827,11 @@ const main = async (): Promise<void> => {
     (r) => r.salaryDueAt && !owesSalaryReport(r.size),
   ).length
   const equalityDueCount = finalRows.filter((r) => r.equalityDueAt).length
+  // Rows the archive cannot hold either, as opposed to duplicate losers, which
+  // it can and does. See the "every sheet row" note in the header.
+  const refusedOutright = skipped.filter(
+    (sk) => !sk.reason.startsWith('Duplicate kennitala'),
+  ).length
   const commentRows = finalRows.filter((r) => r.notesBody)
 
   // One entry per missing postcode, not per company: several companies share a
@@ -1760,7 +1856,14 @@ const main = async (): Promise<void> => {
 -- Companies:  ${finalRows.length}  (skipped ${skipped.length})
 -- Archived:   ${
     archivedRows.length
-  } legacy_report rows (every sheet row, winners and duplicates alike)
+  } legacy_report rows (every row that named a loadable
+--             company, winners and duplicates alike)${
+    refusedOutright
+      ? `\n--             NOT the whole sheet: ${refusedOutright} row(s) refused for a missing Nafn
+--             or a bad kennitala are in skipped.csv only — company_id is
+--             NOT NULL, so the archive cannot hold them.`
+      : ''
+  }
 -- Comments:   ${commentRows.length} system comments
 -- Sizes:      ${
     Object.entries(sizeCounts)
@@ -1776,8 +1879,9 @@ const main = async (): Promise<void> => {
 -- Quarantine: ${quarantinedRows.length} (Staða = undanþága)
 -- Due dates:  ${salaryDueCount} salary, ${equalityDueCount} equality
 --             (${salaryDueWithheld} Gildistími withheld: employee_count_category is not
---              LARGE — either below 50 or a size we could not read — so the
---              company owes no salary report; archived on legacy_report anyway)
+--              LARGE — either below 50, so no salary report is owed, or a size
+--              we could not read, which is not the same claim; archived on
+--              legacy_report either way)
 -- Postcodes added: ${newPostcodes.size}
 --
 -- company upserts on national_id. name/employee_count_category/status are
@@ -1795,6 +1899,13 @@ const main = async (): Promise<void> => {
 -- The two next_*_report_due_at columns COALESCE the OTHER way: whatever the
 -- database holds wins, because the approval flow advances them after launch.
 -- Re-running this file never rolls a company back to its seeded deadline.
+--
+-- next_salary_report_due_at has one exception: it is CLEARED when the register
+-- states a size below LARGE and no admin has set salary_report_required_override,
+-- so a corrected 50+ → 25-49 export stops the reminder task mailing about a
+-- deadline the company no longer owes. A size we could NOT read (UNKNOWN) is
+-- carved out of that and changes nothing — "unreadable" is not "owes nothing",
+-- and clearing on it would destroy a deadline an approval had advanced.
 --
 -- legacy_report and the system comments are replaced wholesale (nothing else
 -- writes either) — the two DELETEs run even when this file has no rows to put
@@ -1856,17 +1967,16 @@ BEGIN;
     )
   }
 
-  if (finalRows.length) {
+  // No `length` guard: the zero-row refusal above has already exited.
+  chunks.push(
+    '\n-- 2. Timeline origin, so a seeded company reads like an imported one.\n\n',
+  )
+  for (let i = 0; i < finalRows.length; i += BATCH_SIZE) {
     chunks.push(
-      '\n-- 2. Timeline origin, so a seeded company reads like an imported one.\n\n',
+      createdEvents(
+        finalRows.slice(i, i + BATCH_SIZE).map((r) => r.nationalId),
+      ) + '\n',
     )
-    for (let i = 0; i < finalRows.length; i += BATCH_SIZE) {
-      chunks.push(
-        createdEvents(
-          finalRows.slice(i, i + BATCH_SIZE).map((r) => r.nationalId),
-        ) + '\n',
-      )
-    }
   }
 
   if (quarantinedRows.length) {
@@ -1891,18 +2001,31 @@ BEGIN;
   // DELETE above exists to prevent. `is_system` is the load's marker and
   // nothing else in either API writes it today.
   //
-  // It is not a marker the load OWNS, though: `CompanyCommentCreateAttributes`
-  // now exposes `isSystem`, so the first other feature to set it has its rows
-  // deleted by the next register re-run. The fix then is a provenance column
-  // this load owns, not a narrower WHERE — see the note in
-  // m-20260901-company-comment-system-author.js.
+  // The load is the column's only writer, and `CompanyCommentModel` keeps it
+  // that way: `isSystem` is a read attribute only, deliberately absent from
+  // `CompanyCommentCreateAttributes`, so nothing can set the flag through the
+  // model and quietly enrol its own rows in this DELETE. If that ever needs to
+  // change, the fix is a provenance column this load owns, not a narrower
+  // WHERE — see the note in m-20260901-company-comment-system-author.js.
+  //
+  // The soft-delete guard below is defensive for later, not load-bearing today:
+  // `TimelineEntry.tsx` gates its delete button on
+  // `comment.authorUserId === currentUserId`, and a system comment has no
+  // author, so no admin can reach the deletion the guard preserves except by
+  // calling the API directly. It stays because a delete affordance for seeded
+  // notes is a plausible next step and the guard has to predate it — losing
+  // 1 700 deletions to a re-run is not a mistake worth being able to make.
   chunks.push(
     `\n-- 4. The Directorate's own notes, as system comments.\n` +
       `--    Replaced wholesale: is_system marks exactly the rows this file\n` +
       `--    writes. Rows an admin has soft-deleted are left alone here and\n` +
       `--    not rewritten below, so a deletion survives a re-run.\n` +
       `--    Unscoped on purpose; if anything else ever writes is_system, give\n` +
-      `--    this load its own marker rather than narrowing the WHERE.\n\n` +
+      `--    this load its own marker rather than narrowing the WHERE.\n` +
+      `--    created_at comes from the sheet's Modified (else Created), not from\n` +
+      `--    CURRENT_TIMESTAMP: the timeline sorts on it, so a default would\n` +
+      `--    restamp every legacy note to "now" on each re-run and shuffle them\n` +
+      `--    all to the bottom.\n\n` +
       'DELETE FROM company_comment WHERE is_system = true AND deleted_at IS NULL;\n',
   )
   for (let i = 0; i < commentRows.length; i += BATCH_SIZE) {
@@ -1913,13 +2036,19 @@ BEGIN;
             nationalId: r.nationalId,
             // Non-null by the filter above; narrowed for the compiler.
             body: r.notesBody as string,
+            writtenAt: legacyInstantValue(
+              r.legacy.modifiedAt ?? r.legacy.createdAt,
+            ),
           })),
         ),
     )
   }
 
   chunks.push(
-    '\n-- 5. The archive: every sheet row, verbatim.\n\n' +
+    '\n-- 5. The archive: every row that named a loadable company, verbatim.\n' +
+      '--    Winners and duplicate losers alike. Rows refused for a missing\n' +
+      '--    Nafn or a bad kennitala are NOT here — company_id is NOT NULL, so\n' +
+      '--    skipped.csv is the only record of them.\n\n' +
       'DELETE FROM legacy_report;\n',
   )
   for (let i = 0; i < archivedRows.length; i += BATCH_SIZE) {
@@ -1974,7 +2103,9 @@ BEGIN;
     statusLabels: tally((r) => r.warnings.statusLabel),
     sizeMissing: finalRows.filter((r) => r.warnings.sizeMissing).length,
     emailDropped: finalRows.filter((r) => r.warnings.emailDropped).length,
-    emailSplit: finalRows.filter((r) => r.warnings.emailSplit).length,
+    emailNotVerbatim: finalRows.filter((r) => r.warnings.emailNotVerbatim)
+      .length,
+    errorCells: tally((r) => r.warnings.errorCells),
   }
 
   const line = (label: string, value: string | number): void =>
@@ -2053,10 +2184,18 @@ BEGIN;
       'unreadable Gildistíma jafnr. (NULL):',
       top(notes.equalityDueUnreadable),
     )
-  if (notes.emailSplit)
-    line('Netfang cells with several addresses:', notes.emailSplit)
+  // Not "cells with several addresses": the test is that the cell did not
+  // survive verbatim, which a trailing comma or a name beside the address trips
+  // just as a second address does.
+  if (notes.emailNotVerbatim)
+    line('Netfang cells not taken verbatim:', notes.emailNotVerbatim)
   if (notes.emailDropped)
     line('Netfang values that are not email:', notes.emailDropped)
+  // Loud on purpose: an error cell reads as an empty column with no other
+  // trace, so this line is the only thing that says the sheet held a value we
+  // could not have. Fix the workbook and re-export rather than loading past it.
+  if (notes.errorCells.size)
+    line('⚠ Excel error cells (read as NULL):', top(notes.errorCells))
   if (ignored.length) line('columns ignored:', ignored.join(' | '))
 
   // Printed last, unconditionally, because it is the one thing about this load

@@ -48,8 +48,8 @@ export function TimelineEntry({
     comment.authorUserId === currentUserId &&
     comment.visibility !== CommentVisibilityEnum.EXTERNAL
   const bodyText = isComment
-    ? comment?.body ?? null
-    : item.event?.reason ?? null
+    ? (comment?.body ?? null)
+    : (item.event?.reason ?? null)
   const hasBody = !!bodyText
   // System auto-review reasons get their percentages bolded; everything else
   // renders verbatim.
