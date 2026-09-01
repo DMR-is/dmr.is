@@ -3,8 +3,7 @@
 /**
  * `legacy_report` — an archive of the Directorate's outgoing SharePoint
  * register, the hand-kept working sheet ("Adda eftirlit Gagnasafn") this system
- * replaces. One row per sheet row, written once by the register load and read
- * only by the company detail view's own tab.
+ * replaces. One row per sheet row, written once by the register load.
  *
  * ## Why this is not `report` + `company_report`
  *
@@ -12,13 +11,20 @@
  * force. Minting APPROVED `report` rows for them would fabricate submissions
  * that never went through the flow — no employees, no criteria, no result — and
  * everything that derives from `report` would then answer from that fiction:
- * `companyReportStatusCaseSql`, the salary renewal window, the public register.
+ * the salary renewal window, the salary report's equality-report reference, the
+ * public register.
  *
- * The trade is deliberate and was decided with the product owner: a company
- * certified under the old regime reads as MISSING_* here until it files for
- * real, and the certificate it actually holds is visible on this tab. The
- * alternative was to tinker with the live compliance model on the day the
- * register goes operational.
+ * So no `report` row is ever minted from this table. The compliance status is
+ * the one thing that does read it: `companyReportStatusCaseSql` treats a
+ * `salary_valid_until` / `equality_valid_until` that has not passed as a second
+ * way to be covered. Without that, the load's 1 507 companies at 25+ would all
+ * read MISSING_EQUALITY_REPORT on day one — the ~540 with a live equality plan
+ * included — which states "has not filed here" as if it meant "is out of
+ * compliance".
+ *
+ * ⚠️ Only the two dates are consulted, never `validity` or `legacy_status`:
+ * those describe the salary certification, and 120 rows hold a live equality
+ * plan beside a lapsed one.
  *
  * ## Everything legacy is TEXT
  *

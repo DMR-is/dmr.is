@@ -18,14 +18,27 @@ import { CompanyModel } from './company.model'
  * its 1 759 rows were certified and in force. Turning those into `report` +
  * `company_report` rows would mean minting APPROVED reports for submissions
  * that never went through the flow — no employees, no criteria, no result — and
- * every derived thing that reads `report` (`companyReportStatusCaseSql`, the
- * renewal window, the public register) would then answer from a fiction.
+ * every derived thing that reads `report` (the renewal window, the salary
+ * report's `equalityReportId` reference, the public register) would then answer
+ * from a fiction.
  *
- * So the legacy record stays legacy. It is written once by the register load,
- * read only by the company detail view's own tab, and nothing derives from it.
- * A company that was certified under the old regime therefore still reads as
- * MISSING_* until it files here for real — which is the honest answer, and the
- * one the Directorate asked for.
+ * So the legacy record stays legacy: no `report` row is ever minted from it.
+ *
+ * ## What does derive from it: the compliance status, and only that
+ *
+ * `companyReportStatusCaseSql` reads the two expiry dates here as a second way
+ * to be covered, beside an APPROVED `report`. It has to. The load leaves 1 507
+ * of 1 753 companies at 25+ with no `report` row, so without that branch the
+ * whole register read MISSING_EQUALITY_REPORT on day one — including the ~540
+ * companies whose equality plan this very table records as in force. "Has not
+ * filed here" and "is out of compliance" are different claims, and the admin
+ * register is asking the second.
+ *
+ * Nothing else derives from this table, and in particular the application
+ * portal's own gate does not: `getSalaryReportEligibility` still requires a
+ * real `report`, because the salary report references its equality report by
+ * id and a legacy certificate has none to give. See the note on `reportCovered`
+ * in `report-status.ts` for why that divergence is the intended one.
  *
  * ## Everything is TEXT, and deliberately so
  *
