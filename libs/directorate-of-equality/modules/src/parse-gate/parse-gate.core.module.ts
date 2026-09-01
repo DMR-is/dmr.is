@@ -29,6 +29,14 @@ import { Semaphore } from './semaphore'
 const LOGGING_CONTEXT = 'ParseGateCoreModule'
 
 /**
+ * Facet on `@errorCode:PARSE_GATE_CONFIG_REJECTED` to catch a task definition
+ * whose value was thrown away. Follows the constant-per-marker pattern
+ * `EXCEL_IMPORT_BUSY` and `COMPANY_IMPORT_BUSY` use, so a discarded
+ * configuration is alertable rather than only greppable.
+ */
+const PARSE_GATE_CONFIG_REJECTED = 'PARSE_GATE_CONFIG_REJECTED'
+
+/**
  * The outcome of reading one variable: the value the gate will use, plus the
  * raw string when an override was present and refused.
  *
@@ -102,6 +110,19 @@ export const DEFAULT_MAX_QUEUED_PARSES = 20
  *
  * 8 is already well past what the heap supports; it exists so a deliberate,
  * considered bump does not require a code change, not as a usable setting.
+ *
+ * The queue ceiling is loose for a different reason, and it is worth stating
+ * rather than leaving as a bare number. Waiting is cheap: a queued caller holds
+ * its pending HTTP request and nothing else, because the workbook is downloaded
+ * *inside* the gated region rather than before it (see
+ * `import-upload/archive-budget.ts`). 200 waiting requests are therefore a
+ * queueing-theory question — how long a client should sit before a 503 is
+ * kinder than a timeout — not a heap one.
+ *
+ * That was not true while the controllers downloaded first: each queued caller
+ * then held up to 20MB, so 200 would have implied ~4GB against a 1152MB heap.
+ * If the download is ever hoisted back out of the gate, this number becomes
+ * indefensible and has to come down with it.
  */
 const MAX_ALLOWED_CONCURRENT_PARSES = 8
 const MAX_ALLOWED_QUEUED_PARSES = 200
@@ -156,6 +177,21 @@ const MAX_ALLOWED_QUEUED_PARSES = 200
           maxQueuedParses: queued.value,
           ...(rejectedOverrides.length > 0 ? { rejectedOverrides } : {}),
         })
+
+        // Separate from the line above, and at warn, because the two answer
+        // different questions. The info line records what this container runs
+        // at; this one says somebody asked for something else and did not get
+        // it. Only the second is worth waking anyone, so only the second
+        // carries a marker.
+        if (rejectedOverrides.length > 0) {
+          logger.warn('Parse gate ignored a configured value', {
+            context: LOGGING_CONTEXT,
+            errorCode: PARSE_GATE_CONFIG_REJECTED,
+            rejectedOverrides,
+            maxConcurrentParses: concurrent.value,
+            maxQueuedParses: queued.value,
+          })
+        }
 
         return new Semaphore(concurrent.value, queued.value)
       },

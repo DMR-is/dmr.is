@@ -1,10 +1,15 @@
 /**
  * Bounds how many callers may hold a slot at once, with a cap on how many may
- * wait for one. Used to gate the memory-heavy exceljs parse: a burst of
- * simultaneous uploads would otherwise stack parses until the container OOMs.
- * Capping concurrency pins worst-case parse memory; excess callers queue, and
- * once the queue is full they're rejected fast (mapped to a 503 upstream)
- * rather than piling up.
+ * wait for one. Used to gate a workbook's whole time in memory — the download
+ * as well as the exceljs parse: a burst of simultaneous uploads would otherwise
+ * stack workbooks until the container OOMs. Capping concurrency pins worst-case
+ * memory; excess callers queue, and once the queue is full they're rejected
+ * fast (mapped to a 503 upstream) rather than piling up.
+ *
+ * A slot is permission to *hold a workbook*, not permission to parse one. That
+ * distinction is why the consumers acquire before calling `fetchWorkbook`
+ * rather than after — a queued caller holding its buffer would put the memory
+ * outside the bound this class exists to enforce.
  *
  * Two heap figures appear around this code and they are not in conflict:
  * ~350MB is what the real template *measured* at, dominated by the exceljs

@@ -64,9 +64,10 @@ export class ArchiveTooLargeError extends Error {
  * ## What the "x 2" covers
  *
  * The 2 is the shared parse gate in `ParseGateCoreModule`, and it means two
- * parses *per process*: `parseWorkbook` and `parseCompanyImport` both acquire
- * from the same `Semaphore` instance, so no third concurrent parse of either
- * kind can start. Both consumers are counted because a company import retains
+ * workbooks *per process*: `parseWorkbook` and `parseCompanyImport` both
+ * acquire from the same `Semaphore` instance, and each holds its slot from the
+ * download through to the end of the parse, so no third workbook of either
+ * kind can be in memory at once. Both consumers are counted because a company import retains
  * the same heap as a report import.
  *
  * Per process, not per deployment. `directorate-of-equality-partner-api` is a
@@ -80,24 +81,26 @@ export class ArchiveTooLargeError extends Error {
  * made a 64MB budget wrong above — while each module still read as correctly
  * bounded on its own, which is what would make it hard to catch.
  *
- * ## What the "x 2" does *not* cover: the queue
+ * ## Why the queue costs nothing
  *
- * The gate bounds parses, not the buffers waiting to become one.
- * `fetchWorkbook` runs in the controller *before* the gate is acquired, so a
- * queued caller holds its compressed upload — up to `MAX_UPLOAD_BYTES`, 20MB —
- * for the whole wait. At the default `DOE_EXCEL_MAX_QUEUED_PARSES` of 20 that
- * is a further ~400MB beside the ~520MB above, or ~920MB of the 1152MB
- * ceiling.
+ * A slot is permission to *hold a workbook in memory*, not permission to burn
+ * CPU — so the gate has to start where the allocation does. `fetchWorkbook` is
+ * therefore called inside the gated region, by `ReportExcelService` and
+ * `CompanyImportService` themselves, and the controllers hand those services a
+ * key rather than a buffer. A caller waiting for a slot holds its pending HTTP
+ * request and nothing else.
  *
- * This term is not new and sharing the gate did not widen it: `report-excel`
- * already queued 20, and `company-import` queued nothing only because it had
- * no gate at all, so the worst case came down rather than up. It is written
- * here because the arithmetic above otherwise reads as a complete accounting
- * and is not one — raising `DOE_EXCEL_MAX_QUEUED_PARSES` spends heap this
- * budget never counted, and the ceiling of 200 in `ParseGateCoreModule` would
- * allow ~4GB of it. Bounding it properly means acquiring the gate before
- * `fetchWorkbook`, which is a change to both controllers rather than to this
- * number.
+ * That is what makes the figure above the *whole* cost rather than part of it.
+ * It was not always true: while the controllers downloaded first, every queued
+ * caller held up to `MAX_UPLOAD_BYTES` (20MB) for the length of its wait, so
+ * the default queue of 20 quietly added ~400MB beside the ~520MB here — ~80% of
+ * the ceiling, none of it in this derivation. `company-import.service.spec.ts`
+ * pins the ordering ("does not download while it is queued for a slot"),
+ * because nothing else about the code makes it visible.
+ *
+ * The trade is that a slot is now held across the S3 read as well as the parse,
+ * which costs some parse throughput at only two slots. Worth it: the
+ * alternative is an accounting that is wrong by ~400MB.
  *
  * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without

@@ -3,11 +3,12 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common'
 
+import { ImportUploadBoundary } from '@dmr.is/doe-modules/import-upload'
 import { UserModel } from '@dmr.is/doe-modules/user'
 
 import { CompanyImportController } from './company-import.controller'
 
-const KEY = 'imports/admin/abc.xlsx'
+const KEY = 'doe-imports/admin/11111111-2222-3333-4444-555555555555.xlsx'
 const ADMIN = { id: 'admin-1' } as UserModel
 
 const build = (applyImpl: jest.Mock) => {
@@ -29,7 +30,7 @@ describe('CompanyImportController', () => {
 
       await controller.apply({ key: KEY }, ADMIN)
 
-      expect(cleanup).toHaveBeenCalledWith(KEY)
+      expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.ADMIN)
     })
 
     /**
@@ -49,9 +50,9 @@ describe('CompanyImportController', () => {
         jest.fn().mockRejectedValue(new ServiceUnavailableException('busy')),
       )
 
-      await expect(controller.apply({ key: KEY }, ADMIN)).rejects.toBeInstanceOf(
-        ServiceUnavailableException,
-      )
+      await expect(
+        controller.apply({ key: KEY }, ADMIN),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException)
 
       expect(cleanup).not.toHaveBeenCalled()
     })
@@ -61,13 +62,47 @@ describe('CompanyImportController', () => {
         jest.fn().mockRejectedValue(new BadRequestException('unreadable')),
       )
 
-      await expect(controller.apply({ key: KEY }, ADMIN)).rejects.toBeInstanceOf(
-        BadRequestException,
-      )
+      await expect(
+        controller.apply({ key: KEY }, ADMIN),
+      ).rejects.toBeInstanceOf(BadRequestException)
 
       // A workbook that cannot be read is not worth keeping — the distinction
       // being drawn is retryable versus terminal, not error versus success.
-      expect(cleanup).toHaveBeenCalledWith(KEY)
+      expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.ADMIN)
+    })
+  })
+
+  /**
+   * The controller used to download the workbook and hand the service a
+   * buffer, which meant a caller queued for a parse slot was already holding
+   * up to the 20MB upload cap. The service owns the download now so it happens
+   * under the gate; if this ever regresses, the queue silently starts costing
+   * as much as the parses do. See `import-upload/archive-budget.ts`.
+   */
+  describe('does not fetch ahead of the gate', () => {
+    it('hands the key to the service and never downloads itself', async () => {
+      const apply = jest.fn().mockResolvedValue({ committed: true })
+      const { controller, fetchWorkbook } = build(apply)
+
+      await controller.apply({ key: KEY }, ADMIN)
+
+      expect(apply).toHaveBeenCalledWith(KEY, ADMIN.id)
+      expect(fetchWorkbook).not.toHaveBeenCalled()
+    })
+
+    it('previews by key too', async () => {
+      const preview = jest.fn().mockResolvedValue({ committed: false })
+      const cleanup = jest.fn().mockResolvedValue(undefined)
+      const fetchWorkbook = jest.fn()
+      const controller = new CompanyImportController(
+        { preview, apply: jest.fn() },
+        { fetchWorkbook, cleanup } as never,
+      )
+
+      await controller.preview({ key: KEY })
+
+      expect(preview).toHaveBeenCalledWith(KEY)
+      expect(fetchWorkbook).not.toHaveBeenCalled()
     })
   })
 })

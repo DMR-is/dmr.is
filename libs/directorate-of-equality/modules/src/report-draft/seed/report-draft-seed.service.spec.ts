@@ -9,7 +9,10 @@ import {
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../company/models/company.enums'
-import { IImportUploadService } from '../../import-upload/import-upload.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../../import-upload/import-upload.service.interface'
 import { ReportTypeEnum } from '../../report/models/report.model'
 import { IReportContentService } from '../../report-content/report-content.service.interface'
 import { IReportExcelService } from '../../report-excel/report-excel.service.interface'
@@ -129,8 +132,14 @@ describe('ReportDraftSeedService', () => {
   it('clears the draft then persists the parsed workbook with NULL scores', async () => {
     await service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY)
 
-    expect(fetchWorkbook).toHaveBeenCalled()
-    expect(cleanup).toHaveBeenCalledWith(KEY)
+    // The key is handed to the importer, not a buffer — the download happens
+    // under the parse gate inside `importWorkbook`.
+    expect(importWorkbook).toHaveBeenCalledWith(
+      KEY,
+      ImportUploadBoundary.APPLICATION,
+    )
+    expect(fetchWorkbook).not.toHaveBeenCalled()
+    expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.APPLICATION)
     // clear must happen before persist (replace semantics).
     expect(clearDraftChildren).toHaveBeenCalledWith(REPORT_ID)
     expect(persistParsedChildren).toHaveBeenCalledWith(
@@ -172,7 +181,7 @@ describe('ReportDraftSeedService', () => {
     await expect(
       service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY),
     ).rejects.toThrow('bad workbook')
-    expect(cleanup).toHaveBeenCalledWith(KEY)
+    expect(cleanup).toHaveBeenCalledWith(KEY, ImportUploadBoundary.APPLICATION)
     expect(persistParsedChildren).not.toHaveBeenCalled()
     // Nothing was written, so nothing counts as activity and no workbook
     // origin is claimed.
@@ -188,7 +197,7 @@ describe('ReportDraftSeedService', () => {
     await expect(
       service.seedFromWorkbook(PROVIDER_ID, COMPANY, KEY),
     ).rejects.toThrow(BadRequestException)
-    expect(fetchWorkbook).not.toHaveBeenCalled()
+    expect(importWorkbook).not.toHaveBeenCalled()
     expect(clearDraftChildren).not.toHaveBeenCalled()
   })
 })

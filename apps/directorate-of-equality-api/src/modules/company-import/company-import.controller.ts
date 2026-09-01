@@ -47,11 +47,9 @@ export class CompanyImportController {
     type: CompanyImportResultDto,
   })
   async preview(@Body() body: ImportKeyDto): Promise<CompanyImportResultDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
-    return this.companyImportService.preview(buffer)
+    // The key, not a buffer: the service downloads under the parse gate so the
+    // workbook is never in memory without a slot. See `archive-budget.ts`.
+    return this.companyImportService.preview(body.key)
   }
 
   @Post('apply')
@@ -63,13 +61,12 @@ export class CompanyImportController {
     @Body() body: ImportKeyDto,
     @CurrentAdminUser() admin: UserModel,
   ): Promise<CompanyImportResultDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
     try {
-      const result = await this.companyImportService.apply(buffer, admin.id)
-      await this.importUploadService.cleanup(body.key)
+      const result = await this.companyImportService.apply(body.key, admin.id)
+      await this.importUploadService.cleanup(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+      )
       return result
     } catch (e) {
       // Not a `finally`. A saturated parse gate answers 503 and tells the
@@ -90,8 +87,15 @@ export class CompanyImportController {
       // anyway (see `cleanup`); deleting one somebody is about to retry costs
       // them the whole upload flow. Do not narrow this to a bespoke error
       // type — that trades a cheap failure for an expensive one.
+      //
+      // The fetch now happens inside `apply`, so this block is also reachable
+      // with a key that failed validation. `cleanup` re-checks it against the
+      // boundary for that reason — do not assume the key here is trusted.
       if (!(e instanceof ServiceUnavailableException)) {
-        await this.importUploadService.cleanup(body.key)
+        await this.importUploadService.cleanup(
+          body.key,
+          ImportUploadBoundary.ADMIN,
+        )
       }
       throw e
     }

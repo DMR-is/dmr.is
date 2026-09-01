@@ -63,17 +63,18 @@ export class ReportExcelController {
   async importWorkbook(
     @Body() body: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      body.key,
-      ImportUploadBoundary.ADMIN,
-    )
     try {
+      // The key, not a buffer: the service downloads under the parse gate so
+      // the workbook is never in memory without a slot.
       return await this.reportExcelService.importWorkbook(
-        buffer,
+        body.key,
         ImportUploadBoundary.ADMIN,
       )
     } finally {
-      await this.importUploadService.cleanup(body.key)
+      await this.importUploadService.cleanup(
+        body.key,
+        ImportUploadBoundary.ADMIN,
+      )
     }
   }
 }

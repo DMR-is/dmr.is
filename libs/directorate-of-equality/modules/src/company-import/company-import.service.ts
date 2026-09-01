@@ -17,6 +17,10 @@ import {
 import { CompanyModel } from '../company/models/company.model'
 import { IsatCategoryModel } from '../company/models/isat-category.model'
 import { ICompanyEventService } from '../company-event/company-event.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { PostcodeModel } from '../location/models/postcode.model'
 import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
 import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
@@ -98,20 +102,38 @@ export class CompanyImportService implements ICompanyImportService {
     // from one allowance for the budget in `import-upload/archive-budget.ts`
     // to hold. See `ParseGateCoreModule`.
     @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
+    // Owned here rather than by the controller so the download sits inside the
+    // gated region — see `parseGated`.
+    @Inject(IImportUploadService)
+    private readonly importUpload: IImportUploadService,
   ) {}
 
   /**
-   * Parse under the shared gate, holding a slot only for the parse itself.
+   * Fetch and parse under the shared gate, holding a slot across both and no
+   * longer.
    *
-   * Deliberately not wrapped around `reconcile` or `apply`: the slot is scarce
-   * (2 by default across the whole process) and `apply` follows this with a
-   * Sequelize transaction. Holding a parse slot across DB work would block
-   * report imports on lock contention that has nothing to do with memory,
-   * which is the only thing this gate exists to bound.
+   * The fetch is inside because the buffer *is* the memory being bounded — a
+   * caller that downloaded first would hold up to the upload cap while it
+   * waited for a slot, and the queue would cost as much as the parses. See
+   * `import-upload/archive-budget.ts`.
+   *
+   * Still deliberately not wrapped around `reconcile` or `apply`: the slot is
+   * scarce (2 by default across the whole process) and `apply` follows this
+   * with a Sequelize transaction. Holding a parse slot across DB work would
+   * block report imports on lock contention that has nothing to do with
+   * memory, which is the only thing this gate exists to bound.
    */
-  private async parseGated(fileBuffer: Buffer): Promise<ParsedCompanyImport> {
+  private async parseGated(key: string): Promise<ParsedCompanyImport> {
+    // Ahead of the gate: rejecting a malformed key costs nothing and allocates
+    // nothing, so it must not consume a slot or a place in the queue.
+    this.importUpload.assertKeyWithinBoundary(key, ImportUploadBoundary.ADMIN)
+
     const release = await this.acquireParseSlot()
     try {
+      const fileBuffer = await this.importUpload.fetchWorkbook(
+        key,
+        ImportUploadBoundary.ADMIN,
+      )
       return await parseCompanyImport(fileBuffer)
     } finally {
       release()
@@ -146,16 +168,16 @@ export class CompanyImportService implements ICompanyImportService {
     }
   }
 
-  async preview(fileBuffer: Buffer): Promise<CompanyImportResultDto> {
-    const plan = await this.reconcile(fileBuffer)
+  async preview(key: string): Promise<CompanyImportResultDto> {
+    const plan = await this.reconcile(key)
     return this.toResult(plan, false)
   }
 
   async apply(
-    fileBuffer: Buffer,
+    key: string,
     actorUserId: string,
   ): Promise<CompanyImportResultDto> {
-    const plan = await this.reconcile(fileBuffer)
+    const plan = await this.reconcile(key)
 
     await this.sequelize.transaction(async () => {
       // CLS auto-propagates this transaction to the event service's writes too.
@@ -215,8 +237,8 @@ export class CompanyImportService implements ICompanyImportService {
   }
 
   /** Pure planning: parse, validate ISAT, resolve postcodes, categorize. No writes. */
-  private async reconcile(fileBuffer: Buffer): Promise<ReconcilePlan> {
-    const parsed = await this.parseGated(fileBuffer)
+  private async reconcile(key: string): Promise<ReconcilePlan> {
+    const parsed = await this.parseGated(key)
     const errors: CompanyImportErrorDto[] = [...parsed.errors]
 
     // Validate ISAT codes against the reference table; reject unknowns.

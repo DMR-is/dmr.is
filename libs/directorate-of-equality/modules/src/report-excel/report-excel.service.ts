@@ -7,7 +7,10 @@ import {
 
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
-import { ImportUploadBoundary } from '../import-upload/import-upload.service.interface'
+import {
+  IImportUploadService,
+  ImportUploadBoundary,
+} from '../import-upload/import-upload.service.interface'
 import { PARSE_GATE, ParseGate } from '../parse-gate/parse-gate.token'
 import { SemaphoreQueueFullError } from '../parse-gate/semaphore'
 import { ImportErrorDto } from './dto/import-error.dto'
@@ -39,6 +42,12 @@ export class ReportExcelService implements IReportExcelService {
     // cost. One gate for the process is what keeps the heap arithmetic in
     // `import-upload/archive-budget.ts` true; see `ParseGateCoreModule`.
     @Inject(PARSE_GATE) private readonly parseGate: ParseGate,
+    // The download happens inside the gated region, so this service owns it
+    // rather than the controllers. A caller that fetched first would be holding
+    // the workbook while it waited for a slot, which is the memory the gate is
+    // supposed to bound.
+    @Inject(IImportUploadService)
+    private readonly importUpload: IImportUploadService,
   ) {}
 
   async generateBlankTemplate(): Promise<Buffer> {
@@ -47,17 +56,23 @@ export class ReportExcelService implements IReportExcelService {
   }
 
   async importWorkbook(
-    fileBuffer: Buffer,
+    key: string,
     boundary: ImportUploadBoundary,
   ): Promise<ParsedReportDto> {
+    // Ahead of the gate: rejecting a malformed key costs nothing and allocates
+    // nothing, so it must not consume a slot or a place in the queue.
+    this.importUpload.assertKeyWithinBoundary(key, boundary)
+
     this.logger.debug('Importing workbook', {
       context: LOGGING_CONTEXT,
-      size: fileBuffer.length,
       boundary,
     })
 
     const release = await this.acquireParseSlot(boundary)
     try {
+      // Inside the gate, deliberately. This is the allocation the slot is
+      // permission for; see `import-upload/archive-budget.ts`.
+      const fileBuffer = await this.importUpload.fetchWorkbook(key, boundary)
       return await parseWorkbook(fileBuffer)
     } catch (e) {
       if (e instanceof BadRequestException) {

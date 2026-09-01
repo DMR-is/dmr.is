@@ -47,19 +47,21 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
       )
     }
 
-    // Fetch the staged workbook and parse it in-memory, then drop the object.
-    const buffer = await this.importUploadService.fetchWorkbook(
-      key,
-      ImportUploadBoundary.APPLICATION,
-    )
+    // Parse the staged workbook, then drop the object. The download happens
+    // inside `importWorkbook`, under the parse gate — this path shares that
+    // gate with every other importer, so it must not hold the buffer while it
+    // waits for a slot.
     let parsed
     try {
       parsed = await this.reportExcelService.importWorkbook(
-        buffer,
+        key,
         ImportUploadBoundary.APPLICATION,
       )
     } finally {
-      await this.importUploadService.cleanup(key)
+      await this.importUploadService.cleanup(
+        key,
+        ImportUploadBoundary.APPLICATION,
+      )
     }
 
     // Reject a malformed workbook (duplicate titles/ordinals, bad step counts,

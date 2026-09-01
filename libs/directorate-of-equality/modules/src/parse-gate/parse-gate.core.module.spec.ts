@@ -356,5 +356,37 @@ describe('ParseGateCoreModule', () => {
         }),
       )
     })
+
+    /**
+     * The info line records what the container runs at; it is emitted on every
+     * boot and so cannot be alerted on. A discarded task-definition value is an
+     * anomaly, and every other anomaly in this scope carries a level and an
+     * `errorCode` for exactly that reason — `EXCEL_IMPORT_BUSY`,
+     * `COMPANY_IMPORT_BUSY`, `EXCEL_IMPORT_VALIDATION_FAILED`.
+     */
+    it('warns under a facetable marker when it discards an override', async () => {
+      const { logger } = await buildWithLogger({
+        DOE_EXCEL_MAX_CONCURRENT_PARSES: '64',
+        DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
+      })
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Parse gate ignored a configured value',
+        expect.objectContaining({
+          errorCode: 'PARSE_GATE_CONFIG_REJECTED',
+          rejectedOverrides: ['DOE_EXCEL_MAX_CONCURRENT_PARSES=64'],
+        }),
+      )
+    })
+
+    /** A normal boot must be silent at warn, or the marker means nothing. */
+    it('does not warn when every value is accepted', async () => {
+      const { logger } = await buildWithLogger({
+        DOE_EXCEL_MAX_CONCURRENT_PARSES: '3',
+        DOE_EXCEL_MAX_QUEUED_PARSES: '10',
+      })
+
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
   })
 })

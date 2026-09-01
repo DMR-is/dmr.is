@@ -15,13 +15,33 @@ export interface IImportUploadService {
   createUpload(boundary: ImportUploadBoundary): Promise<PresignUploadResponseDto>
 
   /**
+   * Throw unless `key` sits inside `boundary`'s own prefix.
+   *
+   * Exposed separately from {@link fetchWorkbook} because the parse gate is
+   * acquired *before* the download — a caller must be able to reject a
+   * client-supplied key without first taking a slot, so a bad key cannot occupy
+   * the queue.
+   */
+  assertKeyWithinBoundary(key: string, boundary: ImportUploadBoundary): void
+
+  /**
    * Validate the key against the boundary, fetch the object from S3 and enforce
    * the size cap. Returns the workbook buffer ready to parse.
+   *
+   * Allocates up to the upload cap, so callers must already hold a parse slot
+   * when they call this.
    */
   fetchWorkbook(key: string, boundary: ImportUploadBoundary): Promise<Buffer>
 
-  /** Best-effort delete of a staged object once it has been consumed. */
-  cleanup(key: string): Promise<void>
+  /**
+   * Best-effort delete of a staged object once it has been consumed.
+   *
+   * Takes the boundary because it validates the key itself. Callers reach this
+   * from `catch`/`finally` blocks that can now be entered on the invalid-key
+   * path, so it must not treat a caller-supplied key as trustworthy. Never
+   * throws — it runs while another error is in flight.
+   */
+  cleanup(key: string, boundary: ImportUploadBoundary): Promise<void>
 
   /**
    * Local-development only: accept raw workbook bytes and stage them on disk

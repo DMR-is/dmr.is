@@ -24,6 +24,13 @@ import {
 
 const LOGGING_CONTEXT = 'ImportUploadService'
 
+/**
+ * Facet on `@errorCode:IMPORT_CLEANUP_KEY_REFUSED` to find a caller that tried
+ * to delete outside its own prefix. Nothing should produce this; if it appears,
+ * a call site is passing a key it has not validated.
+ */
+const IMPORT_CLEANUP_KEY_REFUSED = 'IMPORT_CLEANUP_KEY_REFUSED'
+
 const KEY_PREFIX = 'doe-imports'
 const ONE_MB = 1024 * 1024
 const MAX_UPLOAD_BYTES = ONE_MB * 20
@@ -95,16 +102,29 @@ export class ImportUploadService implements IImportUploadService {
     return { url, key }
   }
 
+  /**
+   * Reject anything outside this boundary's own prefix — the key is
+   * client-supplied and must not become an arbitrary-object read or delete.
+   *
+   * Public so a caller can run it *before* acquiring a parse slot.
+   * `fetchWorkbook` allocates, so the gate is taken ahead of it; validating
+   * inside the gated region would let an invalid key sit in the queue and
+   * delay its own 400.
+   */
+  assertKeyWithinBoundary(key: string, boundary: ImportUploadBoundary): void {
+    if (!keyPattern(boundary).test(key)) {
+      throw new BadRequestException('Invalid import upload key')
+    }
+  }
+
   async fetchWorkbook(
     key: string,
     boundary: ImportUploadBoundary,
   ): Promise<Buffer> {
-    // Reject anything outside this boundary's own prefix before touching
-    // storage — the key is client-supplied and must not become an
-    // arbitrary-object read.
-    if (!keyPattern(boundary).test(key)) {
-      throw new BadRequestException('Invalid import upload key')
-    }
+    // Repeated even though gated callers assert this first: this method is the
+    // one that touches storage, so the check belongs where the read happens
+    // rather than only at the call sites that remember it.
+    this.assertKeyWithinBoundary(key, boundary)
 
     try {
       // The cap has to be pushed down into the download itself. The presigned
@@ -153,14 +173,32 @@ export class ImportUploadService implements IImportUploadService {
       ) {
         // cleanup() is best-effort and swallows its own failures, so this cannot
         // turn the 413 into a 500.
-        await this.cleanup(key)
+        await this.cleanup(key, boundary)
       }
 
       throw error
     }
   }
 
-  async cleanup(key: string): Promise<void> {
+  async cleanup(key: string, boundary: ImportUploadBoundary): Promise<void> {
+    // The controllers' cleanup paths are reachable on the invalid-key path now
+    // that the download happens inside the service call rather than ahead of
+    // it, so this can be handed a key that never passed `fetchWorkbook`'s
+    // check. Validating here is what keeps a 400 from becoming a delete.
+    //
+    // Refuses rather than throws: every caller invokes this from a `finally` or
+    // a `catch` with another error already in flight, and throwing would
+    // replace the error the client is owed.
+    if (!keyPattern(boundary).test(key)) {
+      this.logger.warn('Refused to delete a staged object outside its prefix', {
+        context: LOGGING_CONTEXT,
+        errorCode: IMPORT_CLEANUP_KEY_REFUSED,
+        boundary,
+        key,
+      })
+      return
+    }
+
     try {
       if (this.isLocal) {
         await rm(this.localPath(key), { force: true })

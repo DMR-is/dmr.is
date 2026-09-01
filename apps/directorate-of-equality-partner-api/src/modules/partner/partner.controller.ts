@@ -188,21 +188,21 @@ export class PartnerController {
   async importSalaryReportWorkbook(
     @Body() input: ImportKeyDto,
   ): Promise<ParsedReportDto> {
-    const buffer = await this.importUploadService.fetchWorkbook(
-      input.key,
-      ImportUploadBoundary.APPLICATION,
-    )
-
     try {
+      // The key, not a buffer: the service downloads under the parse gate so
+      // the workbook is never in memory without a slot.
       return await this.reportExcelService.importWorkbook(
-        buffer,
+        input.key,
         ImportUploadBoundary.APPLICATION,
       )
     } finally {
       // Cleaned up whether the parse succeeded or threw: a staged workbook that
       // failed to parse is no more use than one that succeeded, and leaving it
       // behind means paying for storage of files nobody will read.
-      await this.importUploadService.cleanup(input.key)
+      await this.importUploadService.cleanup(
+        input.key,
+        ImportUploadBoundary.APPLICATION,
+      )
     }
   }
 

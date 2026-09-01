@@ -235,10 +235,9 @@ describe('ImportUploadService', () => {
     })
 
     it('never deletes on the invalid-key path (arbitrary-object DELETE guard)', async () => {
-      // cleanup() does not validate keys, so nothing that runs before the
-      // keyPattern check may ever reach it — otherwise a client-supplied key
-      // becomes an arbitrary DELETE in the imports bucket. Do not "simplify"
-      // this by moving the validation inside the try.
+      // A client-supplied key must never become an arbitrary DELETE in the
+      // imports bucket. `cleanup` now validates too (see below), so this is
+      // one of two independent guards rather than the only one — keep both.
       await expect(
         service.fetchWorkbook(
           'doe-imports/admin/../../etc/passwd',
@@ -254,15 +253,53 @@ describe('ImportUploadService', () => {
     it('deletes the staged object from the DOE imports bucket', async () => {
       aws.deleteObject.mockResolvedValue(ResultWrapper.ok())
 
-      await service.cleanup(ADMIN_KEY)
+      await service.cleanup(ADMIN_KEY, ImportUploadBoundary.ADMIN)
 
       expect(aws.deleteObject).toHaveBeenCalledWith(ADMIN_KEY, BUCKET)
+    })
+
+    /**
+     * The controllers reach `cleanup` from `catch`/`finally` blocks that are
+     * now entered on the invalid-key path too, because the download moved
+     * inside the gated service call. Without this check a malformed key would
+     * travel from the request body straight to `deleteObject`.
+     */
+    it('refuses a key outside the boundary prefix instead of deleting it', async () => {
+      await service.cleanup(
+        'doe-imports/admin/../../etc/passwd',
+        ImportUploadBoundary.ADMIN,
+      )
+
+      expect(aws.deleteObject).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalled()
+    })
+
+    /** Cross-boundary too: an admin route may not delete an application upload. */
+    it('refuses a well-formed key from a different boundary', async () => {
+      await service.cleanup(
+        'doe-imports/application/11111111-2222-3333-4444-555555555555.xlsx',
+        ImportUploadBoundary.ADMIN,
+      )
+
+      expect(aws.deleteObject).not.toHaveBeenCalled()
+    })
+
+    /**
+     * It runs while another error is in flight, so a throw here would replace
+     * the error the client is owed.
+     */
+    it('does not throw on a refused key', async () => {
+      await expect(
+        service.cleanup('nope', ImportUploadBoundary.ADMIN),
+      ).resolves.toBeUndefined()
     })
 
     it('swallows delete failures (best-effort) and logs a warning', async () => {
       aws.deleteObject.mockRejectedValue(new Error('S3 down'))
 
-      await expect(service.cleanup(ADMIN_KEY)).resolves.toBeUndefined()
+      await expect(
+        service.cleanup(ADMIN_KEY, ImportUploadBoundary.ADMIN),
+      ).resolves.toBeUndefined()
       expect(mockLogger.warn).toHaveBeenCalled()
     })
   })
@@ -296,7 +333,7 @@ describe('ImportUploadService', () => {
       expect(fetched.equals(data)).toBe(true)
       expect(aws.getObjectBuffer).not.toHaveBeenCalled()
 
-      await service.cleanup(key)
+      await service.cleanup(key, ImportUploadBoundary.ADMIN)
       await expect(
         service.fetchWorkbook(key, ImportUploadBoundary.ADMIN),
       ).rejects.toBeInstanceOf(BadRequestException)
