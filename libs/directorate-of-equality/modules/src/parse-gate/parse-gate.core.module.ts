@@ -21,8 +21,24 @@
  */
 import { Module } from '@nestjs/common'
 
+import { type Logger, LOGGER_PROVIDER, LoggingModule } from '@dmr.is/logging'
+
 import { PARSE_GATE } from './parse-gate.token'
 import { Semaphore } from './semaphore'
+
+const LOGGING_CONTEXT = 'ParseGateCoreModule'
+
+/**
+ * The outcome of reading one variable: the value the gate will use, plus the
+ * raw string when an override was present and refused.
+ *
+ * `rejected` exists so the factory can say so out loud. A discarded override
+ * is otherwise invisible — the gate simply runs at its default, and the only
+ * trace is `activeParses` inside a shed warning that appears only once the
+ * gate is already saturated, which is the wrong moment to discover that a task
+ * definition was ignored.
+ */
+type EnvInt = { value: number; rejected?: string }
 
 /**
  * Read a positive integer from the environment, falling back when it is unset
@@ -30,7 +46,8 @@ import { Semaphore } from './semaphore'
  *
  * Unset is the normal case: neither variable is declared required, so nothing
  * has to be added to a task definition before this ships. The fallbacks are
- * the operating values, not placeholders.
+ * the operating values, not placeholders — so unset is not reported as a
+ * rejection, only a value that was supplied and refused is.
  *
  * A malformed value falls back rather than propagating. `Number('two')` is
  * `NaN`, and `NaN` passes the constructor's `< 1` check while making every
@@ -38,23 +55,30 @@ import { Semaphore } from './semaphore'
  * would wedge every parse in the queue until the queue filled and then shed
  * everything with a 503. Failing back to a working default beats failing into
  * that.
+ *
+ * Note the refusal is to the *default*, not to the nearest bound. An
+ * out-of-range value means somebody's intent and this module's budget
+ * disagree; clamping to the ceiling would silently grant most of what was
+ * asked for, where falling back to 2 and logging it does not.
  */
 const readInt = (
   raw: string | undefined,
   fallback: number,
   min: number,
   max: number,
-): number => {
-  if (raw === undefined) return fallback
+): EnvInt => {
+  if (raw === undefined) return { value: fallback }
 
   // Digits only, deliberately narrower than `Number`. `Number('0x10')` is 16
   // and `Number('1e3')` is 1000 — both are whole numbers in range, so every
   // check below would pass a value nobody meant to write.
   const trimmed = raw.trim()
-  if (!/^\d+$/.test(trimmed)) return fallback
+  if (!/^\d+$/.test(trimmed)) return { value: fallback, rejected: raw }
 
   const parsed = Number(trimmed)
-  return parsed >= min && parsed <= max ? parsed : fallback
+  return parsed >= min && parsed <= max
+    ? { value: parsed }
+    : { value: fallback, rejected: raw }
 }
 
 /**
@@ -83,6 +107,12 @@ const MAX_ALLOWED_CONCURRENT_PARSES = 8
 const MAX_ALLOWED_QUEUED_PARSES = 200
 
 @Module({
+  // `LoggingModule` is `@Global()`, so the app resolves `LOGGER_PROVIDER`
+  // without this. It is imported anyway so the module carries its own
+  // dependency: `Test.createTestingModule({ imports: [ParseGateCoreModule] })`
+  // has no global registry, and a module that only compiles inside a full app
+  // is one nobody writes a test for.
+  imports: [LoggingModule],
   providers: [
     {
       provide: PARSE_GATE,
@@ -90,23 +120,46 @@ const MAX_ALLOWED_QUEUED_PARSES = 200
       // environment when the module is instantiated, not when the file is
       // first imported, which is the difference between seeing a variable and
       // missing it.
-      useFactory: (): Semaphore =>
-        new Semaphore(
-          readInt(
-            process.env.DOE_EXCEL_MAX_CONCURRENT_PARSES,
-            DEFAULT_MAX_CONCURRENT_PARSES,
-            1,
-            MAX_ALLOWED_CONCURRENT_PARSES,
-          ),
-          // Zero is a legitimate setting here — it sheds instead of queueing —
-          // so the floor is 0, not 1.
-          readInt(
-            process.env.DOE_EXCEL_MAX_QUEUED_PARSES,
-            DEFAULT_MAX_QUEUED_PARSES,
-            0,
-            MAX_ALLOWED_QUEUED_PARSES,
-          ),
-        ),
+      useFactory: (logger: Logger): Semaphore => {
+        const concurrent = readInt(
+          process.env.DOE_EXCEL_MAX_CONCURRENT_PARSES,
+          DEFAULT_MAX_CONCURRENT_PARSES,
+          1,
+          MAX_ALLOWED_CONCURRENT_PARSES,
+        )
+        // Zero is a legitimate setting here — it sheds instead of queueing —
+        // so the floor is 0, not 1.
+        const queued = readInt(
+          process.env.DOE_EXCEL_MAX_QUEUED_PARSES,
+          DEFAULT_MAX_QUEUED_PARSES,
+          0,
+          MAX_ALLOWED_QUEUED_PARSES,
+        )
+
+        const rejectedOverrides = [
+          concurrent.rejected === undefined
+            ? undefined
+            : `DOE_EXCEL_MAX_CONCURRENT_PARSES=${concurrent.rejected}`,
+          queued.rejected === undefined
+            ? undefined
+            : `DOE_EXCEL_MAX_QUEUED_PARSES=${queued.rejected}`,
+        ].filter((entry): entry is string => entry !== undefined)
+
+        // Emitted unconditionally, not only on rejection. The effective pair
+        // is what `import-upload/archive-budget.ts` derives its heap figure
+        // from, and "what is this container actually running at" should be
+        // answerable by grepping a boot log rather than by reasoning about
+        // which defaults applied.
+        logger.info('Parse gate configured', {
+          context: LOGGING_CONTEXT,
+          maxConcurrentParses: concurrent.value,
+          maxQueuedParses: queued.value,
+          ...(rejectedOverrides.length > 0 ? { rejectedOverrides } : {}),
+        })
+
+        return new Semaphore(concurrent.value, queued.value)
+      },
+      inject: [LOGGER_PROVIDER],
     },
   ],
   exports: [PARSE_GATE],

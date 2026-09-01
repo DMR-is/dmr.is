@@ -80,6 +80,25 @@ export class ArchiveTooLargeError extends Error {
  * made a 64MB budget wrong above — while each module still read as correctly
  * bounded on its own, which is what would make it hard to catch.
  *
+ * ## What the "x 2" does *not* cover: the queue
+ *
+ * The gate bounds parses, not the buffers waiting to become one.
+ * `fetchWorkbook` runs in the controller *before* the gate is acquired, so a
+ * queued caller holds its compressed upload — up to `MAX_UPLOAD_BYTES`, 20MB —
+ * for the whole wait. At the default `DOE_EXCEL_MAX_QUEUED_PARSES` of 20 that
+ * is a further ~400MB beside the ~520MB above, or ~920MB of the 1152MB
+ * ceiling.
+ *
+ * This term is not new and sharing the gate did not widen it: `report-excel`
+ * already queued 20, and `company-import` queued nothing only because it had
+ * no gate at all, so the worst case came down rather than up. It is written
+ * here because the arithmetic above otherwise reads as a complete accounting
+ * and is not one — raising `DOE_EXCEL_MAX_QUEUED_PARSES` spends heap this
+ * budget never counted, and the ceiling of 200 in `ParseGateCoreModule` would
+ * allow ~4GB of it. Bounding it properly means acquiring the gate before
+ * `fetchWorkbook`, which is a change to both controllers rather than to this
+ * number.
+ *
  * ⚠️ Coupled to `DOE_EXCEL_MAX_CONCURRENT_PARSES` (default 2) and to
  * `doe_api_memory` in the infrastructure repo. Raising either without
  * revisiting this number spends heap that was accounted for here.

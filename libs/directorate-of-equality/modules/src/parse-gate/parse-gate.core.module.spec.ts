@@ -1,6 +1,8 @@
 import { Inject, Injectable, Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 
+import { LOGGER_PROVIDER } from '@dmr.is/logging'
+
 import { CompanyImportCoreModule } from '../company-import/company-import.core.module'
 import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import {
@@ -51,7 +53,10 @@ class SecondConsumerModule {}
  * disables its string coercion for the rest of the worker, which Jest shares
  * across files. Restore key by key.
  */
-const buildWithEnv = async (env: Record<string, string | undefined>) => {
+const withEnv = async <T>(
+  env: Record<string, string | undefined>,
+  run: () => Promise<T>,
+): Promise<T> => {
   const keys = Object.keys(env)
   const saved = new Map(keys.map((k) => [k, process.env[k]]))
 
@@ -61,10 +66,7 @@ const buildWithEnv = async (env: Record<string, string | undefined>) => {
   }
 
   try {
-    const moduleRef = await Test.createTestingModule({
-      imports: [ParseGateCoreModule],
-    }).compile()
-    return moduleRef.get<Semaphore>(PARSE_GATE)
+    return await run()
   } finally {
     for (const [k, v] of saved) {
       if (v === undefined) delete process.env[k]
@@ -72,6 +74,34 @@ const buildWithEnv = async (env: Record<string, string | undefined>) => {
     }
   }
 }
+
+const buildWithEnv = (env: Record<string, string | undefined>) =>
+  withEnv(env, async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [ParseGateCoreModule],
+    }).compile()
+    return moduleRef.get<Semaphore>(PARSE_GATE)
+  })
+
+/**
+ * The same build with the logger replaced, so the init line can be asserted.
+ *
+ * `ParseGateCoreModule` imports `LoggingModule` rather than relying on its
+ * `@Global()` registration precisely so this compiles standalone; overriding
+ * the provider is then the ordinary Nest testing path rather than a fixture
+ * that has to reconstruct the app.
+ */
+const buildWithLogger = (env: Record<string, string | undefined>) =>
+  withEnv(env, async () => {
+    const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+    const moduleRef = await Test.createTestingModule({
+      imports: [ParseGateCoreModule],
+    })
+      .overrideProvider(LOGGER_PROVIDER)
+      .useValue(logger)
+      .compile()
+    return { gate: moduleRef.get<Semaphore>(PARSE_GATE), logger }
+  })
 
 describe('ParseGateCoreModule', () => {
   describe('one gate for the process', () => {
@@ -200,12 +230,6 @@ describe('ParseGateCoreModule', () => {
     })
 
     /**
-     * `Number('two')` is `NaN`, and `NaN` slips past the constructor's `< 1`
-     * guard while making every `active < maxConcurrent` comparison false — so
-     * an unparseable value would not throw, it would queue every parse and
-     * then shed the lot with a 503. Falling back has to be the behaviour.
-     */
-    /**
      * A floor alone would accept any large integer. `64` is valid input and
      * implies ~16GB of worst-case parse heap against a 1152MB ceiling, so one
      * task-definition typo would defeat the module entirely and silently.
@@ -240,6 +264,12 @@ describe('ParseGateCoreModule', () => {
       },
     )
 
+    /**
+     * `Number('two')` is `NaN`, and `NaN` slips past the constructor's `< 1`
+     * guard while making every `active < maxConcurrent` comparison false — so
+     * an unparseable value would not throw, it would queue every parse and
+     * then shed the lot with a 503. Falling back has to be the behaviour.
+     */
     it.each([['two'], ['0'], ['-1'], ['1.5'], ['']])(
       'ignores the unusable concurrency value %p and keeps the default',
       async (raw) => {
@@ -265,6 +295,66 @@ describe('ParseGateCoreModule', () => {
       const release = await gate.acquire()
       await expect(gate.acquire()).rejects.toThrow(/queue is full/i)
       release()
+    })
+  })
+
+  /**
+   * A discarded override used to leave no trace at all. The gate ran at its
+   * default, and the only observable was `activeParses` inside a shed warning
+   * that appears once the gate is already saturated — which is both too late
+   * and the wrong signal for "the task definition was ignored".
+   */
+  describe('reports its effective configuration', () => {
+    it('logs the pair the budget is derived from', async () => {
+      const { logger } = await buildWithLogger({
+        DOE_EXCEL_MAX_CONCURRENT_PARSES: undefined,
+        DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
+      })
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Parse gate configured',
+        expect.objectContaining({
+          maxConcurrentParses: DEFAULT_MAX_CONCURRENT_PARSES,
+          maxQueuedParses: DEFAULT_MAX_QUEUED_PARSES,
+        }),
+      )
+    })
+
+    /**
+     * Unset is the normal deployment, not a mistake — nothing in the
+     * infrastructure repo sets either variable. Reporting it as a rejected
+     * override would make the ordinary case look like a misconfiguration and
+     * train the reader to ignore the field.
+     */
+    it('does not call an unset variable a rejected override', async () => {
+      const { logger } = await buildWithLogger({
+        DOE_EXCEL_MAX_CONCURRENT_PARSES: undefined,
+        DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
+      })
+
+      const [, meta] = logger.info.mock.calls[0]
+      expect(meta).not.toHaveProperty('rejectedOverrides')
+    })
+
+    /**
+     * The value that motivated this: `64` is a valid positive integer that
+     * falls back to 2, not to the ceiling of 8. Without the raw value in the
+     * log there is nothing anywhere to say the deployment asked for something
+     * else and did not get it.
+     */
+    it('names the rejected override and the value actually in force', async () => {
+      const { logger } = await buildWithLogger({
+        DOE_EXCEL_MAX_CONCURRENT_PARSES: '64',
+        DOE_EXCEL_MAX_QUEUED_PARSES: undefined,
+      })
+
+      expect(logger.info).toHaveBeenCalledWith(
+        'Parse gate configured',
+        expect.objectContaining({
+          maxConcurrentParses: DEFAULT_MAX_CONCURRENT_PARSES,
+          rejectedOverrides: ['DOE_EXCEL_MAX_CONCURRENT_PARSES=64'],
+        }),
+      )
     })
   })
 })
