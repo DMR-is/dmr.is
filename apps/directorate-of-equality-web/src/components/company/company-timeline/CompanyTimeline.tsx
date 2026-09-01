@@ -14,21 +14,23 @@ import {
   CompanyTimelineItemDto,
   ReportRoleEnum,
   ReportStatusEnum,
-  ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../gen/fetch'
 import { formatDateIS } from '../../../lib/constants'
 import { companiesText, reportText } from '../../../lib/text'
 import { useTRPC } from '../../../lib/trpc/client/trpc'
 import { TimelineFeed } from '../../report/report-tabs/comments/timeline/TimelineFeed'
+import { TimelineItem } from '../../report/report-tabs/comments/timeline/timelineHelpers'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
 
 const REMINDER_TIER_LABELS: Record<CompanyReminderTierEnum, string> = {
-  [CompanyReminderTierEnum.SIX_MONTHS]: reportText.timeline.reminderTierSixMonths,
-  [CompanyReminderTierEnum.TWO_MONTHS]: reportText.timeline.reminderTierTwoMonths,
+  [CompanyReminderTierEnum.SIX_MONTHS]:
+    reportText.timeline.reminderTierSixMonths,
+  [CompanyReminderTierEnum.TWO_MONTHS]:
+    reportText.timeline.reminderTierTwoMonths,
   [CompanyReminderTierEnum.TWO_WEEKS]: reportText.timeline.reminderTierTwoWeeks,
   [CompanyReminderTierEnum.DUE]: reportText.timeline.reminderTierDue,
 }
@@ -51,24 +53,22 @@ type Props = {
   companyId: string
 }
 
-function adaptTimeline(
-  items: CompanyTimelineItemDto[],
-): ReportTimelineItemDto[] {
+function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
   return items.map((item) => ({
-    kind: item.kind as unknown as ReportTimelineItemKindEnum,
+    kind: (item.kind as unknown) as ReportTimelineItemKindEnum,
     createdAt: item.createdAt,
     event: item.event
       ? {
           id: item.event.id,
           reportId: item.event.companyId,
-          eventType: item.event.eventType as unknown as never,
+          eventType: (item.event.eventType as unknown) as never,
           actorUserId: item.event.actorUserId ?? null,
           actorName: item.event.actorName ?? null,
-          reportStatus: item.event.status as unknown as ReportStatusEnum,
+          reportStatus: (item.event.status as unknown) as ReportStatusEnum,
           fromStatus:
-            (item.event.fromStatus as unknown as ReportStatusEnum) ?? null,
+            ((item.event.fromStatus as unknown) as ReportStatusEnum) ?? null,
           toStatus:
-            (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
+            ((item.event.toStatus as unknown) as ReportStatusEnum) ?? null,
           reason: eventBody(item.event),
           createdAt: item.event.createdAt,
         }
@@ -80,6 +80,9 @@ function adaptTimeline(
           authorKind: ReportRoleEnum.REVIEWER,
           authorUserId: item.comment.authorUserId ?? null,
           authorName: item.comment.authorName ?? null,
+          // Carried through so the feed can label a seeded note as "Kerfið"
+          // instead of falling back to an unnamed member of staff.
+          isSystem: item.comment.isSystem,
           visibility: CommentVisibilityEnum.INTERNAL,
           body: item.comment.body,
           reportStatus: ReportStatusEnum.SUBMITTED,

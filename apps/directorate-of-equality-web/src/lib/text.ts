@@ -614,6 +614,10 @@ export const reportText = {
     yesterday: 'Í gær',
     company: 'Fyrirtæki',
     employee: 'Starfsmaður',
+    // A system-written note. Its own verb, because "skráir skilaboð" reads as a
+    // person sending something; the system is remarking on the record.
+    system: 'Kerfið',
+    makesComment: 'gerir athugasemd',
     reportSubmitted: 'Skýrsla innsend',
     assigned: 'Úthlutað',
     unassigned: 'tekur sig af málinu',

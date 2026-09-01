@@ -1,4 +1,5 @@
 import {
+  ApiBoolean,
   ApiDateTime,
   ApiOptionalString,
   ApiOptionalUuid,
@@ -24,6 +25,12 @@ export class CompanyCommentDto {
 
   @ApiString({ description: 'Plain text comment body' })
   body!: string
+
+  @ApiBoolean({
+    description:
+      'True when the system wrote the comment rather than a person — render it as "Kerfið", not as an unnamed member of staff. Distinct from `authorName` being null, which only means no user is attached.',
+  })
+  isSystem!: boolean
 
   @ApiDateTime()
   createdAt!: Date

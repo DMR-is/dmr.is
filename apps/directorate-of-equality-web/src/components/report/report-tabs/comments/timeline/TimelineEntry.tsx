@@ -8,7 +8,6 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import {
   CommentVisibilityEnum,
   ReportEventTypeEnum,
-  ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
@@ -18,10 +17,11 @@ import {
   renderSystemReason,
   timelineEntryKind,
   timelineEntryText,
+  TimelineItem,
 } from './timelineHelpers'
 
 type Props = {
-  item: ReportTimelineItemDto
+  item: TimelineItem
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void
@@ -48,8 +48,8 @@ export function TimelineEntry({
     comment.authorUserId === currentUserId &&
     comment.visibility !== CommentVisibilityEnum.EXTERNAL
   const bodyText = isComment
-    ? (comment?.body ?? null)
-    : (item.event?.reason ?? null)
+    ? comment?.body ?? null
+    : item.event?.reason ?? null
   const hasBody = !!bodyText
   // System auto-review reasons get their percentages bolded; everything else
   // renders verbatim.

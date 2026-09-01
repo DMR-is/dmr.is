@@ -59,9 +59,27 @@ export function renderSystemReason(reason: string): React.ReactNode {
 
 export type TimelineEntryKind = 'event' | 'outgoing' | 'incoming' | 'internal'
 
-export function timelineEntryKind(
-  item: ReportTimelineItemDto,
-): TimelineEntryKind {
+/**
+ * What the feed actually renders: the generated timeline DTO plus display-only
+ * fields one caller has and the other does not.
+ *
+ * The feed is shared by the report timeline and the company timeline, whose
+ * backend DTOs differ — `CompanyTimeline` already adapts its items into the
+ * report shape. `isSystem` is the one company-comment field with no counterpart
+ * on a report comment, and it is optional here so a plain
+ * `ReportTimelineItemDto` stays assignable and the report side needs no change.
+ *
+ * ⚠️ It has to be its own field rather than inferred from a null
+ * `authorUserId`: null means "no user attached", which is also true of a
+ * comment whose author we simply do not know. See `company_comment.is_system`.
+ */
+export type TimelineItem = Omit<ReportTimelineItemDto, 'comment'> & {
+  comment?:
+    | (NonNullable<ReportTimelineItemDto['comment']> & { isSystem?: boolean })
+    | null
+}
+
+export function timelineEntryKind(item: TimelineItem): TimelineEntryKind {
   if (item.kind === ReportTimelineItemKindEnum.EVENT) return 'event'
   if (item.comment?.authorKind === ReportRoleEnum.COMPANY) return 'incoming'
   if (item.comment?.visibility === CommentVisibilityEnum.INTERNAL)
@@ -70,15 +88,28 @@ export function timelineEntryKind(
 }
 
 export function timelineEntryText(
-  item: ReportTimelineItemDto,
+  item: TimelineItem,
   companyName?: string | null,
 ): React.ReactNode {
   if (item.kind === ReportTimelineItemKindEnum.COMMENT) {
     const comment = item.comment
+
+    // A system-written note gets its own verb: it did not "register a message",
+    // it made a remark. Checked before the author fallbacks, which would
+    // otherwise render it as an unnamed member of staff.
+    if (comment?.isSystem) {
+      return (
+        <>
+          <Bold>{reportText.timeline.system}</Bold>{' '}
+          {reportText.timeline.makesComment}
+        </>
+      )
+    }
+
     const isCompany = comment?.authorKind === ReportRoleEnum.COMPANY
     const authorName = isCompany
-      ? (companyName ?? reportText.timeline.company)
-      : (comment?.authorName ?? reportText.timeline.employee)
+      ? companyName ?? reportText.timeline.company
+      : comment?.authorName ?? reportText.timeline.employee
     return (
       <>
         <Bold>{authorName}</Bold> {reportText.timeline.registersMessage}
@@ -88,8 +119,13 @@ export function timelineEntryText(
 
   if (!item.event) return null
 
-  const { eventType, actorName, assignedUserName, toStatus, systemDecision } =
-    item.event
+  const {
+    eventType,
+    actorName,
+    assignedUserName,
+    toStatus,
+    systemDecision,
+  } = item.event
 
   if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
     // Soft auto-review verdict — system actor, no name. The `reason` renders as
@@ -203,7 +239,7 @@ export function timelineEntryText(
 
   // Company-specific event types are cast as `never` in the adapter but
   // arrive as plain strings at runtime.
-  const eventTypeStr = eventType as unknown as string
+  const eventTypeStr = (eventType as unknown) as string
   const COMPANY_EVENT_LABELS: Record<string, string> = {
     API_KEY_ISSUED: reportText.timeline.apiKeyIssued,
     API_KEY_REVOKED: reportText.timeline.apiKeyRevoked,
