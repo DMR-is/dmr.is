@@ -366,6 +366,36 @@ describe('ImportUploadService', () => {
       })
 
       /**
+       * The property that makes the allow-list an allow-list.
+       *
+       * `TERMINAL_STATUSES` is written as a set of *deletes* precisely so a
+       * status nobody has considered yet keeps the caller's upload, and the
+       * comment there names 429 and 403 as the cases that must land outside
+       * it. Nothing enforced that: adding `TOO_MANY_REQUESTS` to the set left
+       * the whole suite green. These two are what turn the stated principle
+       * into something a maintainer can trip over — which matters, because
+       * "the rule was written down and nothing checked it" is exactly how the
+       * bug these tests exist for got in.
+       */
+      it.each([
+        [
+          '429, retryable and not raised here yet',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ],
+        [
+          '403, an authorization failure is not the upload being bad',
+          HttpStatus.FORBIDDEN,
+        ],
+      ])('keeps the upload on %s', async (_label, status) => {
+        await service.cleanupAfter(
+          ADMIN_KEY,
+          ImportUploadBoundary.ADMIN,
+          new HttpException('nope', status),
+        )
+        expect(aws.deleteObject).not.toHaveBeenCalled()
+      })
+
+      /**
        * The two guards have to interact, and nothing else pins that they do.
        *
        * An invalid key produces a 400, which the predicate treats as terminal —
