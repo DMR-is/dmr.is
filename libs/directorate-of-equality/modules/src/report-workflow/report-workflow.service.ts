@@ -257,37 +257,69 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * `formatDate(null)` renders an em dash rather than throwing, so the company
    * was told its report was approved, valid until `—`, for a row the database
    * still had as IN_REVIEW — then `archiveApprovalDocuments` filed that as the
-   * record of the send, while the reviewer got a 500 and would naturally approve
-   * again.
+   * record of the send. And nothing surfaced to the reviewer: `CLSMiddleware`
+   * commits from an un-awaited `res.on('finish')` listener and only on a 2xx/3xx,
+   * so a failing COMMIT delivers a 200 plus an unhandled rejection, never a 500.
+   * There was no signal at all.
    *
    * One read gates the whole hook rather than each reload, because
    * `notifyApplicationSystem` has the same exposure and no reload of its own to
    * add a column to.
    *
-   * It cannot false-negative: a failed commit leaves the prior status, and
-   * `forceCleanup()` has already cleared the CLS entry and destroyed the
-   * connection by the time a hook runs, so this query takes a fresh pooled
-   * connection and sees committed state.
+   * ⚠️ **`transaction: null`, explicitly.** The usual argument is that
+   * `commit()` runs `cleanup()` → `_clearCls()` before it awaits the hooks, so
+   * there is no ambient transaction left to join. That holds for a top-level
+   * transaction and NOT for a savepoint: `cleanup()` and `forceCleanup()` both
+   * early-return before `_clearCls()` when `this.parent` is set
+   * (`sequelize/lib/transaction.js:117-131`), so inside a
+   * `sequelize.transaction()` wrapper this read would enlist in the uncommitted
+   * parent, see its own write and return `true` — the gate inverted into a false
+   * positive. Not reachable from today's only caller, the controller, but
+   * wrapping is established in this lib and an invariant that holds by accident
+   * is not one.
+   *
+   * ⚠️ **`approvedAt` narrows it from "an approval" to THIS approval.** Status
+   * alone is a value every attempt shares. After a failed commit this read can
+   * block up to the pool's 30s `acquire` timeout; if a second approval commits
+   * inside that window, the first hook wakes to a row reading APPROVED and sends
+   * a second notice with a second set of PDFs and a second S3 object. Comparing
+   * the `approvedAt` this call wrote makes the gate per-attempt.
+   *
+   * `deny` has no equivalent stamp to compare — it writes only `status` and
+   * `reviewerUserId` — so that path keeps the status-only gate. Its residual is
+   * narrower: a duplicate denial carries no attachments and writes no S3 object,
+   * costing one extra notice and one extra `notifyDenied`. Closing it needs a
+   * per-attempt column, which belongs with the durable record.
    */
   private async decisionLanded(
     reportId: string,
     expected: ReportStatusEnum,
+    approvedAt?: Date,
   ): Promise<boolean> {
     try {
       const report = await this.reportModel.findOne({
         where: { id: reportId },
-        attributes: ['status'],
+        attributes: ['status', 'approvedAt'],
+        transaction: null,
       })
 
-      if (report?.status === expected) {
-        return true
+      if (report?.status !== expected) {
+        this.logger.error(
+          `Not notifying anyone about report ${reportId}: its status is ${report?.status ?? 'gone'}, not ${expected} — the commit did not land`,
+          { context: LOGGING_CONTEXT },
+        )
+        return false
       }
 
-      this.logger.error(
-        `Not notifying anyone about report ${reportId}: its status is ${report?.status ?? 'gone'}, not ${expected} — the commit did not land`,
-        { context: LOGGING_CONTEXT },
-      )
-      return false
+      if (approvedAt && report.approvedAt?.getTime() !== approvedAt.getTime()) {
+        this.logger.error(
+          `Not notifying anyone about report ${reportId}: it is APPROVED, but by a different attempt than this one — another approval committed while this one was reading back`,
+          { context: LOGGING_CONTEXT },
+        )
+        return false
+      }
+
+      return true
     } catch (error) {
       /*
        * ⚠️ **Fails CLOSED**, and it catches its own read because nothing above it
@@ -295,10 +327,11 @@ export class ReportWorkflowService implements IReportWorkflowService {
        * transaction, so a throw from here would surface to the caller.
        *
        * Unable to confirm is treated as did not land. That can cost a company the
-       * notice for an approval that did commit, which is the known
-       * no-durable-record gap and is recoverable by a human. The other direction
-       * is not: an official "samþykkt", with the PDFs, for an approval the
-       * database does not have.
+       * notice for an approval that DID commit, and nothing recovers it: the
+       * reviewer saw a 200, so there is no retry to prompt and no re-notify path
+       * in this API. It is the no-durable-record gap, reached a second way. The
+       * other direction is still worse and irreversible: an official "samþykkt",
+       * with the PDFs, for an approval the database does not have.
        */
       this.logger.error(
         `Not notifying anyone about report ${reportId}: could not read back its status to confirm the commit landed`,
@@ -382,8 +415,15 @@ export class ReportWorkflowService implements IReportWorkflowService {
     )
 
     if (affected === 0) {
+      /*
+       * ⚠️ Names the status the CAS was pinned to, not a verdict about whether
+       * the report is deniable. Now that the CAS pins one value, a report that
+       * moved IN_REVIEW ↔ POSTPONED mid-request loses this race while still being
+       * perfectly deniable — "it is no longer awaiting a decision" would be a
+       * flatly wrong thing to show a reviewer who can simply retry.
+       */
       throw new BadRequestException(
-        `Cannot deny report ${context.reportId}: it is no longer awaiting a decision`,
+        `Cannot deny report ${context.reportId}: it is no longer ${context.reportStatus}`,
       )
     }
 
@@ -504,6 +544,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
         !(await this.decisionLanded(
           context.reportId,
           ReportStatusEnum.APPROVED,
+          now,
         ))
       ) {
         return
@@ -605,6 +646,17 @@ export class ReportWorkflowService implements IReportWorkflowService {
        * logged by the mail service, at error.
        */
       if (!delivered) {
+        /*
+         * ⚠️ Logged here, not left to the mail service. `sendReportMail` logs at
+         * ERROR for a failed SES call but at WARN for the case that will actually
+         * dominate — a report with no usable contact or admin email — and an
+         * approval that produced neither a notice nor an archive must not be
+         * visible only at warn, where error-level alerting will not see it.
+         */
+        this.logger.error(
+          `Approved report ${reportId} was not delivered to the company — nothing archived either`,
+          { context: LOGGING_CONTEXT },
+        )
         return
       }
 
@@ -640,8 +692,9 @@ export class ReportWorkflowService implements IReportWorkflowService {
     attachments: ReportMailAttachment[],
   ): Promise<void> {
     if (attachments.length === 0) {
-      // Both renders failed. The notice went out without them, so there is
-      // nothing to keep a copy of.
+      // Every render this report kind asks for failed — both for a salary
+      // report, the single one for an equality report. The notice went out
+      // without them, so there is nothing to keep a copy of.
       return
     }
 
@@ -763,7 +816,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
       : null
 
     // Both entries are independently optional, so this is a filter rather than
-    // two return branches. Empty means both renders failed: the notice still
+    // two return branches. Empty means every render failed: the notice still
     // goes, without a "í viðhengi" line.
     return [reportAttachment, planAttachment].filter(
       (attachment): attachment is ReportMailAttachment => attachment !== null,

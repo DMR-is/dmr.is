@@ -32,10 +32,28 @@ import {
   ReportMailAttachment,
 } from './doe-mail.service.interface'
 import { MailSendError } from './mail-send.error'
+import { looksLikeOneAddress } from './recipient'
 
 const LOGGING_CONTEXT = 'DoeMailService'
 const FALLBACK_FROM_ADDRESS = 'noreply@jafnretti.is'
 const FROM_DISPLAY_NAME = 'Jafnréttisstofa'
+
+/**
+ * Whether a value is a `ResultWrapper`, checked rather than asserted.
+ *
+ * `ResultWrapper.ok`/`.err` both produce `{ result: { ok, … } }`, and `ok` is the
+ * discriminant every caller in this module branches on, so its presence is the
+ * property worth testing — not the class identity, which a serialization round
+ * trip would lose.
+ */
+const isResultWrapper = (value: unknown): value is ResultWrapper<unknown> => {
+  if (typeof value !== 'object' || value === null || !('result' in value)) {
+    return false
+  }
+
+  const result = (value as { result: unknown }).result
+  return typeof result === 'object' && result !== null && 'ok' in result
+}
 
 /** The rendered parts of one message, minus envelope and recipient. */
 type MailContent = {
@@ -144,6 +162,7 @@ export class DoeMailService implements IDoeMailService {
       // `mail-send.error.ts`.
       throw new MailSendError(
         `Failed to send report deadline reminder: ${sent.result.error.message}`,
+        sent.result.error,
       )
     }
 
@@ -178,10 +197,25 @@ export class DoeMailService implements IDoeMailService {
   private async sendMailResult(
     message: Parameters<IAWSService['sendMail']>[0],
   ): Promise<ResultWrapper<unknown>> {
-    return (await this.aws.sendMail(
-      message,
-      LOGGING_CONTEXT,
-    )) as ResultWrapper<unknown>
+    const sent: unknown = await this.aws.sendMail(message, LOGGING_CONTEXT)
+
+    /*
+     * ⚠️ A runtime check, not `as ResultWrapper<unknown>`.
+     *
+     * `SentMessageInfo` is `any`, so an assertion here compiles no matter what
+     * the implementation returns and nothing outside this method would notice it
+     * drifting. If someone later makes `sendMail` honour its declared type —
+     * returning bare `SentMessageInfo` and throwing on failure, which is what the
+     * declaration promises — `sent.result` becomes `undefined` and a SUCCESSFUL
+     * send reads as a failure: no S3 archive on the approval path, and a bare
+     * `TypeError` instead of a `MailSendError` on the reminder path, defeating
+     * the exact distinction `mail-send.error.ts` draws.
+     *
+     * So: a result wrapper is used as one, and anything else is taken at face
+     * value as a delivered send, which is what returning a value would mean under
+     * the declared contract. Both branches are pinned in the spec.
+     */
+    return isResultWrapper(sent) ? sent : ResultWrapper.ok(sent)
   }
 
   /**
@@ -238,16 +272,16 @@ export class DoeMailService implements IDoeMailService {
      * that this field carries the approval PDFs and not just a comment notice, so
      * a candidate has to at least look like an address to be preferred.
      *
-     * `includes('@')` deliberately, not an email regex: the job here is to pick
-     * between two stored values, not to validate one. SES is the authority on
-     * deliverability and it rejects with a logged err result. Tightening the DTO
-     * to `@IsEmail()` is the real fix and is a change to the submission contract
-     * — every provider channel, and whatever is already in the column — so it
-     * belongs to its own PR, not to this one.
+     * `looksLikeOneAddress` deliberately, not an email regex: the job here is to
+     * pick between two stored values, not to validate one. SES is the authority
+     * on deliverability and it rejects with a logged err result. Tightening the
+     * DTO to `@IsEmail()` is the real fix and is a change to the submission
+     * contract — every provider channel, and whatever is already in the column —
+     * so it belongs to its own PR, not to this one.
      */
     const to = [report.contactEmail, report.companyAdminEmail]
       .map((candidate) => candidate?.trim())
-      .find((candidate) => !!candidate && candidate.includes('@'))
+      .find(looksLikeOneAddress)
 
     if (!to) {
       this.logger.warn(

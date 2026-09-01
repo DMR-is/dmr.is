@@ -11,7 +11,11 @@ import {
   CompanyStatusEnum,
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
-import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
+import {
+  IDoeMailService,
+  looksLikeOneAddress,
+  MailSendError,
+} from '@dmr.is/doe-modules/mail'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -169,9 +173,6 @@ export class ReportDeadlineReminderService
        * blocking everyone after it. Statutory deadline notices, withheld
        * indefinitely.
        *
-       * Contained here rather than inside `remindCompany` so the event write and
-       * the missing-email flag are covered by the same guard as the send.
-       *
        * ⚠️ **Only a `MailSendError`.** Everything else rethrows, and it has to:
        * `AdvisoryLockService` runs this whole task in one transaction and CLS is
        * live for this app, so the model queries here enlist in it. A DB error
@@ -183,10 +184,24 @@ export class ReportDeadlineReminderService
        * would mail them all again. A deterministic fault on the event insert
        * turns that into a repeating storm.
        *
-       * So a database fault must stay loud and abort the run, exactly as it did
-       * before this catch existed. The `job_runs` row rolls back with it, which
-       * is correct: nothing durable was recorded, so the next run is a retry, not
-       * a duplicate.
+       * So a database fault must stay loud, exactly as it did before this catch
+       * existed.
+       *
+       * ⚠️ **"Loud" means the PROCESS, not the run.** The rethrow reaches an
+       * `async` `@Cron` method; cron does not await the callback, so this becomes
+       * an unhandled rejection, and this repo's winston config sets
+       * `exitOnError` with `rejectionHandlers`, which exits the container. ECS
+       * restarts it. That is `main`'s behaviour for every error in this task
+       * already — `main`'s `processTier` has no catch at all — so it is not
+       * introduced here, and `report-deadline-reminder.task.ts` now catches at
+       * the `@Cron` boundary so the run aborts without taking the API with it.
+       *
+       * The `job_runs` row rolls back with the abort. That is the right trade,
+       * but it is not free: SES is not transactional, so any company already
+       * emailed in this run WILL be emailed again on the next one, because its
+       * `SENT` event rolled back too. Bounded by where the fault hits, and far
+       * better than the blanket catch it replaced, which mailed the entire band
+       * with nothing recorded.
        */
       try {
         await this.remindCompany(company, kind, tier.tier)
@@ -228,8 +243,22 @@ export class ReportDeadlineReminderService
       )
     if (alreadySent) return
 
-    const to = company.email
-    if (!to) {
+    /*
+     * ⚠️ Same rule as the report mail — `looksLikeOneAddress`, from the mail
+     * module — not a truthiness test.
+     *
+     * `company.email` is admin-set, nullable and validated by nothing, so a
+     * truthy-but-unusable value used to sail past this check into a send that
+     * could never succeed. Because the `SENT` event is only written after a
+     * successful send and `flagMissingEmail` was skipped, that company got no
+     * event of either kind: silently retried every run, forever, with nothing on
+     * its timeline for an admin to notice.
+     *
+     * An unusable address is now the same finding as a missing one — it is, from
+     * the company's side — so it lands on the timeline once per tier per cycle.
+     */
+    const to = company.email?.trim()
+    if (!looksLikeOneAddress(to)) {
       await this.flagMissingEmail(company, kind, tier, dueDateIso)
       return
     }
@@ -254,7 +283,11 @@ export class ReportDeadlineReminderService
   /**
    * Records a NO_EMAIL event on the company timeline so the gap is visible to
    * admins. Deduped per (tier, due date) — same key as the sent event — so a
-   * company with no email gets one event per tier per cycle, not one per run.
+   * company with no usable email gets one event per tier per cycle, not one per
+   * run.
+   *
+   * Covers a stored value that cannot be mailed as well as a null one: both leave
+   * the company un-notified, which is the thing an admin needs to see.
    */
   private async flagMissingEmail(
     company: CompanyModel,
@@ -272,7 +305,7 @@ export class ReportDeadlineReminderService
     if (alreadyFlagged) return
 
     this.logger.warn(
-      `Tried to send ${kind.reportType} ${tier} reminder for company ${company.id} but no email is on file`,
+      `Tried to send ${kind.reportType} ${tier} reminder for company ${company.id} but no usable email is on file`,
       {
         context: LOGGING_CONTEXT,
         companyId: company.id,

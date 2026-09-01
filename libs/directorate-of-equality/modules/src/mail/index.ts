@@ -8,4 +8,5 @@
 
 export * from './doe-mail.module'
 export * from './mail-send.error'
+export * from './recipient'
 export * from './doe-mail.service.interface'

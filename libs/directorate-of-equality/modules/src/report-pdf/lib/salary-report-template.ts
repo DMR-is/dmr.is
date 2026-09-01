@@ -487,13 +487,22 @@ function improvementPlanSection(
    * place it appears.
    *
    * ⚠️ The pointer describes HOW the plan is presented — "í sérstöku skjali" —
-   * and does not claim it is attached to whatever carried this report. It cannot:
-   * this section renders off the ungrouped outlier list, while
-   * `generateImprovementPlanPdf` returns null whenever no group has members, so
-   * outliers can exist here with no plan document produced. The same sentence
-   * also has to hold when a reviewer downloads this PDF on its own from the
-   * report sidebar, and when the plan render failed and the approval mailed the
-   * report alone.
+   * and deliberately does not claim it is *attached* to whatever carried this
+   * report. It cannot: the same sentence has to hold when a reviewer downloads
+   * this PDF on its own from the report sidebar, and when the plan render failed
+   * and the approval mailed the report alone.
+   *
+   * ⚠️ It CAN claim the document exists, and that is worth stating because it is
+   * not obvious. `generateImprovementPlanPdf` returns null when the report has no
+   * outlier groups or when no group has members — neither of which can co-occur
+   * with a non-empty `outliers` here. `report_employee_outlier.group_id` is a
+   * NOT NULL FK ("Every outlier always belongs to a group" on the model) and
+   * `getOutliers` INNER JOINs the group (`required: true`), so an unfiltered page
+   * cannot return a groupless row; `report.service.ts:613-615` says as much where
+   * it filters. So `outliers.length > 0` implies at least one group with at least
+   * one member, which is exactly the condition for a document. Do not weaken this
+   * copy on the theory that outliers can exist without a plan — check the FK
+   * first.
    */
   return section(
     'Úrbótaáætlun',

@@ -110,8 +110,32 @@ describe('ReportWorkflowService', () => {
    * `sendReportApproved` or swap it for an ordering probe. Everything they can
    * fail is reset to its happy value here.
    */
+  /*
+   * ⚠️ **Fixed clock, because `decisionLanded` is per-attempt.**
+   *
+   * `approve` writes `approvedAt: now` and its after-commit gate re-reads the row
+   * and requires that exact value back — status alone is a value every attempt
+   * shares, so after a failed commit a second approval committing inside the
+   * first's read window would let the first hook send a duplicate. A static
+   * `approvedAt` fixture cannot express "the commit landed" when the service's
+   * `now` is unknowable from here, so the clock is fixed and the seeds use
+   * `APPROVED_AT`.
+   *
+   * Deliberately mid-day: the archive test needs `approvedAt` to differ from the
+   * wall clock at archive time to keep its `new Date()` mutant dead, and it gets
+   * that by advancing the clock across midnight from inside a render mock — which
+   * is what a render taking seconds near midnight really does.
+   */
+  const APPROVED_AT = new Date('2026-08-31T10:00:00.000Z')
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'queueMicrotask'] })
+    jest.setSystemTime(APPROVED_AT)
     // A working renderer is the default so the existing approve cases exercise
     // the happy path rather than silently falling into the notification's
     // catch-and-log.
@@ -723,8 +747,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.SALARY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([{ id: 'old-report-1' }])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -783,8 +809,10 @@ describe('ReportWorkflowService', () => {
         validUntil: new Date('2029-08-31'),
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       }
       reportModel.findOne.mockResolvedValue(report)
       reportModel.findAll.mockResolvedValue([])
@@ -812,8 +840,10 @@ describe('ReportWorkflowService', () => {
         validUntil: new Date('2029-08-31'),
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       }
       reportModel.findOne.mockResolvedValue(report)
       reportModel.findAll.mockResolvedValue([])
@@ -874,7 +904,10 @@ describe('ReportWorkflowService', () => {
         service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
           denialReason: 'reason',
         }),
-      ).rejects.toThrow(/no longer awaiting a decision/)
+      // Names the status the CAS was pinned to. "no longer awaiting a decision"
+      // would be wrong for a report that moved IN_REVIEW <-> POSTPONED
+      // mid-request, which is still perfectly deniable on a retry.
+      ).rejects.toThrow(/no longer IN_REVIEW/)
 
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
       expect(mailService.sendReportDenied).not.toHaveBeenCalled()
@@ -886,9 +919,11 @@ describe('ReportWorkflowService', () => {
       // day, and the reconstructible-key argument that excuses having no
       // `s3_key` column would break silently.
       const approvedAt = new Date('2026-08-31T23:55:00.000Z')
+      jest.setSystemTime(approvedAt)
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The gate compares the `approvedAt` this attempt wrote; the clock was
+        // set to `approvedAt` above, so that is what `approve` writes.
         status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
@@ -900,9 +935,19 @@ describe('ReportWorkflowService', () => {
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
       companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
-      reportPdfService.generateReportPdf.mockResolvedValue({
-        pdf: Buffer.from('report-bytes'),
-        fileName: 'launagreining-report-1.pdf',
+      /*
+       * ⚠️ The render CROSSES MIDNIGHT, which is what keeps this test's mutant
+       * dead. `approvedAt` is 23:55 and the archive runs at 00:02 the next day,
+       * so `new Date()` at archive time is a different calendar date — the exact
+       * regression the `approvedAt` key guards against, and the reason a report
+       * approved near midnight must not be filed under the following day.
+       */
+      reportPdfService.generateReportPdf.mockImplementation(async () => {
+        jest.setSystemTime(new Date('2026-09-01T00:02:00.000Z'))
+        return {
+          pdf: Buffer.from('report-bytes'),
+          fileName: 'launagreining-report-1.pdf',
+        }
       })
       reportPdfService.generateImprovementPlanPdf.mockResolvedValue({
         pdf: Buffer.from('plan-bytes'),
@@ -936,8 +981,10 @@ describe('ReportWorkflowService', () => {
       const order: string[] = []
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         companyNationalId: '5500000000',
@@ -963,6 +1010,73 @@ describe('ReportWorkflowService', () => {
 
     // The prefix IS the retrieval path, so a document filed without a national
     // id is one nobody will find.
+    /*
+     * ⚠️ **The duplicate-notice race the status-only gate could not see.**
+     *
+     * After a failed commit the gate's read can block up to the pool's 30s
+     * `acquire` timeout. If a SECOND approval commits inside that window, the
+     * first hook wakes to a row that genuinely reads APPROVED — by someone else's
+     * attempt — and a status-only gate would let it send a second notice, a
+     * second set of PDFs and a second S3 object.
+     *
+     * Drop `now` from `approve`'s `decisionLanded` call and this test fails.
+     */
+    it('tells nobody when the row was approved by a different attempt', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+        status: ReportStatusEnum.APPROVED,
+        // Committed by another approval two seconds after this one wrote.
+        approvedAt: new Date(APPROVED_AT.getTime() + 2000),
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+      expect(applicationSystemService.notifyApproved).not.toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    /*
+     * ⚠️ The gate must read OUTSIDE any ambient transaction. `cleanup()` and
+     * `forceCleanup()` both early-return before `_clearCls()` when `this.parent`
+     * is set, so inside a savepoint the gate would otherwise enlist in the
+     * uncommitted parent, read its own write and return true — inverted into a
+     * false positive. `transaction: null` makes the invariant unconditional
+     * instead of true-by-accident.
+     */
+    it('reads the gate outside any ambient transaction', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        contactEmail: 'contact@example.is',
+        status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(reportModel.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attributes: ['status', 'approvedAt'],
+          transaction: null,
+        }),
+      )
+    })
+
     /*
      * ⚠️ `archiveApprovalDocuments` documents itself as the Directorate's copy of
      * what the company RECEIVED, so writing it after a failed send puts a false
@@ -994,8 +1108,10 @@ describe('ReportWorkflowService', () => {
     it('skips archiving and warns when the report has no companyNationalId', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         companyNationalId: null,
@@ -1021,8 +1137,10 @@ describe('ReportWorkflowService', () => {
     it('mails the report alone when the úrbótaáætlun render throws', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         companyNationalId: '5500000000',
@@ -1053,8 +1171,10 @@ describe('ReportWorkflowService', () => {
     it('sends only the report when there is no úrbótaáætlun', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         contactEmail: 'contact@example.is',
@@ -1076,8 +1196,10 @@ describe('ReportWorkflowService', () => {
     it('does not ask for an úrbótaáætlun on an EQUALITY approval', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         contactEmail: 'contact@example.is',
@@ -1107,8 +1229,10 @@ describe('ReportWorkflowService', () => {
     it('still approves and still notifies when the PDF cannot be rendered', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         contactEmail: 'contact@example.is',
@@ -1139,8 +1263,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.SALARY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -1159,8 +1285,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.EQUALITY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -1179,8 +1307,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.SALARY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       // The cross-type EQUALITY sibling exists in company_report but the
       // type-scoped findAll filters it out, returning no rows to supersede.
@@ -1213,8 +1343,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.EQUALITY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -1237,7 +1369,10 @@ describe('ReportWorkflowService', () => {
         // supersede type lookup
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
         // the after-commit gate's status read
-        .mockResolvedValueOnce({ status: ReportStatusEnum.APPROVED })
+        .mockResolvedValueOnce({
+          status: ReportStatusEnum.APPROVED,
+          approvedAt: APPROVED_AT,
+        })
         // company-notification lookup
         .mockResolvedValueOnce({
           id: 'report-1',
@@ -1294,8 +1429,10 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         type: ReportTypeEnum.EQUALITY,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -1364,8 +1501,10 @@ describe('ReportWorkflowService', () => {
         companyNationalId: '5500000000',
         contactEmail: 'contact@example.is',
         providerType: ReportProviderEnum.SYSTEM,
-        // The after-commit gate re-reads `status` to confirm the commit landed.
+        // The after-commit gate re-reads both to confirm THIS attempt's commit
+        // landed — see APPROVED_AT.
         status: ReportStatusEnum.APPROVED,
+        approvedAt: APPROVED_AT,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)

@@ -381,6 +381,102 @@ describe('DoeMailService', () => {
       const [message] = aws.sendMail.mock.calls[0]
       expect(message.to).toBe('contact@example.is')
     })
+
+    /*
+     * ⚠️ **The mutant the other cases do not kill.** `''` and `'   '` are both
+     * falsy after the `.trim()` that runs first, and a padded valid address is
+     * still valid — so `.find(c => !!c)` passes all three, and reverting the
+     * address test would have gone unnoticed. These are the truthy-but-unusable
+     * values, which is the whole point of the guard.
+     */
+    it.each([
+      ['a missing at-sign', 'jon.example.is'],
+      ['a comma-separated list', 'a@x.is, b@y.is'],
+      ['a semicolon-separated list', 'a@x.is;b@y.is'],
+      ['an angle-bracketed display name', 'Jón <jon@x.is>'],
+      ['interior whitespace', 'jon @x.is'],
+    ])(
+      'falls back to companyAdminEmail when contactEmail has %s',
+      async (_label, contactEmail) => {
+        aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+        await service.sendReportDenied(
+          makeReport({ type: ReportTypeEnum.SALARY, contactEmail }),
+          'reason',
+        )
+
+        const [message] = aws.sendMail.mock.calls[0]
+        expect(message.to).toBe('admin@example.is')
+      },
+    )
+
+    // Nodemailer splits `to` on commas, so a list that reached it would send the
+    // approval's pay-gap PDFs to every address in it. Neither candidate is
+    // usable here, so nothing goes at all.
+    it('sends nothing when neither candidate is a single address', async () => {
+      await service.sendReportDenied(
+        makeReport({
+          type: ReportTypeEnum.SALARY,
+          contactEmail: 'a@x.is, b@y.is',
+          companyAdminEmail: 'not-an-address',
+        }),
+        'reason',
+      )
+
+      expect(aws.sendMail).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalled()
+    })
+  })
+
+  /*
+   * ⚠️ `IAWSService.sendMail` is DECLARED `Promise<SentMessageInfo>`, and
+   * `SentMessageInfo` is `any`. The implementation actually resolves a
+   * `ResultWrapper` and never rejects, because `@LogAndHandle()`'s catch returns
+   * `handleException(...)`. Nothing in the type system holds either shape, so
+   * `sendMailResult` checks at runtime and both branches are pinned here — a
+   * later "cleanup" that makes the implementation honour its declaration must not
+   * turn a successful send into a failure.
+   */
+  describe('sendMailResult narrowing', () => {
+    it('treats an err result as a failed send', async () => {
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES is down' }),
+      )
+
+      await expect(
+        service.sendReportApproved(
+          makeReport({ type: ReportTypeEnum.EQUALITY }),
+          [],
+        ),
+      ).resolves.toBe(false)
+    })
+
+    // The DECLARED shape: a bare `SentMessageInfo`. Returning a value at all
+    // means the send succeeded under that contract, so it must not read as a
+    // failure and skip the S3 archive.
+    it('treats a bare non-ResultWrapper return as a delivered send', async () => {
+      aws.sendMail.mockResolvedValue({ messageId: '<abc@ses>' })
+
+      await expect(
+        service.sendReportApproved(
+          makeReport({ type: ReportTypeEnum.EQUALITY }),
+          [],
+        ),
+      ).resolves.toBe(true)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    // Same for `undefined`, which is what a void implementation would give.
+    it('treats undefined as a delivered send rather than a failure', async () => {
+      aws.sendMail.mockResolvedValue(undefined)
+
+      await expect(
+        service.sendReportApproved(
+          makeReport({ type: ReportTypeEnum.EQUALITY }),
+          [],
+        ),
+      ).resolves.toBe(true)
+    })
   })
 
   describe('sendReportApproved', () => {

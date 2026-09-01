@@ -228,6 +228,56 @@ describe('ReportDeadlineReminderService', () => {
       )
     })
 
+    /*
+     * ⚠️ **A stored value that cannot be mailed is the same finding as none.**
+     *
+     * `company.email` is admin-set, nullable and validated by nothing. A
+     * truthy-but-unusable value used to sail past the old `if (!to)` into a send
+     * that could never succeed — and because the `SENT` event is written only
+     * after a successful send and `flagMissingEmail` was skipped, that company
+     * got NO event of either kind. Silently retried every run, forever, with
+     * nothing on its timeline for an admin to notice.
+     *
+     * Same rule as the report mail now (`looksLikeOneAddress`). Revert to
+     * `if (!to)` and every case here fails.
+     */
+    it.each([
+      ['whitespace only', '   '],
+      ['a missing at-sign', 'acme.acme.is'],
+      ['a comma-separated list', 'a@acme.is, b@acme.is'],
+      ['an angle-bracketed display name', 'Acme <acme@acme.is>'],
+    ])(
+      'records NO_EMAIL instead of sending when the address is %s',
+      async (_label, email) => {
+        returnCompanyAtCall(CALL.equalitySixMonths, makeCompany({ email }))
+
+        await service.run()
+
+        expect(sendReportDeadlineReminder).not.toHaveBeenCalled()
+        expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+          'company-1',
+          CompanyStatusEnum.ACTIVE,
+          CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
+          CompanyReminderTierEnum.SIX_MONTHS,
+          EQUALITY_DUE.toISOString(),
+        )
+      },
+    )
+
+    it('trims a padded address rather than treating it as unusable', async () => {
+      returnCompanyAtCall(
+        CALL.equalitySixMonths,
+        makeCompany({ email: '  acme@acme.is  ' }),
+      )
+
+      await service.run()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledWith(
+        'acme@acme.is',
+        expect.anything(),
+      )
+    })
+
     it('does not re-emit NO_EMAIL when one already exists for the tier', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany({ email: null }))
       hasDeadlineReminderEvent.mockResolvedValue(true)

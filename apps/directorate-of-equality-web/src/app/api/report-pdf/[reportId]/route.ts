@@ -8,6 +8,26 @@ import { authOptions } from '../../../../lib/auth/authOptions'
 
 const logger = getLogger('report-pdf')
 
+/*
+ * ⚠️ **Never a `message:` key in the meta object here.** `logging-next` builds its
+ * entry as `{ level, message, timestamp, ...meta }` (`logger.ts:30-39`), so a
+ * `message` field in the meta OVERWRITES the entry's own label — in production
+ * JSON the label is absent entirely and the line collapses to raw undici text.
+ * Winston, which the API side uses, concatenates instead, so this trap is
+ * specific to `logging-next`. Use `error:`, as the Official Journal's equivalent
+ * route does.
+ */
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error)
+
+// `AbortSignal.timeout` aborts with a TimeoutError. Worth its own status wherever
+// it can happen: 504 says the render did not finish, 502 says it failed.
+const isTimeout = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'TimeoutError'
+
+const PDF_FAILED_MESSAGE = 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
+const PDF_TIMEOUT_MESSAGE = 'Útbúnaður PDF tók of langan tíma. Prófaðu aftur.'
+
 /**
  * ⚠️ A wedged Chromium upstream is a HANG, not a rejection, so the try/catch
  * around `fetch` does not cover it — without a deadline this handler waits
@@ -107,22 +127,16 @@ export async function GET(
       },
     )
   } catch (error) {
-    // `AbortSignal.timeout` aborts with a TimeoutError, which is worth its own
-    // status: 504 says the render did not finish, 502 says it failed.
-    const timedOut = error instanceof Error && error.name === 'TimeoutError'
+    const timedOut = isTimeout(error)
 
     logger.error('Upstream report PDF fetch failed', {
       reportId,
       requested,
       timedOut,
-      message: error instanceof Error ? error.message : String(error),
+      error: errorMessage(error),
     })
     return NextResponse.json(
-      {
-        error: timedOut
-          ? 'Útbúnaður PDF tók of langan tíma. Prófaðu aftur.'
-          : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.',
-      },
+      { error: timedOut ? PDF_TIMEOUT_MESSAGE : PDF_FAILED_MESSAGE },
       { status: timedOut ? 504 : 502 },
     )
   }
@@ -150,7 +164,7 @@ export async function GET(
           ? 'Þessi skýrsla hefur ekki úrbótaáætlun.'
           : res.status === 404
             ? 'Skýrslan fannst ekki.'
-            : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
+            : PDF_FAILED_MESSAGE
 
     // A 404/400 is an answer about the document, not a fault. Anything else is,
     // and leaves no trace upstream that the reviewer can see.
@@ -170,14 +184,20 @@ export async function GET(
   try {
     buffer = await res.arrayBuffer()
   } catch (error) {
+    // The same `AbortSignal` covers the body stream, so a slow render that got
+    // its headers out can still time out here — reported the same way as one that
+    // timed out before them.
+    const timedOut = isTimeout(error)
+
     logger.error('Reading the upstream report PDF body failed', {
       reportId,
       requested,
-      message: error instanceof Error ? error.message : String(error),
+      timedOut,
+      error: errorMessage(error),
     })
     return NextResponse.json(
-      { error: 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.' },
-      { status: 502 },
+      { error: timedOut ? PDF_TIMEOUT_MESSAGE : PDF_FAILED_MESSAGE },
+      { status: timedOut ? 504 : 502 },
     )
   }
 

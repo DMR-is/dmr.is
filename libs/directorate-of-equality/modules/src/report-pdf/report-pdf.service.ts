@@ -76,8 +76,15 @@ export class ReportPdfService implements IReportPdfService {
 
     const { groups } = await this.reportService.getOutlierGroups(reportId)
 
-    // No groups means no plan to state. Returning null rather than a document
-    // whose only content is "engir hópar" — see the interface note.
+    /*
+     * No groups means no plan to state. Returning null rather than a document
+     * whose only content is "engir hópar" — see the interface note.
+     *
+     * Reachable only for a report with no outliers at all: `group_id` is a NOT
+     * NULL FK on every outlier row, so groups exist whenever outliers do. That is
+     * what lets the salary report's Úrbótaáætlun section assert the separate
+     * document exists whenever it renders a non-zero count.
+     */
     if (groups.length === 0) {
       this.logger.debug('No outlier groups; skipping improvement plan PDF', {
         context: LOGGING_CONTEXT,
