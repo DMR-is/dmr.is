@@ -151,7 +151,41 @@ export class ReportDeadlineReminderService
     }
 
     for (const company of companies) {
-      await this.remindCompany(company, kind, tier.tier)
+      /*
+       * ⚠️ **Per-company, so one bad recipient cannot abort the run.**
+       *
+       * `sendReportDeadlineReminder` throws on a failed send — that is its
+       * contract, and what keeps a failure out of the SENT event so the next run
+       * retries it. But nothing above this used to catch, and
+       * `AdvisoryLockService` runs the whole task inside one transaction: the
+       * first failure aborted every remaining company, every remaining tier and
+       * the second report kind, and rolled back the `job_runs` bookkeeping with
+       * it.
+       *
+       * That is worse than the bug it replaced. `company.email` is admin-set,
+       * nullable, and validated by nothing, so one permanently bad-but-truthy
+       * address would re-abort every run — and because the SENT event is written
+       * only after a successful send, that company stays in the band and keeps
+       * blocking everyone after it. Statutory deadline notices, withheld
+       * indefinitely.
+       *
+       * Contained here rather than inside `remindCompany` so the event write and
+       * the missing-email flag are covered by the same guard as the send.
+       */
+      try {
+        await this.remindCompany(company, kind, tier.tier)
+      } catch (error) {
+        this.logger.error(
+          `Failed to remind company ${company.id} of its ${kind.reportType} ${tier.tier} deadline — continuing with the rest of the batch`,
+          {
+            context: LOGGING_CONTEXT,
+            companyId: company.id,
+            reportType: kind.reportType,
+            tier: tier.tier,
+            message: error instanceof Error ? error.message : String(error),
+          },
+        )
+      }
     }
   }
 

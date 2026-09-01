@@ -271,8 +271,11 @@ describe('ReportPdfService', () => {
 
       // Groups must actually have members — a memberless set is the data-fault
       // state the service now declines to render.
+      // Uses the file's own helper rather than an ad-hoc literal: specs are
+      // type-checked by neither `tsconfig.lib.json` (which excludes them) nor
+      // ts-jest (`diagnostics: false`), so a partial DTO here is invisible.
       reportService.getOutliers.mockResolvedValue({
-        outliers: [{ employeeOrdinal: 1 }],
+        outliers: [makeOutlier({ employeeOrdinal: 1 })],
         paging: makePaging(),
       })
 

@@ -29,6 +29,7 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/shared-models-base": "*",
     "@dmr.is/shared-modules": "*",
+    "@dmr.is/types": "*",
     "@dmr.is/utils-server": "*",
     "@dmr.is/utils-shared": "*",
     "cache-manager": "7.2.4",

@@ -680,8 +680,22 @@ export class CommentServiceV2 implements ICommentServiceV2 {
           html: `<h2>Ný athugasemd hefur verið skráð á umsókn ${_case?.caseNumber} - ${_case?.advertType.title} ${_case?.advertTitle}</h2><p>${migrated.creator.title}: ${migrated.comment}</p><p><a href="https://island.is/umsoknir/stjornartidindi/${_case?.applicationId}" target="_blank">Skoða umsókn</a></p>`,
         }
 
-        await this.awsService.sendMail(message)
+        // ⚠️ Branch on the RESULT — `sendMail` is `@LogAndHandle()`-decorated and
+        // never rejects, so the surrounding catch could not see a send failure.
+        const sent = await this.awsService.sendMail(message)
+
+        if (sent.result.ok === false) {
+          this.logger.warn(`Email not sent`, {
+            caseId,
+            commentId,
+            context: LOGGING_CONTEXT,
+            category: LOGGING_CATEGORY,
+            errorCode: sent.result.error.code,
+            errorMessage: sent.result.error.message,
+          })
+        }
       } catch (error) {
+        // Still reachable: the message body above interpolates loaded relations.
         this.logger.warn(`Email not sent`, {
           error,
           caseId,

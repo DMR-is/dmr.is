@@ -31,9 +31,11 @@ type ReportDocumentsProps = {
  * we send them?". Drafts never reach this screen — `ReportService` filters them
  * out of every admin list, even when a status filter asks for them.
  *
- * Plain anchors rather than fetch-and-blob: the route sets
- * `Content-Disposition: inline`, so the browser's own viewer opens it in a new
- * tab. Nothing to hold in memory and nothing to revoke.
+ * `window.open` rather than fetch-and-blob: the route sets
+ * `Content-Disposition: inline`, so the browser's own viewer opens the document
+ * in a new tab with nothing to hold in memory and nothing to revoke. (This
+ * comment used to say "plain anchors", which it never was — and those click
+ * handlers are precisely why the file needs `'use client'`.)
  */
 export const ReportDocuments = ({
   reportId,

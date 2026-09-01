@@ -198,15 +198,25 @@ export class AdvertPublishedListener {
       html: `<h2>Auglýsing hefur verið útgefin:</h2><h3>${advert.publicationNumber} - ${advert.type.title} ${advert.title}</h3><p><a href="https://logbirtingablad.is/auglysingar/${advert.publicationNumber}/${publication.version}" target="_blank">Skoða auglýsingu</a></p>`,
     }
 
-    await this.sesService.sendMail(message).catch((error) => {
+    /*
+     * ⚠️ Branch on the RESULT, not a rejection. `sendMail` is
+     * `@LogAndHandle()`-decorated, so its catch returns `ResultWrapper.err` and
+     * it never rejects — the `.catch()` that used to be here could not fire, and
+     * a failed publication email was silently treated as sent. See the type on
+     * `IAWSService.sendMail`.
+     */
+    const sent = await this.sesService.sendMail(message)
+
+    if (sent.result.ok === false) {
       this.logger.error('Failed to send email after publication', {
-        error: error,
         advertId: advert.id,
         publicationId: publication.id,
         version: publication.version,
         context: LOGGING_CONTEXT,
+        errorCode: sent.result.error.code,
+        errorMessage: sent.result.error.message,
       })
-    })
+    }
   }
 
   @OnEvent(LegalGazetteEvents.ADVERT_PUBLISHED_SIDE_EFFECTS)

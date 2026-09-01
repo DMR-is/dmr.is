@@ -1,5 +1,5 @@
 import { getNamespace } from 'cls-hooked'
-import { Transaction } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 
 import {
   BadRequestException,
@@ -200,6 +200,13 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * catch-all below; do not remove it, and do not rely on callers being
    * total.
    *
+   * ⚠️ **Hooks also run when the COMMIT itself throws.** Sequelize awaits them in
+   * `commit()`'s `finally`, so the catch's `forceCleanup()` + rethrow still fires
+   * them first. `rollback()` has no `finally` and never touches them, which is
+   * why the rollback path genuinely is closed — but a *failing* commit is not,
+   * and describing this as "nothing sends unless the commit succeeded" would
+   * overclaim. Narrow, and properly closed only by the durable record below.
+   *
    * ⚠️ **Still no durable record.** If the process dies between commit and send,
    * the report is approved and the company was never told, with nothing to retry
    * from. Closing that needs the intent-to-send persisted inside the
@@ -274,13 +281,34 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     const actorUserId = context.actor.userId
 
-    await this.reportModel.update(
+    /*
+     * ⚠️ Compare-and-swap, same as `approve` — and for a sharper reason. Without
+     * it an approve/deny race resolves in deny's favour: both read their status
+     * from a context captured earlier in the request, the second write wins on
+     * `WHERE id` alone, and the row ends DENIED while the company holds an
+     * approval PDF and S3 an archived approval of a denied report.
+     *
+     * Accepts either deniable status rather than a single value, matching the
+     * guard above.
+     */
+    const [affected] = await this.reportModel.update(
       {
         status: ReportStatusEnum.DENIED,
         reviewerUserId: actorUserId,
       },
-      { where: { id: context.reportId } },
+      {
+        where: {
+          id: context.reportId,
+          status: { [Op.in]: deniableStatuses },
+        },
+      },
     )
+
+    if (affected === 0) {
+      throw new BadRequestException(
+        `Cannot deny report ${context.reportId}: it is no longer awaiting a decision`,
+      )
+    }
 
     await this.reportEventService.emitStatusChanged(
       context.reportId,
@@ -356,11 +384,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
     )
 
     if (affected === 0) {
-      this.logger.info(
-        `Report ${context.reportId} was already moved out of IN_REVIEW; skipping duplicate approval`,
-        { context: LOGGING_CONTEXT },
+      /*
+       * ⚠️ Throw, do not return. A silent return sends 2xx, so the reviewer's UI
+       * reports a successful approval on a report that moved to DENIED or
+       * POSTPONED under them — and before this compare-and-swap existed, that
+       * case threw a `BadRequestException` naming the real status. Losing the
+       * race is not the same as having already done the work.
+       */
+      throw new BadRequestException(
+        `Cannot approve report ${context.reportId}: it is no longer IN_REVIEW`,
       )
-      return
     }
 
     // Keep the company's next-due date in step with the report's validity. The

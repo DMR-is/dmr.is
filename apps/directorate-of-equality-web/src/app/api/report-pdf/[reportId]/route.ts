@@ -63,16 +63,36 @@ export async function GET(
   const requested = req.nextUrl.searchParams.get('doc') ?? 'skyrsla'
 
   if (!isDocumentKey(requested)) {
-    return NextResponse.json(
-      { error: `Unknown document "${requested}"` },
-      { status: 400 },
-    )
+    // Does not echo `requested`: it is unbounded attacker-controlled text and
+    // naming it back buys nothing. The valid set is fixed and documented.
+    return NextResponse.json({ error: 'Unknown document' }, { status: 400 })
   }
 
-  const res = await fetch(
-    `${getBaseUrl()}/api/v1/reports/${reportId}/pdf${DOCUMENTS[requested]}`,
-    { headers: { Authorization: `Bearer ${session.idToken}` } },
-  )
+  /*
+   * ⚠️ Guarded, and logged. Both `fetch` and `arrayBuffer` were bare, so a
+   * Chromium render failure upstream or an API outage produced an unhandled
+   * rejection and a bare 500 with nothing on the web side to explain it — while
+   * the whole point of these buttons is to diagnose the documents.
+   */
+  let res: Response
+
+  try {
+    res = await fetch(
+      `${getBaseUrl()}/api/v1/reports/${reportId}/pdf${DOCUMENTS[requested]}`,
+      { headers: { Authorization: `Bearer ${session.idToken}` } },
+    )
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[report-pdf] upstream fetch failed', {
+      reportId,
+      requested,
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return NextResponse.json(
+      { error: 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.' },
+      { status: 502 },
+    )
+  }
 
   if (!res.ok) {
     /*
@@ -99,16 +119,44 @@ export async function GET(
             ? 'Skýrslan fannst ekki.'
             : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.'
 
+    // A 404/400 is an answer about the document, not a fault. Anything else is,
+    // and leaves no trace upstream that the reviewer can see.
+    if (res.status >= 500) {
+      // eslint-disable-next-line no-console
+      console.error('[report-pdf] upstream error', {
+        reportId,
+        requested,
+        status: res.status,
+      })
+    }
+
     return NextResponse.json({ error: message }, { status: res.status })
   }
 
-  const buffer = await res.arrayBuffer()
+  let buffer: ArrayBuffer
+
+  try {
+    buffer = await res.arrayBuffer()
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[report-pdf] reading the upstream body failed', {
+      reportId,
+      requested,
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return NextResponse.json(
+      { error: 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.' },
+      { status: 502 },
+    )
+  }
 
   return new NextResponse(buffer, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="${requested}-${reportId}.pdf"`,
+      // Employee salary data on a URL that does not vary by user.
+      'Cache-Control': 'private, no-store',
     },
   })
 }

@@ -102,8 +102,16 @@ export class CompanyFileService implements ICompanyFileService {
         })
         written.push(key)
       } catch (error) {
-        // Swallowed per the interface contract: the document has already been
-        // delivered by the time this runs.
+        /*
+         * Retained, but narrowly. `uploadObject` is `@LogAndHandle()`-decorated
+         * and cannot reject, so this cannot see an S3 failure — that is the
+         * branch above. What it does cover is a throw while BUILDING the call:
+         * `issuedOn` on an invalid Date, or a future undecorated implementation.
+         *
+         * Keeping a catch that cannot see the main failure is exactly the shape
+         * this PR set out to fix elsewhere, so it says so rather than implying
+         * it guards the upload.
+         */
         this.logger.error('Failed to archive company file', {
           context: LOGGING_CONTEXT,
           key,

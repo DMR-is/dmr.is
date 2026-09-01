@@ -113,7 +113,10 @@ describe('CompanyFileService', () => {
    * ⚠️ Never throws: callers archive AFTER the document has been delivered, so a
    * storage failure must not surface as a failed decision.
    */
-  it('swallows a rejected upload and reports no key for it', async () => {
+  // ⚠️ A rejection is NOT how `uploadObject` fails — it is
+  // `@LogAndHandle()`-decorated and resolves an err result, covered by the test
+  // below. This one pins the build-the-call path the catch actually guards.
+  it('swallows a throw from building the upload and reports no key for it', async () => {
     aws.uploadObject.mockRejectedValue(new Error('AccessDenied'))
 
     await expect(service.archive([upload()])).resolves.toEqual([])

@@ -113,7 +113,18 @@ export class ReportPdfService implements IReportPdfService {
      * hóp" beside a salary report rendering its "Engar úrbætur nauðsynlegar"
      * branch tells the company two different things in one email.
      */
-    if (planGroups.every((entry) => entry.members.length === 0)) {
+    /*
+     * ⚠️ Filter, not `every`. The gate used to fire only when EVERY group was
+     * empty, so a single group emptied — `pruneStaleMemberships` can do that —
+     * still shipped a document reading "Engir starfsmenn skráðir í þennan hóp"
+     * next to two perfectly good groups.
+     *
+     * Dropping the empty ones keeps the groups that do describe something, and
+     * `null` is reserved for there being nothing to describe at all.
+     */
+    const populated = planGroups.filter((entry) => entry.members.length > 0)
+
+    if (populated.length === 0) {
       this.logger.warn(
         'Outlier groups exist but none has members; skipping improvement plan PDF',
         { context: LOGGING_CONTEXT, reportId, groupCount: planGroups.length },
@@ -121,7 +132,19 @@ export class ReportPdfService implements IReportPdfService {
       return null
     }
 
-    const html = buildImprovementPlanHtml({ report, groups: planGroups })
+    if (populated.length < planGroups.length) {
+      this.logger.warn(
+        'Omitting outlier groups with no members from the improvement plan PDF',
+        {
+          context: LOGGING_CONTEXT,
+          reportId,
+          omitted: planGroups.length - populated.length,
+          rendered: populated.length,
+        },
+      )
+    }
+
+    const html = buildImprovementPlanHtml({ report, groups: populated })
 
     return {
       pdf: await this.generatePdfFromHtml(html),

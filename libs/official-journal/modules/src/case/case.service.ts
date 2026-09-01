@@ -1464,13 +1464,18 @@ export class CaseService implements ICaseService {
     if (caseToPublish.applicationId) {
       await this.utilityService.approveApplication(caseToPublish.applicationId)
     }
-    try {
-      await this.s3.sendMail(message, 'CaseService')
-    } catch (error) {
+    // ⚠️ Branch on the RESULT. `sendMail` is `@LogAndHandle()`-decorated, so its
+    // catch returns `ResultWrapper.err` and it never rejects — the `try/catch`
+    // that used to be here was unreachable, and a failed publish email was
+    // silently ignored. See the type on `IAWSService.sendMail`.
+    const publishMail = await this.s3.sendMail(message, 'CaseService')
+
+    if (publishMail.result.ok === false) {
       this.logger.error('Failed to send publish email', {
-        error,
         publicationNumber: publicationNumber,
         category: LOGGING_CATEGORY,
+        errorCode: publishMail.result.error.code,
+        errorMessage: publishMail.result.error.message,
       })
     }
     const maintypes = await this.advertMainTypeModel.findAll({

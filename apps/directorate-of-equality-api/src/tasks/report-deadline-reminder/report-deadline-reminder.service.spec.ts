@@ -103,8 +103,13 @@ describe('ReportDeadlineReminderService', () => {
   }
 
   const returnCompanyAtCall = (index: number, company: CompanyModel) => {
+    returnCompaniesAtCall(index, [company])
+  }
+
+  /** Same, for a band holding more than one company. */
+  const returnCompaniesAtCall = (index: number, companies: CompanyModel[]) => {
     for (let i = 0; i < index; i++) findAll.mockResolvedValueOnce([])
-    findAll.mockResolvedValueOnce([company])
+    findAll.mockResolvedValueOnce(companies)
   }
 
   describe('run – band selection', () => {
@@ -233,13 +238,49 @@ describe('ReportDeadlineReminderService', () => {
       expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
     })
 
-    it('does not record the sent event when the email send fails', async () => {
+    /**
+     * ⚠️ This used to assert `rejects.toThrow('SES down')`. That was written when
+     * `sendReportDeadlineReminder` could not throw at all, so once the send
+     * genuinely started throwing the assertion certified a whole-task outage
+     * instead of catching it: one bad recipient aborted every remaining company,
+     * tier and report kind, and rolled back the `job_runs` row.
+     *
+     * The contract is unchanged — a throw still means "not sent", so no SENT
+     * event and a retry next run — but it is now contained per company.
+     */
+    it('keeps going when one company\'s email send fails', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany())
       sendReportDeadlineReminder.mockRejectedValue(new Error('SES down'))
 
-      await expect(service.run()).rejects.toThrow('SES down')
+      await expect(service.run()).resolves.toBeUndefined()
 
+      // Not recorded, so the next run retries this company.
       expect(emitDeadlineReminderEvent).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    // The actual regression guard: a failure must not swallow the companies
+    // behind it. Two companies in the same band, the first one failing.
+    it('reminds the companies after one that failed', async () => {
+      returnCompaniesAtCall(CALL.equalitySixMonths, [
+        makeCompany({ id: 'company-bad' }),
+        makeCompany({ id: 'company-good' }),
+      ])
+      sendReportDeadlineReminder
+        .mockRejectedValueOnce(new Error('SES down'))
+        .mockResolvedValue(undefined)
+
+      await expect(service.run()).resolves.toBeUndefined()
+
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(2)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledTimes(1)
+      expect(emitDeadlineReminderEvent).toHaveBeenCalledWith(
+        'company-good',
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      )
     })
 
     it('uses the salary event type and column for the salary kind', async () => {

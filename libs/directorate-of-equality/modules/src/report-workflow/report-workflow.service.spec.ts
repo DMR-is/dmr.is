@@ -1,4 +1,5 @@
 import { createNamespace, destroyNamespace } from 'cls-hooked'
+import { Op } from 'sequelize'
 
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
@@ -435,12 +436,24 @@ describe('ReportWorkflowService', () => {
       const dto: DenyReportDto = { denialReason: '  Missing data  ' }
       await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), dto)
 
+      // The guard makes the transition atomic: an approve racing this deny can
+      // no longer leave the row DENIED while the company holds an approval PDF.
       expect(reportModel.update).toHaveBeenCalledWith(
         {
           status: ReportStatusEnum.DENIED,
           reviewerUserId: 'reviewer-1',
         },
-        { where: { id: 'report-1' } },
+        {
+          where: {
+            id: 'report-1',
+            status: {
+              [Op.in]: [
+                ReportStatusEnum.IN_REVIEW,
+                ReportStatusEnum.POSTPONED,
+              ],
+            },
+          },
+        },
       )
       expect(reportEventService.emitStatusChanged).toHaveBeenCalledWith(
         'report-1',
@@ -459,12 +472,24 @@ describe('ReportWorkflowService', () => {
         denialReason: 'Outliers never resolved',
       })
 
+      // The guard makes the transition atomic: an approve racing this deny can
+      // no longer leave the row DENIED while the company holds an approval PDF.
       expect(reportModel.update).toHaveBeenCalledWith(
         {
           status: ReportStatusEnum.DENIED,
           reviewerUserId: 'reviewer-1',
         },
-        { where: { id: 'report-1' } },
+        {
+          where: {
+            id: 'report-1',
+            status: {
+              [Op.in]: [
+                ReportStatusEnum.IN_REVIEW,
+                ReportStatusEnum.POSTPONED,
+              ],
+            },
+          },
+        },
       )
       expect(reportEventService.emitStatusChanged).toHaveBeenCalledWith(
         'report-1',
@@ -758,11 +783,15 @@ describe('ReportWorkflowService', () => {
      * object. Before it, the status check read a value resolved earlier in the
      * request and the write was keyed on `id` alone.
      */
-    it('does nothing further when the status guard matches no row', async () => {
+    it('rejects and does nothing further when the status guard matches no row', async () => {
       reportModel.update.mockResolvedValue([0])
       reportModel.findAll.mockResolvedValue([])
 
-      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+      // ⚠️ Rejects rather than returning 2xx. A silent success would tell the
+      // reviewer their approval landed on a report that moved under them.
+      await expect(
+        service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
+      ).rejects.toThrow(/no longer IN_REVIEW/)
 
       expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
       expect(mailService.sendReportApproved).not.toHaveBeenCalled()
@@ -770,13 +799,32 @@ describe('ReportWorkflowService', () => {
       expect(companyModel.update).not.toHaveBeenCalled()
     })
 
+    it('rejects a deny whose status guard matches no row', async () => {
+      reportModel.update.mockResolvedValue([0])
+
+      await expect(
+        service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+          denialReason: 'reason',
+        }),
+      ).rejects.toThrow(/no longer awaiting a decision/)
+
+      expect(reportEventService.emitStatusChanged).not.toHaveBeenCalled()
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+    })
+
     it('archives every attachment under the company national id', async () => {
+      // Deliberately 23:55 UTC: if the key ever went back to `new Date()` at
+      // archive time — after up to two renders — this would file under the next
+      // day, and the reconstructible-key argument that excuses having no
+      // `s3_key` column would break silently.
+      const approvedAt = new Date('2026-08-31T23:55:00.000Z')
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         companyNationalId: '5500000000',
         contactEmail: 'contact@example.is',
+        approvedAt,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -798,11 +846,13 @@ describe('ReportWorkflowService', () => {
           companyNationalId: '5500000000',
           filename: 'launagreining-report-1.pdf',
           content: Buffer.from('report-bytes'),
+          issuedAt: approvedAt,
         }),
         expect.objectContaining({
           companyNationalId: '5500000000',
           filename: 'urbotaaetlun-report-1.pdf',
           content: Buffer.from('plan-bytes'),
+          issuedAt: approvedAt,
         }),
       ])
     })
@@ -1228,7 +1278,10 @@ describe('ReportWorkflowService', () => {
      * `res.on('finish')` callback — so a rejection escaping the hook becomes an
      * unhandled rejection with no request left to fail.
      */
-    it('never lets the hook reject, whatever the work throws', async () => {
+    // A mail failure is caught by `notifyCompanyApproved` itself, a layer BELOW
+    // the hook — so this covers that path, not `runAfterCommit`'s catch-all. The
+    // test after it covers the catch-all.
+    it('survives a mail failure inside the deferred work', async () => {
       seedApprovableReport()
       mailService.sendReportApproved.mockRejectedValue(
         new Error('everything is on fire'),
@@ -1241,6 +1294,42 @@ describe('ReportWorkflowService', () => {
 
       await expect(fake.commit()).resolves.toBeUndefined()
       expect(logger.error).toHaveBeenCalled()
+    })
+
+    /**
+     * ⚠️ Exercises `runAfterCommit`'s catch-all directly, which is the only way
+     * to reach it: every call inside the real work is already total, so throwing
+     * from `sendReportApproved` is swallowed a layer down — the previous version
+     * of this test passed with the catch deleted.
+     *
+     * The catch is load-bearing. Sequelize awaits these hooks inside `commit()`,
+     * which `CLSMiddleware` calls from an un-awaited `res.on('finish')`, so a
+     * rejection escaping it becomes an unhandled rejection with no request left
+     * to fail.
+     */
+    it('swallows a throw from the deferred work itself', async () => {
+      const fake = makeFakeTransaction()
+      const boom = jest.fn(async () => {
+        throw new Error('detached failure')
+      })
+
+      const withPrivate = service as unknown as {
+        runAfterCommit: (
+          label: string,
+          work: () => Promise<void>,
+        ) => Promise<void>
+      }
+
+      await withAmbientTransaction(fake, () =>
+        withPrivate.runAfterCommit('test work', boom),
+      )
+
+      await expect(fake.commit()).resolves.toBeUndefined()
+      expect(boom).toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Post-commit test work failed'),
+        expect.anything(),
+      )
     })
 
     // A rolled-back transaction never runs its after-commit hooks, so a denial
