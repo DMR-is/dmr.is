@@ -4047,6 +4047,72 @@
         "summary": "",
         "tags": ["Report PDF"]
       }
+    },
+    "/api/v1/reports/{reportId}/pdf/urbotaaetlun": {
+      "get": {
+        "operationId": "getReportImprovementPlanPdf",
+        "parameters": [
+          {
+            "name": "reportId",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generates and returns the úrbótaáætlun (\"Dagsetning úrbóta\" and the lágmarksmengi grouped by the groups the company defined) as a PDF. Salary reports only — 400 for an equality report, which has no outlier groups, and 404 when the report has no groups at all (a compliant company has no plan, and its salary report states that as a finding).",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Report PDF"]
+      }
     }
   },
   "info": {

@@ -29,11 +29,13 @@
     "@dmr.is/shared-dto": "*",
     "@dmr.is/shared-models-base": "*",
     "@dmr.is/shared-modules": "*",
+    "@dmr.is/types": "*",
     "@dmr.is/utils-server": "*",
     "@dmr.is/utils-shared": "*",
     "cache-manager": "7.2.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cls-hooked": "^4.2.2",
     "date-fns": "2.30.0",
     "deepmerge": "4.3.1",
     "exceljs": "4.4.0",
@@ -46,6 +48,7 @@
     "zod": "4.1.11"
   },
   "devDependencies": {
+    "@types/cls-hooked": "^4",
     "@types/lodash": "^4.14.160",
     "@types/validator": "^13.7.0"
   }

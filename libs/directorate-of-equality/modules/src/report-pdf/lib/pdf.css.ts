@@ -124,6 +124,48 @@ export const pdfStyles = `
     color: #6a2ea0;
   }
 
+  /*
+   * Label/value rows for a group's explanation, where the row header is the
+   * label rather than a column heading. The width keeps the prose column wide:
+   * ástæða and aðgerð are free text and can run long.
+   */
+  table.detail-table {
+    margin-top: 10px;
+  }
+
+  table.detail-table th.detail-table__label {
+    width: 28%;
+    background: #f7f9fc;
+    vertical-align: top;
+    white-space: nowrap;
+  }
+
+  table.detail-table td {
+    vertical-align: top;
+  }
+
+  /* Two figures rather than three — the leiðréttur group. */
+  .stat-cards--pair {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .subsection {
+    margin-top: 20px;
+  }
+
+  .subsection__title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #00003c;
+    margin: 0 0 4px 0;
+  }
+
+  .subsection__lead {
+    font-size: 11px;
+    color: #43425a;
+    margin: 0;
+  }
+
   .chart-wrap {
     margin-top: 12px;
   }

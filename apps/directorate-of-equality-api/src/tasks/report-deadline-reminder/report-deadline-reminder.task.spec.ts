@@ -87,4 +87,37 @@ describe('ReportDeadlineReminderTask', () => {
     expect(runWithDistributedLock).toHaveBeenCalledTimes(1)
     expect(reminderRun).toHaveBeenCalledTimes(1)
   })
+
+  /*
+   * ⚠️ **This is what keeps a failed run from exiting the container.** `@Cron`
+   * does not await this callback, so a rejection becomes an `unhandledRejection`,
+   * and the repo's winston config has `rejectionHandlers` with `exitOnError` —
+   * process exit 1, ECS restart, repeating for as long as the fault lasts.
+   *
+   * `processTier` rethrows anything that is not a `MailSendError` on purpose, so
+   * this boundary is load-bearing for that decision. Delete the try/catch in
+   * `run()` and this test fails.
+   */
+  it('logs and swallows a failure from the run rather than rejecting', async () => {
+    process.env.EMAIL_REMINDER_JOB_ENABLED = 'true'
+    reminderRun.mockRejectedValue(new Error('column does not exist'))
+
+    await expect(task.run()).resolves.toBeUndefined()
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('aborting this run'),
+      expect.objectContaining({ message: 'column does not exist' }),
+    )
+  })
+
+  // The lock itself failing must not escape either — same exposure, and it is
+  // outside the service's own error handling entirely.
+  it('logs and swallows a failure from the advisory lock', async () => {
+    process.env.EMAIL_REMINDER_JOB_ENABLED = 'true'
+    runWithDistributedLock.mockRejectedValue(new Error('pool exhausted'))
+
+    await expect(task.run()).resolves.toBeUndefined()
+
+    expect(mockLogger.error).toHaveBeenCalled()
+  })
 })

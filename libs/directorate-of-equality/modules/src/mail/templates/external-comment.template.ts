@@ -3,14 +3,7 @@ import {
   ReportProviderEnum,
 } from '../../report/models/report.model'
 import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
-
-const escapeHtml = (value: string): string =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
+import { escapeHtml } from './format'
 
 const buildIslandIsApplicationUrl = (report: ReportModel): string | null => {
   if (

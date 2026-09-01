@@ -14,10 +14,13 @@ jest.mock('./lib/browser', () => ({ getBrowser: jest.fn() }))
 const pdfMock = jest.fn(async () => new Uint8Array([1, 2, 3]))
 const closeMock = jest.fn(async () => undefined)
 
+/** Captures the `setContent` calls so the wait strategy can be asserted. */
+const setContentMock = jest.fn(async () => undefined)
+
 function mockBrowser() {
   ;(getBrowser as jest.Mock).mockResolvedValue({
     newPage: async () => ({
-      setContent: jest.fn(async () => undefined),
+      setContent: setContentMock,
       addStyleTag: jest.fn(async () => undefined),
       pdf: pdfMock,
     }),
@@ -99,9 +102,35 @@ function makeService(reportOverrides = {}) {
         paging: makePaging(),
       }),
     ),
+    getOutlierGroups: jest.fn(async () => ({ groups: [] })),
   }
   const statisticsService = {
     getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
+    // Monthly krónur, fetched separately from the rate statistics — see the
+    // note on `payComponents` in the salary template.
+    getBenefitsBreakdown: jest.fn(async () => ({
+      male: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      female: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      overall: {
+        averageAdditionalSalary: 0,
+        averageBonusSalary: 0,
+        averageTotal: 0,
+        count: 0,
+      },
+      additionalWageGapPercent: null,
+      bonusWageGapPercent: null,
+      totalWageGapPercent: null,
+    })),
   }
 
   const service = new ReportPdfService(
@@ -203,6 +232,107 @@ describe('ReportPdfService', () => {
 
       await expect(service.generateReportPdf('r1')).rejects.toThrow('boom')
       expect(closeMock).toHaveBeenCalled()
+    })
+  })
+
+  /**
+   * ⚠️ Regression guard. These documents are self-contained — inline SVG,
+   * injected styles, nothing fetched — so there is no network to go idle, and
+   * `networkidle0` waits for a silent window some Chromium builds never report
+   * for such a page. It then fails the render with `Navigation timeout of 30000
+   * ms exceeded`. Confirmed locally: `networkidle0`/`networkidle2` time out
+   * against `/Applications/Chromium.app` while `load` produces a byte-identical
+   * PDF in ~1.5s.
+   *
+   * This matters beyond a failed download: the approval path renders inside the
+   * reviewer's request and swallows failures, so a hang means the company is
+   * never told its report was approved.
+   */
+  it('waits for load, never for network idle', async () => {
+    const { service } = makeService()
+
+    await service.generateReportPdf('r1')
+
+    expect(setContentMock).toHaveBeenCalledWith(
+      expect.any(String),
+      { waitUntil: 'load' },
+    )
+  })
+
+  describe('generateImprovementPlanPdf', () => {
+    it('renders one outlier query per group, scoped by groupId', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({
+        groups: [
+          { id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' },
+          { id: 'g2', name: 'Hópur B', reason: 'r', action: 'a' },
+        ],
+      })
+
+      // Groups must actually have members — a memberless set is the data-fault
+      // state the service now declines to render.
+      // Uses the file's own helper rather than an ad-hoc literal: specs are
+      // type-checked by neither `tsconfig.lib.json` (which excludes them) nor
+      // ts-jest (`diagnostics: false`), so a partial DTO here is invisible.
+      reportService.getOutliers.mockResolvedValue({
+        outliers: [makeOutlier({ employeeOrdinal: 1 })],
+        paging: makePaging(),
+      })
+
+      const result = await service.generateImprovementPlanPdf('r1')
+
+      expect(result).not.toBeNull()
+      expect(result?.fileName).toBe('urbotaaetlun-r1.pdf')
+      // ⚠️ The `groupId` is the whole reason this document exists: without it
+      // every group collapses into one flat table.
+      expect(reportService.getOutliers).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ groupId: 'g1' }),
+      )
+      expect(reportService.getOutliers).toHaveBeenCalledWith(
+        'r1',
+        expect.objectContaining({ groupId: 'g2' }),
+      )
+    })
+
+    /**
+     * A compliant company has no plan to state, and its salary report already
+     * carries that as a finding. A page whose only content is "engir hópar"
+     * would read as a plan that failed to print.
+     */
+    it('returns null when the report has no outlier groups', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({ groups: [] })
+
+      await expect(service.generateImprovementPlanPdf('r1')).resolves.toBeNull()
+      expect(reportService.getOutliers).not.toHaveBeenCalled()
+    })
+
+    /**
+     * Groups with nothing assigned is a data fault, not a plan. Attaching a
+     * document reading "Engir starfsmenn skráðir í þennan hóp" beside a salary
+     * report rendering "Engar úrbætur nauðsynlegar" would tell the company two
+     * different things in one email.
+     */
+    it('returns null when groups exist but none has members', async () => {
+      const { service, reportService } = makeService()
+      reportService.getOutlierGroups.mockResolvedValue({
+        groups: [{ id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' }],
+      })
+      reportService.getOutliers.mockResolvedValue({
+        outliers: [],
+        paging: makePaging(),
+      })
+
+      await expect(service.generateImprovementPlanPdf('r1')).resolves.toBeNull()
+    })
+
+    it('rejects an equality report, which has no outlier groups', async () => {
+      const { service } = makeService({ type: ReportTypeEnum.EQUALITY })
+
+      await expect(
+        service.generateImprovementPlanPdf('r1'),
+      ).rejects.toThrow(/not a salary report/)
     })
   })
 })
