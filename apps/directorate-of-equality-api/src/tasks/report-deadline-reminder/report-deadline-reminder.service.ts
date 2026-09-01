@@ -11,7 +11,7 @@ import {
   CompanyStatusEnum,
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
-import { IDoeMailService } from '@dmr.is/doe-modules/mail'
+import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -171,12 +171,32 @@ export class ReportDeadlineReminderService
        *
        * Contained here rather than inside `remindCompany` so the event write and
        * the missing-email flag are covered by the same guard as the send.
+       *
+       * ⚠️ **Only a `MailSendError`.** Everything else rethrows, and it has to:
+       * `AdvisoryLockService` runs this whole task in one transaction and CLS is
+       * live for this app, so the model queries here enlist in it. A DB error
+       * therefore aborts the transaction — every later statement fails `25P02`,
+       * a blanket catch swallows each one, and Postgres answers the eventual
+       * `COMMIT` on an aborted transaction with a silent `ROLLBACK`. The task
+       * would report success having mailed every company in the band while every
+       * `SENT` event and the `job_runs` cooldown were discarded, and the next run
+       * would mail them all again. A deterministic fault on the event insert
+       * turns that into a repeating storm.
+       *
+       * So a database fault must stay loud and abort the run, exactly as it did
+       * before this catch existed. The `job_runs` row rolls back with it, which
+       * is correct: nothing durable was recorded, so the next run is a retry, not
+       * a duplicate.
        */
       try {
         await this.remindCompany(company, kind, tier.tier)
       } catch (error) {
+        if (!(error instanceof MailSendError)) {
+          throw error
+        }
+
         this.logger.error(
-          `Failed to remind company ${company.id} of its ${kind.reportType} ${tier.tier} deadline — continuing with the rest of the batch`,
+          `Could not email company ${company.id} its ${kind.reportType} ${tier.tier} reminder — continuing with the rest of the batch`,
           {
             context: LOGGING_CONTEXT,
             companyId: company.id,

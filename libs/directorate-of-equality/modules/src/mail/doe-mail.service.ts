@@ -31,6 +31,7 @@ import {
   IDoeMailService,
   ReportMailAttachment,
 } from './doe-mail.service.interface'
+import { MailSendError } from './mail-send.error'
 
 const LOGGING_CONTEXT = 'DoeMailService'
 const FALLBACK_FROM_ADDRESS = 'noreply@jafnretti.is'
@@ -86,10 +87,10 @@ export class DoeMailService implements IDoeMailService {
   async sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
-  ): Promise<void> {
+  ): Promise<boolean> {
     const labels = attachments.map((attachment) => attachment.label)
 
-    await this.sendReportMail(
+    return this.sendReportMail(
       report,
       {
         subject: buildReportApprovedSubject(report),
@@ -138,7 +139,10 @@ export class DoeMailService implements IDoeMailService {
     const sent = await this.sendMailResult(message)
 
     if (sent.result.ok === false) {
-      throw new Error(
+      // ⚠️ `MailSendError`, not a bare Error — the task's catch keys on the type
+      // to tell a bad recipient from a database fault it must not swallow. See
+      // `mail-send.error.ts`.
+      throw new MailSendError(
         `Failed to send report deadline reminder: ${sent.result.error.message}`,
       )
     }
@@ -210,27 +214,47 @@ export class DoeMailService implements IDoeMailService {
    * logged and swallowed. Callers that need the opposite (a send whose failure
    * must be visible so the work can be retried) must not use this helper; see
    * `sendReportDeadlineReminder`.
+   *
+   * Returns whether it was delivered, so a caller with a *consequence* of the
+   * send — the approval's S3 archive — can tell. Callers with none ignore it.
    */
   private async sendReportMail(
     report: ReportModel,
     content: MailContent,
     kind: string,
     logFields: Record<string, unknown>,
-  ): Promise<void> {
-    // ⚠️ Not `??`. `contactEmail` is `@ApiString()` — `IsString()` alone, no
-    // `@IsEmail`, no `MinLength` — so a stored `''` is valid, and `??` coalesces
-    // only null/undefined. An empty contact email therefore skipped the notice
-    // entirely while a perfectly good `companyAdminEmail` sat beside it.
+  ): Promise<boolean> {
+    /*
+     * ⚠️ Not `??`, and not "first truthy" either.
+     *
+     * `contactEmail` is `@ApiString()` — `IsString()` alone, no `@IsEmail`, no
+     * `MinLength` — so anything a submitter types is stored, `''` included. `??`
+     * coalesces only null/undefined, so an empty contact email skipped the notice
+     * entirely while a perfectly good `companyAdminEmail` sat beside it.
+     *
+     * First truthy fixed that and left the wider half: a typo'd
+     * `jon.example.is` is truthy, so it won the fallback and the send failed
+     * against an address that was never going to work. That is a live path now
+     * that this field carries the approval PDFs and not just a comment notice, so
+     * a candidate has to at least look like an address to be preferred.
+     *
+     * `includes('@')` deliberately, not an email regex: the job here is to pick
+     * between two stored values, not to validate one. SES is the authority on
+     * deliverability and it rejects with a logged err result. Tightening the DTO
+     * to `@IsEmail()` is the real fix and is a change to the submission contract
+     * — every provider channel, and whatever is already in the column — so it
+     * belongs to its own PR, not to this one.
+     */
     const to = [report.contactEmail, report.companyAdminEmail]
       .map((candidate) => candidate?.trim())
-      .find((candidate) => !!candidate)
+      .find((candidate) => !!candidate && candidate.includes('@'))
 
     if (!to) {
       this.logger.warn(
-        `Skipping ${kind} email — report has no contact or admin email`,
+        `Skipping ${kind} email — report has no usable contact or admin email`,
         { ...logFields, context: LOGGING_CONTEXT },
       )
-      return
+      return false
     }
 
     try {
@@ -258,13 +282,14 @@ export class DoeMailService implements IDoeMailService {
           errorCode: sent.result.error.code,
           errorMessage: sent.result.error.message,
         })
-        return
+        return false
       }
 
       this.logger.info(`Sent ${kind}`, {
         ...logFields,
         context: LOGGING_CONTEXT,
       })
+      return true
     } catch (error) {
       // Retained for a throw the decorator cannot intercept — building the
       // message, or a future undecorated implementation. `message` is extracted
@@ -276,6 +301,7 @@ export class DoeMailService implements IDoeMailService {
         context: LOGGING_CONTEXT,
         errorMessage: error instanceof Error ? error.message : String(error),
       })
+      return false
     }
   }
 }

@@ -7,4 +7,5 @@
  */
 
 export * from './doe-mail.module'
+export * from './mail-send.error'
 export * from './doe-mail.service.interface'

@@ -1,5 +1,5 @@
 import { getNamespace } from 'cls-hooked'
-import { Op, Transaction } from 'sequelize'
+import { Transaction } from 'sequelize'
 
 import {
   BadRequestException,
@@ -200,12 +200,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
    * catch-all below; do not remove it, and do not rely on callers being
    * total.
    *
-   * ⚠️ **Hooks also run when the COMMIT itself throws.** Sequelize awaits them in
-   * `commit()`'s `finally`, so the catch's `forceCleanup()` + rethrow still fires
-   * them first. `rollback()` has no `finally` and never touches them, which is
-   * why the rollback path genuinely is closed — but a *failing* commit is not,
-   * and describing this as "nothing sends unless the commit succeeded" would
-   * overclaim. Narrow, and properly closed only by the durable record below.
+   * ⚠️ **Hooks also run when the COMMIT itself throws**, so being in one is not
+   * on its own proof that the write landed. Sequelize awaits them in `commit()`'s
+   * `finally`, so the catch's `forceCleanup()` + rethrow still fires them first;
+   * `rollback()` has no `finally` and never touches them, which is why only the
+   * failing-commit path was ever open. **Every callback must therefore verify the
+   * state it is about before acting on it — see `decisionLanded`**, which both
+   * decision hooks call first. This wrapper cannot do it for them: it does not
+   * know what its callback is claiming.
    *
    * ⚠️ **Still no durable record.** If the process dies between commit and send,
    * the report is approved and the company was never told, with nothing to retry
@@ -238,6 +240,75 @@ export class ReportWorkflowService implements IReportWorkflowService {
         })
       }
     })
+  }
+
+  /**
+   * Whether the decision this hook is about is actually in the database.
+   *
+   * ⚠️ **The reason every after-commit hook starts here.** Sequelize awaits the
+   * after-commit hooks inside `commit()`'s `finally`, so a COMMIT that THROWS —
+   * pool timeout, a killed connection, a deferred constraint — runs them anyway,
+   * on its way to `forceCleanup()` and the rethrow
+   * (`node_modules/sequelize/lib/transaction.js:39-56`). `rollback()` has no such
+   * block, which is why that path was never open; a failing commit was.
+   *
+   * And it did not fail safe. The reload in `notifyCompanyApproved` selected no
+   * `status`, so it found the row with its pre-transaction values and sent:
+   * `formatDate(null)` renders an em dash rather than throwing, so the company
+   * was told its report was approved, valid until `—`, for a row the database
+   * still had as IN_REVIEW — then `archiveApprovalDocuments` filed that as the
+   * record of the send, while the reviewer got a 500 and would naturally approve
+   * again.
+   *
+   * One read gates the whole hook rather than each reload, because
+   * `notifyApplicationSystem` has the same exposure and no reload of its own to
+   * add a column to.
+   *
+   * It cannot false-negative: a failed commit leaves the prior status, and
+   * `forceCleanup()` has already cleared the CLS entry and destroyed the
+   * connection by the time a hook runs, so this query takes a fresh pooled
+   * connection and sees committed state.
+   */
+  private async decisionLanded(
+    reportId: string,
+    expected: ReportStatusEnum,
+  ): Promise<boolean> {
+    try {
+      const report = await this.reportModel.findOne({
+        where: { id: reportId },
+        attributes: ['status'],
+      })
+
+      if (report?.status === expected) {
+        return true
+      }
+
+      this.logger.error(
+        `Not notifying anyone about report ${reportId}: its status is ${report?.status ?? 'gone'}, not ${expected} — the commit did not land`,
+        { context: LOGGING_CONTEXT },
+      )
+      return false
+    } catch (error) {
+      /*
+       * ⚠️ **Fails CLOSED**, and it catches its own read because nothing above it
+       * would: `runAfterCommit` runs the callback bare when there is no ambient
+       * transaction, so a throw from here would surface to the caller.
+       *
+       * Unable to confirm is treated as did not land. That can cost a company the
+       * notice for an approval that did commit, which is the known
+       * no-durable-record gap and is recoverable by a human. The other direction
+       * is not: an official "samþykkt", with the PDFs, for an approval the
+       * database does not have.
+       */
+      this.logger.error(
+        `Not notifying anyone about report ${reportId}: could not read back its status to confirm the commit landed`,
+        {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
+      return false
+    }
   }
 
   private async getReviewerUserId(reportId: string): Promise<string | null> {
@@ -288,8 +359,14 @@ export class ReportWorkflowService implements IReportWorkflowService {
      * `WHERE id` alone, and the row ends DENIED while the company holds an
      * approval PDF and S3 an archived approval of a denied report.
      *
-     * Accepts either deniable status rather than a single value, matching the
-     * guard above.
+     * ⚠️ **Pins the one status it is about to report**, rather than accepting
+     * either deniable value. `emitStatusChanged` below records
+     * `context.reportStatus` as the prior state, read back when the guard ran —
+     * so a CAS matching `IN_REVIEW OR POSTPONED` could succeed against the value
+     * the context did NOT hold and write an audit event for a transition that
+     * never happened. The guard above has already established that
+     * `context.reportStatus` is deniable; the CAS's job is to establish it is
+     * still the current one. `approve` pins its single value for the same reason.
      */
     const [affected] = await this.reportModel.update(
       {
@@ -299,7 +376,7 @@ export class ReportWorkflowService implements IReportWorkflowService {
       {
         where: {
           id: context.reportId,
-          status: { [Op.in]: deniableStatuses },
+          status: context.reportStatus,
         },
       },
     )
@@ -323,6 +400,12 @@ export class ReportWorkflowService implements IReportWorkflowService {
     // Both outbound calls are irrevocable, so neither may happen before the
     // denial is durable. See `runAfterCommit`.
     await this.runAfterCommit('denial notification', async () => {
+      if (
+        !(await this.decisionLanded(context.reportId, ReportStatusEnum.DENIED))
+      ) {
+        return
+      }
+
       await this.notifyCompanyDenied(context.reportId, denialReason)
       await this.notifyApplicationSystem(
         context.reportId,
@@ -417,6 +500,15 @@ export class ReportWorkflowService implements IReportWorkflowService {
     // one irrevocable, and none of them may happen until the approval is
     // durable. See `runAfterCommit`.
     await this.runAfterCommit('approval notification', async () => {
+      if (
+        !(await this.decisionLanded(
+          context.reportId,
+          ReportStatusEnum.APPROVED,
+        ))
+      ) {
+        return
+      }
+
       await this.notifyCompanyApproved(context.reportId)
       await this.notifyApplicationSystem(
         context.reportId,
@@ -487,16 +579,35 @@ export class ReportWorkflowService implements IReportWorkflowService {
         return
       }
 
-      const attachments = await this.buildApprovalAttachments(report.type, reportId)
+      const attachments = await this.buildApprovalAttachments(
+        report.type,
+        reportId,
+      )
 
-      await this.mailService.sendReportApproved(report, attachments)
+      const delivered = await this.mailService.sendReportApproved(
+        report,
+        attachments,
+      )
 
-      // ⚠️ **After the send, deliberately.** Archiving is secondary: the company
-      // having its documents is the point, keeping our own copy is the record.
-      // Uploading first would let an unset or misconfigured bucket stop the
-      // notification — the exact failure mode to avoid while the bucket is still
-      // being provisioned. `archive` never throws, so this cannot reach the
-      // catch below either.
+      /*
+       * ⚠️ **After the send, deliberately.** Archiving is secondary: the company
+       * having its documents is the point, keeping our own copy is the record.
+       * Uploading first would let an unset or misconfigured bucket stop the
+       * notification — the exact failure mode to avoid while the bucket is still
+       * being provisioned. `archive` never throws, so this cannot reach the catch
+       * below either.
+       *
+       * ⚠️ **And only when the send landed.** The archive is justified in
+       * `archiveApprovalDocuments` as the Directorate's copy of what the company
+       * received, so writing it after a failed send puts a false yes where
+       * someone will later go looking for proof of delivery. Nothing was
+       * received; there is nothing to keep a copy of. The failure is already
+       * logged by the mail service, at error.
+       */
+      if (!delivered) {
+        return
+      }
+
       await this.archiveApprovalDocuments(report, attachments)
     } catch (error) {
       this.logger.error(
@@ -528,6 +639,12 @@ export class ReportWorkflowService implements IReportWorkflowService {
     report: Pick<ReportModel, 'id' | 'companyNationalId' | 'approvedAt'>,
     attachments: ReportMailAttachment[],
   ): Promise<void> {
+    if (attachments.length === 0) {
+      // Both renders failed. The notice went out without them, so there is
+      // nothing to keep a copy of.
+      return
+    }
+
     const companyNationalId = report.companyNationalId
 
     if (!companyNationalId) {
@@ -569,18 +686,46 @@ export class ReportWorkflowService implements IReportWorkflowService {
     type: ReportTypeEnum,
     reportId: string,
   ): Promise<ReportMailAttachment[]> {
-    const { pdf, fileName } =
-      await this.reportPdfService.generateReportPdf(reportId)
+    /*
+     * ⚠️ **Guarded, like the plan render below it.** This one used to be bare,
+     * which made it the one render that could still swallow the whole
+     * notification: a throw here propagated past `sendReportApproved` into
+     * `notifyCompanyApproved`'s catch, so a Chromium failure on a committed
+     * approval told the company nothing at all — not even that it had been
+     * approved.
+     *
+     * The notice is the part that cannot be reconstructed later; the documents
+     * can be downloaded from the report screen. So a render failure costs an
+     * attachment, never the notice. `buildReportApprovedHtml` already omits the
+     * "Skjalið er í viðhengi" line for an empty list, so the mail stays
+     * truthful with nothing attached.
+     */
+    let reportAttachment: ReportMailAttachment | null = null
 
-    const reportAttachment: ReportMailAttachment = {
-      filename: fileName,
-      content: pdf,
-      label:
-        type === ReportTypeEnum.SALARY ? 'jafnlaunaúttekt' : 'jafnréttisáætlun',
+    try {
+      const { pdf, fileName } =
+        await this.reportPdfService.generateReportPdf(reportId)
+
+      reportAttachment = {
+        filename: fileName,
+        content: pdf,
+        label:
+          type === ReportTypeEnum.SALARY
+            ? 'jafnlaunaúttekt'
+            : 'jafnréttisáætlun',
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to render the report PDF for approved report ${reportId} — sending the approval notice without it`,
+        {
+          context: LOGGING_CONTEXT,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      )
     }
 
     if (type !== ReportTypeEnum.SALARY) {
-      return [reportAttachment]
+      return reportAttachment ? [reportAttachment] : []
     }
 
     /*
@@ -613,18 +758,16 @@ export class ReportWorkflowService implements IReportWorkflowService {
 
     // Null for a compliant company with no outlier groups — there is no plan to
     // state, and the salary report itself carries that as a finding.
-    if (!plan) {
-      return [reportAttachment]
-    }
+    const planAttachment: ReportMailAttachment | null = plan
+      ? { filename: plan.fileName, content: plan.pdf, label: 'úrbótaáætlun' }
+      : null
 
-    return [
-      reportAttachment,
-      {
-        filename: plan.fileName,
-        content: plan.pdf,
-        label: 'úrbótaáætlun',
-      },
-    ]
+    // Both entries are independently optional, so this is a filter rather than
+    // two return branches. Empty means both renders failed: the notice still
+    // goes, without a "í viðhengi" line.
+    return [reportAttachment, planAttachment].filter(
+      (attachment): attachment is ReportMailAttachment => attachment !== null,
+    )
   }
 
   /**

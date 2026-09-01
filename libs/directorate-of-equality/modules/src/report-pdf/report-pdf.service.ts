@@ -89,14 +89,24 @@ export class ReportPdfService implements IReportPdfService {
     /*
      * One `getOutliers` call per group, with `groupId` set.
      *
-     * ⚠️ This is the whole reason the úrbótaáætlun could not live in the salary
-     * report: `fetchAllOutliers` pages `getOutliers` WITHOUT a `groupId`, so
-     * every group collapsed into one flat table and the group name, ástæða,
-     * aðgerð and signature had nowhere to go.
+     * The úrbótaáætlun could not live in the salary report because
+     * `improvementPlanSection` renders `fetchAllOutliers` — one flat table, no
+     * group name, ástæða, aðgerð or signature. That was the section's shape, not
+     * a limit of the data: `ReportEmployeeOutlierDto` denormalises `groupId`,
+     * `groupName`, `reason`, `action`, `signatureName`, `signatureRole` and
+     * `remedyDate` onto every row, so **a single unfiltered pass bucketed by
+     * `row.groupId` would produce identical output** and is the fix for the N+1
+     * below. Do not read this loop as evidence that per-group queries are
+     * required.
      *
-     * Sequential rather than `Promise.all`: a report with many groups would
-     * otherwise open a connection per group against the same pool this request
-     * is already holding, and the page count here is small.
+     * ⚠️ It is an N+1, and the group count is applicant-defined and uncapped:
+     * each call re-runs the `detailed` scope and its per-employee snapshot
+     * (`report.service.ts`), G×P times, in the most heap-constrained path there
+     * is. Scoped out of this PR with the durable-record work, not defended.
+     *
+     * Sequential rather than `Promise.all` in the meantime: a report with many
+     * groups would otherwise open a connection per group against the same pool
+     * this request is already holding.
      */
     const planGroups: ImprovementPlanGroup[] = []
     for (const group of groups) {

@@ -495,7 +495,10 @@ describe('DoeMailService', () => {
       expect(logger.warn).toHaveBeenCalled()
     })
 
-    it('logs and swallows SES errors so the approval stands', async () => {
+    // ⚠️ Resolves FALSE rather than throwing: the approval is already committed,
+    // so the reviewer must not see an error — but the caller has to know, because
+    // it archives these same attachments to S3 as the record of what was sent.
+    it('logs and reports a failed send so the approval stands and nothing is archived', async () => {
       aws.sendMail.mockResolvedValue(
         ResultWrapper.err({ code: 500, message: 'SES is down' }),
       )
@@ -505,9 +508,20 @@ describe('DoeMailService', () => {
           makeReport({ type: ReportTypeEnum.EQUALITY }),
           [pdf('jafnréttisáætlun.pdf')],
         ),
-      ).resolves.toBeUndefined()
+      ).resolves.toBe(false)
 
       expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('reports a delivered send', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await expect(
+        service.sendReportApproved(
+          makeReport({ type: ReportTypeEnum.EQUALITY }),
+          [pdf('jafnréttisáætlun.pdf')],
+        ),
+      ).resolves.toBe(true)
     })
   })
 

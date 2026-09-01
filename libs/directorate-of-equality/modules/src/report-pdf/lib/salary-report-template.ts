@@ -485,11 +485,20 @@ function improvementPlanSection(
    * print. The EMPTY case above stays in full: an empty lágmarksmengi is a
    * finding, and no separate document is generated for it, so this is the only
    * place it appears.
+   *
+   * ⚠️ The pointer describes HOW the plan is presented — "í sérstöku skjali" —
+   * and does not claim it is attached to whatever carried this report. It cannot:
+   * this section renders off the ungrouped outlier list, while
+   * `generateImprovementPlanPdf` returns null whenever no group has members, so
+   * outliers can exist here with no plan document produced. The same sentence
+   * also has to hold when a reviewer downloads this PDF on its own from the
+   * report sidebar, and when the plan render failed and the approval mailed the
+   * report alone.
    */
   return section(
     'Úrbótaáætlun',
     `<p class="field__value">Starfsmenn í úrbótaáætlun: ${formatNumber(outliers.length)}.</p>
-    <p class="advisory-note">Úrbótaáætlunin fylgir þessari skýrslu sem sérstakt skjal, þar sem starfsmenn eru flokkaðir eftir hópum með ástæðu og aðgerðum hvers hóps.</p>`,
+    <p class="advisory-note">Úrbótaáætlunin er sett fram í sérstöku skjali, þar sem starfsmenn eru flokkaðir eftir hópum með ástæðu og aðgerðum hvers hóps.</p>`,
   )
 }
 

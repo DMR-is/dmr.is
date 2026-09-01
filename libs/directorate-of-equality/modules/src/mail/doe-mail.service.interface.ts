@@ -42,12 +42,17 @@ export interface IDoeMailService {
    * salary report.
    *
    * Best-effort, for the same reason as `sendReportDenied`: the approval is
-   * committed before this runs.
+   * committed before this runs, so a failed send is logged rather than thrown.
+   *
+   * ⚠️ **Returns whether it was delivered**, which the others do not, because
+   * this one has a consequence: the caller archives the same attachments to S3
+   * as the Directorate's record of what the company received. Archiving a send
+   * that never happened puts a false yes in front of an auditor.
    */
   sendReportApproved(
     report: ReportModel,
     attachments: ReportMailAttachment[],
-  ): Promise<void>
+  ): Promise<boolean>
 
   /**
    * Sends a 6-months-before reminder for an upcoming report deadline.

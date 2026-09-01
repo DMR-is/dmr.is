@@ -2,12 +2,37 @@ import { GenderEnum } from '../../report/models/report.enums'
 
 /** Pure formatting/escaping helpers shared by the PDF templates. */
 
+/**
+ * is-IS number formatting: `.` groups thousands, `,` separates the decimal.
+ *
+ * ⚠️ **Substitutes by part TYPE, not by character.** `Intl.NumberFormat('is-IS')`
+ * gets both separators right on a full-ICU Node — every Node 18+ default build,
+ * this repo's image included. On a small-icu build `is-IS` is unavailable and
+ * resolves to en-US, which inverts them, and that is what the blanket
+ * `.replaceAll(',', '.')` this replaces was guarding against.
+ *
+ * It guarded the grouping and corrupted the decimal. In is-IS the `,` it
+ * replaced IS the decimal separator, so `420,5` came out `420.5` and `1.234,56`
+ * came out `1.234.56` — two grouping dots and no decimal at all. Invisible to
+ * the specs, which pin only integers, and live wherever a fractional figure
+ * prints: `score` is `DECIMAL(6,2)`, and the FTE counts are fractional by
+ * definition.
+ *
+ * `formatToParts` names each separator, so this is correct under either ICU
+ * build.
+ */
+const formatIsIs = (value: number): string =>
+  new Intl.NumberFormat('is-IS')
+    .formatToParts(value)
+    .map((part) =>
+      part.type === 'group' ? '.' : part.type === 'decimal' ? ',' : part.value,
+    )
+    .join('')
+
 /** is-IS thousands formatting with a dot separator (e.g. 1.065.400). */
 export function formatCurrency(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
-  return `${new Intl.NumberFormat('is-IS')
-    .format(Math.round(value))
-    .replaceAll(',', '.')} kr.`
+  return `${formatIsIs(Math.round(value))} kr.`
 }
 
 /**
@@ -22,15 +47,19 @@ export function formatCurrency(value: number | null | undefined): string {
  */
 export function formatHourlyRate(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
-  return `${new Intl.NumberFormat('is-IS')
-    .format(Math.round(value))
-    .replaceAll(',', '.')} kr./klst.`
+  return `${formatIsIs(Math.round(value))} kr./klst.`
 }
 
-/** Plain integer with is-IS grouping (no currency suffix). */
+/**
+ * A plain number with is-IS grouping and no currency suffix.
+ *
+ * Not rounded, unlike `formatCurrency` and `formatHourlyRate`: this is the one
+ * helper that prints fractions — `Stig` is `DECIMAL(6,2)` and the FTE counts are
+ * fractional — which is why it was the one the old separator munging broke.
+ */
 export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
-  return new Intl.NumberFormat('is-IS').format(value).replaceAll(',', '.')
+  return formatIsIs(value)
 }
 
 /** Signed percent with one decimal (e.g. +6,3% / -12,0%). */

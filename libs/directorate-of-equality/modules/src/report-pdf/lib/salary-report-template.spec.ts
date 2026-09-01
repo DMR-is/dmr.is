@@ -413,7 +413,16 @@ describe('buildSalaryReportHtml', () => {
 
     expect(html).toContain('Úrbótaáætlun')
     expect(html).toContain('Starfsmenn í úrbótaáætlun: 2')
-    expect(html).toContain('sem sérstakt skjal')
+    /*
+     * ⚠️ "í sérstöku skjali", not "fylgir þessari skýrslu". This section renders
+     * off the ungrouped outlier list while `generateImprovementPlanPdf` returns
+     * null whenever no group has members, so the plan can be absent with
+     * outliers present — and the same sentence has to hold for a standalone
+     * download from the report sidebar and for an approval whose plan render
+     * failed.
+     */
+    expect(html).toContain('í sérstöku skjali')
+    expect(html).not.toContain('fylgir þessari skýrslu')
     // The empty-state finding must not appear on a report that has a plan.
     expect(html).not.toContain('Engar úrbætur nauðsynlegar')
     // The per-employee rows moved out; only the pay-dispersion advisory below

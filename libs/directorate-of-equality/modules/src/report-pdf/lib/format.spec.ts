@@ -26,6 +26,20 @@ describe('report-pdf format helpers', () => {
       expect(formatNumber(25000)).toBe('25.000')
     })
 
+    /*
+     * ⚠️ The case the old `.replaceAll(',', '.')` corrupted, and the reason the
+     * suite could not see it: every other assertion here is an integer, where
+     * the substitution was a no-op. In is-IS the comma IS the decimal
+     * separator, so `420,5` came out `420.5` and `1.234,56` came out
+     * `1.234.56`. `Stig` is DECIMAL(6,2) and the FTE counts are fractional, so
+     * both shapes print in a real report.
+     */
+    it('separates the decimal with a comma, and still groups with dots', () => {
+      expect(formatNumber(420.5)).toBe('420,5')
+      expect(formatNumber(1234.56)).toBe('1.234,56')
+      expect(formatNumber(0.5)).toBe('0,5')
+    })
+
     it('returns an em dash for nullish values', () => {
       expect(formatNumber(null)).toBe('—')
     })

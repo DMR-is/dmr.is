@@ -10,7 +10,7 @@ import {
   CompanyStatusEnum,
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
-import { IDoeMailService } from '@dmr.is/doe-modules/mail'
+import { IDoeMailService, MailSendError } from '@dmr.is/doe-modules/mail'
 import { ReportTypeEnum } from '@dmr.is/doe-modules/report'
 import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
@@ -247,10 +247,13 @@ describe('ReportDeadlineReminderService', () => {
      *
      * The contract is unchanged — a throw still means "not sent", so no SENT
      * event and a retry next run — but it is now contained per company.
+     *
+     * ⚠️ A `MailSendError`, which is what the real service throws, NOT a bare
+     * Error: containment keys on the type. See the DB-error test below for why.
      */
     it('keeps going when one company\'s email send fails', async () => {
       returnCompanyAtCall(CALL.equalitySixMonths, makeCompany())
-      sendReportDeadlineReminder.mockRejectedValue(new Error('SES down'))
+      sendReportDeadlineReminder.mockRejectedValue(new MailSendError('SES down'))
 
       await expect(service.run()).resolves.toBeUndefined()
 
@@ -267,7 +270,7 @@ describe('ReportDeadlineReminderService', () => {
         makeCompany({ id: 'company-good' }),
       ])
       sendReportDeadlineReminder
-        .mockRejectedValueOnce(new Error('SES down'))
+        .mockRejectedValueOnce(new MailSendError('SES down'))
         .mockResolvedValue(undefined)
 
       await expect(service.run()).resolves.toBeUndefined()
@@ -281,6 +284,38 @@ describe('ReportDeadlineReminderService', () => {
         expect.anything(),
         expect.anything(),
       )
+    })
+
+    /*
+     * ⚠️ **The other half of the containment, and the reason it is typed.**
+     *
+     * `AdvisoryLockService` runs this whole task inside one transaction and CLS
+     * is live for this app, so every query here enlists in it. A DB error
+     * therefore aborts the transaction: if the catch were blanket, each later
+     * statement would fail `25P02` and be swallowed the same way, the loop would
+     * keep calling SES for every remaining company, and Postgres would answer
+     * the eventual COMMIT on an aborted transaction with a silent ROLLBACK. The
+     * task would report success having mailed everyone while every SENT event
+     * and the `job_runs` cooldown were discarded — and the next run would mail
+     * them all again.
+     *
+     * So anything that is not a mail failure has to come back out. Widen the
+     * catch to `catch (error)` and this test fails.
+     */
+    it('aborts loudly when the event write fails, rather than mailing on', async () => {
+      returnCompaniesAtCall(CALL.equalitySixMonths, [
+        makeCompany({ id: 'company-1' }),
+        makeCompany({ id: 'company-2' }),
+      ])
+      emitDeadlineReminderEvent.mockRejectedValue(
+        new Error('column does not exist'),
+      )
+
+      await expect(service.run()).rejects.toThrow('column does not exist')
+
+      // Stopped at the first company instead of mailing the rest with nothing
+      // durable recorded.
+      expect(sendReportDeadlineReminder).toHaveBeenCalledTimes(1)
     })
 
     it('uses the salary event type and column for the salary kind', async () => {

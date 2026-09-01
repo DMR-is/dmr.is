@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+import { getLogger } from '@dmr.is/logging-next'
+
 import { getBaseUrl } from '../../../../lib/api/createClient'
 import { authOptions } from '../../../../lib/auth/authOptions'
+
+const logger = getLogger('report-pdf')
+
+/**
+ * ⚠️ A wedged Chromium upstream is a HANG, not a rejection, so the try/catch
+ * around `fetch` does not cover it — without a deadline this handler waits
+ * forever and holds its lambda with it. Mirrors the 60s in
+ * `official-journal-web/src/app/api/cases/[id]/previewPdf/route.ts`, which is
+ * the same job against the same renderer.
+ */
+const PDF_TIMEOUT_MS = 60_000
 
 /**
  * Which of the two documents an approval produces to fetch.
@@ -18,8 +31,17 @@ const DOCUMENTS = {
 
 type DocumentKey = keyof typeof DOCUMENTS
 
+/**
+ * ⚠️ `Object.hasOwn`, not `in`. `in` walks the prototype chain, so `?doc=toString`
+ * and `?doc=constructor` passed this allowlist, made the `value is DocumentKey`
+ * narrowing false, and put `Object.prototype`'s own stringification into the
+ * upstream path and the `Content-Disposition` filename. No traversal
+ * materialised — the inherited names carry no `/` and the origin is fixed — so
+ * this was a broken allowlist rather than an exploit, but a two-entry allowlist
+ * should hold two entries.
+ */
 const isDocumentKey = (value: string | null): value is DocumentKey =>
-  value !== null && value in DOCUMENTS
+  value !== null && Object.hasOwn(DOCUMENTS, value)
 
 /**
  * ⚠️ `reportId` is interpolated into the upstream URL, and Next percent-decodes
@@ -79,18 +101,29 @@ export async function GET(
   try {
     res = await fetch(
       `${getBaseUrl()}/api/v1/reports/${reportId}/pdf${DOCUMENTS[requested]}`,
-      { headers: { Authorization: `Bearer ${session.idToken}` } },
+      {
+        headers: { Authorization: `Bearer ${session.idToken}` },
+        signal: AbortSignal.timeout(PDF_TIMEOUT_MS),
+      },
     )
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('[report-pdf] upstream fetch failed', {
+    // `AbortSignal.timeout` aborts with a TimeoutError, which is worth its own
+    // status: 504 says the render did not finish, 502 says it failed.
+    const timedOut = error instanceof Error && error.name === 'TimeoutError'
+
+    logger.error('Upstream report PDF fetch failed', {
       reportId,
       requested,
+      timedOut,
       message: error instanceof Error ? error.message : String(error),
     })
     return NextResponse.json(
-      { error: 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.' },
-      { status: 502 },
+      {
+        error: timedOut
+          ? 'Útbúnaður PDF tók of langan tíma. Prófaðu aftur.'
+          : 'Ekki var unnt að útbúa PDF fyrir þessa skýrslu.',
+      },
+      { status: timedOut ? 504 : 502 },
     )
   }
 
@@ -122,8 +155,7 @@ export async function GET(
     // A 404/400 is an answer about the document, not a fault. Anything else is,
     // and leaves no trace upstream that the reviewer can see.
     if (res.status >= 500) {
-      // eslint-disable-next-line no-console
-      console.error('[report-pdf] upstream error', {
+      logger.error('Upstream report PDF error', {
         reportId,
         requested,
         status: res.status,
@@ -138,8 +170,7 @@ export async function GET(
   try {
     buffer = await res.arrayBuffer()
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('[report-pdf] reading the upstream body failed', {
+    logger.error('Reading the upstream report PDF body failed', {
       reportId,
       requested,
       message: error instanceof Error ? error.message : String(error),

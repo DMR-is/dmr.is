@@ -1,5 +1,4 @@
 import { createNamespace, destroyNamespace } from 'cls-hooked'
-import { Op } from 'sequelize'
 
 import { BadRequestException, ForbiddenException } from '@nestjs/common'
 
@@ -97,6 +96,20 @@ describe('ReportWorkflowService', () => {
     actor: { kind: ReportRoleEnum.COMPANY, nationalId: '5500000000' },
   })
 
+  /*
+   * ⚠️ **Re-arm EVERY collaborator whose failure any test simulates.**
+   *
+   * `jest.preset.js` sets `clearMocks` and `restoreMocks` but NOT `resetMocks`.
+   * `clearMocks` clears calls, `restoreMocks` only restores `jest.spyOn` spies —
+   * neither drops an implementation set on a plain `jest.fn()`. So a
+   * `mockRejectedValue`/`mockImplementation` anywhere in this file persists into
+   * every later test, and the suite's result depends on declaration order.
+   *
+   * `mailService` and `applicationSystemService` were the two that leaked: the
+   * deny test that rejects `notifyDenied`, and the approve tests that reject
+   * `sendReportApproved` or swap it for an ordering probe. Everything they can
+   * fail is reset to its happy value here.
+   */
   beforeEach(() => {
     jest.clearAllMocks()
     // A working renderer is the default so the existing approve cases exercise
@@ -109,6 +122,15 @@ describe('ReportWorkflowService', () => {
     // Null is the common case: a compliant company has no plan to attach.
     reportPdfService.generateImprovementPlanPdf.mockResolvedValue(null)
     companyFileService.archive.mockResolvedValue([])
+    // `true` is "delivered". A default of `undefined` would read as a failed
+    // send and skip the S3 archive in every test that does not set it.
+    mailService.sendReportApproved.mockResolvedValue(true)
+    mailService.sendReportDenied.mockResolvedValue(undefined)
+    mailService.sendExternalCommentNotification.mockResolvedValue(undefined)
+    mailService.sendReportDeadlineReminder.mockResolvedValue(undefined)
+    applicationSystemService.notifyApproved.mockResolvedValue(undefined)
+    applicationSystemService.notifyDenied.mockResolvedValue(undefined)
+    applicationSystemService.notifyEdited.mockResolvedValue(undefined)
     service = new ReportWorkflowService(
       logger as never,
       reportEventService as never,
@@ -436,8 +458,15 @@ describe('ReportWorkflowService', () => {
       const dto: DenyReportDto = { denialReason: '  Missing data  ' }
       await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), dto)
 
-      // The guard makes the transition atomic: an approve racing this deny can
-      // no longer leave the row DENIED while the company holds an approval PDF.
+      /*
+       * The guard makes the transition atomic: an approve racing this deny can no
+       * longer leave the row DENIED while the company holds an approval PDF.
+       *
+       * ⚠️ It pins `context.reportStatus` — the ONE value the audit event below
+       * reports as the prior state — not `IN_REVIEW OR POSTPONED`. A CAS matching
+       * either could succeed against the value the context did not hold and
+       * record a transition that never happened.
+       */
       expect(reportModel.update).toHaveBeenCalledWith(
         {
           status: ReportStatusEnum.DENIED,
@@ -446,12 +475,7 @@ describe('ReportWorkflowService', () => {
         {
           where: {
             id: 'report-1',
-            status: {
-              [Op.in]: [
-                ReportStatusEnum.IN_REVIEW,
-                ReportStatusEnum.POSTPONED,
-              ],
-            },
+            status: ReportStatusEnum.IN_REVIEW,
           },
         },
       )
@@ -472,8 +496,9 @@ describe('ReportWorkflowService', () => {
         denialReason: 'Outliers never resolved',
       })
 
-      // The guard makes the transition atomic: an approve racing this deny can
-      // no longer leave the row DENIED while the company holds an approval PDF.
+      // Same CAS, pinned to the other deniable status — which is the point: the
+      // guard follows what the context read, so the audit event cannot disagree
+      // with the row it changed.
       expect(reportModel.update).toHaveBeenCalledWith(
         {
           status: ReportStatusEnum.DENIED,
@@ -482,12 +507,7 @@ describe('ReportWorkflowService', () => {
         {
           where: {
             id: 'report-1',
-            status: {
-              [Op.in]: [
-                ReportStatusEnum.IN_REVIEW,
-                ReportStatusEnum.POSTPONED,
-              ],
-            },
+            status: ReportStatusEnum.POSTPONED,
           },
         },
       )
@@ -508,6 +528,8 @@ describe('ReportWorkflowService', () => {
         type: ReportTypeEnum.EQUALITY,
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.DENIED,
       }
       reportModel.findOne.mockResolvedValue(report)
 
@@ -536,15 +558,47 @@ describe('ReportWorkflowService', () => {
 
       expect(mailService.sendReportDenied).not.toHaveBeenCalled()
       expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
-      expect(logger.warn).toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    /*
+     * ⚠️ The failing-COMMIT case, which is the only way an after-commit hook can
+     * run over work that is not in the database. Sequelize awaits these hooks in
+     * `commit()`'s `finally`, so a COMMIT that throws fires them on its way to
+     * the rethrow — and the row still reads its pre-transaction status.
+     *
+     * Delete `decisionLanded`'s guard and this test fails by mailing the company
+     * a denial the database never recorded.
+     */
+    it('tells nobody when the row does not actually say DENIED', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      reportModel.findOne.mockResolvedValue({
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        contactEmail: 'contact@example.is',
+        // What a rolled-back denial leaves behind.
+        status: ReportStatusEnum.IN_REVIEW,
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'app-uuid-1',
+      })
+
+      await service.deny(reviewerContext(ReportStatusEnum.IN_REVIEW), {
+        denialReason: 'reason',
+      })
+
+      expect(mailService.sendReportDenied).not.toHaveBeenCalled()
+      expect(applicationSystemService.notifyDenied).not.toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
     })
 
     it('still denies when the notification load throws', async () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
-      // Only the notification's own load fails. `notifyApplicationSystem`
-      // issues its load OUTSIDE its try/catch, so a blanket rejection would
-      // fail `deny` there instead and prove nothing about this path.
+      // The FIRST read is now `decisionLanded`'s status check, which fails
+      // closed and catches its own error — `runAfterCommit` runs the callback
+      // bare when there is no ambient transaction, so an uncaught read here
+      // would surface to the reviewer.
       reportModel.findOne
         .mockRejectedValueOnce(new Error('db is down'))
         .mockResolvedValue(null)
@@ -562,6 +616,8 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.DENIED,
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: 'app-uuid-1',
       })
@@ -595,6 +651,8 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.DENIED,
         providerType: ReportProviderEnum.SYSTEM,
         providerId: null,
       })
@@ -610,6 +668,8 @@ describe('ReportWorkflowService', () => {
       reportModel.update.mockResolvedValue([1])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.DENIED,
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: 'app-uuid-1',
       })
@@ -661,7 +721,11 @@ describe('ReportWorkflowService', () => {
   describe('approve', () => {
     it('transitions IN_REVIEW → APPROVED, supersedes prior approvals of the same type, emits STATUS_CHANGED + SUPERSEDED', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.SALARY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       reportModel.findAll.mockResolvedValue([{ id: 'old-report-1' }])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       reportEventService.emitSuperseded.mockResolvedValue(undefined)
@@ -719,6 +783,8 @@ describe('ReportWorkflowService', () => {
         validUntil: new Date('2029-08-31'),
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
       }
       reportModel.findOne.mockResolvedValue(report)
       reportModel.findAll.mockResolvedValue([])
@@ -746,6 +812,8 @@ describe('ReportWorkflowService', () => {
         validUntil: new Date('2029-08-31'),
         contactEmail: 'contact@example.is',
         companyAdminEmail: null,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
       }
       reportModel.findOne.mockResolvedValue(report)
       reportModel.findAll.mockResolvedValue([])
@@ -820,6 +888,8 @@ describe('ReportWorkflowService', () => {
       const approvedAt = new Date('2026-08-31T23:55:00.000Z')
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         companyNationalId: '5500000000',
@@ -866,6 +936,8 @@ describe('ReportWorkflowService', () => {
       const order: string[] = []
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         companyNationalId: '5500000000',
@@ -877,6 +949,7 @@ describe('ReportWorkflowService', () => {
       companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
       mailService.sendReportApproved.mockImplementation(async () => {
         order.push('mail')
+        return true
       })
       companyFileService.archive.mockImplementation(async () => {
         order.push('archive')
@@ -890,9 +963,39 @@ describe('ReportWorkflowService', () => {
 
     // The prefix IS the retrieval path, so a document filed without a national
     // id is one nobody will find.
+    /*
+     * ⚠️ `archiveApprovalDocuments` documents itself as the Directorate's copy of
+     * what the company RECEIVED, so writing it after a failed send puts a false
+     * yes where someone will later look for proof of delivery. `sendReportApproved`
+     * returns the outcome for exactly this.
+     */
+    it('does not archive when the mail did not go out', async () => {
+      reportModel.update.mockResolvedValue([1])
+      reportModel.findOne.mockResolvedValue({
+        status: ReportStatusEnum.APPROVED,
+        id: 'report-1',
+        type: ReportTypeEnum.EQUALITY,
+        companyNationalId: '5500000000',
+        contactEmail: 'contact@example.is',
+        approvedAt: new Date('2026-08-31T10:00:00.000Z'),
+      })
+      reportModel.findAll.mockResolvedValue([])
+      reportEventService.emitStatusChanged.mockResolvedValue(undefined)
+      companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
+      companyReportModel.findAll.mockResolvedValue([{ reportId: 'report-1' }])
+      mailService.sendReportApproved.mockResolvedValue(false)
+
+      await service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW))
+
+      expect(mailService.sendReportApproved).toHaveBeenCalled()
+      expect(companyFileService.archive).not.toHaveBeenCalled()
+    })
+
     it('skips archiving and warns when the report has no companyNationalId', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         companyNationalId: null,
@@ -918,6 +1021,8 @@ describe('ReportWorkflowService', () => {
     it('mails the report alone when the úrbótaáætlun render throws', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         companyNationalId: '5500000000',
@@ -948,6 +1053,8 @@ describe('ReportWorkflowService', () => {
     it('sends only the report when there is no úrbótaáætlun', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.SALARY,
         contactEmail: 'contact@example.is',
@@ -969,6 +1076,8 @@ describe('ReportWorkflowService', () => {
     it('does not ask for an úrbótaáætlun on an EQUALITY approval', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         contactEmail: 'contact@example.is',
@@ -985,11 +1094,21 @@ describe('ReportWorkflowService', () => {
       ).not.toHaveBeenCalled()
     })
 
-    // The approval, the due-date advance, the supersede and the audit event are
-    // all committed before the notification runs.
-    it('still approves when the PDF cannot be rendered', async () => {
+    /*
+     * The approval, the due-date advance, the supersede and the audit event are
+     * all committed before the notification runs.
+     *
+     * ⚠️ And the NOTICE STILL GOES, without the attachment. The report render
+     * used to be the one unguarded one, so a Chromium failure propagated into
+     * `notifyCompanyApproved`'s catch and the company heard nothing at all about
+     * an approval that was already durable. The notice is the part that cannot be
+     * reconstructed later; the PDF can be downloaded from the report screen.
+     */
+    it('still approves and still notifies when the PDF cannot be rendered', async () => {
       reportModel.update.mockResolvedValue([1])
       reportModel.findOne.mockResolvedValue({
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
         id: 'report-1',
         type: ReportTypeEnum.EQUALITY,
         contactEmail: 'contact@example.is',
@@ -1006,14 +1125,23 @@ describe('ReportWorkflowService', () => {
         service.approve(reviewerContext(ReportStatusEnum.IN_REVIEW)),
       ).resolves.toBeUndefined()
 
-      expect(mailService.sendReportApproved).not.toHaveBeenCalled()
+      expect(mailService.sendReportApproved).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'report-1' }),
+        [],
+      )
+      // And nothing is archived, because nothing was produced to archive.
+      expect(companyFileService.archive).not.toHaveBeenCalled()
       expect(reportEventService.emitStatusChanged).toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalled()
     })
 
     it('advances the parent company next_salary_report_due_at to the new validUntil on a SALARY approval', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.SALARY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
@@ -1029,7 +1157,11 @@ describe('ReportWorkflowService', () => {
 
     it('advances next_equality_report_due_at (not salary) on an EQUALITY approval', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.EQUALITY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
@@ -1045,7 +1177,11 @@ describe('ReportWorkflowService', () => {
 
     it('does not supersede approved reports of a different type (SALARY approval leaves APPROVED EQUALITY untouched)', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.SALARY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.SALARY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       // The cross-type EQUALITY sibling exists in company_report but the
       // type-scoped findAll filters it out, returning no rows to supersede.
       reportModel.findAll.mockResolvedValue([])
@@ -1075,7 +1211,11 @@ describe('ReportWorkflowService', () => {
 
     it('skips supersede when no sibling reports are APPROVED', async () => {
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.EQUALITY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
@@ -1096,6 +1236,8 @@ describe('ReportWorkflowService', () => {
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
         // supersede type lookup
         .mockResolvedValueOnce({ type: ReportTypeEnum.EQUALITY })
+        // the after-commit gate's status read
+        .mockResolvedValueOnce({ status: ReportStatusEnum.APPROVED })
         // company-notification lookup
         .mockResolvedValueOnce({
           id: 'report-1',
@@ -1150,7 +1292,11 @@ describe('ReportWorkflowService', () => {
     it('proceeds with approval when no outlier group has a missing explanation (EQUALITY no-op or SALARY resolved)', async () => {
       reportOutlierGroupModel.findOne.mockResolvedValueOnce(null)
       reportModel.update.mockResolvedValue([1])
-      reportModel.findOne.mockResolvedValue({ type: ReportTypeEnum.EQUALITY })
+      reportModel.findOne.mockResolvedValue({
+        type: ReportTypeEnum.EQUALITY,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
+      })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       companyReportModel.findOne.mockResolvedValue({ companyId: 'company-1' })
@@ -1218,6 +1364,8 @@ describe('ReportWorkflowService', () => {
         companyNationalId: '5500000000',
         contactEmail: 'contact@example.is',
         providerType: ReportProviderEnum.SYSTEM,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.APPROVED,
       })
       reportModel.findAll.mockResolvedValue([])
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
@@ -1252,6 +1400,8 @@ describe('ReportWorkflowService', () => {
         type: ReportTypeEnum.SALARY,
         contactEmail: 'contact@example.is',
         providerType: ReportProviderEnum.SYSTEM,
+        // The after-commit gate re-reads `status` to confirm the commit landed.
+        status: ReportStatusEnum.DENIED,
       })
       reportEventService.emitStatusChanged.mockResolvedValue(undefined)
       const fake = makeFakeTransaction()
