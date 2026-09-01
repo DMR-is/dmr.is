@@ -105,6 +105,13 @@
         "cwd": "apps/directorate-of-equality-api"
       }
     },
+    "company-register-to-sql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ts-node --project tsconfig.app.json -O '{\"module\":\"commonjs\"}' scripts/company-register-to-sql.ts",
+        "cwd": "apps/directorate-of-equality-api"
+      }
+    },
     "refresh-wage-gap-fixtures": {
       "executor": "nx:run-commands",
       "options": {

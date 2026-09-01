@@ -7,22 +7,22 @@ import { Button } from '@dmr.is/ui/components/island-is/Button'
 
 import { Divider } from '@island.is/island-ui/core'
 
-import { ReportTimelineItemDto } from '../../../../../gen/fetch'
 import { reportText } from '../../../../../lib/text'
 import { TimelineEntry } from './TimelineEntry'
+import { TimelineItem } from './timelineHelpers'
 
 const HEAD_COUNT = 3
 const TAIL_COUNT = 3
 const COLLAPSE_THRESHOLD = HEAD_COUNT + TAIL_COUNT
 
 type Props = {
-  timeline: ReportTimelineItemDto[]
+  timeline: TimelineItem[]
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void
 }
 
-function entryKey(item: ReportTimelineItemDto, i: number) {
+function entryKey(item: TimelineItem, i: number) {
   return `${item.kind}-${item.comment?.id ?? item.event?.id}-${i}`
 }
 
@@ -43,7 +43,7 @@ export function TimelineFeed({
     ? timeline.length - HEAD_COUNT - TAIL_COUNT
     : 0
 
-  const renderEntry = (item: ReportTimelineItemDto, i: number) => (
+  const renderEntry = (item: TimelineItem, i: number) => (
     <TimelineEntry
       key={entryKey(item, i)}
       item={item}
@@ -53,7 +53,7 @@ export function TimelineFeed({
     />
   )
 
-  const renderList = (items: ReportTimelineItemDto[], offset = 0) =>
+  const renderList = (items: TimelineItem[], offset = 0) =>
     items.map((item, i) => (
       <React.Fragment key={entryKey(item, offset + i)}>
         {i > 0 && <Divider />}

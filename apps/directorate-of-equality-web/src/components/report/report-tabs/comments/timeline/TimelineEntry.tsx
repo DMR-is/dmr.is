@@ -8,7 +8,6 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import {
   CommentVisibilityEnum,
   ReportEventTypeEnum,
-  ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from '../../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../../lib/text'
@@ -18,10 +17,11 @@ import {
   renderSystemReason,
   timelineEntryKind,
   timelineEntryText,
+  TimelineItem,
 } from './timelineHelpers'
 
 type Props = {
-  item: ReportTimelineItemDto
+  item: TimelineItem
   companyName?: string | null
   currentUserId?: string | null
   onDelete: (commentId: string) => void

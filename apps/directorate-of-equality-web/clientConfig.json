@@ -5584,13 +5584,17 @@
             "type": "string",
             "description": "Plain text comment body"
           },
+          "isSystem": {
+            "type": "boolean",
+            "description": "True when the system wrote the comment rather than a person — render it as \"Kerfið\", not as an unnamed member of staff. Distinct from `authorName` being null, which only means no user is attached."
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
             "example": "2026-02-19T10:30:00.000Z"
           }
         },
-        "required": ["id", "companyId", "body", "createdAt"]
+        "required": ["id", "companyId", "body", "isSystem", "createdAt"]
       },
       "CompanyTimelineItemDto": {
         "type": "object",
