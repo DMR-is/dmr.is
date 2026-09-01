@@ -6,6 +6,7 @@ import { CompanyEventModel } from './company/models/company-event.model'
 import { CompanyReportModel } from './company/models/company-report.model'
 import { IsatCategoryModel } from './company/models/isat-category.model'
 import { IsatSectionModel } from './company/models/isat-section.model'
+import { LegacyReportModel } from './company/models/legacy-report.model'
 import { ConfigModel } from './config/models/config.model'
 import { PostcodeModel } from './location/models/postcode.model'
 import { RegionModel } from './location/models/region.model'
@@ -60,6 +61,7 @@ export const DOE_MODELS = [
   ReportCommentModel,
   CompanyEventModel,
   CompanyCommentModel,
+  LegacyReportModel,
   ConfigModel,
   ApiKeyModel,
 ]
