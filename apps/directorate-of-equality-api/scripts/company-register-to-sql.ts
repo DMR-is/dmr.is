@@ -79,19 +79,25 @@
  * at whether a `report` exists; per-tier dedup is keyed on
  * `*_REPORT_DEADLINE_REMINDER_SENT` events, which this load does not write.
  *
- * So the first run of that task after this load mails every seeded company
- * whose deadline lands in one of those bands. Long-run that is the point of the
- * column. On day one it is a mass mailing to companies that have never heard of
- * this system, some of them holding a certificate the register still calls
- * valid — the archive-not-convert decision keeps the certificate out of
- * `report`, but the mailer only ever sees the date.
+ * The bands span roughly `(now - 30 days, now + 6 months]`, so a certificate
+ * that lapsed long ago is never selected and the "you are overdue" case is
+ * confined to one that expired within the last month — where the message is
+ * true. What is left is volume and first contact: every seeded deadline inside
+ * that window goes out in a single pass, un-deduped, to companies that have
+ * never heard of this system.
  *
- * **Keep `EMAIL_REMINDER_JOB_ENABLED` off across the load and turn it back on
- * deliberately.** It is strict opt-in (`tasks/constants.ts` — only the exact
- * string `"true"` arms it), so leaving it unset is enough. Suppression
- * `*_DEADLINE_REMINDER_SENT` events were considered instead and rejected: they
- * would put "reminder sent" on a timeline for a reminder nobody sent, which is
- * the same fiction as minting APPROVED reports for legacy certificates.
+ * The hazard is therefore not the psql run. It is **the first run of the task
+ * after `EMAIL_REMINDER_JOB_ENABLED` next reads `"true"`**, whenever that is.
+ * Confirm it is off before loading — it is strict opt-in (`tasks/constants.ts`,
+ * `=== 'true'`), so unset is enough — and treat turning it back on as its own
+ * decision with the Directorate rather than a step in this runbook. There is no
+ * staged rollout to fall back on: the flag is global, and `quarantined` is the
+ * only per-company outbound suppression the model has.
+ *
+ * Suppression `*_DEADLINE_REMINDER_SENT` events were considered instead and
+ * rejected: they would put "reminder sent" on a timeline for a reminder nobody
+ * sent, which is the same fiction as minting APPROVED reports for legacy
+ * certificates.
  *
  * The salary side is narrowed at the source as well: `Gildistími` is only
  * written onto `next_salary_report_due_at` for companies the regulation
@@ -900,6 +906,19 @@ const COMPANY_COLUMNS = [
  *   sector                → the sheet wins UNLESS an admin has set
  *                           `sector_override`, which this load never sets
  *                           itself. See `readSector` for why.
+ *   next_salary_report_due_at
+ *                         → cleared when the register says the company owes no
+ *                           salary report. Withholding the date on the way in
+ *                           only governs the FIRST load: the COALESCE below is
+ *                           stored-wins and nothing here ever writes NULL, so a
+ *                           re-export correcting 50+ → 25-49 would set
+ *                           employee_count_category = MEDIUM, let the trigger
+ *                           clear salary_report_required, and leave run 1's
+ *                           deadline standing — which the reminder task, which
+ *                           reads neither column, would keep mailing about,
+ *                           while the generator's summary called the date
+ *                           withheld. An admin's
+ *                           `salary_report_required_override` still wins.
  *   the two due dates     → the DATABASE is authoritative once a report has
  *                           been approved (`advanceCompanyReportDueDate`), so
  *                           the COALESCE runs the other way and the sheet only
@@ -930,7 +949,12 @@ const COMPANY_ON_CONFLICT = `ON CONFLICT (national_id) DO UPDATE SET
   address                     = COALESCE(EXCLUDED.address, company.address),
   postcode_id                 = COALESCE(EXCLUDED.postcode_id, company.postcode_id),
   isat_category_code          = COALESCE(EXCLUDED.isat_category_code, company.isat_category_code),
-  next_salary_report_due_at   = COALESCE(company.next_salary_report_due_at, EXCLUDED.next_salary_report_due_at),
+  next_salary_report_due_at   = CASE
+                                  WHEN EXCLUDED.employee_count_category <> 'LARGE'
+                                   AND company.salary_report_required_override IS NOT TRUE
+                                  THEN NULL
+                                  ELSE COALESCE(company.next_salary_report_due_at, EXCLUDED.next_salary_report_due_at)
+                                END,
   next_equality_report_due_at = COALESCE(company.next_equality_report_due_at, EXCLUDED.next_equality_report_due_at),
   updated_at                  = CURRENT_TIMESTAMP;`
 
@@ -1046,6 +1070,27 @@ type Row = {
     salaryDueUnreadable: string | null
     equalityDueUnreadable: string | null
   }
+}
+
+/**
+ * The refusal log, one row per sheet row we would not load, with the reason.
+ *
+ * Shared by the normal path and the zero-row refusal above: when nothing
+ * survived the scan, this file is the only thing that says why, so it is
+ * written even though no SQL is.
+ */
+const writeSkipped = (output: string, skipped: Skip[]): void => {
+  const csv = [
+    'row,kennitala,nafn,reason',
+    ...skipped
+      .sort((a, b) => a.row - b.row)
+      .map((s) =>
+        [s.row, s.nationalId ?? '', s.name ?? '', s.reason]
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(','),
+      ),
+  ].join('\n')
+  writeFileSync(`${output}.skipped.csv`, csv, 'utf8')
 }
 
 const dueTimestamp = (d: Day | null): string =>
@@ -1633,6 +1678,39 @@ const main = async (): Promise<void> => {
   // alike — the archive is of the sheet, not of the register we derived.
   const archivedRows = [...rows].sort((a, b) => a.row - b.row)
 
+  // A load with nothing to load must not be written at all.
+  //
+  // This file replaces `legacy_report` and the live system comments wholesale,
+  // and those DELETEs are deliberately unconditional so the replacement holds
+  // at zero rows (see the emission section). The other half of that contract
+  // is here: a sheet that yields no companies is not an empty register, it is
+  // a workbook we failed to read, and emitting it would produce a file that
+  // wipes the archive and every seeded comment, commits, and exits 0 — a
+  // SUCCESSFUL load that destroyed data, which is exactly what
+  // `\set ON_ERROR_STOP on` was added to make impossible to miss.
+  //
+  // `REQUIRED` cannot catch this: it holds Nafn and Kennitala, and a template
+  // tab, a `--sheet=` pointed at a summary, or an export saved with its data
+  // region emptied all carry both headers and no rows.
+  if (!finalRows.length) {
+    console.error(
+      `No companies could be read from worksheet "${sheet.name}" — refusing to write ${output}.`,
+    )
+    console.error(
+      `This file replaces legacy_report and the system comments wholesale, so an empty`,
+    )
+    console.error(
+      `load is a wipe, not a no-op. Check --sheet and that the data rows survived the export.`,
+    )
+    if (skipped.length) {
+      console.error(
+        `${skipped.length} row(s) were refused; see ${output}.skipped.csv for why.`,
+      )
+      writeSkipped(output, skipped)
+    }
+    process.exit(1)
+  }
+
   // ------------------------------------------------------------
   // Emit
   // ------------------------------------------------------------
@@ -1697,8 +1775,9 @@ const main = async (): Promise<void> => {
 -- Inactive:   ${inactiveCount} (Staða = hætt)
 -- Quarantine: ${quarantinedRows.length} (Staða = undanþága)
 -- Due dates:  ${salaryDueCount} salary, ${equalityDueCount} equality
---             (${salaryDueWithheld} Gildistími withheld: company is not 50+, so it
---              owes no salary report; archived on legacy_report either way)
+--             (${salaryDueWithheld} Gildistími withheld: employee_count_category is not
+--              LARGE — either below 50 or a size we could not read — so the
+--              company owes no salary report; archived on legacy_report anyway)
 -- Postcodes added: ${newPostcodes.size}
 --
 -- company upserts on national_id. name/employee_count_category/status are
@@ -1727,13 +1806,17 @@ const main = async (): Promise<void> => {
 -- next_equality_report_due_at, and ReportDeadlineReminderTask selects on
 -- status/quarantined/due-date alone — no report, no certificate, nothing
 -- else — with per-tier dedup keyed on *_DEADLINE_REMINDER_SENT events this
--- load does not write. So the first run of that task after this load will mail
--- every seeded company whose deadline falls in one of its four bands, up to
--- six months out. That is the intended long-run behaviour, but it is not an
--- acceptable way to introduce the system to 1 700 companies on day one. Keep
--- EMAIL_REMINDER_JOB_ENABLED off (it is strict opt-in: only the exact string
--- "true" arms it) across this load and turn it on deliberately, once the
--- Directorate has decided who should hear from it first.
+-- load does not write. Its tiers span roughly (now - 30 days, now + 6 months],
+-- so a long-lapsed certificate is never selected — but every seeded deadline
+-- inside that window is, in one pass, un-deduped.
+--
+-- The hazard is not this psql run. It is the FIRST RUN OF THE TASK AFTER
+-- EMAIL_REMINDER_JOB_ENABLED next reads "true", whenever that happens. Confirm
+-- the flag is off before loading (it is strict opt-in: only the exact string
+-- arms it), and treat turning it back on as its own decision with the
+-- Directorate rather than a step in this runbook. Note there is no staged
+-- rollout to fall back on: the flag is global and company.quarantined is the
+-- only per-company outbound suppression the model has.
 --
 -- A postcode still unresolved after the top-up below leaves postcode_id NULL
 -- rather than failing the load.
@@ -1801,11 +1884,25 @@ BEGIN;
   // `notes IS NULL` while the previous run's comments stayed on every
   // timeline — text whose archive row no longer exists, which this file's own
   // doc says must match it.
+  // The DELETE is repo-wide rather than scoped to this sheet's national IDs,
+  // deliberately. Scoping it would trade this risk for the opposite one: a
+  // company dropped from a corrected export would keep its seeded note for
+  // ever, with no archive row behind it — the same mismatch the unconditional
+  // DELETE above exists to prevent. `is_system` is the load's marker and
+  // nothing else in either API writes it today.
+  //
+  // It is not a marker the load OWNS, though: `CompanyCommentCreateAttributes`
+  // now exposes `isSystem`, so the first other feature to set it has its rows
+  // deleted by the next register re-run. The fix then is a provenance column
+  // this load owns, not a narrower WHERE — see the note in
+  // m-20260901-company-comment-system-author.js.
   chunks.push(
     `\n-- 4. The Directorate's own notes, as system comments.\n` +
       `--    Replaced wholesale: is_system marks exactly the rows this file\n` +
       `--    writes. Rows an admin has soft-deleted are left alone here and\n` +
-      `--    not rewritten below, so a deletion survives a re-run.\n\n` +
+      `--    not rewritten below, so a deletion survives a re-run.\n` +
+      `--    Unscoped on purpose; if anything else ever writes is_system, give\n` +
+      `--    this load its own marker rather than narrowing the WHERE.\n\n` +
       'DELETE FROM company_comment WHERE is_system = true AND deleted_at IS NULL;\n',
   )
   for (let i = 0; i < commentRows.length; i += BATCH_SIZE) {
@@ -1832,19 +1929,7 @@ BEGIN;
   chunks.push('\nCOMMIT;\n')
   writeFileSync(output, chunks.join(''), 'utf8')
 
-  if (skipped.length) {
-    const csv = [
-      'row,kennitala,nafn,reason',
-      ...skipped
-        .sort((a, b) => a.row - b.row)
-        .map((s) =>
-          [s.row, s.nationalId ?? '', s.name ?? '', s.reason]
-            .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-            .join(','),
-        ),
-    ].join('\n')
-    writeFileSync(`${output}.skipped.csv`, csv, 'utf8')
-  }
+  if (skipped.length) writeSkipped(output, skipped)
 
   // ------------------------------------------------------------
   // Summary
@@ -1921,7 +2006,9 @@ BEGIN;
   if (salaryDueWithheld)
     line(
       'Gildistími withheld:',
-      `${salaryDueWithheld} (company not 50+, owes no salary report; archived either way)`,
+      `${salaryDueWithheld} (employee_count_category is not LARGE, so the trigger` +
+        ` leaves salary_report_required false — includes sizes we could not read;` +
+        ` archived on legacy_report either way)`,
     )
   line(
     'skipped:',
@@ -1980,12 +2067,14 @@ BEGIN;
       `  ⚠ ${salaryDueCount + equalityDueCount} deadlines seeded. ReportDeadlineReminderTask selects on`,
     )
     console.log(
-      `    status/quarantined/due-date alone, so its next run mails all of them.`,
+      `    status/quarantined/due-date alone, un-deduped, over a window of about`,
     )
     console.log(
-      `    Keep EMAIL_REMINDER_JOB_ENABLED off across the load and re-enable it`,
+      `    (now - 30 days, now + 6 months]. Confirm EMAIL_REMINDER_JOB_ENABLED is off`,
     )
-    console.log(`    deliberately.`)
+    console.log(
+      `    before loading; turning it back on is its own decision, not a step here.`,
+    )
   }
   console.log('')
 }

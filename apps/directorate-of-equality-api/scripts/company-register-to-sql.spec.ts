@@ -65,10 +65,17 @@ describe('readDay — formula cells', () => {
     // The shapes the readers actually have to cope with. Asserted rather than
     // assumed, so an exceljs upgrade that changes them fails here and not in a
     // silently short load.
-    expect(Object.keys(sheet.getCell('A1').value as object)).toContain('formula')
+    //
+    // `in` rather than `Object.keys`, because that is the operator `scalar`
+    // branches on. exceljs declares `readonly formula?: string` on
+    // `CellSharedFormulaValue`, so a future version could expose it as a
+    // prototype getter: own-key assertions would stay green while the defect's
+    // precondition had quietly gone.
+    const master = sheet.getCell('A1').value as object
+    expect('formula' in master).toBe(true)
     const slave = sheet.getCell('A2').value as object
-    expect(Object.keys(slave)).toContain('sharedFormula')
-    expect(Object.keys(slave)).not.toContain('formula')
+    expect('sharedFormula' in slave).toBe(true)
+    expect('formula' in slave).toBe(false)
 
     expect(readDay(sheet.getCell('A1'))).toEqual({
       year: 2027,
@@ -77,6 +84,25 @@ describe('readDay — formula cells', () => {
     })
     // The regression: this read as null while the sheet plainly states a date.
     expect(readDay(sheet.getCell('A2'))).toEqual({
+      year: 2027,
+      month: 12,
+      day: 31,
+    })
+  })
+
+  // Pins the key test's NARROWNESS, not just its presence. `scalar` must unwrap
+  // formula wrappers and nothing else: dropping the key check altogether and
+  // unwrapping every object would still satisfy the shared-formula cases above,
+  // while silently nulling the two non-formula object shapes `readString`
+  // handles — rich text and hyperlinks — both of which are ordinary export
+  // content. Without this case that mutant passes the whole file.
+  it('does not mistake a rich-text cell for a formula wrapper', async () => {
+    const sheet = await roundTrip((s) => {
+      s.getCell('A1').value = { richText: [{ text: '31.12.2027' }] }
+    })
+
+    expect('richText' in (sheet.getCell('A1').value as object)).toBe(true)
+    expect(readDay(sheet.getCell('A1'))).toEqual({
       year: 2027,
       month: 12,
       day: 31,
