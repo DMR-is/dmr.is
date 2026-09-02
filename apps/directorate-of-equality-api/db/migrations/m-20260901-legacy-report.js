@@ -104,6 +104,14 @@ module.exports = {
       CREATE INDEX IF NOT EXISTS legacy_report_company_id_idx
         ON legacy_report (company_id);
 
+      -- ⚠️ Superseded, and deliberately left as it was issued. This migration has
+      -- already run wherever the register load has (the load commits the company
+      -- rows and the legacy_report rows in one transaction, so one implies the
+      -- other), which includes production. Rewriting the string here would
+      -- therefore only change what a database created from scratch gets, and
+      -- leave every already-migrated one on the old text — a third state.
+      -- m-20260902-legacy-report-comment.js re-issues the current comment, so
+      -- both kinds of database converge on it.
       COMMENT ON TABLE legacy_report IS 'Archive of the Directorate''s retired SharePoint register (Adda eftirlit Gagnasafn), one row per sheet row. Written once by the company-register load, read only by the company detail view''s legacy tab. Nothing derives from it — compliance status still comes from report/company_report.';
 
       COMMENT ON COLUMN legacy_report.national_id IS 'Kennitala exactly as the sheet held it, unvalidated. 13 source rows fail checksum validation (legacy institutional 71026x IDs, plus two truncated to 9 digits); company_id is the resolved company.';

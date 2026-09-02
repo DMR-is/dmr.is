@@ -185,13 +185,24 @@
  *
  * ## `Í gildi` reaches no column on `company`
  *
- * It is archived verbatim on `legacy_report.validity` and nothing derives from
- * it. Whether a company is currently in good standing is computed here —
- * `companyReportStatusCaseSql` from its reports, `salaryReportOverdue` from the
- * due date — and a seeded second opinion could only ever contradict that. The
- * 914 blank cells are left blank for the same reason: with no certification
- * date behind 902 of them there is nothing to compute from, and inventing a
- * value for an archive column is worse than an honest NULL.
+ * It is archived verbatim on `legacy_report.validity`, and no column on
+ * `company` is seeded from it. Whether a company is in good standing is
+ * computed at read time by `companyReportStatusCaseSql` — from its reports and,
+ * since the legacy-coverage branch landed, from `legacy_report`'s own expiry
+ * dates. A seeded second opinion on `company` could only ever contradict that.
+ *
+ * ⚠️ That query does read this column, on the salary side only: a row marked
+ * `Útrunnið` is not counted as coverage even when its stated date is still in
+ * the future. Those are the 20 surrendered certificates above. Without the
+ * guard they would read SATISFACTORY in the register while the renewal window
+ * kept them from filing — locked out and flagged to nobody until 2027. The
+ * equality side stays date-only, because `Í gildi` describes the salary
+ * certificate and 120 rows hold a live equality plan beside a lapsed one.
+ *
+ * The 914 blank cells are still left blank: with no certification date behind
+ * 902 of them there is nothing to compute from, inventing a value for an
+ * archive column is worse than an honest NULL, and the guard is written
+ * `IS DISTINCT FROM` so a blank never withdraws coverage its date supports.
  *
  * ## Postcodes and regions are already seeded
  *

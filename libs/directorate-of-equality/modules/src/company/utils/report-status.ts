@@ -41,6 +41,14 @@ const LEGACY_VALID_UNTIL_COLUMN: Record<ReportTypeEnum, string> = {
 }
 
 /**
+ * The sheet's own word for a certification no longer in force, held verbatim on
+ * `legacy_report.validity`. Compared as a string literal because that column is
+ * TEXT by design — the archive's contract is what the list said, not what our
+ * domain means (see `LegacyReportModel`).
+ */
+const LEGACY_VALIDITY_EXPIRED = 'Útrunnið'
+
+/**
  * Whether the company holds a certification from the Directorate's outgoing
  * SharePoint register that has not yet expired.
  *
@@ -55,13 +63,31 @@ const LEGACY_VALID_UNTIL_COLUMN: Record<ReportTypeEnum, string> = {
  * here" is not "is out of compliance", and the admin register has to show the
  * second.
  *
- * ⚠️ Only the date is consulted — never `validity` or `legacyStatus`. Those two
- * describe the *salary* certification (`Í gildi` / `Lokið` / `Útrunnið`), and
- * the equality plan is a separate case with its own number and its own expiry:
- * 120 rows carry a live `equality_valid_until` while the salary certification
- * beside it has lapsed. Reading the status columns here would wrongly mark all
- * 120 as missing a plan they hold. This is the same rule the load applies when
- * it seeds `next_equality_report_due_at` from the same cell.
+ * ⚠️ The *equality* branch consults the date and nothing else — never
+ * `validity` or `legacyStatus`. Those two describe the *salary* certification
+ * (`Í gildi` / `Lokið` / `Útrunnið`), and the equality plan is a separate case
+ * with its own number and its own expiry: 120 rows carry a live
+ * `equality_valid_until` while the salary certification beside it has lapsed.
+ * Reading the status columns there would wrongly mark all 120 as missing a plan
+ * they hold. This is the same rule the load applies when it seeds
+ * `next_equality_report_due_at` from the same cell.
+ *
+ * ⚠️ The *salary* branch additionally rejects `validity = 'Útrunnið'`, because
+ * on that side the two columns describe the same certificate and 20 rows have
+ * them disagreeing: the certificate was surrendered early ("Vottun sagt upp",
+ * "Uppsögn á skírteini") while its stated expiry still runs into the future —
+ * Reykjavíkurborg's to 2027-12-15. The date alone would read those as covered,
+ * and nothing else would catch it: the load seeds `next_salary_report_due_at`
+ * from the same cell, so `salaryReportOverdue` is false too, and the renewal
+ * window (`evaluateSalaryRenewalEligibility`) bars the company from filing
+ * until six months before that date. They would sit in the register as
+ * SATISFACTORY, unable to correct it, until 2027.
+ *
+ * The guard is `IS DISTINCT FROM`, not `<>`: 914 rows have a blank `validity`
+ * — the list never recorded one — and the archive keeps that as an honest NULL,
+ * so a blank cell beside a live date stays covered. An `Útrunnið` row whose
+ * date has actually passed already fails the date test, so this only ever moves
+ * the 20.
  *
  * The comparison is `>= CURRENT_DATE`, not `> NOW()`, because these are
  * DATEONLY calendar dates: a certificate stated to be valid until today is
@@ -69,11 +95,52 @@ const LEGACY_VALID_UNTIL_COLUMN: Record<ReportTypeEnum, string> = {
  * reasoning that makes the load write 23:59:59 into the timestamp columns.
  */
 function activeLegacyCertificationExists(type: ReportTypeEnum): string {
+  const surrenderGuard =
+    type === ReportTypeEnum.SALARY
+      ? `AND lr.validity IS DISTINCT FROM '${LEGACY_VALIDITY_EXPIRED}'`
+      : ''
+
   return `EXISTS (
     SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
     WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
     AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} IS NOT NULL
     AND lr.${LEGACY_VALID_UNTIL_COLUMN[type]} >= CURRENT_DATE
+    ${surrenderGuard}
+  )`
+}
+
+/**
+ * Whether the company's legacy certification runs out within `interval` — the
+ * legacy half of the company list's "expires within" filter.
+ *
+ * It lives here, beside `activeLegacyCertificationExists`, for the reason the
+ * whole module exists: coverage and expiry have to be read off the same two
+ * sources or an admin gets a queue that contradicts the status column. Once a
+ * legacy certificate counts as coverage, a `report`-only expiry filter hides
+ * every one of those companies until the day it lapses — 1 507 of the 1 753
+ * loaded at 25+ hold no `report` row at all.
+ *
+ * The same surrender guard applies, and for the same reason: a certificate that
+ * was given up is not expiring soon, it is already gone, and advertising it as
+ * "expires in 30 days" would put a date on something that ended.
+ *
+ * `interval` is a SQL interval literal chosen by the caller from a fixed set
+ * (`INTERVAL '30 days'`), never user input.
+ */
+export function legacyCertificationExpiringSql(interval: string): string {
+  const equalityColumn = LEGACY_VALID_UNTIL_COLUMN[ReportTypeEnum.EQUALITY]
+  const salaryColumn = LEGACY_VALID_UNTIL_COLUMN[ReportTypeEnum.SALARY]
+
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+    AND (
+      lr.${equalityColumn} BETWEEN CURRENT_DATE AND CURRENT_DATE + ${interval}
+      OR (
+        lr.${salaryColumn} BETWEEN CURRENT_DATE AND CURRENT_DATE + ${interval}
+        AND lr.validity IS DISTINCT FROM '${LEGACY_VALIDITY_EXPIRED}'
+      )
+    )
   )`
 }
 
