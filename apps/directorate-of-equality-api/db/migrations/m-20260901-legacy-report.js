@@ -3,8 +3,7 @@
 /**
  * `legacy_report` — an archive of the Directorate's outgoing SharePoint
  * register, the hand-kept working sheet ("Adda eftirlit Gagnasafn") this system
- * replaces. One row per sheet row, written once by the register load and read
- * only by the company detail view's own tab.
+ * replaces. One row per sheet row, written once by the register load.
  *
  * ## Why this is not `report` + `company_report`
  *
@@ -12,13 +11,23 @@
  * force. Minting APPROVED `report` rows for them would fabricate submissions
  * that never went through the flow — no employees, no criteria, no result — and
  * everything that derives from `report` would then answer from that fiction:
- * `companyReportStatusCaseSql`, the salary renewal window, the public register.
+ * the salary renewal window, the salary report's equality-report reference, the
+ * public register.
  *
- * The trade is deliberate and was decided with the product owner: a company
- * certified under the old regime reads as MISSING_* here until it files for
- * real, and the certificate it actually holds is visible on this tab. The
- * alternative was to tinker with the live compliance model on the day the
- * register goes operational.
+ * So no `report` row is ever minted from this table. The compliance status is
+ * the one thing that does read it: `companyReportStatusCaseSql` treats a
+ * `salary_valid_until` / `equality_valid_until` that has not passed as a second
+ * way to be covered. Without that, the load's 1 507 companies at 25+ would all
+ * read MISSING_EQUALITY_REPORT on day one — the ~540 with a live equality plan
+ * included — which states "has not filed here" as if it meant "is out of
+ * compliance".
+ *
+ * ⚠️ `legacy_status` is never consulted. `validity` is, on the salary side
+ * only: a row marked `Útrunnið` is a certificate that was surrendered early,
+ * and 20 of them still carry a future date, so the date alone would read them
+ * as covered. The equality side stays date-only, because `validity` describes
+ * the salary certificate and 120 rows hold a live equality plan beside a
+ * lapsed one.
  *
  * ## Everything legacy is TEXT
  *
@@ -98,6 +107,14 @@ module.exports = {
       CREATE INDEX IF NOT EXISTS legacy_report_company_id_idx
         ON legacy_report (company_id);
 
+      -- ⚠️ Superseded, and deliberately left as it was issued. This migration has
+      -- already run wherever the register load has (the load commits the company
+      -- rows and the legacy_report rows in one transaction, so one implies the
+      -- other), which includes production. Rewriting the string here would
+      -- therefore only change what a database created from scratch gets, and
+      -- leave every already-migrated one on the old text — a third state.
+      -- m-20260902-legacy-report-comment.js re-issues the current comment, so
+      -- both kinds of database converge on it.
       COMMENT ON TABLE legacy_report IS 'Archive of the Directorate''s retired SharePoint register (Adda eftirlit Gagnasafn), one row per sheet row. Written once by the company-register load, read only by the company detail view''s legacy tab. Nothing derives from it — compliance status still comes from report/company_report.';
 
       COMMENT ON COLUMN legacy_report.national_id IS 'Kennitala exactly as the sheet held it, unvalidated. 13 source rows fail checksum validation (legacy institutional 71026x IDs, plus two truncated to 9 digits); company_id is the resolved company.';

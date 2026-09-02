@@ -12,6 +12,7 @@ import {
   COMPANY_QUERY_ALIAS,
   companyReportStatusCaseSql,
   equalityReportOverdueSql,
+  legacyCertificationExpiringSql,
   salaryReportOverdueSql,
 } from './report-status'
 
@@ -138,6 +139,20 @@ function maxExpiryInterval(values: CompanyExpiryFilterEnum[]): string {
   return "INTERVAL '30 days'"
 }
 
+/**
+ * Filter to companies whose coverage runs out within the selected window.
+ *
+ * ⚠️ Both sources of coverage are checked, for the same reason
+ * `companyReportStatusCaseSql` checks both: at hand-over 1 507 of the 1 753
+ * loaded companies at 25+ are covered by a legacy certification and hold no
+ * `report` row at all. A `report`-only filter would leave every one of them out
+ * of this queue while the status column already calls them covered — so a
+ * legacy certificate expiring in three weeks would surface nowhere until the
+ * day it lapsed, and the first an admin heard of it would be the overdue flag.
+ *
+ * The legacy half is defined in `report-status.ts` beside the coverage test it
+ * has to agree with; see `legacyCertificationExpiringSql`.
+ */
 export function buildCompanyExpiryWhere(
   values: CompanyExpiryFilterEnum[],
 ): WhereOptions {
@@ -145,14 +160,14 @@ export function buildCompanyExpiryWhere(
   const interval = maxExpiryInterval(values)
   return {
     [Op.and]: [
-      literal(`EXISTS (
+      literal(`(EXISTS (
         SELECT 1 FROM "${DoeModels.COMPANY_REPORT}" cr
         JOIN "${DoeModels.REPORT}" r ON r.id = cr.report_id
         WHERE cr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
         AND r.status = 'APPROVED'
         AND r.valid_until > NOW()
         AND r.valid_until <= NOW() + ${interval}
-      )`),
+      ) OR ${legacyCertificationExpiringSql(interval)})`),
     ],
   }
 }
