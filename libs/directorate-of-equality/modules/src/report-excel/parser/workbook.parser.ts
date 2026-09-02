@@ -3,6 +3,13 @@
  * a fully-populated `ParsedReportDto` (or throws a `BadRequestException`
  * carrying a structured error list if anything in the workbook is invalid).
  *
+ * ## Two halves
+ *
+ * `parseWorkbook` owns the byte-level concerns (archive budget, shared-strings
+ * repair, "is this even an xlsx") and then hands a loaded workbook to
+ * `parseLoadedWorkbook`, which owns everything value-level. Step 1 below is the
+ * boundary.
+ *
  * ## Orchestration order
  *
  * 1. Load the workbook via exceljs.
@@ -211,46 +218,21 @@ const formatImportError = (e: ImportErrorDto): string => {
   return `Blað: ${where} – ${e.message}`
 }
 
-export const parseWorkbook = async (
-  fileBuffer: Buffer,
-): Promise<ParsedReportDto> => {
-  const workbook = new ExcelJS.Workbook()
-  try {
-    const zip = await JSZip.loadAsync(fileBuffer)
-    await assertArchiveWithinBudget(zip)
-    const guardedBuffer = await guardMissingSharedStrings(zip, fileBuffer)
-    // exceljs declares its own `Buffer extends ArrayBuffer` shape that
-    // conflicts with Node 20's `Buffer extends Uint8Array<ArrayBufferLike>`.
-    // Hand it the underlying ArrayBuffer slice to satisfy both contracts.
-    const arrayBuffer = guardedBuffer.buffer.slice(
-      guardedBuffer.byteOffset,
-      guardedBuffer.byteOffset + guardedBuffer.byteLength,
-    ) as ArrayBuffer
-    await workbook.xlsx.load(arrayBuffer)
-  } catch (e) {
-    // The guard above rejects on purpose, with a message that already says
-    // what is wrong. Re-wrapping it would replace that with "is this a valid
-    // xlsx file?" — which is both less useful and, for a workbook that is
-    // simply too large, untrue. Only genuine load failures get the generic
-    // message; `errors` does not reach the client, so the headline is the
-    // only part the user reads.
-    if (e instanceof ArchiveTooLargeError) throw workbookTooLarge()
-    if (e instanceof BadRequestException) throw e
-
-    throw new BadRequestException({
-      message: 'Ekki tókst að lesa vinnubókina — er þetta gild xlsx skrá?',
-      errors: [
-        {
-          sheet: '(workbook)',
-          row: null,
-          column: null,
-          message:
-            e instanceof Error ? e.message : 'Óþekkt villa við lestur xlsx',
-        },
-      ],
-    })
-  }
-
+/**
+ * The value-level half of the parse: everything that reads an already-loaded
+ * `ExcelJS.Workbook` rather than bytes. Split out from `parseWorkbook` so tests
+ * that build a workbook in memory can exercise it without paying a
+ * `writeBuffer()` + re-`load()` round trip per case — on the shipped template
+ * that round trip is ~600ms of pure exceljs CPU, and it was also the source of
+ * two intermittent failures (a truncated zip out of `writeBuffer`, and buffer
+ * pool aliasing on the way back in).
+ *
+ * Byte-level concerns — archive budget, shared-strings repair, "is this even an
+ * xlsx" — belong to `parseWorkbook` and are not reachable from here.
+ */
+export const parseLoadedWorkbook = (
+  workbook: ExcelJS.Workbook,
+): ParsedReportDto => {
   const errors = new ErrorBag()
 
   // ⚠️ Layout FIRST, and bail on mismatch. Every parser below reads by
@@ -294,4 +276,47 @@ export const parseWorkbook = async (
   }
 
   return report
+}
+
+export const parseWorkbook = async (
+  fileBuffer: Buffer,
+): Promise<ParsedReportDto> => {
+  const workbook = new ExcelJS.Workbook()
+  try {
+    const zip = await JSZip.loadAsync(fileBuffer)
+    await assertArchiveWithinBudget(zip)
+    const guardedBuffer = await guardMissingSharedStrings(zip, fileBuffer)
+    // exceljs declares its own `Buffer extends ArrayBuffer` shape that
+    // conflicts with Node 20's `Buffer extends Uint8Array<ArrayBufferLike>`.
+    // Hand it the underlying ArrayBuffer slice to satisfy both contracts.
+    const arrayBuffer = guardedBuffer.buffer.slice(
+      guardedBuffer.byteOffset,
+      guardedBuffer.byteOffset + guardedBuffer.byteLength,
+    ) as ArrayBuffer
+    await workbook.xlsx.load(arrayBuffer)
+  } catch (e) {
+    // The guard above rejects on purpose, with a message that already says
+    // what is wrong. Re-wrapping it would replace that with "is this a valid
+    // xlsx file?" — which is both less useful and, for a workbook that is
+    // simply too large, untrue. Only genuine load failures get the generic
+    // message; `errors` does not reach the client, so the headline is the
+    // only part the user reads.
+    if (e instanceof ArchiveTooLargeError) throw workbookTooLarge()
+    if (e instanceof BadRequestException) throw e
+
+    throw new BadRequestException({
+      message: 'Ekki tókst að lesa vinnubókina — er þetta gild xlsx skrá?',
+      errors: [
+        {
+          sheet: '(workbook)',
+          row: null,
+          column: null,
+          message:
+            e instanceof Error ? e.message : 'Óþekkt villa við lestur xlsx',
+        },
+      ],
+    })
+  }
+
+  return parseLoadedWorkbook(workbook)
 }
