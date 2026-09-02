@@ -346,6 +346,12 @@ export const Table = <TData extends object>({
                               : undefined
                           }
                           style={{
+                            // A long unbreakable value — an email address, a URL —
+                            // has no break opportunity, so under the default
+                            // `fixed` layout it overflows its cell and renders on
+                            // top of the next column. Inert on `fit` columns,
+                            // which set `whiteSpace: 'nowrap'`.
+                            overflowWrap: 'break-word',
                             ...sizingStyle(cell.column),
                             ...(getRowExpanded && href
                               ? { cursor: 'pointer' }

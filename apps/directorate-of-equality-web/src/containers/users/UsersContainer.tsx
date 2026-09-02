@@ -29,22 +29,29 @@ const COLUMNS: ColumnDef<UserDto>[] = [
     enableSorting: true,
     cell: ({ row }) =>
       `${row.original.firstName} ${row.original.lastName}`.trim(),
+    meta: { fit: true },
   },
   {
     accessorKey: 'nationalId',
     header: usersText.modal.nationalIdLabel,
     enableSorting: false,
     cell: ({ getValue }) => formatNationalId(getValue<string>()),
+    meta: { fit: true },
   },
   {
     accessorKey: 'email',
     header: sharedText.form.emailLabel,
     enableSorting: true,
+    // The widest column by far, and the only one whose content varies in
+    // length, so it takes the slack the others leave rather than all six
+    // columns sharing the width equally.
+    meta: { grow: true },
   },
   {
     accessorKey: 'phone',
     header: sharedText.form.phoneShortLabel,
     enableSorting: false,
+    meta: { fit: true },
   },
   {
     accessorKey: 'role',
@@ -62,6 +69,7 @@ const COLUMNS: ColumnDef<UserDto>[] = [
         />
       )
     },
+    meta: { fit: true },
   },
   {
     accessorKey: 'isActive',
@@ -76,6 +84,7 @@ const COLUMNS: ColumnDef<UserDto>[] = [
         }}
       />
     ),
+    meta: { fit: true },
   },
 ]
 
@@ -144,7 +153,18 @@ export const UsersContainer = () => {
                 <Text fontWeight="semiBold">{visibleUsers.length}</Text>
                 <Text>{usersText.resultsText}</Text>
               </Inline>
+              {/*
+                `layout="auto"` with the `fit`/`grow` meta above, rather than the
+                default `fixed`. Fixed layout gave all six columns an equal
+                sixth of the width, so `Sími` — seven digits — got as much room
+                as `Netfang`, whose addresses need roughly twice that. An email
+                has no break opportunity, so it overflowed its cell and rendered
+                on top of the phone number, and the surplus turned into a
+                horizontal scrollbar on the `overflow: auto` wrapper island-ui
+                puts around every table.
+              */}
               <Table
+                layout="auto"
                 columns={COLUMNS}
                 data={visibleUsers}
                 noDataMessage={usersText.noData}
