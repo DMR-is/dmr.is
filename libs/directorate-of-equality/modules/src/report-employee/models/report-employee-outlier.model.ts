@@ -1,10 +1,13 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import type { ReportEmployeeOutlierDto } from '../dto/report-employee-outlier.dto'
+import type { ReportEmployeeModel as ReportEmployeeModelRef } from './report-employee.model'
 import { ReportEmployeeModel } from './report-employee.model'
+import type { ReportOutlierGroupModel as ReportOutlierGroupModelRef } from './report-outlier-group.model'
 import { ReportOutlierGroupModel } from './report-outlier-group.model'
 
 /**
@@ -62,13 +65,13 @@ export class ReportEmployeeOutlierModel extends MutableModel<
     foreignKey: 'reportEmployeeId',
     as: 'reportEmployee',
   })
-  reportEmployee?: ReportEmployeeModel
+  reportEmployee?: ReportEmployeeModelRef
 
   @BelongsTo(() => ReportOutlierGroupModel, {
     foreignKey: 'groupId',
     as: 'group',
   })
-  group?: ReportOutlierGroupModel
+  group?: ReportOutlierGroupModelRef
 
   /**
    * Project an outlier row to its DTO. The persisted row is a thin join
