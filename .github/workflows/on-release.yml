@@ -41,11 +41,42 @@ jobs:
         with:
           VERSION_TAG: ${{ github.ref_name }}
           ECR_REPOSITORY: ${{ matrix.ECR_REPOSITORY }}
-  deploy:
-    name: 🚀 Deploy to Prod
+
+  # Single approval gate for the whole release. The `production` environment
+  # holds no secrets or variables — only a required-reviewers rule — so gating
+  # one no-op job is enough: the deploy jobs below declare no environment and
+  # therefore need no second approval.
+  approve-prod:
+    name: ✋ Approve prod deploy
     runs-on: ubuntu-latest
     environment: production
     needs: version-tag
+    steps:
+      - name: ✅ Approved
+        run: echo "Approved deploy of ${{ github.ref_name }} to ${{ env.ENV }}"
+
+  # Jafnréttisstofa goes first, it is the faster of the two. Both deploys commit
+  # to main in DMR-is/infrastructure, so they must stay sequential rather than
+  # racing on the push.
+  deploy-jafnrettisstofa:
+    name: 🚀 Deploy Jafnréttisstofa to Prod
+    runs-on: ubuntu-latest
+    needs: approve-prod
+    steps:
+      - name: 📁 Checkout
+        uses: actions/checkout@v4
+      - name: 🚀 Deploy to Prod
+        uses: ./.github/actions/deploy/update-terragrunt-jafnrettisstofa
+        with:
+          ENV: ${{ env.ENV }}
+          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
+          VERSION_TAG: ${{ github.ref_name }}
+          PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
+
+  deploy:
+    name: 🚀 Deploy to Prod
+    runs-on: ubuntu-latest
+    needs: deploy-jafnrettisstofa
     steps:
       - name: 📁 Checkout
         uses: actions/checkout@v4
@@ -57,19 +88,3 @@ jobs:
           VERSION_TAG: ${{ github.ref_name }}
           PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
           SERVICES: official-journal-api official-journal-admin-api official-journal-application-api official-journal-web regulations-api legal-gazette-api legal-gazette-web legal-gazette-application-web legal-gazette-public-web
-
-  deploy-jafnrettisstofa:
-    name: 🚀 Deploy Jafnréttisstofa to Prod
-    runs-on: ubuntu-latest
-    environment: production
-    needs: deploy
-    steps:
-      - name: 📁 Checkout
-        uses: actions/checkout@v4
-      - name: 🚀 Deploy to Prod
-        uses: ./.github/actions/deploy/update-terragrunt-jafnrettisstofa
-        with:
-          ENV: ${{ env.ENV }}
-          AWS_ENV_ROLE_ARN: arn:aws:iam::${{ env.AWS_JAFNRETTISSTOFA_PROD_ACCOUNT_ID }}:role/${{ env.ENV }}-github-ci-role
-          VERSION_TAG: ${{ github.ref_name }}
-          PAT: ${{ secrets.DMR_ACCOUNT_PAT }}
