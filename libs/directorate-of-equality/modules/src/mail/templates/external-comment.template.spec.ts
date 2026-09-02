@@ -15,8 +15,9 @@ const CONTACT_DOE = 'hafa samband við Jafnréttisstofu'
 const reportOf = (
   providerType: ReportProviderEnum | null,
   providerId: string | null,
+  reportType: 'SALARY' | 'EQUALITY' = 'EQUALITY',
 ): ReportModel =>
-  ({ id: 'report-1', providerType, providerId }) as unknown as ReportModel
+  ({ id: 'report-1', providerType, providerId, type: reportType }) as unknown as ReportModel
 
 const comment = (body = 'Vantar skýringar á tveimur röðum.'): ReportCommentModel =>
   ({ body }) as unknown as ReportCommentModel
@@ -28,8 +29,8 @@ const bothRenderings = (report: ReportModel): string[] => [
 ]
 
 describe('external comment template', () => {
-  describe('an island.is report', () => {
-    const report = reportOf(ReportProviderEnum.ISLAND_IS, 'app-uuid-1')
+  describe('an island.is salary report', () => {
+    const report = reportOf(ReportProviderEnum.ISLAND_IS, 'app-uuid-1', 'SALARY')
 
     it('tells the reader to log in to the application', () => {
       for (const rendered of bothRenderings(report)) {
@@ -40,7 +41,25 @@ describe('external comment template', () => {
     it('links to the application', () => {
       for (const rendered of bothRenderings(report)) {
         expect(rendered).toContain(
-          'https://island.is/umsoknir/jafnrettisstofa/app-uuid-1',
+          'https://island.is/umsoknir/jafnrettisstofa-skyrslugjof/app-uuid-1',
+        )
+      }
+    })
+  })
+
+    describe('an island.is equality report', () => {
+    const report = reportOf(ReportProviderEnum.ISLAND_IS, 'app-uuid-1', 'EQUALITY')
+
+    it('tells the reader to log in to the application', () => {
+      for (const rendered of bothRenderings(report)) {
+        expect(rendered).toContain(LOG_IN)
+      }
+    })
+
+    it('links to the application', () => {
+      for (const rendered of bothRenderings(report)) {
+        expect(rendered).toContain(
+          'https://island.is/umsoknir/jafnrettisstofa-jafnrettisaaetlun/app-uuid-1',
         )
       }
     })

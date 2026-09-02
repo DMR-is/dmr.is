@@ -12,7 +12,10 @@ const buildIslandIsApplicationUrl = (report: ReportModel): string | null => {
   ) {
     return null
   }
-  return `https://island.is/umsoknir/jafnrettisstofa/${encodeURIComponent(
+
+  const reportTypeUrl = report.type === 'SALARY' ? 'skyrslugjof' : 'jafnrettisaaetlun'
+
+  return `https://island.is/umsoknir/jafnrettisstofa-${reportTypeUrl}/${encodeURIComponent(
     report.providerId,
   )}`
 }
