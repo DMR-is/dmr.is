@@ -38,6 +38,19 @@ const formatSpreads = (value: number | null | undefined): string =>
 
 const dash = '–'
 
+/**
+ * The same figure without its sign, for prose that already states the direction
+ * in words. "víkja 2,51 staðalvik niður" — printing "−2,51 staðalvik niður"
+ * states the direction twice and invites the reader to wonder which is right.
+ * Mirrors `formatSpreadMagnitude` in the PDF template (change both together).
+ */
+const formatSpreadMagnitude = (value: number): string =>
+  Math.abs(value).toFixed(2).replace('.', ',')
+
+/** Icelandic thousands separators, for counts that can reach four digits. */
+const formatCount = (value: number): string =>
+  new Intl.NumberFormat('is-IS').format(value)
+
 const genderMap: Record<string, string> = {
   MALE: sharedText.genders.male,
   FEMALE: sharedText.genders.female,
@@ -167,6 +180,9 @@ export const PayDispersionTable = ({
     employees,
     cohortResidualSpreadPercentUp,
     cohortResidualSpreadPercentDown,
+    countBelowExpected,
+    countAboveExpected,
+    chanceCriticalSpreads,
   } = payDispersion
 
   return (
@@ -184,7 +200,12 @@ export const PayDispersionTable = ({
               </Text>
             ))}
           </Stack>
-        ) : employees.length === 0 ? (
+        ) : /* ⚠️ On the TRUE counts, NOT on `employees.length`. The array is a
+               shortlist, and a suppressed tie group is precisely the case where
+               employees qualified and no rows were produced — reading the array
+               here would print the all-clear copy on a report that found 312
+               people off the line. */
+        countBelowExpected === 0 && countAboveExpected === 0 ? (
           <Text variant="small" color="dark350">
             {p.allClear}
           </Text>
@@ -214,18 +235,85 @@ export const PayDispersionTable = ({
                   )}
                 </Text>
               )}
-            {/*
-              ⚠️ `layout="auto"` is REQUIRED by the `fit` meta above — see
-              the ColumnMeta docstring in the shared Table. Without it the table
-              defaults to `fixed` while `sizingStyle` still applies
-              `width: 1; nowrap`, so every fit column is pinned to 1px and its
-              content overflows the cell. `OutlierGroupTable` passes it for the
-              same reason.
-            */}
-            <Table columns={columns} data={employees} layout="auto" />
+            <Text variant="small" color="dark350">
+              {p.counts(
+                String(payDispersion.threshold).replace('.', ','),
+                formatCount(countBelowExpected),
+                formatCount(countAboveExpected),
+              )}
+            </Text>
+            {chanceCriticalSpreads != null && (
+              <Text variant="small" color="dark350">
+                {p.chanceNote(formatSpreadMagnitude(chanceCriticalSpreads))}
+              </Text>
+            )}
+            <PayDispersionDirection
+              heading={p.headingBelow}
+              count={countBelowExpected}
+              rows={employees.filter((row) => row.studentizedResidual < 0)}
+            />
+            <PayDispersionDirection
+              heading={p.headingAbove}
+              count={countAboveExpected}
+              rows={employees.filter((row) => row.studentizedResidual > 0)}
+            />
           </Stack>
         )}
       </Stack>
     </Box>
+  )
+}
+
+interface PayDispersionDirectionProps {
+  heading: string
+  /** The TRUE total for this direction, before the cap. */
+  count: number
+  /** The shortlist. Shorter than `count` whenever the cap fired. */
+  rows: PayDispersionEmployeeDto[]
+}
+
+/**
+ * One direction of the list — its own heading, its own count, its own table.
+ *
+ * ⚠️ **Two headings, because the two directions are different findings.** An
+ * employee paid far below what their stig imply and one paid far above are not
+ * variations of one observation, and on a workforce long enough to need a cap a
+ * single mixed table buries the first among the second.
+ *
+ * ⚠️ **`count` is the total; `rows` is the shortlist.** They differ whenever the
+ * cap fired — that is the whole point — so the heading carries `count` and the
+ * lead says how many are shown. Never derive one from the other.
+ *
+ * Renders nothing when a direction has nothing: a heading over an empty table
+ * reads as a finding that failed to print.
+ */
+const PayDispersionDirection = ({
+  heading,
+  count,
+  rows,
+}: PayDispersionDirectionProps) => {
+  if (count === 0) return null
+
+  return (
+    <Stack space={1}>
+      <Text variant="h5">{`${heading} — ${formatCount(count)}`}</Text>
+
+      {rows.length < count && (
+        <Text variant="small" color="dark350">
+          {p.shownNote(formatCount(rows.length))}
+        </Text>
+      )}
+
+      {rows.length > 0 && (
+        /*
+          ⚠️ `layout="auto"` is REQUIRED by the `fit` meta on the columns — see
+          the ColumnMeta docstring in the shared Table. Without it the table
+          defaults to `fixed` while `sizingStyle` still applies `width: 1;
+          nowrap`, so every fit column is pinned to 1px and its content overflows
+          the cell. `OutlierGroupTable` passes it for the same reason.
+        */
+        <Table columns={columns} data={rows} layout="auto" />
+      )}
+    </Stack>
   )
 }

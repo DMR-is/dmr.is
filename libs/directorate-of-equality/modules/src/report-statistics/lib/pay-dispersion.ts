@@ -37,6 +37,60 @@ export const PAY_DISPERSION_THRESHOLD = 2
  */
 export const PAY_DISPERSION_MIN_COHORT = 12
 
+/**
+ * How many employees each direction lists before it stops.
+ *
+ * ⚠️ **A display depth, not a selection rule.** Unlike the retired ±1,95% band
+ * and the rejected fixed "20% off expected", this constant decides *nothing*:
+ * every qualifying employee is still counted in `countBelowExpected` /
+ * `countAboveExpected`, still printed as a total on every surface, and still
+ * recomputable from `wageGapDecomposition.employees[]`. It changes how deep the
+ * table prints and not who qualifies, which is why it is allowed to be a round
+ * number chosen for legibility.
+ *
+ * Why the list needed one at all: `|t| ≥ 2` flags ~4,6% of ANY workforce, near
+ * enough regardless of the data, because the statistic divides by the cohort's
+ * own spread. At 120 employees that is 5 rows and reads as insight; at 10 000 it
+ * is ~460 rows and reads as noise. Worse, it is ~455 rows when pay is perfectly
+ * explained by stig and ~352 when 100 employees are genuinely 5 spreads off —
+ * the list gets SHORTER as the problem gets worse, because the anomalies inflate
+ * the spread they are measured against.
+ *
+ * Why 10 and not 5: 4,6% of a workforce exceeds two lists of ten only above
+ * n ≈ 430, so at 10 every company below that renders exactly as it did before
+ * this cap existed. A cap of 5 would start truncating around n ≈ 220 — reports
+ * that read perfectly well today.
+ */
+export const PAY_DISPERSION_SHORTLIST_SIZE = 10
+
+/**
+ * The absolute ceiling on rows per direction — a plain slice, and the only place
+ * {@link shortlist} will cut a tie group in half.
+ *
+ * Needed because the tie extension is otherwise unbounded. Measured: a tie group
+ * on the printed value runs to 2–5 rows in ordinary data, and the largest
+ * produced in 1.500 simulated cohorts — with discrete scores and gridded wages,
+ * i.e. deliberately payroll-like — was **32** at n = 10.000. So this is a guard
+ * against a shape we have never observed, not a case we expect.
+ *
+ * ⚠️ Do NOT reintroduce a special rendering for a group that crosses it. An
+ * earlier version summarised such a group in prose instead of tabling it, on the
+ * theory that identically-graded workforces routinely tie in bulk. That theory
+ * was not evidenced: reaching an exact tie needs the same starfsmatsstig AND the
+ * same hourly wage to the aurar, and `hourlyWage` is salary ÷ hours, which varies
+ * per person. The prose branch cost two DTO fields, a copy string on two surfaces
+ * and a whole class of "employees qualified but no rows were produced" bugs, all
+ * to serve a case nobody has seen. If a real filing ever produces one, 50 rows of
+ * it is a perfectly readable answer.
+ */
+export const PAY_DISPERSION_LIST_CEILING = 50
+
+/**
+ * Familywise error rate for {@link chanceCriticalSpreads} — the context figure,
+ * not a filter.
+ */
+const CHANCE_ALPHA = 0.05
+
 /** One employee's position relative to the fitted line, in spreads. */
 export type StudentizedResidual = {
   employee: WageGapEmployeeSnapshot
@@ -179,6 +233,13 @@ export function computePayDispersion(
       cohortResidualSpreadPercentUp: null,
       cohortResidualSpreadPercentDown: null,
       employees: [],
+      // ⚠️ Zero, not "unknown". A blocked report has no qualifying employees to
+      // count, and a surface reading these before it reads `blockers` must land
+      // on the blocker copy rather than on "0 starfsmenn víkja" — which would
+      // state an all-clear we have not established.
+      countBelowExpected: 0,
+      countAboveExpected: 0,
+      chanceCriticalSpreads: null,
     }
   }
 
@@ -194,7 +255,10 @@ export function computePayDispersion(
   // 1,996 would be excluded while displaying as 2,00, and 2,004 included while
   // displaying the same. A reader checking our arithmetic against the printed
   // column would find two rows they cannot account for. One rounding, one number.
-  const employees = studentizedResiduals(snapshot)
+  //
+  // ⚠️ The rounding is also what makes the tie grouping in `shortlist` correct —
+  // it groups on THIS value, the one that prints. See the note there.
+  const qualifying = studentizedResiduals(snapshot)
     .map((row) => ({
       ...row,
       studentizedResidual: round2(row.studentizedResidual),
@@ -204,13 +268,17 @@ export function computePayDispersion(
         Math.abs(row.studentizedResidual) >= PAY_DISPERSION_THRESHOLD &&
         eligible(row.employee),
     )
-    // Most extreme first: the reader's question is "who most needs a look".
-    .sort(
-      (a, b) =>
-        Math.abs(b.studentizedResidual) - Math.abs(a.studentizedResidual) ||
-        a.employee.ordinal - b.employee.ordinal,
-    )
-    .map(toEmployeeDto)
+
+  // ⚠️ Split BEFORE capping, and capped per direction. The two directions mean
+  // different things to an employer — underpaid against their stig, and overpaid
+  // against them — and a single mixed list buries the first among the second on
+  // any workforce big enough to need a cap at all.
+  //
+  // A shared cap would also let one direction crowd out the other entirely: a
+  // company with 40 people above expected and 3 below would print no `below`
+  // rows at all under a global top-10.
+  const below = shortlist(qualifying.filter((row) => row.studentizedResidual < 0))
+  const above = shortlist(qualifying.filter((row) => row.studentizedResidual > 0))
 
   return {
     available: true,
@@ -228,8 +296,131 @@ export function computePayDispersion(
       spread === null ? null : round2((Math.exp(spread) - 1) * 100),
     cohortResidualSpreadPercentDown:
       spread === null ? null : round2((Math.exp(-spread) - 1) * 100),
-    employees,
+    // ⚠️ Below first, then above — matching the order both surfaces render, so a
+    // client that does not split the array still reads it in a sensible order.
+    // NOT a global sort; see the field docstring.
+    employees: [...below.listed, ...above.listed].map(toEmployeeDto),
+    // ⚠️ The TRUE totals, before the cap. These are what the surfaces print, and
+    // they are the reason a display cap is legitimate at all: nothing is hidden,
+    // only undisplayed.
+    countBelowExpected: below.total,
+    countAboveExpected: above.total,
+    chanceCriticalSpreads: chanceCriticalSpreads(snapshot.employees.length),
   }
+}
+
+/**
+ * One direction's rows, cut to a readable depth without splitting a tie.
+ *
+ * ⚠️ **Groups on the ROUNDED value** — the one that prints. Grouping on the raw
+ * `studentizedResidual` would still split two rows that both print `2,04`
+ * because their unrounded values differ in the ninth decimal, which is exactly
+ * the defect this rule exists to prevent: two employees shown at the same stated
+ * distance from the line, one listed and one not, for a reason no reader can see.
+ * The rounding happens in {@link computePayDispersion} before this is called.
+ *
+ * ⚠️ **Not a micro-optimisation — a plain slice splits an equal in roughly one in
+ * three large reports.** Measured on simulated cohorts: 16% at n = 500, 22% at
+ * n = 2.000, 29% at n = 10.000, and 17/28/37% once scores are discrete and wages
+ * sit on a grid, as real pay steps do. Extending through the tie costs 0,2–0,5
+ * rows on average. That is the whole justification for this walk being anything
+ * more than `slice(0, 10)`.
+ *
+ * Whole groups are taken until the shortlist is full, then
+ * {@link PAY_DISPERSION_LIST_CEILING} slices whatever came back. A tie group is
+ * therefore split only when it crosses 50 on its own, which has not been
+ * observed — see that constant.
+ *
+ * `total` is the count BEFORE any of this. Callers publish it; `listed.length`
+ * is not a substitute and must never be used as one.
+ */
+function shortlist(rows: StudentizedResidual[]): {
+  listed: StudentizedResidual[]
+  total: number
+} {
+  // Most extreme first: the reader's question is "who most needs a look".
+  // `ordinal` breaks ties so the output is deterministic for one snapshot — the
+  // tie grouping below relies on equal values being adjacent, not on their
+  // internal order, but a stable order keeps the published JSON reproducible.
+  const sorted = [...rows].sort(
+    (a, b) =>
+      Math.abs(b.studentizedResidual) - Math.abs(a.studentizedResidual) ||
+      a.employee.ordinal - b.employee.ordinal,
+  )
+
+  const listed: StudentizedResidual[] = []
+  let index = 0
+
+  while (index < sorted.length && listed.length < PAY_DISPERSION_SHORTLIST_SIZE) {
+    const value = Math.abs(sorted[index].studentizedResidual)
+
+    let end = index
+    while (
+      end < sorted.length &&
+      Math.abs(sorted[end].studentizedResidual) === value
+    ) {
+      end += 1
+    }
+
+    listed.push(...sorted.slice(index, end))
+    index = end
+  }
+
+  return {
+    // The plain slice. Only bites when one tie group alone exceeds the ceiling.
+    listed: listed.slice(0, PAY_DISPERSION_LIST_CEILING),
+    total: rows.length,
+  }
+}
+
+/**
+ * How far from the line chance alone would put someone in a cohort this size —
+ * the familywise critical value `z(α / 2n)` at α = 5%.
+ *
+ * ⚠️ **CONTEXT ONLY. Never compare a row against this.** `PAY_DISPERSION_THRESHOLD`
+ * decides membership; this decides nothing, and wiring it into the filter would
+ * empty the list on every fixture we own (the reference cohort's most extreme
+ * employee sits at 3,49 against a critical value of 3,53). It is published so a
+ * reader can tell a long list on a large workforce from a real finding: screening
+ * 10 000 people produces more extremes than screening 120, and `|t| ≥ 2` does not
+ * know that.
+ *
+ * Acklam's rational approximation to the inverse normal CDF, lower tail only —
+ * `α / 2n` is at most 0,05/24 ≈ 0,0021 once {@link PAY_DISPERSION_MIN_COHORT} is
+ * satisfied, so the central and upper branches are unreachable and deliberately
+ * not implemented. Relative error < 1,15 × 10⁻⁹, which is far past what a printed
+ * 2dp sentence needs.
+ *
+ * ⚠️ The normal approximation to an internally studentized residual's null
+ * distribution is lax on a small cohort — the exact null is a scaled Beta. That
+ * is acceptable *because* this is a sentence and not a gate; it would not be
+ * acceptable if this number ever decided a row.
+ */
+function chanceCriticalSpreads(n: number): number | null {
+  if (!Number.isFinite(n) || n < 2) return null
+
+  const tail = CHANCE_ALPHA / (2 * n)
+  if (!(tail > 0) || tail >= 0.02425) return null
+
+  const q = Math.sqrt(-2 * Math.log(tail))
+  const numerator =
+    ((((-7.784894002430293e-3 * q - 3.223964580411365e-1) * q -
+      2.400758277161838) *
+      q -
+      2.549732539343734) *
+      q +
+      4.374664141464968) *
+      q +
+    2.938163982698783
+  const denominator =
+    (((7.784695709041462e-3 * q + 3.224671290700398e-1) * q +
+      2.445134137142996) *
+      q +
+      3.754408661907416) *
+      q +
+    1
+
+  return round2(Math.abs(numerator / denominator))
 }
 
 /**

@@ -177,6 +177,37 @@ export class PayDispersionDto {
   })
   cohortResidualSpreadPercentDown!: number | null
 
+  /**
+   * ⚠️ **The union of two per-direction shortlists, NOT a global top-N.** Rows
+   * below expected come first, then rows above expected, each block ordered by
+   * `|studentizedResidual|` descending with `employeeOrdinal` breaking ties. Do
+   * not "fix" this into a single global sort: the cap is applied per direction,
+   * so a global sort would silently reorder blocks away from the rendered order
+   * and make the array disagree with both surfaces.
+   *
+   * ⚠️ **Capped.** Use `countBelowExpected` / `countAboveExpected` for how many
+   * employees actually qualified — never `employees.length`.
+   */
   @ApiDtoArray(PayDispersionEmployeeDto)
   employees!: PayDispersionEmployeeDto[]
+
+  @ApiNumber({
+    description:
+      'How many employees qualified BELOW expected pay, before any cap. This is the figure to print; `employees` is a shortlist and its length is not this number. Zero when unavailable.',
+  })
+  countBelowExpected!: number
+
+  @ApiNumber({
+    description:
+      'How many employees qualified ABOVE expected pay, before any cap. Zero when unavailable.',
+  })
+  countAboveExpected!: number
+
+  @ApiOptionalNumber({
+    nullable: true,
+    description:
+      "CONTEXT ONLY — never a filter. The familywise critical value z(0,05 / 2n): the distance past which chance alone would rarely put ANY of this company's employees. It grows with headcount (3,5 at 120 employees, 4,6 at 10 000) because screening more people produces more extremes, and it exists so a reader can tell a long list on a large workforce from a real finding. ⚠️ Do NOT filter rows on it: `threshold` decides membership. Null when no list could be produced.",
+  })
+  chanceCriticalSpreads!: number | null
+
 }

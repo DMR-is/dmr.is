@@ -598,6 +598,28 @@ export const reportText = {
       spreadHeader: 'Staðalvik frá línu',
       directionBelow: 'undir',
       directionAbove: 'yfir',
+      /** Sub-heading per direction. Distinct from `directionBelow`/`Above`, which
+       *  are the lowercase words used inside the Launafrávik cell. */
+      headingBelow: 'Undir væntanlegu tímakaupi',
+      headingAbove: 'Yfir væntanlegu tímakaupi',
+      /**
+       * ⚠️ The TRUE totals, and the sentence that makes a capped list honest —
+       * without it a reader takes the table's length for the finding. Written as
+       * a noun phrase with a colon rather than "24 starfsmenn víkja …" so it
+       * needs no singular/plural agreement at 1 and 21.
+       */
+      counts: (threshold: string, below: string, above: string) =>
+        `Starfsmenn sem víkja ${threshold} staðalvik eða meira frá línunni: ${below} niður, ${above} upp.`,
+      /** Printed only when a direction was actually capped. */
+      shownNote: (shown: string) => `Þeir ${shown} sem víkja mest eru sýndir hér.`,
+      /**
+       * ⚠️ CONTEXT, never a cut-off — nothing was filtered on this number. It is
+       * here because `|t| ≥ 2` is blind to headcount: screening 10.000 people
+       * throws up more extremes than screening 120, so without this line a long
+       * list on a large workforce reads as a finding when it may be arithmetic.
+       */
+      chanceNote: (spreads: string) =>
+        `Hjá fyrirtæki af þessari stærð fer sjaldnast nokkur starfsmaður yfir ${spreads} staðalvik frá línunni af tilviljun einni.`,
     },
     /**
      * ── Pay-component split by gender ────────────────────────────────────────

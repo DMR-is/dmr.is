@@ -15,6 +15,7 @@ import {
 import {
   PayDispersionBlockerEnum,
   type PayDispersionDto,
+  type PayDispersionEmployeeDto,
   PayDispersionPopulationEnum,
 } from '../../report-statistics/dto/pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
@@ -548,6 +549,9 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     employees,
     cohortResidualSpreadPercentUp,
     cohortResidualSpreadPercentDown,
+    countBelowExpected,
+    countAboveExpected,
+    chanceCriticalSpreads,
   } = payDispersion
 
   // Three states, and an empty table is only one of them — the same rule the
@@ -560,7 +564,11 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     )
   }
 
-  if (employees.length === 0) {
+  // ⚠️ On the TRUE counts, NOT on `employees.length`. The array is a shortlist,
+  // and a suppressed tie group is the case where employees qualified and no rows
+  // were produced — printing the all-clear copy there would state the opposite of
+  // what was found, on the document of record.
+  if (countBelowExpected === 0 && countAboveExpected === 0) {
     return section(
       'Ábendingar um launadreifingu',
       `<p class="advisory-note">Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.</p>`,
@@ -576,7 +584,88 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
       ? ''
       : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${String(payDispersion.threshold).replace('.', ',')} staðalvik eða meira frá henni.</p>`
 
-  const rows = employees
+  // ⚠️ Stated as a count, never as "these are the deviating employees" — the
+  // tables below are a shortlist, and a reader who takes their length for the
+  // finding has been told something false. Phrased as a noun phrase with a colon
+  // rather than "24 starfsmenn víkja …" so the sentence needs no singular/plural
+  // agreement at 1 and 21.
+  const countsNote = `<p class="advisory-note">Starfsmenn sem víkja ${String(payDispersion.threshold).replace('.', ',')} staðalvik eða meira frá línunni: ${formatNumber(countBelowExpected)} niður, ${formatNumber(countAboveExpected)} upp.</p>`
+
+  // ⚠️ CONTEXT, not a cut-off, and the copy must not imply otherwise — nothing
+  // was filtered on this number. It exists because `|t| ≥ 2` is blind to
+  // headcount: screening 10 000 people throws up more extremes than screening
+  // 120, and without this line a long list on a large workforce reads as a
+  // finding when it may be arithmetic.
+  const chanceNote =
+    chanceCriticalSpreads === null
+      ? ''
+      : `<p class="advisory-note">Hjá fyrirtæki af þessari stærð fer sjaldnast nokkur starfsmaður yfir ${formatSpreadMagnitude(chanceCriticalSpreads)} staðalvik frá línunni af tilviljun einni.</p>`
+
+  const below = payDispersionDirection(
+    'Undir væntanlegu tímakaupi',
+    countBelowExpected,
+    employees.filter((employee) => employee.studentizedResidual < 0),
+  )
+  const above = payDispersionDirection(
+    'Yfir væntanlegu tímakaupi',
+    countAboveExpected,
+    employees.filter((employee) => employee.studentizedResidual > 0),
+  )
+
+  return section(
+    'Ábendingar um launadreifingu',
+    `<p class="advisory-note">Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir.</p>
+    <p class="advisory-note--lead">Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
+    ${spreadNote}
+    ${countsNote}
+    ${chanceNote}
+    ${below}
+    ${above}`,
+  )
+}
+
+/**
+ * One direction of the ábendingar list — its own heading, its own count, its own
+ * table.
+ *
+ * ⚠️ **Two headings, because the two directions are different findings.** An
+ * employee paid far BELOW what their stig imply and one paid far above are not
+ * variations of one observation, and on a workforce long enough to need a cap a
+ * single mixed table buries the first among the second.
+ *
+ * ⚠️ **`count` is the true total; `rows` is the shortlist.** They differ whenever
+ * the cap fired, which is the entire point, so the heading carries `count` and
+ * the lead says how many are shown.
+ *
+ * Returns `''` when a direction has nothing — a heading over an empty table
+ * reads as a finding that failed to print.
+ */
+function payDispersionDirection(
+  title: string,
+  count: number,
+  rows: PayDispersionEmployeeDto[],
+): string {
+  if (count === 0) return ''
+
+  const lead =
+    rows.length < count
+      ? `Þeir ${formatNumber(rows.length)} sem víkja mest eru sýndir hér.`
+      : ''
+
+  return subsection(
+    `${title} — ${formatNumber(count)}`,
+    lead,
+    payDispersionTable(rows),
+  )
+}
+
+/**
+ * ⚠️ Deliberately carries no group, reason, action, signature or `Hlutur af
+ * óskýrðu` column. Every one of those implies an obligation the úrbótaáætlun
+ * carries and this list does not, and a PDF reader cannot ask which is which.
+ */
+function payDispersionTable(rows: PayDispersionEmployeeDto[]): string {
+  const body = rows
     .map(
       (employee) =>
         `<tr>
@@ -591,16 +680,10 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     )
     .join('')
 
-  return section(
-    'Ábendingar um launadreifingu',
-    `<p class="advisory-note">Laun þessara starfsmanna víkja meira frá starfsmatsstigum þeirra en launadreifing fyrirtækisins skýrir.</p>
-    <p class="advisory-note--lead">Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
-    ${spreadNote}
-    <table class="data-table">
+  return `<table class="data-table">
       <thead><tr><th>Starfsmaður</th><th>Kyn</th><th>Stig</th><th>Tímakaup</th><th>Væntanlegt</th><th>Frávik</th><th>Staðalvik frá línu</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`,
-  )
+      <tbody>${body}</tbody>
+    </table>`
 }
 
 const payDispersionBlockerText = (
@@ -624,6 +707,14 @@ const payDispersionBlockerText = (
  */
 const formatSpreads = (value: number): string =>
   `${value > 0 ? '+' : ''}${value.toFixed(2).replace('.', ',')}`
+
+/**
+ * The same figure without its sign, for prose that already says the direction in
+ * words. "víkja 2,51 staðalvik niður" — printing "−2,51 staðalvik niður" states
+ * the direction twice and invites the reader to wonder whether the two disagree.
+ */
+const formatSpreadMagnitude = (value: number): string =>
+  Math.abs(value).toFixed(2).replace('.', ',')
 
 function deadlineSection(report: ReportDetailDto): string {
   return section(
