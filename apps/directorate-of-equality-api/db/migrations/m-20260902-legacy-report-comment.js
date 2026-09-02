@@ -32,7 +32,7 @@ module.exports = {
     await queryInterface.sequelize.query(`
       BEGIN;
 
-      COMMENT ON TABLE legacy_report IS 'Archive of the Directorate''s retired SharePoint register (Adda eftirlit Gagnasafn), one row per sheet row. Written once by the company-register load. The compliance status derives from it: companyReportStatusCaseSql counts an unexpired equality_valid_until / salary_valid_until as coverage beside an APPROVED report, because 1 507 of the loaded companies at 25+ hold no report row. Only the dates are read, plus validity on the salary side — an Útrunnið row is a surrendered certificate, not coverage.';
+      COMMENT ON TABLE legacy_report IS 'Archive of the Directorate''s retired SharePoint register (Adda eftirlit Gagnasafn), one row per sheet row. Written once by the company-register load. The compliance status derives from it: companyReportStatusCaseSql counts an unexpired equality_valid_until / salary_valid_until as coverage beside an APPROVED report, because 1 507 of the loaded companies at 25+ hold no report row. buildCompanyExpiryWhere reads the same two dates for the "expires within" queue. Only the dates are read, plus validity on the salary side — an Útrunnið row is a surrendered certificate, not coverage.';
 
       COMMIT;
     `)

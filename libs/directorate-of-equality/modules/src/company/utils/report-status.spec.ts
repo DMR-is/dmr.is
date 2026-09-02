@@ -47,7 +47,13 @@ describe('companyReportStatusCaseSql', () => {
     // them as covered, and nothing else would catch it: the same cell seeds
     // next_salary_report_due_at, so they are not overdue either, and the
     // renewal window bars them from filing until six months before it.
-    expect(salaryBranch).toContain("lr.validity IS DISTINCT FROM 'Útrunnið'")
+    // Normalised on both sides: `validity` is free text the load copies from
+    // the sheet verbatim, so an exact match would be undone by a re-export that
+    // spelled the word with different casing — silently, and for all 20 at once,
+    // because the load replaces legacy_report wholesale.
+    expect(salaryBranch).toContain(
+      "lower(btrim(lr.validity)) IS DISTINCT FROM lower('Útrunnið')",
+    )
   })
 
   it('never reads legacy_status', () => {

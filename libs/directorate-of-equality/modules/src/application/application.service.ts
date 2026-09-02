@@ -209,6 +209,15 @@ export class ApplicationService implements IApplicationService {
     // This blocks the flow regardless of the renewal window, so it takes
     // priority — but we still surface the (informational) due dates from the
     // renewal decision so the portal can render them either way.
+    //
+    // ⚠️ Deliberately narrower than the admin register's notion of coverage.
+    // `companyReportStatusCaseSql` also counts an unexpired legacy certification
+    // (see `legacy_report`), so a company certified under the old regime reads
+    // SATISFACTORY there while this gate still answers MISSING_EQUALITY_REPORT.
+    // That is intended and cannot be relaxed here: the reference below is by
+    // report id, and a legacy certificate has none to give. The register answers
+    // "is this company in compliance"; this answers "can this submission be
+    // built", and the second needs a row the first does not.
     const activeEquality = await this.reportService.getActiveEqualityForCompany(
       company.id,
     )

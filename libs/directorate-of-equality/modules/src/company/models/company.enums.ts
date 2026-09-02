@@ -86,6 +86,11 @@ export enum CompanySectorEnum {
  *   MISSING_SALARY_REPORT   → "Vantar launagreiningu": a salary report is
  *       required (50+/LARGE, or admin override — i.e. `salary_report_required`)
  *       with no active/approved salary report.
+ *
+ *   For both of the above, an unexpired certification from the Directorate's
+ *   retired register (`legacy_report`) counts as coverage in place of a report,
+ *   so a company certified under the old regime does not read as missing one it
+ *   holds. See `activeLegacyCertificationExists` in `utils/report-status.ts`.
  *   MISSING_ACTION_PLAN     → "Vantar úrbótaáætlun": a salary report is
  *       POSTPONED, i.e. it has pay-gap outliers whose explanations are still
  *       deferred.

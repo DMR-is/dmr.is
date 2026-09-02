@@ -22,9 +22,12 @@
  * included — which states "has not filed here" as if it meant "is out of
  * compliance".
  *
- * ⚠️ Only the two dates are consulted, never `validity` or `legacy_status`:
- * those describe the salary certification, and 120 rows hold a live equality
- * plan beside a lapsed one.
+ * ⚠️ `legacy_status` is never consulted. `validity` is, on the salary side
+ * only: a row marked `Útrunnið` is a certificate that was surrendered early,
+ * and 20 of them still carry a future date, so the date alone would read them
+ * as covered. The equality side stays date-only, because `validity` describes
+ * the salary certificate and 120 rows hold a live equality plan beside a
+ * lapsed one.
  *
  * ## Everything legacy is TEXT
  *

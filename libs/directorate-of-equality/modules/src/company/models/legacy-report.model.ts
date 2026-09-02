@@ -24,7 +24,7 @@ import { CompanyModel } from './company.model'
  *
  * So the legacy record stays legacy: no `report` row is ever minted from it.
  *
- * ## What does derive from it: the compliance status, and only that
+ * ## What derives from it: the admin register's two coverage questions
  *
  * `companyReportStatusCaseSql` reads the two expiry dates here as a second way
  * to be covered, beside an APPROVED `report`. It has to. The load leaves 1 507
@@ -33,6 +33,13 @@ import { CompanyModel } from './company.model'
  * companies whose equality plan this very table records as in force. "Has not
  * filed here" and "is out of compliance" are different claims, and the admin
  * register is asking the second.
+ *
+ * `buildCompanyExpiryWhere` reads them too, through
+ * `legacyCertificationExpiringSql`, and necessarily: once a legacy certificate
+ * counts as coverage, an expiry queue that looked only at `report` would hide
+ * every one of those 1 507 companies until the day it lapsed. The two answer
+ * "is this company covered" and "for how much longer", off the same two
+ * columns, and drift between them is what `report-status.ts` exists to prevent.
  *
  * Nothing else derives from this table, and in particular the application
  * portal's own gate does not: `getSalaryReportEligibility` still requires a
