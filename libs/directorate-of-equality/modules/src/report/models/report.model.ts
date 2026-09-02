@@ -9,6 +9,7 @@ import {
 } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
+import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
 
 import { CompanyModel } from '../../company/models/company.model'
 import { CompanyReportModel } from '../../company/models/company-report.model'
@@ -478,13 +479,38 @@ export class ReportModel extends MutableModel<
    *
    * Kept as a static on the model so it lives next to `fromModel` — it IS
    * a DTO projection, just a different shape, and follows the same pattern.
+   *
+   * ⚠️ **`content` is sanitised here, and this is the choke point.**
+   * `equality_report_content` is applicant-supplied HTML stored verbatim —
+   * `ApiHTML` only base64-decodes it, and no write path cleans it — so the
+   * column must be treated as untrusted on the way out. Every admin-facing
+   * consumer of the narrative goes through this one projection:
+   *
+   * - `EqualityReportTab` hands it to `HTMLEditor` as `defaultValue`, and the
+   *   editor runs it through `asDiv()` — a bare `div.innerHTML = html` —
+   *   before TinyMCE ever sees it. `<script>` does not execute from
+   *   `innerHTML`, but an `onerror`/`onload` handler does, even on a detached
+   *   node, and it would run in a Jafnréttisstofa reviewer's session with
+   *   their `/api/trpc` rights (approve/deny, daily fines, every company's
+   *   data).
+   * - `report-pdf` renders it into headless Chromium.
+   *
+   * Sanitising the projection rather than each consumer means a new one cannot
+   * miss it, and it covers the rows already written. The PDF template
+   * sanitises again as a last line of defence; `simpleSanitize` is idempotent,
+   * so that costs nothing.
+   *
+   * This is a READ projection only — nothing here writes back — so the stored
+   * original is left untouched.
    */
   static fromModelToEqualityReport(model: ReportModel): EqualityReportDto {
     return {
       id: model.id,
       identifier: model.identifier,
       status: model.status,
-      content: model.equalityReportContent,
+      content: model.equalityReportContent
+        ? simpleSanitize(model.equalityReportContent)
+        : model.equalityReportContent,
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,
       correctionDeadline: model.correctionDeadline,

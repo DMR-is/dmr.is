@@ -17,10 +17,36 @@ const closeMock = jest.fn(async () => undefined)
 /** Captures the `setContent` calls so the wait strategy can be asserted. */
 const setContentMock = jest.fn(async () => undefined)
 
+const setJavaScriptEnabledMock = jest.fn(async () => undefined)
+const setRequestInterceptionMock = jest.fn(async () => undefined)
+
+/**
+ * The `request` handler the service registers, captured so the tests can drive
+ * it with URLs directly. Puppeteer would otherwise only invoke it against a
+ * real page, which these tests deliberately do not have.
+ */
+let requestHandler: ((request: FakeRequest) => void) | null = null
+
+type FakeRequest = {
+  url: () => string
+  continue: jest.Mock
+  abort: jest.Mock
+}
+
+function makeRequest(url: string): FakeRequest {
+  return { url: () => url, continue: jest.fn(), abort: jest.fn() }
+}
+
 function mockBrowser() {
+  requestHandler = null
   ;(getBrowser as jest.Mock).mockResolvedValue({
     newPage: async () => ({
       setContent: setContentMock,
+      setJavaScriptEnabled: setJavaScriptEnabledMock,
+      setRequestInterception: setRequestInterceptionMock,
+      on: (event: string, handler: (request: FakeRequest) => void) => {
+        if (event === 'request') requestHandler = handler
+      },
       addStyleTag: jest.fn(async () => undefined),
       pdf: pdfMock,
     }),
@@ -253,10 +279,71 @@ describe('ReportPdfService', () => {
 
     await service.generateReportPdf('r1')
 
-    expect(setContentMock).toHaveBeenCalledWith(
-      expect.any(String),
-      { waitUntil: 'load' },
-    )
+    expect(setContentMock).toHaveBeenCalledWith(expect.any(String), {
+      waitUntil: 'load',
+    })
+  })
+
+  /*
+   * The renderer runs `--no-sandbox` Chromium inside the API container, and the
+   * equality report's body is applicant-supplied markup. `equality-report-
+   * template.spec.ts` covers the sanitising that keeps script out of the HTML;
+   * these cover the second layer, which also stops a subresource fetch that
+   * sanitising permits — `<img src="http://…">` survives the allow-list, and
+   * `waitUntil: 'load'` would fetch it.
+   */
+  describe('renderer hardening', () => {
+    it('disables JavaScript before setting the page content', async () => {
+      const { service } = makeService()
+
+      await service.generateReportPdf('r1')
+
+      expect(setJavaScriptEnabledMock).toHaveBeenCalledWith(false)
+      expect(setJavaScriptEnabledMock.mock.invocationCallOrder[0]).toBeLessThan(
+        setContentMock.mock.invocationCallOrder[0],
+      )
+    })
+
+    it('enables request interception before setting the page content', async () => {
+      const { service } = makeService()
+
+      await service.generateReportPdf('r1')
+
+      expect(setRequestInterceptionMock).toHaveBeenCalledWith(true)
+      expect(
+        setRequestInterceptionMock.mock.invocationCallOrder[0],
+      ).toBeLessThan(setContentMock.mock.invocationCallOrder[0])
+    })
+
+    it.each([
+      ['http://169.254.169.254/latest/meta-data/', 'the metadata endpoint'],
+      ['http://localhost:4100/api/v1/reports', 'an internal service'],
+      ['https://example.com/beacon.png', 'an external beacon'],
+      ['file:///etc/passwd', 'a local file'],
+    ])('aborts %s (%s)', async (url) => {
+      const { service } = makeService()
+      await service.generateReportPdf('r1')
+
+      const request = makeRequest(url)
+      requestHandler?.(request)
+
+      expect(request.abort).toHaveBeenCalled()
+      expect(request.continue).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['data:image/png;base64,iVBORw0KGgo=', 'an inline image'],
+      ['about:blank', 'the document setContent writes into'],
+    ])('allows %s (%s)', async (url) => {
+      const { service } = makeService()
+      await service.generateReportPdf('r1')
+
+      const request = makeRequest(url)
+      requestHandler?.(request)
+
+      expect(request.continue).toHaveBeenCalled()
+      expect(request.abort).not.toHaveBeenCalled()
+    })
   })
 
   describe('generateImprovementPlanPdf', () => {
@@ -330,9 +417,9 @@ describe('ReportPdfService', () => {
     it('rejects an equality report, which has no outlier groups', async () => {
       const { service } = makeService({ type: ReportTypeEnum.EQUALITY })
 
-      await expect(
-        service.generateImprovementPlanPdf('r1'),
-      ).rejects.toThrow(/not a salary report/)
+      await expect(service.generateImprovementPlanPdf('r1')).rejects.toThrow(
+        /not a salary report/,
+      )
     })
   })
 })
