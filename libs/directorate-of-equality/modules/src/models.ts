@@ -27,6 +27,49 @@ import { ReportResultModel } from './report-result/models/report-result.model'
 import { UserModel } from './user/models/user.model'
 
 /**
+ * Association properties across these models annotate their type through a
+ * type-only alias rather than naming the class directly:
+ *
+ * ```ts
+ * import { ReportModel } from '../../report/models/report.model'
+ * import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
+ *
+ * @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
+ * report?: ReportModelRef
+ * ```
+ *
+ * The model graph is inherently cyclic: `report.model.ts` imports
+ * `ReportCommentModel` for its `@HasMany`, and `report-comment.model.ts`
+ * imports `ReportModel` back for its `@BelongsTo`. The `() => Model` arrows are
+ * lazy and fine. What is not fine is `emitDecoratorMetadata`, which emits an
+ * EAGER read of the annotated type at class-decoration time — while the other
+ * module is still mid-evaluation.
+ *
+ * tsc assigns `exports.X` only after the class body runs, so that read yields
+ * `undefined` and the emitted guard quietly falls back to `Object`. swc emits
+ * ESM-faithful live bindings — an export getter installed before any
+ * `require()`, over a TDZ binding — so the same read THROWS
+ * `Cannot access 'ReportModel' before initialization`. Under real ESM tsc's
+ * would too. The cycle plus an eval-time read is the actual defect; swc only
+ * makes it audible. (It surfaced when `doe-modules` tests moved to `@swc/jest`:
+ * 36 of 65 suites failed on exactly this.)
+ *
+ * The alias resolves to a type-only binding, so neither compiler emits a
+ * runtime read: swc emits `design:type = Object`, tsc `design:type = Function`
+ * (in place of the class it used to reference). Nothing reads that metadata —
+ * association decorators take their target from the arrow, and every `@Column`
+ * in these models declares `type: DataType.*` explicitly, so none rely on
+ * `design:type` inference. Verified by booting the Sequelize registry from
+ * both emits: identical tables, associations and attributes across all 26
+ * models.
+ *
+ * Safe without the alias, for reference: `X | null`, `X[]`, and same-file
+ * self-references all already emit `Object`. Only a plain, cross-module class
+ * annotation reads. For the same reason, model files import enums straight from
+ * `report.enums.ts` rather than through the `report.model.ts` re-export.
+ */
+
+/**
  * Every model in the DoE schema, in the order Sequelize should register them.
  *
  * Exists because both APIs write to the same database and so both must register

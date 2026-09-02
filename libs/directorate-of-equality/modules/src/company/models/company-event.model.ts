@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
@@ -6,6 +7,7 @@ import { DoeModels } from '../../constants'
 import { UserModel } from '../../user/models/user.model'
 import type { CompanyEventDto } from '../dto/company-event.dto'
 import { CompanyStatusEnum } from './company.enums'
+import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
 /**
@@ -156,7 +158,7 @@ export class CompanyEventModel extends ImmutableModel<
   reminderTier!: CompanyReminderTierEnum | null
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
-  company?: CompanyModel
+  company?: CompanyModelRef
 
   @BelongsTo(() => UserModel, { foreignKey: 'actorUserId', as: 'actor' })
   actor?: UserModel | null

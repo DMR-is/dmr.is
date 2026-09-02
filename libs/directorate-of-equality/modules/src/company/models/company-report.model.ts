@@ -1,11 +1,14 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
 import { ReportModel } from '../../report/models/report.model'
 import type { CompanyReportDto } from '../dto/company-report.dto'
 import { CompanySizeEnum } from './company.enums'
+import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
 type CompanyReportAttributes = {
@@ -79,10 +82,10 @@ export class CompanyReportModel extends ImmutableModel<
   isatCategory!: string
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
-  company?: CompanyModel
+  company?: CompanyModelRef
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
-  report?: ReportModel
+  report?: ReportModelRef
 
   @BelongsTo(() => CompanyModel, {
     foreignKey: 'parentCompanyId',

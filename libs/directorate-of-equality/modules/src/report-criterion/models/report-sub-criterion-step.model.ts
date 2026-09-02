@@ -1,9 +1,11 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import type { ReportSubCriterionStepDto } from '../dto/report-sub-criterion-step.dto'
+import type { ReportSubCriterionModel as ReportSubCriterionModelRef } from './report-sub-criterion.model'
 import { ReportSubCriterionModel } from './report-sub-criterion.model'
 
 type ReportSubCriterionStepAttributes = {
@@ -50,7 +52,7 @@ export class ReportSubCriterionStepModel extends MutableModel<
     foreignKey: 'reportSubCriterionId',
     as: 'reportSubCriterion',
   })
-  reportSubCriterion?: ReportSubCriterionModel
+  reportSubCriterion?: ReportSubCriterionModelRef
 
   static fromModel(
     model: ReportSubCriterionStepModel,
