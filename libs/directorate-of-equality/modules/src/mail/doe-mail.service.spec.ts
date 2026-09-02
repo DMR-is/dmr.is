@@ -117,19 +117,39 @@ describe('DoeMailService', () => {
     expect(message.html).toContain('&lt;script&gt;')
   })
 
-  it('includes the island.is application link when provider is ISLAND_IS', async () => {
+  it('includes the island.is application link when provider is ISLAND_IS, for salary reports', async () => {
     aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
 
     await service.sendExternalCommentNotification(
       makeReport({
         providerType: ReportProviderEnum.ISLAND_IS,
         providerId: 'abc-123',
+        type: ReportTypeEnum.SALARY,
       }),
       makeComment(),
     )
 
     const [message] = aws.sendMail.mock.calls[0]
-    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa/abc-123'
+    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa-skyrslugjof/abc-123'
+    expect(message.html).toContain(`href="${expectedUrl}"`)
+    expect(message.html).toContain('Skoða umsókn')
+    expect(message.text).toContain(expectedUrl)
+  })
+
+    it('includes the island.is application link when provider is ISLAND_IS, for equality reports', async () => {
+    aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+    await service.sendExternalCommentNotification(
+      makeReport({
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'abc-123',
+        type: ReportTypeEnum.EQUALITY,
+      }),
+      makeComment(),
+    )
+
+    const [message] = aws.sendMail.mock.calls[0]
+    const expectedUrl = 'https://island.is/umsoknir/jafnrettisstofa-jafnrettisaaetlun/abc-123'
     expect(message.html).toContain(`href="${expectedUrl}"`)
     expect(message.html).toContain('Skoða umsókn')
     expect(message.text).toContain(expectedUrl)
