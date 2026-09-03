@@ -1,8 +1,10 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
 import { ReportModel } from '../../report/models/report.model'
 import type { PublicReportDto } from '../dto/public-report.dto'
 
@@ -92,7 +94,7 @@ export class PublicReportModel extends ImmutableModel<
     foreignKey: 'sourceReportId',
     as: 'sourceReport',
   })
-  sourceReport!: ReportModel
+  sourceReport!: ReportModelRef
 
   static fromModel(model: PublicReportModel): PublicReportDto {
     return {

@@ -1,9 +1,11 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import type { LegacyReportDto } from '../dto/legacy-report.dto'
+import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
 /**
@@ -348,7 +350,7 @@ export class LegacyReportModel extends MutableModel<
   legacyModifiedAt!: Date | null
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
-  company?: CompanyModel
+  company?: CompanyModelRef
 
   static fromModel(model: LegacyReportModel): LegacyReportDto {
     return {

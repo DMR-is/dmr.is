@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import {
   BelongsTo,
   Column,
@@ -9,6 +10,7 @@ import {
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
 import { ReportModel } from '../../report/models/report.model'
 import type { ReportOutlierGroupDto } from '../dto/report-outlier-group.dto'
 import { ReportEmployeeOutlierModel } from './report-employee-outlier.model'
@@ -77,7 +79,7 @@ export class ReportOutlierGroupModel extends MutableModel<
   remedyDate!: string | null
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
-  report?: ReportModel
+  report?: ReportModelRef
 
   @HasMany(() => ReportEmployeeOutlierModel, {
     foreignKey: 'groupId',

@@ -1,9 +1,11 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import type { PostcodeDto } from '../dto/postcode.dto'
+import type { RegionModel as RegionModelRef } from './region.model'
 import { RegionModel } from './region.model'
 
 /**
@@ -41,7 +43,7 @@ export class PostcodeModel extends MutableModel<
   regionId!: string
 
   @BelongsTo(() => RegionModel, { foreignKey: 'regionId', as: 'region' })
-  region?: RegionModel
+  region?: RegionModelRef
 
   static fromModel(model: PostcodeModel): PostcodeDto {
     return {

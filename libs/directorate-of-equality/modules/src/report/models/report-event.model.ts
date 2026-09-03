@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
@@ -6,7 +7,9 @@ import { CompanyModel } from '../../company/models/company.model'
 import { DoeModels } from '../../constants'
 import { UserModel } from '../../user/models/user.model'
 import type { ReportEventDto } from '../dto/report-event.dto'
-import { ReportModel, ReportStatusEnum } from './report.model'
+import { ReportStatusEnum } from './report.enums'
+import type { ReportModel as ReportModelRef } from './report.model'
+import { ReportModel } from './report.model'
 
 export enum ReportEventTypeEnum {
   SUBMITTED = 'SUBMITTED',
@@ -130,7 +133,7 @@ export class ReportEventModel extends ImmutableModel<
   systemDecision!: AutoReviewDecisionEnum | null
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
-  report?: ReportModel
+  report?: ReportModelRef
 
   @BelongsTo(() => UserModel, { foreignKey: 'actorUserId', as: 'actor' })
   actor?: UserModel | null
