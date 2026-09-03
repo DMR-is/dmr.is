@@ -40,13 +40,19 @@ export const PAY_DISPERSION_MIN_COHORT = 12
 /**
  * How many employees each direction lists before it stops.
  *
- * ⚠️ **A display depth, not a selection rule.** Unlike the retired ±1,95% band
- * and the rejected fixed "20% off expected", this constant decides *nothing*:
- * every qualifying employee is still counted in `countBelowExpected` /
- * `countAboveExpected`, still printed as a total on every surface, and still
- * recomputable from `wageGapDecomposition.employees[]`. It changes how deep the
- * table prints and not who qualifies, which is why it is allowed to be a round
- * number chosen for legibility.
+ * ⚠️ **Part of the definition, not a display depth.** An ábending IS one of the
+ * most extreme few per direction. This is deliberate and it is the framing every
+ * surface renders: the list is the finding, not a sample of a longer one.
+ *
+ * §10 is hostile to arbitrary constants because the retired ±1,95% band decided
+ * *compliance* and the rejected fixed "20% off expected" decided *membership of a
+ * consequence-bearing list*. This decides membership of a list that carries no
+ * consequence at all — nothing is requested of the employer, no reviewer acts on
+ * it, it can never be a basis for rejection — which is the same licence
+ * `PAY_DISPERSION_THRESHOLD` already has.
+ *
+ * `countBelowExpected` / `countAboveExpected` publish the POOL this was drawn
+ * from, so a reader can see the instrument is a triage of something larger.
  *
  * Why the list needed one at all: `|t| ≥ 2` flags ~4,6% of ANY workforce, near
  * enough regardless of the data, because the statistic divides by the cohort's
@@ -82,6 +88,12 @@ export const PAY_DISPERSION_SHORTLIST_SIZE = 10
  * and a whole class of "employees qualified but no rows were produced" bugs, all
  * to serve a case nobody has seen. If a real filing ever produces one, 50 rows of
  * it is a perfectly readable answer.
+ *
+ * ⚠️ One consequence of the definition being the list: membership is
+ * headcount-dependent. An employee at `|t| = 2,1` is an ábending in a 120-person
+ * cohort and not in a 10.000-person one, because ten colleagues sit further out.
+ * That is correct for a triage list — an employer can only look at so many — but
+ * it looks like a defect until stated, so it is stated here and in §10.
  */
 export const PAY_DISPERSION_LIST_CEILING = 50
 

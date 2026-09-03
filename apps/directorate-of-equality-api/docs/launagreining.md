@@ -766,23 +766,25 @@ inflate `s` and deflate everyone else's `t`. The same mechanism collapses the
 structural-split case to zero rows past `q = 25%`: past a quarter of the workforce
 the deviant group _becomes_ the spread and stops being unusual.
 
-So at scale `|t| ≥ 2` is a fixed-quantile rule rather than a test, and the section
-says what is actually true of it: **the employees furthest from what their stig
-imply**, with the totals stated.
+So at scale `|t| ≥ 2` is a fixed-quantile rule rather than a test. The instrument is
+therefore defined as what it usefully is — **a triage list**:
 
-The count has a hard bound. From `Σ tᵢ²(1 − hᵢ) = n − 2` and `Σ hᵢ = p = 2`, a count
-`k` at `|t| ≥ 2` needs `4(k − Σhᵢ) ≤ n − 2`, so:
+> An ábending is one of the employees who deviate most in each direction, up to ten
+> each way.
 
-```
-k ≤ (n + 6) / 4          ~25% of the workforce, never more
-```
+⚠️ So an employee past the threshold but not among the most extreme is **not an
+ábending being withheld** — they are not an ábending. Nobody says the threshold
+hides the employee at 1,9.
 
-At the 10 000-employee cap that is ~2 500 rows; ~2 000 is reachable in practice.
+The pool is published (`countBelowExpected`, `countAboveExpected`) and printed, so a
+reader can see the list is a triage of something larger — context, not a count of
+ábendingar. It is bounded: `Σ tᵢ²(1 − hᵢ) = n − 2` with `Σ hᵢ = 2` gives
+`k ≤ (n + 6)/4`, never more than ~25% of the workforce, so about 2 500 at the
+10 000-employee cap.
 
-**What is shown:** the ten furthest in each direction
+**The rule:** the ten furthest in each direction
 (`PAY_DISPERSION_SHORTLIST_SIZE`), extended to keep a tie group together, sliced at
-50 rows per direction (`PAY_DISPERSION_LIST_CEILING`), with the true totals always
-printed.
+50 per direction (`PAY_DISPERSION_LIST_CEILING`), with the pool printed alongside.
 
 ⚠️ **The cap does nothing below n ≈ 430**, where 4,6% of the workforce first exceeds
 two lists of ten. Every smaller company renders exactly as it did before — including
@@ -820,14 +822,24 @@ bulk — only that we have never seen it. Hence a slice rather than special hand
 
 ### The two constants
 
-`SHORTLIST_SIZE` is where the walk stops taking new groups; `LIST_CEILING` slices
-the result. Both are round numbers chosen for legibility, and §10 is otherwise
-hostile to those — the difference is that these **decide nothing**. They change how
-deep the table prints, not who qualifies: `threshold` still decides membership and
-is still `2`, every qualifying employee is still counted on the page, and the whole
-list stays recomputable from `wageGapDecomposition.employees[]`. Neither constant is
-published in the API; the response states what was _found_, not how the engine is
-tuned.
+`SHORTLIST_SIZE` is where the walk stops taking new groups; `LIST_CEILING` slices the
+result. Both are round numbers chosen for legibility, and §10 is otherwise hostile to
+those.
+
+They are part of the definition, so they decide membership — of a list that asks
+nothing of anyone: no explanation requested, nothing submitted, no reviewer acting
+on it, never a basis for rejection. That is the licence `threshold` already has. The
+±1,95% band decided **compliance** and the rejected fixed "20% off expected" decided
+membership of a **consequence-bearing** list; that is the difference.
+
+⚠️ **Membership is therefore headcount-dependent.** An employee at `|t| = 2,1` is an
+ábending in a 120-person cohort and not in a 10.000-person one, because ten
+colleagues sit further out. For a triage list that is correct — an employer can only
+look at so many, and the ones worth looking at first are the most extreme — but it
+reads as a defect until said out loud.
+
+Neither constant is published in the API; the response states what was _found_, not
+how the engine is tuned.
 
 ### The size-aware threshold, and why it is not the gate
 
@@ -876,7 +888,7 @@ record. Not defensible to a company being named.
 | Reviewer             | approves on those explanations                     | does not act on it; it cannot be a basis for rejection |
 | Auto-review          | óskýrt decides the verdict                         | invisible to it entirely                               |
 | Addressed to         | the Directorate, via the employer                  | the employer — someone inside the company who can look |
-| How many are shown   | every member, always                               | a shortlist of ten each way; the totals are printed    |
+| How many are listed  | every member, always                               | the ten furthest each way; the pool is printed too     |
 | Stored               | frozen in the snapshot at submit                   | **derived on read**, never stored                      |
 
 Being in the lágmarksmengi says _the company's statutory gap runs through your

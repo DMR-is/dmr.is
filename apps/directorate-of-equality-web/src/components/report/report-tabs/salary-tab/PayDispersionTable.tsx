@@ -8,7 +8,11 @@ import {
   type PayDispersionEmployeeDto,
 } from '../../../../gen/fetch'
 import { reportText, sharedText } from '../../../../lib/text'
-import { formatHourlyRate, formatPercent } from '../../../../lib/utils'
+import {
+  formatHourlyRate,
+  formatPercent,
+  formatSalary,
+} from '../../../../lib/utils'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -47,9 +51,6 @@ const dash = '–'
 const formatSpreadMagnitude = (value: number): string =>
   Math.abs(value).toFixed(2).replace('.', ',')
 
-/** Icelandic thousands separators, for counts that can reach four digits. */
-const formatCount = (value: number): string =>
-  new Intl.NumberFormat('is-IS').format(value)
 
 const genderMap: Record<string, string> = {
   MALE: sharedText.genders.male,
@@ -231,16 +232,21 @@ export const PayDispersionTable = ({
                     formatPercent(cohortResidualSpreadPercentUp, {
                       signed: true,
                     }),
-                    String(payDispersion.threshold).replace('.', ','),
                   )}
                 </Text>
               )}
+            {/* The pool, then what was drawn from it — in that order, because
+                the second sentence only makes sense once the first has given a
+                number to draw from. */}
             <Text variant="small" color="dark350">
               {p.counts(
                 String(payDispersion.threshold).replace('.', ','),
-                formatCount(countBelowExpected),
-                formatCount(countAboveExpected),
+                formatSalary(countBelowExpected),
+                formatSalary(countAboveExpected),
               )}
+            </Text>
+            <Text variant="small" color="dark350">
+              {p.listRule}
             </Text>
             {chanceCriticalSpreads != null && (
               <Text variant="small" color="dark350">
@@ -249,12 +255,10 @@ export const PayDispersionTable = ({
             )}
             <PayDispersionDirection
               heading={p.headingBelow}
-              count={countBelowExpected}
               rows={employees.filter((row) => row.studentizedResidual < 0)}
             />
             <PayDispersionDirection
               heading={p.headingAbove}
-              count={countAboveExpected}
               rows={employees.filter((row) => row.studentizedResidual > 0)}
             />
           </Stack>
@@ -266,54 +270,43 @@ export const PayDispersionTable = ({
 
 interface PayDispersionDirectionProps {
   heading: string
-  /** The TRUE total for this direction, before the cap. */
-  count: number
-  /** The shortlist. Shorter than `count` whenever the cap fired. */
+  /** This direction's ábendingar. The list IS the finding, not a sample of it. */
   rows: PayDispersionEmployeeDto[]
 }
 
 /**
- * One direction of the list — its own heading, its own count, its own table.
+ * One direction of the list.
  *
  * ⚠️ **Two headings, because the two directions are different findings.** An
  * employee paid far below what their stig imply and one paid far above are not
- * variations of one observation, and on a workforce long enough to need a cap a
- * single mixed table buries the first among the second.
+ * variations of one observation, and mixing them buries the first among the
+ * second.
  *
- * ⚠️ **`count` is the total; `rows` is the shortlist.** They differ whenever the
- * cap fired — that is the whole point — so the heading carries `count` and the
- * lead says how many are shown. Never derive one from the other.
+ * ⚠️ **No count in the heading, deliberately.** It would only restate the number
+ * of rows beneath it. The figures worth stating are the POOL — how many
+ * employees sit past the threshold — and those are in the `counts` sentence
+ * above, once, rather than split across two headings.
  *
  * Renders nothing when a direction has nothing: a heading over an empty table
  * reads as a finding that failed to print.
  */
 const PayDispersionDirection = ({
   heading,
-  count,
   rows,
 }: PayDispersionDirectionProps) => {
-  if (count === 0) return null
+  if (rows.length === 0) return null
 
   return (
     <Stack space={1}>
-      <Text variant="h5">{`${heading} — ${formatCount(count)}`}</Text>
-
-      {rows.length < count && (
-        <Text variant="small" color="dark350">
-          {p.shownNote(formatCount(rows.length))}
-        </Text>
-      )}
-
-      {rows.length > 0 && (
-        /*
-          ⚠️ `layout="auto"` is REQUIRED by the `fit` meta on the columns — see
-          the ColumnMeta docstring in the shared Table. Without it the table
-          defaults to `fixed` while `sizingStyle` still applies `width: 1;
-          nowrap`, so every fit column is pinned to 1px and its content overflows
-          the cell. `OutlierGroupTable` passes it for the same reason.
-        */
-        <Table columns={columns} data={rows} layout="auto" />
-      )}
+      <Text variant="h5">{heading}</Text>
+      {/*
+        ⚠️ `layout="auto"` is REQUIRED by the `fit` meta on the columns — see the
+        ColumnMeta docstring in the shared Table. Without it the table defaults to
+        `fixed` while `sizingStyle` still applies `width: 1; nowrap`, so every fit
+        column is pinned to 1px and its content overflows the cell.
+        `OutlierGroupTable` passes it for the same reason.
+      */}
+      <Table columns={columns} data={rows} layout="auto" />
     </Stack>
   )
 }

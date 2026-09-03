@@ -4801,11 +4801,11 @@
           },
           "countBelowExpected": {
             "type": "number",
-            "description": "How many employees qualified BELOW expected pay, before any cap. This is the figure to print; `employees` is a shortlist and its length is not this number. Zero when unavailable."
+            "description": "CONTEXT — how many employees sit more than `threshold` spreads BELOW the fitted line. This is the POOL the ábendingar were drawn from, not a count of ábendingar: the list is the most extreme few per direction, and `employees` holds all of them. Print it to show the instrument is a triage of something larger; do not present it as a number of findings. Zero when unavailable."
           },
           "countAboveExpected": {
             "type": "number",
-            "description": "How many employees qualified ABOVE expected pay, before any cap. Zero when unavailable."
+            "description": "The same for ABOVE the fitted line — context, not a count of ábendingar. Zero when unavailable."
           },
           "chanceCriticalSpreads": {
             "type": "number",

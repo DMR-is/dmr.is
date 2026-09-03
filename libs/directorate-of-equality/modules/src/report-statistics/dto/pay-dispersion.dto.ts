@@ -185,21 +185,25 @@ export class PayDispersionDto {
    * so a global sort would silently reorder blocks away from the rendered order
    * and make the array disagree with both surfaces.
    *
-   * ⚠️ **Capped.** Use `countBelowExpected` / `countAboveExpected` for how many
-   * employees actually qualified — never `employees.length`.
+   * ⚠️ **This array IS the finding, not a sample of one.** An ábending is one of
+   * the most extreme few per direction, so these rows are the ábendingar and
+   * `employees.length` is how many there are. `countBelowExpected` /
+   * `countAboveExpected` are a different quantity — the POOL past the threshold
+   * that these were drawn from — and are context for the reader, not a count of
+   * ábendingar.
    */
   @ApiDtoArray(PayDispersionEmployeeDto)
   employees!: PayDispersionEmployeeDto[]
 
   @ApiNumber({
     description:
-      'How many employees qualified BELOW expected pay, before any cap. This is the figure to print; `employees` is a shortlist and its length is not this number. Zero when unavailable.',
+      'CONTEXT — how many employees sit more than `threshold` spreads BELOW the fitted line. This is the POOL the ábendingar were drawn from, not a count of ábendingar: the list is the most extreme few per direction, and `employees` holds all of them. Print it to show the instrument is a triage of something larger; do not present it as a number of findings. Zero when unavailable.',
   })
   countBelowExpected!: number
 
   @ApiNumber({
     description:
-      'How many employees qualified ABOVE expected pay, before any cap. Zero when unavailable.',
+      'The same for ABOVE the fitted line — context, not a count of ábendingar. Zero when unavailable.',
   })
   countAboveExpected!: number
 

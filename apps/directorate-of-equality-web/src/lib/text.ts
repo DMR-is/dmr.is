@@ -570,9 +570,15 @@ export const reportText = {
        * why someone 30% off the line is listed while someone 25% off is not — the
        * answer being that the cut-off is measured in the company's OWN spread, not
        * in percent.
+       *
+       * ⚠️ Deliberately no longer ends "hér eru starfsmenn sem víkja X staðalvik
+       * eða meira frá henni". That sentence defined the list by the threshold
+       * alone, which stopped being true when the list became the most extreme few
+       * per direction. The threshold still appears, in `counts`, where it
+       * describes the POOL rather than the list.
        */
-      spreadNote: (down: string, up: string, threshold: string) =>
-        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}. Hér eru starfsmenn sem víkja ${threshold} staðalvik eða meira frá henni.`,
+      spreadNote: (down: string, up: string) =>
+        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}.`,
       allClear:
         'Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.',
       /**
@@ -610,8 +616,18 @@ export const reportText = {
        */
       counts: (threshold: string, below: string, above: string) =>
         `Starfsmenn sem víkja ${threshold} staðalvik eða meira frá línunni: ${below} niður, ${above} upp.`,
-      /** Printed only when a direction was actually capped. */
-      shownNote: (shown: string) => `Þeir ${shown} sem víkja mest eru sýndir hér.`,
+      /**
+       * ⚠️ **The definition, and it is load-bearing.** An ábending IS one of the
+       * most extreme few per direction — not "an employee over the threshold, of
+       * whom some are shown". `counts` above states the pool this was drawn from;
+       * this sentence says what was drawn. Without it a reader adds the two
+       * figures up and wonders where the rest went.
+       *
+       * Printed unconditionally: on a company with three below and two above it
+       * is still true, and a conditional sentence would make the section's
+       * meaning depend on the company's size.
+       */
+      listRule: 'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
       /**
        * ⚠️ CONTEXT, never a cut-off — nothing was filtered on this number. It is
        * here because `|t| ≥ 2` is blind to headcount: screening 10.000 people

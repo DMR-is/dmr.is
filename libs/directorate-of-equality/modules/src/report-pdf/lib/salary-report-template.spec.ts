@@ -286,6 +286,10 @@ describe('buildSalaryReportHtml', () => {
       // Both ends, no ±: the spread is symmetric in log points and asymmetric in
       // krónur, so one figure with a ± overstates the downward band by ~5pp.
       expect(html).toContain('-20,4% til +25,7%')
+      // ⚠️ The clause that used to follow — "hér eru starfsmenn sem víkja 2
+      // staðalvik eða meira frá henni" — defined the list by the threshold alone,
+      // which stopped being true when the list became the most extreme few.
+      expect(html).not.toContain('staðalvik eða meira frá henni')
       expect(html).not.toContain('±')
 
       // ⚠️ The sentence that stops a reader treating this as a second
@@ -364,11 +368,11 @@ describe('buildSalaryReportHtml', () => {
     })
 
     /**
-     * ⚠️ The two directions are separate findings, and the heading carries the
-     * TRUE count while the table carries the shortlist. A reader who takes the
-     * table's length for the finding has been told something false.
+     * ⚠️ The two directions are separate findings. The headings carry no number —
+     * it would only restate the rows beneath them — and the POOL is stated once,
+     * in its own sentence, followed by the rule that says what was drawn from it.
      */
-    it('splits the list by direction and states the true totals', () => {
+    it('splits by direction and states the pool it drew from', () => {
       const html = withPayDispersion({
         cohortResidualSpreadPercentUp: 19.55,
         cohortResidualSpreadPercentDown: -16.35,
@@ -381,15 +385,22 @@ describe('buildSalaryReportHtml', () => {
         chanceCriticalSpreads: 4.29,
       })
 
-      expect(html).toContain('Undir væntanlegu tímakaupi — 24')
-      expect(html).toContain('Yfir væntanlegu tímakaupi — 22')
-      // The totals, not the row count.
+      expect(html).toContain('Undir væntanlegu tímakaupi')
+      expect(html).toContain('Yfir væntanlegu tímakaupi')
+      // ⚠️ No count appended to either heading — that was the old framing, where
+      // the list was a sample of a longer one.
+      expect(html).not.toContain('Undir væntanlegu tímakaupi — ')
+      // The pool, stated once.
       expect(html).toContain(
         'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 24 niður, 22 upp.',
       )
-      // Said outright, because ten rows under a heading reading 24 is otherwise
-      // a discrepancy the reader has to resolve alone.
-      expect(html).toContain('Þeir 10 sem víkja mest eru sýndir hér.')
+      // ⚠️ And immediately the definition, without which a reader adds 24 and 22
+      // and asks where the other rows went.
+      expect(html).toContain(
+        'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
+      )
+      // The retired sentence: the list is not "some of" anything.
+      expect(html).not.toContain('eru sýndir hér')
       // ⚠️ Context, not a cut-off — and no sign on it, since the sentence
       // already carries no direction.
       expect(html).toContain(
@@ -399,32 +410,41 @@ describe('buildSalaryReportHtml', () => {
       expect(html.match(/<table class="data-table">/g)?.length).toBe(2)
     })
 
-    it('says nothing about a shortlist when nothing was cut', () => {
+    /**
+     * ⚠️ The rule sentence is unconditional. On a company with one row each way
+     * nothing was cut, and it is still true that the ábendingar are the ones who
+     * deviate most — making the sentence conditional would let the section's
+     * meaning depend on headcount.
+     */
+    it('states the rule even when nothing was cut', () => {
       const html = withPayDispersion({
         employees: [row(1, -2.4), row(2, 2.1)],
       })
 
-      expect(html).toContain('Undir væntanlegu tímakaupi — 1')
-      expect(html).toContain('Yfir væntanlegu tímakaupi — 1')
-      expect(html).not.toContain('sem víkja mest eru sýndir hér')
+      expect(html).toContain(
+        'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
+      )
+      expect(html).toContain(
+        'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 1 niður, 1 upp.',
+      )
     })
 
     it('renders only the direction that has anything', () => {
       const html = withPayDispersion({ employees: [row(1, -2.4), row(2, -2.2)] })
 
-      expect(html).toContain('Undir væntanlegu tímakaupi — 2')
+      expect(html).toContain('Undir væntanlegu tímakaupi')
       expect(html).not.toContain('Yfir væntanlegu tímakaupi')
       // A heading over an empty table reads as a finding that failed to print.
       expect(html.match(/<table class="data-table">/g)?.length).toBe(1)
     })
 
     /**
-     * ⚠️ Splitting a tie is accepted only past the ceiling, so the surface has no
-     * special case for it — the count carries the truth and the rows are simply
-     * the most extreme 50. An earlier design rendered a prose sentence instead;
-     * see `PAY_DISPERSION_LIST_CEILING` for why that was removed.
+     * ⚠️ The ceiling has no special rendering — the rows are simply the most
+     * extreme 50 and the pool sentence carries the larger figure. An earlier
+     * design rendered a prose summary instead; see `PAY_DISPERSION_LIST_CEILING`
+     * for why that was removed.
      */
-    it('states the total even when the ceiling cut the rows', () => {
+    it('states the pool even when the ceiling cut the rows', () => {
       const html = withPayDispersion({
         employees: Array.from({ length: PAY_DISPERSION_LIST_CEILING }, (_, i) =>
           row(i + 1, -2.51),
@@ -433,8 +453,10 @@ describe('buildSalaryReportHtml', () => {
         countAboveExpected: 0,
       })
 
-      expect(html).toContain('Undir væntanlegu tímakaupi — 312')
-      expect(html).toContain('Þeir 50 sem víkja mest eru sýndir hér.')
+      expect(html).toContain(
+        'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 312 niður, 0 upp.',
+      )
+      expect(html).toContain('Undir væntanlegu tímakaupi')
       expect(html).not.toContain('Engar ábendingar')
       expect(html).not.toContain('Yfir væntanlegu tímakaupi')
     })

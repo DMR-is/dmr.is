@@ -582,14 +582,26 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     cohortResidualSpreadPercentUp === null ||
     cohortResidualSpreadPercentDown === null
       ? ''
-      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}. Hér eru starfsmenn sem víkja ${String(payDispersion.threshold).replace('.', ',')} staðalvik eða meira frá henni.</p>`
+      // ⚠️ No longer ends "hér eru starfsmenn sem víkja X staðalvik eða meira frá
+      // henni". That defined the list by the threshold alone, which stopped being
+      // true when the list became the most extreme few per direction. The
+      // threshold still appears in `countsNote`, describing the POOL.
+      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}.</p>`
 
-  // ⚠️ Stated as a count, never as "these are the deviating employees" — the
-  // tables below are a shortlist, and a reader who takes their length for the
-  // finding has been told something false. Phrased as a noun phrase with a colon
-  // rather than "24 starfsmenn víkja …" so the sentence needs no singular/plural
+  // The POOL the ábendingar were drawn from — a factual statement about who sits
+  // past the threshold, NOT a count of ábendingar. Phrased as a noun phrase with a
+  // colon rather than "24 starfsmenn víkja …" so it needs no singular/plural
   // agreement at 1 and 21.
+  //
+  // ⚠️ Must be followed by `listRuleNote`. On its own it invites the reader to add
+  // the two figures up and ask where the rest of the rows went.
   const countsNote = `<p class="advisory-note">Starfsmenn sem víkja ${String(payDispersion.threshold).replace('.', ',')} staðalvik eða meira frá línunni: ${formatNumber(countBelowExpected)} niður, ${formatNumber(countAboveExpected)} upp.</p>`
+
+  // ⚠️ The definition. An ábending IS one of the most extreme few per direction —
+  // not "an employee past the threshold, of whom some are printed". Unconditional:
+  // it is equally true on a company with three below and two above, and making it
+  // conditional would let the section's meaning depend on headcount.
+  const listRuleNote = `<p class="advisory-note">Ábendingar eru gerðar um þá sem víkja mest í hvora átt.</p>`
 
   // ⚠️ CONTEXT, not a cut-off, and the copy must not imply otherwise — nothing
   // was filtered on this number. It exists because `|t| ≥ 2` is blind to
@@ -603,12 +615,10 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
 
   const below = payDispersionDirection(
     'Undir væntanlegu tímakaupi',
-    countBelowExpected,
     employees.filter((employee) => employee.studentizedResidual < 0),
   )
   const above = payDispersionDirection(
     'Yfir væntanlegu tímakaupi',
-    countAboveExpected,
     employees.filter((employee) => employee.studentizedResidual > 0),
   )
 
@@ -618,6 +628,7 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     <p class="advisory-note--lead">Engra skýringa er krafist og ekkert þarf að skrá — þetta eru ekki frávik í skilningi úrbótaáætlunar og hafa engin áhrif á afgreiðslu skýrslunnar. Ábendingin er til fyrirtækisins sjálfs: gögnin gætu þurft nánari skoðun innanhúss.</p>
     ${spreadNote}
     ${countsNote}
+    ${listRuleNote}
     ${chanceNote}
     ${below}
     ${above}`,
@@ -625,38 +636,27 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
 }
 
 /**
- * One direction of the ábendingar list — its own heading, its own count, its own
- * table.
+ * One direction of the ábendingar list — its own heading, its own table.
  *
  * ⚠️ **Two headings, because the two directions are different findings.** An
  * employee paid far BELOW what their stig imply and one paid far above are not
- * variations of one observation, and on a workforce long enough to need a cap a
- * single mixed table buries the first among the second.
+ * variations of one observation, and mixing them buries the first among the
+ * second.
  *
- * ⚠️ **`count` is the true total; `rows` is the shortlist.** They differ whenever
- * the cap fired, which is the entire point, so the heading carries `count` and
- * the lead says how many are shown.
+ * ⚠️ **No count in the heading, deliberately.** It would only restate the number
+ * of rows beneath it. The figures worth stating are the pool — see `countsNote`,
+ * which states both directions once rather than splitting them across headings.
  *
  * Returns `''` when a direction has nothing — a heading over an empty table
  * reads as a finding that failed to print.
  */
 function payDispersionDirection(
   title: string,
-  count: number,
   rows: PayDispersionEmployeeDto[],
 ): string {
-  if (count === 0) return ''
+  if (rows.length === 0) return ''
 
-  const lead =
-    rows.length < count
-      ? `Þeir ${formatNumber(rows.length)} sem víkja mest eru sýndir hér.`
-      : ''
-
-  return subsection(
-    `${title} — ${formatNumber(count)}`,
-    lead,
-    payDispersionTable(rows),
-  )
+  return subsection(title, '', payDispersionTable(rows))
 }
 
 /**
