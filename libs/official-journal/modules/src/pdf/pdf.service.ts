@@ -489,6 +489,38 @@ export class PdfService implements OnModuleDestroy, IPdfService {
 
         await page.evaluate(async () => {
           const images = Array.from(document.querySelectorAll('img'))
+          const isIgnorableImageSibling = (node: ChildNode) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              return !node.textContent?.trim()
+            }
+
+            return (
+              node.nodeType === Node.ELEMENT_NODE &&
+              (node as Element).tagName === 'BR'
+            )
+          }
+
+          images.forEach((img) => {
+            img.classList.add('pdf-image')
+
+            const parent = img.parentElement
+            if (!parent) {
+              return
+            }
+
+            const meaningfulSiblings = Array.from(parent.childNodes).filter(
+              (node) => node === img || !isIgnorableImageSibling(node),
+            )
+
+            if (
+              meaningfulSiblings.length === 1 &&
+              meaningfulSiblings[0] === img
+            ) {
+              parent.classList.add('pdf-image-block')
+              img.classList.add('pdf-standalone-image')
+            }
+          })
+
           await Promise.all(
             images.map((img) => {
               if (img.complete) return Promise.resolve()

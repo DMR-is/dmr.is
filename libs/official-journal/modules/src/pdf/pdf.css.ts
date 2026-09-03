@@ -1,3 +1,8 @@
+const PDF_PAGE_HEIGHT = '297mm'
+const PDF_PAGE_MARGIN_TOP = '4cm'
+const PDF_PAGE_MARGIN_BOTTOM = '1.5cm'
+const PDF_PAGE_MARGIN_INLINE = 'calc(2cm - 0.33em)'
+
 export const pdfCss = `
   :root {
     --font-family: 'Times New Roman', serif;
@@ -85,8 +90,8 @@ export const pdfCss = `
 
   @page {
     size: A4;
-    margin: 4cm calc(2cm - 0.33em); /* --table-padding--h */
-    margin-bottom: 1.5cm;
+    margin: ${PDF_PAGE_MARGIN_TOP} ${PDF_PAGE_MARGIN_INLINE}; /* --table-padding--h */
+    margin-bottom: ${PDF_PAGE_MARGIN_BOTTOM};
 
     @top-left {
       content: element(regName);
@@ -236,6 +241,31 @@ export const pdfCss = `
     max-width: 100%;
     width: auto;
     height: auto;
+  }
+
+  .pdf-image-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  p.pdf-image-block,
+  div.pdf-image-block {
+    text-indent: 0 !important;
+    text-align: left !important;
+  }
+
+  .pdf-standalone-image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(
+      ${PDF_PAGE_HEIGHT} - ${PDF_PAGE_MARGIN_TOP} - ${PDF_PAGE_MARGIN_BOTTOM}
+    );
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin: 0.5em 0 1em;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   table {
