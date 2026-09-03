@@ -72,8 +72,7 @@ number. It is _not_ the regulation's test.
 **Leiðréttur** comes from a twofold Oaxaca-Blinder decomposition on
 `log(tímakaup)` with a pooled **Neumark** reference — a pooled fit with no gender
 dummy. That is the only convention implemented, and it is the one the
-Directorate's own R reference publishes (`group.weight = -1 -> sameiginlegt
-líkan (Neumark); oftast birt`). Which reference produced a figure is recorded on
+Directorate's own R reference publishes (`group.weight = -1 -> sameiginlegt líkan (Neumark); oftast birt`). Which reference produced a figure is recorded on
 every snapshot, because that is part of what the number means.
 
 Note the R reference prints several conventions side by side (`group.weight` 0, 1,
@@ -743,6 +742,142 @@ nothing at all, and it runs only after compliance has already been settled by
 cut-off, and it is a count of **spreads**, not of percent, which is why it adapts
 to a company instead of being imposed on it.
 
+### Why the list is a shortlist
+
+`|t| ≥ 2` flags **~4,6% of any workforce**, near enough regardless of the data,
+because the statistic divides by the cohort's own spread. Heavy tails do not move
+it: simulated normal, t₅, t₃ and contaminated mixtures all land between 4,2% and
+5,8% at every size from 50 to 10 000. 4,55% is just the two-sided `|z| ≥ 2` rate,
+and studentizing pins you to it.
+
+That is fine at 120 employees, where it is 5 rows. At 10 000 it is ~460 rows and a
+~50-page section for an instrument that asks nothing of anybody.
+
+⚠️ **And the count is anti-correlated with whether anything is wrong.** At
+n = 10 000:
+
+| the cohort                                        | rows |
+| ------------------------------------------------- | ---: |
+| pay perfectly explained by stig plus normal noise | ~455 |
+| 100 employees genuinely 5 spreads off the line    | ~352 |
+
+The company with the real problem gets the **shorter** list, because its anomalies
+inflate `s` and deflate everyone else's `t`. The same mechanism collapses the
+structural-split case to zero rows past `q = 25%`: past a quarter of the workforce
+the deviant group _becomes_ the spread and stops being unusual.
+
+So at scale `|t| ≥ 2` is a fixed-quantile rule rather than a test. The instrument is
+therefore defined as what it usefully is — **a triage list**:
+
+> An ábending is one of the employees who deviate most in each direction, up to ten
+> each way.
+
+⚠️ So an employee past the threshold but not among the most extreme is **not an
+ábending being withheld** — they are not an ábending. Nobody says the threshold
+hides the employee at 1,9.
+
+The pool is published (`countBelowExpected`, `countAboveExpected`) and printed, so a
+reader can see the list is a triage of something larger — context, not a count of
+ábendingar. It is bounded: `Σ tᵢ²(1 − hᵢ) = n − 2` with `Σ hᵢ = 2` gives
+`k ≤ (n + 6)/4`, never more than ~25% of the workforce, so about 2 500 at the
+10 000-employee cap.
+
+**The rule:** the ten furthest in each direction
+(`PAY_DISPERSION_SHORTLIST_SIZE`), extended to keep a tie group together, sliced at
+50 per direction (`PAY_DISPERSION_LIST_CEILING`), with the pool printed alongside.
+
+⚠️ **The cap does nothing below n ≈ 430**, where 4,6% of the workforce first exceeds
+two lists of ten. Every smaller company renders exactly as it did before — including
+`richSheetCompliant`, which still lists #70 and #1 and nothing else.
+
+### Ties
+
+Rows are grouped by their **printed** `|t|` — the 2dp value — and a group is taken
+whole until the shortlist is full. `PAY_DISPERSION_LIST_CEILING` then slices the
+result at 50 per direction, so a tie is broken only when one group alone exceeds 50.
+
+⚠️ **Grouping on the raw value would not work.** Two employees both printing `2,04`
+can differ in the ninth decimal, so a raw-valued cut would separate them: the same
+stated distance from the line, one listed and one not, for a reason no reader can
+see. That is the `round2` problem one step further out, and the same principle
+answers it — _one rounding, one number_.
+
+This is not a nicety. A plain cut at ten separates two employees printing the same
+`|t|` in roughly **one in three large reports**:
+
+| n      | continuous wages | discrete scores, gridded wages |
+| ------ | ---------------: | -----------------------------: |
+| 500    |              16% |                            17% |
+| 2 000  |              22% |                            28% |
+| 10 000 |              29% |                        **37%** |
+
+Higher on the payroll-like data, because real pay steps make near-ties _more_ likely,
+not less. Extending through the group costs 0,2–0,5 rows on average.
+
+An **exact** tie needs the same starfsmatsstig _and_ the same hourly wage to the
+aurar. `hourlyWage` is salary ÷ hours, so it rarely repeats: no cohort we hold
+contains one, and the largest group in 1 500 payroll-like simulated cohorts was 32.
+Those cohorts are synthetic, so this is not evidence that real payrolls never tie in
+bulk — only that we have never seen it. Hence a slice rather than special handling.
+
+### The two constants
+
+`SHORTLIST_SIZE` is where the walk stops taking new groups; `LIST_CEILING` slices the
+result. Both are round numbers chosen for legibility, and §10 is otherwise hostile to
+those.
+
+They are part of the definition, so they decide membership — of a list that asks
+nothing of anyone: no explanation requested, nothing submitted, no reviewer acting
+on it, never a basis for rejection. That is the licence `threshold` already has. The
+±1,95% band decided **compliance** and the rejected fixed "20% off expected" decided
+membership of a **consequence-bearing** list; that is the difference.
+
+⚠️ **Membership is therefore headcount-dependent.** An employee at `|t| = 2,1` is an
+ábending in a 120-person cohort and not in a 10.000-person one, because ten
+colleagues sit further out. For a triage list that is correct — an employer can only
+look at so many, and the ones worth looking at first are the most extreme — but it
+reads as a defect until said out loud.
+
+Neither constant is published in the API; the response states what was _found_, not
+how the engine is tuned.
+
+### The size-aware threshold, and why it is not the gate
+
+`|t| ≥ 2` is blind to headcount: screening 10 000 people throws up more extremes
+than screening 120. The familywise critical value `z(α / 2n)` at α = 5% is not:
+
+| n      | critical value | rows under the null | rows when 100 employees are truly off |
+| ------ | -------------- | ------------------: | ------------------------------------: |
+| 12     | 2,87           |                  ~0 |                                     — |
+| 120    | 3,53           |                0,04 |                                     — |
+| 2 000  | 4,21           |                0,06 |                        12 of 20 found |
+| 10 000 | 4,56           |                0,05 |                       46 of 100 found |
+
+It is published as `chanceCriticalSpreads` and printed as a **sentence** — _"hjá
+fyrirtæki af þessari stærð fer sjaldnast nokkur starfsmaður yfir 4,6 staðalvik frá
+línunni af tilviljun einni"_ — so a reader can tell a long list on a large workforce
+from a real finding.
+
+⚠️ **It is deliberately NOT the filter, and wiring it in would empty every fixture
+we own:**
+
+| fixture            |   n | critical value | rows today | rows if gated | most extreme |
+| ------------------ | --: | -------------- | ---------: | ------------: | ------------ |
+| referenceCompany   | 120 | 3,53           |          3 |         **0** | −3,49        |
+| richSheet          | 100 | 3,48           |          2 |         **0** | +2,60        |
+| richSheetCompliant | 100 | 3,48           |          2 |         **0** | +2,53        |
+
+referenceCompany's most extreme employee misses by **0,04**. And the worked example
+below — richSheet #70 at +2,60 — is expected **~0,9 times by chance** in a 100-person
+cohort: statistically it is noise. Keeping today's three rows on referenceCompany
+would need α ≈ 0,5, which is not a number anyone should have to defend.
+
+It will be proposed again. This table is the answer. **FDR (Benjamini–Hochberg)** was
+considered too and has better power — 93 of 100 planted anomalies at n = 10 000
+against Bonferroni's 46 — but membership then depends on the _other_ employees'
+p-values, so adding one employee can silently remove another from a document of
+record. Not defensible to a company being named.
+
 ### The consequence boundary — the part that matters
 
 |                      | Lágmarksmengi (§4)                                 | Ábendingar                                             |
@@ -753,6 +888,7 @@ to a company instead of being imposed on it.
 | Reviewer             | approves on those explanations                     | does not act on it; it cannot be a basis for rejection |
 | Auto-review          | óskýrt decides the verdict                         | invisible to it entirely                               |
 | Addressed to         | the Directorate, via the employer                  | the employer — someone inside the company who can look |
+| How many are listed  | every member, always                               | the ten furthest each way; the pool is printed too     |
 | Stored               | frozen in the snapshot at submit                   | **derived on read**, never stored                      |
 
 Being in the lágmarksmengi says _the company's statutory gap runs through your
@@ -818,6 +954,12 @@ The same hundred people **without** the demo pay cut (`richSheetCompliant`, ósk
 2,10%) are compliant, so the lágmarksmengi is empty, the population is
 `ALL_EMPLOYEES`, and **both** `#70` and `#1` are listed.
 
+⚠️ **The cap does not fire on any of this.** At n = 100 the shortlist is never
+reached, so these rows are exactly what they were before the cap existed — which is
+true of every company under n ≈ 430. What changes on this report is the surrounding
+copy: the true totals per direction, the two direction headings, and the chance
+sentence. See "Why the list is a shortlist".
+
 ### Where it comes from
 
 Derived from `report_result.wage_gap_decomposition_snapshot` on read —
@@ -829,6 +971,17 @@ published history; a regulatory figure must not. It also means the instrument
 works on every snapshot already frozen, needed no migration and no
 `calculation_version` bump, and is reproducible by anyone holding the published
 JSON.
+
+The shortlist, the totals and the chance figure are all derived on the same read, so
+the same argument covers them: `PAY_DISPERSION_SHORTLIST_SIZE` and
+`PAY_DISPERSION_LIST_CEILING` can be retuned without rewriting a single published
+report.
+
+⚠️ The flip side, stated plainly: a PDF downloaded from a large company's report
+before this change shows more rows than one generated after it. Same data, same
+statistic, different print depth. Making ábendingar byte-reproducible from a point in
+time would mean freezing it into the snapshot — a much larger decision, and the one
+this design deliberately declines.
 
 ⚠️ A snapshot whose employees carry no usable `residualLog` reports
 `GAP_NOT_COMPUTABLE`, **not** an empty list. "Cannot tell" and "nobody deviates"

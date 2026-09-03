@@ -11,9 +11,11 @@ import { ReportEmployeeOutlierDto } from '../../report-employee/dto/report-emplo
 import {
   PayDispersionBlockerEnum,
   type PayDispersionDto,
+  type PayDispersionEmployeeDto,
   PayDispersionPopulationEnum,
 } from '../../report-statistics/dto/pay-dispersion.dto'
 import { SalaryByGenderAndScoreDto } from '../../report-statistics/dto/salary-by-gender-and-score.dto'
+import { PAY_DISPERSION_LIST_CEILING } from '../../report-statistics/lib/pay-dispersion'
 import {
   buildSalaryReportHtml,
   SalaryReportPdfData,
@@ -210,13 +212,45 @@ describe('buildSalaryReportHtml', () => {
      * The absent-field case below opts out explicitly, because that is the one
      * scenario whose whole point is a payload that does NOT match the type.
      */
-    const withPayDispersion = (payDispersion: PayDispersionDto | undefined) => {
+    /**
+     * Takes a partial and fills the rest, so a case states only the fields it is
+     * actually about.
+     *
+     * ⚠️ **The counts default to the row set's own composition** — i.e. "nothing
+     * was capped", which is true of every case here except the ones deliberately
+     * exercising the cap. Without that default a literal that sets `employees`
+     * and omits `countBelowExpected` would fall into the all-clear branch, and
+     * the case would assert against a section that never rendered.
+     */
+    const withPayDispersion = (
+      payDispersion?: Partial<PayDispersionDto>,
+    ): string => {
       const data = makeData()
+      const rows = payDispersion?.employees ?? []
+      const complete: PayDispersionDto | undefined = payDispersion && {
+        available: true,
+        blockers: [],
+        population: PayDispersionPopulationEnum.ALL_EMPLOYEES,
+        threshold: 2,
+        cohortResidualSpreadPercentUp: null,
+        cohortResidualSpreadPercentDown: null,
+        employees: [],
+        chanceCriticalSpreads: null,
+        ...payDispersion,
+        // After the spread, so an explicit count still wins.
+        countBelowExpected:
+          payDispersion.countBelowExpected ??
+          rows.filter((row) => row.studentizedResidual < 0).length,
+        countAboveExpected:
+          payDispersion.countAboveExpected ??
+          rows.filter((row) => row.studentizedResidual > 0).length,
+      }
+
       return buildSalaryReportHtml({
         ...data,
         report: {
           ...data.report,
-          result: { ...data.report.result, payDispersion },
+          result: { ...data.report.result, payDispersion: complete },
         } as unknown as ReportDetailDto,
       })
     }
@@ -252,6 +286,10 @@ describe('buildSalaryReportHtml', () => {
       // Both ends, no ±: the spread is symmetric in log points and asymmetric in
       // krónur, so one figure with a ± overstates the downward band by ~5pp.
       expect(html).toContain('-20,4% til +25,7%')
+      // ⚠️ The clause that used to follow — "hér eru starfsmenn sem víkja 2
+      // staðalvik eða meira frá henni" — defined the list by the threshold alone,
+      // which stopped being true when the list became the most extreme few.
+      expect(html).not.toContain('staðalvik eða meira frá henni')
       expect(html).not.toContain('±')
 
       // ⚠️ The sentence that stops a reader treating this as a second
@@ -314,6 +352,115 @@ describe('buildSalaryReportHtml', () => {
       expect(html).not.toContain('Starfsmaður 1<')
     })
 
+    const row = (
+      ordinal: number,
+      studentizedResidual: number,
+    ): PayDispersionEmployeeDto => ({
+      employeeOrdinal: ordinal,
+      gender: GenderEnum.FEMALE,
+      score: 500,
+      regularHourlyWage: 4000,
+      expectedHourlyWage: 4400,
+      deviationPercent: studentizedResidual < 0 ? -9.1 : 9.1,
+      payStatus:
+        studentizedResidual < 0 ? PayStatusEnum.UNDERPAID : PayStatusEnum.OVERPAID,
+      studentizedResidual,
+    })
+
+    /**
+     * ⚠️ The two directions are separate findings. The headings carry no number —
+     * it would only restate the rows beneath them — and the POOL is stated once,
+     * in its own sentence, followed by the rule that says what was drawn from it.
+     */
+    it('splits by direction and states the pool it drew from', () => {
+      const html = withPayDispersion({
+        cohortResidualSpreadPercentUp: 19.55,
+        cohortResidualSpreadPercentDown: -16.35,
+        employees: [
+          ...Array.from({ length: 10 }, (_, i) => row(i + 1, -3 + i * 0.05)),
+          ...Array.from({ length: 10 }, (_, i) => row(i + 20, 3 - i * 0.05)),
+        ],
+        countBelowExpected: 24,
+        countAboveExpected: 22,
+        chanceCriticalSpreads: 4.29,
+      })
+
+      expect(html).toContain('Undir væntanlegu tímakaupi')
+      expect(html).toContain('Yfir væntanlegu tímakaupi')
+      // ⚠️ No count appended to either heading — that was the old framing, where
+      // the list was a sample of a longer one.
+      expect(html).not.toContain('Undir væntanlegu tímakaupi — ')
+      // The pool, stated once.
+      expect(html).toContain(
+        'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 24 niður, 22 upp.',
+      )
+      // ⚠️ And immediately the definition, without which a reader adds 24 and 22
+      // and asks where the other rows went.
+      expect(html).toContain(
+        'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
+      )
+      // The retired sentence: the list is not "some of" anything.
+      expect(html).not.toContain('eru sýndir hér')
+      // ⚠️ Context, not a cut-off — and no sign on it, since the sentence
+      // already carries no direction.
+      expect(html).toContain(
+        'Hjá fyrirtæki af þessari stærð fer sjaldnast nokkur starfsmaður yfir 4,29 staðalvik',
+      )
+      // Two tables, one per direction.
+      expect(html.match(/<table class="data-table">/g)?.length).toBe(2)
+    })
+
+    /**
+     * ⚠️ The rule sentence is unconditional. On a company with one row each way
+     * nothing was cut, and it is still true that the ábendingar are the ones who
+     * deviate most — making the sentence conditional would let the section's
+     * meaning depend on headcount.
+     */
+    it('states the rule even when nothing was cut', () => {
+      const html = withPayDispersion({
+        employees: [row(1, -2.4), row(2, 2.1)],
+      })
+
+      expect(html).toContain(
+        'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
+      )
+      expect(html).toContain(
+        'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 1 niður, 1 upp.',
+      )
+    })
+
+    it('renders only the direction that has anything', () => {
+      const html = withPayDispersion({ employees: [row(1, -2.4), row(2, -2.2)] })
+
+      expect(html).toContain('Undir væntanlegu tímakaupi')
+      expect(html).not.toContain('Yfir væntanlegu tímakaupi')
+      // A heading over an empty table reads as a finding that failed to print.
+      expect(html.match(/<table class="data-table">/g)?.length).toBe(1)
+    })
+
+    /**
+     * ⚠️ The ceiling has no special rendering — the rows are simply the most
+     * extreme 50 and the pool sentence carries the larger figure. An earlier
+     * design rendered a prose summary instead; see `PAY_DISPERSION_LIST_CEILING`
+     * for why that was removed.
+     */
+    it('states the pool even when the ceiling cut the rows', () => {
+      const html = withPayDispersion({
+        employees: Array.from({ length: PAY_DISPERSION_LIST_CEILING }, (_, i) =>
+          row(i + 1, -2.51),
+        ),
+        countBelowExpected: 312,
+        countAboveExpected: 0,
+      })
+
+      expect(html).toContain(
+        'Starfsmenn sem víkja 2 staðalvik eða meira frá línunni: 312 niður, 0 upp.',
+      )
+      expect(html).toContain('Undir væntanlegu tímakaupi')
+      expect(html).not.toContain('Engar ábendingar')
+      expect(html).not.toContain('Yfir væntanlegu tímakaupi')
+    })
+
     it('distinguishes "cannot be assessed" from "nothing to report"', () => {
       const blocked = withPayDispersion({
         available: false,
@@ -332,6 +479,10 @@ describe('buildSalaryReportHtml', () => {
         cohortResidualSpreadPercentUp: 4.2,
         cohortResidualSpreadPercentDown: -4.03,
         employees: [],
+        // Stated rather than inferred: the all-clear is now keyed on these, and
+        // an empty row set alone no longer means it.
+        countBelowExpected: 0,
+        countAboveExpected: 0,
       })
 
       expect(blocked).toContain('Of fáir starfsmenn')
