@@ -231,6 +231,47 @@ export class ReportPdfService implements IReportPdfService {
     const browser = await getBrowser()
     try {
       const page = await browser.newPage()
+
+      /*
+       * ⚠️ Both of the following harden the renderer against the one piece of
+       * applicant-supplied markup these documents carry: the equality report's
+       * `content` (`equality-report-template.ts`), which is rich text the
+       * company wrote and is interpolated as markup rather than escaped.
+       *
+       * That template sanitises it, and that is the primary defence. These two
+       * are the second layer, and they are nearly free because — as the
+       * `waitUntil` note below already argues — these documents are
+       * self-contained: the chart is inline SVG, the styles are injected from
+       * `pdfStyles`, and nothing here needs script or the network. So there is
+       * no functionality to trade away by removing both.
+       *
+       * It matters because this page is not a sandbox. `getBrowser` launches
+       * Chromium with `--no-sandbox`, inside the API container, on the
+       * container's network — so anything that executes here executes next to
+       * internal services and the instance metadata endpoint. Without this, a
+       * `<script>` or an `onerror=` in a submitted plan runs there, and an
+       * `<img src="http://…">` reaches them even with scripting off, since
+       * `waitUntil: 'load'` waits for subresources to be fetched.
+       */
+      await page.setJavaScriptEnabled(false)
+
+      await page.setRequestInterception(true)
+      page.on('request', (request) => {
+        const url = request.url()
+        // `data:` covers inline images; `about:` is the blank document
+        // `setContent` writes into. Everything else is a fetch this renderer
+        // has no reason to make.
+        if (url.startsWith('data:') || url.startsWith('about:')) {
+          request.continue()
+        } else {
+          this.logger.warn('Blocked an outbound request from the PDF renderer', {
+            context: LOGGING_CONTEXT,
+            url,
+          })
+          request.abort()
+        }
+      })
+
       /*
        * ⚠️ `load`, NOT `networkidle0`.
        *
