@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 
 import { HTMLEditor } from '@dmr.is/ui/components/Editor/Editor'
 import { TextInput } from '@dmr.is/ui/components/Inputs/TextInput'
+import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Drawer } from '@dmr.is/ui/components/island-is/Drawer'
@@ -47,6 +48,40 @@ const EMPTY_FORM = {
   averageEmployeeNeutralCount: '',
 }
 
+/**
+ * Mirrors the API's 4MB cap on a decoded PDF.
+ *
+ * Checked here as well as server-side because the failure is much cheaper to
+ * explain before the upload than after: base64 inflates by 4/3, so an oversized
+ * file would otherwise be encoded, sent, and rejected — for a limit the admin
+ * could have been told about on selection.
+ */
+const MAX_PDF_BYTES = 4 * 1024 * 1024
+
+/** Which representation the admin is entering the content as. */
+type ContentMode = 'TEXT' | 'PDF'
+
+type SelectedPdf = { filename: string; base64: string }
+
+/**
+ * Reads a File into base64 without the data-URI prefix `readAsDataURL` adds.
+ *
+ * Chunked rather than `String.fromCharCode(...bytes)`: spreading a multi-megabyte
+ * array into an argument list overflows the call stack, and 4MB is comfortably
+ * past where that starts failing.
+ */
+const fileToBase64 = async (file: File): Promise<string> => {
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  const CHUNK = 0x8000
+  let binary = ''
+
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+  }
+
+  return btoa(binary)
+}
+
 export const CreateEqualityReportDrawer = () => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
@@ -54,10 +89,46 @@ export const CreateEqualityReportDrawer = () => {
   const [companyId, setCompanyId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [isOpen, setIsOpen] = useState<boolean | undefined>(undefined)
+  const [contentMode, setContentMode] = useState<ContentMode>('TEXT')
+  const [pdf, setPdf] = useState<SelectedPdf | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const editorKey = useRef(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const set = (key: keyof typeof EMPTY_FORM) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
+
+  const handlePdfChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    // Clear the input so re-picking the same file after an error still fires
+    // `change` — otherwise a corrected upload of the same name does nothing.
+    event.target.value = ''
+
+    if (!file) return
+
+    setPdfError(null)
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setPdf(null)
+      setPdfError(t.pdfNotAPdf)
+      return
+    }
+
+    if (file.size > MAX_PDF_BYTES) {
+      setPdf(null)
+      setPdfError(t.pdfTooLarge)
+      return
+    }
+
+    try {
+      setPdf({ filename: file.name, base64: await fileToBase64(file) })
+    } catch {
+      setPdf(null)
+      setPdfError(t.pdfReadError)
+    }
+  }
 
   const companiesQuery = useQuery(
     trpc.company.list.queryOptions({ pageSize: 1000 }),
@@ -92,8 +163,13 @@ export const CreateEqualityReportDrawer = () => {
   const handleReset = () => {
     setForm(EMPTY_FORM)
     setCompanyId(null)
+    setContentMode('TEXT')
+    setPdf(null)
+    setPdfError(null)
     editorKey.current += 1
   }
+
+  const isPdfMode = contentMode === 'PDF'
 
   const handleSubmit = () => {
     if (!companyId) return
@@ -110,7 +186,14 @@ export const CreateEqualityReportDrawer = () => {
         contactTitle: form.contactTitle || null,
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
-        equalityReportContent: form.equalityReportContent,
+        // Exactly one of the two — the API rejects both together, and sending
+        // the unused one as an empty string would count as "both supplied".
+        ...(isPdfMode
+          ? {
+              equalityReportPdf: pdf?.base64,
+              equalityReportPdfFilename: pdf?.filename,
+            }
+          : { equalityReportContent: form.equalityReportContent }),
         averageEmployeeMaleCount: form.averageEmployeeMaleCount
           ? Number(form.averageEmployeeMaleCount)
           : undefined,
@@ -131,7 +214,8 @@ export const CreateEqualityReportDrawer = () => {
     !!form.contactName &&
     !!form.contactEmail &&
     !!form.contactPhone &&
-    !!form.equalityReportContent
+    // Whichever representation is active has to actually carry content.
+    (isPdfMode ? !!pdf : !!form.equalityReportContent)
 
   return (
     <Drawer
@@ -321,25 +405,87 @@ export const CreateEqualityReportDrawer = () => {
             </Text>
           </GridColumn>
           <GridColumn span="12/12">
-            <Box
-              border="standard"
-              position="relative"
-              zIndex={10}
-              borderRadius="large"
-            >
-              <HTMLEditor
-                key={editorKey.current}
-                disabled={!companyId}
-                defaultValue={form.equalityReportContent}
-                handleUpload={() => new Error('File upload not supported')}
-                onChange={(value) => set('equalityReportContent')(value)}
-                config={{
-                  toolbar:
-                    'bold italic underline | align numlist bullist | link',
-                }}
-              />
+            <Box marginBottom={2}>
+              <Inline space={2}>
+                <Button
+                  variant={isPdfMode ? 'ghost' : 'primary'}
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => setContentMode('TEXT')}
+                >
+                  {t.contentModeText}
+                </Button>
+                <Button
+                  variant={isPdfMode ? 'primary' : 'ghost'}
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => setContentMode('PDF')}
+                >
+                  {t.contentModePdf}
+                </Button>
+              </Inline>
             </Box>
           </GridColumn>
+          <GridColumn span="12/12">
+            {isPdfMode ? (
+              <Box
+                background={pdf ? 'mint100' : 'blue100'}
+                borderRadius="large"
+                padding={3}
+                display="flex"
+                alignItems="center"
+                columnGap={3}
+              >
+                <Box flexGrow={1}>
+                  <Text variant="small">
+                    {pdf ? pdf.filename : t.pdfPlaceholder}
+                  </Text>
+                </Box>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  style={{ display: 'none' }}
+                  onChange={handlePdfChange}
+                  disabled={!companyId}
+                />
+                <Button
+                  variant="ghost"
+                  size="small"
+                  disabled={!companyId}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {pdf ? t.switchPdf : t.choosePdf}
+                </Button>
+              </Box>
+            ) : (
+              <Box
+                border="standard"
+                position="relative"
+                zIndex={10}
+                borderRadius="large"
+              >
+                <HTMLEditor
+                  key={editorKey.current}
+                  disabled={!companyId}
+                  defaultValue={form.equalityReportContent}
+                  handleUpload={() => new Error('File upload not supported')}
+                  onChange={(value) => set('equalityReportContent')(value)}
+                  config={{
+                    toolbar:
+                      'bold italic underline | align numlist bullist | link',
+                  }}
+                />
+              </Box>
+            )}
+          </GridColumn>
+          {pdfError && isPdfMode && (
+            <GridColumn span="12/12">
+              <Box marginTop={2}>
+                <AlertMessage type="error" message={pdfError} />
+              </Box>
+            </GridColumn>
+          )}
         </GridRow>
 
         <GridRow rowGap={1} marginBottom={4}>

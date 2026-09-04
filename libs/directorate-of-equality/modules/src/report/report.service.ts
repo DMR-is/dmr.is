@@ -18,6 +18,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -63,7 +64,11 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
-import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
+import {
+  EqualityContentTypeEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
 import {
@@ -71,7 +76,10 @@ import {
   buildImprovementPlanWhere,
   dateRangeFilter,
 } from './utils/filters'
-import { IReportService } from './report.service.interface'
+import {
+  EqualityContentPdf,
+  IReportService,
+} from './report.service.interface'
 
 const LOGGING_CONTEXT = 'ReportService'
 
@@ -218,6 +226,34 @@ export class ReportService implements IReportService {
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
     return { reports, paging }
+  }
+
+  async getEqualityContentPdf(id: string): Promise<EqualityContentPdf> {
+    this.logger.debug('Fetching uploaded equality plan PDF', {
+      context: LOGGING_CONTEXT,
+      id,
+    })
+
+    // Unscoped: only the three content columns matter here, and the `detailed`
+    // scope's includes would pull the whole report tree for a file download.
+    const report = await this.reportModel.findByPkOrThrow(id)
+
+    if (
+      report.type !== ReportTypeEnum.EQUALITY ||
+      report.equalityReportContentType !== EqualityContentTypeEnum.PDF ||
+      !report.equalityReportContent
+    ) {
+      throw new NotFoundException(
+        `Report "${id}" has no uploaded equality plan PDF`,
+      )
+    }
+
+    return {
+      pdf: Buffer.from(report.equalityReportContent, 'base64'),
+      // Non-null whenever the type is PDF — the database CHECK enforces it —
+      // but a report predating that constraint would still read null here.
+      fileName: report.equalityReportContentFilename ?? `jafnrettisaaetlun.pdf`,
+    }
   }
 
   async getById(id: string): Promise<ReportDetailDto> {

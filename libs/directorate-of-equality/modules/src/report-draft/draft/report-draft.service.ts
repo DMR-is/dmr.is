@@ -12,9 +12,11 @@ import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
+import { resolveOptionalEqualityContent } from '../../report/lib/equality-content'
 import { isReportIdentifierCollision } from '../../report/lib/report-identifier'
 import { resolveDraftSalaryDataBasis } from '../../report/lib/salary-data-basis'
 import {
+  EqualityContentTypeEnum,
   ReportModel,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -49,6 +51,11 @@ const APPLICATION_REPORT_PROVIDER = ReportProviderEnum.ISLAND_IS
  * interdependent (AVERAGE clears the month, a month is normalised to the 1st),
  * so it is resolved through `resolveDraftSalaryDataBasis` instead of copied key
  * by key.
+ *
+ * The equality-content trio is absent for the same reason: content, its type
+ * and the PDF filename only make sense set together, and copying
+ * `equalityReportContent` on its own would leave a row claiming PDF while
+ * holding HTML. `resolveOptionalEqualityContent` writes all three or none.
  */
 const DRAFT_HEADER_KEYS = [
   'companyAdminName',
@@ -62,7 +69,6 @@ const DRAFT_HEADER_KEYS = [
   'averageEmployeeMaleCount',
   'averageEmployeeFemaleCount',
   'averageEmployeeNeutralCount',
-  'equalityReportContent',
 ] as const
 
 @Injectable()
@@ -127,7 +133,13 @@ export class ReportDraftService implements IReportDraftService {
       averageEmployeeNeutralCount: report.averageEmployeeNeutralCount,
       salaryDataBasis: report.salaryDataBasis,
       salaryDataPeriod: report.salaryDataPeriod,
-      equalityReportContent: report.equalityReportContent,
+      // Withheld only for PDF — see the same test in `ApplicationService`.
+      equalityReportContent:
+        report.equalityReportContentType !== EqualityContentTypeEnum.PDF
+          ? report.equalityReportContent
+          : null,
+      equalityReportContentType: report.equalityReportContentType,
+      equalityReportContentFilename: report.equalityReportContentFilename,
       importedFromExcel: report.importedFromExcel,
       counts: { employees, criteria, outlierGroups },
       createdAt: report.createdAt ?? null,
@@ -170,6 +182,14 @@ export class ReportDraftService implements IReportDraftService {
       patch,
       resolveDraftSalaryDataBasis(input, report.salaryDataBasis),
     )
+
+    // Null when the patch mentions neither content field, which is the common
+    // case — a PATCH setting only a phone number must not touch the narrative.
+    const equalityContent = resolveOptionalEqualityContent(input)
+
+    if (equalityContent) {
+      Object.assign(patch, equalityContent)
+    }
 
     if (Object.keys(patch).length > 0) {
       await this.reportModel.update(patch, { where: { id: report.id } })

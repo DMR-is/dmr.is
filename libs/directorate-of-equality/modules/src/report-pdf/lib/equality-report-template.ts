@@ -11,6 +11,19 @@ function field(label: string, value: string): string {
     </div>`
 }
 
+type BuildEqualityReportHtmlOptions = {
+  /**
+   * Whether to render the plan body.
+   *
+   * `false` produces the identification and metadata alone — the cover page for
+   * a report whose content is an uploaded PDF, which is merged in behind it by
+   * `ReportPdfService` rather than expressed as HTML. Rendering the same
+   * template both ways is what keeps the two kinds of equality report looking
+   * like one document.
+   */
+  includeBody?: boolean
+}
+
 /**
  * Builds the equality-report PDF document HTML. Simpler than the salary
  * report: the body is the equality report's rich-text `content` (already HTML),
@@ -31,7 +44,10 @@ function field(label: string, value: string): string {
  * blocks network fetches in the page as the second layer; neither is a reason
  * to skip this one.
  */
-export function buildEqualityReportHtml(report: ReportDetailDto): string {
+export function buildEqualityReportHtml(
+  report: ReportDetailDto,
+  { includeBody = true }: BuildEqualityReportHtmlOptions = {},
+): string {
   const equality = report.equalityReport
   const companyName = report.company?.name ?? ''
   const content = equality?.content
@@ -48,6 +64,25 @@ export function buildEqualityReportHtml(report: ReportDetailDto): string {
   const body = sanitized
     ? `<div class="rich-content">${sanitized}</div>`
     : `<p class="empty-note">Ekkert efni skráð fyrir jafnréttisáætlun.</p>`
+
+  /*
+   * The heading goes with the body. Without it the cover page would announce a
+   * "Jafnréttisáætlun" section and then end, leaving the reader looking for
+   * content that is actually on the next page.
+   *
+   * `content` is always null on the `includeBody: false` path — that is the
+   * PDF-backed report, whose bytes are merged in behind this page rather than
+   * rendered as markup — so nothing reaches the sanitiser there either.
+   */
+  const bodySection = !includeBody
+    ? ''
+    : `
+    <div class="section">
+      <div class="section__header">
+        <h2 class="section__title">Jafnréttisáætlun</h2>
+      </div>
+      ${body}
+    </div>`
 
   return `<!DOCTYPE html>
 <html lang="is">
@@ -72,13 +107,7 @@ export function buildEqualityReportHtml(report: ReportDetailDto): string {
         ${field('Frestur til úrbóta', formatDate(equality?.correctionDeadline))}
       </div>
     </div>
-
-    <div class="section">
-      <div class="section__header">
-        <h2 class="section__title">Jafnréttisáætlun</h2>
-      </div>
-      ${body}
-    </div>
+${bodySection}
   </body>
 </html>`
 }

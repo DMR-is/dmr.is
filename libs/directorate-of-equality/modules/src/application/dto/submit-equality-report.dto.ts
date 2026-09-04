@@ -4,8 +4,9 @@ import { isBase64 } from 'validator'
 import {
   ApiDto,
   ApiEnum,
-  ApiHTML,
+  ApiOptionalBase64File,
   ApiOptionalDtoArray,
+  ApiOptionalHTML,
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
@@ -63,9 +64,16 @@ export class SubmitEqualityReportDto {
   @ApiString()
   contactPhone!: string
 
-  @ApiHTML({
+  /*
+   * Optional, not absent: a report's content is EITHER this or
+   * `equalityReportPdf`, and the submit is rejected unless exactly one arrives.
+   * That rule lives in `resolveEqualityContent` rather than here, because the
+   * DTO can only see one field at a time and the other three write paths need
+   * the same rule to mean the same thing.
+   */
+  @ApiOptionalHTML({
     description:
-      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`.',
   })
   @Transform(({ value }) => {
     if (isBase64(value)) {
@@ -73,7 +81,19 @@ export class SubmitEqualityReportDto {
     }
     return value
   })
-  equalityReportContent!: string
+  equalityReportContent?: string
+
+  @ApiOptionalBase64File({
+    description:
+      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',
+  })
+  equalityReportPdf?: string
+
+  @ApiOptionalString({
+    description:
+      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied.',
+  })
+  equalityReportPdfFilename?: string
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeMaleCount?: number | null

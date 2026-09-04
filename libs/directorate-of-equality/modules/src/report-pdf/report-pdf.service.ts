@@ -3,7 +3,10 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ReportDetailDto } from '../report/dto/report-detail.dto'
-import { ReportTypeEnum } from '../report/models/report.enums'
+import {
+  EqualityContentTypeEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { IReportService } from '../report/report.service.interface'
 import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee-outlier.dto'
 import { IReportStatisticsService } from '../report-statistics/report-statistics.service.interface'
@@ -13,6 +16,7 @@ import {
   buildImprovementPlanHtml,
   ImprovementPlanGroup,
 } from './lib/improvement-plan-template'
+import { mergePdfs } from './lib/merge'
 import { pdfStyles } from './lib/pdf.css'
 import { buildSalaryReportHtml } from './lib/salary-report-template'
 import {
@@ -192,9 +196,29 @@ export class ReportPdfService implements IReportPdfService {
   private async buildEqualityReportPdf(
     report: ReportDetailDto,
   ): Promise<Buffer> {
-    const html = buildEqualityReportHtml(report)
+    // HTML content: one render, exactly as before the PDF path existed.
+    if (report.equalityReport?.contentType !== EqualityContentTypeEnum.PDF) {
+      return this.generatePdfFromHtml(buildEqualityReportHtml(report))
+    }
 
-    return this.generatePdfFromHtml(html)
+    /*
+     * PDF content: the same template rendered without its body becomes a cover
+     * page, and the company's own document follows it. The metadata (auðkenni,
+     * samþykkt, gildir til, frestur til úrbóta) is the part that makes this an
+     * approved report rather than just a file someone sent us, so it stays on
+     * the document regardless of which representation the content took.
+     *
+     * `equalityReport.id` rather than `report.id`: on a SALARY report this
+     * block is the LINKED equality report, and its content lives on that row.
+     */
+    const [cover, uploaded] = await Promise.all([
+      this.generatePdfFromHtml(
+        buildEqualityReportHtml(report, { includeBody: false }),
+      ),
+      this.reportService.getEqualityContentPdf(report.equalityReport.id),
+    ])
+
+    return mergePdfs([cover, uploaded.pdf])
   }
 
   /**

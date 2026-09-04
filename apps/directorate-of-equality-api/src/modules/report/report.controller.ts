@@ -1,3 +1,5 @@
+import { Response } from 'express'
+
 import {
   Controller,
   Get,
@@ -5,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
@@ -87,6 +90,42 @@ export class ReportController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ReportDetailDto> {
     return this.reportService.getById(id)
+  }
+
+  /**
+   * The jafnréttisáætlun PDF exactly as the company uploaded it.
+   *
+   * Not on `ReportPdfController` with the generated documents, because this is
+   * not one: nothing renders here, the bytes are handed back as submitted. A
+   * reviewer assessing a plan needs to see the file the company actually sent,
+   * not a version of it the Directorate produced.
+   *
+   * 404 for an HTML-backed report — there is no file. Read `contentType` on the
+   * report detail to know which case you are in before calling this.
+   */
+  @Get(':id/equality-content/pdf')
+  @DoeResponse({
+    operationId: 'getEqualityContentPdf',
+    include404: true,
+    produces: 'application/pdf',
+    successDescription:
+      'Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the ' +
+      "report's equality content is HTML rather than an uploaded PDF.",
+  })
+  async getEqualityContentPdf(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { pdf, fileName } = await this.reportService.getEqualityContentPdf(id)
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      // Inline: the admin web embeds this in an iframe rather than downloading
+      // it, and `attachment` would make the browser save it instead of render.
+      'Content-Disposition': `inline; filename="${encodeURIComponent(fileName)}"`,
+      'Content-Length': pdf.length,
+    })
+    res.send(pdf)
   }
 
   @Get(':id/outliers')
