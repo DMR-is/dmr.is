@@ -719,9 +719,13 @@ export const reportText = {
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
     apiKeyIssued: 'bjó til aðgangslykil',
-    apiKeyIssuedNoActor: 'Aðgangslykill búinn til',
     apiKeyRevoked: 'afturkallaði aðgangslykil',
-    apiKeyRevokedNoActor: 'Aðgangslykill afturkallaður',
+    // These two attribute the action to the COMPANY, which is sound rather
+    // than a guess: `resolveIssuer` throws if an ADMIN-issued key carries no
+    // actor, so an actorless key event can only have come from the island.is
+    // self-service path — someone acting for the company.
+    apiKeyIssuedNoActor: 'Fyrirtæki {company} bjó til aðgangslykil',
+    apiKeyRevokedNoActor: 'Fyrirtæki {company} afturkallaði aðgangslykil',
     // The event stores the key's public id, which is a correlation handle and
     // not something to read: printing it put half a credential on screen for
     // no gain. It is used to look the key up instead, and these render what an

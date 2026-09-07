@@ -55,7 +55,9 @@ export const CompanyRegisterStatusField = ({ company }: Props) => {
   const updateStatus = useMutation({
     ...trpc.company.updateStatus.mutationOptions(),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.get.queryKey({ id: company.id }),
+      })
       queryClient.invalidateQueries({ queryKey: trpc.company.list.queryKey() })
       // The change is recorded as a STATUS_CHANGED event, so the timeline is
       // stale the moment this succeeds.

@@ -69,12 +69,23 @@ export function renderSystemReason(reason: string): React.ReactNode {
  * ("Fyrirtæki {company} skráð" → "Fyrirtæki skráð"). That case is not
  * hypothetical: only the company timeline passes a name, so any other caller
  * of these labels gets the shorter form.
+ *
+ * ⚠️ A template with NO slot renders unchanged, and that guard is the whole
+ * reason this returns early. Without it, `split` left the label in `before`
+ * and an empty `after`, so a name was appended to the END of the sentence with
+ * nothing between them — "Aðgangslykill búinn tilAcme ehf." Every actorless
+ * company label reaches this function whether or not it declares a slot, so
+ * the no-slot case has to be a decision rather than a fallthrough.
  */
 function withCompanyName(
   template: string,
   companyName?: string | null,
 ): React.ReactNode {
-  const [before, after = ''] = template.split('{company}')
+  const [before, after] = template.split('{company}')
+
+  if (after === undefined) {
+    return <>{template}</>
+  }
 
   if (!companyName) {
     return <>{`${before.replace(/ $/, '')}${after}`}</>
