@@ -73,9 +73,28 @@ export type TimelineEntryKind = 'event' | 'outgoing' | 'incoming' | 'internal'
  * `authorUserId`: null means "no user attached", which is also true of a
  * comment whose author we simply do not know. See `company_comment.is_system`.
  */
-export type TimelineItem = Omit<ReportTimelineItemDto, 'comment'> & {
+export type TimelineItem = Omit<ReportTimelineItemDto, 'comment' | 'event'> & {
   comment?:
     | (NonNullable<ReportTimelineItemDto['comment']> & { isSystem?: boolean })
+    | null
+  /**
+   * `scope` says which entity the event is about, and it cannot be inferred.
+   *
+   * `CompanyTimeline` adapts company events into the report event shape, and
+   * the two share the `STATUS_CHANGED` type while meaning different things: a
+   * report moves through review, a company moves on or off the register. With
+   * no discriminator the renderer read a company event as a report one and
+   * printed "færir mál í stöðuna:" followed by nothing, because ACTIVE and
+   * INACTIVE are not members of `ReportStatusTranslatedEnum`.
+   *
+   * Optional and defaulting to report scope, so a plain `ReportTimelineItemDto`
+   * stays assignable and the report side needs no change — same arrangement as
+   * `isSystem` above.
+   */
+  event?:
+    | (NonNullable<ReportTimelineItemDto['event']> & {
+        scope?: 'report' | 'company'
+      })
     | null
 }
 
@@ -119,8 +138,46 @@ export function timelineEntryText(
 
   if (!item.event) return null
 
-  const { eventType, actorName, assignedUserName, toStatus, systemDecision } =
-    item.event
+  const {
+    eventType,
+    actorName,
+    assignedUserName,
+    toStatus,
+    systemDecision,
+    scope,
+  } = item.event
+
+  /**
+   * Company events come in two shapes: with an actor (an admin did it) and
+   * without (the register import, or a company issuing its own key through
+   * island.is, which records no `doe_user`). The renderer prints the name and
+   * then the label, so the two cases need different labels — a verb phrase
+   * that continues the sentence, or a passive one that stands alone.
+   */
+  const actorLine = (withActor: string, withoutActor: string) =>
+    actorName ? (
+      <>
+        <Bold>{actorName} </Bold>
+        {withActor}
+      </>
+    ) : (
+      <>{withoutActor}</>
+    )
+
+  // Before the report branch below: company events reuse STATUS_CHANGED but
+  // mean the register lifecycle, whose values are not report statuses.
+  if (scope === 'company' && eventType === ReportEventTypeEnum.STATUS_CHANGED) {
+    const activated = (toStatus as unknown as string) === 'ACTIVE'
+
+    return actorLine(
+      activated
+        ? reportText.timeline.companyActivated
+        : reportText.timeline.companyDeactivated,
+      activated
+        ? reportText.timeline.companyActivatedNoActor
+        : reportText.timeline.companyDeactivatedNoActor,
+    )
+  }
 
   if (eventType === ReportEventTypeEnum.SYSTEM_AUTO_REVIEW) {
     // Soft auto-review verdict — system actor, no name. The `reason` renders as
@@ -235,10 +292,11 @@ export function timelineEntryText(
   // Company-specific event types are cast as `never` in the adapter but
   // arrive as plain strings at runtime.
   const eventTypeStr = eventType as unknown as string
+  // Events whose wording works with or without a name in front of it: the
+  // fines and quarantine switches are always admin-driven, and the reminder
+  // events are always the system's. Anything that can arrive both ways belongs
+  // in COMPANY_EVENT_ACTOR_LABELS below instead.
   const COMPANY_EVENT_LABELS: Record<string, string> = {
-    API_KEY_ISSUED: reportText.timeline.apiKeyIssued,
-    API_KEY_REVOKED: reportText.timeline.apiKeyRevoked,
-    CREATED: reportText.timeline.companyCreated,
     FINES_STARTED: reportText.timeline.finesStarted,
     FINES_STOPPED: reportText.timeline.finesStopped,
     QUARANTINED: reportText.timeline.companyQuarantined,
@@ -252,6 +310,25 @@ export function timelineEntryText(
     SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL:
       reportText.timeline.reminderNoEmailSalary,
   }
+  const COMPANY_EVENT_ACTOR_LABELS: Record<string, [string, string]> = {
+    API_KEY_ISSUED: [
+      reportText.timeline.apiKeyIssued,
+      reportText.timeline.apiKeyIssuedNoActor,
+    ],
+    API_KEY_REVOKED: [
+      reportText.timeline.apiKeyRevoked,
+      reportText.timeline.apiKeyRevokedNoActor,
+    ],
+    CREATED: [
+      reportText.timeline.companyCreated,
+      reportText.timeline.companyCreatedNoActor,
+    ],
+  }
+  if (eventTypeStr in COMPANY_EVENT_ACTOR_LABELS) {
+    const [withActor, withoutActor] = COMPANY_EVENT_ACTOR_LABELS[eventTypeStr]
+    return actorLine(withActor, withoutActor)
+  }
+
   if (eventTypeStr in COMPANY_EVENT_LABELS) {
     return (
       <>

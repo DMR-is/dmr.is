@@ -35,10 +35,28 @@ const REMINDER_TIER_LABELS: Record<CompanyReminderTierEnum, string> = {
   [CompanyReminderTierEnum.DUE]: reportText.timeline.reminderTierDue,
 }
 
-// For reminder events the raw `reason` is the ISO due date. Turn it (plus the
-// tier) into a readable line for the timeline body; pass other reasons through.
+// Company events overload `reason` with whatever that event type needs, so the
+// body is composed per type rather than printed raw.
+//
+//   reminders  → the ISO due date; rendered with the tier as a readable line.
+//   API keys   → the key's PUBLIC id (`doe_<env>_<keyId>.<secret>`), optionally
+//                followed by " — <revocation reason>". Labelled, because on its
+//                own it reads as a stray hex string with no hint that it is the
+//                handle tying this row to the aðgangslyklar tab. Never the
+//                secret: that is hashed at issue time and unrecoverable.
+//   everything else → the reason as given (a status change's explanation).
+const API_KEY_EVENT_TYPES = new Set(['API_KEY_ISSUED', 'API_KEY_REVOKED'])
+
 function eventBody(event: CompanyTimelineItemDto['event']): string | null {
   if (!event) return null
+
+  if (
+    API_KEY_EVENT_TYPES.has(event.eventType as unknown as string) &&
+    event.reason
+  ) {
+    return `${reportText.timeline.apiKeyIdPrefix} ${event.reason}`
+  }
+
   const tierLabel = event.reminderTier
     ? REMINDER_TIER_LABELS[event.reminderTier]
     : null
@@ -59,6 +77,9 @@ function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
     createdAt: item.createdAt,
     event: item.event
       ? {
+          // Company scope: STATUS_CHANGED means the register lifecycle here,
+          // not a report moving through review.
+          scope: 'company' as const,
           id: item.event.id,
           reportId: item.event.companyId,
           eventType: item.event.eventType as unknown as never,

@@ -695,11 +695,41 @@ export const reportText = {
     // before communication status became silent still render in the timeline.
     communicationOpened: 'opnaði á samskipti við innsendanda',
     communicationClosed: 'lokaði á samskipti við innsendanda',
-    companyCreated: 'Fyrirtæki skráð',
+    // ⚠️ Two wordings per event, and both are needed.
+    //
+    // The renderer prints the actor's name and then the label, so a label has
+    // to be a VERB PHRASE that continues the sentence — "Gervimaður Færeyjar
+    // bjó til aðgangslykil". Several of these were noun phrases, which read as
+    // two glued-together fragments: "Gervimaður Færeyjar Aðgangslykill búinn
+    // til".
+    //
+    // But the actor is genuinely absent on some of these rows, so a verb
+    // phrase alone would have no subject. A key issued by a company itself
+    // through island.is records no `doe_user` (see `resolveIssuer`), and the
+    // annual register import deactivates companies with no actor at all. Those
+    // rows get the `NoActor` passive form instead.
+    companyCreated: 'skráði fyrirtækið',
+    companyCreatedNoActor: 'Fyrirtæki skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
-    apiKeyIssued: 'Aðgangslykill búinn til',
-    apiKeyRevoked: 'Aðgangslykill afturkallaður',
+    apiKeyIssued: 'bjó til aðgangslykil',
+    apiKeyIssuedNoActor: 'Aðgangslykill búinn til',
+    apiKeyRevoked: 'afturkallaði aðgangslykil',
+    apiKeyRevokedNoActor: 'Aðgangslykill afturkallaður',
+    // The event body is the key's PUBLIC id — the middle segment of
+    // `doe_<env>_<keyId>.<secret>` — which is what ties this row to a row in
+    // the aðgangslyklar tab. Labelled so it does not read as a stray hex
+    // string, and never the secret, which is hashed and unrecoverable.
+    apiKeyIdPrefix: 'Lyklanúmer:',
+    // Company register lifecycle. Distinct from `movesToStatus` below, which is
+    // a REPORT moving through review — company events reuse the same
+    // STATUS_CHANGED type but mean something else entirely, and rendering them
+    // with the report wording produced "færir mál í stöðuna:" followed by
+    // nothing, because ACTIVE/INACTIVE are not report statuses.
+    companyActivated: 'virkjaði fyrirtækið í skrá',
+    companyActivatedNoActor: 'Fyrirtæki virkjað í skrá',
+    companyDeactivated: 'gerði fyrirtækið óvirkt í skrá',
+    companyDeactivatedNoActor: 'Fyrirtæki gert óvirkt í skrá',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
     reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
