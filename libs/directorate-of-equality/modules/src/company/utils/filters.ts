@@ -6,6 +6,7 @@ import { RegionModel } from '../../location/models/region.model'
 import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
+  CompanyStatusEnum,
 } from '../models/company.enums'
 import { IsatCategoryModel } from '../models/isat-category.model'
 import {
@@ -28,6 +29,26 @@ export function buildCompanyStatusWhere(
   if (!statuses.length) return {}
   const values = statuses.map((status) => `'${status}'`).join(', ')
   return literal(`${companyReportStatusCaseSql()} IN (${values})`)
+}
+
+/**
+ * Filter the company list by register lifecycle status — whether the company is
+ * in the Directorate's authoritative register (ACTIVE) or not (INACTIVE).
+ *
+ * A direct column, and a different axis from `buildCompanyStatusWhere` above
+ * despite the neighbouring names: that one filters on compliance (what the
+ * company owes), this one on whether it is on the books at all. An INACTIVE
+ * company still carries a compliance status, which is why neither filter
+ * implies the other.
+ *
+ * Nothing defaults to ACTIVE. The list has always shown both, and quietly
+ * hiding INACTIVE companies the moment a filter existed would change what an
+ * unfiltered page means.
+ */
+export function buildCompanyLifecycleStatusWhere(
+  statuses: CompanyStatusEnum[],
+): WhereOptions {
+  return { status: { [Op.in]: statuses } }
 }
 
 /**

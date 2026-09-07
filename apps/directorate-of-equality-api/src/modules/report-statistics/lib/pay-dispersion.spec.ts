@@ -12,7 +12,9 @@ import {
 } from '@dmr.is/doe-modules/report'
 import {
   computePayDispersion,
+  PAY_DISPERSION_LIST_CEILING,
   PAY_DISPERSION_MIN_COHORT,
+  PAY_DISPERSION_SHORTLIST_SIZE,
   PAY_DISPERSION_THRESHOLD,
   PayDispersionBlockerEnum,
   PayDispersionPopulationEnum,
@@ -748,6 +750,293 @@ describe('pay-dispersion (ábendingar)', () => {
     ]) {
       expect(row).not.toHaveProperty(forbidden)
     }
+  })
+
+  /**
+   * The shortlist — the cap, the direction split and the tie rule.
+   *
+   * ⚠️ These cohorts put every employee at `FIT.xMean`, so leverage is `1/n` for
+   * everyone and `t` is simply `residualLog / (s · √(1 − 1/n))`. That makes the
+   * fixtures readable, and it is the only reason a tie group here is exact —
+   * which is also how real cohorts tie: same role, same step, same wage, same
+   * score, therefore the same residual and the same leverage.
+   *
+   * ⚠️ A tie group is SELF-LIMITING and the fixtures have to respect it. `k`
+   * employees at one deviation with the rest on the line give
+   * `|t| = √((n − 2)/k)`, so a group of 60 needs n ≥ 242 before it clears 2 at
+   * all — the group inflates the very spread it is measured against. Cohorts
+   * below carry the headroom deliberately; shrinking `n` will silently empty
+   * them rather than fail loudly.
+   */
+  describe('the shortlist', () => {
+    const cohort = (residualLogs: number[]) =>
+      makeSnapshot({
+        oskyrtWithinBenchmark: true,
+        employees: residualLogs.map((residualLog, index) =>
+          employee(index + 1, { residualLog }),
+        ),
+      })
+
+    const spread = (count: number, value: number) =>
+      Array.from({ length: count }, () => value)
+
+    const ramp = (count: number, from: number, step: number) =>
+      Array.from({ length: count }, (_, i) => from + i * step)
+
+    /** What the engine itself says qualifies, so expectations are not a second
+     *  implementation of the formula. */
+    const qualifying = (snapshot: WageGapDecompositionSnapshot) =>
+      studentizedResiduals(snapshot)
+        .map((row) => Math.round(row.studentizedResidual * 100) / 100)
+        .filter((value) => Math.abs(value) >= PAY_DISPERSION_THRESHOLD)
+
+    it('caps each direction and still reports the true totals', () => {
+      const snapshot = cohort([
+        ...ramp(15, -0.5, -0.01),
+        ...ramp(15, 0.5, 0.01),
+        ...spread(170, 0),
+      ])
+      const result = computePayDispersion(snapshot)
+
+      expect(qualifying(snapshot)).toHaveLength(30)
+
+      // The cap bit; the counts did not.
+      expect(result.countBelowExpected).toBe(15)
+      expect(result.countAboveExpected).toBe(15)
+      expect(result.employees).toHaveLength(2 * PAY_DISPERSION_SHORTLIST_SIZE)
+    })
+
+    it('lists the most extreme, not the first found', () => {
+      const result = computePayDispersion(
+        cohort([...ramp(15, -0.5, -0.01), ...spread(185, 0)]),
+      )
+      const listed = result.employees.map((row) => row.studentizedResidual)
+
+      // Descending by magnitude, and the ten furthest of the fifteen.
+      expect(listed).toEqual(
+        [...listed].sort((a, b) => Math.abs(b) - Math.abs(a)),
+      )
+      expect(Math.min(...listed.map(Math.abs))).toBeGreaterThan(2.3)
+    })
+
+    /**
+     * ⚠️ The two lists are separate findings, not one list rendered twice. A
+     * shared cap would let one direction crowd out the other entirely.
+     */
+    it('does not let one direction crowd out the other', () => {
+      const result = computePayDispersion(
+        cohort([
+          ...ramp(3, -0.9, -0.03),
+          ...ramp(40, 0.5, 0.004),
+          ...spread(357, 0),
+        ]),
+      )
+
+      const below = result.employees.filter((r) => r.studentizedResidual < 0)
+      const above = result.employees.filter((r) => r.studentizedResidual > 0)
+
+      // All three below survive even though forty above compete with them.
+      expect(below).toHaveLength(3)
+      expect(above).toHaveLength(PAY_DISPERSION_SHORTLIST_SIZE)
+      expect(result.countBelowExpected).toBe(3)
+      expect(result.countAboveExpected).toBe(40)
+    })
+
+    it('does not reallocate one direction\u2019s unused capacity to the other', () => {
+      const result = computePayDispersion(
+        cohort([
+          ...ramp(3, -0.9, -0.03),
+          ...ramp(40, 0.5, 0.004),
+          ...spread(357, 0),
+        ]),
+      )
+
+      // Seven unused below-slots do NOT become seven extra above-rows: the
+      // reader is not comparing the two lengths, and "your overpaid list grew
+      // because nobody is underpaid" is not a behaviour worth having.
+      expect(
+        result.employees.filter((r) => r.studentizedResidual > 0),
+      ).toHaveLength(PAY_DISPERSION_SHORTLIST_SIZE)
+    })
+
+    it('never splits a tie at the boundary, even past the shortlist size', () => {
+      const snapshot = cohort([
+        ...ramp(9, -0.9, -0.03),
+        ...spread(3, -0.8),
+        ...spread(188, 0),
+      ])
+      const result = computePayDispersion(snapshot)
+      const listed = result.employees.map((r) => r.studentizedResidual)
+
+      // Nine singles fill the list to 9, then the group of three is taken whole
+      // rather than clipped to one — 12 rows, not 10.
+      expect(listed).toHaveLength(12)
+      expect(listed.filter((value) => value === -3.35)).toHaveLength(3)
+    })
+
+    it('tables a tie group of exactly the shortlist size', () => {
+      const result = computePayDispersion(
+        cohort([...spread(10, -0.5), ...spread(190, 0)]),
+      )
+
+      expect(result.employees).toHaveLength(PAY_DISPERSION_SHORTLIST_SIZE)
+      expect(result.countBelowExpected).toBe(10)
+    })
+
+    /**
+     * Between the two constants a tied group prints in full: 40 rows of
+     * genuinely equal deviation beats separating two of them arbitrarily.
+     */
+    it('tables a tie group larger than the shortlist but within the ceiling', () => {
+      const result = computePayDispersion(
+        cohort([...spread(40, -0.5), ...spread(360, 0)]),
+      )
+
+      expect(result.employees).toHaveLength(40)
+      expect(result.employees.length).toBeLessThanOrEqual(
+        PAY_DISPERSION_LIST_CEILING,
+      )
+    })
+
+    /**
+     * ⚠️ Past the ceiling the tie IS split — the one place that happens, and the
+     * accepted trade. An earlier design summarised such a group in prose
+     * instead, on the theory that identically-graded workforces tie in bulk.
+     * That was never evidenced: an exact tie needs the same starfsmatsstig AND
+     * the same hourly wage to the aurar, and the largest tie group produced in
+     * 1.500 payroll-like simulated cohorts was 32. The prose branch cost two DTO
+     * fields, copy on two surfaces and a class of "qualified but no rows" bugs,
+     * so it is gone.
+     */
+    it('slices a tie group that alone exceeds the ceiling', () => {
+      const result = computePayDispersion(
+        cohort([...spread(60, -0.5), ...spread(340, 0)]),
+      )
+
+      expect(result.employees).toHaveLength(PAY_DISPERSION_LIST_CEILING)
+      // ⚠️ The count still tells the truth — that is what makes a slice honest.
+      expect(result.countBelowExpected).toBe(60)
+      expect(result.available).toBe(true)
+      expect(result.blockers).toEqual([])
+    })
+
+    it('keeps the more extreme rows when a later group overruns the ceiling', () => {
+      const result = computePayDispersion(
+        cohort([
+          ...ramp(8, -1.6, -0.05),
+          ...spread(45, -0.75),
+          ...spread(447, 0),
+        ]),
+      )
+      const listed = result.employees.map((r) => r.studentizedResidual)
+
+      // 8 + 45 = 53 accumulate, then the ceiling slices to 50 — and the eight
+      // furthest sit at the FRONT, so the slice never costs the extremes.
+      expect(listed).toHaveLength(PAY_DISPERSION_LIST_CEILING)
+      expect(listed.slice(0, 8).every((value) => value <= -5)).toBe(true)
+      expect(result.countBelowExpected).toBe(53)
+    })
+
+    it.each([
+      // tie-group size per direction, expected rows once the ceiling applies
+      [10, PAY_DISPERSION_SHORTLIST_SIZE],
+      [40, 40],
+      [60, PAY_DISPERSION_LIST_CEILING],
+      [200, PAY_DISPERSION_LIST_CEILING],
+    ])('holds a tie of %i per direction to the ceiling', (size, expectedRows) => {
+      const result = computePayDispersion(
+        cohort([
+          ...spread(size, -0.5),
+          ...spread(size, 0.5),
+          ...spread(Math.max(900, 8 * size), 0),
+        ]),
+      )
+
+      // The guard: if the cohort stopped qualifying, this fails rather than
+      // letting the length checks below pass on an empty list.
+      expect(result.countBelowExpected).toBe(size)
+      expect(result.countAboveExpected).toBe(size)
+
+      for (const sign of [-1, 1]) {
+        const rows = result.employees.filter(
+          (r) => Math.sign(r.studentizedResidual) === sign,
+        )
+        expect(rows).toHaveLength(expectedRows)
+        expect(rows.length).toBeLessThanOrEqual(PAY_DISPERSION_LIST_CEILING)
+      }
+    })
+
+    it('puts every row in exactly one direction', () => {
+      const result = computePayDispersion(
+        cohort([...ramp(15, -0.5, -0.01), ...ramp(15, 0.5, 0.01), ...spread(170, 0)]),
+      )
+
+      const ordinals = result.employees.map((r) => r.employeeOrdinal)
+      expect(new Set(ordinals).size).toBe(ordinals.length)
+      // Below-expected block first, then above — the order both surfaces render.
+      const signs = result.employees.map((r) => Math.sign(r.studentizedResidual))
+      expect(signs).toEqual([...signs].sort((a, b) => a - b))
+      expect(result.employees.every((r) => r.studentizedResidual !== 0)).toBe(true)
+    })
+
+    it('is deterministic for one snapshot', () => {
+      const snapshot = cohort([
+        ...ramp(15, -0.5, -0.01),
+        ...spread(4, -0.45),
+        ...spread(181, 0),
+      ])
+
+      expect(JSON.stringify(computePayDispersion(snapshot))).toBe(
+        JSON.stringify(computePayDispersion(snapshot)),
+      )
+    })
+
+  })
+
+  /**
+   * ⚠️ CONTEXT, not a cut-off. If this figure ever gates a row, the list empties
+   * on every fixture we own — the reference cohort's most extreme employee sits
+   * at 3,49 against a critical value of 3,53. It is published so a reader can
+   * tell a long list on a large workforce from a real finding.
+   */
+  describe('the chance figure', () => {
+    const cohortOf = (n: number) =>
+      makeSnapshot({
+        oskyrtWithinBenchmark: true,
+        employees: Array.from({ length: n }, (_, i) =>
+          employee(i + 1, { residualLog: i % 2 === 0 ? 0.05 : -0.05 }),
+        ),
+      })
+
+    it('grows with headcount, because screening more people finds more extremes', () => {
+      const values = [12, 100, 500, 2000, 10000].map(
+        (n) => computePayDispersion(cohortOf(n)).chanceCriticalSpreads,
+      )
+
+      expect(values).toEqual([2.87, 3.48, 3.89, 4.21, 4.56])
+      for (let i = 1; i < values.length; i += 1) {
+        expect(values[i]).toBeGreaterThan(values[i - 1] as number)
+      }
+    })
+
+    it('sits above the membership threshold at every size', () => {
+      for (const n of [12, 100, 10000]) {
+        expect(
+          computePayDispersion(cohortOf(n)).chanceCriticalSpreads,
+        ).toBeGreaterThan(PAY_DISPERSION_THRESHOLD)
+      }
+    })
+
+    it('is null when no list could be produced', () => {
+      const result = computePayDispersion(
+        makeSnapshot({ oskyrtAvailable: false, pooledFit: null, employees: [] }),
+      )
+
+      expect(result.available).toBe(false)
+      expect(result.chanceCriticalSpreads).toBeNull()
+      expect(result.countBelowExpected).toBe(0)
+      expect(result.countAboveExpected).toBe(0)
+    })
   })
 })
 

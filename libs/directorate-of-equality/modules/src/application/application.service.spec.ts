@@ -63,6 +63,7 @@ import {
   EXTERNAL_PROVIDER_CHANNEL,
   ISLAND_IS_PROVIDER_CHANNEL,
   REPORT_PROVIDER_CHANNEL,
+  ReportProviderChannel,
 } from './provider-channel'
 
 const mockLogger = {
@@ -95,14 +96,18 @@ const COMPANY: CompanyDto = {
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
+  hasLegacyReports: false,
   email: null,
 }
 
 describe('ApplicationService', () => {
   let service: ApplicationService
+  let createService: (
+    channel?: ReportProviderChannel,
+  ) => Promise<ApplicationService>
   let configGetByKey: jest.Mock
   let getOrCreateSubsidiaryReportSnapshotSource: jest.Mock
-  let getActiveEqualityForCompany: jest.Mock
+  let findActiveEqualityForCompany: jest.Mock
   let createSalary: jest.Mock
   let createEquality: jest.Mock
   let reportFindOne: jest.Mock
@@ -130,7 +135,7 @@ describe('ApplicationService', () => {
     getOrCreateSubsidiaryReportSnapshotSource = jest
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
-    getActiveEqualityForCompany = jest.fn()
+    findActiveEqualityForCompany = jest.fn()
     createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
     createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
     reportFindOne = jest.fn()
@@ -154,14 +159,19 @@ describe('ApplicationService', () => {
     emitEdited = jest.fn().mockResolvedValue(undefined)
     emitStatusChanged = jest.fn().mockResolvedValue(undefined)
 
-    const module = await Test.createTestingModule({
+    // Parameterised by channel so a test can rebuild the service on the partner
+    // channel. Everything else is identical, and duplicating this provider list
+    // to vary one entry is how the two copies drift.
+    createService = async (channel = ISLAND_IS_PROVIDER_CHANNEL) => {
+      const testModule = await Test.createTestingModule({
       providers: [
         ApplicationService,
-        // These assertions were written for the island.is channel: provider_type
-        // ISLAND_IS and provider_id stored exactly as given.
+        // Unless a test says otherwise these assertions are written for the
+        // island.is channel: provider_type ISLAND_IS and provider_id stored
+        // exactly as given.
         {
           provide: REPORT_PROVIDER_CHANNEL,
-          useValue: ISLAND_IS_PROVIDER_CHANNEL,
+          useValue: channel,
         },
         { provide: LOGGER_PROVIDER, useValue: mockLogger },
         {
@@ -177,7 +187,7 @@ describe('ApplicationService', () => {
         },
         {
           provide: IReportService,
-          useValue: { getActiveEqualityForCompany },
+          useValue: { findActiveEqualityForCompany },
         },
         {
           provide: IReportCreateService,
@@ -231,9 +241,12 @@ describe('ApplicationService', () => {
           useValue: { findOne: eventFindOne },
         },
       ],
-    }).compile()
+      }).compile()
 
-    service = module.get(ApplicationService)
+      return testModule.get(ApplicationService)
+    }
+
+    service = await createService()
   })
 
   describe('salaryAnalysis', () => {
@@ -332,28 +345,89 @@ describe('ApplicationService', () => {
   })
 
   describe('getActiveEqualityReport', () => {
+    /** The columns `toEqualitySummary` and the channels read. */
+    const makeActiveEquality = (
+      overrides: Partial<{
+        providerType: ReportProviderEnum
+        providerId: string | null
+        companyNationalId: string | null
+      }> = {},
+    ) =>
+      ({
+        id: 'eq-1',
+        identifier: 'EQ-2025-001',
+        providerType: ReportProviderEnum.ISLAND_IS,
+        providerId: 'island-is-application-eq-1',
+        companyNationalId: COMPANY.nationalId,
+        approvedAt: new Date('2025-01-01T00:00:00Z'),
+        validUntil: new Date('2028-01-01T00:00:00Z'),
+        ...overrides,
+      }) as unknown as ReportModel
+
     it('returns the summary when one is found', async () => {
-      const summary = {
+      findActiveEqualityForCompany.mockResolvedValue(makeActiveEquality())
+
+      const result = await service.getActiveEqualityReport(COMPANY)
+
+      expect(findActiveEqualityForCompany).toHaveBeenCalledWith(COMPANY.id)
+      expect(result).toEqual({
         id: 'eq-1',
         identifier: 'EQ-2025-001',
         providerId: 'island-is-application-eq-1',
         approvedAt: new Date('2025-01-01T00:00:00Z'),
         validUntil: new Date('2028-01-01T00:00:00Z'),
-      }
-      getActiveEqualityForCompany.mockResolvedValue(summary)
-
-      const result = await service.getActiveEqualityReport(COMPANY)
-
-      expect(getActiveEqualityForCompany).toHaveBeenCalledWith(COMPANY.id)
-      expect(result).toEqual(summary)
+      })
     })
 
     it('throws NotFoundException when no active equality exists', async () => {
-      getActiveEqualityForCompany.mockResolvedValue(null)
+      findActiveEqualityForCompany.mockResolvedValue(null)
 
       await expect(service.getActiveEqualityReport(COMPANY)).rejects.toThrow(
         NotFoundException,
       )
+    })
+
+    it('names no company in the not-found message', async () => {
+      findActiveEqualityForCompany.mockResolvedValue(null)
+
+      // The internal company id used to be quoted here, on a PUBLIC error.
+      await expect(
+        service.getActiveEqualityReport(COMPANY),
+      ).rejects.toThrow('No approved equality report is in force')
+      await expect(service.getActiveEqualityReport(COMPANY)).rejects.not.toThrow(
+        new RegExp(COMPANY.id),
+      )
+    })
+
+    it('returns the partner’s OWN providerId on the partner channel, namespace stripped', async () => {
+      // The regression this was written for: the summary hard-coded a
+      // `providerType === ISLAND_IS` gate, so every partner-filed report came
+      // back with `providerId: null` and a vendor could not correlate the active
+      // equality report with its own submission.
+      const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+      findActiveEqualityForCompany.mockResolvedValue(
+        makeActiveEquality({
+          providerType: ReportProviderEnum.OTHER,
+          providerId: `${COMPANY.nationalId}:vendor-submission-7`,
+        }),
+      )
+
+      const result = await partnerService.getActiveEqualityReport(COMPANY)
+
+      expect(result.providerId).toBe('vendor-submission-7')
+    })
+
+    it('returns no providerId for a report filed on another channel', async () => {
+      // Filed on island.is by the company itself: not addressable through the
+      // partner API, so a handle would only ever 404.
+      const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+      findActiveEqualityForCompany.mockResolvedValue(makeActiveEquality())
+
+      const result = await partnerService.getActiveEqualityReport(COMPANY)
+
+      expect(result.providerId).toBeNull()
+      // The rest of the summary is still served — only the handle is withheld.
+      expect(result.id).toBe('eq-1')
     })
   })
 
@@ -532,16 +606,11 @@ describe('ApplicationService', () => {
   })
 
   describe('getSalaryReportEligibility', () => {
-    const activeEquality = {
-      id: 'eq-1',
-      identifier: 'EQ-2025-001',
-      providerId: 'island-is-application-eq-1',
-      approvedAt: new Date('2025-01-01T00:00:00Z'),
-      validUntil: new Date('2028-01-01T00:00:00Z'),
-    }
+    // Only its existence is read here, so the shape is deliberately minimal.
+    const activeEquality = { id: 'eq-1' } as unknown as ReportModel
 
     it('is eligible when there is no due date and an equality report exists', async () => {
-      getActiveEqualityForCompany.mockResolvedValue(activeEquality)
+      findActiveEqualityForCompany.mockResolvedValue(activeEquality)
 
       const result = await service.getSalaryReportEligibility(COMPANY)
 
@@ -551,7 +620,7 @@ describe('ApplicationService', () => {
     })
 
     it('is ineligible with a reason when the due date is more than 6 months out', async () => {
-      getActiveEqualityForCompany.mockResolvedValue(activeEquality)
+      findActiveEqualityForCompany.mockResolvedValue(activeEquality)
       const farFuture = new Date()
       farFuture.setFullYear(farFuture.getFullYear() + 2)
       const company = { ...COMPANY, nextSalaryReportDueAt: farFuture }
@@ -565,7 +634,7 @@ describe('ApplicationService', () => {
     })
 
     it('is ineligible with MISSING_EQUALITY_REPORT when no active equality report exists, taking priority over the renewal window', async () => {
-      getActiveEqualityForCompany.mockResolvedValue(null)
+      findActiveEqualityForCompany.mockResolvedValue(null)
       // Due date within the window would otherwise be eligible; the missing
       // equality report must still block and win the reason.
       const soon = new Date()

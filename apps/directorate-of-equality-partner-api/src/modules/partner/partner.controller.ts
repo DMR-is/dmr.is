@@ -22,7 +22,11 @@ import {
   SubmitSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { GetSubCriterionCatalogResponseDto } from '@dmr.is/doe-modules/application'
-import { CompanyDto } from '@dmr.is/doe-modules/company'
+import {
+  CompanyDto,
+  PartnerCompanyDto,
+  toPartnerCompanyDto,
+} from '@dmr.is/doe-modules/company'
 import {
   IImportUploadService,
   ImportKeyDto,
@@ -100,12 +104,15 @@ export class PartnerController {
   @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
   @PartnerResponse({
     operationId: 'getPartnerCompany',
-    type: CompanyDto,
+    type: PartnerCompanyDto,
     description:
-      'The company this API key belongs to. Useful as a first call to confirm a key is live and points where the integrator expects — the company is never taken from a request, only from the key.',
+      'The company this API key belongs to. Useful as a first call to confirm a key is live and points where the integrator expects — the company is never taken from a request, only from the key. A narrow projection: the Directorate’s own working state (fines, quarantine, admin overrides, RSK bookkeeping, internal keys) is not part of this contract — see `PartnerCompanyDto`.',
   })
-  getCompany(@CurrentCompany() company: CompanyDto): CompanyDto {
-    return company
+  getCompany(@CurrentCompany() company: CompanyDto): PartnerCompanyDto {
+    // Projected, never returned whole. `CompanyDto` is the back office's view
+    // and grows with the admin UI's needs; handing it to a vendor publishes
+    // every one of those additions by default.
+    return toPartnerCompanyDto(company)
   }
 
   @Get('reports/equality/active')

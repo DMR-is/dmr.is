@@ -285,3 +285,39 @@ export function equalityReportOverdueLiteral() {
 export function salaryReportOverdueLiteral() {
   return literal(salaryReportOverdueSql())
 }
+
+/**
+ * SQL boolean: the company has at least one row in the retired SharePoint
+ * archive. Surfaced on `CompanyDto.hasLegacyReports` so the detail view can
+ * leave out the "Eldri gögn" tab entirely rather than offer a tab that opens
+ * on nothing.
+ *
+ * It lives here, beside the other `withReportStatus` literals, because that
+ * scope is the one read path that builds a `CompanyDto` and this is another
+ * column it has to derive — not because the flag has anything to do with
+ * compliance status. It deliberately does not.
+ *
+ * Unconditional, unlike `activeLegacyCertificationExists`: that asks whether
+ * legacy coverage is still in force, this asks only whether the old list said
+ * anything at all. A lapsed or surrendered certificate is exactly the history
+ * an admin opens the tab to read.
+ *
+ * Every company the register load created holds a row (1 753 companies, 1 759
+ * rows — six resolved from two sheet rows each), so in practice the flag is
+ * false only for companies created in this system since hand-over, which is
+ * the whole point of asking.
+ *
+ * `EXISTS` rather than a count: the tab fetches the rows itself, so the number
+ * is not wanted here, and `EXISTS` stops at the first hit on
+ * `legacy_report_company_id_idx`.
+ */
+export function companyHasLegacyReportsSql(): string {
+  return `EXISTS (
+    SELECT 1 FROM "${DoeModels.LEGACY_REPORT}" lr
+    WHERE lr.company_id = "${COMPANY_QUERY_ALIAS}"."id"
+  )`
+}
+
+export function companyHasLegacyReportsLiteral() {
+  return literal(companyHasLegacyReportsSql())
+}

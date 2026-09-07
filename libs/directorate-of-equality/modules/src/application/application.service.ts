@@ -192,7 +192,7 @@ export class ApplicationService implements IApplicationService {
       )
       if (!renewal.eligible) {
         throw new ConflictException(
-          `Salary report renewal window is not open yet for company "${company.id}"; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
+          `Salary report renewal window is not open yet; earliest submission ${renewal.earliestSubmissionDate?.toISOString() ?? 'n/a'}`,
         )
       }
     }
@@ -223,9 +223,8 @@ export class ApplicationService implements IApplicationService {
     // report id, and a legacy certificate has none to give. The register answers
     // "is this company in compliance"; this answers "can this submission be
     // built", and the second needs a row the first does not.
-    const activeEquality = await this.reportService.getActiveEqualityForCompany(
-      company.id,
-    )
+    const activeEquality =
+      await this.reportService.findActiveEqualityForCompany(company.id)
     if (!activeEquality) {
       return {
         eligible: false,
@@ -255,17 +254,22 @@ export class ApplicationService implements IApplicationService {
   async getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
-    const equality = await this.reportService.getActiveEqualityForCompany(
+    const equality = await this.reportService.findActiveEqualityForCompany(
       company.id,
     )
 
     if (!equality) {
-      throw new NotFoundException(
-        `No active equality report found for company "${company.id}"`,
-      )
+      // No company identifier in the message: this is a public error on the
+      // partner channel, the id is ours rather than the caller's, and that the
+      // authenticated company has no approved equality report is the whole
+      // fact.
+      throw new NotFoundException('No approved equality report is in force')
     }
 
-    return equality
+    return ReportModel.toEqualitySummary(
+      equality,
+      this.channel.toClientProviderId(equality),
+    )
   }
 
   getEqualityTemplateHtml(): string {
@@ -1127,7 +1131,10 @@ export class ApplicationService implements IApplicationService {
       return null
     }
 
-    return ReportModel.toEqualitySummary(equalityReport)
+    return ReportModel.toEqualitySummary(
+      equalityReport,
+      this.channel.toClientProviderId(equalityReport),
+    )
   }
 
   private async loadDenialReason(report: ReportModel): Promise<string | null> {

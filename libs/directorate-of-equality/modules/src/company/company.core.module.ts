@@ -10,6 +10,7 @@ import { PostcodeModel } from '../location/models/postcode.model'
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
+import { LegacyReportModel } from './models/legacy-report.model'
 import { CompanyService } from './company.service'
 import { ICompanyService } from './company.service.interface'
 
@@ -20,6 +21,7 @@ import { ICompanyService } from './company.service.interface'
       IsatCategoryModel,
       IsatSectionModel,
       PostcodeModel,
+      LegacyReportModel,
     ]),
     NationalRegistryModule,
     RskCompanyRegistryModule,

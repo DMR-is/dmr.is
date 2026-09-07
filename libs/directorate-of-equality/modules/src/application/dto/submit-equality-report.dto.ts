@@ -1,3 +1,6 @@
+import { Transform } from 'class-transformer'
+import { isBase64 } from 'validator'
+
 import {
   ApiDto,
   ApiEnum,
@@ -70,10 +73,29 @@ export class SubmitEqualityReportDto {
    */
   @ApiOptionalHTML({
     description:
-      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`.',
+      'Narrative gender-equality plan as plain HTML. Persisted as `report.equality_report_content` and rendered into the approved PDF, so send the markup itself — not a base64 blob, not a document. Mutually exclusive with `equalityReportPdf`.',
+  })
+  @Transform(({ value }) => {
+    // Base64 is no longer part of the contract, but the island.is client still
+    // sends it, so a base64 body is decoded rather than stored verbatim. Remove
+    // this branch once that client sends HTML — and note the edge it carries: a
+    // very short plain-HTML-free value that happens to be valid base64
+    // (`abcd`) is decoded as though it were encoded. Real markup contains
+    // `<`, so it never matches.
+    if (typeof value === 'string' && isBase64(value)) {
+      return Buffer.from(value, 'base64').toString('utf-8')
+    }
+    return value
   })
   equalityReportContent?: string
 
+  /*
+   * ⚠️ **No `@Transform`, and that is deliberate — see `ApiOptionalBase64File`.**
+   * The decode above is for markup; running it over a PDF would replace every
+   * byte that is not valid UTF-8 with U+FFFD and corrupt the file silently.
+   * Base64 stays base64 the whole way here: validated, persisted and served
+   * back as-is.
+   */
   @ApiOptionalBase64File({
     description:
       'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',

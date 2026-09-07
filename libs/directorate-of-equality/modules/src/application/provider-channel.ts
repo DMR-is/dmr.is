@@ -34,6 +34,36 @@ export type ReportProviderChannel = {
    * company, which also leaks that the id is taken.
    */
   buildProviderId(clientId: string, companyNationalId: string): string
+
+  /**
+   * Inverse of `buildProviderId`: the id the CALLER knows this report by, or
+   * null when the report did not arrive on this channel.
+   *
+   * Needed because a caller only ever quotes its own id — the stored form is
+   * ours. Reading `report.provider_id` back raw would hand an integrator a
+   * value it never sent (and, on the partner channel, one prefixed with a
+   * kennitala it has no use for).
+   *
+   * Returning null for a foreign channel is the load-bearing half: a report the
+   * company filed on island.is is not addressable through the partner API, and
+   * a handle the caller can only ever 404 on is worse than no handle.
+   */
+  toClientProviderId(report: ClientProviderIdSource): string | null
+}
+
+/**
+ * The columns `toClientProviderId` needs. Structural rather than `ReportModel`
+ * so the channel stays free of the model layer, and so a caller can pass a
+ * plain row.
+ */
+export type ClientProviderIdSource = {
+  providerType: ReportProviderEnum | null
+  providerId: string | null
+  /**
+   * The company the report was filed for, i.e. what `buildProviderId` was given
+   * as `companyNationalId` at creation (`report.company_national_id`).
+   */
+  companyNationalId: string | null
 }
 
 /**
@@ -44,6 +74,10 @@ export type ReportProviderChannel = {
 export const ISLAND_IS_PROVIDER_CHANNEL: ReportProviderChannel = {
   providerType: ReportProviderEnum.ISLAND_IS,
   buildProviderId: (clientId) => clientId,
+  toClientProviderId: (report) =>
+    report.providerType === ReportProviderEnum.ISLAND_IS
+      ? report.providerId
+      : null,
 }
 
 /**
@@ -59,4 +93,24 @@ export const EXTERNAL_PROVIDER_CHANNEL: ReportProviderChannel = {
   providerType: ReportProviderEnum.OTHER,
   buildProviderId: (clientId, companyNationalId) =>
     `${companyNationalId}:${clientId}`,
+  toClientProviderId: (report) => {
+    if (report.providerType !== ReportProviderEnum.OTHER) {
+      return null
+    }
+
+    const { providerId, companyNationalId } = report
+    if (!providerId || !companyNationalId) {
+      return null
+    }
+
+    // Strip the namespace this channel added, rather than splitting on ':'. A
+    // vendor's own id may contain a colon, so `split(':')[1]` would truncate
+    // it; and requiring the prefix means a row stored under a different
+    // company's namespace returns null instead of leaking a foreign id.
+    const prefix = `${companyNationalId}:`
+
+    return providerId.startsWith(prefix)
+      ? providerId.slice(prefix.length)
+      : null
+  },
 }

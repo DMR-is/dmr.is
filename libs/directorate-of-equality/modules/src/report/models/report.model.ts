@@ -450,20 +450,26 @@ export class ReportModel extends MutableModel<
   /**
    * Slim, applicant-facing view of an equality report.
    *
-   * `providerId` is only surfaced for island.is-originated reports: it is the
-   * handle `GET /application/reports/:providerId` resolves against, and that
-   * route filters on `providerType = ISLAND_IS`. An admin- or Excel-created
-   * report has no applicant-facing content route, so the handle is null rather
-   * than a value the caller would only ever 404 on.
+   * `clientProviderId` is passed in rather than read off the model, because
+   * which handle a caller may see is a property of the CHANNEL it is calling
+   * on, not of the row: island.is quotes the application UUID verbatim, the
+   * partner API quotes its own id out of a namespaced stored value, and a
+   * report from a foreign channel exposes no handle at all. Resolve it with
+   * `ReportProviderChannel.toClientProviderId` — the inverse of the same
+   * channel's `buildProviderId`.
+   *
+   * This used to gate on `providerType === ISLAND_IS` here, which made the
+   * handle unconditionally null on every partner-filed report and left a vendor
+   * unable to correlate the active equality report with its own submission.
    */
-  static toEqualitySummary(model: ReportModel): EqualityReportSummaryDto {
+  static toEqualitySummary(
+    model: ReportModel,
+    clientProviderId: string | null,
+  ): EqualityReportSummaryDto {
     return {
       id: model.id,
       identifier: model.identifier,
-      providerId:
-        model.providerType === ReportProviderEnum.ISLAND_IS
-          ? model.providerId
-          : null,
+      providerId: clientProviderId,
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,
     }
