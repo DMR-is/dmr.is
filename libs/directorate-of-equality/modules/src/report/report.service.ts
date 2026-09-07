@@ -63,7 +63,11 @@ import {
   ReportTimelineItemDto,
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
-import { ReportStatusEnum, ReportTypeEnum } from './models/report.enums'
+import {
+  ReportProviderEnum,
+  ReportStatusEnum,
+  ReportTypeEnum,
+} from './models/report.enums'
 import { ReportModel } from './models/report.model'
 import { ReportEventModel } from './models/report-event.model'
 import {
@@ -489,6 +493,27 @@ export class ReportService implements IReportService {
   async getActiveEqualityForCompany(
     companyId: string,
   ): Promise<EqualityReportSummaryDto | null> {
+    const report = await this.findActiveEqualityForCompany(companyId)
+
+    if (!report) {
+      return null
+    }
+
+    // This accessor serves the ADMIN surface, where the handle's only meaning is
+    // the island.is application UUID the DTO documents. A channel-aware caller
+    // wants `findActiveEqualityForCompany` and its own channel's
+    // `toClientProviderId` instead — see ApplicationService.
+    return ReportModel.toEqualitySummary(
+      report,
+      report.providerType === ReportProviderEnum.ISLAND_IS
+        ? report.providerId
+        : null,
+    )
+  }
+
+  async findActiveEqualityForCompany(
+    companyId: string,
+  ): Promise<ReportModel | null> {
     const report = await this.reportModel.findOne({
       where: {
         type: ReportTypeEnum.EQUALITY,
@@ -507,11 +532,7 @@ export class ReportService implements IReportService {
       order: [['approvedAt', 'DESC']],
     })
 
-    if (!report) {
-      return null
-    }
-
-    return ReportModel.toEqualitySummary(report)
+    return report
   }
 
   private async buildTimeline(
