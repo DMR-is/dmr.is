@@ -67,6 +67,7 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { contentDisposition } from '../../core/http/content-disposition'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -320,7 +321,7 @@ export class ApplicationController {
 
     return new StreamableFile(pdf, {
       type: 'application/pdf',
-      disposition: `inline; filename="${encodeURIComponent(fileName)}"`,
+      disposition: contentDisposition('inline', fileName),
     })
   }
 

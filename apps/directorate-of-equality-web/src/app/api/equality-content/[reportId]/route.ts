@@ -139,11 +139,25 @@ export async function GET(
     )
   }
 
+  /*
+   * Forwarded rather than rebuilt: the upstream already encodes the name the
+   * company uploaded (RFC 5987, with an ASCII fallback), and that name is the
+   * whole reason the column exists — rewriting it here is what made a save
+   * dialog offer `jafnrettisaaetlun-<uuid>.pdf` instead. Falls back to the
+   * generic name only if the header is missing.
+   *
+   * `fetch` has already parsed the header, so a CR/LF in it cannot survive to
+   * this point; the upstream escapes the quoted parameter.
+   */
+  const disposition =
+    res.headers.get('content-disposition') ??
+    `inline; filename="jafnrettisaaetlun-${reportId}.pdf"`
+
   return new NextResponse(buffer, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="jafnrettisaaetlun-${reportId}.pdf"`,
+      'Content-Disposition': disposition,
       // Company-submitted content on a URL that does not vary by user.
       'Cache-Control': 'private, no-store',
     },

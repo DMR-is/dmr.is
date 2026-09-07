@@ -319,8 +319,6 @@ export const reportText = {
     // The embedded PDF viewer, for plans the company uploaded as a file.
     pdfFrameTitle: 'Jafnréttisáætlun fyrirtækisins',
     pdfOpenInNewTab: 'Opna í nýjum flipa',
-    pdfFallback:
-      'Ekki tókst að birta skjalið hér. Opnaðu það í nýjum flipa til að lesa það.',
   },
   salaryTab: {
     emptyTitle: 'Engin skýrslugjöf ',

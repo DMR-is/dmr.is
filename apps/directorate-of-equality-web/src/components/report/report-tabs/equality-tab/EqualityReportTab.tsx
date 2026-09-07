@@ -79,8 +79,11 @@ export const EqualityReportTab = ({
               {/*
                 `title` is what a screen reader announces for the frame, so it
                 names the document rather than leaving an unlabelled region.
-                The child renders only when the browser refuses to embed the
-                PDF, which is the case the button above is here for.
+
+                No fallback child: browsers ignore `iframe` children (that
+                mechanism belongs to `object`), so anything in here would never
+                render. The "open in new tab" button above is the real escape
+                hatch when the browser declines to embed the PDF.
               */}
               <iframe
                 src={pdfHref}
@@ -88,9 +91,7 @@ export const EqualityReportTab = ({
                 width="100%"
                 height={PDF_FRAME_HEIGHT}
                 style={{ border: 'none', display: 'block' }}
-              >
-                <Text>{reportText.equalityTab.pdfFallback}</Text>
-              </iframe>
+              />
             </Box>
           </Box>
         ) : (

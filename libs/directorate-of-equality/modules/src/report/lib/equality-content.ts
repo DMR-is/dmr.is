@@ -159,13 +159,16 @@ export function resolveEqualityContent(
 
   const pdf = input.equalityReportPdf as string
 
-  assertValidPdf(pdf)
-
+  // Before `assertValidPdf`: the filename costs nothing to check, and checking
+  // it second means a request that was always going to be rejected still
+  // decodes up to 4MB first.
   if (!isPresent(input.equalityReportPdfFilename)) {
     throw new BadRequestException(
       'equalityReportPdfFilename is required when submitting a PDF',
     )
   }
+
+  assertValidPdf(pdf)
 
   return {
     equalityReportContent: pdf,

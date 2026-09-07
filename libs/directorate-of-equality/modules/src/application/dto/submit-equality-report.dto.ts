@@ -1,6 +1,3 @@
-import { Transform } from 'class-transformer'
-import { isBase64 } from 'validator'
-
 import {
   ApiDto,
   ApiEnum,
@@ -74,12 +71,6 @@ export class SubmitEqualityReportDto {
   @ApiOptionalHTML({
     description:
       'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`.',
-  })
-  @Transform(({ value }) => {
-    if (isBase64(value)) {
-      return Buffer.from(value, 'base64').toString('utf-8')
-    }
-    return value
   })
   equalityReportContent?: string
 

@@ -1,5 +1,3 @@
-import { Response } from 'express'
-
 import {
   Controller,
   Get,
@@ -7,7 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Query,
-  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
@@ -31,6 +29,7 @@ import { TokenJwtAuthGuard } from '@dmr.is/shared-modules'
 
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { AdminGuard } from '../../core/guards/admin/admin.guard'
+import { contentDisposition } from '../../core/http/content-disposition'
 
 @Controller({ path: 'reports', version: '1' })
 @ApiTags('Reports')
@@ -114,18 +113,15 @@ export class ReportController {
   })
   async getEqualityContentPdf(
     @Param('id', ParseUUIDPipe) id: string,
-    @Res() res: Response,
-  ): Promise<void> {
+  ): Promise<StreamableFile> {
     const { pdf, fileName } = await this.reportService.getEqualityContentPdf(id)
 
-    res.set({
-      'Content-Type': 'application/pdf',
+    return new StreamableFile(pdf, {
+      type: 'application/pdf',
       // Inline: the admin web embeds this in an iframe rather than downloading
       // it, and `attachment` would make the browser save it instead of render.
-      'Content-Disposition': `inline; filename="${encodeURIComponent(fileName)}"`,
-      'Content-Length': pdf.length,
+      disposition: contentDisposition('inline', fileName),
     })
-    res.send(pdf)
   }
 
   @Get(':id/outliers')

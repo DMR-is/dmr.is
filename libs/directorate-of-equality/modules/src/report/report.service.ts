@@ -879,12 +879,23 @@ export class ReportService implements IReportService {
       )
     }
 
+    /*
+     * ⚠️ **Every column `fromModelToEqualityReport` reads has to be in this
+     * list.** A partial select leaves the rest `undefined` on the instance, and
+     * `undefined` is not a null this projection can detect: the withholding
+     * test is `!== PDF`, so a missing `equalityReportContentType` reads as HTML
+     * and the base64 of an uploaded plan is returned as though it were rich
+     * text — several MB on a read, rendered as markup by the admin editor, and
+     * baked into the approval PDF as base64 text.
+     */
     const equality = await this.reportModel.findByPk(report.equalityReportId, {
       attributes: [
         'id',
         'identifier',
         'status',
         'equalityReportContent',
+        'equalityReportContentType',
+        'equalityReportContentFilename',
         'approvedAt',
         'validUntil',
         'correctionDeadline',
