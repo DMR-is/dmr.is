@@ -38,6 +38,7 @@ import {
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
 import { IsatSectionDto } from './dto/isat-section.dto'
+import { LegacyReportDto } from './dto/legacy-report.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { UpdateCompanyEmailDto } from './dto/update-company-email.dto'
 import { UpdateCompanyFinesDto } from './dto/update-company-fines.dto'
@@ -53,6 +54,7 @@ import {
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
+import { LegacyReportModel } from './models/legacy-report.model'
 import {
   buildCompanyExpiryWhere,
   buildCompanyIsatSectionInclude,
@@ -91,6 +93,8 @@ export class CompanyService implements ICompanyService {
     private readonly isatSectionModel: typeof IsatSectionModel,
     @InjectModel(PostcodeModel)
     private readonly postcodeModel: typeof PostcodeModel,
+    @InjectModel(LegacyReportModel)
+    private readonly legacyReportModel: typeof LegacyReportModel,
     @Inject(ICompanyEventService)
     private readonly companyEventService: ICompanyEventService,
     @Inject(ICompanyCommentService)
@@ -810,7 +814,12 @@ export class CompanyService implements ICompanyService {
 
     await company.update({ isatCategoryCode: code })
 
-    const updated = await this.companyModel.findOneOrThrow({
+    // Scoped, like every other CompanyDto read: the derived columns
+    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals the
+    // `withReportStatus` scope selects, and come back undefined without it.
+    // Re-read rather than `loadCompanyDto` because the response carries the
+    // resolved ISAT category and that helper does not include it.
+    const updated = await this.companyWithReportStatus.findOneOrThrow({
       where: { id },
       include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
     })
@@ -981,5 +990,37 @@ export class CompanyService implements ICompanyService {
     return [...eventItems, ...commentItems].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
     )
+  }
+
+  /**
+   * The company's rows from the Directorate's retired SharePoint register.
+   *
+   * Returns a list, not a single row: `legacy_report` holds one row per *sheet*
+   * row and a handful of companies resolved from two of them (a renamed
+   * ministry, a kennitala two police districts shared), so collapsing to one
+   * here would drop a certification the archive exists to preserve. See
+   * `LegacyReportModel`.
+   *
+   * Ordered newest edit first so the row the register load treated as
+   * authoritative — `legacyModifiedAt` is what resolves duplicates — is the one
+   * an admin reads first. `NULLS LAST` because 12 rows never carried a
+   * SharePoint Modified stamp, and an unstamped row must not outrank a stamped
+   * one.
+   */
+  async getLegacyReports(id: string): Promise<LegacyReportDto[]> {
+    await this.companyModel.findOneOrThrow(
+      { where: { id } },
+      companyMessages.notFound(id),
+    )
+
+    const rows = await this.legacyReportModel.findAll({
+      where: { companyId: id },
+      order: [
+        literal('"legacy_modified_at" DESC NULLS LAST'),
+        ['createdAt', 'DESC'],
+      ],
+    })
+
+    return rows.map((row) => row.fromModel())
   }
 }

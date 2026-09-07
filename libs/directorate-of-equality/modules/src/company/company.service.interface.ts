@@ -7,6 +7,7 @@ import { GetCompaniesQueryDto } from './dto/get-companies-query.dto'
 import { GetCompaniesResponseDto } from './dto/get-companies-response.dto'
 import { IsatCategoryDto } from './dto/isat-category.dto'
 import { IsatSectionDto } from './dto/isat-section.dto'
+import { LegacyReportDto } from './dto/legacy-report.dto'
 import { SearchIsatCategoriesQueryDto } from './dto/search-isat-categories-query.dto'
 import { SubsidiaryReportSnapshotLookup } from './dto/subsidiary-report-snapshot-lookup.dto'
 import { SubsidiaryReportSnapshotSourceDto } from './dto/subsidiary-report-snapshot-source.dto'
@@ -65,6 +66,7 @@ export interface ICompanyService {
     actorUserId: string,
   ): Promise<CompanyDto>
   getTimeline(id: string): Promise<CompanyTimelineItemDto[]>
+  getLegacyReports(id: string): Promise<LegacyReportDto[]>
   searchIsatCategories(
     query: SearchIsatCategoriesQueryDto,
   ): Promise<IsatCategoryDto[]>

@@ -6,6 +6,7 @@ import {
   zCreateCompanyCommentPath,
   zDeleteCompanyCommentPath,
   zGetCompanyCommentsPath,
+  zGetCompanyLegacyReportsPath,
   zGetCompanyTimelinePath,
   zGetRskCompanyPreviewPath,
   zRskLookupCompanyPath,
@@ -101,6 +102,15 @@ export const companyRouter = router({
     .input(zGetCompanyTimelinePath)
     .query(({ ctx, input }) =>
       ctx.api.getCompanyTimeline({ path: { id: input.id } }),
+    ),
+
+  // The company's rows from the retired SharePoint register, backing the
+  // "Eldri gögn" tab. A list, not a row: a few companies resolved from two
+  // sheet rows each.
+  legacyReports: protectedProcedure
+    .input(zGetCompanyLegacyReportsPath)
+    .query(({ ctx, input }) =>
+      ctx.api.getCompanyLegacyReports({ path: { id: input.id } }),
     ),
 
   comments: router({

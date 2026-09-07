@@ -1620,6 +1620,75 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/companies/{id}/legacy-reports": {
+      "get": {
+        "operationId": "getCompanyLegacyReports",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LegacyReportDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Companies"]
+      }
+    },
     "/api/v1/companies/{id}/comments": {
       "get": {
         "operationId": "getCompanyComments",
@@ -5328,6 +5397,10 @@
           "salaryReportOverdue": {
             "type": "boolean",
             "description": "Derived: the company's next salary-report due date has passed."
+          },
+          "hasLegacyReports": {
+            "type": "boolean",
+            "description": "Derived: the Directorate's retired SharePoint register holds at least one row for this company. Drives whether the detail view offers the legacy-data tab; says nothing about compliance — the row may record a lapsed or surrendered certificate."
           }
         },
         "required": [
@@ -5344,7 +5417,8 @@
           "sectorOverride",
           "reportStatus",
           "equalityReportOverdue",
-          "salaryReportOverdue"
+          "salaryReportOverdue",
+          "hasLegacyReports"
         ]
       },
       "Paging": {
@@ -6806,6 +6880,164 @@
           "totalWageGapPercent": { "type": "number", "nullable": true }
         },
         "required": ["male", "female", "overall"]
+      },
+      "LegacyReportDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "nationalId": {
+            "type": "string",
+            "description": "Kennitala exactly as the legacy list held it — unvalidated and possibly malformed. The resolved company is `companyId`."
+          },
+          "legacyStatus": {
+            "type": "string",
+            "nullable": true,
+            "description": "Staða — the legacy workflow state: \"ólokið\", \"Lokið\", \"undanþága\", \"hætt\" or \"í vinnslu\"."
+          },
+          "validity": {
+            "type": "string",
+            "nullable": true,
+            "description": "Í gildi — \"Í gildi\" or \"Útrunnið\". Blank where the list never recorded one, which in practice means never certified."
+          },
+          "changeType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Breyting — what changed about the row since the previous list (\"Nýtt\", \"Dottið út\", \"Nafn\", \"Stærðarflokkun\"). Multi-valued, joined with \";#\"."
+          },
+          "certificationType": {
+            "type": "string",
+            "nullable": true,
+            "description": "Jafnlaunavottun/staðfesting — \"Vottun\" (accredited body) or \"Staðfesting\" (confirmed by the Directorate)."
+          },
+          "certifiedAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-03-26",
+            "nullable": true,
+            "description": "Dags. Staðf/Vottunar — when the certification was issued, as `YYYY-MM-DD`."
+          },
+          "salaryValidUntil": {
+            "type": "string",
+            "format": "date",
+            "example": "2027-12-20",
+            "nullable": true,
+            "description": "Gildistími vottunar/staðfestingar — the certificate’s stated expiry, as `YYYY-MM-DD`. Not the live deadline: that is `company.nextSalaryReportDueAt`."
+          },
+          "equalityValidUntil": {
+            "type": "string",
+            "format": "date",
+            "example": "2027-05-31",
+            "nullable": true,
+            "description": "Gildistíma jafnréttisáætlunar — when the equality plan lapses, as `YYYY-MM-DD`."
+          },
+          "round": {
+            "type": "string",
+            "nullable": true,
+            "description": "Númer hrings — which certification round the company was on (\"1.\" … \"4.\")."
+          },
+          "caseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Málsnúmer — the Directorate’s case number for the salary certification."
+          },
+          "equalityCaseNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Jafnréttisáætlun - málsnúmer. A separate case from the salary one; some rows hold prose (\"vantar\", \"svf.\") instead of a number."
+          },
+          "certifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vottunaraðili — the accrediting body, with SharePoint’s lookup-id suffix stripped."
+          },
+          "maleCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Fjöldi kk — male headcount as counted for the certification."
+          },
+          "femaleCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Fjöldi kvk — female headcount as counted for the certification."
+          },
+          "neutralCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Hlutlaus skráning kyns — employees registered with a neutral gender."
+          },
+          "topManagerGender": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kyn æðsta stjórnanda — \"Karl\" or \"Kona\"."
+          },
+          "genderPayGap": {
+            "type": "string",
+            "nullable": true,
+            "description": "Kynb. launamunur. A string, not a number: the few populated rows mix a percentage with what appear to be ISK amounts."
+          },
+          "employeeCount": {
+            "type": "number",
+            "nullable": true,
+            "description": "Starfsmannafjöldi — informational only, and often at odds with the size buckets. `company.employeeCountCategory` comes from `sizeCategoryNew`."
+          },
+          "sizeCategoryNew": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nýr stærðarflokkur — the authoritative bucket (\"0\", \"25-49\", \"50+\"), and what the company’s size was mapped from."
+          },
+          "sizeCategoryOld": {
+            "type": "string",
+            "nullable": true,
+            "description": "Stærðarflokkur — the older, finer bucketing (\"50-89\", \"90-149\", \">249\"). Used as fallback where the new bucket is blank."
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tengiliður — the named contact. The company record keeps only the email address."
+          },
+          "incomeYear": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tekjuár — the year the figures were drawn from. A string: some rows say \"0\"."
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "description": "Breytingar / Áður flokkað — the admins’ free-text notes. Also seeded onto the company timeline as a system comment."
+          },
+          "reminderSent6Months": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the legacy list had already sent its 6-month reminder. Not read by the reminder task here."
+          },
+          "reminderSent2Weeks": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the legacy list had already sent its 2-week reminder. Not read by the reminder task here."
+          },
+          "legacyCreatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the row was created in SharePoint."
+          },
+          "legacyModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true,
+            "description": "When the row was last edited in SharePoint. This is what resolves duplicate kennitölur — the latest edit wins."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "description": "When this archive row was loaded into our register."
+          }
+        },
+        "required": ["id", "companyId", "nationalId", "createdAt"]
       }
     }
   }

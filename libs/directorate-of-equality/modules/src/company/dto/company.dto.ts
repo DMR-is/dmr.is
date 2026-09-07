@@ -120,4 +120,10 @@ export class CompanyDto {
       'Derived: the company\'s next salary-report due date has passed.',
   })
   salaryReportOverdue!: boolean
+
+  @ApiBoolean({
+    description:
+      "Derived: the Directorate's retired SharePoint register holds at least one row for this company. Drives whether the detail view offers the legacy-data tab; says nothing about compliance — the row may record a lapsed or surrendered certificate.",
+  })
+  hasLegacyReports!: boolean
 }

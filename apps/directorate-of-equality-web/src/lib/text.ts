@@ -837,6 +837,7 @@ export const companiesText = {
     tabInfo: 'Upplýsingar',
     tabReports: 'Skýrslur',
     tabApiKeys: 'Aðgangslyklar',
+    tabLegacy: 'Eldri gögn',
     tabsLabel: 'Fyrirtækjaflippar',
     timelineHeading: 'Saga fyrirtækis',
     sidebarTitle: 'Staða fyrirtækis',
@@ -883,6 +884,61 @@ export const companiesText = {
     emailCancelButton: 'Hætta við',
     emailSavedToast: 'Netfang uppfært',
     emailErrorToast: 'Villa við að uppfæra netfang',
+
+    // The retired SharePoint register ("Adda eftirlit Gagnasafn"), archived
+    // verbatim on `legacy_report`. Labels are the sheet's own column headings
+    // rather than our domain words, because the tab answers "what did the old
+    // list say about this company" — an admin cross-checking it has the sheet's
+    // vocabulary in mind, not ours.
+    legacy: {
+      heading: 'Skráning í eldri gagnagrunni',
+      intro:
+        'Gögnin hér að neðan koma óbreytt úr eldri gagnagrunni Jafnréttisstofu og eru einungis til upplýsingar — þau eru ekki uppfærð héðan.',
+      empty: 'Fyrirtækið var ekki skráð í eldri gagnagrunni',
+      loadError: 'Villa við að hlaða eldri gögn',
+      rowHeading: 'Færsla',
+      unknown: '—',
+
+      sectionCertification: 'Vottun',
+      sectionValidity: 'Gildistími og staða',
+      sectionEmployees: 'Starfsmenn',
+      sectionSize: 'Stærðarflokkun',
+      sectionContact: 'Tengiliður og athugasemdir',
+      sectionSource: 'Upprunafærsla',
+
+      certificationType: 'Jafnlaunavottun/staðfesting',
+      certifier: 'Vottunaraðili',
+      caseNumber: 'Málsnúmer',
+      equalityCaseNumber: 'Jafnréttisáætlun – málsnúmer',
+      round: 'Númer hrings',
+      certifiedAt: 'Dags. staðfestingar/vottunar',
+
+      salaryValidUntil: 'Gildistími vottunar/staðfestingar',
+      equalityValidUntil: 'Gildistími jafnréttisáætlunar',
+      validity: 'Í gildi',
+      legacyStatus: 'Staða',
+      changeType: 'Breyting',
+
+      employeeCount: 'Starfsmannafjöldi',
+      maleCount: 'Fjöldi kk',
+      femaleCount: 'Fjöldi kvk',
+      neutralCount: 'Hlutlaus skráning kyns',
+      topManagerGender: 'Kyn æðsta stjórnanda',
+      genderPayGap: 'Kynb. launamunur',
+      incomeYear: 'Tekjuár',
+
+      sizeCategoryNew: 'Nýr stærðarflokkur',
+      sizeCategoryOld: 'Stærðarflokkur',
+
+      contactName: 'Tengiliður',
+      notes: 'Breytingar / áður flokkað',
+      reminderSent6Months: 'Áminning send (6 mánuðir)',
+      reminderSent2Weeks: 'Áminning send (2 vikur)',
+
+      nationalId: 'Kennitala í eldri skrá',
+      legacyCreatedAt: 'Stofnað í eldri skrá',
+      legacyModifiedAt: 'Síðast breytt í eldri skrá',
+    },
 
     apiKeys: {
       heading: 'Aðgangslyklar',

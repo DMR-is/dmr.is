@@ -1,4 +1,7 @@
-import { companyReportStatusCaseSql } from './report-status'
+import {
+  companyHasLegacyReportsSql,
+  companyReportStatusCaseSql,
+} from './report-status'
 
 /**
  * `companyReportStatusCaseSql` emits raw SQL, so a typo in a table or column
@@ -74,5 +77,30 @@ describe('companyReportStatusCaseSql', () => {
     expect(sql.indexOf('MISSING_SALARY_REPORT')).toBeLessThan(
       sql.indexOf('MISSING_ACTION_PLAN'),
     )
+  })
+})
+
+/**
+ * The flag that decides whether the detail view offers the legacy tab at all.
+ * Raw SQL again, and the failure is quiet in the other direction: a wrong
+ * identifier here 500s the company list, and a *narrowed* predicate hides the
+ * tab on companies whose archive rows exist.
+ */
+describe('companyHasLegacyReportsSql', () => {
+  const sql = companyHasLegacyReportsSql()
+
+  it('pins the archive table and the correlation to the outer company', () => {
+    expect(sql).toContain('FROM "legacy_report" lr')
+    expect(sql).toContain('lr.company_id = "CompanyModel"."id"')
+  })
+
+  it('asks only whether a row exists', () => {
+    // Existence, not coverage: the tab shows what the old list said, so a
+    // lapsed or surrendered certificate must still open it. Any date, validity
+    // or status test here would hide history an admin came to read.
+    expect(sql).toContain('EXISTS')
+    expect(sql).not.toMatch(/valid_until/)
+    expect(sql).not.toMatch(/lr\."?validity"?/)
+    expect(sql).not.toMatch(/lr\."?legacy_status"?/)
   })
 })
