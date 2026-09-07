@@ -59,6 +59,7 @@ import {
   buildCompanyExpiryWhere,
   buildCompanyIsatSectionInclude,
   buildCompanyIsatWhere,
+  buildCompanyLifecycleStatusWhere,
   buildCompanyLocationInclude,
   buildCompanyOverdueWhere,
   buildCompanySectorWhere,
@@ -145,6 +146,10 @@ export class CompanyService implements ICompanyService {
 
     if (query.companyStatus?.length) {
       conditions.push(buildCompanyStatusWhere(query.companyStatus))
+    }
+
+    if (query.status?.length) {
+      conditions.push(buildCompanyLifecycleStatusWhere(query.status))
     }
 
     if (query.expiresWithin?.length) {

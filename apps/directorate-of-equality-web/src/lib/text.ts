@@ -763,6 +763,11 @@ export const companiesText = {
   // the detail view — the two must not share a word the admin can edit.
   sector: 'Eignarhald',
   sectorPlaceholder: 'Veldu eignarhald',
+  // Deliberately NOT `statusLabel`, which the compliance filter already uses in
+  // the same panel. Selecting nothing means both, which is also what the list
+  // shows unfiltered.
+  registerStatus: 'Staða í skrá',
+  registerStatusPlaceholder: 'Virkt eða óvirkt',
   resultsText: 'fyrirtæki fundust',
   noData: 'Engin fyrirtæki skráð',
   expandedRow: {
@@ -860,6 +865,23 @@ export const companiesText = {
     finesAlert: 'Fyrirtækið er í dagsektarferli',
     finesAlertReasonAlertMessage:
       'Fyrirtækið hefur verið sett í dagsektarferli vegna: ',
+
+    // "í skrá" is load-bearing: `sidebarTitle` above already claims the word
+    // "staða" for the compliance tag (reportStatus), and these two answer
+    // different questions. An admin must not read this field as "the company is
+    // in order".
+    registerStatusLabel: 'Staða í skrá',
+    registerStatusEditButton: 'Breyta',
+    registerStatusSaveButton: 'Vista',
+    registerStatusCancelButton: 'Hætta',
+    registerStatusPlaceholder: 'Veldu stöðu í skrá',
+    registerStatusReasonLabel: 'Skýring (valkvæð)',
+    registerStatusReasonPlaceholder: 'T.d. gjaldþrot eða samruni',
+    registerStatusActivatedToast: 'Fyrirtæki virkjað í skrá',
+    registerStatusDeactivatedToast: 'Fyrirtæki gert óvirkt í skrá',
+    registerStatusErrorToast: 'Villa við að uppfæra stöðu í skrá',
+    registerStatusInactiveHint:
+      'Fyrirtækið er ekki í gildandi fyrirtækjaskrá Jafnréttisstofu. Skýringin er skráð í sögu fyrirtækisins.',
 
     // Only sectorLegalFormHint says "rekstrarform" — it is the RSK legal form,
     // a read-only input to the classification. The editable field above it is

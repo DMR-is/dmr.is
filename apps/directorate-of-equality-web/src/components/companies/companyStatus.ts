@@ -2,6 +2,7 @@ import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../../gen/fetch/types.gen'
 
 // Icelandic labels + tag colours for the company report status. The status
@@ -64,6 +65,33 @@ export const SECTOR_FILTER_OPTIONS = [
   CompanySectorEnum.PUBLIC,
   CompanySectorEnum.UNKNOWN,
 ].map((value) => ({ value, label: SECTOR_LABEL[value] }))
+
+// Register lifecycle status — whether the company is on the Directorate's
+// authoritative register. A DIFFERENT axis from the report status above, and
+// the two must not be conflated in the UI either: a company can be ACTIVE and
+// non-compliant, or INACTIVE and have nothing outstanding. Hence "staða í
+// skrá" rather than plain "staða", which the detail sidebar already uses for
+// the compliance tag.
+export const COMPANY_STATUS_LABEL: Record<CompanyStatusEnum, string> = {
+  [CompanyStatusEnum.ACTIVE]: 'Virkt',
+  [CompanyStatusEnum.INACTIVE]: 'Óvirkt',
+}
+
+// Only INACTIVE gets a colour. ACTIVE is the norm — tagging ~1 750 companies
+// with a badge that says "normal" is noise, so the list only marks the
+// exceptions.
+export const COMPANY_STATUS_TAG_VARIANT: Record<
+  CompanyStatusEnum,
+  'red' | 'blue'
+> = {
+  [CompanyStatusEnum.ACTIVE]: 'blue',
+  [CompanyStatusEnum.INACTIVE]: 'red',
+}
+
+export const COMPANY_STATUS_FILTER_OPTIONS = [
+  CompanyStatusEnum.ACTIVE,
+  CompanyStatusEnum.INACTIVE,
+].map((value) => ({ value, label: COMPANY_STATUS_LABEL[value] }))
 
 export const PAGE_SIZE = 10
 

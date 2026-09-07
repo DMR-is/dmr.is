@@ -18,6 +18,8 @@ import {
   zUpdateCompanyQuarantinePath,
   zUpdateCompanySectorBody,
   zUpdateCompanySectorPath,
+  zUpdateCompanyStatusBody,
+  zUpdateCompanyStatusPath,
 } from '../../../../gen/fetch/zod.gen'
 import { protectedProcedure, router } from '../trpc'
 
@@ -38,6 +40,9 @@ const zGetCompaniesQuery = z.object({
       ]),
     )
     .optional(),
+  // Register lifecycle, not compliance — see `companyStatus` directly above.
+  // Omitted means both, which is what the list has always shown.
+  status: z.array(z.enum(['ACTIVE', 'INACTIVE'])).optional(),
   expiresWithin: z.array(z.enum(['30d', '3m', 'soon'])).optional(),
   finesStarted: z.boolean().optional(),
   quarantined: z.boolean().optional(),
@@ -177,6 +182,21 @@ export const companyRouter = router({
       ctx.api.updateCompanyEmail({
         path: { id: input.id },
         body: { email: input.email },
+      }),
+    ),
+
+  // Register lifecycle status. INACTIVE means the company is no longer in the
+  // authoritative register (bankruptcy, merger, or absent from the latest
+  // import); ACTIVE puts it back. Idempotent server-side, and the change is
+  // recorded as a STATUS_CHANGED event with `reason` on the company timeline —
+  // the status column keeps no history of its own, so that event is the only
+  // record of why.
+  updateStatus: protectedProcedure
+    .input(zUpdateCompanyStatusPath.extend(zUpdateCompanyStatusBody.shape))
+    .mutation(({ ctx, input }) =>
+      ctx.api.updateCompanyStatus({
+        path: { id: input.id },
+        body: { status: input.status, reason: input.reason },
       }),
     ),
 

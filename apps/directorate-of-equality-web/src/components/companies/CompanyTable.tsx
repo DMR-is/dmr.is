@@ -10,12 +10,21 @@ import { Tooltip } from '@dmr.is/ui/components/island-is/Tooltip'
 import { Table, TableCell } from '@dmr.is/ui/components/Tables/Table'
 import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 
-import { type CompanyDto, type Paging } from '../../gen/fetch/types.gen'
+import {
+  type CompanyDto,
+  CompanyStatusEnum,
+  type Paging,
+} from '../../gen/fetch/types.gen'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, overviewText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
-import { REPORT_STATUS_LABEL, REPORT_STATUS_TAG_VARIANT } from './companyStatus'
+import {
+  COMPANY_STATUS_LABEL,
+  COMPANY_STATUS_TAG_VARIANT,
+  REPORT_STATUS_LABEL,
+  REPORT_STATUS_TAG_VARIANT,
+} from './companyStatus'
 
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
 
@@ -66,6 +75,17 @@ export const CompanyTable = ({
               children: REPORT_STATUS_LABEL[status],
             },
           ]
+          // Off the register. Rendered here rather than in its own column
+          // because it is the exception, not a value every row carries — and
+          // without it the register-status filter could narrow the list to
+          // INACTIVE companies that looked identical to every other row.
+          if (row.original.status === CompanyStatusEnum.INACTIVE) {
+            items.push({
+              type: 'tag',
+              variant: COMPANY_STATUS_TAG_VARIANT[CompanyStatusEnum.INACTIVE],
+              children: COMPANY_STATUS_LABEL[CompanyStatusEnum.INACTIVE],
+            })
+          }
           // Overdue obligation — prompts the admin to look at the company and
           // possibly start the daily-fines process.
           if (
