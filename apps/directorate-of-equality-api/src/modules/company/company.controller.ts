@@ -26,6 +26,7 @@ import {
   ICompanyService,
   IsatCategoryDto,
   IsatSectionDto,
+  LegacyReportDto,
   SearchIsatCategoriesQueryDto,
   UpdateCompanyEmailDto,
   UpdateCompanyFinesDto,
@@ -236,6 +237,19 @@ export class CompanyController {
     @Param('id') id: string,
   ): Promise<CompanyTimelineItemDto[]> {
     return this.companyService.getTimeline(id)
+  }
+
+  @Get(':id/legacy-reports')
+  @ApiParam({ name: 'id', type: String })
+  @DoeResponse({
+    operationId: 'getCompanyLegacyReports',
+    type: [LegacyReportDto],
+    include404: true,
+  })
+  async getLegacyReports(
+    @Param('id') id: string,
+  ): Promise<LegacyReportDto[]> {
+    return this.companyService.getLegacyReports(id)
   }
 
   @Get(':id/comments')

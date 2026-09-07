@@ -6,6 +6,7 @@ import { Tabs } from '@island.is/island-ui/core'
 
 import { CompanyApiKeysTab } from '../../components/company/company-tabs/api-keys-tab/CompanyApiKeysTab'
 import { CompanyDetailInfoTab } from '../../components/company/company-tabs/info-tab/CompanyDetailInfoTab'
+import { CompanyLegacyTab } from '../../components/company/company-tabs/legacy-tab/CompanyLegacyTab'
 import { CompanyReportsTab } from '../../components/company/company-tabs/reports-tab/CompanyReportsTab'
 import { CompanyDto } from '../../gen/fetch'
 import { companiesText } from '../../lib/text'
@@ -29,6 +30,11 @@ export function CompanyTabsContainer({ company }: CompanyTabsContainerProps) {
       id: 'skyrslur',
       label: t.tabReports,
       content: <CompanyReportsTab companyId={company.id} />,
+    },
+    {
+      id: 'eldri-gogn',
+      label: t.tabLegacy,
+      content: <CompanyLegacyTab companyId={company.id} />,
     },
     {
       id: 'adgangslyklar',

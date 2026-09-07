@@ -21,6 +21,7 @@ import {
 import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
+import { LegacyReportModel } from './models/legacy-report.model'
 import { companyMessages } from './company.messages'
 import { CompanyService } from './company.service'
 
@@ -49,6 +50,7 @@ describe('CompanyService', () => {
   let isatFindByPk: jest.Mock
   let isatSectionFindAll: jest.Mock
   let postcodeFindOne: jest.Mock
+  let legacyReportFindAll: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
@@ -57,6 +59,7 @@ describe('CompanyService', () => {
     isatFindByPk = jest.fn()
     isatSectionFindAll = jest.fn()
     postcodeFindOne = jest.fn()
+    legacyReportFindAll = jest.fn().mockResolvedValue([])
     getEntityByNationalId = jest.fn()
     getLegalEntityByNationalId = jest.fn()
     emitCreated = jest.fn()
@@ -105,6 +108,10 @@ describe('CompanyService', () => {
         {
           provide: getModelToken(PostcodeModel),
           useValue: { findOne: postcodeFindOne },
+        },
+        {
+          provide: getModelToken(LegacyReportModel),
+          useValue: { findAll: legacyReportFindAll },
         },
         {
           provide: ICompanyEventService,
@@ -1214,7 +1221,56 @@ describe('CompanyService', () => {
       )
     })
   })
+
+  describe('getLegacyReports', () => {
+    it('returns every archived row for the company, newest edit first', async () => {
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-1' }))
+      legacyReportFindAll.mockResolvedValue([
+        makeLegacyReportModel({ id: 'lr-2' }),
+        makeLegacyReportModel({ id: 'lr-1' }),
+      ])
+
+      const rows = await service.getLegacyReports('company-1')
+
+      // Two rows, not one: a handful of companies resolved from two sheet rows
+      // and collapsing them would drop a certification (see LegacyReportModel).
+      expect(rows.map((row) => row.id)).toEqual(['lr-2', 'lr-1'])
+      expect(legacyReportFindAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { companyId: 'company-1' } }),
+      )
+    })
+
+    it('returns an empty list for a company the legacy register never held', async () => {
+      findOneOrThrow.mockResolvedValue(makeCompanyModel({ id: 'company-1' }))
+      legacyReportFindAll.mockResolvedValue([])
+
+      await expect(service.getLegacyReports('company-1')).resolves.toEqual([])
+    })
+
+    it('throws NotFoundException when the company does not exist', async () => {
+      findOneOrThrow.mockRejectedValue(new NotFoundException())
+
+      await expect(service.getLegacyReports('missing')).rejects.toThrow(
+        NotFoundException,
+      )
+    })
+  })
 })
+
+function makeLegacyReportModel(
+  overrides: Partial<LegacyReportModel> = {},
+): LegacyReportModel {
+  const fields = {
+    id: 'lr-1',
+    companyId: 'company-1',
+    nationalId: '5501234567',
+    ...overrides,
+  }
+  return {
+    ...fields,
+    fromModel: () => ({ ...fields }),
+  } as unknown as LegacyReportModel
+}
 
 function makeRegistryEntity(
   overrides: Partial<NationalRegistryEntityDto> = {},
