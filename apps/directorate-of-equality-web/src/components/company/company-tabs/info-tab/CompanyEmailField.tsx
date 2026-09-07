@@ -32,7 +32,9 @@ export const CompanyEmailField = ({ company }: Props) => {
   const updateEmail = useMutation({
     ...trpc.company.updateEmail.mutationOptions(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.get.queryKey({ id: company.id }),
+      })
       toast.success(t.emailSavedToast)
       setIsEditing(false)
     },

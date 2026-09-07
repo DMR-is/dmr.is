@@ -22,6 +22,7 @@ import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../../gen/fetch'
 import { useCompanies } from '../../hooks/useCompanies'
 import { useIsTablet } from '../../hooks/useIsTablet'
@@ -42,6 +43,7 @@ export const CompaniesContainer = () => {
       ? [filter.employeeCountCategory]
       : [],
     status: (filter.companyStatus ?? []) as CompanyReportStatusEnum[],
+    registerStatus: (filter.status ?? []) as CompanyStatusEnum[],
     expires: (filter.expiresWithin ?? []) as CompanyExpiryFilterEnum[],
     flags: [
       ...(filter.finesStarted ? ['fines'] : []),
@@ -118,6 +120,13 @@ export const CompaniesContainer = () => {
     setFilters((prev) => ({ ...prev, [key]: val }))
     if (key === 'status') {
       setFilter({ companyStatus: val as CompanyReportStatusEnum[], page: 1 })
+    } else if (key === 'registerStatus') {
+      // Empty selection clears the param rather than sending both values —
+      // same result, but an unfiltered URL stays unfiltered.
+      setFilter({
+        status: val.length ? (val as CompanyStatusEnum[]) : null,
+        page: 1,
+      })
     } else if (key === 'employees') {
       // API supports a single employeeCountCategory; pass first selected value.
       // Multi-select >1 categories would require an API change.
@@ -153,6 +162,7 @@ export const CompaniesContainer = () => {
     setFilters({
       employees: [],
       status: [],
+      registerStatus: [],
       expires: [],
       flags: [],
       regionCode: [],

@@ -14,6 +14,7 @@ import { useIsTablet } from '../../hooks/useIsTablet'
 import { companiesText, sharedText } from '../../lib/text'
 import { EMPLOYEE_RANGES } from '../../lib/utils'
 import {
+  COMPANY_STATUS_FILTER_OPTIONS,
   EXPIRES_FILTER_OPTIONS,
   FLAG_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
@@ -27,7 +28,15 @@ export type FilterOption = { value: string; label: string }
 
 export type CompanyFilters = {
   employees: string[]
+  /** Compliance — what the company still owes (`CompanyReportStatusEnum`). */
   status: string[]
+  /**
+   * Register lifecycle — whether the company is on the books at all
+   * (`CompanyStatusEnum`). A separate key from `status` above because they are
+   * separate axes and the panel offers both; collapsing them into one control
+   * would ask a single question that has two answers.
+   */
+  registerStatus: string[]
   expires: string[]
   flags: string[]
   regionCode: string[]
@@ -103,6 +112,7 @@ export const CompanyFilter = ({
               labelVariant="h5"
               labelColor={labelColor(
                 filters.employees,
+                filters.registerStatus,
                 filters.sector,
                 filters.isatSection,
                 filters.isatCategoryCode,
@@ -119,6 +129,16 @@ export const CompanyFilter = ({
                   selected={filters.employees}
                   isMulti={false}
                   onChange={(val) => onFiltersChange('employees', val)}
+                />
+                <MultiSelectFilter
+                  name="registerStatus"
+                  label={companiesText.registerStatus}
+                  placeholder={companiesText.registerStatusPlaceholder}
+                  noOptionsMessage={companiesText.filterNoResults}
+                  isSearchable={false}
+                  options={COMPANY_STATUS_FILTER_OPTIONS}
+                  selected={filters.registerStatus}
+                  onChange={(val) => onFiltersChange('registerStatus', val)}
                 />
                 <MultiSelectFilter
                   name="sector"

@@ -1,6 +1,11 @@
 import { Op } from 'sequelize'
 
-import { buildCompanyExpiryWhere, CompanyExpiryFilterEnum } from './filters'
+import { CompanyStatusEnum } from '../models/company.enums'
+import {
+  buildCompanyExpiryWhere,
+  buildCompanyLifecycleStatusWhere,
+  CompanyExpiryFilterEnum,
+} from './filters'
 
 /**
  * `buildCompanyExpiryWhere` emits raw SQL, so a wrong identifier is not a
@@ -71,5 +76,32 @@ describe('buildCompanyExpiryWhere', () => {
     expect(
       sqlFor([CompanyExpiryFilterEnum.DAYS_30, CompanyExpiryFilterEnum.SOON]),
     ).toContain("INTERVAL '6 months'")
+  })
+})
+
+describe('buildCompanyLifecycleStatusWhere', () => {
+  it('matches any of the requested statuses', () => {
+    expect(
+      buildCompanyLifecycleStatusWhere([
+        CompanyStatusEnum.ACTIVE,
+        CompanyStatusEnum.INACTIVE,
+      ]),
+    ).toEqual({ status: { [Op.in]: ['ACTIVE', 'INACTIVE'] } })
+  })
+
+  it('narrows to one status on its own', () => {
+    expect(
+      buildCompanyLifecycleStatusWhere([CompanyStatusEnum.INACTIVE]),
+    ).toEqual({ status: { [Op.in]: ['INACTIVE'] } })
+  })
+
+  it('filters the lifecycle column, not the compliance expression', () => {
+    // The two filters sit next to each other with near-identical names, and
+    // swapping them would silently answer a different question: `status` is
+    // whether the company is on the register, `companyStatus` is what it owes.
+    const where = buildCompanyLifecycleStatusWhere([CompanyStatusEnum.ACTIVE])
+
+    expect(Object.keys(where)).toEqual(['status'])
+    expect(JSON.stringify(where)).not.toContain('CASE')
   })
 })

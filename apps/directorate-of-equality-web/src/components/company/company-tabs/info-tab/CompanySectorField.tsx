@@ -46,7 +46,9 @@ export const CompanySectorField = ({ company }: Props) => {
   const updateSector = useMutation({
     ...trpc.company.updateSector.mutationOptions(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: trpc.company.get.queryKey() })
+      queryClient.invalidateQueries({
+        queryKey: trpc.company.get.queryKey({ id: company.id }),
+      })
       queryClient.invalidateQueries({ queryKey: trpc.company.list.queryKey() })
       toast.success(t.sectorSavedToast)
       setIsEditing(false)

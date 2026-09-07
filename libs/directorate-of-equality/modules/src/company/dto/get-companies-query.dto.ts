@@ -15,6 +15,7 @@ import {
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
+  CompanyStatusEnum,
 } from '../models/company.enums'
 import { CompanyExpiryFilterEnum } from '../utils/filters'
 
@@ -63,6 +64,23 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsArray()
   @IsEnum(CompanyReportStatusEnum, { each: true })
   companyStatus?: CompanyReportStatusEnum[]
+
+  @ApiProperty({
+    enum: CompanyStatusEnum,
+    enumName: 'CompanyStatusEnum',
+    isArray: true,
+    required: false,
+    description:
+      'Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. ⚠️ Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.',
+  })
+  @Transform(({ value }) => {
+    if (value == null) return undefined
+    return Array.isArray(value) ? value : [value]
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(CompanyStatusEnum, { each: true })
+  status?: CompanyStatusEnum[]
 
   @ApiProperty({
     enum: CompanyExpiryFilterEnum,

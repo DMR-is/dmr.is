@@ -585,6 +585,18 @@
             }
           },
           {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. \u26a0\ufe0f Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CompanyStatusEnum"
+              }
+            }
+          },
+          {
             "name": "expiresWithin",
             "required": false,
             "in": "query",

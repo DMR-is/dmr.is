@@ -8,6 +8,7 @@ import { COMPANY_SIZE_LABEL, formatNationalId } from '../../../../lib/utils'
 import { InfoItems } from '../../../report/report-tabs/company-tab/InfoItems'
 import { CompanyTimeline } from '../../company-timeline/CompanyTimeline'
 import { CompanyEmailField } from './CompanyEmailField'
+import { CompanyRegisterStatusField } from './CompanyRegisterStatusField'
 import { CompanySectorField } from './CompanySectorField'
 
 const f = sharedText.form
@@ -30,6 +31,11 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
           {
             label: d.employeeCount,
             children: COMPANY_SIZE_LABEL[company.employeeCountCategory],
+          },
+
+          {
+            label: companiesText.detailView.registerStatusLabel,
+            children: <CompanyRegisterStatusField company={company} />,
           },
 
           {
@@ -78,7 +84,7 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
       />
 
       <Box marginTop={6}>
-        <CompanyTimeline companyId={company.id} />
+        <CompanyTimeline companyId={company.id} companyName={company.name} />
       </Box>
     </Box>
   )
