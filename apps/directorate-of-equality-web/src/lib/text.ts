@@ -570,9 +570,15 @@ export const reportText = {
        * why someone 30% off the line is listed while someone 25% off is not — the
        * answer being that the cut-off is measured in the company's OWN spread, not
        * in percent.
+       *
+       * ⚠️ Deliberately no longer ends "hér eru starfsmenn sem víkja X staðalvik
+       * eða meira frá henni". That sentence defined the list by the threshold
+       * alone, which stopped being true when the list became the most extreme few
+       * per direction. The threshold still appears, in `counts`, where it
+       * describes the POOL rather than the list.
        */
-      spreadNote: (down: string, up: string, threshold: string) =>
-        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}. Hér eru starfsmenn sem víkja ${threshold} staðalvik eða meira frá henni.`,
+      spreadNote: (down: string, up: string) =>
+        `Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${down} til ${up}.`,
       allClear:
         'Engar ábendingar — laun engra starfsmanna víkja meira frá starfsmatsstigum sínum en launadreifing fyrirtækisins skýrir.',
       /**
@@ -598,6 +604,38 @@ export const reportText = {
       spreadHeader: 'Staðalvik frá línu',
       directionBelow: 'undir',
       directionAbove: 'yfir',
+      /** Sub-heading per direction. Distinct from `directionBelow`/`Above`, which
+       *  are the lowercase words used inside the Launafrávik cell. */
+      headingBelow: 'Undir væntanlegu tímakaupi',
+      headingAbove: 'Yfir væntanlegu tímakaupi',
+      /**
+       * ⚠️ The TRUE totals, and the sentence that makes a capped list honest —
+       * without it a reader takes the table's length for the finding. Written as
+       * a noun phrase with a colon rather than "24 starfsmenn víkja …" so it
+       * needs no singular/plural agreement at 1 and 21.
+       */
+      counts: (threshold: string, below: string, above: string) =>
+        `Starfsmenn sem víkja ${threshold} staðalvik eða meira frá línunni: ${below} niður, ${above} upp.`,
+      /**
+       * ⚠️ **The definition, and it is load-bearing.** An ábending IS one of the
+       * most extreme few per direction — not "an employee over the threshold, of
+       * whom some are shown". `counts` above states the pool this was drawn from;
+       * this sentence says what was drawn. Without it a reader adds the two
+       * figures up and wonders where the rest went.
+       *
+       * Printed unconditionally: on a company with three below and two above it
+       * is still true, and a conditional sentence would make the section's
+       * meaning depend on the company's size.
+       */
+      listRule: 'Ábendingar eru gerðar um þá sem víkja mest í hvora átt.',
+      /**
+       * ⚠️ CONTEXT, never a cut-off — nothing was filtered on this number. It is
+       * here because `|t| ≥ 2` is blind to headcount: screening 10.000 people
+       * throws up more extremes than screening 120, so without this line a long
+       * list on a large workforce reads as a finding when it may be arithmetic.
+       */
+      chanceNote: (spreads: string) =>
+        `Hjá fyrirtæki af þessari stærð fer sjaldnast nokkur starfsmaður yfir ${spreads} staðalvik frá línunni af tilviljun einni.`,
     },
     /**
      * ── Pay-component split by gender ────────────────────────────────────────
