@@ -63,9 +63,11 @@ export const PAY_DISPERSION_MIN_COHORT = 12
  * the spread they are measured against.
  *
  * Why 10 and not 5: 4,6% of a workforce exceeds two lists of ten only above
- * n ≈ 430, so at 10 every company below that renders exactly as it did before
- * this cap existed. A cap of 5 would start truncating around n ≈ 220 — reports
- * that read perfectly well today.
+ * n ≈ 430, so at 10 a company below that size normally renders exactly as it did
+ * before this cap existed. ⚠️ Normally, not always — the cut is ten per
+ * DIRECTION, and nothing here keys on headcount, so a smaller cohort whose
+ * anomalies cluster to one side is capped as well. A cap of 5 would start
+ * truncating around n ≈ 220 — reports that read perfectly well today.
  */
 export const PAY_DISPERSION_SHORTLIST_SIZE = 10
 

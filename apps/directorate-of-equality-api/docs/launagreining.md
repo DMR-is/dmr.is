@@ -786,9 +786,13 @@ reader can see the list is a triage of something larger — context, not a count
 (`PAY_DISPERSION_SHORTLIST_SIZE`), extended to keep a tie group together, sliced at
 50 per direction (`PAY_DISPERSION_LIST_CEILING`), with the pool printed alongside.
 
-⚠️ **The cap does nothing below n ≈ 430**, where 4,6% of the workforce first exceeds
-two lists of ten. Every smaller company renders exactly as it did before — including
-`richSheetCompliant`, which still lists #70 and #1 and nothing else.
+⚠️ **The cap rarely fires below n ≈ 430**, where 4,6% of the workforce first exceeds
+two lists of ten. That is what the ~4,6% rate predicts, not a boundary the code
+enforces: what fires the cap is one _direction_ holding more than ten qualifying
+employees, so a smaller cohort whose anomalies cluster to one side reaches it too —
+200 employees with fifteen each way list ten each way. At an ordinary spread, though,
+smaller companies render exactly as they did before — including `richSheetCompliant`,
+which still lists #70 and #1 and nothing else.
 
 ### Ties
 
@@ -955,10 +959,10 @@ The same hundred people **without** the demo pay cut (`richSheetCompliant`, ósk
 `ALL_EMPLOYEES`, and **both** `#70` and `#1` are listed.
 
 ⚠️ **The cap does not fire on any of this.** At n = 100 the shortlist is never
-reached, so these rows are exactly what they were before the cap existed — which is
-true of every company under n ≈ 430. What changes on this report is the surrounding
-copy: the true totals per direction, the two direction headings, and the chance
-sentence. See "Why the list is a shortlist".
+reached, so these rows are exactly what they were before the cap existed — as is
+usual, though not guaranteed, under n ≈ 430. What changes on this report is the
+surrounding copy: the true totals per direction, the two direction headings, and
+the chance sentence. See "Why the list is a shortlist".
 
 ### Where it comes from
 
