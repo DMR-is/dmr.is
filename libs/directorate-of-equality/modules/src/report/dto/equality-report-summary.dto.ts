@@ -29,11 +29,18 @@ export class EqualityReportSummaryDto {
   identifier!: string | null
 
   /**
-   * Upstream submission handle — the island.is application UUID this report
-   * was created from, and the value `GET /application/reports/:providerId`
-   * resolves against. `null` when the report did not originate on island.is
-   * (an admin- or Excel-created report), in which case no applicant-facing
-   * content route can reach it.
+   * The submission handle **as the calling channel knows it**, and the value
+   * that channel's `GET .../reports/:providerId` resolves against: the
+   * island.is application UUID on island.is, the vendor's own id on the partner
+   * API (the stored value is namespaced by company; the namespace is stripped
+   * here and never exposed).
+   *
+   * `null` when the report cannot be reached from the calling channel — an
+   * admin- or Excel-created report, or one filed on a different channel — in
+   * which case no content route can reach it and a handle would only 404.
+   *
+   * Resolved by `ReportProviderChannel.toClientProviderId`, never read off the
+   * row.
    */
   @ApiOptionalString({ nullable: true })
   providerId!: string | null

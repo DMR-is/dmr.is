@@ -10,6 +10,7 @@ import { GetReportsResponseDto } from './dto/get-reports-response.dto'
 import { ReportDetailDto } from './dto/report-detail.dto'
 import { ReportOverviewDto } from './dto/report-overview.dto'
 import { ReportOverviewStatisticsDto } from './dto/report-overview-statistics.dto'
+import { ReportModel } from './models/report.model'
 
 export interface IReportService {
   list(query: GetReportsQueryDto): Promise<GetReportsResponseDto>
@@ -26,6 +27,12 @@ export interface IReportService {
   getActiveEqualityForCompany(
     companyId: string,
   ): Promise<EqualityReportSummaryDto | null>
+  /**
+   * The same lookup as above, unmapped. For callers that must resolve the
+   * caller-facing `providerId` through their own channel, which needs columns
+   * the summary DTO does not carry.
+   */
+  findActiveEqualityForCompany(companyId: string): Promise<ReportModel | null>
   getOverview(nationalId: string): Promise<ReportOverviewDto>
   getOverviewStatistics(): Promise<ReportOverviewStatisticsDto>
 }

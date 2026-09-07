@@ -19,6 +19,28 @@ describe('report provider channels', () => {
         ISLAND_IS_PROVIDER_CHANNEL.buildProviderId('app-uuid', '5501012130'),
       ).toBe('app-uuid')
     })
+
+    it('reads the application id back verbatim', () => {
+      expect(
+        ISLAND_IS_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'app-uuid',
+          companyNationalId: '5501012130',
+        }),
+      ).toBe('app-uuid')
+    })
+
+    it('withholds the handle for a report filed on another channel', () => {
+      // An admin-, Excel- or partner-created report has no island.is content
+      // route, so a handle would only ever 404.
+      expect(
+        ISLAND_IS_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.OTHER,
+          providerId: '5501012130:vendor-1',
+          companyNationalId: '5501012130',
+        }),
+      ).toBeNull()
+    })
   })
 
   describe('partner', () => {
@@ -43,6 +65,78 @@ describe('report provider channels', () => {
       const b = EXTERNAL_PROVIDER_CHANNEL.buildProviderId('1', '6602022240')
 
       expect(a).not.toBe(b)
+    })
+
+    it('reads back the vendor id it stored, without the namespace', () => {
+      // The round trip is the contract: a vendor quotes its own id and never
+      // sees the stored form.
+      const stored = EXTERNAL_PROVIDER_CHANNEL.buildProviderId(
+        '2026-Q1-042',
+        '5501012130',
+      )
+
+      expect(
+        EXTERNAL_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.OTHER,
+          providerId: stored,
+          companyNationalId: '5501012130',
+        }),
+      ).toBe('2026-Q1-042')
+    })
+
+    it('keeps a vendor id that contains a colon intact', () => {
+      // Why this strips a prefix rather than splitting on ':' — `split(':')[1]`
+      // would truncate this to 'urn'.
+      const stored = EXTERNAL_PROVIDER_CHANNEL.buildProviderId(
+        'urn:vendor:42',
+        '5501012130',
+      )
+
+      expect(
+        EXTERNAL_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.OTHER,
+          providerId: stored,
+          companyNationalId: '5501012130',
+        }),
+      ).toBe('urn:vendor:42')
+    })
+
+    it('withholds a handle stored under a different company', () => {
+      // Requiring the prefix is what stops a foreign id being handed out if a
+      // row is ever reached with the wrong company in context.
+      expect(
+        EXTERNAL_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.OTHER,
+          providerId: '6602022240:vendor-1',
+          companyNationalId: '5501012130',
+        }),
+      ).toBeNull()
+    })
+
+    it('withholds the handle for an island.is-filed report', () => {
+      // The company filed this one itself; it is not addressable here.
+      expect(
+        EXTERNAL_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.ISLAND_IS,
+          providerId: 'app-uuid',
+          companyNationalId: '5501012130',
+        }),
+      ).toBeNull()
+    })
+
+    it.each([
+      ['no provider id', null, '5501012130'],
+      ['no company national id', '5501012130:vendor-1', null],
+      ['neither', null, null],
+    ])('withholds the handle with %s', (_label, providerId, nationalId) => {
+      // Every column here is nullable on `report`.
+      expect(
+        EXTERNAL_PROVIDER_CHANNEL.toClientProviderId({
+          providerType: ReportProviderEnum.OTHER,
+          providerId,
+          companyNationalId: nationalId,
+        }),
+      ).toBeNull()
     })
 
     it('is idempotent for the same company and id, so replay still matches', () => {
