@@ -57,6 +57,38 @@ export function renderSystemReason(reason: string): React.ReactNode {
   return out
 }
 
+/**
+ * Fills the `{company}` slot in a label with the company's name, bolded.
+ *
+ * Exists so an actorless company event still opens with a bold subject — the
+ * feed's other entries all start with a bold name, and a row that begins with
+ * plain text reads as a fragment next to them.
+ *
+ * A null name drops the placeholder AND the space in front of it, so every
+ * template carrying the slot has to still read as a sentence without it
+ * ("Fyrirtæki {company} skráð" → "Fyrirtæki skráð"). That case is not
+ * hypothetical: only the company timeline passes a name, so any other caller
+ * of these labels gets the shorter form.
+ */
+function withCompanyName(
+  template: string,
+  companyName?: string | null,
+): React.ReactNode {
+  const [before, after = ''] = template.split('{company}')
+
+  if (!companyName) {
+    return <>{`${before.replace(/ $/, '')}${after}`}</>
+  }
+
+  return (
+    <>
+      {before}
+      <Bold>{companyName}</Bold>
+      {after}
+    </>
+  )
+}
+
 export type TimelineEntryKind = 'event' | 'outgoing' | 'incoming' | 'internal'
 
 /**
@@ -161,7 +193,7 @@ export function timelineEntryText(
         {withActor}
       </>
     ) : (
-      <>{withoutActor}</>
+      withCompanyName(withoutActor, companyName)
     )
 
   // Before the report branch below: company events reuse STATUS_CHANGED but

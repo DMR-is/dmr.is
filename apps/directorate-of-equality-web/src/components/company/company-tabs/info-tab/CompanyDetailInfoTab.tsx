@@ -84,7 +84,7 @@ export const CompanyDetailInfoTab = ({ company }: Props) => {
       />
 
       <Box marginTop={6}>
-        <CompanyTimeline companyId={company.id} />
+        <CompanyTimeline companyId={company.id} companyName={company.name} />
       </Box>
     </Box>
   )

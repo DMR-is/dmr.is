@@ -69,6 +69,13 @@ function eventBody(event: CompanyTimelineItemDto['event']): string | null {
 
 type Props = {
   companyId: string
+  /**
+   * Forwarded to the feed so an actorless event ("Fyrirtæki X skráð") can name
+   * the company. Passed in rather than fetched: the caller is rendering the
+   * company already, so refetching it here would be a second request for a
+   * string we hold.
+   */
+  companyName: string
 }
 
 function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
@@ -113,7 +120,7 @@ function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
   }))
 }
 
-export const CompanyTimeline = ({ companyId }: Props) => {
+export const CompanyTimeline = ({ companyId, companyName }: Props) => {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
   const [body, setBody] = useState('')
@@ -166,6 +173,7 @@ export const CompanyTimeline = ({ companyId }: Props) => {
       >
         <TimelineFeed
           timeline={timeline}
+          companyName={companyName}
           currentUserId={me?.id}
           onDelete={handleDelete}
         />

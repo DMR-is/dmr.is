@@ -708,8 +708,14 @@ export const reportText = {
     // through island.is records no `doe_user` (see `resolveIssuer`), and the
     // annual register import deactivates companies with no actor at all. Those
     // rows get the `NoActor` passive form instead.
+    //
+    // The `NoActor` forms name the company instead, in the `{company}` slot —
+    // it is bolded on render, so an actorless row still opens with a bold
+    // subject like every other entry in the feed rather than starting mid-air.
+    // A missing name drops the placeholder and the space before it, which is
+    // why the slot sits where the sentence still reads without it.
     companyCreated: 'skráði fyrirtækið',
-    companyCreatedNoActor: 'Fyrirtæki skráð',
+    companyCreatedNoActor: 'Fyrirtæki {company} skráð',
     finesStarted: 'hefur hafið dagsektarferli',
     finesStopped: 'hefur stöðvað dagsektarferli',
     apiKeyIssued: 'bjó til aðgangslykil',
@@ -727,9 +733,9 @@ export const reportText = {
     // with the report wording produced "færir mál í stöðuna:" followed by
     // nothing, because ACTIVE/INACTIVE are not report statuses.
     companyActivated: 'virkjaði fyrirtækið í skrá',
-    companyActivatedNoActor: 'Fyrirtæki virkjað í skrá',
+    companyActivatedNoActor: 'Fyrirtæki {company} virkjað í skrá',
     companyDeactivated: 'gerði fyrirtækið óvirkt í skrá',
-    companyDeactivatedNoActor: 'Fyrirtæki gert óvirkt í skrá',
+    companyDeactivatedNoActor: 'Fyrirtæki {company} gert óvirkt í skrá',
     companyQuarantined: 'hefur sett fyrirtækið í var',
     companyUnquarantined: 'hefur tekið fyrirtækið úr vari',
     reminderSentEquality: 'Áminning send um skil jafnréttisskýrslu',
