@@ -722,11 +722,13 @@ export const reportText = {
     apiKeyIssuedNoActor: 'Aðgangslykill búinn til',
     apiKeyRevoked: 'afturkallaði aðgangslykil',
     apiKeyRevokedNoActor: 'Aðgangslykill afturkallaður',
-    // The event body is the key's PUBLIC id — the middle segment of
-    // `doe_<env>_<keyId>.<secret>` — which is what ties this row to a row in
-    // the aðgangslyklar tab. Labelled so it does not read as a stray hex
-    // string, and never the secret, which is hashed and unrecoverable.
-    apiKeyIdPrefix: 'Lyklanúmer:',
+    // The event stores the key's public id, which is a correlation handle and
+    // not something to read: printing it put half a credential on screen for
+    // no gain. It is used to look the key up instead, and these render what an
+    // admin actually wants to know about it.
+    apiKeyExpiresPrefix: 'Gildir til',
+    apiKeyNoExpiry: 'Ótímabundinn',
+    apiKeyRevokedReasonPrefix: 'Ástæða:',
     // Company register lifecycle. Distinct from `movesToStatus` below, which is
     // a REPORT moving through review — company events reuse the same
     // STATUS_CHANGED type but mean something else entirely, and rendering them

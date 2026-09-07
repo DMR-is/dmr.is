@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { Box } from '@dmr.is/ui/components/island-is/Box'
@@ -9,6 +9,7 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 
 import {
+  ApiKeyDto,
   CommentVisibilityEnum,
   CompanyReminderTierEnum,
   CompanyTimelineItemDto,
@@ -39,22 +40,64 @@ const REMINDER_TIER_LABELS: Record<CompanyReminderTierEnum, string> = {
 // body is composed per type rather than printed raw.
 //
 //   reminders  → the ISO due date; rendered with the tier as a readable line.
-//   API keys   → the key's PUBLIC id (`doe_<env>_<keyId>.<secret>`), optionally
-//                followed by " — <revocation reason>". Labelled, because on its
-//                own it reads as a stray hex string with no hint that it is the
-//                handle tying this row to the aðgangslyklar tab. Never the
-//                secret: that is hashed at issue time and unrecoverable.
+//   API keys   → the key's public id, optionally followed by
+//                " — <revocation reason>". NOT rendered: it is a correlation
+//                handle, and putting half a credential on screen tells an admin
+//                nothing they can act on. It is used to look the key up in the
+//                list the aðgangslyklar tab already loads, and what gets shown
+//                is the key's label and lifetime.
 //   everything else → the reason as given (a status change's explanation).
 const API_KEY_EVENT_TYPES = new Set(['API_KEY_ISSUED', 'API_KEY_REVOKED'])
 
-function eventBody(event: CompanyTimelineItemDto['event']): string | null {
+/** `keyId`, or `keyId — reason` on a revocation. */
+const parseApiKeyReason = (reason: string): [string, string | null] => {
+  const [keyId, ...rest] = reason.split(' — ')
+  return [keyId, rest.length ? rest.join(' — ') : null]
+}
+
+function apiKeyEventBody(
+  event: NonNullable<CompanyTimelineItemDto['event']>,
+  keysByKeyId: Map<string, ApiKeyDto>,
+): string | null {
+  if (!event.reason) return null
+
+  const [keyId, revokedReason] = parseApiKeyReason(event.reason)
+  const key = keysByKeyId.get(keyId)
+
+  const parts: string[] = []
+
+  // The label is the only human name a key has, and it is optional.
+  if (key?.label) {
+    parts.push(`„${key.label}“`)
+  }
+
+  if ((event.eventType as unknown as string) === 'API_KEY_ISSUED') {
+    // How long it lasts — the question an admin actually has about a key that
+    // was just minted. `expiresAt` null means it never expires, which is worth
+    // saying out loud rather than leaving blank.
+    parts.push(
+      key?.expiresAt
+        ? `${reportText.timeline.apiKeyExpiresPrefix} ${formatDateIS(key.expiresAt)}`
+        : reportText.timeline.apiKeyNoExpiry,
+    )
+  } else if (revokedReason) {
+    parts.push(`${reportText.timeline.apiKeyRevokedReasonPrefix} ${revokedReason}`)
+  }
+
+  // Nothing worth saying — better an empty body than a hex string. Happens
+  // while the key list is still loading, and on an event whose key predates
+  // whatever the list can still see.
+  return parts.length ? parts.join(' · ') : null
+}
+
+function eventBody(
+  event: CompanyTimelineItemDto['event'],
+  keysByKeyId: Map<string, ApiKeyDto>,
+): string | null {
   if (!event) return null
 
-  if (
-    API_KEY_EVENT_TYPES.has(event.eventType as unknown as string) &&
-    event.reason
-  ) {
-    return `${reportText.timeline.apiKeyIdPrefix} ${event.reason}`
+  if (API_KEY_EVENT_TYPES.has(event.eventType as unknown as string)) {
+    return apiKeyEventBody(event, keysByKeyId)
   }
 
   const tierLabel = event.reminderTier
@@ -78,7 +121,10 @@ type Props = {
   companyName: string
 }
 
-function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
+function adaptTimeline(
+  items: CompanyTimelineItemDto[],
+  keysByKeyId: Map<string, ApiKeyDto>,
+): TimelineItem[] {
   return items.map((item) => ({
     kind: item.kind as unknown as ReportTimelineItemKindEnum,
     createdAt: item.createdAt,
@@ -97,7 +143,7 @@ function adaptTimeline(items: CompanyTimelineItemDto[]): TimelineItem[] {
             (item.event.fromStatus as unknown as ReportStatusEnum) ?? null,
           toStatus:
             (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
-          reason: eventBody(item.event),
+          reason: eventBody(item.event, keysByKeyId),
           createdAt: item.event.createdAt,
         }
       : null,
@@ -130,6 +176,18 @@ export const CompanyTimeline = ({ companyId, companyName }: Props) => {
 
   const { data: me } = useQuery(trpc.user.getMyUser.queryOptions())
 
+  // The same list the aðgangslyklar tab loads, so on a company whose keys have
+  // already been viewed this is served from cache. Keyed by the public key id
+  // because that is what the event rows carry.
+  const { data: apiKeys } = useQuery(
+    trpc.apiKey.listForCompany.queryOptions({ companyId }),
+  )
+
+  const keysByKeyId = useMemo(
+    () => new Map((apiKeys?.apiKeys ?? []).map((key) => [key.keyId, key])),
+    [apiKeys],
+  )
+
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: timelineQuery.queryKey })
 
@@ -157,7 +215,7 @@ export const CompanyTimeline = ({ companyId, companyName }: Props) => {
     deleteComment.mutate({ id: companyId, commentId })
   }
 
-  const timeline = adaptTimeline(timelineItems)
+  const timeline = adaptTimeline(timelineItems, keysByKeyId)
 
   return (
     <>
