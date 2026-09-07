@@ -31,11 +31,18 @@ export function CompanyTabsContainer({ company }: CompanyTabsContainerProps) {
       label: t.tabReports,
       content: <CompanyReportsTab companyId={company.id} />,
     },
-    {
-      id: 'eldri-gogn',
-      label: t.tabLegacy,
-      content: <CompanyLegacyTab companyId={company.id} />,
-    },
+    // Only where the retired register actually holds something: every company
+    // the load created has a row, but ones created here since have none, and
+    // for those the tab opened on an empty state that read as a data problem.
+    ...(company.hasLegacyReports
+      ? [
+          {
+            id: 'eldri-gogn',
+            label: t.tabLegacy,
+            content: <CompanyLegacyTab companyId={company.id} />,
+          },
+        ]
+      : []),
     {
       id: 'adgangslyklar',
       label: t.tabApiKeys,

@@ -13,6 +13,7 @@ import { PostcodeModel } from '../../location/models/postcode.model'
 import type { CreateReportCompanySnapshotDto } from '../../report-create/dto/create-report.dto'
 import type { CompanyDto } from '../dto/company.dto'
 import {
+  companyHasLegacyReportsLiteral,
   companyReportStatusLiteral,
   equalityReportOverdueLiteral,
   salaryReportOverdueLiteral,
@@ -80,6 +81,7 @@ type CompanyCreateAttributes = {
         [companyReportStatusLiteral(), 'reportStatus'],
         [equalityReportOverdueLiteral(), 'equalityReportOverdue'],
         [salaryReportOverdueLiteral(), 'salaryReportOverdue'],
+        [companyHasLegacyReportsLiteral(), 'hasLegacyReports'],
       ],
     },
   },
@@ -235,6 +237,11 @@ export class CompanyModel extends MutableModel<
   @Column(DataType.VIRTUAL)
   salaryReportOverdue!: boolean
 
+  // Derived: the retired SharePoint register holds a row for this company.
+  // Populated by the `withReportStatus` scope alongside the flags above.
+  @Column(DataType.VIRTUAL)
+  hasLegacyReports!: boolean
+
   static fromModel(model: CompanyModel): CompanyDto {
     return {
       id: model.id,
@@ -262,6 +269,7 @@ export class CompanyModel extends MutableModel<
       reportStatus: model.reportStatus,
       equalityReportOverdue: model.equalityReportOverdue,
       salaryReportOverdue: model.salaryReportOverdue,
+      hasLegacyReports: model.hasLegacyReports,
     }
   }
 

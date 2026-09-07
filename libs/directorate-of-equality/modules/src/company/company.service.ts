@@ -814,7 +814,12 @@ export class CompanyService implements ICompanyService {
 
     await company.update({ isatCategoryCode: code })
 
-    const updated = await this.companyModel.findOneOrThrow({
+    // Scoped, like every other CompanyDto read: the derived columns
+    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals the
+    // `withReportStatus` scope selects, and come back undefined without it.
+    // Re-read rather than `loadCompanyDto` because the response carries the
+    // resolved ISAT category and that helper does not include it.
+    const updated = await this.companyWithReportStatus.findOneOrThrow({
       where: { id },
       include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
     })

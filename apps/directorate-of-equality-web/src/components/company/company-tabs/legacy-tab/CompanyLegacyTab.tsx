@@ -193,6 +193,9 @@ export const CompanyLegacyTab = ({ companyId }: Props) => {
 
   const rows = data ?? []
 
+  // Kept though `CompanyTabsContainer` now only mounts this tab when
+  // `hasLegacyReports` is true: the flag and this fetch are two round trips, so
+  // an empty answer is still reachable, and a blank tab body would be worse.
   if (rows.length === 0) {
     return (
       <Box marginTop={4}>
