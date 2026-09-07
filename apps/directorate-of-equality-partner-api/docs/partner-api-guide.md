@@ -72,6 +72,20 @@ A key issued without an explicit scope set gets all three. A call outside the
 key's scopes is `403`, and the scope check runs *before* the rate limiter, so a
 refused call does not spend your allowance.
 
+### A company off the register
+
+A company that is not active in Jafnréttisstofa's register **cannot use this
+API at all**. Every route answers `409` with a message saying so — reads
+included, not just the submissions.
+
+Nothing an integrator can do resolves it: the company itself has to contact
+Jafnréttisstofa and have its registration reinstated. So it is not a condition
+to retry around, and it is worth surfacing to the employer verbatim rather than
+swallowing as a failed sync.
+
+A `409` on the very first call is the signal to look for: the key is valid (an
+invalid one answers `401`), the company simply cannot file.
+
 ### Rate limits
 
 - **Per key:** 5 000 requests per hour, across the whole surface. Reported in
@@ -135,7 +149,6 @@ working state is not part of this contract:
 | `nationalId`, `name` | identity — is this the employer you meant? |
 | `address` | prefills the `company` snapshot a submission carries |
 | `employeeCountCategory` | `SMALL` 0–24, `MEDIUM` 25–49, `LARGE` 50+, `UNKNOWN`. What the company owes follows from this |
-| `status` | `ACTIVE` / `INACTIVE` — whether the company is in the authoritative register at all |
 | `salaryReportRequired` | whether a salary report is owed |
 | `reportStatus` | what is still outstanding: `MISSING_EQUALITY_REPORT`, `MISSING_SALARY_REPORT`, `MISSING_ACTION_PLAN`, `SATISFACTORY`. Reflects reports filed on any channel, not just this one |
 | `nextEqualityReportDueAt`, `nextSalaryReportDueAt` | deadlines. The salary renewal window opens six months before its date |
@@ -143,6 +156,10 @@ working state is not part of this contract:
 
 Not returned, and not coming: internal row ids, the Directorate's fines and
 quarantine flags, admin override flags, and RSK legal-form bookkeeping.
+
+Nor the company's register lifecycle status. It is the Directorate's own
+bookkeeping — see **A company off the register** below for what happens when it
+lapses.
 
 ### A2. `GET /partner/reports/equality/active` — is one already in force?
 
@@ -412,6 +429,10 @@ employee counts **required** here):
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
 reviewer queue), `POSTPONED` when deferred (a reviewer cannot pick it up).
 
+Two more `409`s live on this route beyond the register check above: the renewal
+window being shut, and a previous report still in review. The response says
+which.
+
 Same sibling policy as A3: a prior `SUBMITTED` salary report is silently
 withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 
@@ -466,6 +487,6 @@ from B12 instead of paginating.
 | `401` | missing or invalid key |
 | `403` | key lacks the scope the route declares |
 | `404` | no approved equality report; unknown `providerId`; report filed on another channel |
-| `409` | renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED` |
+| `409` | the company is not active in the register (any route); renewal window not open; a sibling report is `IN_REVIEW` or `POSTPONED` |
 | `429` | rate limit — per key (headers) or per IP |
 | `503` | write collision. Retry with the same `providerId` |
