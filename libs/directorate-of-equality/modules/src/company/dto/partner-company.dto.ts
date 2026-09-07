@@ -9,7 +9,6 @@ import {
 import {
   CompanyReportStatusEnum,
   CompanySizeEnum,
-  CompanyStatusEnum,
 } from '../models/company.enums'
 import { CompanyDto } from './company.dto'
 
@@ -24,6 +23,16 @@ import { CompanyDto } from './company.dto'
  * vendor's business, and several of those fields would be actively misleading
  * out of context (`sector: UNKNOWN` does not mean private; `hasLegacyReports`
  * says nothing about compliance).
+ *
+ * The register lifecycle status is deliberately NOT here, and that omission is
+ * load-bearing rather than an oversight. It is the Directorate's own posture
+ * toward its register — its one live consequence is that reminder emails stop —
+ * and it is derived from absence from an ANNUAL import, so it can be a year out
+ * of date. A vendor reading `INACTIVE` would reasonably hear "dissolved" when
+ * it may only mean "missing from one sheet". An inactive company is refused
+ * outright by `RequireActiveCompanyGuard` — every route, not only the
+ * submissions — and that refusal's message carries the whole explanation
+ * precisely because this field does not exist.
  *
  * The rule for what belongs here, in the absence of anything else to appeal to:
  * a field earns its place if an integrator can *act* on it — confirm the key
@@ -57,13 +66,6 @@ export class PartnerCompanyDto {
       'Regulatory size bucket: SMALL 0–24, MEDIUM 25–49, LARGE 50+ employees, UNKNOWN when no headcount is on record. What obligations a company has follows from this — 25+ owes an equality report, 50+ also owes a salary report. UNKNOWN imposes none but does not assert the company is small.',
   })
   employeeCountCategory!: CompanySizeEnum
-
-  @ApiEnum(CompanyStatusEnum, {
-    enumName: 'CompanyStatusEnum',
-    description:
-      'Whether the company is in the Directorate’s authoritative register. `INACTIVE` means it is not — dissolved, merged, or absent from the latest register import — and is worth surfacing before filing on its behalf.',
-  })
-  status!: CompanyStatusEnum
 
   @ApiBoolean({
     description:
@@ -118,7 +120,6 @@ export const toPartnerCompanyDto = (
   name: company.name,
   address: company.address,
   employeeCountCategory: company.employeeCountCategory,
-  status: company.status,
   salaryReportRequired: company.salaryReportRequired,
   reportStatus: company.reportStatus,
   nextEqualityReportDueAt: company.nextEqualityReportDueAt,

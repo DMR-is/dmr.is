@@ -49,6 +49,8 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
+import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
+import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../../core/guards/api-key/api-key.guard'
 import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-scope.decorator'
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
@@ -69,14 +71,23 @@ const XLSX_MIME =
  *
  * Guard order matters and is not arbitrary:
  *
- *   ApiKeyGuard            who is calling
- *   PartnerCompanyGuard    which company that key belongs to
- *   RequireApiScopeGuard   whether the key may do this
- *   ApiKeyThrottlerGuard   how often, bucketed per key
+ *   ApiKeyGuard                who is calling
+ *   PartnerCompanyGuard        which company that key belongs to
+ *   RequireApiScopeGuard       whether the key may do this
+ *   RequireActiveCompanyGuard  whether that company may use this API at all
+ *   ApiKeyThrottlerGuard       how often, bucketed per key
  *
  * The scope and throttler guards both read what ApiKeyGuard puts on the request,
- * so they cannot run before it. The throttler is last because a request that is
- * about to be refused for scope should not consume the caller's allowance.
+ * and the active-company guard reads what PartnerCompanyGuard resolves, so
+ * neither can run before its source. The throttler is last because a request
+ * that is about to be refused for scope or for an inactive company should not
+ * consume the caller's allowance.
+ *
+ * `@RequireActiveCompany` is declared once on the controller rather than per
+ * handler, so a company that has fallen off the register cannot reach ANY of
+ * this API — reads included. One unmistakable answer beats a surface that
+ * half-works, and every route here answers 409 for it, which is why
+ * `PartnerResponse` carries that status by default.
  */
 @Controller({
   path: 'partner',
@@ -84,10 +95,12 @@ const XLSX_MIME =
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
   PartnerCompanyGuard,
   RequireApiScopeGuard,
+  RequireActiveCompanyGuard,
   ApiKeyThrottlerGuard,
 )
 export class PartnerController {
@@ -246,7 +259,7 @@ export class PartnerController {
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
     description:
-      'Files a salary report. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong.',
+      'Files a salary report. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
   submitSalaryReport(
     @Body() input: SubmitSalaryReportDto,
@@ -263,7 +276,7 @@ export class PartnerController {
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
     description:
-      'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission.',
+      'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
   })
   submitEqualityReport(
     @Body() input: SubmitEqualityReportDto,
