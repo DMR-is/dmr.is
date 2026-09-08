@@ -2,6 +2,7 @@ import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.model'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 
 export interface IReportFinalizeService {
+  resolveActiveEqualityReportId(companyId: string): Promise<string>
   assertEqualityReportApproved(equalityReportId: string): Promise<void>
   withdrawInflightSibling(
     companyId: string,

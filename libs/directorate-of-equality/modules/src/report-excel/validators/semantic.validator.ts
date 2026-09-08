@@ -50,10 +50,20 @@ export const validateSemantics = (
   collectParsedPayloadSemantics(report, issues)
 
   for (const issue of issues.list) {
-    errors.add(SHEET_BY_SCOPE[issue.scope], issue.message, {
-      // An employee's ordinal IS its row number in the salary-data sheet, which
-      // is what makes this translation exact rather than approximate.
-      row: issue.ordinal ?? undefined,
-    })
+    // Sheet only, never a row.
+    //
+    // An earlier version passed `issue.ordinal` as `row`, on the assumption
+    // that an employee's ordinal IS its row. It is not: salary data starts at
+    // `TABLE_FIRST_DATA_ROW` (6), and the classification sheets locate an
+    // employee at their own grid's `firstRow` plus the employee's index — a
+    // different number again, parsed from the sheet rather than known here.
+    // Employee #1 was therefore pointed at row 1, inside the header block.
+    //
+    // The ordinal is not lost: every employee-scoped message names it
+    // (`Starfsmaður #4`), which is the identity an employer can actually match
+    // against their own data. A wrong cell reference is worse than none, so
+    // this adapter gives the sheet and stops there; a row would have to come
+    // from the parser's own mapping, which is not in scope here.
+    errors.add(SHEET_BY_SCOPE[issue.scope], issue.message)
   }
 }

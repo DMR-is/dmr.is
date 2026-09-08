@@ -118,9 +118,9 @@ export class CreateReportCompanySnapshotDto {
 export class CreateReportDto {
   @ApiUUID({
     description:
-      'FK to the approved EQUALITY report this salary was audited against.',
+      'FK to the approved EQUALITY report this salary was audited against. Omit it to have the creation service resolve the company’s active one — which is what the partner API does, since its contract does not carry the field.',
   })
-  equalityReportId!: string
+  equalityReportId?: string
 
   @ApiBoolean()
   importedFromExcel!: boolean

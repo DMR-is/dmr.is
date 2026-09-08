@@ -47,6 +47,51 @@ export class ReportFinalizeService implements IReportFinalizeService {
   ) {}
 
   /**
+   * The equality report a new salary submission will be filed against, for a
+   * caller that does not name one — every partner-API submission, since that
+   * contract omits the field.
+   *
+   * Lives beside `assertEqualityReportApproved` and is called from the same
+   * place, which is the point: this must run **after** the idempotent replay
+   * check, never before it. Resolving first made a retry of an
+   * already-filed report answer 404 once its equality report stopped being
+   * active, instead of replaying — a report that was successfully filed
+   * becoming un-retryable because a precondition for NEW submissions had since
+   * lapsed.
+   *
+   * Ordered by `approvedAt DESC`, which decides the rare case of two approved
+   * plans still in force: a company that re-filed before the previous one
+   * expired is working under the newer.
+   */
+  async resolveActiveEqualityReportId(companyId: string): Promise<string> {
+    const parentSnapshots = await this.companyReportModel.findAll({
+      where: { companyId, parentCompanyId: null },
+      attributes: ['reportId'],
+    })
+
+    const equalityReport = parentSnapshots.length
+      ? await this.reportModel.findOne({
+          where: {
+            id: { [Op.in]: parentSnapshots.map((row) => row.reportId) },
+            type: ReportTypeEnum.EQUALITY,
+            status: ReportStatusEnum.APPROVED,
+            validUntil: { [Op.gt]: new Date() },
+          },
+          order: [['approvedAt', 'DESC']],
+        })
+      : null
+
+    if (!equalityReport) {
+      // The same sentence `GET .../reports/equality/active` answers with, so a
+      // caller that skipped the eligibility pre-check reads one message from
+      // either route.
+      throw new NotFoundException('No approved equality report is in force')
+    }
+
+    return equalityReport.id
+  }
+
+  /**
    * Schema invariant: a SALARY row's `equality_report_id` must point to an
    * EQUALITY row that was APPROVED at the moment of insert and is still
    * within its three-year validity window.
@@ -135,7 +180,11 @@ export class ReportFinalizeService implements IReportFinalizeService {
     )
     if (blocking) {
       throw new ConflictException(
-        `Company already has a ${type} report in status ${blocking.status} (providerId: ${blocking.providerId ?? 'n/a'}). Resolve it before submitting another.`,
+        `Company already has a ${type} report in status ${
+          blocking.status
+        } (providerId: ${
+          blocking.providerId ?? 'n/a'
+        }). Resolve it before submitting another.`,
       )
     }
 

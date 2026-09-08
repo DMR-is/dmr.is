@@ -878,6 +878,77 @@ describe('ReportCreateService', () => {
     })
   })
 
+  describe('resolving the equality report when the caller names none', () => {
+    const RESOLVED_EQUALITY_ID = '00000000-0000-0000-0000-0000000000e9'
+
+    const withoutEqualityReportId = (): CreateReportDto => {
+      const input = makeInput()
+      input.equalityReportId = undefined
+
+      return input
+    }
+
+    it("resolves the company's active report and files against it", async () => {
+      const input = withoutEqualityReportId()
+      // `makeInput` leaves `providerId` null, so no tuple lookup happens: the
+      // first `findOne` is the resolution's, the second is the invariant check.
+      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
+      reportFindOne
+        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
+        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
+
+      await service.createSalary(input)
+
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ equalityReportId: RESOLVED_EQUALITY_ID }),
+      )
+    })
+
+    it('refuses a new submission when no approved report is in force', async () => {
+      const input = withoutEqualityReportId()
+      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
+      reportFindOne.mockResolvedValueOnce(null)
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        NotFoundException,
+      )
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('replays an already-filed report even after its equality report has lapsed', async () => {
+      // The regression. Resolution used to happen while the creation input was
+      // built, i.e. BEFORE this replay check, so a retry of a report that was
+      // successfully filed answered 404 once its equality report stopped being
+      // active — a precondition for NEW submissions making an old one
+      // un-retryable, and an integrator reading a filed report as failed.
+      const input = withoutEqualityReportId()
+      const FILED_REPORT_ID = '00000000-0000-0000-0000-0000000000ea'
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '6511881219:vendor-submission-1'
+
+      // The tuple lookup finds the earlier submission; every later `findOne`
+      // answers null, so an equality resolution reaching the database would
+      // throw instead of replaying.
+      reportFindOne
+        .mockResolvedValueOnce({
+          id: FILED_REPORT_ID,
+          providerType: input.providerType,
+          providerId: input.providerId,
+          type: ReportTypeEnum.SALARY,
+        })
+        .mockResolvedValue(null)
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      const result = await service.createSalary(input)
+
+      expect(result).toEqual({ reportId: FILED_REPORT_ID, replayed: true })
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+  })
+
   describe('idempotent replay on (providerType, providerId)', () => {
     const EXISTING_REPORT_ID = '00000000-0000-0000-0000-0000000000ee'
 
