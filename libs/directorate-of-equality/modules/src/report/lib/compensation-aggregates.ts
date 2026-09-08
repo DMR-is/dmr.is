@@ -8,7 +8,6 @@ export type CompensationEmployeeInput = {
   paidHours: number
   baseSalary: number
   additionalSalary: number
-  bonusSalary: number | null
 }
 
 export type GenderSalarySample = {
@@ -108,7 +107,6 @@ export type RegularHourlyWageInput = {
   paidHours: number
   baseSalary: number
   additionalSalary: number
-  bonusSalary: number | null
 }
 
 /**
@@ -116,20 +114,20 @@ export type RegularHourlyWageInput = {
  * evaluated on, per the regulation's *"reglulegum launum, reiknuðum niður á
  * tímakaup"*.
  *
- * Replaces the previous pair of adjusted-salary helpers. There is no
- * base-pay-only counterpart **by construction**, not merely because nothing
- * needed one: `baseSalary / paidHours` would divide a base-pay-only numerator
- * by a denominator that includes the overtime hours which generated the
- * additional and bonus pay. Under the old FTE divisor both variants were
- * coherent; under an hours divisor only the total-pay numerator is.
+ * `(grunnlaun + viðbótarlaun) / greiddar stundir`. **Aukagreiðslur are
+ * excluded**, and so are the incidental hours that earned them — the two
+ * exclusions are a matched pair introduced by Excel template 2.0, and neither
+ * is safe on its own. Adding incidental pay back over fixed-only hours would
+ * inflate every rate; see `computeRegularWages` for the full note.
+ *
+ * There is no base-pay-only counterpart **by construction**, not merely because
+ * nothing needed one: `baseSalary / paidHours` would divide a base-pay-only
+ * numerator by a denominator that still includes the fixed overtime hours which
+ * generated the additional pay. Under the old FTE divisor both variants were
+ * coherent; under an hours divisor only the fixed-pay numerator is.
  */
 export function getRegularHourlyWage(employee: RegularHourlyWageInput): number {
-  return (
-    (employee.baseSalary +
-      employee.additionalSalary +
-      (employee.bonusSalary ?? 0)) /
-    employee.paidHours
-  )
+  return (employee.baseSalary + employee.additionalSalary) / employee.paidHours
 }
 
 /**

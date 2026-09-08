@@ -39,7 +39,7 @@ export class CreateDraftEmployeeDto {
 
   @ApiNumber({
     description:
-      'Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar. Nefnari reglulegs tímakaups.',
+      'Greiddar stundir í mánuðinum, fastar yfirvinnustundir meðtaldar en ekki tilfallandi greiddar stundir. Nefnari reglulegs tímakaups.',
     minimum: MIN_PAID_HOURS_PER_MONTH,
     maximum: MAX_PAID_HOURS_PER_MONTH,
   })
@@ -50,22 +50,23 @@ export class CreateDraftEmployeeDto {
   @ApiNumber()
   baseSalary!: number
 
-  // ── Viðbótarlaun (additional salary) sub-components ──
+  // ── Viðbótarlaun — fastar greiðslur aðrar en grunnlaun (Launagögn J–L) ──
   @ApiOptionalNumber({ nullable: true })
   additionalFixedOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
   additionalFixedCarAllowance?: number | null
 
-  // ── Aukagreiðslur (bonus salary) sub-components ──
   @ApiOptionalNumber({ nullable: true })
-  bonusOccasionalCarAllowance?: number | null
+  additionalFixedOther?: number | null
 
+  // ── Aukagreiðslur — tilfallandi greiðslur (Launagögn M–O). Reported
+  //    on their own; NOT part of regluleg laun or reglulegt tímakaup. ──
   @ApiOptionalNumber({ nullable: true })
   bonusOccasionalOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  bonusPayments?: number | null
+  bonusOccasionalCarAllowance?: number | null
 
   @ApiOptionalNumber({ nullable: true })
   bonusOther?: number | null

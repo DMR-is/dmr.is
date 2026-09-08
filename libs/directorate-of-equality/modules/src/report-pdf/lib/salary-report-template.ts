@@ -345,6 +345,12 @@ function salaryAnalysisSection(
  * deliberately does not divide by greiddar stundir: dividing would double-count
  * the hours already inside the tímakaup figures above.
  *
+ * ⚠️ `Samtals` is NOT regluleg laun. Since template 2.0 the aukagreiðslur column
+ * is excluded from regluleg laun and from every tímakaup figure elsewhere in
+ * this document, so this table deliberately does not reconcile with them. The
+ * lead says so, because a reviewer who tries to add these back into the rate
+ * would otherwise conclude the report is inconsistent.
+ *
  * The bottom row is the **óleiðrétti** gap per component — a plain difference of
  * means, no decomposition, no compliance role. It can reach magnitudes like
  * −300% on small denominators, which is not an error, and is exactly why it is
@@ -386,7 +392,7 @@ function payComponentsSection(
 
   return section(
     'Viðbótarlaun og aukagreiðslur',
-    `<p class="subsection__lead">Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum.</p>
+    `<p class="subsection__lead">Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum. Aukagreiðslur (tilfallandi greiðslur) teljast ekki með í reglulegum launum og hafa því ekki áhrif á reglulegt tímakaup.</p>
     <table class="data-table">
       <thead><tr><th>Kyn</th><th>Viðbótarlaun</th><th>Aukagreiðslur</th><th>Samtals</th></tr></thead>
       <tbody>
@@ -582,11 +588,11 @@ function payDispersionSection(payDispersion?: PayDispersionDto | null): string {
     cohortResidualSpreadPercentUp === null ||
     cohortResidualSpreadPercentDown === null
       ? ''
-      // ⚠️ No longer ends "hér eru starfsmenn sem víkja X staðalvik eða meira frá
-      // henni". That defined the list by the threshold alone, which stopped being
-      // true when the list became the most extreme few per direction. The
-      // threshold still appears in `countsNote`, describing the POOL.
-      : `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}.</p>`
+      : // ⚠️ No longer ends "hér eru starfsmenn sem víkja X staðalvik eða meira frá
+        // henni". That defined the list by the threshold alone, which stopped being
+        // true when the list became the most extreme few per direction. The
+        // threshold still appears in `countsNote`, describing the POOL.
+        `<p class="advisory-note">Dæmigerð dreifing um línuna hjá þessu fyrirtæki er ${formatPercent(cohortResidualSpreadPercentDown)} til ${formatPercent(cohortResidualSpreadPercentUp, { signed: true })}.</p>`
 
   // The POOL the ábendingar were drawn from — a factual statement about who sits
   // past the threshold, NOT a count of ábendingar. Phrased as a noun phrase with a

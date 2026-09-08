@@ -53,9 +53,9 @@ const employee = (
   baseSalary: 1000,
   additionalFixedOvertime: 0,
   additionalFixedCarAllowance: null,
-  bonusOccasionalCarAllowance: null,
+  additionalFixedOther: null,
   bonusOccasionalOvertime: null,
-  bonusPayments: null,
+  bonusOccasionalCarAllowance: null,
   bonusOther: null,
   personalStepAssignments,
 })

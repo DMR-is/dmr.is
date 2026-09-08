@@ -99,9 +99,9 @@ function scalePay(
     baseSalary: Math.round(employee.baseSalary * factor),
     additionalFixedOvertime: scale(employee.additionalFixedOvertime),
     additionalFixedCarAllowance: scale(employee.additionalFixedCarAllowance),
-    bonusOccasionalCarAllowance: scale(employee.bonusOccasionalCarAllowance),
+    additionalFixedOther: scale(employee.additionalFixedOther),
     bonusOccasionalOvertime: scale(employee.bonusOccasionalOvertime),
-    bonusPayments: scale(employee.bonusPayments),
+    bonusOccasionalCarAllowance: scale(employee.bonusOccasionalCarAllowance),
     bonusOther: scale(employee.bonusOther),
   }
 }
@@ -112,12 +112,8 @@ const hourlyWageOf = (employee: ParsedReportDto['employees'][number]): number =>
     baseSalary: employee.baseSalary,
     additionalSalary:
       (employee.additionalFixedOvertime ?? 0) +
-      (employee.additionalFixedCarAllowance ?? 0),
-    bonusSalary:
-      (employee.bonusOccasionalCarAllowance ?? 0) +
-      (employee.bonusOccasionalOvertime ?? 0) +
-      (employee.bonusPayments ?? 0) +
-      (employee.bonusOther ?? 0),
+      (employee.additionalFixedCarAllowance ?? 0) +
+      (employee.additionalFixedOther ?? 0),
   })
 
 /**

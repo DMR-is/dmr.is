@@ -118,11 +118,14 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  // ONE snapshot, on reglulegt tímakaup. There is deliberately no base-pay-only
-  // counterpart: `baseSalary / paidHours` would divide base pay alone by a
-  // denominator that includes the overtime hours which earned the additional and
-  // bonus pay. Under the old FTE divisor both variants were coherent; under an
-  // hours divisor only the total-pay numerator is.
+  // ONE snapshot, on reglulegt tímakaup = (grunnlaun + viðbótarlaun) / greiddar
+  // stundir. Aukagreiðslur are excluded, and so are the incidental hours that
+  // earned them — `CompensationEmployeeInput` therefore carries no bonus field
+  // at all, which is the strongest form the exclusion can take: it is not
+  // possible to pass incidental pay in here and have it silently counted.
+  // There is deliberately no base-pay-only counterpart either: `baseSalary /
+  // paidHours` would divide base pay alone by a denominator that still includes
+  // the FIXED overtime hours which earned the additional pay.
   it('computes one report-level hourly-wage snapshot with score buckets', () => {
     const aggregates = computeCompensationAggregates({
       employees: [
@@ -130,11 +133,10 @@ describe('compensation-aggregates', () => {
           reportEmployeeRoleId: 'role-b',
           score: 120,
           gender: GenderEnum.MALE,
-          // 550.000 regluleg laun over 200 klst → 2.750 kr./klst.
+          // 500.000 regluleg laun over 200 klst → 2.500 kr./klst.
           paidHours: 200,
           baseSalary: 400000,
           additionalSalary: 100000,
-          bonusSalary: 50000,
         },
         {
           reportEmployeeRoleId: 'role-a',
@@ -145,19 +147,18 @@ describe('compensation-aggregates', () => {
           paidHours: 100,
           baseSalary: 300000,
           additionalSalary: 50000,
-          bonusSalary: null,
         },
       ],
     })
 
-    expect(aggregates.report.snapshot.totals.overall.average).toBe(3125)
+    expect(aggregates.report.snapshot.totals.overall.average).toBe(3000)
     expect(aggregates.report.snapshot.scoreBuckets).toEqual([
       expect.objectContaining({
         rangeFrom: 100,
         rangeTo: 200,
         counts: { overall: 1, male: 1, female: 0, neutral: 0 },
         totals: expect.objectContaining({
-          overall: expect.objectContaining({ average: 2750 }),
+          overall: expect.objectContaining({ average: 2500 }),
         }),
       }),
       expect.objectContaining({
@@ -169,24 +170,6 @@ describe('compensation-aggregates', () => {
         }),
       }),
     ])
-  })
-
-  it('treats a null bonusSalary as zero in the hourly rate', () => {
-    const aggregates = computeCompensationAggregates({
-      employees: [
-        {
-          reportEmployeeRoleId: 'role-a',
-          score: 100,
-          gender: GenderEnum.MALE,
-          paidHours: 100,
-          baseSalary: 300000,
-          additionalSalary: 50000,
-          bonusSalary: null,
-        },
-      ],
-    })
-
-    expect(aggregates.report.snapshot.totals.overall.average).toBe(3500)
   })
 
   it('rounds result snapshots including bucket totals', () => {
@@ -271,13 +254,11 @@ describe('compensation-aggregates', () => {
       paidHours: 200,
       baseSalary: 1000000,
       additionalSalary: 0,
-      bonusSalary: null,
     })
     const half = getRegularHourlyWage({
       paidHours: 100,
       baseSalary: 500000,
       additionalSalary: 0,
-      bonusSalary: null,
     })
 
     expect(full).toBe(5000)

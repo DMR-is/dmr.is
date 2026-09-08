@@ -12,10 +12,16 @@
  *
  * ## Greiddar stundir (paid hours)
  *
- * All paid hours in the month, **overtime included** — the denominator of
- * reglulegt tímakaup. Column E carried `Starfshlutfall (0–1)` until the
- * template moved to an hourly basis; it now carries hours, so a value like
- * `173.33` is normal and `0.85` is a leftover from the old sheet.
+ * Paid hours in the month **including fixed overtime but excluding incidental
+ * paid hours** — the denominator of reglulegt tímakaup. Column E carried
+ * `Starfshlutfall (0–1)` until the template moved to an hourly basis; it now
+ * carries hours, so a value like `173.33` is normal and `0.85` is a leftover
+ * from the old sheet.
+ *
+ * ⚠️ The scope narrowed in template 2.0 — it previously meant all paid hours
+ * with all overtime included. It pairs with regluleg laun dropping incidental
+ * pay, so numerator and denominator cover the same scope. Expect a step DOWN
+ * in reported hours for staff with variable overtime, relative to 1.x files.
  *
  * Accepted range is `MIN_PAID_HOURS_PER_MONTH`–`MAX_PAID_HOURS_PER_MONTH`.
  * Both bounds catch a specific data-entry error rather than merely describing
@@ -57,11 +63,21 @@ import { ErrorBag } from './errors'
  * `readInteger`). The ordinal is therefore derived from row position instead
  * (see {@link parseEmployees}), which reproduces `=ROW()-5` exactly.
  *
- * The salary breakdown lives in J–O (6 sub-components). The template also has
- * two trailing computed columns — P "Viðbótarlaun" (`=SUM(J:K)`) and Q
- * "Aukagreiðslur" (`=SUM(L:O)`) — which the parser deliberately does NOT
- * read: the parents are derived server-side from the children, so the
- * spreadsheet formulas are display-only.
+ * The salary breakdown lives in J–O (6 sub-components), split by template 2.0
+ * into a fixed band (I–L, "Fastar greiðslur") and an incidental one (M–O,
+ * "Tilfallandi greiðslur"). The template also has trailing computed columns —
+ * P "Viðbótarlaun" (`=SUM(J:L)`), Q "Aukagreiðslur" (`=SUM(M:O)`),
+ * R "Regluleg laun" (`=I+P`) and S "Reglulegt tímakaup" (`=R/E`) — which the
+ * parser deliberately does NOT read: the parents are derived server-side from
+ * the children, so the spreadsheet formulas are display-only.
+ *
+ * ⚠️ **Three of these columns changed MEANING in template 2.0 without moving.**
+ * L was an incidental car allowance and is now a fixed payment; N was
+ * `Bónusgreiðslur` and is now the incidental car allowance; O widened to absorb
+ * bonuses. Reading a 1.x workbook with this map therefore files fixed pay as
+ * incidental and vice versa — silently, since every cell still holds a
+ * plausible number. That is why `assertWorkbookLayout` and the template-version
+ * gate must run BEFORE this parser, not as a nicety alongside it.
  */
 const COLS = {
   name: 'B',
@@ -72,13 +88,13 @@ const COLS = {
   department: 'G',
   startDate: 'H',
   baseSalary: 'I',
-  // Viðbótarlaun (additional salary) sub-components
+  // Viðbótarlaun — fastar greiðslur aðrar en grunnlaun (J–L)
   additionalFixedOvertime: 'J',
   additionalFixedCarAllowance: 'K',
-  // Aukagreiðslur (bonus salary) sub-components
-  bonusOccasionalCarAllowance: 'L',
+  additionalFixedOther: 'L',
+  // Aukagreiðslur — tilfallandi greiðslur (M–O)
   bonusOccasionalOvertime: 'M',
-  bonusPayments: 'N',
+  bonusOccasionalCarAllowance: 'N',
   bonusOther: 'O',
 } as const
 
@@ -143,9 +159,9 @@ type RawRow = {
   baseSalary: number | null
   additionalFixedOvertime: number | null
   additionalFixedCarAllowance: number | null
-  bonusOccasionalCarAllowance: number | null
+  additionalFixedOther: number | null
   bonusOccasionalOvertime: number | null
-  bonusPayments: number | null
+  bonusOccasionalCarAllowance: number | null
   bonusOther: number | null
   field: string | null
   department: string | null
@@ -163,13 +179,15 @@ const readRow = (sheet: ExcelJS.Worksheet, r: number): RawRow => ({
   additionalFixedCarAllowance: readNumber(
     sheet.getCell(`${COLS.additionalFixedCarAllowance}${r}`),
   ),
-  bonusOccasionalCarAllowance: readNumber(
-    sheet.getCell(`${COLS.bonusOccasionalCarAllowance}${r}`),
+  additionalFixedOther: readNumber(
+    sheet.getCell(`${COLS.additionalFixedOther}${r}`),
   ),
   bonusOccasionalOvertime: readNumber(
     sheet.getCell(`${COLS.bonusOccasionalOvertime}${r}`),
   ),
-  bonusPayments: readNumber(sheet.getCell(`${COLS.bonusPayments}${r}`)),
+  bonusOccasionalCarAllowance: readNumber(
+    sheet.getCell(`${COLS.bonusOccasionalCarAllowance}${r}`),
+  ),
   bonusOther: readNumber(sheet.getCell(`${COLS.bonusOther}${r}`)),
   field: readString(sheet.getCell(`${COLS.field}${r}`)),
   department: readString(sheet.getCell(`${COLS.department}${r}`)),
@@ -183,9 +201,9 @@ const isEmptyRow = (row: RawRow): boolean =>
   row.baseSalary == null &&
   row.additionalFixedOvertime == null &&
   row.additionalFixedCarAllowance == null &&
-  row.bonusOccasionalCarAllowance == null &&
+  row.additionalFixedOther == null &&
   row.bonusOccasionalOvertime == null &&
-  row.bonusPayments == null &&
+  row.bonusOccasionalCarAllowance == null &&
   row.bonusOther == null &&
   !row.field &&
   !row.department &&
@@ -211,9 +229,9 @@ const buildEmployee = (
     baseSalary,
     additionalFixedOvertime,
     additionalFixedCarAllowance,
-    bonusOccasionalCarAllowance,
+    additionalFixedOther,
     bonusOccasionalOvertime,
-    bonusPayments,
+    bonusOccasionalCarAllowance,
     bonusOther,
     field,
     department,
@@ -286,9 +304,9 @@ const buildEmployee = (
     baseSalary,
     additionalFixedOvertime,
     additionalFixedCarAllowance,
-    bonusOccasionalCarAllowance,
+    additionalFixedOther,
     bonusOccasionalOvertime,
-    bonusPayments,
+    bonusOccasionalCarAllowance,
     bonusOther,
     personalStepAssignments: [],
   }

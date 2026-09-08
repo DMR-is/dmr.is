@@ -30,9 +30,17 @@
  * analysis depends on:
  *
  *   grunnlaun   → base_salary
- *   vaktaalag   → additional_fixed_overtime   (viðbótarlaun)
+ *   vaktaalag   → additional_fixed_overtime      (viðbótarlaun)
  *   onnur_alag  → additional_fixed_car_allowance (viðbótarlaun)
- *   bonus       → bonus_payments              (aukagreiðslur)
+ *   bonus       → additional_fixed_other         (viðbótarlaun)
+ *
+ * ⚠️ **All four must land in the FIXED band, and that is now load-bearing.**
+ * `bonus` used to map to `bonus_payments`; since template 2.0 dropped
+ * aukagreiðslur from regluleg laun, any column parked in the incidental band
+ * would silently fall out of the sum and break the row-for-row comparability
+ * with the R script that is this fixture's entire purpose. The workbook's
+ * `bonus` is a fixed monthly amount, so the fixed band is also where it
+ * belongs on the merits — but do not move it back on tidiness grounds.
  *
  * ⚠️ **Score is the raw `haefni1 + haefni2 + haefni3`, so 3–15.** The R script
  * prints exactly this as `haefni_summa`, so an employee's score is comparable
@@ -80,7 +88,7 @@ type ReferenceEmployee = {
   baseSalary: number
   additionalFixedOvertime: number
   additionalFixedCarAllowance: number
-  bonusPayments: number
+  additionalFixedOther: number
   /** Fullvinnandi | Hlutastarf — the workbook's own `stada`, used as the role. */
   role: string
 }
@@ -134,7 +142,7 @@ async function readWorkbook(path: string): Promise<ReferenceEmployee[]> {
       baseSalary: num(row, 5),
       additionalFixedOvertime: num(row, 6),
       additionalFixedCarAllowance: num(row, 7),
-      bonusPayments: num(row, 8),
+      additionalFixedOther: num(row, 8),
       role: text(row, 4) || 'Fullvinnandi',
     })
   }
@@ -146,7 +154,7 @@ const hourlyWageOf = (employee: ReferenceEmployee): number =>
   (employee.baseSalary +
     employee.additionalFixedOvertime +
     employee.additionalFixedCarAllowance +
-    employee.bonusPayments) /
+    employee.additionalFixedOther) /
   employee.paidHours
 
 async function main(): Promise<void> {
