@@ -142,16 +142,15 @@ const compareVersions = (left: string, right: string): number => {
  * redo. Naming the three columns that moved, and the one whose DEFINITION
  * changed, turns it into a set of instructions.
  */
-const outdatedTemplateMessage = (found: string | null): string =>
-  [
-    found
-      ? `Sniðmátið er af eldri útgáfu (${found}); útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`
-      : `Sniðmátið er af eldri útgáfu; útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`,
-    'Sæktu nýjasta sniðmátið og færðu gögnin yfir í það.',
-    'Dálkar A–K færast beint yfir.',
-    'Dálkar L–O hafa breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur bifreiðastyrkur“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.',
-    'Athugaðu einnig „Greiddar stundir“ (E): skilgreiningin hefur breyst og á nú við fastar yfirvinnustundir en ekki tilfallandi greiddar stundir.',
-  ].join(' ')
+const outdatedTemplateLines = (found: string | null): string[] => [
+  found
+    ? `Sniðmátið er af eldri útgáfu (${found}); útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`
+    : `Sniðmátið er af eldri útgáfu; útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`,
+  'Sæktu nýjasta sniðmátið og færðu gögnin yfir í það.',
+  'Dálkar A–K færast beint yfir.',
+  'Dálkar L–O hafa breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur bifreiðastyrkur“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.',
+  'Athugaðu einnig „Greiddar stundir“ (E): skilgreiningin hefur breyst og á nú við fastar yfirvinnustundir en ekki tilfallandi greiddar stundir.',
+]
 
 /**
  * A workbook carrying a version but not OUR template id. Distinct from the
@@ -159,18 +158,23 @@ const outdatedTemplateMessage = (found: string | null): string =>
  * when it is simply a different document sends them to re-download something
  * they already have.
  */
-const foreignTemplateMessage = (found: string | null): string =>
-  [
-    found
-      ? `Skráin er ekki launagreiningarsniðmát Jafnréttisstofu (auðkenni „${found}“).`
-      : 'Skráin er ekki launagreiningarsniðmát Jafnréttisstofu.',
-    'Sæktu sniðmátið og færðu gögnin yfir í það.',
-  ].join(' ')
+const foreignTemplateLines = (found: string | null): string[] => [
+  found
+    ? `Skráin er ekki launagreiningarsniðmát Jafnréttisstofu (auðkenni „${found}“).`
+    : 'Skráin er ekki launagreiningarsniðmát Jafnréttisstofu.',
+  'Sæktu sniðmátið og færðu gögnin yfir í það.',
+]
 
 /**
- * @returns `null` when the workbook is current. Otherwise a message describing
- * what to do — the caller must reject and must NOT go on to parse rows, because
- * every column from L onwards would be read as the wrong field.
+ * @returns `null` when the workbook is current. Otherwise **one sentence per
+ * entry**, describing what to do — the caller must reject and must NOT go on to
+ * parse rows, because every column from L onwards would be read as the wrong
+ * field.
+ *
+ * Split rather than pre-joined because the island.is portal renders
+ * `ApiErrorDto.details` verbatim: one entry as plain text, several as a bulleted
+ * list. These are migration steps, so a list is what they should be. Callers
+ * that want a single string join with `' '`.
  *
  * **Version is checked before identity**, deliberately. A genuine 1.x workbook
  * predates the custom properties entirely, so it has neither value; the
@@ -180,15 +184,15 @@ const foreignTemplateMessage = (found: string | null): string =>
  */
 export const checkTemplateVersion = (
   metadata: TemplateMetadata,
-): string | null => {
+): string[] | null => {
   const { version, templateId } = metadata
 
   if (version === null) {
-    return outdatedTemplateMessage(null)
+    return outdatedTemplateLines(null)
   }
 
   if (compareVersions(version, MIN_TEMPLATE_VERSION) < 0) {
-    return outdatedTemplateMessage(version)
+    return outdatedTemplateLines(version)
   }
 
   // Without this the id would be read and then ignored, which reads to the next
@@ -196,7 +200,7 @@ export const checkTemplateVersion = (
   // carry `TemplateVersion >= 2.0` would otherwise reach the column parsers with
   // only `assertWorkbookLayout` between it and a misread sheet.
   if (templateId !== TEMPLATE_ID) {
-    return foreignTemplateMessage(templateId)
+    return foreignTemplateLines(templateId)
   }
 
   return null

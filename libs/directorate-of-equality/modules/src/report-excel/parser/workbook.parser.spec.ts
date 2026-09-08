@@ -277,7 +277,7 @@ const fillCriteriaAndSubCriteria = (wb: ExcelJS.Workbook) => {
 const expectBadRequest = async (
   promise: Promise<unknown>,
 ): Promise<{
-  message: string
+  message: string[]
   errors: {
     message: string
     sheet: string
@@ -290,7 +290,7 @@ const expectBadRequest = async (
     await promise
   } catch (e) {
     return (e as BadRequestException).getResponse() as {
-      message: string
+      message: string[]
       errors: {
         message: string
         sheet: string
@@ -904,6 +904,26 @@ describe('parseWorkbook', () => {
         expect(message).toContain('A–K')
         expect(message).toContain('L–O')
         expect(message).toContain('Greiddar stundir')
+      })
+
+      /**
+       * `message` becomes `ApiErrorDto.details`, which the island.is portal
+       * renders as a bulleted list when it holds more than one entry and as
+       * plain text when it holds one. These are migration steps, so they must
+       * arrive split — re-joining them into a single entry silently turns the
+       * applicant's instructions back into a wall of text.
+       */
+      it('delivers the migration steps as separate details entries', async () => {
+        const { message, errors } = await expectBadRequest(
+          parseWorkbook(await stripTemplateProps(await validWorkbookBuffer())),
+        )
+
+        expect(Array.isArray(message)).toBe(true)
+        expect(message.length).toBeGreaterThan(1)
+        // No entry may smuggle a newline: the portal renders each verbatim.
+        message.forEach((entry) => expect(entry).not.toContain('\n'))
+        // One structured error, though — this is one bad workbook, not five.
+        expect(errors).toHaveLength(1)
       })
     })
 

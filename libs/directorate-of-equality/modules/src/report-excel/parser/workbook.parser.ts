@@ -271,14 +271,21 @@ export const parseWorkbook = async (
   // `template-version.assert.ts` for why 1.x is rejected rather than supported.
   const outdatedTemplate = checkTemplateVersion(templateMetadata)
   if (outdatedTemplate) {
+    // `message` and `errors` deliberately do NOT run parallel here, unlike the
+    // per-cell throws below. `message` becomes `ApiErrorDto.details`, which the
+    // island.is portal renders as a bulleted list once it has more than one
+    // entry — and these are migration steps, so a list is what they should be.
+    // `errors` stays a single ImportErrorDto because this is one problem with
+    // the workbook, not five, and that array is the structured per-location
+    // list. Splitting it would invent four locations that do not exist.
     const error: ImportErrorDto = {
       sheet: SHEETS.EMPLOYEES,
       row: null,
       column: null,
-      message: outdatedTemplate,
+      message: outdatedTemplate.join(' '),
     }
     throw new BadRequestException({
-      message: [outdatedTemplate],
+      message: outdatedTemplate,
       errors: [error],
     })
   }
