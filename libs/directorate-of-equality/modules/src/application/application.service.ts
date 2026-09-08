@@ -246,36 +246,6 @@ export class ApplicationService implements IApplicationService {
     return this.reportCreateService.createEquality(createInput)
   }
 
-  /**
-   * The equality report a salary submission will be filed against, for a caller
-   * that does not name one.
-   *
-   * The same lookup `getSalaryReportEligibility` runs, so a company told
-   * `eligible: true` cannot then be refused here for want of an equality
-   * report. `findActiveEqualityForCompany` orders by `approvedAt DESC`, which
-   * decides the rare case of two approved plans still in force — a company that
-   * re-filed before its previous one expired: the newest is the one it is
-   * working under.
-   *
-   * 404 rather than a 409, matching the equality precondition's documented
-   * status on both channels and the message
-   * `getActiveEqualityReport` answers with, so a vendor that skipped the
-   * eligibility pre-check reads the same sentence from either route.
-   */
-  private async resolveActiveEqualityReportId(
-    company: CompanyDto,
-  ): Promise<string> {
-    const equality = await this.reportService.findActiveEqualityForCompany(
-      company.id,
-    )
-
-    if (!equality) {
-      throw new NotFoundException('No approved equality report is in force')
-    }
-
-    return equality.id
-  }
-
   async getActiveEqualityReport(
     company: CompanyDto,
   ): Promise<EqualityReportSummaryDto> {
@@ -824,15 +794,11 @@ export class ApplicationService implements IApplicationService {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      // Absent on the partner channel, where the caller does not name the
-      // report it audited against — see `SubmitPartnerSalaryReportDto`. The
-      // resolved id is re-verified by `assertEqualityReportApproved` inside
-      // `createSalary` a moment later; that check is the schema invariant's one
-      // choke point and stays there rather than being skipped for ids this
-      // method produced, even though the two predicates are identical.
-      equalityReportId:
-        input.equalityReportId ??
-        (await this.resolveActiveEqualityReportId(company)),
+      // Passed through as sent, absent and all. `createSalary` resolves it when
+      // a caller does not name one — and it must, because that has to happen
+      // after its idempotent replay check. Resolving here made a retry of an
+      // already-filed report 404 once its equality report lapsed.
+      equalityReportId: input.equalityReportId,
       // The workbook is an island.is concept. A partner submission arrives as
       // JSON built from payroll data, so there is nothing for this to be true
       // of and the field is not part of that contract.

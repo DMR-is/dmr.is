@@ -476,55 +476,38 @@ describe('ApplicationService', () => {
     })
 
     describe('the equality report the salary was audited against', () => {
-      // The partner contract omits `equalityReportId` and `importedFromExcel`
-      // entirely (`SubmitPartnerSalaryReportDto`), so the service sees them
-      // absent rather than empty.
-      const makePartnerSubmitSalaryInput = (): SubmitSalaryReportInput => ({
-        ...makeSubmitSalaryInput(),
-        equalityReportId: undefined,
-        importedFromExcel: undefined,
-      })
-
-      it('resolves the company\'s active report when the caller names none', async () => {
-        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
-        findActiveEqualityForCompany.mockResolvedValue({
-          id: 'eq-resolved',
-        } as unknown as ReportModel)
-
-        await partnerService.submitSalary(makePartnerSubmitSalaryInput(), COMPANY)
-
-        expect(findActiveEqualityForCompany).toHaveBeenCalledWith(COMPANY.id)
-        expect(createSalary).toHaveBeenCalledWith(
-          expect.objectContaining({
-            equalityReportId: 'eq-resolved',
-            // No workbook exists on this channel to have come through.
-            importedFromExcel: false,
-          }),
-        )
-      })
-
-      it('refuses when the company has no approved report in force', async () => {
-        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
-        findActiveEqualityForCompany.mockResolvedValue(null)
-
-        await expect(
-          partnerService.submitSalary(makePartnerSubmitSalaryInput(), COMPANY),
-        ).rejects.toThrow(NotFoundException)
-        expect(createSalary).not.toHaveBeenCalled()
-      })
-
-      it('takes the id island.is supplies without looking one up', async () => {
+      it('passes the field through as sent, resolving nothing itself', async () => {
         const input = makeSubmitSalaryInput()
 
         await service.submitSalary(input, COMPANY)
 
-        // The channel that names its own report is not second-guessed, and the
-        // lookup it would cost is not paid.
+        // Resolution moved to `createSalary`, which has to do it after its
+        // idempotent replay check — doing it here made a retry of an
+        // already-filed report answer 404 once its equality report lapsed.
         expect(findActiveEqualityForCompany).not.toHaveBeenCalled()
         expect(createSalary).toHaveBeenCalledWith(
           expect.objectContaining({
             equalityReportId: input.equalityReportId,
             importedFromExcel: true,
+          }),
+        )
+      })
+
+      it('leaves the field absent when the caller omits it', async () => {
+        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+        const input: SubmitSalaryReportInput = {
+          ...makeSubmitSalaryInput(),
+          equalityReportId: undefined,
+          importedFromExcel: undefined,
+        }
+
+        await partnerService.submitSalary(input, COMPANY)
+
+        expect(findActiveEqualityForCompany).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: undefined,
+            importedFromExcel: false,
           }),
         )
       })
