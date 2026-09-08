@@ -13,7 +13,25 @@
  * for the first time is usually wrong in several places at once, and answering
  * one fault per request turns that into a dozen round trips. One request, the
  * whole list.
+ *
+ * Bounded, though — see `MAX_ISSUES`. Accumulating without a ceiling turned the
+ * capacity limits into a denial of service: the completeness rules are
+ * O(employees × sub-criteria), so a 10 000-employee payload that simply forgot
+ * to populate `personalStepAssignments` — every count inside its limits, an
+ * ordinary first attempt — produces a million messages and serialises them all
+ * into one response body.
  */
+
+/**
+ * How many issues are worth reporting.
+ *
+ * The round-trip argument for accumulating is about a caller fixing a field
+ * mapping, and nobody acts on more than a screenful. Past this the list stops
+ * informing and starts costing: a payload can legitimately hold 10 000
+ * employees and 100 personal sub-criteria, and one missing assignment per pair
+ * is a million strings.
+ */
+export const MAX_ISSUES = 200
 
 /** The region of the payload an issue is about. */
 export enum PayloadIssueScope {
@@ -39,13 +57,39 @@ export type PayloadIssue = {
 
 export class PayloadIssueBag {
   private readonly issues: PayloadIssue[] = []
+  private full = false
 
   add(
     scope: PayloadIssueScope,
     message: string,
     opts?: { ordinal?: number },
   ): void {
+    if (this.full) {
+      return
+    }
+
+    if (this.issues.length >= MAX_ISSUES) {
+      this.full = true
+      this.issues.push({
+        scope,
+        message: `Fleiri en ${MAX_ISSUES} villur fundust í innsendum gögnum; listinn er styttur. Leystu þær sem hér eru taldar og sendu gögnin aftur.`,
+        ordinal: null,
+      })
+
+      return
+    }
+
     this.issues.push({ scope, message, ordinal: opts?.ordinal ?? null })
+  }
+
+  /**
+   * Whether the list is closed. A caller walking a large structure should stop
+   * when this turns true: the messages it would add are discarded, but building
+   * them is not free, and the loops that reach this cap are the ones with a
+   * multiplicative bound.
+   */
+  get isFull(): boolean {
+    return this.full
   }
 
   get hasIssues(): boolean {
