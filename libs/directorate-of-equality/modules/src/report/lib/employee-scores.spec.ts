@@ -6,6 +6,8 @@ import { GenderEnum } from '../models/report.enums'
 import {
   assertParsedPayloadIntegrity,
   assertParsedPayloadValid,
+  computeEmployeeScores,
+  stepKey,
 } from './employee-scores'
 
 /**
@@ -160,6 +162,29 @@ describe('employee-scores', () => {
         () => assertParsedPayloadValid(parsed),
         /Starf „Manager“: vantar úthlutun fyrir „Responsibility \/ People responsibility“/,
       )
+    })
+  })
+
+  describe('computeEmployeeScores', () => {
+    it('counts a step once even when the role and the employee both name it', () => {
+      const parsed = makeParsedReport()
+      const key = stepKey('Responsibility', 'People responsibility', 1)
+      parsed.employees[0].personalStepAssignments = [
+        {
+          criterionTitle: 'Responsibility',
+          subTitle: 'People responsibility',
+          stepOrder: 1,
+        },
+      ]
+
+      const [score] = computeEmployeeScores(parsed, new Map([[key, 10]]))
+
+      // 10, not 20. Defensive only: a role owns the job-based criteria and an
+      // employee owns only the personal ones, so a validated payload cannot
+      // produce this overlap — `assertParsedPayloadValid` refuses it. The
+      // dedup stays because double-counting a step would be a wrong score
+      // rather than a rejected request.
+      expect(score).toBe(10)
     })
   })
 

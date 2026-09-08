@@ -1,5 +1,5 @@
 import {
-  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
   computeEmployeeScores,
 } from '../../report/lib/employee-scores'
 import {
@@ -39,9 +39,11 @@ export function analyzeSalaryPayload(
   parsed: ParsedReportDto,
   benchmarkPercent: number,
 ): SalaryAnalysisResponseDto {
-  // 1. Integrity-check the parsed payload (rejects malformed input) and
-  //    capture the step-score lookup map.
-  const stepScoreByKey = assertParsedPayloadIntegrity(parsed)
+  // 1. Validate the payload whole — structure and cross-field semantics — and
+  //    capture the step-score lookup map. The preview is a channel boundary,
+  //    and it answers with the same rules the submission enforces, so a
+  //    payload that previews clean cannot be refused at submit.
+  const stepScoreByKey = assertParsedPayloadValid(parsed)
 
   // 2. Compute per-employee total scores using the same dedup'd Set logic the
   //    submit endpoint uses, so preview and submit agree on score.

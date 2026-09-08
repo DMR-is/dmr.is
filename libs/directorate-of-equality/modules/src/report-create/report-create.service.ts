@@ -15,7 +15,7 @@ import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import {
-  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
@@ -124,7 +124,7 @@ export class ReportCreateService implements IReportCreateService {
     // a salary report. MONTH must name its month; AVERAGE never carries one.
     const salaryDataBasis = resolveSalaryDataBasis(input)
 
-    const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
+    const stepScoreByKey = assertParsedPayloadValid(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
       input,

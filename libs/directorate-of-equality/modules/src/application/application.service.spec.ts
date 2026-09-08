@@ -36,6 +36,10 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
 import { IReportService } from '../report/report.service.interface'
 import {
   type ReportResourceContext,
@@ -1802,7 +1806,7 @@ describe('ApplicationService', () => {
 
 function makeRequest(): SalaryAnalysisRequestDto {
   return {
-    parsed: {
+    parsed: padToSemanticValidity({
       criteria: [
         {
           type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -1822,15 +1826,28 @@ function makeRequest(): SalaryAnalysisRequestDto {
                 { order: 5, description: 'score 500', score: 500 },
                 { order: 6, description: 'score 600', score: 600 },
                 { order: 7, description: 'score 700', score: 700 },
+                // The role's step. Scores 0, because in this fixture the score
+                // spread is per-employee and a role step applies to all of
+                // them equally — see PERSONAL_STEPS below.
+                { order: 8, description: 'none', score: 0 },
               ],
             },
           ],
         },
+        personalCriterion(PERSONAL_STEPS),
       ],
       roles: [
         {
           title: 'Framkvaemdastjori',
-          stepAssignments: [],
+          // A role owns the job-based criteria and must be scored on every one
+          // of their sub-criteria.
+          stepAssignments: [
+            {
+              criterionTitle: 'Abyrgd',
+              subTitle: 'Abyrgd a fólki',
+              stepOrder: 8,
+            },
+          ],
         },
       ],
       employees: [
@@ -1877,7 +1894,7 @@ function makeRequest(): SalaryAnalysisRequestDto {
           stepOrder: 7,
         }),
       ],
-    },
+    }),
   }
 }
 
@@ -1910,15 +1927,29 @@ function makeEmployee({
     bonusOccasionalOvertime: null,
     bonusPayments: null,
     bonusOther: null,
+    // An employee owns only the personal criteria: two people in one role
+    // differ exactly and only in their einstaklingsbundið scoring, which is
+    // what varies the score across this cohort.
     personalStepAssignments: [
       {
-        criterionTitle: 'Abyrgd',
-        subTitle: 'Abyrgd a fólki',
+        criterionTitle: 'Einstaklingsbundid',
+        subTitle: 'Frammistada',
         stepOrder,
       },
     ],
   }
 }
+
+/** The same 100–700 scale the score spread has always used. */
+const PERSONAL_STEPS = [
+  { order: 1, description: 'score 100', score: 100 },
+  { order: 2, description: 'score 200', score: 200 },
+  { order: 3, description: 'score 300', score: 300 },
+  { order: 4, description: 'score 400', score: 400 },
+  { order: 5, description: 'score 500', score: 500 },
+  { order: 6, description: 'score 600', score: 600 },
+  { order: 7, description: 'score 700', score: 700 },
+]
 
 function makeCompanySnapshot(
   overrides: Partial<CreateReportCompanySnapshotDto> = {},
