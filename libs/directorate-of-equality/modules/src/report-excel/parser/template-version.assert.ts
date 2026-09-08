@@ -154,15 +154,34 @@ const outdatedTemplateMessage = (found: string | null): string =>
   ].join(' ')
 
 /**
- * @returns `null` when the workbook is current. Otherwise a single-entry error
- * list describing what to do — the caller must reject and must NOT go on to
- * parse rows, because every column from L onwards would be read as the wrong
- * field.
+ * A workbook carrying a version but not OUR template id. Distinct from the
+ * outdated message on purpose: telling someone their template is out of date
+ * when it is simply a different document sends them to re-download something
+ * they already have.
+ */
+const foreignTemplateMessage = (found: string | null): string =>
+  [
+    found
+      ? `Skráin er ekki launagreiningarsniðmát Jafnréttisstofu (auðkenni „${found}“).`
+      : 'Skráin er ekki launagreiningarsniðmát Jafnréttisstofu.',
+    'Sæktu sniðmátið og færðu gögnin yfir í það.',
+  ].join(' ')
+
+/**
+ * @returns `null` when the workbook is current. Otherwise a message describing
+ * what to do — the caller must reject and must NOT go on to parse rows, because
+ * every column from L onwards would be read as the wrong field.
+ *
+ * **Version is checked before identity**, deliberately. A genuine 1.x workbook
+ * predates the custom properties entirely, so it has neither value; the
+ * out-of-date message is the useful one there, and it is by far the likelier
+ * case. Only a file that clears the version bar is then asked to prove it is
+ * ours.
  */
 export const checkTemplateVersion = (
   metadata: TemplateMetadata,
 ): string | null => {
-  const { version } = metadata
+  const { version, templateId } = metadata
 
   if (version === null) {
     return outdatedTemplateMessage(null)
@@ -170,6 +189,14 @@ export const checkTemplateVersion = (
 
   if (compareVersions(version, MIN_TEMPLATE_VERSION) < 0) {
     return outdatedTemplateMessage(version)
+  }
+
+  // Without this the id would be read and then ignored, which reads to the next
+  // maintainer as though it were validated. A foreign workbook that happens to
+  // carry `TemplateVersion >= 2.0` would otherwise reach the column parsers with
+  // only `assertWorkbookLayout` between it and a misread sheet.
+  if (templateId !== TEMPLATE_ID) {
+    return foreignTemplateMessage(templateId)
   }
 
   return null

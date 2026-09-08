@@ -130,13 +130,30 @@ export const parsedRegularHourlyWage = (
 }
 
 /**
- * `== null` catches `undefined` as well as `null`, deliberately. The parameter
- * type says `number | null`, but these fields arrive from DTOs that declare
- * several of them optional, so an absent one reaches here as `undefined` — and
- * `toStoredPrecision(undefined)` is `NaN`, which `?? 0` does NOT rescue
- * downstream. One missing sub-component would then NaN the employee's entire
- * tímakaup and, through the pooled fit, every figure in the report. Matches
- * `parseNullableDecimal` above, which already guards both.
+ * `== null` catches `undefined` as well as `null`, deliberately. **This is a
+ * live path, not a defensive flourish**, and the reachable route is worth
+ * naming because the types actively hide it:
+ *
+ *   `POST /api/v1/application/reports/salary-analysis` (and its admin twin)
+ *   → `SalaryAnalysisRequestDto.parsed` → `analyzeSalaryPayload`
+ *   → `parsedRegularHourlyWage`
+ *
+ * That `ParsedReportDto` is a **request body**, not a parser output. Every pay
+ * field on `ParsedEmployeeDto` is declared `!: number | null`, but each is
+ * decorated `@ApiOptionalNumber`, which applies `IsOptional()` — so a client
+ * that simply omits the key passes validation and the property arrives
+ * `undefined`. The `!` is a TypeScript claim nothing enforces at the HTTP
+ * boundary. (The Excel route is safe: `buildEmployee` always assigns from
+ * `readNumber`, which returns `number | null`.)
+ *
+ * Omission is the EXPECTED shape right now, not a hypothetical: template 2.0
+ * added `additionalFixedOther`, so every client that has not yet updated omits
+ * exactly this field.
+ *
+ * Under `=== null` that becomes `toStoredPrecision(undefined)` → `NaN`, which
+ * `?? 0` does NOT rescue, so one absent sub-component NaNs the employee's whole
+ * tímakaup and, through `Math.log` in the pooled fit, every figure in the
+ * report. Matches `parseNullableDecimal` above, which already guards both.
  */
 const nullableToStored = (value: number | null | undefined): number | null =>
   value == null ? null : toStoredPrecision(value)

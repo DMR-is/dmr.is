@@ -146,5 +146,35 @@ describe('report-employee salary derivation', () => {
 
       expect(parsedRegularHourlyWage(raw)).toBe(parsedRegularHourlyWage(stored))
     })
+
+    /**
+     * Pins the `== null` guard in `nullableToStored`. Under `=== null` an
+     * omitted field becomes `toStoredPrecision(undefined)` → `NaN`, which
+     * `?? 0` does not rescue, so the whole wage returns `NaN` and later NaNs
+     * every figure in the report through `Math.log` in the pooled fit.
+     *
+     * Reachable for real: `ParsedEmployeeDto` is a request body on
+     * `POST /reports/salary-analysis`, and its pay fields are `@ApiOptionalNumber`
+     * (`IsOptional()`) despite being typed `!: number | null` — so a client that
+     * omits one passes validation. `additionalFixedOther` is new in template
+     * 2.0, so any client not yet updated omits precisely this field.
+     *
+     * The cast is the point: it reproduces what the HTTP boundary delivers,
+     * which the declared type says cannot happen.
+     */
+    it('treats an omitted sub-component as 0, not NaN', () => {
+      const withOmittedField = {
+        paidHours: 160,
+        baseSalary: 500000,
+        additionalFixedOvertime: 100000,
+        additionalFixedCarAllowance: null,
+        // `additionalFixedOther` deliberately absent.
+      } as unknown as Parameters<typeof parsedRegularHourlyWage>[0]
+
+      const wage = parsedRegularHourlyWage(withOmittedField)
+
+      expect(Number.isFinite(wage)).toBe(true)
+      expect(wage).toBe(3750)
+    })
   })
 })

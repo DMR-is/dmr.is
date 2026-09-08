@@ -864,6 +864,32 @@ describe('parseWorkbook', () => {
       )
 
       /**
+       * A current-enough version on a workbook that is not ours. Without the
+       * id check this reaches the column parsers with only `assertWorkbookLayout`
+       * in the way. The message must NOT say "out of date" — the file isn't.
+       */
+      it('rejects a foreign workbook that carries a recent TemplateVersion', async () => {
+        const buf = await validWorkbookBuffer()
+        const zip = await JSZip.loadAsync(buf)
+        zip.file(
+          'docProps/custom.xml',
+          TEMPLATE_CUSTOM_PROPS_XML.replace(
+            'jafnrettisstofa-launagreining',
+            'einhver-onnur-skra',
+          ),
+        )
+
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await zip.generateAsync({ type: 'nodebuffer' })),
+        )
+
+        expect(errors[0].message).toContain(
+          'ekki launagreiningarsniðmát Jafnréttisstofu',
+        )
+        expect(errors[0].message).not.toContain('eldri útgáfu')
+      })
+
+      /**
        * The message is the whole cost of rejecting: the workbook is filled in
        * offline over days, so "wrong version" alone throws that work away
        * without saying what to redo. It has to name the columns that moved and
