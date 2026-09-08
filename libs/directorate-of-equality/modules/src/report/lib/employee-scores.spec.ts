@@ -3,7 +3,34 @@ import { BadRequestException } from '@nestjs/common'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import type { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import { GenderEnum } from '../models/report.enums'
-import { assertParsedPayloadIntegrity } from './employee-scores'
+import {
+  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
+} from './employee-scores'
+
+/**
+ * Payload faults now accumulate: the exception carries every message as an
+ * array, which the shared HTTP filter renders as `ApiErrorDto.details`. That
+ * moves the text off `error.message` — which is the generic "Bad Request
+ * Exception" for an array-valued throw — so matching on the message no longer
+ * works, and would silently pass against any 400 if it did.
+ */
+const expectPayloadIssue = (run: () => unknown, pattern: RegExp): void => {
+  expect(run).toThrow(BadRequestException)
+
+  let details: string[] = []
+  try {
+    run()
+  } catch (e) {
+    const response = (e as BadRequestException).getResponse()
+    const message = (response as { message?: string | string[] }).message
+    details = Array.isArray(message) ? message : [String(message)]
+  }
+
+  expect(details).toEqual(
+    expect.arrayContaining([expect.stringMatching(pattern)]),
+  )
+}
 
 describe('employee-scores', () => {
   describe('assertParsedPayloadIntegrity', () => {
@@ -15,8 +42,10 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/)
+      expectPayloadIssue(
+        run,
+        /Tvítekið raðnúmer starfsmanns í innsendum gögnum: 1/,
+      )
     })
 
     it.each([1, 9])(
@@ -30,8 +59,8 @@ describe('employee-scores', () => {
 
         const run = () => assertParsedPayloadIntegrity(parsed)
 
-        expect(run).toThrow(BadRequestException)
-        expect(run).toThrow(
+        expectPayloadIssue(
+          run,
           new RegExp(`er með ${stepCount} þrep; leyfilegt bil er 2–8`),
         )
       },
@@ -48,9 +77,9 @@ describe('employee-scores', () => {
 
         const run = () => assertParsedPayloadIntegrity(parsed)
 
-        expect(run).toThrow(BadRequestException)
-        expect(run).toThrow(
-          /Starfsmaður með raðnúmer 1 er með ógildar greiddar stundir .* gildið verður að vera á bilinu/,
+        expectPayloadIssue(
+          run,
+          /Starfsmaður #1: ógildar greiddar stundir .* gildið verður að vera á bilinu/,
         )
       },
     )
@@ -72,9 +101,64 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
-        /Starfsmaður með raðnúmer 1 er með engin regluleg laun/,
+      expectPayloadIssue(run, /Starfsmaður #1: engin regluleg laun/)
+    })
+  })
+
+  describe('assertParsedPayloadValid', () => {
+    // The gap this function exists to close. `makeParsedReport` is the fixture
+    // shape every spec in the repo uses, and it is structurally sound — which
+    // is exactly why the cross-field rules matter: they were reachable only
+    // through the workbook parser, so a payload like this one arriving as JSON
+    // was accepted whole.
+    it('rejects a structurally sound payload that is not a salary report', () => {
+      const parsed = makeParsedReport()
+
+      expect(() => assertParsedPayloadIntegrity(parsed)).not.toThrow()
+
+      expectPayloadIssue(
+        () => assertParsedPayloadValid(parsed),
+        /Skyldubundið starfsbundið viðmið „STRAIN“ vantar/,
+      )
+    })
+
+    it('reports every fault at once rather than the first', () => {
+      const parsed = makeParsedReport()
+
+      let details: string[] = []
+      try {
+        assertParsedPayloadValid(parsed)
+      } catch (e) {
+        const message = ((e as BadRequestException).getResponse() as {
+          message: string[]
+        }).message
+        details = message
+      }
+
+      // Three of the four mandatory types missing, and both weight totals
+      // wrong — five faults, one request.
+      expect(details).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(/viðmið „STRAIN“ vantar/),
+          expect.stringMatching(/viðmið „CONDITION“ vantar/),
+          expect.stringMatching(/viðmið „COMPETENCE“ vantar/),
+          expect.stringMatching(/Vægi viðmiða leggst saman í 15%/),
+          expect.stringMatching(/Vægi undirviðmiða leggst saman í 5%/),
+        ]),
+      )
+    })
+
+    it('catches a role left unclassified on a sub-criterion', () => {
+      const parsed = makeParsedReport()
+      parsed.roles[0].stepAssignments = []
+
+      // Silent today: the score just comes out lower, which moves the employee
+      // along the wage-gap regression and decides whether they are flagged.
+      expect(() => assertParsedPayloadIntegrity(parsed)).not.toThrow()
+
+      expectPayloadIssue(
+        () => assertParsedPayloadValid(parsed),
+        /Starf „Manager“: vantar úthlutun fyrir „Responsibility \/ People responsibility“/,
       )
     })
   })
@@ -87,8 +171,7 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Að hámarki 5 viðmið eru leyfð; fjöldi var 6/)
+      expectPayloadIssue(run, /Að hámarki 5 viðmið eru leyfð; fjöldi var 6/)
     })
 
     it('rejects more than 100 roles', () => {
@@ -100,8 +183,7 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(/Að hámarki 100 störf eru leyfð; fjöldi var 101/)
+      expectPayloadIssue(run, /Að hámarki 100 störf eru leyfð; fjöldi var 101/)
     })
 
     it('rejects more than 10000 employees', () => {
@@ -112,8 +194,8 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
+      expectPayloadIssue(
+        run,
         /Að hámarki 10000 starfsmenn eru leyfðir; fjöldi var 10001/,
       )
     })
@@ -123,8 +205,8 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
+      expectPayloadIssue(
+        run,
         /Viðmið „C“ er með 26 undirviðmið; að hámarki 25 eru leyfð á hvert viðmið/,
       )
     })
@@ -145,8 +227,8 @@ describe('employee-scores', () => {
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
-      expect(run).toThrow(BadRequestException)
-      expect(run).toThrow(
+      expectPayloadIssue(
+        run,
         /Að hámarki 100 persónubundin undirviðmið eru leyfð; fjöldi var 125/,
       )
     })
