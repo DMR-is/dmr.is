@@ -641,14 +641,20 @@ export const reportText = {
      * ── Pay-component split by gender ────────────────────────────────────────
      *
      * ⚠️ `Aukagreiðslur`, NOT `hlunnindi`. The template's own computed columns
-     * are P "Viðbótarlaun" (`=SUM(J:K)`) and Q "Aukagreiðslur" (`=SUM(L:O)`), so
+     * are P "Viðbótarlaun" (`=SUM(J:L)`) and Q "Aukagreiðslur" (`=SUM(M:O)`), so
      * that is the submitter-facing vocabulary. "Hlunnindi" had crept into the
      * formula docs and was corrected out 2026-08-20.
+     *
+     * ⚠️ Since template 2.0, `Samtals` here is NOT regluleg laun: aukagreiðslur
+     * are excluded from that and from reglulegt tímakaup. The two numbers sit on
+     * the same page, so the description has to say which is which — a reader who
+     * assumes this table adds up to the headline rate will not be able to make
+     * the figures reconcile.
      */
     components: {
       heading: 'Viðbótarlaun og aukagreiðslur',
       description:
-        'Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum.',
+        'Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum. Aukagreiðslur (tilfallandi greiðslur) teljast ekki með í reglulegum launum og hafa því ekki áhrif á reglulegt tímakaup.',
       genderHeader: 'Kyn',
       additionalHeader: 'Viðbótarlaun',
       bonusHeader: 'Aukagreiðslur',

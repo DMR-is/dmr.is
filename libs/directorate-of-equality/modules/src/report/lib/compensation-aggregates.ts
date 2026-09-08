@@ -8,7 +8,6 @@ export type CompensationEmployeeInput = {
   paidHours: number
   baseSalary: number
   additionalSalary: number
-  bonusSalary: number | null
 }
 
 export type GenderSalarySample = {
@@ -108,7 +107,6 @@ export type RegularHourlyWageInput = {
   paidHours: number
   baseSalary: number
   additionalSalary: number
-  bonusSalary: number | null
 }
 
 /**
@@ -116,20 +114,20 @@ export type RegularHourlyWageInput = {
  * evaluated on, per the regulation's *"reglulegum launum, reiknuðum niður á
  * tímakaup"*.
  *
- * Replaces the previous pair of adjusted-salary helpers. There is no
- * base-pay-only counterpart **by construction**, not merely because nothing
- * needed one: `baseSalary / paidHours` would divide a base-pay-only numerator
- * by a denominator that includes the overtime hours which generated the
- * additional and bonus pay. Under the old FTE divisor both variants were
- * coherent; under an hours divisor only the total-pay numerator is.
+ * `(grunnlaun + viðbótarlaun) / greiddar stundir`. **Aukagreiðslur are
+ * excluded**, and so are the incidental hours that earned them — the two
+ * exclusions are a matched pair introduced by Excel template 2.0, and neither
+ * is safe on its own. Adding incidental pay back over fixed-only hours would
+ * inflate every rate; see `computeRegularWages` for the full note.
+ *
+ * There is no base-pay-only counterpart **by construction**, not merely because
+ * nothing needed one: `baseSalary / paidHours` would divide a base-pay-only
+ * numerator by a denominator that still includes the fixed overtime hours which
+ * generated the additional pay. Under the old FTE divisor both variants were
+ * coherent; under an hours divisor only the fixed-pay numerator is.
  */
 export function getRegularHourlyWage(employee: RegularHourlyWageInput): number {
-  return (
-    (employee.baseSalary +
-      employee.additionalSalary +
-      (employee.bonusSalary ?? 0)) /
-    employee.paidHours
-  )
+  return (employee.baseSalary + employee.additionalSalary) / employee.paidHours
 }
 
 /**
@@ -171,10 +169,37 @@ export function computeSalaryResultSnapshot(
   }
 }
 
+/**
+ * Drops samples whose reglulegt tímakaup is not a usable positive number.
+ *
+ * ⚠️ **This must stay in step with the identical filter in
+ * `wage-gap-decomposition.ts`** (`Number.isFinite(hourlyWage) && hourlyWage > 0`,
+ * counted there as `counts.excluded`). The two run off the same employee array
+ * in `ReportResultService`, so if only one of them filters, a single report
+ * publishes a decomposition that excludes someone alongside averages that
+ * include them at zero — which is exactly the state this replaced.
+ *
+ * A zero tímakaup became reachable with template 2.0: aukagreiðslur left the
+ * numerator, so an employee paid entirely in incidental pay now has no regluleg
+ * laun. Including them would drag the average, the minimum and the gender gap
+ * toward zero, and put a scatter point on the chart's floor.
+ *
+ * No `excluded` count is surfaced here on purpose. The decomposition already
+ * reports one for the same cohort, so a second would be a duplicate that can
+ * drift; and the live chart, which shares this helper, is descriptive — a
+ * missing point misleads far less than a wrong average.
+ */
+const usableSalarySamples = <T extends GenderSalarySample>(
+  samples: readonly T[],
+): T[] =>
+  samples.filter(
+    (sample) => Number.isFinite(sample.salary) && sample.salary > 0,
+  )
+
 export function computeSalaryAggregateSnapshot(
   samples: GenderSalarySample[],
 ): SalaryAggregateSnapshot {
-  const grouped = groupSalaries(samples)
+  const grouped = groupSalaries(usableSalarySamples(samples))
 
   return {
     overall: computeMetrics(grouped.overall),
@@ -211,9 +236,14 @@ export function computeSalaryAggregateSnapshot(
 }
 
 export function computeSalaryScoreBucketSnapshots(
-  samples: SalaryScorePoint[],
+  rawSamples: SalaryScorePoint[],
   bucketWidth = 100,
 ): SalaryScoreBucketSnapshot[] {
+  // Filtered before the bucket range is derived, not just before averaging: an
+  // unusable sample would otherwise still stretch the score range and emit a
+  // bucket whose counts are all zero.
+  const samples = usableSalarySamples(rawSamples)
+
   if (samples.length === 0) {
     return []
   }

@@ -163,83 +163,83 @@ describe('ApplicationService', () => {
     // to vary one entry is how the two copies drift.
     createService = async (channel = ISLAND_IS_PROVIDER_CHANNEL) => {
       const testModule = await Test.createTestingModule({
-      providers: [
-        ApplicationService,
-        // Unless a test says otherwise these assertions are written for the
-        // island.is channel: provider_type ISLAND_IS and provider_id stored
-        // exactly as given.
-        {
-          provide: REPORT_PROVIDER_CHANNEL,
-          useValue: channel,
-        },
-        { provide: LOGGER_PROVIDER, useValue: mockLogger },
-        {
-          provide: IConfigService,
-          useValue: { getByKey: configGetByKey },
-        },
-        {
-          provide: ICompanyService,
-          useValue: {
-            getByNationalId: jest.fn(),
-            getOrCreateSubsidiaryReportSnapshotSource,
+        providers: [
+          ApplicationService,
+          // Unless a test says otherwise these assertions are written for the
+          // island.is channel: provider_type ISLAND_IS and provider_id stored
+          // exactly as given.
+          {
+            provide: REPORT_PROVIDER_CHANNEL,
+            useValue: channel,
           },
-        },
-        {
-          provide: IReportService,
-          useValue: { findActiveEqualityForCompany },
-        },
-        {
-          provide: IReportCreateService,
-          useValue: { createSalary, createEquality },
-        },
-        {
-          provide: IReportCommentService,
-          useValue: {
-            getByReportId: getCommentsByReportId,
-            create: createComment,
+          { provide: LOGGER_PROVIDER, useValue: mockLogger },
+          {
+            provide: IConfigService,
+            useValue: { getByKey: configGetByKey },
           },
-        },
-        {
-          provide: IReportEventService,
-          useValue: {
-            emitEdited,
-            emitStatusChanged,
+          {
+            provide: ICompanyService,
+            useValue: {
+              getByNationalId: jest.fn(),
+              getOrCreateSubsidiaryReportSnapshotSource,
+            },
           },
-        },
-        {
-          provide: IReportResultService,
-          useValue: { getByReportId: getResultByReportId },
-        },
-        {
-          provide: getModelToken(ReportModel),
-          useValue: { findOne: reportFindOne, update: reportUpdate },
-        },
-        {
-          provide: getModelToken(CompanyReportModel),
-          useValue: { findAll: companyReportFindAll },
-        },
-        {
-          provide: getModelToken(ReportEmployeeOutlierModel),
-          useValue: {
-            findAll: outlierFindAll,
-            findAndCountAll: outlierFindAndCountAll,
-            count: outlierCount,
-            update: outlierUpdate,
+          {
+            provide: IReportService,
+            useValue: { findActiveEqualityForCompany },
           },
-        },
-        {
-          provide: getModelToken(ReportOutlierGroupModel),
-          useValue: {
-            create: outlierGroupCreate,
-            findAll: outlierGroupFindAll,
-            destroy: outlierGroupDestroy,
+          {
+            provide: IReportCreateService,
+            useValue: { createSalary, createEquality },
           },
-        },
-        {
-          provide: getModelToken(ReportEventModel),
-          useValue: { findOne: eventFindOne },
-        },
-      ],
+          {
+            provide: IReportCommentService,
+            useValue: {
+              getByReportId: getCommentsByReportId,
+              create: createComment,
+            },
+          },
+          {
+            provide: IReportEventService,
+            useValue: {
+              emitEdited,
+              emitStatusChanged,
+            },
+          },
+          {
+            provide: IReportResultService,
+            useValue: { getByReportId: getResultByReportId },
+          },
+          {
+            provide: getModelToken(ReportModel),
+            useValue: { findOne: reportFindOne, update: reportUpdate },
+          },
+          {
+            provide: getModelToken(CompanyReportModel),
+            useValue: { findAll: companyReportFindAll },
+          },
+          {
+            provide: getModelToken(ReportEmployeeOutlierModel),
+            useValue: {
+              findAll: outlierFindAll,
+              findAndCountAll: outlierFindAndCountAll,
+              count: outlierCount,
+              update: outlierUpdate,
+            },
+          },
+          {
+            provide: getModelToken(ReportOutlierGroupModel),
+            useValue: {
+              create: outlierGroupCreate,
+              findAll: outlierGroupFindAll,
+              destroy: outlierGroupDestroy,
+            },
+          },
+          {
+            provide: getModelToken(ReportEventModel),
+            useValue: { findOne: eventFindOne },
+          },
+        ],
       }).compile()
 
       return testModule.get(ApplicationService)
@@ -390,12 +390,12 @@ describe('ApplicationService', () => {
       findActiveEqualityForCompany.mockResolvedValue(null)
 
       // The internal company id used to be quoted here, on a PUBLIC error.
+      await expect(service.getActiveEqualityReport(COMPANY)).rejects.toThrow(
+        'No approved equality report is in force',
+      )
       await expect(
         service.getActiveEqualityReport(COMPANY),
-      ).rejects.toThrow('No approved equality report is in force')
-      await expect(service.getActiveEqualityReport(COMPANY)).rejects.not.toThrow(
-        new RegExp(COMPANY.id),
-      )
+      ).rejects.not.toThrow(new RegExp(COMPANY.id))
     })
 
     it('returns the partner’s OWN providerId on the partner channel, namespace stripped', async () => {
@@ -1850,9 +1850,9 @@ function makeEmployee({
     baseSalary,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     personalStepAssignments: [
       {

@@ -36,10 +36,17 @@ export enum DoeModels {
 
 /**
  * Accepted range for `report_employee.paid_hours` (greiddar stundir í
- * mánuðinum, yfirvinnustundir meðtaldar) — the denominator of reglulegt
- * tímakaup. Shared by every ingress: the Excel parser, the draft-employee
- * endpoints and the sync batch. The Excel path is not the only way in, so a
- * bound enforced only there would let the API accept what the sheet rejects.
+ * mánuðinum, fastar yfirvinnustundir meðtaldar en ekki tilfallandi greiddar
+ * stundir) — the denominator of reglulegt tímakaup. Shared by every ingress:
+ * the Excel parser, the draft-employee endpoints and the sync batch. The Excel
+ * path is not the only way in, so a bound enforced only there would let the API
+ * accept what the sheet rejects.
+ *
+ * ⚠️ The DEFINITION narrowed with template 2.0 (incidental hours excluded); the
+ * BOUNDS deliberately did not move. Both still catch the errors they were
+ * chosen for — the lower one a `Starfshlutfall (0–1)` carryover, the upper an
+ * annual total entered where a monthly average was asked for — and narrowing
+ * the definition moves real values DOWN, away from the ceiling, not toward it.
  *
  * **Max — must match the template's own validation on column E** (`decimal
  * between 0 and 750`). A parser stricter than the sheet rejects a value Excel

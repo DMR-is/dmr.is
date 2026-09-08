@@ -12,64 +12,76 @@ const parseNullableDecimal = (value: unknown): number | null =>
   value !== null && value !== undefined ? parseFloat(value as string) : null
 
 /**
- * Viðbótarlaun (additional salary) = sum of its fixed sub-components, each
- * `null` (not entered) treated as `0`. Pure so the composition rule is
- * testable without a model instance.
+ * Viðbótarlaun (additional salary) = **fastar greiðslur aðrar en grunnlaun** —
+ * the sum of its fixed sub-components, each `null` (not entered) treated as
+ * `0`. Pure so the composition rule is testable without a model instance.
  */
 export const computeAdditionalSalary = (children: {
-  additionalFixedOvertime: number | null
-  additionalFixedCarAllowance: number | null
+  additionalFixedOvertime?: number | null
+  additionalFixedCarAllowance?: number | null
+  additionalFixedOther?: number | null
 }): number =>
   (children.additionalFixedOvertime ?? 0) +
-  (children.additionalFixedCarAllowance ?? 0)
+  (children.additionalFixedCarAllowance ?? 0) +
+  (children.additionalFixedOther ?? 0)
 
 /**
- * Aukagreiðslur (bonus salary) = sum of its occasional / bonus sub-components,
- * each `null` (not entered) treated as `0`.
+ * Aukagreiðslur (bonus salary) = **tilfallandi greiðslur** — the sum of its
+ * incidental sub-components, each `null` (not entered) treated as `0`.
+ *
+ * Still collected, still returned by the API, still shown to reviewers. It is
+ * simply **not part of {@link computeRegularWages}** — see the note there.
  */
 export const computeBonusSalary = (children: {
   bonusOccasionalCarAllowance: number | null
   bonusOccasionalOvertime: number | null
-  bonusPayments: number | null
   bonusOther: number | null
 }): number =>
   (children.bonusOccasionalCarAllowance ?? 0) +
   (children.bonusOccasionalOvertime ?? 0) +
-  (children.bonusPayments ?? 0) +
   (children.bonusOther ?? 0)
 
 /**
- * The seven pay fields that compose **regluleg laun**, named once so the
- * composition is stated in exactly one place.
+ * The pay fields that compose **regluleg laun**, named once so the composition
+ * is stated in exactly one place. Incidental pay is deliberately absent — see
+ * {@link computeRegularWages}.
+ *
+ * The children are `?:`, not `!:`, because one caller is a **request body**:
+ * `ParsedEmployeeDto` arrives over HTTP with these fields marked
+ * `@ApiOptionalNumber` (`IsOptional()`), so an omitted key really does reach
+ * here as `undefined`. Declaring them required would restate the lie that let
+ * a missing field become `NaN` in the first place — see `nullableToStored`.
  */
 type RegularWageComponents = {
   baseSalary: number
-  additionalFixedOvertime: number | null
-  additionalFixedCarAllowance: number | null
-  bonusOccasionalCarAllowance: number | null
-  bonusOccasionalOvertime: number | null
-  bonusPayments: number | null
-  bonusOther: number | null
+  additionalFixedOvertime?: number | null
+  additionalFixedCarAllowance?: number | null
+  additionalFixedOther?: number | null
 }
 
 /**
- * Regluleg laun = grunnlaun + viðbótarlaun + aukagreiðslur — every collected pay
- * field, each unentered child treated as `0`.
+ * Regluleg laun = **grunnlaun + viðbótarlaun**, each unentered child treated as
+ * `0`. Tilfallandi greiðslur teljast ekki með.
  *
- * ⚠️ **The wide reading is deliberate. Do not narrow it.** Hagstofa's published
- * definition of *regluleg laun* is *"greidd mánaðarlaun fyrir umsaminn
- * vinnutíma … hvers konar álags- og bónusgreiðslur"*, which read strictly
- * excludes tilfallandi yfirvinna and does not clearly cover aukagreiðslur. The
- * Directorate approved this wider formula regardless, "until further notice",
- * and it is what the Excel template's own `Regluleg laun` column computes. A
- * later reader who narrows this to match Hagstofa's wording would silently move
- * every company's tímakaup and every published gap figure — so the discrepancy
- * is recorded here rather than left to be discovered and "fixed".
+ * ⚠️ **The narrow reading is deliberate. Do not widen it back.** This formula
+ * used to include aukagreiðslur, on a wider reading the Directorate had
+ * approved "until further notice". That notice arrived with Excel template 2.0
+ * (2026-09-08), which re-cut the pay columns along fixed vs. incidental and
+ * narrowed `Regluleg laun` to `I + P` on the sheet itself. The change is
+ * coherent only as a pair with `paid_hours`: template 2.0 also narrowed
+ * *Greiddar stundir* to exclude incidental hours, so numerator and denominator
+ * now cover the same scope. Adding incidental pay back on top of fixed-only
+ * hours would reintroduce exactly the mismatch this release removed.
+ *
+ * Figures produced here are **not comparable** with those from before the
+ * change — anyone with incidental pay shows a lower tímakaup than the same
+ * input produced under 1.x. That is intended, and is why `report_result` rows
+ * written after this stamp `calculation_version = 'v4'`.
+ *
+ * See `.plans/doe/plan-launalidir-2-0.md`.
  */
 export const computeRegularWages = (employee: RegularWageComponents): number =>
-  employee.baseSalary +
-  computeAdditionalSalary(employee) +
-  computeBonusSalary(employee)
+  employee.baseSalary + computeAdditionalSalary(employee)
 
 /**
  * Decimal places every pay column on `report_employee` stores — they are all
@@ -117,19 +129,40 @@ export const parsedRegularHourlyWage = (
     additionalFixedCarAllowance: nullableToStored(
       employee.additionalFixedCarAllowance,
     ),
-    bonusOccasionalCarAllowance: nullableToStored(
-      employee.bonusOccasionalCarAllowance,
-    ),
-    bonusOccasionalOvertime: nullableToStored(employee.bonusOccasionalOvertime),
-    bonusPayments: nullableToStored(employee.bonusPayments),
-    bonusOther: nullableToStored(employee.bonusOther),
+    additionalFixedOther: nullableToStored(employee.additionalFixedOther),
   }
 
   return computeRegularWages(stored) / stored.paidHours
 }
 
-const nullableToStored = (value: number | null): number | null =>
-  value === null ? null : toStoredPrecision(value)
+/**
+ * `== null` catches `undefined` as well as `null`, deliberately. **This is a
+ * live path, not a defensive flourish**, and the reachable route is worth
+ * naming because the types actively hide it:
+ *
+ *   `POST /api/v1/application/reports/salary-analysis` (and its admin twin)
+ *   → `SalaryAnalysisRequestDto.parsed` → `analyzeSalaryPayload`
+ *   → `parsedRegularHourlyWage`
+ *
+ * That `ParsedReportDto` is a **request body**, not a parser output. Every pay
+ * field on `ParsedEmployeeDto` is declared `!: number | null`, but each is
+ * decorated `@ApiOptionalNumber`, which applies `IsOptional()` — so a client
+ * that simply omits the key passes validation and the property arrives
+ * `undefined`. The `!` is a TypeScript claim nothing enforces at the HTTP
+ * boundary. (The Excel route is safe: `buildEmployee` always assigns from
+ * `readNumber`, which returns `number | null`.)
+ *
+ * Omission is the EXPECTED shape right now, not a hypothetical: template 2.0
+ * added `additionalFixedOther`, so every client that has not yet updated omits
+ * exactly this field.
+ *
+ * Under `=== null` that becomes `toStoredPrecision(undefined)` → `NaN`, which
+ * `?? 0` does NOT rescue, so one absent sub-component NaNs the employee's whole
+ * tímakaup and, through `Math.log` in the pooled fit, every figure in the
+ * report. Matches `parseNullableDecimal` above, which already guards both.
+ */
+const nullableToStored = (value: number | null | undefined): number | null =>
+  value == null ? null : toStoredPrecision(value)
 
 /**
  * Asserts an employee's score has been computed. A draft's employee scores are
@@ -158,9 +191,9 @@ type ReportEmployeeAttributes = {
   baseSalary: number
   additionalFixedOvertime: number | null
   additionalFixedCarAllowance: number | null
+  additionalFixedOther: number | null
   bonusOccasionalCarAllowance: number | null
   bonusOccasionalOvertime: number | null
-  bonusPayments: number | null
   bonusOther: number | null
   gender: GenderEnum
   reportEmployeeRoleId: string
@@ -179,9 +212,9 @@ type ReportEmployeeCreateAttributes = {
   baseSalary: number
   additionalFixedOvertime?: number | null
   additionalFixedCarAllowance?: number | null
+  additionalFixedOther?: number | null
   bonusOccasionalCarAllowance?: number | null
   bonusOccasionalOvertime?: number | null
-  bonusPayments?: number | null
   bonusOther?: number | null
   gender: GenderEnum
   reportEmployeeRoleId: string
@@ -207,10 +240,18 @@ export class ReportEmployeeModel extends MutableModel<
   startDate!: string
 
   /**
-   * Greiddar stundir í mánuðinum, yfirvinnustundir meðtaldar — the denominator
-   * of reglulegt tímakaup. `NOT NULL CHECK (paid_hours > 0)`, so never zero on
-   * persisted data. Replaced `work_ratio`; see {@link computeRegularHourlyWage}
-   * for why the two must not coexist.
+   * Greiddar stundir í mánuðinum — **fastar yfirvinnustundir meðtaldar, en ekki
+   * tilfallandi greiddar stundir** — the denominator of reglulegt tímakaup.
+   * `NOT NULL CHECK (paid_hours > 0)`, so never zero on persisted data.
+   *
+   * ⚠️ The scope narrowed with template 2.0: it previously meant all paid
+   * hours with all overtime included. It is the deliberate counterpart to
+   * {@link computeRegularWages} dropping incidental pay — both sides of the
+   * division now cover fixed pay and fixed hours only. Widening either one
+   * alone reintroduces the mismatch.
+   *
+   * Replaced `work_ratio`; see {@link parsedRegularHourlyWage} for why the two
+   * must not coexist.
    */
   @Column({
     type: DataType.DECIMAL(6, 2),
@@ -260,6 +301,21 @@ export class ReportEmployeeModel extends MutableModel<
   })
   additionalFixedCarAllowance!: number | null
 
+  /**
+   * Aðrar reglulegar greiðslur / hlunnindi — Launagögn column L. Added by
+   * template 2.0, which reassigned L from an incidental car allowance to a
+   * fixed payment. Feeds viðbótarlaun, and therefore regluleg laun.
+   */
+  @Column({
+    type: DataType.DECIMAL(14, 2),
+    allowNull: true,
+    field: 'additional_fixed_other',
+    get() {
+      return parseNullableDecimal(this.getDataValue('additionalFixedOther'))
+    },
+  })
+  additionalFixedOther!: number | null
+
   @Column({
     type: DataType.DECIMAL(14, 2),
     allowNull: true,
@@ -285,16 +341,6 @@ export class ReportEmployeeModel extends MutableModel<
   @Column({
     type: DataType.DECIMAL(14, 2),
     allowNull: true,
-    field: 'bonus_payments',
-    get() {
-      return parseNullableDecimal(this.getDataValue('bonusPayments'))
-    },
-  })
-  bonusPayments!: number | null
-
-  @Column({
-    type: DataType.DECIMAL(14, 2),
-    allowNull: true,
     field: 'bonus_other',
     get() {
       return parseNullableDecimal(this.getDataValue('bonusOther'))
@@ -303,16 +349,19 @@ export class ReportEmployeeModel extends MutableModel<
   bonusOther!: number | null
 
   /**
-   * Viðbótarlaun — derived, not stored. Sum of its fixed sub-components, each
-   * treated as 0 when not entered.
+   * Viðbótarlaun — derived, not stored. Sum of the three FIXED sub-components,
+   * each treated as 0 when not entered. Part of regluleg laun.
    */
   get additionalSalary(): number {
     return computeAdditionalSalary(this)
   }
 
   /**
-   * Aukagreiðslur — derived, not stored. Sum of its occasional / bonus
+   * Aukagreiðslur — derived, not stored. Sum of the three INCIDENTAL
    * sub-components, each treated as 0 when not entered.
+   *
+   * Reported on its own, but **not** part of regluleg laun or reglulegt
+   * tímakaup — see {@link computeRegularWages}.
    */
   get bonusSalary(): number {
     return computeBonusSalary(this)
@@ -368,9 +417,9 @@ export class ReportEmployeeModel extends MutableModel<
       baseSalary: model.baseSalary,
       additionalFixedOvertime: model.additionalFixedOvertime,
       additionalFixedCarAllowance: model.additionalFixedCarAllowance,
+      additionalFixedOther: model.additionalFixedOther,
       bonusOccasionalCarAllowance: model.bonusOccasionalCarAllowance,
       bonusOccasionalOvertime: model.bonusOccasionalOvertime,
-      bonusPayments: model.bonusPayments,
       bonusOther: model.bonusOther,
       additionalSalary: model.additionalSalary,
       bonusSalary: model.bonusSalary,

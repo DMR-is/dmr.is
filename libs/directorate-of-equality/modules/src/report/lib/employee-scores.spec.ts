@@ -65,10 +65,12 @@ describe('employee-scores', () => {
       employee.baseSalary = 0
       employee.additionalFixedOvertime = 0
       employee.additionalFixedCarAllowance = 0
-      employee.bonusOccasionalCarAllowance = 0
-      employee.bonusOccasionalOvertime = 0
-      employee.bonusPayments = 0
-      employee.bonusOther = 0
+      employee.additionalFixedOther = 0
+      // Incidental pay is left NON-zero deliberately: it must not rescue an
+      // employee from this guard, because it is not part of regluleg laun.
+      employee.bonusOccasionalOvertime = 250000
+      employee.bonusOccasionalCarAllowance = 50000
+      employee.bonusOther = 25000
 
       const run = () => assertParsedPayloadIntegrity(parsed)
 
@@ -234,9 +236,9 @@ function makeEmployee(
     baseSalary: 1000000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     personalStepAssignments: [],
     ...overrides,

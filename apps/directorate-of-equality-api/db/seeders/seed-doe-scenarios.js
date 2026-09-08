@@ -593,21 +593,22 @@ INSERT INTO report_employee_role_criterion_step (id, report_employee_role_id, re
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
   start_date, paid_hours, base_salary,
-  additional_fixed_overtime, additional_fixed_car_allowance,
-  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
+  additional_fixed_overtime, additional_fixed_car_allowance, additional_fixed_other,
+  bonus_occasional_overtime, bonus_occasional_car_allowance, bonus_other,
   gender, report_employee_role_id, score) VALUES
 ${cohort
   .map(
     (e, i) =>
       `  ('${empIds[i]}','${reportId}',${e.ordinal},'${e.field}','${e.department}','${e.startDate}',` +
-      `${e.paidHours},${money(e.baseSalary)},${money(e.additionalFixedOvertime)},NULL,NULL,NULL,` +
-      `${money(e.bonusPayments)},NULL,'${e.gender}','${roleIds[e.roleIndex]}',${e.score}.00)`,
+      `${e.paidHours},${money(e.baseSalary)},${money(e.additionalFixedOvertime)},NULL,` +
+      `${money(e.additionalFixedOther)},NULL,NULL,NULL,` +
+      `'${e.gender}','${roleIds[e.roleIndex]}',${e.score}.00)`,
   )
   .join(',\n')};
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES ('${resultId}', '${reportId}', 3.90, 'v3', '${salarySnap}', '${wageGapSnap}');
+VALUES ('${resultId}', '${reportId}', 3.90, 'v4', '${salarySnap}', '${wageGapSnap}');
 
 `
 
@@ -915,58 +916,77 @@ VALUES ('${uid(evCounter++)}', '${sid(18)}', 'SUBMITTED', NULL, 'SUBMITTED', '${
   return sql
 }
 
+/**
+ * ⚠️ **Scope every clause to THIS seeder's 28 companies — never to the
+ * `500101…` national-id prefix.** That prefix is shared by every DoE seeder
+ * (rich-scenario is slot 29, three-group 30, reference-company 40), so a
+ * prefix-matching predicate on `company_national_id` reaches into their data.
+ *
+ * It used to, and it broke `db:seed:undo:all` outright: this `down` deleted
+ * rows from `report` belonging to companies 29 and 40 while their
+ * `company_report` rows — scoped, correctly, to the 28 ids below — were left in
+ * place. Postgres then refused with
+ * `company_report_report_id_fkey`, the undo aborted partway, and
+ * `nx run directorate-of-equality-api:reseed` could not complete at all.
+ *
+ * The mismatch is the whole bug: the delete that BLOCKS is keyed on
+ * `report_id`, so scoping the two clauses differently is what makes them
+ * disagree. Keep both keyed to `companyIds` / `companyNationalIds`.
+ */
 function downSql() {
-  const companyIds = Array.from(
-    { length: 28 },
-    (_, i) => `'${cid(i + 1)}'`,
-  ).join(',\n    ')
+  const scenarioCompanies = Array.from({ length: 28 }, (_, i) => i + 1)
+  const companyIds = scenarioCompanies.map((n) => `'${cid(n)}'`).join(',\n    ')
+  // Matches the literals in `companiesSql` above: '500101' + 4-digit slot.
+  const companyNationalIds = scenarioCompanies
+    .map((n) => `'500101${String(n).padStart(4, '0')}'`)
+    .join(',\n    ')
   return `
 BEGIN;
 
-DELETE FROM report_comment      WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+DELETE FROM report_comment      WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_event        WHERE company_id IN (${companyIds});
 DELETE FROM report_employee_personal_criterion_step
   WHERE report_employee_id IN (
     SELECT re.id FROM report_employee re
     JOIN report r ON r.id = re.report_id
-    WHERE r.company_national_id LIKE '500101%'
+    WHERE r.company_national_id IN (${companyNationalIds})
   );
 DELETE FROM report_employee_outlier
   WHERE report_employee_id IN (
     SELECT re.id FROM report_employee re
     JOIN report r ON r.id = re.report_id
-    WHERE r.company_national_id LIKE '500101%'
+    WHERE r.company_national_id IN (${companyNationalIds})
   );
 DELETE FROM report_outlier_group
-  WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+  WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_employee_role_criterion_step
   WHERE report_sub_criterion_step_id IN (
     SELECT rscs.id FROM report_sub_criterion_step rscs
     JOIN report_sub_criterion rsc ON rsc.id = rscs.report_sub_criterion_id
     JOIN report_criterion rc ON rc.id = rsc.report_criterion_id
     JOIN report r ON r.id = rc.report_id
-    WHERE r.company_national_id LIKE '500101%'
+    WHERE r.company_national_id IN (${companyNationalIds})
   );
-DELETE FROM report_employee     WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+DELETE FROM report_employee     WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_employee_role
-  WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
-DELETE FROM report_result       WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+  WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
+DELETE FROM report_result       WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM report_sub_criterion_step
   WHERE report_sub_criterion_id IN (
     SELECT rsc.id FROM report_sub_criterion rsc
     JOIN report_criterion rc ON rc.id = rsc.report_criterion_id
     JOIN report r ON r.id = rc.report_id
-    WHERE r.company_national_id LIKE '500101%'
+    WHERE r.company_national_id IN (${companyNationalIds})
   );
 DELETE FROM report_sub_criterion
   WHERE report_criterion_id IN (
     SELECT rc.id FROM report_criterion rc
     JOIN report r ON r.id = rc.report_id
-    WHERE r.company_national_id LIKE '500101%'
+    WHERE r.company_national_id IN (${companyNationalIds})
   );
-DELETE FROM report_criterion    WHERE report_id IN (SELECT id FROM report WHERE company_national_id LIKE '500101%');
+DELETE FROM report_criterion    WHERE report_id IN (SELECT id FROM report WHERE company_national_id IN (${companyNationalIds}));
 DELETE FROM company_report      WHERE company_id IN (${companyIds});
-DELETE FROM report              WHERE company_national_id LIKE '500101%';
+DELETE FROM report              WHERE company_national_id IN (${companyNationalIds});
 DELETE FROM company             WHERE id IN (${companyIds});
 
 COMMIT;

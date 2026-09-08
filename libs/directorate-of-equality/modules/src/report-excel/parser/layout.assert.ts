@@ -31,10 +31,16 @@ import { ErrorBag } from './errors'
  * ## Matching
  *
  * Prefix match on a distinctive leading token, not equality. Header wording gets
- * tweaked (`Greiddar stundir` gained *"(inniheldur yfirvinnustundir)"*) and
- * rejecting a workbook over a parenthetical would be worse than the problem this
- * solves. A prefix is still more than enough to catch a *shift*, because the
- * value landing in the cell is then a different field entirely.
+ * tweaked (`Greiddar stundir` gained a parenthetical, twice) and rejecting a
+ * workbook over that would be worse than the problem this solves. A prefix is
+ * still more than enough to catch a *shift*, because the value landing in the
+ * cell is then a different field entirely.
+ *
+ * ⚠️ It is only enough to catch a *reassignment* — a column that stayed put and
+ * changed meaning, as L, N and O did in template 2.0 — when the prefix reaches
+ * past what the old and new headers share. Where two headers on the same sheet
+ * start alike, the prefix has to be long enough to tell them apart; see M and N
+ * below. Shortening one to "tidy it up" silently removes the check.
  *
  * Only the columns a parser actually reads positionally are checked. Computed
  * columns are deliberately absent: nothing reads them, so their wording is free
@@ -56,6 +62,24 @@ const EXPECTED: Array<{ sheet: string; headers: ExpectedHeader[] }> = [
       // The one that moved. An old sheet has `Starfshlutfall` here.
       { column: 'E', startsWith: 'Greiddar stundir' },
       { column: 'I', startsWith: 'Grunnlaun' },
+      // ⚠️ L, N and O were REASSIGNED by template 2.0 without moving, so unlike
+      // every other entry here these do not guard against a column shift — they
+      // guard against a column that sits exactly where it always did and means
+      // something else. A 1.x sheet passes C/D/E/I and then files a fixed
+      // payment as an incidental one. The version gate catches that first;
+      // these catch a file whose properties were stripped or rebuilt.
+      { column: 'J', startsWith: 'Föst yfirvinna' },
+      { column: 'K', startsWith: 'Föst bifreiðahlunnindi' },
+      // 1.x: `Tilfallandi / mældur bifreiðastyrkur`.
+      { column: 'L', startsWith: 'Aðrar reglulegar greiðslur' },
+      // ⚠️ M and N both begin `Tilfallandi / mæld…` — these two prefixes MUST
+      // stay long enough to reach the word that separates them. Trimmed back to
+      // a shared prefix they would accept the pair swapped, which is precisely
+      // the 1.x-vs-2.0 difference, and the check would be decorative.
+      { column: 'M', startsWith: 'Tilfallandi / mæld yfirvinna' },
+      { column: 'N', startsWith: 'Tilfallandi / mældur bifreiðastyrkur' },
+      // 1.x: `Önnur hlunnindi eða greiðslur`.
+      { column: 'O', startsWith: 'Aðrar tilfallandi greiðslur' },
     ],
   },
   {

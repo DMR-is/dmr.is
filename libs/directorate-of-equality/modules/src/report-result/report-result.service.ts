@@ -34,6 +34,15 @@ import { IReportResultService } from './report-result.service.interface'
 
 const LOGGING_CONTEXT = 'ReportResultService'
 /**
+ * `v4` = launaliðir 2.0. Regluleg laun narrowed from
+ * `grunnlaun + viðbótarlaun + aukagreiðslur` to `grunnlaun + viðbótarlaun`,
+ * with `greiddar stundir` narrowed to match (fixed overtime in, incidental
+ * out). The snapshot SHAPE is unchanged from v3 — only the arithmetic behind
+ * every figure in it moved, which is exactly the case a version marker exists
+ * for: a v3 row deserialises perfectly and is simply **not comparable**.
+ * Anyone with incidental pay shows a lower tímakaup than the same input
+ * produced under v3. See `.plans/doe/plan-launalidir-2-0.md`.
+ *
  * `v3` = two-directional lágmarksmengi. The snapshot's per-employee
  * `isCorrectable` became `widensGap` with a wider meaning (carries the gap on
  * either side of the line, not just liftable), `correctableCount` became
@@ -46,7 +55,7 @@ const LOGGING_CONTEXT = 'ReportResultService'
  * are not comparable, and no v1 row survived the migration that introduced
  * `paid_hours`.
  */
-const REPORT_RESULT_CALCULATION_VERSION = 'v3'
+const REPORT_RESULT_CALCULATION_VERSION = 'v4'
 
 @Injectable()
 export class ReportResultService implements IReportResultService {
@@ -131,7 +140,6 @@ export class ReportResultService implements IReportResultService {
         paidHours: employee.paidHours,
         baseSalary: employee.baseSalary,
         additionalSalary: employee.additionalSalary,
-        bonusSalary: employee.bonusSalary,
       })),
     })
     // The decomposition runs on the same employee rows as the aggregates, so
