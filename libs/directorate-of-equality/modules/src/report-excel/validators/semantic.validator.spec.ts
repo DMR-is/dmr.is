@@ -236,16 +236,10 @@ describe('validateSemantics', () => {
     })
   })
 
-  describe('role reference integrity', () => {
-    it('rejects an employee referencing an unknown role title', () => {
-      const report = validReport()
-      report.employees[0].roleTitle = 'Ghost'
-      const errors = runValidator(report)
-      expect(
-        errors.some((e) => e.message.includes('vísar í óþekkt starf „Ghost“')),
-      ).toBe(true)
-    })
-  })
+  // An employee naming a role that does not exist is checked by
+  // `assertParsedPayloadIntegrity` instead — see employee-scores.spec.ts. It
+  // sits with the other rules about an employee row's own fields, and putting
+  // it in both places would report it twice in one list.
 
   describe('role classification completeness', () => {
     it('rejects a role missing one job-based sub assignment', () => {
@@ -265,9 +259,9 @@ describe('validateSemantics', () => {
         stepOrder: 5,
       })
       const errors = runValidator(report)
-      expect(
-        errors.some((e) => e.message.includes('er með 2 úthlutanir fyrir')),
-      ).toBe(true)
+      expect(errors.some((e) => e.message.includes('2 úthlutanir fyrir'))).toBe(
+        true,
+      )
     })
   })
 

@@ -19,6 +19,10 @@ import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
+import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
 import { REPORT_IDENTIFIER_INDEX } from '../report/lib/report-identifier'
 import {
   GenderEnum,
@@ -267,7 +271,7 @@ describe('ReportCreateService', () => {
   it('creates a SALARY report with all child rows', async () => {
     const result = await service.createSalary(makeInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID })
+    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
 
     expect(reportFindOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -304,18 +308,26 @@ describe('ReportCreateService', () => {
       employeeCountCategory: CompanySizeEnum.LARGE,
     })
 
-    // 1 role, 1 criterion, 1 sub_criterion, 2 steps, 1 employee.
+    // 1 role, 1 employee, and five criteria with one sub-criterion each: the
+    // job-based Abyrgd, the personal one, and the three mandatory job-based
+    // types `padToSemanticValidity` supplies. A valid salary report cannot
+    // have fewer — that is the rule the payload gate now enforces.
     expect(roleBulkCreate.mock.calls[0][0]).toHaveLength(1)
-    expect(criterionCreate).toHaveBeenCalledTimes(1)
-    expect(subCriterionCreate).toHaveBeenCalledTimes(1)
+    expect(criterionCreate).toHaveBeenCalledTimes(5)
+    expect(subCriterionCreate).toHaveBeenCalledTimes(5)
     expect(subCriterionStepBulkCreate.mock.calls[0][0]).toHaveLength(2)
 
-    // role step assignment + personal step assignment both resolve.
-    expect(roleStepBulkCreate.mock.calls[0][0]).toEqual([
-      expect.objectContaining({
-        reportEmployeeRoleId: 'role-0',
-      }),
-    ])
+    // Role step assignments and the personal one both resolve. Four role
+    // assignments, not one: a role must be scored on every job-based
+    // sub-criterion, which is four of them once the payload is a valid report.
+    expect(roleStepBulkCreate.mock.calls[0][0]).toHaveLength(4)
+    expect(roleStepBulkCreate.mock.calls[0][0]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reportEmployeeRoleId: 'role-0',
+        }),
+      ]),
+    )
     expect(personalStepBulkCreate.mock.calls[0][0]).toEqual([
       expect.objectContaining({
         reportEmployeeId: 'emp-0',
@@ -391,18 +403,12 @@ describe('ReportCreateService', () => {
     )
   })
 
-  it('dedups overlapping role and personal step assignments when computing score', async () => {
-    const input = makeInput()
-    // Role and personal both reference (Abyrgd, Abyrgd a fólki, stepOrder=5).
-    // Score should still count once: 50, not 100.
-    input.parsed.employees[0].personalStepAssignments = [
-      { criterionTitle: 'Abyrgd', subTitle: 'Abyrgd a fólki', stepOrder: 5 },
-    ]
-
-    await service.createSalary(input)
-
-    expect(employeeBulkCreate.mock.calls[0][0][0].score).toBe(50)
-  })
+  // The overlapping-assignment case is no longer reachable through this
+  // service: a role owns the job-based criteria and an employee owns only the
+  // personal ones, so the two cannot name the same sub-criterion and the
+  // payload gate refuses a submission where they do. `computeEmployeeScores`
+  // still dedups, defensively, and is tested for it directly — see
+  // employee-scores.spec.ts.
 
   it('writes one company_report row per participating company with parent FK wired up', async () => {
     const input = makeInput()
@@ -686,7 +692,7 @@ describe('ReportCreateService', () => {
   it('creates an EQUALITY report with content + company snapshot + event', async () => {
     const result = await service.createEquality(makeEqualityInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID })
+    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
 
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -872,6 +878,77 @@ describe('ReportCreateService', () => {
     })
   })
 
+  describe('resolving the equality report when the caller names none', () => {
+    const RESOLVED_EQUALITY_ID = '00000000-0000-0000-0000-0000000000e9'
+
+    const withoutEqualityReportId = (): CreateReportDto => {
+      const input = makeInput()
+      input.equalityReportId = undefined
+
+      return input
+    }
+
+    it("resolves the company's active report and files against it", async () => {
+      const input = withoutEqualityReportId()
+      // `makeInput` leaves `providerId` null, so no tuple lookup happens: the
+      // first `findOne` is the resolution's, the second is the invariant check.
+      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
+      reportFindOne
+        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
+        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
+
+      await service.createSalary(input)
+
+      expect(reportCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ equalityReportId: RESOLVED_EQUALITY_ID }),
+      )
+    })
+
+    it('refuses a new submission when no approved report is in force', async () => {
+      const input = withoutEqualityReportId()
+      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
+      reportFindOne.mockResolvedValueOnce(null)
+
+      await expect(service.createSalary(input)).rejects.toThrow(
+        NotFoundException,
+      )
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+
+    it('replays an already-filed report even after its equality report has lapsed', async () => {
+      // The regression. Resolution used to happen while the creation input was
+      // built, i.e. BEFORE this replay check, so a retry of a report that was
+      // successfully filed answered 404 once its equality report stopped being
+      // active — a precondition for NEW submissions making an old one
+      // un-retryable, and an integrator reading a filed report as failed.
+      const input = withoutEqualityReportId()
+      const FILED_REPORT_ID = '00000000-0000-0000-0000-0000000000ea'
+      input.providerType = ReportProviderEnum.OTHER
+      input.providerId = '6511881219:vendor-submission-1'
+
+      // The tuple lookup finds the earlier submission; every later `findOne`
+      // answers null, so an equality resolution reaching the database would
+      // throw instead of replaying.
+      reportFindOne
+        .mockResolvedValueOnce({
+          id: FILED_REPORT_ID,
+          providerType: input.providerType,
+          providerId: input.providerId,
+          type: ReportTypeEnum.SALARY,
+        })
+        .mockResolvedValue(null)
+      companyReportFindOne.mockResolvedValueOnce({
+        companyId: PARENT_COMPANY_ID,
+        parentCompanyId: null,
+      })
+
+      const result = await service.createSalary(input)
+
+      expect(result).toEqual({ reportId: FILED_REPORT_ID, replayed: true })
+      expect(reportCreate).not.toHaveBeenCalled()
+    })
+  })
+
   describe('idempotent replay on (providerType, providerId)', () => {
     const EXISTING_REPORT_ID = '00000000-0000-0000-0000-0000000000ee'
 
@@ -896,7 +973,10 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_REPORT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
       expect(reportResultCreateForReport).not.toHaveBeenCalled()
@@ -943,7 +1023,10 @@ describe('ReportCreateService', () => {
 
       const result = await service.createEquality(input)
 
-      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_REPORT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
       expect(reportEventCreate).not.toHaveBeenCalled()
@@ -992,9 +1075,7 @@ describe('ReportCreateService', () => {
         parentCompanyId: null,
       })
 
-      await expect(service.createSalary(input)).rejects.toThrow(
-        /EQUALITY/,
-      )
+      await expect(service.createSalary(input)).rejects.toThrow(/EQUALITY/)
     })
 
     it('checks ownership before type, so a foreign tuple reveals nothing about it', async () => {
@@ -1033,7 +1114,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           providerType: ReportProviderEnum.ISLAND_IS,
@@ -1075,7 +1156,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(makeInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },
@@ -1187,7 +1268,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createEquality(makeEqualityInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },
@@ -1314,7 +1395,7 @@ function makeInput(): CreateReportDto {
     salaryDataBasis: SalaryDataBasisEnum.MONTH,
     salaryDataPeriod: PERIOD_INPUT,
     companies: [makeCompanySnapshot(PARENT_COMPANY_ID, null)],
-    parsed: {
+    parsed: padToSemanticValidity({
       criteria: [
         {
           type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -1333,6 +1414,13 @@ function makeInput(): CreateReportDto {
             },
           ],
         },
+        // Carries the 10 the employee below used to take off the job-based
+        // criterion, so the total score is unchanged: 50 from the role, 10
+        // from the person.
+        personalCriterion([
+          { order: 1, description: 'low', score: 10 },
+          { order: 5, description: 'high', score: 50 },
+        ]),
       ],
       roles: [
         {
@@ -1365,14 +1453,14 @@ function makeInput(): CreateReportDto {
           bonusOther: null,
           personalStepAssignments: [
             {
-              criterionTitle: 'Abyrgd',
-              subTitle: 'Abyrgd a fólki',
+              criterionTitle: 'Einstaklingsbundid',
+              subTitle: 'Frammistada',
               stepOrder: 1,
             },
           ],
         },
       ],
-    },
+    }),
   }
 }
 
@@ -1383,7 +1471,7 @@ function makeInput(): CreateReportDto {
  */
 function makeInputWithDetectedOutlier(): CreateReportDto {
   const base = makeInput()
-  base.parsed.criteria[0].subCriteria[0].steps = [
+  const spread = [
     { order: 1, description: 'score 100', score: 100 },
     { order: 2, description: 'score 200', score: 200 },
     { order: 3, description: 'score 300', score: 300 },
@@ -1392,7 +1480,19 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
     { order: 6, description: 'score 600', score: 600 },
     { order: 7, description: 'score 700', score: 700 },
   ]
-  base.parsed.roles[0].stepAssignments = []
+  // The spread is per-employee, so it lives on the personal criterion. The
+  // job-based one keeps a step scoring 0 for the role to sit on: a role step
+  // would otherwise add the same points to everyone and say nothing about the
+  // differences this fixture exists to detect.
+  base.parsed.criteria[0].subCriteria[0].steps = [
+    { order: 1, description: 'none', score: 0 },
+    { order: 5, description: 'none', score: 0 },
+  ]
+  base.parsed.criteria = base.parsed.criteria.map((criterion) =>
+    criterion.type === ReportCriterionTypeEnum.PERSONAL
+      ? personalCriterion(spread)
+      : criterion,
+  )
   base.parsed.employees = [
     [1, GenderEnum.FEMALE, 850000],
     [2, GenderEnum.MALE, 1000000],
@@ -1419,8 +1519,8 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
     bonusOther: null,
     personalStepAssignments: [
       {
-        criterionTitle: 'Abyrgd',
-        subTitle: 'Abyrgd a fólki',
+        criterionTitle: 'Einstaklingsbundid',
+        subTitle: 'Frammistada',
         stepOrder: ordinal as number,
       },
     ],

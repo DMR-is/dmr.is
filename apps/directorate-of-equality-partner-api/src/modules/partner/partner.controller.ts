@@ -1,15 +1,15 @@
+import { Response } from 'express'
+
 import {
   Body,
   Controller,
   Get,
-  Header,
-  HttpCode,
   HttpStatus,
   Inject,
   Param,
   Post,
   Query,
-  StreamableFile,
+  Res,
   UseGuards,
 } from '@nestjs/common'
 import { ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger'
@@ -19,7 +19,7 @@ import {
   IApplicationService,
   SalaryReportEligibilityDto,
   SubmitEqualityReportDto,
-  SubmitSalaryReportDto,
+  SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { GetSubCriterionCatalogResponseDto } from '@dmr.is/doe-modules/application'
 import {
@@ -27,19 +27,9 @@ import {
   PartnerCompanyDto,
   toPartnerCompanyDto,
 } from '@dmr.is/doe-modules/company'
-import {
-  IImportUploadService,
-  ImportKeyDto,
-  ImportUploadBoundary,
-  PresignUploadResponseDto,
-} from '@dmr.is/doe-modules/import-upload'
 import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
-import {
-  IReportExcelService,
-  ParsedReportDto,
-} from '@dmr.is/doe-modules/report-excel'
 import {
   SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
@@ -49,14 +39,13 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
+import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
+import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../../core/guards/api-key/api-key.guard'
 import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-scope.decorator'
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
 import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
-
-const XLSX_MIME =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 /**
  * The public third-party surface.
@@ -69,14 +58,23 @@ const XLSX_MIME =
  *
  * Guard order matters and is not arbitrary:
  *
- *   ApiKeyGuard            who is calling
- *   PartnerCompanyGuard    which company that key belongs to
- *   RequireApiScopeGuard   whether the key may do this
- *   ApiKeyThrottlerGuard   how often, bucketed per key
+ *   ApiKeyGuard                who is calling
+ *   PartnerCompanyGuard        which company that key belongs to
+ *   RequireApiScopeGuard       whether the key may do this
+ *   RequireActiveCompanyGuard  whether that company may use this API at all
+ *   ApiKeyThrottlerGuard       how often, bucketed per key
  *
  * The scope and throttler guards both read what ApiKeyGuard puts on the request,
- * so they cannot run before it. The throttler is last because a request that is
- * about to be refused for scope should not consume the caller's allowance.
+ * and the active-company guard reads what PartnerCompanyGuard resolves, so
+ * neither can run before its source. The throttler is last because a request
+ * that is about to be refused for scope or for an inactive company should not
+ * consume the caller's allowance.
+ *
+ * `@RequireActiveCompany` is declared once on the controller rather than per
+ * handler, so a company that has fallen off the register cannot reach ANY of
+ * this API — reads included. One unmistakable answer beats a surface that
+ * half-works, and every route here answers 409 for it, which is why
+ * `PartnerResponse` carries that status by default.
  */
 @Controller({
   path: 'partner',
@@ -84,20 +82,18 @@ const XLSX_MIME =
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
   PartnerCompanyGuard,
   RequireApiScopeGuard,
+  RequireActiveCompanyGuard,
   ApiKeyThrottlerGuard,
 )
 export class PartnerController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
-    @Inject(IReportExcelService)
-    private readonly reportExcelService: IReportExcelService,
-    @Inject(IImportUploadService)
-    private readonly importUploadService: IImportUploadService,
   ) {}
 
   @Get('company')
@@ -150,77 +146,10 @@ export class PartnerController {
     operationId: 'getPartnerSubCriterionCatalog',
     type: GetSubCriterionCatalogResponseDto,
     description:
-      'Jafnréttisstofa’s catalog of sub-criteria and the generic step scale, as the workbook template uses them. Reference data for building a criteria tree without the spreadsheet.',
+      'Jafnréttisstofa’s catalog of sub-criteria and the generic step scale. Reference data for building the criteria tree a submission carries — the authoritative list of what may be scored and on what steps, so a vendor maps its own job data onto it rather than guessing.',
   })
   getSubCriterionCatalog(): GetSubCriterionCatalogResponseDto {
     return this.applicationService.getSubCriterionCatalog()
-  }
-
-  @Get('reports/excel/template')
-  @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
-  @Header('Content-Disposition', 'attachment; filename="template.xlsx"')
-  @PartnerResponse({
-    operationId: 'getPartnerBlankExcelTemplate',
-    produces: XLSX_MIME,
-    description:
-      'The blank salary-report workbook. The same file the employer downloads from island.is, so a vendor can prefill it rather than asking a customer to fill it by hand.',
-  })
-  async getBlankExcelTemplate(): Promise<StreamableFile> {
-    return new StreamableFile(
-      await this.reportExcelService.generateBlankTemplate(),
-      { type: XLSX_MIME },
-    )
-  }
-
-  @Post('reports/excel/presign')
-  @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
-  @PartnerResponse({
-    operationId: 'presignPartnerImportUpload',
-    type: PresignUploadResponseDto,
-    description:
-      'A short-lived URL to PUT a filled workbook to, and the `key` to quote when importing it. The workbook goes to storage directly rather than through this API, which is what keeps a several-megabyte upload off the request path.',
-  })
-  presignImportUpload(): Promise<PresignUploadResponseDto> {
-    return this.importUploadService.createUpload(ImportUploadBoundary.APPLICATION)
-  }
-
-  @Post('reports/excel/import')
-  @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
-  @PartnerResponse({
-    operationId: 'importPartnerSalaryReportWorkbook',
-    type: ParsedReportDto,
-    description:
-      'Parses an uploaded workbook into the `parsed` payload a salary submission carries. Parse only — nothing is stored, so a vendor can import, inspect the result, and decide whether to submit.',
-  })
-  async importSalaryReportWorkbook(
-    @Body() input: ImportKeyDto,
-  ): Promise<ParsedReportDto> {
-    // Not a `finally`, and no longer "cleaned up whether it succeeded or
-    // threw" — that rule was written when the download happened before this
-    // scope, so a transient storage failure could never reach it. It can now.
-    // A vendor whose upload is deleted on an S3 blip has to redo the presign,
-    // the PUT and the parse; the storage cost of keeping it is one lifecycle
-    // sweep. `cleanupAfter` decides which outcomes are terminal.
-    try {
-      // The key, not a buffer: the service downloads under the parse gate so
-      // the workbook is never in memory without a slot.
-      const parsed = await this.reportExcelService.importWorkbook(
-        input.key,
-        ImportUploadBoundary.APPLICATION,
-      )
-      await this.importUploadService.cleanupAfter(
-        input.key,
-        ImportUploadBoundary.APPLICATION,
-      )
-      return parsed
-    } catch (e) {
-      await this.importUploadService.cleanupAfter(
-        input.key,
-        ImportUploadBoundary.APPLICATION,
-        e,
-      )
-      throw e
-    }
   }
 
   @Post('reports/salary-analysis')
@@ -229,7 +158,7 @@ export class PartnerController {
     operationId: 'analyzePartnerSalaryReport',
     type: SalaryAnalysisResponseDto,
     description:
-      'Runs the outlier analysis over a payload without submitting it. This is how a vendor finds out which employees will need an explanation before filing, rather than after.',
+      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payload parses, that its criteria tree is accepted, and which employees will need an explanation — all of which the submission would otherwise refuse for the first time. Nothing is stored, so it can be called as often as the payload changes; when the answer looks right, the same payload goes to `POST /reports/salary`.',
   })
   analyzeSalaryReport(
     @Body() input: SalaryAnalysisRequestDto,
@@ -240,36 +169,70 @@ export class PartnerController {
 
   @Post('reports/salary')
   @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
-  @HttpCode(HttpStatus.CREATED)
   @PartnerResponse({
     operationId: 'submitPartnerSalaryReport',
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
+    alsoSucceedsWith: {
+      status: HttpStatus.OK,
+      description:
+        'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
+    },
     description:
-      'Files a salary report. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong.',
+      'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means there is none, and section A has to happen first. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
-  submitSalaryReport(
-    @Body() input: SubmitSalaryReportDto,
+  async submitSalaryReport(
+    @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    return this.applicationService.submitSalary(input, company)
+    const result = await this.applicationService.submitSalary(input, company)
+
+    return this.answerCreated(res, result)
   }
 
   @Post('reports/equality')
   @RequireApiScope(ApiKeyScopeEnum.EQUALITY_SUBMIT)
-  @HttpCode(HttpStatus.CREATED)
   @PartnerResponse({
     operationId: 'submitPartnerEqualityReport',
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
+    alsoSucceedsWith: {
+      status: HttpStatus.OK,
+      description:
+        'Replayed — as on the salary submission. Nothing was filed and the body was not read.',
+    },
     description:
-      'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission.',
+      'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
   })
-  submitEqualityReport(
+  async submitEqualityReport(
     @Body() input: SubmitEqualityReportDto,
     @CurrentCompany() company: CompanyDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    return this.applicationService.submitEquality(input, company)
+    const result = await this.applicationService.submitEquality(input, company)
+
+    return this.answerCreated(res, result)
+  }
+
+  /**
+   * `201 Created` only when something was created.
+   *
+   * A replay creates nothing — it hands back a report an earlier call filed —
+   * and answering `201` for it is a plain untruth that costs a vendor real
+   * data: re-file a corrected report under a used `providerId` and the status
+   * code, the `reportId` and a follow-up read by provider id all agree that a
+   * correction landed when nothing was read. `200` is the honest answer, and it
+   * is the one a naive `assert status === 201` catches. Changed while this
+   * surface has no integrators to break.
+   */
+  private answerCreated(
+    res: Response,
+    result: CreateReportResponseDto,
+  ): CreateReportResponseDto {
+    res.status(result.replayed ? HttpStatus.OK : HttpStatus.CREATED)
+
+    return result
   }
 
   @Get('reports/:providerId')

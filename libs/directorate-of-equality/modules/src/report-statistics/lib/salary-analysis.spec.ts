@@ -1,3 +1,4 @@
+import { padToSemanticValidity } from '../../report/lib/parsed-payload.testing'
 import {
   computeWageGapDecomposition,
   PayStatusEnum,
@@ -260,7 +261,10 @@ function expectedHourlyWageFor(
  * MAX_PERSONAL_CRITERIA cap.
  */
 function makeMixedPayload(): ParsedReportDto {
-  return {
+  // Padded to semantic validity, score-neutrally. The scoring here is already
+  // role-owned, which is the shape the domain asks for; what the fixture
+  // lacked was the other three mandatory criteria and the weight totals.
+  return padToSemanticValidity({
     criteria: [
       {
         type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -312,7 +316,7 @@ function makeMixedPayload(): ParsedReportDto {
       makeEmployee(7, GenderEnum.FEMALE, 'Clerk', 600_000),
       makeEmployee(8, GenderEnum.FEMALE, 'Clerk', 592_000),
     ],
-  }
+  })
 }
 
 function makeEmployee(

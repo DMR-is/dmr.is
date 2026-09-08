@@ -13,8 +13,10 @@ import {
   IImportUploadService,
   ImportUploadBoundary,
 } from '../../import-upload/import-upload.service.interface'
+import { padToSemanticValidity } from '../../report/lib/parsed-payload.testing'
 import { ReportTypeEnum } from '../../report/models/report.model'
 import { IReportContentService } from '../../report-content/report-content.service.interface'
+import type { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import { IReportExcelService } from '../../report-excel/report-excel.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { ReportDraftSeedService } from './report-draft-seed.service'
@@ -23,58 +25,72 @@ const REPORT_ID = 'report-id-1'
 const KEY = 'doe-imports/application/abc.xlsx'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = {
+const COMPANY = ({
   id: 'company-1',
   nationalId: '5500000000',
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown as CompanyDto
+} as unknown) as CompanyDto
 
-// A minimal valid parsed payload: one role, one criterion→sub→2 steps, one
-// employee referencing the role. Enough to pass assertParsedPayloadIntegrity.
-const validParsed = () => ({
-  roles: [{ title: 'Sérfræðingur', stepAssignments: [] }],
-  criteria: [
-    {
-      title: 'Ábyrgð',
-      weight: 1,
-      description: '',
-      type: 'RESPONSIBILITY',
-      subCriteria: [
-        {
-          title: 'Mannaforráð',
-          description: '',
-          weight: 1,
-          steps: [
-            { order: 1, description: 'a', score: 0 },
-            { order: 2, description: 'b', score: 5 },
-          ],
-        },
-      ],
-    },
-  ],
-  employees: [
-    {
-      ordinal: 1,
-      identifier: 'ABC-001',
-      roleTitle: 'Sérfræðingur',
-      gender: 'FEMALE',
-      field: 'Eng',
-      department: 'R&D',
-      startDate: '2020-01-01',
-      paidHours: 173.33,
-      baseSalary: 800000,
-      additionalFixedOvertime: null,
-      additionalFixedCarAllowance: null,
-      bonusOccasionalCarAllowance: null,
-      bonusOccasionalOvertime: null,
-      bonusPayments: null,
-      bonusOther: null,
-      personalStepAssignments: [],
-    },
-  ],
-})
+// What the parser actually hands this service: a payload the API would accept,
+// which since `assertParsedPayloadValid` means the cross-field rules too — all
+// four mandatory criterion types, weights totalling 100%, and every role
+// classified on every job-based sub-criterion. `padToSemanticValidity` supplies
+// the three types this fixture does not care about; the role's assignment on its
+// own sub-criterion is spelled out, because choosing a step means choosing a
+// score and that is the fixture's business (step 1 scores 0, so the employee
+// still totals 0 as before).
+const validParsed = () =>
+  padToSemanticValidity(({
+    roles: [
+      {
+        title: 'Sérfræðingur',
+        stepAssignments: [
+          { criterionTitle: 'Ábyrgð', subTitle: 'Mannaforráð', stepOrder: 1 },
+        ],
+      },
+    ],
+    criteria: [
+      {
+        title: 'Ábyrgð',
+        weight: 1,
+        description: '',
+        type: 'RESPONSIBILITY',
+        subCriteria: [
+          {
+            title: 'Mannaforráð',
+            description: '',
+            weight: 1,
+            steps: [
+              { order: 1, description: 'a', score: 0 },
+              { order: 2, description: 'b', score: 5 },
+            ],
+          },
+        ],
+      },
+    ],
+    employees: [
+      {
+        ordinal: 1,
+        identifier: 'ABC-001',
+        roleTitle: 'Sérfræðingur',
+        gender: 'FEMALE',
+        field: 'Eng',
+        department: 'R&D',
+        startDate: '2020-01-01',
+        paidHours: 173.33,
+        baseSalary: 800000,
+        additionalFixedOvertime: null,
+        additionalFixedCarAllowance: null,
+        bonusOccasionalCarAllowance: null,
+        bonusOccasionalOvertime: null,
+        bonusPayments: null,
+        bonusOther: null,
+        personalStepAssignments: [],
+      },
+    ],
+  } as unknown) as ParsedReportDto)
 
 describe('ReportDraftSeedService', () => {
   let service: ReportDraftSeedService

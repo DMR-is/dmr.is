@@ -47,13 +47,13 @@ const PERIOD_STORED = `${PERIOD_MONTH}-01`
 const COMPANY_NATIONAL_ID = '5500000000'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = {
+const COMPANY = ({
   id: 'company-1',
   nationalId: COMPANY_NATIONAL_ID,
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown as CompanyDto
+} as unknown) as CompanyDto
 
 /** What the stubbed `IReportIdentifierService.allocate` hands back. */
 const IDENTIFIER = 'KTPQZW'
@@ -290,7 +290,7 @@ describe('ReportDraftSubmitService', () => {
       company: salaryBody().company,
     })
 
-    expect(result).toEqual({ reportId: REPORT_ID })
+    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
     expect(createCompanyReportSnapshots).toHaveBeenCalled()
     expect(persistScores).not.toHaveBeenCalled()
     expect(createForReport).not.toHaveBeenCalled()
@@ -587,9 +587,7 @@ describe('ReportDraftSubmitService', () => {
       )
       employeeFindAll.mockResolvedValueOnce([{ id: 'emp-1' }, { id: 'emp-2' }])
       outlierFindAll
-        .mockResolvedValueOnce([
-          { reportEmployeeId: 'emp-1', groupId: 'g-1' },
-        ])
+        .mockResolvedValueOnce([{ reportEmployeeId: 'emp-1', groupId: 'g-1' }])
         .mockResolvedValueOnce([
           { reportEmployeeId: 'emp-1', groupId: 'g-1' },
           { reportEmployeeId: 'emp-2', groupId: 'default-group-1' },

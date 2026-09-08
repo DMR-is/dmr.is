@@ -15,7 +15,7 @@ import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import {
-  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
@@ -124,7 +124,7 @@ export class ReportCreateService implements IReportCreateService {
     // a salary report. MONTH must name its month; AVERAGE never carries one.
     const salaryDataBasis = resolveSalaryDataBasis(input)
 
-    const stepScoreByKey = assertParsedPayloadIntegrity(input.parsed)
+    const stepScoreByKey = assertParsedPayloadValid(input.parsed)
     const employeeScores = computeEmployeeScores(input.parsed, stepScoreByKey)
     const detectedOrdinals = await this.computeDetectedOutlierOrdinals(
       input,
@@ -132,15 +132,23 @@ export class ReportCreateService implements IReportCreateService {
     )
     this.assertOutlierGroupsMatchDetected(input, detectedOrdinals)
 
-    await this.finalizeService.assertEqualityReportApproved(
-      input.equalityReportId,
-    )
-
-    const withdrawnReportIds =
-      await this.finalizeService.withdrawInflightSibling(
+    // Absent on the partner channel, whose contract omits it — resolved here
+    // and NOT in `ApplicationService`, because everything in this method must
+    // run after the replay check above. Resolving while the creation input was
+    // being built made a retry of an already-filed report answer 404 once its
+    // equality report stopped being active.
+    const equalityReportId =
+      input.equalityReportId ??
+      (await this.finalizeService.resolveActiveEqualityReportId(
         submittingCompany.companyId,
-        ReportTypeEnum.SALARY,
-      )
+      ))
+
+    await this.finalizeService.assertEqualityReportApproved(equalityReportId)
+
+    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
+      submittingCompany.companyId,
+      ReportTypeEnum.SALARY,
+    )
 
     const outliersPostponed = input.outliersPostponed ?? false
 
@@ -156,7 +164,7 @@ export class ReportCreateService implements IReportCreateService {
     const report = await this.createReportRow({
       type: ReportTypeEnum.SALARY,
       status: initialStatus,
-      equalityReportId: input.equalityReportId,
+      equalityReportId,
       identifier: await this.reportIdentifierService.allocate(),
       importedFromExcel: input.importedFromExcel,
       providerType: input.providerType,
@@ -191,12 +199,13 @@ export class ReportCreateService implements IReportCreateService {
     // 3–7. Child insertion (roles, criteria → sub-criteria → steps, role↔step
     //       joins, employees, employee↔personal-step joins). Shared with the
     //       report-draft Excel-seed path via the report-content module.
-    const { employeeOrdinalToId } =
-      await this.contentService.persistParsedChildren(
-        report.id,
-        input.parsed,
-        employeeScores,
-      )
+    const {
+      employeeOrdinalToId,
+    } = await this.contentService.persistParsedChildren(
+      report.id,
+      input.parsed,
+      employeeScores,
+    )
 
     // 8. Outlier groups + outlier rows. Every detected outlier belongs to
     //    exactly one group (group_id NOT NULL):
@@ -280,7 +289,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -303,11 +312,10 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
-    const withdrawnReportIds =
-      await this.finalizeService.withdrawInflightSibling(
-        submittingCompany.companyId,
-        ReportTypeEnum.EQUALITY,
-      )
+    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
+      submittingCompany.companyId,
+      ReportTypeEnum.EQUALITY,
+    )
 
     const report = await this.createReportRow({
       type: ReportTypeEnum.EQUALITY,
@@ -358,7 +366,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -427,7 +435,7 @@ export class ReportCreateService implements IReportCreateService {
       providerId,
     })
 
-    return { reportId: existing.id }
+    return { reportId: existing.id, replayed: true }
   }
 
   private getSubmittingCompany(
@@ -541,14 +549,18 @@ export class ReportCreateService implements IReportCreateService {
     const extras = [...submittedOrdinals].filter((o) => !detectedSet.has(o))
     if (extras.length > 0) {
       throw new BadRequestException(
-        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(', ')}`,
+        `Outlier group(s) reference non-outlier employee ordinal(s): ${extras.join(
+          ', ',
+        )}`,
       )
     }
 
     const missing = [...detectedSet].filter((o) => !submittedOrdinals.has(o))
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(', ')}`,
+        `Detected outlier(s) missing from the outlier groups for employee ordinal(s): ${missing.join(
+          ', ',
+        )}`,
       )
     }
   }

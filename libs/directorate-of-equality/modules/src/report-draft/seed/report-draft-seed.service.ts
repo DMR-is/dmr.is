@@ -7,7 +7,7 @@ import {
   IImportUploadService,
   ImportUploadBoundary,
 } from '../../import-upload/import-upload.service.interface'
-import { assertParsedPayloadIntegrity } from '../../report/lib/employee-scores'
+import { assertParsedPayloadValid } from '../../report/lib/employee-scores'
 import { ReportTypeEnum } from '../../report/models/report.model'
 import { IReportContentService } from '../../report-content/report-content.service.interface'
 import { IReportExcelService } from '../../report-excel/report-excel.service.interface'
@@ -73,9 +73,18 @@ export class ReportDraftSeedService implements IReportDraftSeedService {
       throw e
     }
 
-    // Reject a malformed workbook (duplicate titles/ordinals, bad step counts,
-    // unresolved assignments, …) before touching the draft.
-    assertParsedPayloadIntegrity(parsed)
+    // Reject a workbook the API would not accept — duplicate titles/ordinals,
+    // bad step counts, assignments pointing at nothing, and the cross-field
+    // rules (mandatory criterion types, weight totals, complete
+    // classifications) — before touching the draft.
+    //
+    // The full gate rather than the structural half, even though
+    // `workbook.parser` already ran the same semantic collection and a
+    // workbook that failed it never reaches this line. That protection is real
+    // but it lives in another module and holds only while the parser keeps
+    // calling it; this call makes the guarantee local, and costs one pass over
+    // a payload the capacity ceilings already bound.
+    assertParsedPayloadValid(parsed)
 
     // Replace: clear the draft's current scoring content, then persist the
     // workbook. Scores stay NULL — derived on read, frozen at submit. Atomic

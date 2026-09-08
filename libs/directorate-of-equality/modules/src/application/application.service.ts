@@ -69,11 +69,11 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './dto/submit-report-company.dto'
-import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
 import {
@@ -163,7 +163,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async submitSalary(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
@@ -788,14 +788,21 @@ export class ApplicationService implements IApplicationService {
   }
 
   private async createSalaryReportInput(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportDto> {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
+      // Passed through as sent, absent and all. `createSalary` resolves it when
+      // a caller does not name one — and it must, because that has to happen
+      // after its idempotent replay check. Resolving here made a retry of an
+      // already-filed report 404 once its equality report lapsed.
       equalityReportId: input.equalityReportId,
-      importedFromExcel: input.importedFromExcel,
+      // The workbook is an island.is concept. A partner submission arrives as
+      // JSON built from payroll data, so there is nothing for this to be true
+      // of and the field is not part of that contract.
+      importedFromExcel: input.importedFromExcel ?? false,
       providerType: this.channel.providerType,
       providerId: this.channel.buildProviderId(
         input.providerId,

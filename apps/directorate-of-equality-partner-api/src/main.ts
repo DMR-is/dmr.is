@@ -31,10 +31,13 @@ async function bootstrap() {
   // ever put in front of this service, this number changes with it.
   app.set('trust proxy', 1)
 
-  // A submitted salary report carries the whole parsed workbook inline, and a
-  // large employer's payload runs to megabytes. 8mb rather than the sibling
-  // app's 6mb because this surface has no island.is payload cap in front of it
-  // — a vendor posts the report whole.
+  // A submitted salary report carries the whole scoring payload inline — every
+  // employee row, every criterion — and a large employer's runs to megabytes.
+  // There is no upload route to take it off the request path: this surface
+  // replaces the workbook rather than transporting one, so the payload arrives
+  // as JSON on the submission itself. 8mb rather than the sibling app's 6mb
+  // because there is no island.is payload cap in front of this one — a vendor
+  // posts the report whole.
   app.use(json({ limit: '8mb' }))
   app.use(urlencoded({ extended: true, limit: '8mb' }))
 

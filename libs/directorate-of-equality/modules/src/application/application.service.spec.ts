@@ -24,6 +24,10 @@ import {
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
+import {
   CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
@@ -52,6 +56,7 @@ import { IReportEventService } from '../report-event/report-event.service.interf
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import {
   SUB_CRITERION_CATALOG,
@@ -135,8 +140,14 @@ describe('ApplicationService', () => {
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
     findActiveEqualityForCompany = jest.fn()
-    createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
-    createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
+    // `replayed` comes from the creation service, and this service passes the
+    // response through untouched — the assertions below check that it does.
+    createSalary = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
+    createEquality = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
     reportFindOne = jest.fn()
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
@@ -461,7 +472,45 @@ describe('ApplicationService', () => {
         outliersPostponed: undefined,
         outlierGroups: undefined,
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
+    })
+
+    describe('the equality report the salary was audited against', () => {
+      it('passes the field through as sent, resolving nothing itself', async () => {
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, COMPANY)
+
+        // Resolution moved to `createSalary`, which has to do it after its
+        // idempotent replay check — doing it here made a retry of an
+        // already-filed report answer 404 once its equality report lapsed.
+        expect(findActiveEqualityForCompany).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: input.equalityReportId,
+            importedFromExcel: true,
+          }),
+        )
+      })
+
+      it('leaves the field absent when the caller omits it', async () => {
+        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+        const input: SubmitSalaryReportInput = {
+          ...makeSubmitSalaryInput(),
+          equalityReportId: undefined,
+          importedFromExcel: undefined,
+        }
+
+        await partnerService.submitSalary(input, COMPANY)
+
+        expect(findActiveEqualityForCompany).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: undefined,
+            importedFromExcel: false,
+          }),
+        )
+      })
     })
 
     it('resolves subsidiary snapshot details through the company service', async () => {
@@ -674,7 +723,7 @@ describe('ApplicationService', () => {
         averageEmployeeNeutralCount: undefined,
         companies: [makeCompanySnapshot()],
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
     it('forwards average employee counts when the applicant provides them', async () => {
@@ -1746,7 +1795,7 @@ describe('ApplicationService', () => {
 
 function makeRequest(): SalaryAnalysisRequestDto {
   return {
-    parsed: {
+    parsed: padToSemanticValidity({
       criteria: [
         {
           type: ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -1766,15 +1815,28 @@ function makeRequest(): SalaryAnalysisRequestDto {
                 { order: 5, description: 'score 500', score: 500 },
                 { order: 6, description: 'score 600', score: 600 },
                 { order: 7, description: 'score 700', score: 700 },
+                // The role's step. Scores 0, because in this fixture the score
+                // spread is per-employee and a role step applies to all of
+                // them equally — see PERSONAL_STEPS below.
+                { order: 8, description: 'none', score: 0 },
               ],
             },
           ],
         },
+        personalCriterion(PERSONAL_STEPS),
       ],
       roles: [
         {
           title: 'Framkvaemdastjori',
-          stepAssignments: [],
+          // A role owns the job-based criteria and must be scored on every one
+          // of their sub-criteria.
+          stepAssignments: [
+            {
+              criterionTitle: 'Abyrgd',
+              subTitle: 'Abyrgd a fólki',
+              stepOrder: 8,
+            },
+          ],
         },
       ],
       employees: [
@@ -1821,7 +1883,7 @@ function makeRequest(): SalaryAnalysisRequestDto {
           stepOrder: 7,
         }),
       ],
-    },
+    }),
   }
 }
 
@@ -1854,15 +1916,29 @@ function makeEmployee({
     bonusOccasionalOvertime: null,
     bonusPayments: null,
     bonusOther: null,
+    // An employee owns only the personal criteria: two people in one role
+    // differ exactly and only in their einstaklingsbundið scoring, which is
+    // what varies the score across this cohort.
     personalStepAssignments: [
       {
-        criterionTitle: 'Abyrgd',
-        subTitle: 'Abyrgd a fólki',
+        criterionTitle: 'Einstaklingsbundid',
+        subTitle: 'Frammistada',
         stepOrder,
       },
     ],
   }
 }
+
+/** The same 100–700 scale the score spread has always used. */
+const PERSONAL_STEPS = [
+  { order: 1, description: 'score 100', score: 100 },
+  { order: 2, description: 'score 200', score: 200 },
+  { order: 3, description: 'score 300', score: 300 },
+  { order: 4, description: 'score 400', score: 400 },
+  { order: 5, description: 'score 500', score: 500 },
+  { order: 6, description: 'score 600', score: 600 },
+  { order: 7, description: 'score 700', score: 700 },
+]
 
 function makeCompanySnapshot(
   overrides: Partial<CreateReportCompanySnapshotDto> = {},

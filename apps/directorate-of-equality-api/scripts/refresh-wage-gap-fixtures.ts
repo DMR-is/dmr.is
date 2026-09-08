@@ -32,7 +32,7 @@ import {
 } from '../db/lib/scenario-cohort'
 import { getRegularHourlyWage } from '../src/modules/report/lib/compensation-aggregates'
 import {
-  assertParsedPayloadIntegrity,
+  assertParsedPayloadValid,
   computeEmployeeScores,
 } from '../src/modules/report/lib/employee-scores'
 import {
@@ -127,7 +127,7 @@ const hourlyWageOf = (employee: ParsedReportDto['employees'][number]): number =>
  * insert employee rows, render a chart and freeze a snapshot that all describe
  * the SAME cohort.
  *
- * Scored through the exact submit path — `assertParsedPayloadIntegrity` for the
+ * Scored through the exact submit path — `assertParsedPayloadValid` for the
  * step-score map, then `computeEmployeeScores` — so the scores match the
  * `report_employee.score` values those seeders write, and so this fixture is
  * verified on every run to be a payload the API would actually accept.
@@ -159,7 +159,15 @@ function richDemoFixture(payCut: number = DEMO_PAY_CUT) {
   // Throws if the sheet is not a payload the API would accept — the same 400 a
   // submitter would get. Deliberately run against the ADJUSTED payload, since
   // that is what the seeders insert.
-  const stepScoreByKey = assertParsedPayloadIntegrity(parsed)
+  //
+  // The FULL gate, structure and cross-field semantics both. The structural
+  // half alone was never what "a payload the API would actually accept" meant,
+  // and since `createSalary` began enforcing the semantic rules it is not even
+  // close: this sheet had never been held to the mandatory criterion types, the
+  // weight totals or classification completeness. It satisfies all of them —
+  // checked before the switch, so the claim above is now true rather than
+  // aspirational.
+  const stepScoreByKey = assertParsedPayloadValid(parsed)
   const scores = computeEmployeeScores(parsed, stepScoreByKey)
   const withWage = parsed.employees.map((employee, index) => ({
     ordinal: employee.ordinal,
