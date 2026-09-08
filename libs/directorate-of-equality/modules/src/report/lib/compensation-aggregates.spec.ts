@@ -3,12 +3,123 @@ import {
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
   computeSalaryRegression,
+  computeSalaryScoreBucketSnapshots,
   getRegularHourlyWage,
   roundSalaryAggregateSnapshot,
   roundSalaryResultSnapshot,
 } from './compensation-aggregates'
+import { computeWageGapDecomposition } from './wage-gap-decomposition'
 
 describe('compensation-aggregates', () => {
+  /**
+   * An employee paid entirely in incidental pay has no regluleg laun under
+   * template 2.0, so their tímakaup is 0. These pin that such a sample is
+   * EXCLUDED rather than averaged in — see `usableSalarySamples`.
+   */
+  describe('unusable samples (zero / non-finite tímakaup)', () => {
+    it('leaves the cohort metrics untouched', () => {
+      const real = [
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.FEMALE, salary: 3000 },
+      ]
+
+      expect(
+        computeSalaryAggregateSnapshot([
+          ...real,
+          { gender: GenderEnum.FEMALE, salary: 0 },
+        ]),
+      ).toEqual(computeSalaryAggregateSnapshot(real))
+    })
+
+    it('does not drag the minimum to zero', () => {
+      const snapshot = computeSalaryAggregateSnapshot([
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.MALE, salary: 0 },
+      ])
+
+      expect(snapshot.overall.minimum).toBe(4000)
+      expect(snapshot.overall.average).toBe(4000)
+    })
+
+    it('excludes them from the cohort counts', () => {
+      const buckets = computeSalaryScoreBucketSnapshots([
+        { gender: GenderEnum.MALE, score: 150, salary: 4000 },
+        { gender: GenderEnum.FEMALE, score: 150, salary: 0 },
+      ])
+
+      expect(buckets).toHaveLength(1)
+      expect(buckets[0].counts).toEqual({
+        overall: 1,
+        male: 1,
+        female: 0,
+        neutral: 0,
+      })
+    })
+
+    // Filtered before the range is derived, so an unusable sample at a distant
+    // score cannot emit a bucket containing nobody.
+    it('does not stretch the score range or emit an empty bucket', () => {
+      const buckets = computeSalaryScoreBucketSnapshots([
+        { gender: GenderEnum.MALE, score: 150, salary: 4000 },
+        { gender: GenderEnum.FEMALE, score: 950, salary: 0 },
+      ])
+
+      expect(buckets).toHaveLength(1)
+      expect(buckets[0].rangeFrom).toBe(100)
+    })
+
+    it('ignores non-finite salaries too', () => {
+      const snapshot = computeSalaryAggregateSnapshot([
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.FEMALE, salary: Number.NaN },
+        { gender: GenderEnum.FEMALE, salary: Number.POSITIVE_INFINITY },
+      ])
+
+      expect(snapshot.overall.average).toBe(4000)
+      expect(snapshot.female.average).toBeNull()
+    })
+
+    /**
+     * ⚠️ **The invariant that matters.** `ReportResultService` feeds one
+     * employee array to both the aggregates and the decomposition, and freezes
+     * both onto the same `report_result` row. If only one of them filters, that
+     * single row reports a decomposition excluding somebody next to averages
+     * that include them at zero. This asserts the two agree on the population.
+     */
+    it('counts the same population as the wage-gap decomposition', () => {
+      const employees = [
+        { ordinal: 1, gender: GenderEnum.MALE, score: 200, hourlyWage: 4000 },
+        { ordinal: 2, gender: GenderEnum.FEMALE, score: 300, hourlyWage: 3000 },
+        { ordinal: 3, gender: GenderEnum.FEMALE, score: 250, hourlyWage: 0 },
+      ]
+
+      const decomposition = computeWageGapDecomposition({
+        employees,
+        benchmarkPercent: 3.9,
+      })
+      const snapshot = computeSalaryAggregateSnapshot(
+        employees.map((e) => ({ gender: e.gender, salary: e.hourlyWage })),
+      )
+      // NEUTRAL is bundled into FEMALE on both sides, so male + female is the
+      // whole counted population.
+      const decompositionCounted =
+        decomposition.counts.male + decomposition.counts.female
+      const snapshotCounted = computeSalaryScoreBucketSnapshots(
+        employees.map((e) => ({
+          gender: e.gender,
+          score: e.score,
+          salary: e.hourlyWage,
+        })),
+      ).reduce((total, bucket) => total + bucket.counts.overall, 0)
+
+      expect(decomposition.counts.excluded).toBe(1)
+      expect(decompositionCounted).toBe(2)
+      expect(snapshotCounted).toBe(decompositionCounted)
+      // And the average is of the two usable wages, not three with a zero.
+      expect(snapshot.overall.average).toBe(3500)
+    })
+  })
+
   it('bundles NEUTRAL into FEMALE for cohort metrics and wage gaps', () => {
     const snapshot = computeSalaryAggregateSnapshot([
       { gender: GenderEnum.MALE, salary: 100 },

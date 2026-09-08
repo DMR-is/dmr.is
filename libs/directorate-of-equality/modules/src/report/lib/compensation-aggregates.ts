@@ -169,10 +169,37 @@ export function computeSalaryResultSnapshot(
   }
 }
 
+/**
+ * Drops samples whose reglulegt tímakaup is not a usable positive number.
+ *
+ * ⚠️ **This must stay in step with the identical filter in
+ * `wage-gap-decomposition.ts`** (`Number.isFinite(hourlyWage) && hourlyWage > 0`,
+ * counted there as `counts.excluded`). The two run off the same employee array
+ * in `ReportResultService`, so if only one of them filters, a single report
+ * publishes a decomposition that excludes someone alongside averages that
+ * include them at zero — which is exactly the state this replaced.
+ *
+ * A zero tímakaup became reachable with template 2.0: aukagreiðslur left the
+ * numerator, so an employee paid entirely in incidental pay now has no regluleg
+ * laun. Including them would drag the average, the minimum and the gender gap
+ * toward zero, and put a scatter point on the chart's floor.
+ *
+ * No `excluded` count is surfaced here on purpose. The decomposition already
+ * reports one for the same cohort, so a second would be a duplicate that can
+ * drift; and the live chart, which shares this helper, is descriptive — a
+ * missing point misleads far less than a wrong average.
+ */
+const usableSalarySamples = <T extends GenderSalarySample>(
+  samples: readonly T[],
+): T[] =>
+  samples.filter(
+    (sample) => Number.isFinite(sample.salary) && sample.salary > 0,
+  )
+
 export function computeSalaryAggregateSnapshot(
   samples: GenderSalarySample[],
 ): SalaryAggregateSnapshot {
-  const grouped = groupSalaries(samples)
+  const grouped = groupSalaries(usableSalarySamples(samples))
 
   return {
     overall: computeMetrics(grouped.overall),
@@ -209,9 +236,14 @@ export function computeSalaryAggregateSnapshot(
 }
 
 export function computeSalaryScoreBucketSnapshots(
-  samples: SalaryScorePoint[],
+  rawSamples: SalaryScorePoint[],
   bucketWidth = 100,
 ): SalaryScoreBucketSnapshot[] {
+  // Filtered before the bucket range is derived, not just before averaging: an
+  // unusable sample would otherwise still stretch the score range and emit a
+  // bucket whose counts are all zero.
+  const samples = usableSalarySamples(rawSamples)
+
   if (samples.length === 0) {
     return []
   }
