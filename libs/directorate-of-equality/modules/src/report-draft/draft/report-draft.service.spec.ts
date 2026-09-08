@@ -184,7 +184,7 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           type: ReportTypeEnum.SALARY,
@@ -205,7 +205,10 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: EXISTING_DRAFT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_DRAFT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
     })
 
@@ -262,7 +265,10 @@ describe('ReportDraftService', () => {
 
       const result = await service.createDraft(draftInput())
 
-      expect(result).toEqual({ reportId: EXISTING_DRAFT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_DRAFT_ID,
+        replayed: true,
+      })
     })
   })
 

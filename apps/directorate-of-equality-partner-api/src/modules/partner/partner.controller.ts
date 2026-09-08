@@ -2,15 +2,16 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpStatus,
   Inject,
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common'
 import { ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger'
+import { Response } from 'express'
 
 import {
   ApplicationReportDetailDto,
@@ -167,36 +168,70 @@ export class PartnerController {
 
   @Post('reports/salary')
   @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
-  @HttpCode(HttpStatus.CREATED)
   @PartnerResponse({
     operationId: 'submitPartnerSalaryReport',
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
+    alsoSucceedsWith: {
+      status: HttpStatus.OK,
+      description:
+        'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
+    },
     description:
       'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means there is none, and section A has to happen first. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
-  submitSalaryReport(
+  async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    return this.applicationService.submitSalary(input, company)
+    const result = await this.applicationService.submitSalary(input, company)
+
+    return this.answerCreated(res, result)
   }
 
   @Post('reports/equality')
   @RequireApiScope(ApiKeyScopeEnum.EQUALITY_SUBMIT)
-  @HttpCode(HttpStatus.CREATED)
   @PartnerResponse({
     operationId: 'submitPartnerEqualityReport',
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
+    alsoSucceedsWith: {
+      status: HttpStatus.OK,
+      description:
+        'Replayed — as on the salary submission. Nothing was filed and the body was not read.',
+    },
     description:
       'Files an equality report — the narrative document that must be approved before any salary report can reference it. Same `providerId` and idempotency rules as the salary submission. A **409** means the company’s own state prevents filing: it is not active in the register, or a previous equality report is still in review.',
   })
-  submitEqualityReport(
+  async submitEqualityReport(
     @Body() input: SubmitEqualityReportDto,
     @CurrentCompany() company: CompanyDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    return this.applicationService.submitEquality(input, company)
+    const result = await this.applicationService.submitEquality(input, company)
+
+    return this.answerCreated(res, result)
+  }
+
+  /**
+   * `201 Created` only when something was created.
+   *
+   * A replay creates nothing — it hands back a report an earlier call filed —
+   * and answering `201` for it is a plain untruth that costs a vendor real
+   * data: re-file a corrected report under a used `providerId` and the status
+   * code, the `reportId` and a follow-up read by provider id all agree that a
+   * correction landed when nothing was read. `200` is the honest answer, and it
+   * is the one a naive `assert status === 201` catches. Changed while this
+   * surface has no integrators to break.
+   */
+  private answerCreated(
+    res: Response,
+    result: CreateReportResponseDto,
+  ): CreateReportResponseDto {
+    res.status(result.replayed ? HttpStatus.OK : HttpStatus.CREATED)
+
+    return result
   }
 
   @Get('reports/:providerId')

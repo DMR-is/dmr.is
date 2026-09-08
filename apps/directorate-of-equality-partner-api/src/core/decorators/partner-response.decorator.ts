@@ -44,6 +44,16 @@ type PartnerResponseParams = {
   produces?: string
   errors?: number[]
   include404?: boolean
+  /**
+   * A second success status this route can answer with, documented alongside
+   * the first and carrying the same `type`.
+   *
+   * Exists for the submissions, which answer `201` when they file a report and
+   * `200` when the `providerId` had already been used and nothing was created.
+   * Publishing both is the point: a generated client that only knows about
+   * `201` is a client that cannot tell a filed report from a replayed one.
+   */
+  alsoSucceedsWith?: { status: number; description: string }
 }
 
 function buildSuccessContentSchema(produces: string) {
@@ -61,6 +71,7 @@ export function PartnerResponse({
   produces,
   errors = DEFAULT_ERRORS,
   include404 = false,
+  alsoSucceedsWith,
 }: PartnerResponseParams) {
   let successDecorator: ReturnType<typeof ApiResponse>
 
@@ -73,7 +84,11 @@ export function PartnerResponse({
       },
     })
   } else if (type || successDescription) {
-    successDecorator = ApiResponse({ status, type, description: successDescription })
+    successDecorator = ApiResponse({
+      status,
+      type,
+      description: successDescription,
+    })
   } else {
     successDecorator = ApiNoContentResponse()
   }
@@ -83,6 +98,15 @@ export function PartnerResponse({
   return applyDecorators(
     ApiOperation({ operationId, description }),
     successDecorator,
+    ...(alsoSucceedsWith
+      ? [
+          ApiResponse({
+            status: alsoSucceedsWith.status,
+            type,
+            description: alsoSucceedsWith.description,
+          }),
+        ]
+      : []),
     ...effectiveErrors.map((code) =>
       ApiResponse({ status: code, type: ApiErrorDto }),
     ),
