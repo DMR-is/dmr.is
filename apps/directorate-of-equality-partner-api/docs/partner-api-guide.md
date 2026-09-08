@@ -65,7 +65,7 @@ A key carries some subset of:
 | Scope | Grants |
 | --- | --- |
 | `report:read` | every `GET` below |
-| `salary:submit` | the workbook presign/import, the analysis preview, and the salary submission |
+| `salary:submit` | the analysis preview and the salary submission |
 | `equality:submit` | the equality submission |
 
 A key issued without an explicit scope set gets all three. A call outside the
@@ -234,9 +234,14 @@ Only when this report is `APPROVED` can the salary flow reference it. Its `id`
 
 ## B. Filing a salary report
 
-Twelve steps, of which the outlier handling is the part integrations get wrong.
+Ten steps, of which the outlier handling is the part integrations get wrong.
 The order matters: several of these calls exist so you learn about a rejection
 before you have built a megabyte of payload.
+
+**There is no spreadsheet anywhere in this flow, by design.** Replacing the
+workbook is the reason this API exists: you build the payload from payroll data
+and validate it against B6 until it comes back clean. Nothing here reads,
+writes, or accepts an `.xlsx` file.
 
 ### B1. `GET /partner/company` — confirm the key
 
@@ -273,43 +278,20 @@ building the payload.
 *Scope: `report:read`*
 
 Jafnréttisstofa's catalog of sub-criteria (undirviðmið) and the generic step
-scale, exactly as the workbook uses them: `entries[]` with `criterionType`
+scale — the authoritative list of what may be scored and on what steps:
+`entries[]` with `criterionType`
 (`RESPONSIBILITY` | `STRAIN` | `CONDITION` | `COMPETENCE` | `PERSONAL`),
 `parentTitle`, `title`, `description`, `numSteps`, `steps[]`, plus
 `generalScale[]`.
 
-Needed only if you build the criteria tree yourself (B8 alternative). Group for
-display by `parentTitle`, not by `criterionType` — several distinct Icelandic
-labels map to `PERSONAL`.
+This is where the criteria tree in B5 comes from, so fetch it before building
+anything. Group for display by `parentTitle`, not by `criterionType` — several
+distinct Icelandic labels map to `PERSONAL`.
 
-### B5. `GET /partner/reports/excel/template` — the blank workbook
+### B5. Build the payload
 
-*Scope: `report:read`* — returns an `.xlsx` stream.
-
-The same file the employer downloads on island.is. Fetch it, prefill it from
-payroll, and hand it to the employer to complete — the template deliberately
-ships without personal-criterion values, which are the employer's to fill in.
-
-Skip B5–B8 entirely if you construct the payload yourself.
-
-### B6. `POST /partner/reports/excel/presign` — get an upload URL
-
-*Scope: `salary:submit`* — no body.
-
-Returns `{ url, key }`. The workbook goes to storage **directly**, not through
-this API, which is what keeps a multi-megabyte upload off the request path. The
-`url` expires in one hour.
-
-### B7. `PUT <url>` — upload the workbook
-
-Not a route on this API. Plain `PUT` of the `.xlsx` bytes to the presigned
-`url`. Do not send the `Authorization` header on this request.
-
-### B8. `POST /partner/reports/excel/import` — parse it
-
-*Scope: `salary:submit`*
-
-Body: `{ "key": "<the key from B6>" }`. Returns `ParsedReportDto`:
+Not a call — the work. The salary submission carries a `parsed` object
+(`ParsedReportDto`) that you construct from payroll data and the B4 catalog:
 
 - `criteria[]` — the criteria tree: type, title, description, weight, and
   `subCriteria[]` each with their `steps[]` (order, description, score).
@@ -319,20 +301,20 @@ Body: `{ "key": "<the key from B6>" }`. Returns `ParsedReportDto`:
   `baseSalary`, the viðbótarlaun/aukagreiðslur components, and
   `personalStepAssignments[]`.
 
-**Parse only — nothing is stored.** You get the payload back, inspect it, and
-decide whether to submit. The uploaded file is cleaned up afterwards, so a
-second import needs a fresh presign.
+⚠️ The **personal criteria** are the employer's judgement, not payroll data —
+they carry roughly a tenth of the total weight and no system can derive them.
+Collect them from the employer rather than defaulting them, or you are filing a
+score they never agreed to.
 
-Two things about `employees[].ordinal`: it is the identity every later step
-uses — the analysis returns ordinals, the outlier groups reference ordinals —
-and `identifier` (`ABC-001`) is **not** stable across imports, so never key
-your own records on it.
+`employees[].ordinal` is the identity every later step uses — the analysis
+returns ordinals, the outlier groups reference ordinals. Assign them once and
+keep them stable for the whole submission.
 
-The alternative to B5–B8 is to build `ParsedReportDto` directly from payroll
-data, using B4 for the criteria and step scale. The submission accepts either;
-set `importedFromExcel` on the submission to say which you did.
+The type is still named `ParsedReportDto` after the island.is workbook parser
+that produces the same shape on that surface. Nothing on this API parses
+anything; read the name as "the scoring payload".
 
-### B9. `POST /partner/reports/salary-analysis` — find the outliers first
+### B6. `POST /partner/reports/salary-analysis` — find the outliers first
 
 *Scope: `salary:submit`*
 
@@ -363,11 +345,11 @@ Body: `{ "parsed": <ParsedReportDto> }`. Nothing is stored. Returns:
 Run this before you ask the employer anything. It is how you find out which
 employees need an explanation *before* filing rather than after.
 
-### B10. Build the outlier groups
+### B7. Build the outlier groups
 
-Not a call — the modelling step between B9 and B11.
+Not a call — the modelling step between B6 and B8.
 
-Partition the `employeeOrdinal`s from B9 into one or more groups. Each group is
+Partition the `employeeOrdinal`s from B6 into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
 | Field | Notes |
@@ -390,7 +372,7 @@ The submission validates the partition strictly. The union of every group's
 - detected outliers but `outlierGroups` empty or absent → `400`
 
 Because the set is recomputed at submit time, **any edit to `parsed` between
-B9 and B11 can reshuffle who is in it.** If the payload changes, re-run B9 and
+B6 and B8 can reshuffle who is in it.** If the payload changes, re-run B6 and
 re-partition; do not carry groups over.
 
 **The deferral option.** Instead of groups, send `outliersPostponed: true` and
@@ -406,7 +388,7 @@ only on the island.is surface; the partner API exposes no such route. A
 submission until it is resolved. Unless the employer specifically wants to
 defer and finish on island.is themselves, send real groups.
 
-### B11. `POST /partner/reports/salary` — file it
+### B8. `POST /partner/reports/salary` — file it
 
 *Scope: `salary:submit` → `201 { reportId }`*
 
@@ -422,8 +404,8 @@ employee counts **required** here):
 | `salaryDataBasis` | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one |
 | `salaryDataPeriod` | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required |
-| `parsed` | the `ParsedReportDto` from B8 (or your own) |
-| `outlierGroups?` | the partition from B10 |
+| `parsed` | the payload from B5, as validated by B6 |
+| `outlierGroups?` | the partition from B7 |
 | `outliersPostponed?` | defaults to `false`. `true` defers every explanation |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
@@ -439,7 +421,7 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 `503` means the write collided and should be retried with the same
 `providerId` — it does not mean the payload was wrong.
 
-### B12. `GET /partner/reports/:providerId` — track the review
+### B9. `GET /partner/reports/:providerId` — track the review
 
 *Scope: `report:read`*
 
@@ -448,7 +430,7 @@ As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
 least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
 decision rests on.
 
-### B13. `GET /partner/reports/:providerId/outliers` — the filed outlier list
+### B10. `GET /partner/reports/:providerId/outliers` — the filed outlier list
 
 *Scope: `report:read`*
 
@@ -458,7 +440,7 @@ rows.
 
 Use it to show the employer what was actually filed and how each row was
 explained. If all you need is "are there any", read `includesImprovementPlan`
-from B12 instead of paginating.
+from B9 instead of paginating.
 
 ---
 
@@ -470,14 +452,11 @@ from B12 instead of paginating.
 | 2 | `GET` | `/partner/reports/equality/active` | `report:read` |
 | 3 | `GET` | `/partner/reports/salary/eligibility` | `report:read` |
 | 4 | `GET` | `/partner/sub-criteria/catalog` | `report:read` |
-| 5 | `GET` | `/partner/reports/excel/template` | `report:read` |
-| 6 | `POST` | `/partner/reports/excel/presign` | `salary:submit` |
-| 7 | `POST` | `/partner/reports/excel/import` | `salary:submit` |
-| 8 | `POST` | `/partner/reports/salary-analysis` | `salary:submit` |
-| 9 | `POST` | `/partner/reports/salary` | `salary:submit` |
-| 10 | `POST` | `/partner/reports/equality` | `equality:submit` |
-| 11 | `GET` | `/partner/reports/:providerId` | `report:read` |
-| 12 | `GET` | `/partner/reports/:providerId/outliers` | `report:read` |
+| 5 | `POST` | `/partner/reports/salary-analysis` | `salary:submit` |
+| 6 | `POST` | `/partner/reports/salary` | `salary:submit` |
+| 7 | `POST` | `/partner/reports/equality` | `equality:submit` |
+| 8 | `GET` | `/partner/reports/:providerId` | `report:read` |
+| 9 | `GET` | `/partner/reports/:providerId/outliers` | `report:read` |
 
 ## Status codes
 
