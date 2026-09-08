@@ -280,7 +280,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -358,7 +358,7 @@ export class ReportCreateService implements IReportCreateService {
       report.id,
     )
 
-    return { reportId: report.id }
+    return { reportId: report.id, replayed: false }
   }
 
   /**
@@ -427,7 +427,7 @@ export class ReportCreateService implements IReportCreateService {
       providerId,
     })
 
-    return { reportId: existing.id }
+    return { reportId: existing.id, replayed: true }
   }
 
   private getSubmittingCompany(

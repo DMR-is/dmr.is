@@ -271,7 +271,7 @@ describe('ReportCreateService', () => {
   it('creates a SALARY report with all child rows', async () => {
     const result = await service.createSalary(makeInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID })
+    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
 
     expect(reportFindOne).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -692,7 +692,7 @@ describe('ReportCreateService', () => {
   it('creates an EQUALITY report with content + company snapshot + event', async () => {
     const result = await service.createEquality(makeEqualityInput())
 
-    expect(result).toEqual({ reportId: REPORT_ID })
+    expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
 
     expect(reportCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -902,7 +902,10 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_REPORT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
       expect(reportResultCreateForReport).not.toHaveBeenCalled()
@@ -949,7 +952,10 @@ describe('ReportCreateService', () => {
 
       const result = await service.createEquality(input)
 
-      expect(result).toEqual({ reportId: EXISTING_REPORT_ID })
+      expect(result).toEqual({
+        reportId: EXISTING_REPORT_ID,
+        replayed: true,
+      })
       expect(reportCreate).not.toHaveBeenCalled()
       expect(companyReportBulkCreate).not.toHaveBeenCalled()
       expect(reportEventCreate).not.toHaveBeenCalled()
@@ -1037,7 +1043,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(input)
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           providerType: ReportProviderEnum.ISLAND_IS,
@@ -1079,7 +1085,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createSalary(makeInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },
@@ -1191,7 +1197,7 @@ describe('ReportCreateService', () => {
 
       const result = await service.createEquality(makeEqualityInput())
 
-      expect(result).toEqual({ reportId: REPORT_ID })
+      expect(result).toEqual({ reportId: REPORT_ID, replayed: false })
       expect(reportUpdate).toHaveBeenCalledWith(
         { status: ReportStatusEnum.WITHDRAWN },
         { where: { id: [PRIOR_REPORT_ID] } },

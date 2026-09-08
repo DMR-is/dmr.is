@@ -119,11 +119,46 @@ submission. Rules that matter:
   surface.
 - It is **your idempotency key.** Re-sending the same `providerId` for the same
   company returns the original `reportId` instead of filing a second report, so
-  a network-level retry is safe. Generate it once, persist it, reuse it on
-  retry — do not mint a fresh UUID per attempt.
+  a network-level retry is safe. Persist it with the submission and reuse it for
+  every retry of *that* submission — do not mint a fresh UUID per HTTP attempt.
+- **One `providerId` per submission, and a correction is a new submission.**
+  This is the distinction that costs data if you get it wrong, so it has its own
+  section below.
 - It is namespaced server-side as `<companyNationalId>:<yourProviderId>` from
   the authenticated key, so you cannot collide with another employer, and you
   always quote your own bare id — never the stored form.
+
+#### ⚠️ Re-filing a corrected report needs a NEW `providerId`
+
+The employer files, spots a mistake, and you re-file the fixed report. If you
+send it under the **same** `providerId`, the call is treated as a retry of the
+first submission: **nothing is filed and your corrected payload is not read at
+all** — not validated, not compared, not stored. The report the reviewer sees
+stays the wrong one.
+
+Do not key `providerId` on the report's identity in your own system
+("customer X's 2026 salary report"). Key it on the submission: a new id each
+time you intend to file something, the same id only when you are retrying a call
+whose outcome you do not know.
+
+Filing a correction is supported and works — a previous `SUBMITTED` report is
+withdrawn and replaced by the new one. You simply cannot reach it by reusing an
+id.
+
+**Two signals tell you which happened**, and you should assert on at least one:
+
+| | Filed | Replayed |
+| --- | --- | --- |
+| Status | `201 Created` | `200 OK` |
+| `replayed` | `false` | `true` |
+
+A `200` on a submission you believed was new means your `providerId` was already
+used. Note that a follow-up `GET /partner/reports/:providerId` cannot tell you
+this — it returns the earlier report, looking exactly like a successful
+correction, so the response to the submission itself is the only place the
+distinction appears.
+
+The same applies to the equality submission.
 
 ---
 
@@ -182,7 +217,8 @@ there is none, when it is about to expire, or when the plan itself changed.
 
 ### A3. `POST /partner/reports/equality` — file it
 
-*Scope: `equality:submit` → `201 { reportId }`*
+*Scope: `equality:submit` → `201 { reportId, replayed: false }`, or
+`200 { reportId, replayed: true }` on a replay — as on the salary submission.*
 
 Body (`SubmitEqualityReportDto`):
 
@@ -394,7 +430,9 @@ defer and finish on island.is themselves, send real groups.
 
 ### B8. `POST /partner/reports/salary` — file it
 
-*Scope: `salary:submit` → `201 { reportId }`*
+*Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
+`200 { reportId, replayed: true }` when the `providerId` was already used and
+nothing was filed — see the `providerId` section.*
 
 Body (`SubmitPartnerSalaryReportDto`) — beyond the admin/contact/`company`/
 `subsidiaries` fields, which are identical to A3 (but with the three average
@@ -474,6 +512,8 @@ from B9 instead of paginating.
 
 | Code | Meaning |
 | --- | --- |
+| `200` | on a submission: replayed. Nothing was filed, the body was not read, and `reportId` names the earlier report. A corrected re-file needs a new `providerId` |
+| `201` | on a submission: filed |
 | `400` | validation — unknown/misspelled field, bad outlier partition, bad `remedyDate`, non-UUID `providerId` |
 | `401` | missing or invalid key |
 | `403` | key lacks the scope the route declares |

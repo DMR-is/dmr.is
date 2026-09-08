@@ -140,8 +140,14 @@ describe('ApplicationService', () => {
       .fn()
       .mockResolvedValue(makeCompanySnapshotSource())
     findActiveEqualityForCompany = jest.fn()
-    createSalary = jest.fn().mockResolvedValue({ reportId: 'report-1' })
-    createEquality = jest.fn().mockResolvedValue({ reportId: 'report-1' })
+    // `replayed` comes from the creation service, and this service passes the
+    // response through untouched — the assertions below check that it does.
+    createSalary = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
+    createEquality = jest
+      .fn()
+      .mockResolvedValue({ reportId: 'report-1', replayed: false })
     reportFindOne = jest.fn()
     reportUpdate = jest.fn().mockResolvedValue([1])
     companyReportFindAll = jest.fn().mockResolvedValue([])
@@ -466,7 +472,7 @@ describe('ApplicationService', () => {
         outliersPostponed: undefined,
         outlierGroups: undefined,
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
     describe('the equality report the salary was audited against', () => {
@@ -734,7 +740,7 @@ describe('ApplicationService', () => {
         averageEmployeeNeutralCount: undefined,
         companies: [makeCompanySnapshot()],
       })
-      expect(result).toEqual({ reportId: 'report-1' })
+      expect(result).toEqual({ reportId: 'report-1', replayed: false })
     })
 
     it('forwards average employee counts when the applicant provides them', async () => {
