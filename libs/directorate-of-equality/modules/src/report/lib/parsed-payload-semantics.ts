@@ -175,6 +175,17 @@ const checkAssignmentsComplete = (
   ownerLabel: string,
   assignments: readonly ParsedStepAssignmentDto[],
   expectedSubs: ReadonlyMap<SubKey, ParsedSubCriterionDto>,
+  /**
+   * Every sub-criterion in the report, not just the ones this owner may be
+   * scored on. Without it, "not in `expectedSubs`" conflates a pair that does
+   * not exist with a pair that exists and belongs to the other owner — two
+   * different mistakes, and only the second is this collection's to report.
+   * The first belongs to `collectParsedPayloadIntegrity`, which is the only
+   * gate some callers run.
+   */
+  allSubs: ReadonlyMap<SubKey, ParsedSubCriterionDto>,
+  /** What this owner may be scored on, for the wrong-owner message. */
+  ownScoring: string,
   scope: PayloadIssueScope,
   issues: PayloadIssueBag,
   ordinal?: number,
@@ -197,13 +208,18 @@ const checkAssignmentsComplete = (
         { ordinal },
       )
     }
-    if (!expectedSubs.has(key)) {
+    if (!expectedSubs.has(key) && allSubs.has(key)) {
+      // The domain rule, and the whole reason these two sets differ: a starf
+      // owns the starfsbundin criteria and a starfsmaður only the
+      // einstaklingsbundin ones. Naming a real sub-criterion from the other
+      // side is not a typo, so the message says which side it came from
+      // rather than calling it unknown.
       issues.add(
         scope,
-        `${ownerLabel}: vísar í óþekkt undirviðmið „${subCriterionLabel(
+        `${ownerLabel}: „${subCriterionLabel(
           criterionTitle,
           subTitle,
-        )}“`,
+        )}“ er ekki metið hér — ${ownScoring}`,
         { ordinal },
       )
     }
@@ -233,6 +249,7 @@ const checkRoleClassificationsComplete = (
     criteria,
     (c) => c.type !== ReportCriterionTypeEnum.PERSONAL,
   )
+  const allSubs = collectSubsByKey(criteria, () => true)
   for (const role of roles) {
     // The multiplicative loop. Building messages nobody will read is the cost
     // this guards — see `MAX_ISSUES`.
@@ -244,6 +261,8 @@ const checkRoleClassificationsComplete = (
       roleLabel(role.title),
       role.stepAssignments,
       jobBasedSubs,
+      allSubs,
+      'störf eru aðeins metin á starfsbundin viðmið',
       PayloadIssueScope.ROLE_CLASSIFICATION,
       issues,
     )
@@ -259,6 +278,7 @@ const checkEmployeeClassificationsComplete = (
     criteria,
     (c) => c.type === ReportCriterionTypeEnum.PERSONAL,
   )
+  const allSubs = collectSubsByKey(criteria, () => true)
   for (const emp of employees) {
     if (issues.isFull) {
       return
@@ -268,6 +288,8 @@ const checkEmployeeClassificationsComplete = (
       employeeLabel(emp.ordinal),
       emp.personalStepAssignments,
       personalSubs,
+      allSubs,
+      'starfsmenn eru aðeins metnir á einstaklingsbundin viðmið',
       PayloadIssueScope.EMPLOYEE_CLASSIFICATION,
       issues,
       emp.ordinal,

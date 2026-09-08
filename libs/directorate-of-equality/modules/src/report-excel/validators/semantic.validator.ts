@@ -3,7 +3,7 @@
  *
  * The rules themselves moved to `report/lib/parsed-payload-semantics.ts`, so
  * they can run on a payload that never was a spreadsheet — see that file, and
- * `assertParsedPayloadIntegrity`, which is where every channel now meets them.
+ * `assertParsedPayloadValid`, which is where every channel now meets them.
  * What stays here is the translation back: an employer who uploaded a workbook
  * is told which **sheet** to open, in the same combined list as their cell-level
  * parse errors, which is the one-round-trip behaviour `ErrorBag` exists for.
@@ -31,6 +31,9 @@ import { SHEETS } from '../workbook.schema'
  * that column produced.
  */
 const SHEET_BY_SCOPE: Readonly<Record<PayloadIssueScope, string>> = {
+  // Not a cell fault — a notice about the upload as a whole, so it points at
+  // the overview rather than at whichever sheet tripped the cap.
+  [PayloadIssueScope.REPORT]: SHEETS.OVERVIEW,
   [PayloadIssueScope.CRITERIA]: SHEETS.CRITERIA,
   [PayloadIssueScope.SUB_CRITERIA]: SHEETS.SUB_CRITERIA,
   [PayloadIssueScope.ROLES]: SHEETS.EMPLOYEES,

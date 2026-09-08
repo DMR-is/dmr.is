@@ -35,6 +35,13 @@ export const MAX_ISSUES = 200
 
 /** The region of the payload an issue is about. */
 export enum PayloadIssueScope {
+  /**
+   * The payload as a whole rather than a region of it — currently only the
+   * truncation notice. Without it that notice inherited the scope of whichever
+   * issue happened to trip the cap, so on the Excel path an employer was told
+   * "more than 200 errors" against whatever sheet the 201st fault belonged to.
+   */
+  REPORT = 'REPORT',
   CRITERIA = 'CRITERIA',
   SUB_CRITERIA = 'SUB_CRITERIA',
   ROLES = 'ROLES',
@@ -71,7 +78,7 @@ export class PayloadIssueBag {
     if (this.issues.length >= MAX_ISSUES) {
       this.full = true
       this.issues.push({
-        scope,
+        scope: PayloadIssueScope.REPORT,
         message: `Fleiri en ${MAX_ISSUES} villur fundust í innsendum gögnum; listinn er styttur. Leystu þær sem hér eru taldar og sendu gögnin aftur.`,
         ordinal: null,
       })
