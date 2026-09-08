@@ -122,24 +122,24 @@ export class ParsedEmployeeDto {
 
   // ── Viðbótarlaun — fastar greiðslur aðrar en grunnlaun (Launagögn J–L) ──
   @ApiOptionalNumber({ nullable: true })
-  additionalFixedOvertime!: number | null
+  additionalFixedOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  additionalFixedCarAllowance!: number | null
+  additionalFixedCarAllowance?: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  additionalFixedOther!: number | null
+  additionalFixedOther?: number | null
 
   // ── Aukagreiðslur — tilfallandi greiðslur (Launagögn M–O). Reported
   //    on their own; NOT part of regluleg laun or reglulegt tímakaup. ──
   @ApiOptionalNumber({ nullable: true })
-  bonusOccasionalOvertime!: number | null
+  bonusOccasionalOvertime?: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  bonusOccasionalCarAllowance!: number | null
+  bonusOccasionalCarAllowance?: number | null
 
   @ApiOptionalNumber({ nullable: true })
-  bonusOther!: number | null
+  bonusOther?: number | null
 
   @ApiDtoArray(ParsedStepAssignmentDto)
   personalStepAssignments!: ParsedStepAssignmentDto[]

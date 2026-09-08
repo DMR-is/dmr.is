@@ -17,9 +17,9 @@ const parseNullableDecimal = (value: unknown): number | null =>
  * `0`. Pure so the composition rule is testable without a model instance.
  */
 export const computeAdditionalSalary = (children: {
-  additionalFixedOvertime: number | null
-  additionalFixedCarAllowance: number | null
-  additionalFixedOther: number | null
+  additionalFixedOvertime?: number | null
+  additionalFixedCarAllowance?: number | null
+  additionalFixedOther?: number | null
 }): number =>
   (children.additionalFixedOvertime ?? 0) +
   (children.additionalFixedCarAllowance ?? 0) +
@@ -45,12 +45,18 @@ export const computeBonusSalary = (children: {
  * The pay fields that compose **regluleg laun**, named once so the composition
  * is stated in exactly one place. Incidental pay is deliberately absent — see
  * {@link computeRegularWages}.
+ *
+ * The children are `?:`, not `!:`, because one caller is a **request body**:
+ * `ParsedEmployeeDto` arrives over HTTP with these fields marked
+ * `@ApiOptionalNumber` (`IsOptional()`), so an omitted key really does reach
+ * here as `undefined`. Declaring them required would restate the lie that let
+ * a missing field become `NaN` in the first place — see `nullableToStored`.
  */
 type RegularWageComponents = {
   baseSalary: number
-  additionalFixedOvertime: number | null
-  additionalFixedCarAllowance: number | null
-  additionalFixedOther: number | null
+  additionalFixedOvertime?: number | null
+  additionalFixedCarAllowance?: number | null
+  additionalFixedOther?: number | null
 }
 
 /**
