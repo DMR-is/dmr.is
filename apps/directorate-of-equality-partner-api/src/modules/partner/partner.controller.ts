@@ -17,7 +17,7 @@ import {
   IApplicationService,
   SalaryReportEligibilityDto,
   SubmitEqualityReportDto,
-  SubmitSalaryReportDto,
+  SubmitPartnerSalaryReportDto,
 } from '@dmr.is/doe-modules/application'
 import { GetSubCriterionCatalogResponseDto } from '@dmr.is/doe-modules/application'
 import {
@@ -173,10 +173,10 @@ export class PartnerController {
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
     description:
-      'Files a salary report. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
+      'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means there is none, and section A has to happen first. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
   submitSalaryReport(
-    @Body() input: SubmitSalaryReportDto,
+    @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     return this.applicationService.submitSalary(input, company)
