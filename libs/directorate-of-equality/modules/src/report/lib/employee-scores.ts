@@ -129,11 +129,20 @@ function collectParsedPayloadIntegrity(
 
   const stepScoreByKey = new Map<string, number>()
   // Which (criterion, sub-criterion) pairs exist at all, as opposed to which
-  // (criterion, sub, step) triples do. The distinction is what keeps one
-  // mistake to one message: a pair that does not exist is reported by
-  // `collectParsedPayloadSemantics` as an unknown sub-criterion, so the step
-  // checks below stay quiet about it and speak only for a bad step ORDER on a
-  // pair that is real.
+  // (criterion, sub, step) triples do. That split divides one fault from
+  // another rather than deduplicating a message:
+  //
+  //   - pair missing entirely      → reported HERE, and this function must own
+  //     it, because it is the only gate some callers run
+  //   - pair real, step order bad  → reported here too, below
+  //   - pair real, wrong OWNER     → `collectParsedPayloadSemantics`, which is
+  //     the only one that knows a role owns the job-based criteria and an
+  //     employee only the personal ones
+  //
+  // Reporting the missing pair from the semantic collection instead would read
+  // as tidier and would make `assertParsedPayloadIntegrity` blind to a
+  // dangling assignment: `computeEmployeeScores` does `?? 0`, so the score
+  // silently comes out low.
   const knownSubKeys = new Set<string>()
   const criterionTitles = new Set<string>()
   let totalSubCriteria = 0
@@ -225,6 +234,16 @@ function collectParsedPayloadIntegrity(
           subPairKey(assignment.criterionTitle, assignment.subTitle),
         )
       ) {
+        issues.add(
+          PayloadIssueScope.ROLE_CLASSIFICATION,
+          `${roleLabel(
+            role.title,
+          )}: vísar í óþekkt undirviðmið „${subCriterionLabel(
+            assignment.criterionTitle,
+            assignment.subTitle,
+          )}“`,
+        )
+
         continue
       }
 
@@ -302,6 +321,17 @@ function collectParsedPayloadIntegrity(
           subPairKey(assignment.criterionTitle, assignment.subTitle),
         )
       ) {
+        issues.add(
+          PayloadIssueScope.EMPLOYEE_CLASSIFICATION,
+          `${employeeLabel(
+            employee.ordinal,
+          )}: vísar í óþekkt undirviðmið „${subCriterionLabel(
+            assignment.criterionTitle,
+            assignment.subTitle,
+          )}“`,
+          { ordinal: employee.ordinal },
+        )
+
         continue
       }
 
@@ -329,11 +359,21 @@ function collectParsedPayloadIntegrity(
 }
 
 /**
- * Structural integrity only, as its own answer — the shape report creation
- * needs once a boundary has already accepted the payload.
+ * Structural integrity only, as its own answer.
  *
- * Prefer `assertParsedPayloadValid` at any point where a payload ENTERS the
- * system: this one cannot tell a complete report from an unscoreable fragment.
+ * **No production caller, deliberately.** Every path that takes a payload now
+ * runs `assertParsedPayloadValid` instead, because this one cannot tell a
+ * complete report from an unscoreable fragment: it says nothing about the
+ * mandatory criterion types, the weight totals, or whether every role and
+ * employee is actually classified. A caller that reaches for it because the
+ * name sounds sufficient gets a payload that scores — just not the scores
+ * anyone intended.
+ *
+ * Kept because the split is the point: what this function checks is what a
+ * single payload can be judged on in isolation, and everything
+ * `collectParsedPayloadSemantics` adds needs the whole tree assembled. The
+ * spec next door asserts the difference, which is the clearest statement of
+ * what the semantic rules are for.
  */
 export function assertParsedPayloadIntegrity(
   parsed: ParsedReportDto,
