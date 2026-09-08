@@ -52,6 +52,7 @@ import { IReportEventService } from '../report-event/report-event.service.interf
 import { IReportResultService } from '../report-result/report-result.service.interface'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
 import {
   SUB_CRITERION_CATALOG,
@@ -462,6 +463,61 @@ describe('ApplicationService', () => {
         outlierGroups: undefined,
       })
       expect(result).toEqual({ reportId: 'report-1' })
+    })
+
+    describe('the equality report the salary was audited against', () => {
+      // The partner contract omits `equalityReportId` and `importedFromExcel`
+      // entirely (`SubmitPartnerSalaryReportDto`), so the service sees them
+      // absent rather than empty.
+      const makePartnerSubmitSalaryInput = (): SubmitSalaryReportInput => ({
+        ...makeSubmitSalaryInput(),
+        equalityReportId: undefined,
+        importedFromExcel: undefined,
+      })
+
+      it('resolves the company\'s active report when the caller names none', async () => {
+        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+        findActiveEqualityForCompany.mockResolvedValue({
+          id: 'eq-resolved',
+        } as unknown as ReportModel)
+
+        await partnerService.submitSalary(makePartnerSubmitSalaryInput(), COMPANY)
+
+        expect(findActiveEqualityForCompany).toHaveBeenCalledWith(COMPANY.id)
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: 'eq-resolved',
+            // No workbook exists on this channel to have come through.
+            importedFromExcel: false,
+          }),
+        )
+      })
+
+      it('refuses when the company has no approved report in force', async () => {
+        const partnerService = await createService(EXTERNAL_PROVIDER_CHANNEL)
+        findActiveEqualityForCompany.mockResolvedValue(null)
+
+        await expect(
+          partnerService.submitSalary(makePartnerSubmitSalaryInput(), COMPANY),
+        ).rejects.toThrow(NotFoundException)
+        expect(createSalary).not.toHaveBeenCalled()
+      })
+
+      it('takes the id island.is supplies without looking one up', async () => {
+        const input = makeSubmitSalaryInput()
+
+        await service.submitSalary(input, COMPANY)
+
+        // The channel that names its own report is not second-guessed, and the
+        // lookup it would cost is not paid.
+        expect(findActiveEqualityForCompany).not.toHaveBeenCalled()
+        expect(createSalary).toHaveBeenCalledWith(
+          expect.objectContaining({
+            equalityReportId: input.equalityReportId,
+            importedFromExcel: true,
+          }),
+        )
+      })
     })
 
     it('resolves subsidiary snapshot details through the company service', async () => {

@@ -12,7 +12,6 @@ import { ReportCreateCoreModule } from '../report-create/report-create.core.modu
 import { ReportEmployeeOutlierModel } from '../report-employee/models/report-employee-outlier.model'
 import { ReportOutlierGroupModel } from '../report-employee/models/report-outlier-group.model'
 import { ReportEventCoreModule } from '../report-event/report-event.core.module'
-import { ReportExcelCoreModule } from '../report-excel/report-excel.core.module'
 import { ReportResultCoreModule } from '../report-result/report-result.core.module'
 import { ApplicationService } from './application.service'
 import { IApplicationService } from './application.service.interface'
@@ -37,7 +36,6 @@ export class ApplicationCoreModule {
       module: ApplicationCoreModule,
       imports: [
         CompanyCoreModule,
-        ReportExcelCoreModule,
         ConfigCoreModule,
         ReportCoreModule,
         ReportCreateCoreModule,

@@ -247,15 +247,19 @@ writes, or accepts an `.xlsx` file.
 
 *Scope: `report:read`* — as A1.
 
-### B2. `GET /partner/reports/equality/active` — get `equalityReportId`
+### B2. `GET /partner/reports/equality/active` — is one in force?
 
 *Scope: `report:read`*
 
-The `id` in this response is the mandatory `equalityReportId` on the salary
-submission. A `404` here means the salary flow cannot start: go and do section A
-first, and wait for approval. The submission re-checks this server-side and
-answers `404` if the referenced equality report is not `APPROVED` and still
-in force — so this is not a formality you can skip.
+A salary report is always audited against the company's approved equality
+report, but **you do not pass its id** — the submission resolves it itself, from
+the same lookup this route answers from. So this call is a precondition check,
+not a value to carry: a `404` here means the salary flow cannot start, and
+section A has to happen first and be approved. The submission answers the same
+`404` for the same reason if you skip ahead.
+
+The `id` in the response is the Directorate's own key. It is not a handle you
+can look anything up by on this API — use `providerId` for that (see B9).
 
 ### B3. `GET /partner/reports/salary/eligibility` — may they file now?
 
@@ -392,15 +396,23 @@ defer and finish on island.is themselves, send real groups.
 
 *Scope: `salary:submit` → `201 { reportId }`*
 
-Body (`SubmitSalaryReportDto`) — beyond the admin/contact/`company`/
+Body (`SubmitPartnerSalaryReportDto`) — beyond the admin/contact/`company`/
 `subsidiaries` fields, which are identical to A3 (but with the three average
 employee counts **required** here):
 
+Two fields are **not** part of this body, and sending either is a `400` under
+the strict validation above:
+
+- **`equalityReportId`** — resolved server-side to the company's approved,
+  in-force equality report (`404` when there is none). There was only ever one
+  value the submission would accept, and it is the one the server already
+  computes for B2 and B3.
+- **`importedFromExcel`** — there is no workbook on this API for a payload to
+  have come from.
+
 | Field | Notes |
 | --- | --- |
-| `equalityReportId` | the `id` from B2. Re-verified as `APPROVED` and in force → `404` if not |
 | `providerId` | your UUID — see the section above |
-| `importedFromExcel` | whether `parsed` came from a workbook |
 | `salaryDataBasis` | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one |
 | `salaryDataPeriod` | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required |

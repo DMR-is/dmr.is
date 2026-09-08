@@ -73,7 +73,7 @@ import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './dto/submit-report-company.dto'
-import { SubmitSalaryReportDto } from './dto/submit-salary-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
 import {
@@ -163,7 +163,7 @@ export class ApplicationService implements IApplicationService {
   }
 
   async submitSalary(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportResponseDto> {
     this.logger.info('Submitting salary report from application portal', {
@@ -244,6 +244,36 @@ export class ApplicationService implements IApplicationService {
 
     const createInput = await this.createEqualityReportInput(input, company)
     return this.reportCreateService.createEquality(createInput)
+  }
+
+  /**
+   * The equality report a salary submission will be filed against, for a caller
+   * that does not name one.
+   *
+   * The same lookup `getSalaryReportEligibility` runs, so a company told
+   * `eligible: true` cannot then be refused here for want of an equality
+   * report. `findActiveEqualityForCompany` orders by `approvedAt DESC`, which
+   * decides the rare case of two approved plans still in force — a company that
+   * re-filed before its previous one expired: the newest is the one it is
+   * working under.
+   *
+   * 404 rather than a 409, matching the equality precondition's documented
+   * status on both channels and the message
+   * `getActiveEqualityReport` answers with, so a vendor that skipped the
+   * eligibility pre-check reads the same sentence from either route.
+   */
+  private async resolveActiveEqualityReportId(
+    company: CompanyDto,
+  ): Promise<string> {
+    const equality = await this.reportService.findActiveEqualityForCompany(
+      company.id,
+    )
+
+    if (!equality) {
+      throw new NotFoundException('No approved equality report is in force')
+    }
+
+    return equality.id
   }
 
   async getActiveEqualityReport(
@@ -788,14 +818,25 @@ export class ApplicationService implements IApplicationService {
   }
 
   private async createSalaryReportInput(
-    input: SubmitSalaryReportDto,
+    input: SubmitSalaryReportInput,
     company: CompanyDto,
   ): Promise<CreateReportDto> {
     const companies = await this.createReportCompanySnapshots(input, company)
 
     return {
-      equalityReportId: input.equalityReportId,
-      importedFromExcel: input.importedFromExcel,
+      // Absent on the partner channel, where the caller does not name the
+      // report it audited against — see `SubmitPartnerSalaryReportDto`. The
+      // resolved id is re-verified by `assertEqualityReportApproved` inside
+      // `createSalary` a moment later; that check is the schema invariant's one
+      // choke point and stays there rather than being skipped for ids this
+      // method produced, even though the two predicates are identical.
+      equalityReportId:
+        input.equalityReportId ??
+        (await this.resolveActiveEqualityReportId(company)),
+      // The workbook is an island.is concept. A partner submission arrives as
+      // JSON built from payroll data, so there is nothing for this to be true
+      // of and the field is not part of that contract.
+      importedFromExcel: input.importedFromExcel ?? false,
       providerType: this.channel.providerType,
       providerId: this.channel.buildProviderId(
         input.providerId,
