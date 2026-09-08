@@ -35,6 +35,10 @@ export const stepKey = (
   stepOrder: number,
 ) => `${criterionTitle}|${subTitle}|${stepOrder}`
 
+/** The same pair without a step — see `knownSubKeys`. */
+const subPairKey = (criterionTitle: string, subTitle: string) =>
+  `${criterionTitle}|${subTitle}`
+
 /**
  * The single gate every scoring payload passes, whichever channel it arrived
  * on: the island.is portal, an imported workbook, or a partner API submission.
@@ -46,6 +50,13 @@ export const stepKey = (
  * mistake; they now accumulate and the whole list comes back as
  * `ApiErrorDto.details`. Continuing past a fault is safe because each check is
  * local — none of them establishes an invariant a later one relies on.
+ *
+ * Two bounds keep that from becoming an attack surface, and both are load
+ * bearing: the capacity ceilings still fail on the first breach
+ * (`assertWithinCapacity`), and the list itself is capped (`MAX_ISSUES`). The
+ * second is what covers a payload that breaches nothing — 10 000 employees and
+ * 100 personal sub-criteria are both legal, and one missing assignment per pair
+ * is a million messages.
  *
  * Cross-field semantics — the four mandatory criterion types, weights summing
  * to 100%, complete classifications — come from
@@ -68,32 +79,43 @@ export const stepKey = (
  * caller can compute employee total scores in memory without re-walking
  * the criteria tree.
  */
+/**
+ * Report-level capacity ceilings, and the one part of payload validation that
+ * still **fails on the first fault**.
+ *
+ * Deliberately not accumulated with everything else. These are generous sanity
+ * limits rather than domain rules, so a payload that breaches one will never be
+ * accepted whatever else is true of it — and walking it anyway is the whole
+ * exposure. The completeness rules are O(employees × sub-criteria), so
+ * enumerating the faults of an oversized payload is unbounded work on
+ * unbounded input: nothing upstream caps array length (`ApiDtoArray` applies
+ * no `ArrayMaxSize`) and the body limit is 8 MB.
+ *
+ * Runs before anything is walked, so an over-large payload costs three length
+ * comparisons.
+ */
+function assertWithinCapacity(parsed: ParsedReportDto): void {
+  if (parsed.criteria.length > MAX_CRITERIA) {
+    throw new BadRequestException([
+      `Að hámarki ${MAX_CRITERIA} viðmið eru leyfð; fjöldi var ${parsed.criteria.length}`,
+    ])
+  }
+  if (parsed.roles.length > MAX_ROLES) {
+    throw new BadRequestException([
+      `Að hámarki ${MAX_ROLES} störf eru leyfð; fjöldi var ${parsed.roles.length}`,
+    ])
+  }
+  if (parsed.employees.length > MAX_EMPLOYEES) {
+    throw new BadRequestException([
+      `Að hámarki ${MAX_EMPLOYEES} starfsmenn eru leyfðir; fjöldi var ${parsed.employees.length}`,
+    ])
+  }
+}
+
 function collectParsedPayloadIntegrity(
   parsed: ParsedReportDto,
   issues: PayloadIssueBag,
 ): Map<string, number> {
-  // Report-level capacity ceilings. Generous sanity limits, not domain rules —
-  // they reject nonsensical / adversarial payloads with a clear error rather
-  // than letting them through (or silently truncating during parse).
-  if (parsed.criteria.length > MAX_CRITERIA) {
-    issues.add(
-      PayloadIssueScope.CRITERIA,
-      `Að hámarki ${MAX_CRITERIA} viðmið eru leyfð; fjöldi var ${parsed.criteria.length}`,
-    )
-  }
-  if (parsed.roles.length > MAX_ROLES) {
-    issues.add(
-      PayloadIssueScope.ROLES,
-      `Að hámarki ${MAX_ROLES} störf eru leyfð; fjöldi var ${parsed.roles.length}`,
-    )
-  }
-  if (parsed.employees.length > MAX_EMPLOYEES) {
-    issues.add(
-      PayloadIssueScope.EMPLOYEES,
-      `Að hámarki ${MAX_EMPLOYEES} starfsmenn eru leyfðir; fjöldi var ${parsed.employees.length}`,
-    )
-  }
-
   const roleTitles = new Set<string>()
   for (const role of parsed.roles) {
     if (roleTitles.has(role.title)) {
@@ -106,6 +128,13 @@ function collectParsedPayloadIntegrity(
   }
 
   const stepScoreByKey = new Map<string, number>()
+  // Which (criterion, sub-criterion) pairs exist at all, as opposed to which
+  // (criterion, sub, step) triples do. The distinction is what keeps one
+  // mistake to one message: a pair that does not exist is reported by
+  // `collectParsedPayloadSemantics` as an unknown sub-criterion, so the step
+  // checks below stay quiet about it and speak only for a bad step ORDER on a
+  // pair that is real.
+  const knownSubKeys = new Set<string>()
   const criterionTitles = new Set<string>()
   let totalSubCriteria = 0
   let personalSubCriteria = 0
@@ -151,6 +180,8 @@ function collectParsedPayloadIntegrity(
         )
       }
 
+      knownSubKeys.add(subPairKey(criterion.title, sub.title))
+
       const stepOrders = new Set<number>()
       for (const step of sub.steps) {
         if (stepOrders.has(step.order)) {
@@ -189,6 +220,14 @@ function collectParsedPayloadIntegrity(
   // semantic collection below; this is the other direction.
   for (const role of parsed.roles) {
     for (const assignment of role.stepAssignments) {
+      if (
+        !knownSubKeys.has(
+          subPairKey(assignment.criterionTitle, assignment.subTitle),
+        )
+      ) {
+        continue
+      }
+
       const key = stepKey(
         assignment.criterionTitle,
         assignment.subTitle,
@@ -258,6 +297,14 @@ function collectParsedPayloadIntegrity(
     }
 
     for (const assignment of employee.personalStepAssignments) {
+      if (
+        !knownSubKeys.has(
+          subPairKey(assignment.criterionTitle, assignment.subTitle),
+        )
+      ) {
+        continue
+      }
+
       const key = stepKey(
         assignment.criterionTitle,
         assignment.subTitle,
@@ -291,6 +338,8 @@ function collectParsedPayloadIntegrity(
 export function assertParsedPayloadIntegrity(
   parsed: ParsedReportDto,
 ): Map<string, number> {
+  assertWithinCapacity(parsed)
+
   const issues = new PayloadIssueBag()
   const stepScoreByKey = collectParsedPayloadIntegrity(parsed, issues)
 
@@ -353,6 +402,8 @@ export function computeEmployeeScores(
 export function assertParsedPayloadValid(
   parsed: ParsedReportDto,
 ): Map<string, number> {
+  assertWithinCapacity(parsed)
+
   const issues = new PayloadIssueBag()
   const stepScoreByKey = collectParsedPayloadIntegrity(parsed, issues)
   collectParsedPayloadSemantics(parsed, issues)

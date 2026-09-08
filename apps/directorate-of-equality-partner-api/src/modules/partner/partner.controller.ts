@@ -1,3 +1,5 @@
+import { Response } from 'express'
+
 import {
   Body,
   Controller,
@@ -11,7 +13,6 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger'
-import { Response } from 'express'
 
 import {
   ApplicationReportDetailDto,

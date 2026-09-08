@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common'
 
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import type { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
+import { MAX_EMPLOYEES } from '../../report-excel/workbook.schema'
 import { GenderEnum } from '../models/report.enums'
 import {
   assertParsedPayloadIntegrity,
@@ -9,6 +10,7 @@ import {
   computeEmployeeScores,
   stepKey,
 } from './employee-scores'
+import { MAX_ISSUES } from './parsed-payload-issues'
 
 /**
  * Payload faults now accumulate: the exception carries every message as an
@@ -185,6 +187,117 @@ describe('employee-scores', () => {
       // dedup stays because double-counting a step would be a wrong score
       // rather than a rejected request.
       expect(score).toBe(10)
+    })
+  })
+
+  it('reports an unknown sub-criterion once, not twice', () => {
+    const parsed = makeParsedReport()
+    parsed.roles[0].stepAssignments = [
+      {
+        criterionTitle: 'Responsibility',
+        subTitle: 'No such sub',
+        stepOrder: 1,
+      },
+    ]
+
+    let details: string[] = []
+    try {
+      assertParsedPayloadValid(parsed)
+    } catch (e) {
+      details = ((e as BadRequestException).getResponse() as {
+        message: string[]
+      }).message
+    }
+
+    // The pair does not exist, so the semantic rule owns the message and the
+    // step-order check stays quiet: one mistake, one line. The integrity walk
+    // speaks only for a bad step ORDER on a pair that is real.
+    const aboutTheSub = details.filter((m) => m.includes('No such sub'))
+    expect(aboutTheSub).toHaveLength(1)
+    expect(aboutTheSub[0]).toMatch(/óþekkt undirviðmið/)
+  })
+
+  it('still reports a bad step order on a sub-criterion that exists', () => {
+    const parsed = makeParsedReport()
+    parsed.roles[0].stepAssignments = [
+      {
+        criterionTitle: 'Responsibility',
+        subTitle: 'People responsibility',
+        stepOrder: 99,
+      },
+    ]
+
+    expectPayloadIssue(
+      () => assertParsedPayloadValid(parsed),
+      /vísar í óþekkt þrep 99 undir „Responsibility \/ People responsibility“/,
+    )
+  })
+
+  describe('bounds on the accumulated list', () => {
+    it('fails on the first capacity breach instead of enumerating the payload', () => {
+      const parsed = makeParsedReport()
+      parsed.employees = Array.from({ length: MAX_EMPLOYEES + 1 }, (_, i) =>
+        makeEmployee({ ordinal: i + 1 }),
+      )
+
+      let details: string[] = []
+      try {
+        assertParsedPayloadValid(parsed)
+      } catch (e) {
+        details = ((e as BadRequestException).getResponse() as {
+          message: string[]
+        }).message
+      }
+
+      // One message, not one per fault. An oversized payload will never be
+      // accepted, so walking it to enumerate the rest is pure cost — and the
+      // completeness rules are O(employees × sub-criteria).
+      expect(details).toHaveLength(1)
+      expect(details[0]).toMatch(
+        new RegExp(`Að hámarki ${MAX_EMPLOYEES} starfsmenn`),
+      )
+    })
+
+    it('caps the list for a payload that breaches no ceiling at all', () => {
+      // The accidental case, and the reason the ceilings alone are not enough:
+      // every count here is legal. A vendor's first field mapping simply does
+      // not populate `personalStepAssignments`, so every employee is missing an
+      // assignment for every personal sub-criterion. 2 000 × 60 = 120 000
+      // faults, all real, none worth sending.
+      const personalSubs = 60
+      const employeeCount = 2000
+
+      const parsed = makeParsedReport()
+      parsed.criteria.push({
+        type: ReportCriterionTypeEnum.PERSONAL,
+        title: 'Einstaklingsbundid',
+        description: 'Personal',
+        weight: 0,
+        subCriteria: Array.from({ length: personalSubs }, (_, i) => ({
+          title: `Personal sub ${i + 1}`,
+          description: 'Personal sub',
+          weight: 0,
+          steps: [
+            { order: 1, description: 'low', score: 0 },
+            { order: 2, description: 'high', score: 0 },
+          ],
+        })),
+      })
+      parsed.employees = Array.from({ length: employeeCount }, (_, i) =>
+        makeEmployee({ ordinal: i + 1 }),
+      )
+
+      let details: string[] = []
+      try {
+        assertParsedPayloadValid(parsed)
+      } catch (e) {
+        details = ((e as BadRequestException).getResponse() as {
+          message: string[]
+        }).message
+      }
+
+      expect(details.length).toBeLessThanOrEqual(MAX_ISSUES + 1)
+      expect(details[details.length - 1]).toMatch(/listinn er styttur/)
     })
   })
 

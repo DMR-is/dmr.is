@@ -234,6 +234,12 @@ const checkRoleClassificationsComplete = (
     (c) => c.type !== ReportCriterionTypeEnum.PERSONAL,
   )
   for (const role of roles) {
+    // The multiplicative loop. Building messages nobody will read is the cost
+    // this guards — see `MAX_ISSUES`.
+    if (issues.isFull) {
+      return
+    }
+
     checkAssignmentsComplete(
       roleLabel(role.title),
       role.stepAssignments,
@@ -254,6 +260,10 @@ const checkEmployeeClassificationsComplete = (
     (c) => c.type === ReportCriterionTypeEnum.PERSONAL,
   )
   for (const emp of employees) {
+    if (issues.isFull) {
+      return
+    }
+
     checkAssignmentsComplete(
       employeeLabel(emp.ordinal),
       emp.personalStepAssignments,

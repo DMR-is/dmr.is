@@ -1,3 +1,4 @@
+import { padToSemanticValidity } from '../../report/lib/parsed-payload.testing'
 import {
   computeWageGapDecomposition,
   PayStatusEnum,
@@ -5,7 +6,6 @@ import {
   WageGapBlockerEnum,
 } from '../../report/lib/wage-gap-decomposition'
 import { GenderEnum } from '../../report/models/report.enums'
-import { padToSemanticValidity } from '../../report/lib/parsed-payload.testing'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import type { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
 import { analyzeSalaryPayload } from './salary-analysis'

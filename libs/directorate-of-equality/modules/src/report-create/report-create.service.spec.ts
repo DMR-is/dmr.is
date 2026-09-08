@@ -19,6 +19,10 @@ import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
+import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
 import { REPORT_IDENTIFIER_INDEX } from '../report/lib/report-identifier'
 import {
   GenderEnum,
@@ -33,10 +37,6 @@ import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { ReportContentService } from '../report-content/report-content.service'
 import { IReportContentService } from '../report-content/report-content.service.interface'
-import {
-  padToSemanticValidity,
-  personalCriterion,
-} from '../report/lib/parsed-payload.testing'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import { ReportCriterionModel } from '../report-criterion/models/report-criterion.model'
 import { ReportSubCriterionModel } from '../report-criterion/models/report-sub-criterion.model'

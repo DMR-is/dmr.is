@@ -24,6 +24,10 @@ import {
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import {
+  padToSemanticValidity,
+  personalCriterion,
+} from '../report/lib/parsed-payload.testing'
+import {
   CommunicationStatusEnum,
   GenderEnum,
   ReportProviderEnum,
@@ -36,10 +40,6 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
-import {
-  padToSemanticValidity,
-  personalCriterion,
-} from '../report/lib/parsed-payload.testing'
 import { IReportService } from '../report/report.service.interface'
 import {
   type ReportResourceContext,

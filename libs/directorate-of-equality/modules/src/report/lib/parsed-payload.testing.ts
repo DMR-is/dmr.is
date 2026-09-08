@@ -3,7 +3,10 @@ import {
   ParsedCriterionDto,
   ParsedReportDto,
 } from '../../report-excel/dto/parsed-report.dto'
-import { MANDATORY_JOB_BASED_CRITERIA } from '../../report-excel/workbook.schema'
+import {
+  MANDATORY_JOB_BASED_CRITERIA,
+  MAX_CRITERIA,
+} from '../../report-excel/workbook.schema'
 
 /**
  * Test-only. Pads a payload up to semantic validity **without moving a single
@@ -50,6 +53,16 @@ export const padToSemanticValidity = (
   }))
 
   const criteria = [...parsed.criteria, ...filler]
+
+  // A padded fixture sits at exactly MAX_CRITERIA today (one job-based, one
+  // personal, three filler). Add a fifth mandatory type, or a criterion to a
+  // fixture, and the fixture itself breaches the ceiling — failing with a
+  // capacity error that says nothing about what changed. Say it here instead.
+  if (criteria.length > MAX_CRITERIA) {
+    throw new Error(
+      `padToSemanticValidity produced ${criteria.length} criteria, over the MAX_CRITERIA ceiling of ${MAX_CRITERIA}. The fixture brought ${parsed.criteria.length} and ${filler.length} mandatory types had to be padded in — give the fixture fewer criteria, or raise the ceiling.`,
+    )
+  }
 
   // The whole 100% goes to the first criterion and the first sub-criterion,
   // zero everywhere else. Arbitrary and legal: the rules ask that each list

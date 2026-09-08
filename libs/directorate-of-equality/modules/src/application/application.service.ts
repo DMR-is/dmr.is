@@ -69,11 +69,11 @@ import { SalaryReportEligibilityDto } from './dto/salary-report-eligibility.dto'
 import { GetSubCriterionCatalogResponseDto } from './dto/sub-criterion-catalog.dto'
 import { SubmitApplicationReportCommentDto } from './dto/submit-application-report-comment.dto'
 import { SubmitEqualityReportDto } from './dto/submit-equality-report.dto'
+import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import type {
   SubmitReportCompanyDto,
   SubmitReportSubsidiaryDto,
 } from './dto/submit-report-company.dto'
-import { SubmitSalaryReportInput } from './dto/submit-partner-salary-report.dto'
 import { EQUALITY_REPORT_TEMPLATE_BASE64 } from './equality-template/template-data'
 import { buildEqualityReportTemplateHtml } from './equality-template/template-html'
 import {
