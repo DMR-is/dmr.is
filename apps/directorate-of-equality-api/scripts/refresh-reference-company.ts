@@ -62,9 +62,9 @@ import {
   computeWageGapDecomposition,
   roundWageGapDecompositionSnapshot,
   type WageGapEmployeeInput,
-} from '../src/modules/report/lib/wage-gap-decomposition'
-import { GenderEnum } from '../src/modules/report/models/report.enums'
-import { buildChartFromEmployeePoints } from '../src/modules/report-statistics/lib/build-chart'
+} from '@dmr.is/doe-modules/report'
+import { GenderEnum } from '@dmr.is/doe-modules/report'
+import { buildChartFromEmployeePoints } from '@dmr.is/doe-modules/report-statistics'
 
 const BENCHMARK_PERCENT = 3.9
 const DATA_DIR = join(__dirname, '..', 'db', 'seeders', 'data')
