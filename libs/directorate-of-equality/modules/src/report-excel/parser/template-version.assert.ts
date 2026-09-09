@@ -367,15 +367,22 @@ const compareVersions = (left: string, right: string): number => {
  * "wrong version" alone means throwing that work away without knowing what to
  * redo. Naming the three columns that moved, and the one whose DEFINITION
  * changed, turns it into a set of instructions.
+ *
+ * ⚠️ Every column reference names its SHEET. These lines become
+ * `ApiErrorDto.details`, which the portal renders as standalone bullets with no
+ * location prefix — unlike the per-cell errors, which `formatImportError` puts
+ * behind `Blað: Launagögn (…)`. A bullet reading "Dálkar A–K færast beint
+ * yfir" on a workbook with eight sheets, six of which have an A–K, does not
+ * say where to look.
  */
 const outdatedTemplateLines = (found: string | null): string[] => [
   found
     ? `Sniðmátið er af eldri útgáfu (${found}); útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`
     : `Sniðmátið er af eldri útgáfu; útgáfa ${MIN_TEMPLATE_VERSION} eða nýrri er nauðsynleg.`,
   'Sæktu nýjasta sniðmátið og færðu gögnin yfir í það.',
-  'Dálkar A–K færast beint yfir.',
-  'Dálkar L–O hafa breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur bifreiðastyrkur“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.',
-  'Athugaðu einnig „Greiddar stundir“ (E): skilgreiningin hefur breyst og á nú við fastar yfirvinnustundir en ekki tilfallandi greiddar stundir.',
+  `Á blaðinu „${SHEETS.EMPLOYEES}“ færast dálkar A–K beint yfir.`,
+  `Á blaðinu „${SHEETS.EMPLOYEES}“ hafa dálkar L–O breyst: L er nú „Aðrar reglulegar greiðslur / hlunnindi“ (fastar greiðslur), N er „Tilfallandi / mældur bifreiðastyrkur“ og O er „Aðrar tilfallandi greiðslur / hlunnindi“ — bónusgreiðslur færast í O.`,
+  `Athugaðu einnig „Greiddar stundir“ (dálkur E á blaðinu „${SHEETS.EMPLOYEES}“): skilgreiningin hefur breyst og á nú við fastar yfirvinnustundir en ekki tilfallandi greiddar stundir.`,
 ]
 
 /**
