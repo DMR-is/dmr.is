@@ -6309,7 +6309,7 @@
           "email": {
             "type": "string",
             "nullable": true,
-            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved \u2014 the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
           }
         },
         "required": ["companyId", "companyName"]
@@ -6336,7 +6336,7 @@
           "email": {
             "type": "string",
             "nullable": true,
-            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved \u2014 the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
           },
           "reason": {
             "description": "Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED.",
@@ -6350,6 +6350,10 @@
       "CompanyEmailPreviewDto": {
         "type": "object",
         "properties": {
+          "bodyHtml": {
+            "type": "string",
+            "description": "The message body as it will be delivered — already run through the same sanitiser the send applies, so the confirmation step shows the bytes that go out rather than the raw editor state."
+          },
           "recipients": {
             "type": "array",
             "items": {
@@ -6371,7 +6375,13 @@
             "description": "Companies excluded, for either skip reason."
           }
         },
-        "required": ["recipients", "skipped", "recipientCount", "skippedCount"]
+        "required": [
+          "bodyHtml",
+          "recipients",
+          "skipped",
+          "recipientCount",
+          "skippedCount"
+        ]
       },
       "SendCompanyEmailResponseDto": {
         "type": "object",

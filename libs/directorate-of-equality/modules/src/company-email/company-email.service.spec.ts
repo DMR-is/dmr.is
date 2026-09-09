@@ -226,6 +226,22 @@ describe('CompanyEmailService', () => {
     })
   })
 
+  describe('preview', () => {
+    it('returns the body already sanitised, so the confirmation step matches what is sent', async () => {
+      /*
+       * ⚠️ The admin approves what this step renders. Echoing the raw editor
+       * state back would let them sign off on markup that sanitise-html strips
+       * on the way out, and the recipient would get something else.
+       */
+      const preview = await service.preview({
+        ...validDto,
+        bodyHtml: '<p onclick="steal()">Halló</p><script>x()</script>',
+      })
+
+      expect(preview.bodyHtml).toBe('<p>Halló</p>')
+    })
+  })
+
   describe('send', () => {
     it('sanitises the body once, before storing it', async () => {
       await service.send(
@@ -234,8 +250,8 @@ describe('CompanyEmailService', () => {
       )
 
       const [created] = companyEmailModel.create.mock.calls[0]
-      // Stored sanitised, so the preview, the delivered mail and the timeline
-      // read-back are the same bytes rather than three passes that could differ.
+      // Stored sanitised, so the delivered mail and the timeline read-back are
+      // the same bytes — and the same ones `preview` showed for this input.
       expect(created.bodyHtml).toBe('<p>Halló</p>')
     })
 
@@ -519,12 +535,13 @@ describe('CompanyEmailService', () => {
       }
     })
 
-    const makeAttachmentRow = () => {
+    const makeAttachmentRow = (overrides: Record<string, unknown> = {}) => {
       const row = {
         filename: 'bref.pdf',
         s3Key: 'doe-imports/mail-attachment/x.pdf',
         archived: false,
         update: jest.fn(),
+        ...overrides,
       }
       row.update.mockImplementation(async (values: Record<string, unknown>) => {
         Object.assign(row, values)
@@ -554,7 +571,8 @@ describe('CompanyEmailService', () => {
       // write the same file once per company.
       expect(aws.uploadObject).toHaveBeenCalledWith(
         'doe-company-files',
-        'company-emails/batch-1/bref.pdf',
+        // The staged basename, not `filename`: server generated, so unique.
+        'company-emails/batch-1/x.pdf',
         'bref.pdf',
         expect.any(Buffer),
       )
@@ -596,6 +614,67 @@ describe('CompanyEmailService', () => {
       expect(aws.uploadObject).not.toHaveBeenCalled()
       expect(uploadService.cleanupAfter).not.toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalled()
+    })
+
+    it('gives two attachments sharing a filename separate archive keys', async () => {
+      /*
+       * ⚠️ Nothing stops an admin attaching two files called the same thing —
+       * the client caps count and size, not names. Keying the archive by
+       * `filename` would put both under one key and leave the second
+       * overwriting the only durable copy of the first, after the staged
+       * objects it could have been recovered from are already cleaned up.
+       */
+      process.env.AWS_DOE_COMPANY_FILES_BUCKET = 'doe-company-files'
+      uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
+      aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ok'))
+      attachmentModel.findAll.mockResolvedValue([
+        makeAttachmentRow({ s3Key: 'doe-imports/mail-attachment/a.pdf' }),
+        makeAttachmentRow({ s3Key: 'doe-imports/mail-attachment/b.pdf' }),
+      ])
+
+      await service.send(
+        {
+          ...validDto,
+          attachments: [
+            { key: 'doe-imports/mail-attachment/a.pdf', filename: 'bref.pdf' },
+            { key: 'doe-imports/mail-attachment/b.pdf', filename: 'bref.pdf' },
+          ],
+        },
+        'user-1',
+      )
+
+      const keys = aws.uploadObject.mock.calls.map(([, key]) => key)
+      expect(keys).toEqual([
+        'company-emails/batch-1/a.pdf',
+        'company-emails/batch-1/b.pdf',
+      ])
+    })
+
+    it('strips characters that would break out of the Content-Disposition header', async () => {
+      process.env.AWS_DOE_COMPANY_FILES_BUCKET = 'doe-company-files'
+      uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
+      aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ok'))
+      attachmentModel.findAll.mockResolvedValue([
+        makeAttachmentRow({ filename: '../a"b.pdf' }),
+      ])
+
+      await service.send(
+        {
+          ...validDto,
+          attachments: [
+            {
+              key: 'doe-imports/mail-attachment/x.pdf',
+              filename: '../a"b.pdf',
+            },
+          ],
+        },
+        'user-1',
+      )
+
+      // `uploadObject` interpolates this into `inline; filename="…"` unescaped.
+      const [, key, headerName] = aws.uploadObject.mock.calls[0]
+      expect(key).toBe('company-emails/batch-1/x.pdf')
+      expect(headerName).toBe('..ab.pdf')
     })
   })
 })

@@ -137,9 +137,10 @@ export class CompanyEmailService implements ICompanyEmailService {
   async presignAttachment(
     dto: PresignCompanyEmailAttachmentDto,
   ): Promise<PresignUploadResponseDto> {
-    // Only the extension travels into the key. The name the recipient sees is
-    // sent with the message, so nothing here has to survive as a file name —
-    // which is also why no path-sanitising of `filename` is needed.
+    // Only the extension travels into the key; the rest of the name is server
+    // generated. The name the recipient sees is sent with the message, so
+    // nothing here has to survive as a file name — and no key anywhere is built
+    // from `filename`, including the archive one. See `archiveAttachments`.
     const extension = dto.filename.split('.').pop() ?? ''
 
     return this.uploadService.createUpload(
@@ -159,6 +160,13 @@ export class CompanyEmailService implements ICompanyEmailService {
     )
 
     return {
+      /*
+       * ⚠️ Sanitised here, with the identical pass `send` runs on the identical
+       * input, so the confirmation step renders the bytes that will actually be
+       * delivered. Echoing `dto.bodyHtml` back instead would let an admin
+       * approve markup that sanitise-html strips on the way out.
+       */
+      bodyHtml: simpleSanitize(dto.bodyHtml),
       recipients: recipients.map(({ companyId, companyName, email }) => ({
         companyId,
         companyName,
@@ -216,10 +224,10 @@ export class CompanyEmailService implements ICompanyEmailService {
      */
     const buffers = await this.fetchAttachments(attachments)
 
-    // Sanitised exactly once, before it is stored. Everything downstream — the
-    // preview, the delivered message, the timeline read-back — reads this same
-    // stored value, so there is no second pass that could produce different
-    // bytes than the ones that were approved.
+    // Sanitised before it is stored, and the delivered message and the timeline
+    // read-back both read this stored value. `preview` runs the same pass over
+    // the same input, so what the admin approved and what is stored here are
+    // the same bytes.
     const bodyHtml = simpleSanitize(dto.bodyHtml)
 
     const batch = await this.companyEmailModel.create({
@@ -719,13 +727,28 @@ export class CompanyEmailService implements ICompanyEmailService {
           MAX_SINGLE_ATTACHMENT_BYTES,
         )
 
-        // One copy per batch under the message's own prefix — NOT one per
-        // company. See the note on `CompanyEmailAttachmentModel`.
-        const key = `company-emails/${companyEmailId}/${row.filename}`
+        /*
+         * One copy per batch under the message's own prefix — NOT one per
+         * company. See the note on `CompanyEmailAttachmentModel`.
+         *
+         * ⚠️ Keyed by the staged basename — which the boundary pattern has
+         * already proven to be a server-generated `<uuid>.<ext>` — and not by
+         * `row.filename`. Two attachments on one message may carry the same
+         * name, which would collapse them onto a single key and leave the
+         * second overwriting the only durable copy of the first.
+         */
+        const stagedName = stagedKey.slice(stagedKey.lastIndexOf('/') + 1)
+        const key = `company-emails/${companyEmailId}/${stagedName}`
+
+        // The name the recipient sees, minus the characters that would break
+        // out of the unescaped `Content-Disposition` header `uploadObject`
+        // builds. The stored `filename` itself is left as the admin typed it.
+        const headerName = row.filename.replace(/["\\/]|\p{Cc}/gu, '')
+
         const uploaded = await this.aws.uploadObject(
           bucket,
           key,
-          row.filename,
+          headerName,
           buffer,
         )
 

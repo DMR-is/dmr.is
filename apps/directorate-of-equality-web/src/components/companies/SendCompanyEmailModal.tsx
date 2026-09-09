@@ -499,13 +499,18 @@ export const SendCompanyEmailModal = ({
                 <Box border="standard" borderRadius="large">
                   {/*
                     Read-only editor rather than `dangerouslySetInnerHTML`, the
-                    same way a stored report body is rendered. It also shows the
-                    admin their formatting as the recipient will get it.
+                    same way a stored report body is rendered.
+
+                    ⚠️ `preview.bodyHtml`, not the local editor state: the API
+                    returns the body already sanitised, so anything the
+                    sanitiser strips is gone before the admin approves it rather
+                    than after. Otherwise this step would show markup the
+                    recipient never gets.
                   */}
                   <HTMLEditor
                     readonly
                     disabled
-                    defaultValue={bodyHtml}
+                    defaultValue={preview.bodyHtml}
                     handleUpload={() => new Error('File upload not supported')}
                   />
                 </Box>

@@ -44,6 +44,12 @@ export class CompanyEmailSkippedPreviewDto extends CompanyEmailRecipientPreviewD
  * show a smaller number than the button with nothing to explain the gap.
  */
 export class CompanyEmailPreviewDto {
+  @ApiString({
+    description:
+      'The message body as it will be delivered — already run through the same sanitiser the send applies, so the confirmation step shows the bytes that go out rather than the raw editor state.',
+  })
+  bodyHtml!: string
+
   @ApiProperty({ type: CompanyEmailRecipientPreviewDto, isArray: true })
   recipients!: CompanyEmailRecipientPreviewDto[]
 
