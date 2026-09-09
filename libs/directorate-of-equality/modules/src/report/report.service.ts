@@ -18,6 +18,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -64,6 +65,7 @@ import {
   ReportTimelineItemKindEnum,
 } from './dto/report-timeline-item.dto'
 import {
+  EqualityContentTypeEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -75,7 +77,10 @@ import {
   buildImprovementPlanWhere,
   dateRangeFilter,
 } from './utils/filters'
-import { IReportService } from './report.service.interface'
+import {
+  EqualityContentPdf,
+  IReportService,
+} from './report.service.interface'
 
 const LOGGING_CONTEXT = 'ReportService'
 
@@ -222,6 +227,34 @@ export class ReportService implements IReportService {
     const paging = generatePaging(reports, query.page, query.pageSize, count)
 
     return { reports, paging }
+  }
+
+  async getEqualityContentPdf(id: string): Promise<EqualityContentPdf> {
+    this.logger.debug('Fetching uploaded equality plan PDF', {
+      context: LOGGING_CONTEXT,
+      id,
+    })
+
+    // Unscoped: only the three content columns matter here, and the `detailed`
+    // scope's includes would pull the whole report tree for a file download.
+    const report = await this.reportModel.findByPkOrThrow(id)
+
+    if (
+      report.type !== ReportTypeEnum.EQUALITY ||
+      report.equalityReportContentType !== EqualityContentTypeEnum.PDF ||
+      !report.equalityReportContent
+    ) {
+      throw new NotFoundException(
+        `Report "${id}" has no uploaded equality plan PDF`,
+      )
+    }
+
+    return {
+      pdf: Buffer.from(report.equalityReportContent, 'base64'),
+      // Non-null whenever the type is PDF — the database CHECK enforces it —
+      // but a report predating that constraint would still read null here.
+      fileName: report.equalityReportContentFilename ?? `jafnrettisaaetlun.pdf`,
+    }
   }
 
   async getById(id: string): Promise<ReportDetailDto> {
@@ -864,12 +897,23 @@ export class ReportService implements IReportService {
       )
     }
 
+    /*
+     * ⚠️ **Every column `fromModelToEqualityReport` reads has to be in this
+     * list.** A partial select leaves the rest `undefined` on the instance, and
+     * `undefined` is not a null this projection can detect: the withholding
+     * test is `!== PDF`, so a missing `equalityReportContentType` reads as HTML
+     * and the base64 of an uploaded plan is returned as though it were rich
+     * text — several MB on a read, rendered as markup by the admin editor, and
+     * baked into the approval PDF as base64 text.
+     */
     const equality = await this.reportModel.findByPk(report.equalityReportId, {
       attributes: [
         'id',
         'identifier',
         'status',
         'equalityReportContent',
+        'equalityReportContentType',
+        'equalityReportContentFilename',
         'approvedAt',
         'validUntil',
         'correctionDeadline',

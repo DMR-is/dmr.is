@@ -86,6 +86,16 @@ export const overviewText = {
     successToast: 'Skýrsla send inn',
     inflightConflictToast:
       'Fyrirtækið er nú þegar með jafnréttisáætlun í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný jafnréttisáætlun er send inn.',
+    // Choosing between the two representations the content may take.
+    contentModeHeading: 'Innihald jafnréttisáætlunar',
+    contentModeText: 'Slá inn texta',
+    contentModePdf: 'Hlaða upp PDF',
+    pdfPlaceholder: 'Veldu PDF skrá með jafnréttisáætlun fyrirtækisins',
+    choosePdf: 'Velja skrá',
+    switchPdf: 'Skipta um skrá',
+    pdfTooLarge: 'Skráin er of stór. Hámarksstærð er 4 MB.',
+    pdfNotAPdf: 'Skráin er ekki PDF. Veldu skrá sem endar á .pdf.',
+    pdfReadError: 'Ekki tókst að lesa skrána. Prófaðu aftur.',
   },
   createSalaryReport: {
     drawerLabel: 'Skrá launagreiningu',
@@ -306,6 +316,9 @@ export const reportText = {
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',
     responsibleLabel: 'Ábyrgðaraðili',
+    // The embedded PDF viewer, for plans the company uploaded as a file.
+    pdfFrameTitle: 'Jafnréttisáætlun fyrirtækisins',
+    pdfOpenInNewTab: 'Opna í nýjum flipa',
   },
   salaryTab: {
     emptyTitle: 'Engin skýrslugjöf ',

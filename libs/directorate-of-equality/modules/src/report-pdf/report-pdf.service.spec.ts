@@ -1,8 +1,14 @@
+import { PDFDocument } from 'pdf-lib'
+
 import { BadRequestException } from '@nestjs/common'
 
 import { Paging } from '@dmr.is/shared-dto'
 
-import { GenderEnum, ReportTypeEnum } from '../report/models/report.enums'
+import {
+  EqualityContentTypeEnum,
+  GenderEnum,
+  ReportTypeEnum,
+} from '../report/models/report.enums'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee-outlier.dto'
 import { SalaryByGenderAndScoreDto } from '../report-statistics/dto/salary-by-gender-and-score.dto'
@@ -118,6 +124,17 @@ function makeOutlier(
   }
 }
 
+/** A real, loadable PDF with `pages` blank pages. */
+async function makePdf(pages: number): Promise<Buffer> {
+  const doc = await PDFDocument.create()
+  for (let i = 0; i < pages; i++) doc.addPage()
+  return Buffer.from(await doc.save())
+}
+
+async function pageCount(pdf: Buffer): Promise<number> {
+  return (await PDFDocument.load(pdf)).getPageCount()
+}
+
 function makeService(reportOverrides = {}) {
   const logger = { debug: jest.fn(), warn: jest.fn() }
   const reportService = {
@@ -129,6 +146,10 @@ function makeService(reportOverrides = {}) {
       }),
     ),
     getOutlierGroups: jest.fn(async () => ({ groups: [] })),
+    getEqualityContentPdf: jest.fn(async () => ({
+      pdf: Buffer.alloc(0),
+      fileName: 'aaetlun.pdf',
+    })),
   }
   const statisticsService = {
     getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
@@ -206,6 +227,101 @@ describe('ReportPdfService', () => {
         statisticsService.getRegularHourlyWageByScoreAll,
       ).not.toHaveBeenCalled()
       expect(reportService.getOutliers).not.toHaveBeenCalled()
+    })
+
+    describe('when the equality content is an uploaded PDF', () => {
+      /*
+       * The shared `pdfMock` returns three bytes, which is fine while nothing
+       * parses the output — but this path merges it, so the cover render has to
+       * be a real document. Restored by the suite-wide `clearAllMocks`.
+       */
+      const withRealCoverRender = async (coverPages = 1) => {
+        pdfMock.mockResolvedValue(new Uint8Array(await makePdf(coverPages)))
+      }
+
+      it('merges the generated cover page in front of the uploaded plan', async () => {
+        const { service, reportService } = makeService({
+          type: ReportTypeEnum.EQUALITY,
+          equalityReport: {
+            id: 'eq1',
+            contentType: EqualityContentTypeEnum.PDF,
+            content: null,
+          },
+        })
+        await withRealCoverRender()
+        reportService.getEqualityContentPdf.mockResolvedValue({
+          pdf: await makePdf(3),
+          fileName: 'aaetlun.pdf',
+        })
+
+        const result = await service.generateReportPdf('r1')
+
+        // One cover page plus the company's three — the whole point being that
+        // the download carries the Directorate's metadata AND the plan.
+        expect(await pageCount(result.pdf)).toBe(4)
+        expect(result.fileName).toBe('jafnrettisaaetlun-r1.pdf')
+      })
+
+      it("reads the content from the LINKED equality report on a salary report", async () => {
+        // A salary report's equality block is a different row, and its content
+        // lives there — fetching by `report.id` would find nothing.
+        const { service, reportService } = makeService({
+          type: ReportTypeEnum.EQUALITY,
+          equalityReport: {
+            id: 'linked-eq',
+            contentType: EqualityContentTypeEnum.PDF,
+            content: null,
+          },
+        })
+        await withRealCoverRender()
+        reportService.getEqualityContentPdf.mockResolvedValue({
+          pdf: await makePdf(1),
+          fileName: 'aaetlun.pdf',
+        })
+
+        await service.generateReportPdf('r1')
+
+        expect(reportService.getEqualityContentPdf).toHaveBeenCalledWith(
+          'linked-eq',
+        )
+      })
+
+      it('renders HTML content without fetching any uploaded PDF', async () => {
+        const { service, reportService } = makeService({
+          type: ReportTypeEnum.EQUALITY,
+          equalityReport: {
+            id: 'eq1',
+            contentType: EqualityContentTypeEnum.HTML,
+            content: '<p>efni</p>',
+          },
+        })
+
+        await service.generateReportPdf('r1')
+
+        expect(reportService.getEqualityContentPdf).not.toHaveBeenCalled()
+      })
+
+      it('throws when the stored PDF is unreadable', async () => {
+        // Deliberate: `buildApprovalAttachments` catches this and mails the
+        // approval notice without the attachment, which is the right trade on a
+        // decision already committed. Swallowing it here would instead ship a
+        // document with the plan silently missing.
+        const { service, reportService } = makeService({
+          type: ReportTypeEnum.EQUALITY,
+          equalityReport: {
+            id: 'eq1',
+            contentType: EqualityContentTypeEnum.PDF,
+            content: null,
+          },
+        })
+        await withRealCoverRender()
+        reportService.getEqualityContentPdf.mockResolvedValue({
+          pdf: Buffer.from('%PDF- truncated garbage', 'ascii'),
+          fileName: 'aaetlun.pdf',
+        })
+
+        await expect(service.generateReportPdf('r1')).rejects.toBeDefined()
+      })
     })
 
     it('rejects reports with an unsupported type', async () => {

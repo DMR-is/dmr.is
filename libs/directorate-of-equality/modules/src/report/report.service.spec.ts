@@ -12,11 +12,12 @@ import {
 } from './dto/get-reports.query.dto'
 import {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
 } from './models/report.enums'
-import type { ReportModel } from './models/report.model'
+import { ReportModel } from './models/report.model'
 import { ReportService } from './report.service'
 
 /**
@@ -558,6 +559,9 @@ describe('ReportService.getById', () => {
         identifier: row.identifier ?? null,
         status: row.status,
         content: row.equalityReportContent ?? null,
+        contentType:
+          row.equalityReportContentType ?? EqualityContentTypeEnum.HTML,
+        contentFilename: row.equalityReportContentFilename ?? null,
         approvedAt: row.approvedAt ?? null,
         validUntil: row.validUntil ?? null,
         correctionDeadline: row.correctionDeadline ?? null,
@@ -644,6 +648,94 @@ describe('ReportService.getById', () => {
           identifier: 'ABC-000',
           content: 'Linked equality text',
           status: ReportStatusEnum.APPROVED,
+        }),
+      )
+    })
+
+    /*
+     * ⚠️ Regression guard. This path loads the linked row with an explicit
+     * `attributes` list, and a column missing from it reads as `undefined` on
+     * the instance — which `equalityContentForRead` cannot tell apart from
+     * HTML, because it tests `!== PDF`. The symptom was multi-MB base64 served
+     * as rich text: rendered as markup by the admin editor and baked into the
+     * approval PDF. Asserting the projection instead of the SELECT would not
+     * have caught it either, so this asserts both.
+     */
+    it('selects every column the equality projection reads', async () => {
+      const { service, findByPkOrThrow } = makeService()
+      const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: linkedEqualityId,
+        }) as unknown as ReportModel,
+      )
+
+      const serviceAny = service as unknown as {
+        reportModel: { findByPk: jest.Mock }
+      }
+      serviceAny.reportModel.findByPk.mockResolvedValueOnce(
+        makeLinkedEqualityRow({ id: linkedEqualityId }),
+      )
+
+      await service.getById(baseReport.id)
+
+      expect(serviceAny.reportModel.findByPk).toHaveBeenCalledWith(
+        linkedEqualityId,
+        {
+          attributes: expect.arrayContaining([
+            'equalityReportContent',
+            'equalityReportContentType',
+            'equalityReportContentFilename',
+          ]),
+        },
+      )
+    })
+
+    it('withholds the base64 of a PDF-backed linked equality report', async () => {
+      const { service, findByPkOrThrow } = makeService()
+      const linkedEqualityId = '00000000-0000-0000-0000-000000000099'
+      findByPkOrThrow.mockResolvedValueOnce(
+        makeDetailedReportRow({
+          type: ReportTypeEnum.SALARY,
+          equalityReportId: linkedEqualityId,
+        }) as unknown as ReportModel,
+      )
+
+      // The REAL projection, not the stub above: the withholding rule lives in
+      // `fromModelToEqualityReport`, so a stubbed projection would assert the
+      // stub rather than the behaviour the reviewer and the PDF depend on.
+      const linkedRow = {
+        id: linkedEqualityId,
+        identifier: 'ABC-000',
+        status: ReportStatusEnum.APPROVED,
+        equalityReportContent: 'JVBERi0xLjQK',
+        equalityReportContentType: EqualityContentTypeEnum.PDF,
+        equalityReportContentFilename: 'jafnréttisáætlun.pdf',
+        approvedAt: null,
+        validUntil: null,
+        correctionDeadline: null,
+      }
+      const serviceAny = service as unknown as {
+        reportModel: { findByPk: jest.Mock }
+      }
+      serviceAny.reportModel.findByPk.mockResolvedValueOnce(
+        Object.assign(linkedRow, {
+          fromModelToEqualityReport: () =>
+            ReportModel.fromModelToEqualityReport(
+              linkedRow as unknown as ReportModel,
+            ),
+        }),
+      )
+
+      const detail = await service.getById(baseReport.id)
+
+      expect(detail.equalityReport).toEqual(
+        expect.objectContaining({
+          id: linkedEqualityId,
+          content: null,
+          contentType: EqualityContentTypeEnum.PDF,
+          contentFilename: 'jafnréttisáætlun.pdf',
         }),
       )
     })

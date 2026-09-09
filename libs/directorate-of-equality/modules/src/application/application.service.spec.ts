@@ -25,6 +25,7 @@ import { CompanyReportModel } from '../company/models/company-report.model'
 import { IConfigService } from '../config/config.service.interface'
 import {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -1254,8 +1255,15 @@ describe('ApplicationService', () => {
         COMPANY,
       )
 
+      // Content and representation are written together — a correction may
+      // switch a report between HTML and PDF, so the type can never be left
+      // describing the content it replaced.
       expect(reportUpdate).toHaveBeenCalledWith(
-        { equalityReportContent: 'Revised narrative' },
+        {
+          equalityReportContent: 'Revised narrative',
+          equalityReportContentType: EqualityContentTypeEnum.HTML,
+          equalityReportContentFilename: null,
+        },
         { where: { id: REPORT_ID } },
       )
       expect(emitEdited).toHaveBeenCalledWith(

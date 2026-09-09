@@ -13,6 +13,7 @@ import {
 import { CompanyReportDto } from '../../company/dto/company-report.dto'
 import { EqualityReportSummaryDto } from '../../report/dto/equality-report-summary.dto'
 import {
+  EqualityContentTypeEnum,
   ReportStatusEnum,
   ReportTypeEnum,
   SalaryDataBasisEnum,
@@ -51,8 +52,19 @@ export class ApplicationReportDetailDto {
   @ApiOptionalDto(EqualityReportSummaryDto, { nullable: true })
   equalityReport!: EqualityReportSummaryDto | null
 
+  /**
+   * Null when `equalityReportContentType` is PDF — the applicant fetches those
+   * bytes from `GET /application/reports/:providerId/equality-content/pdf`
+   * rather than receiving megabytes of base64 on every report read.
+   */
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiEnum(EqualityContentTypeEnum, { enumName: 'EqualityContentTypeEnum' })
+  equalityReportContentType!: EqualityContentTypeEnum
+
+  @ApiOptionalString({ nullable: true })
+  equalityReportContentFilename!: string | null
 
   @ApiOptionalEnum(SalaryDataBasisEnum, {
     nullable: true,

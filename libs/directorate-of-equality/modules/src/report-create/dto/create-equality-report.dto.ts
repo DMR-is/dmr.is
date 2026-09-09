@@ -3,7 +3,8 @@ import { ArrayMinSize } from 'class-validator'
 import {
   ApiDtoArray,
   ApiEnum,
-  ApiHTML,
+  ApiOptionalBase64File,
+  ApiOptionalHTML,
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
@@ -63,11 +64,25 @@ export class CreateEqualityReportDto {
   @ApiString()
   contactPhone!: string
 
-  @ApiHTML({
+  // Exactly one of this and `equalityReportPdf` is required — enforced in
+  // `resolveEqualityContent`, which is shared with the other write paths.
+  @ApiOptionalHTML({
     description:
-      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`.',
   })
-  equalityReportContent!: string
+  equalityReportContent?: string
+
+  @ApiOptionalBase64File({
+    description:
+      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',
+  })
+  equalityReportPdf?: string
+
+  @ApiOptionalString({
+    description:
+      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied.',
+  })
+  equalityReportPdfFilename?: string
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeMaleCount?: number | null

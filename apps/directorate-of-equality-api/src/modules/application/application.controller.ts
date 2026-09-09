@@ -67,6 +67,7 @@ import { AutoProvisionCompany } from '../../core/decorators/auto-provision-compa
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { DoeResponse } from '../../core/decorators/doe-response.decorator'
 import { CompanyResourceGuard } from '../../core/guards/company-resource/company-resource.guard'
+import { contentDisposition } from '../../core/http/content-disposition'
 
 const XLSX_MIME =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -284,6 +285,44 @@ export class ApplicationController {
     @CurrentCompany() company: CompanyDto,
   ): Promise<ApplicationReportDetailDto> {
     return this.applicationService.getReport(providerId, company)
+  }
+
+  /**
+   * The company's own uploaded jafnréttisáætlun, read back.
+   *
+   * The report detail withholds the PDF bytes (they are megabytes of base64),
+   * so this is how an applicant sees the plan they submitted — which matters
+   * most during a correction, where they are being asked to revise a document
+   * they would otherwise have no way to look at.
+   */
+  @Get('reports/:providerId/equality-content/pdf')
+  @ApiParam({
+    name: 'providerId',
+    type: String,
+    description:
+      'Upstream submission ID (e.g. the island.is application UUID).',
+  })
+  @DoeResponse({
+    operationId: 'getApplicationEqualityContentPdf',
+    include404: true,
+    produces: 'application/pdf',
+    successDescription:
+      'Returns the uploaded jafnréttisáætlun PDF verbatim. 404 when the ' +
+      "report's equality content is HTML rather than an uploaded PDF.",
+  })
+  async getEqualityContentPdf(
+    @Param('providerId') providerId: string,
+    @CurrentCompany() company: CompanyDto,
+  ): Promise<StreamableFile> {
+    const { pdf, fileName } = await this.applicationService.getEqualityContentPdf(
+      providerId,
+      company,
+    )
+
+    return new StreamableFile(pdf, {
+      type: 'application/pdf',
+      disposition: contentDisposition('inline', fileName),
+    })
   }
 
   @Get('reports/:providerId/outliers')

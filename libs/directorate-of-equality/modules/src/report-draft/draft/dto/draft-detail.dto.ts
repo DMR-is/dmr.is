@@ -11,6 +11,7 @@ import {
 } from '@dmr.is/decorators'
 
 import {
+  EqualityContentTypeEnum,
   GenderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -107,8 +108,15 @@ export class DraftDetailDto {
   })
   salaryDataPeriod!: string | null
 
+  /** Null when `equalityReportContentType` is PDF — see `EqualityReportDto.content`. */
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiEnum(EqualityContentTypeEnum, { enumName: 'EqualityContentTypeEnum' })
+  equalityReportContentType!: EqualityContentTypeEnum
+
+  @ApiOptionalString({ nullable: true })
+  equalityReportContentFilename!: string | null
 
   @ApiBoolean({
     description:
