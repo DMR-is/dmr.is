@@ -9,6 +9,12 @@ import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
+import {
+  resolveTemplateVersion,
+  TEMPLATE_ID,
+  type TemplateMetadata,
+  TemplateVersionSourceEnum,
+} from './template-version.assert'
 import { parseWorkbook } from './workbook.parser'
 
 // CI runs this project's tests concurrently with several other Nx projects on
@@ -764,16 +770,21 @@ describe('parseWorkbook', () => {
     })
 
     /**
-     * The version gate — the one check that does not depend on the submitter
-     * having left the headers intact.
+     * The version gate — four sources in trust order, because the most
+     * trustworthy one is the one an editor is likeliest to throw away.
      *
      * It matters more than the layout assertion because template 2.0
      * REASSIGNED Launagögn L, N and O without moving them. A 1.x workbook whose
      * headers were edited (or a sheet rebuilt by a tool that rewrites them)
      * parses to completion and files fixed pay as incidental — a complete,
-     * confident, wrong answer. These tests build their buffers by stripping the
-     * properties back out of a serialized workbook, which is exactly the shape
-     * of a genuine pre-2.0 file: no version metadata at all.
+     * confident, wrong answer.
+     *
+     * ⚠️ **Each tier is tested by DISABLING the ones above it**, not by
+     * stripping custom.xml and hoping. A test that only removed the top source
+     * would pass against a gate that had stopped checking versions entirely,
+     * which is the one bug this chain could plausibly introduce. `SOURCES`
+     * below names every disabling step so a tier cannot be added without
+     * saying how to switch it off.
      */
     describe('template version', () => {
       const stripTemplateProps = async (buf: Buffer): Promise<Buffer> => {
@@ -797,8 +808,62 @@ describe('parseWorkbook', () => {
         return zip.generateAsync({ type: 'nodebuffer' })
       }
 
-      /** A workbook that is otherwise entirely valid, so only the version can fail it. */
-      const validWorkbookBuffer = async (): Promise<Buffer> => {
+      /**
+       * Put `cp:version` back into `docProps/core.xml`.
+       *
+       * ⚠️ It has to be re-added rather than merely left alone: exceljs's
+       * writer drops `cp:version` while keeping `cp:category`, so a serialized
+       * fixture reaches this suite with source 2 already half-disabled. The
+       * shipped `template.xlsx` does carry it.
+       */
+      const setCoreVersion = async (
+        buf: Buffer,
+        version: string,
+      ): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        const core = await zip.file('docProps/core.xml')!.async('string')
+        zip.file(
+          'docProps/core.xml',
+          core.replace(
+            '<cp:category>',
+            `<cp:version>${version}</cp:version><cp:category>`,
+          ),
+        )
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      /** Blank the visible version mirror on Leiðbeiningar (source 3). */
+      const clearInstructionsCell = (wb: ExcelJS.Workbook): void => {
+        wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value = null
+      }
+
+      /**
+       * Blank Launagögn's fixed/incidental column bands (source 4), which is
+       * the state 1.x shipped in — row 4 entirely empty.
+       *
+       * Written at the merge ANCHORS (`I4`, `M4`), since that is where the
+       * value lives and where the assert reads it.
+       */
+      const clearColumnBands = (wb: ExcelJS.Workbook): void => {
+        const sheet = wb.getWorksheet('Launagögn')!
+        sheet.getCell('I4').value = null
+        sheet.getCell('M4').value = null
+      }
+
+      /** Every sheet-level source, for the tests that need a genuine 1.x shape. */
+      const clearSheetSources = (wb: ExcelJS.Workbook): void => {
+        clearInstructionsCell(wb)
+        clearColumnBands(wb)
+      }
+
+      /**
+       * A workbook that is otherwise entirely valid, so only the version can
+       * fail it. `mutate` runs before serialization, which is the only point
+       * the sheet-level sources can be reached.
+       */
+      const validWorkbookBuffer = async (
+        mutate?: (wb: ExcelJS.Workbook) => void,
+      ): Promise<Buffer> => {
         const wb = await loadTemplate()
         writeEmployeeRow(wb, 1, {
           name: 'X',
@@ -819,8 +884,16 @@ describe('parseWorkbook', () => {
         fillCriteriaAndSubCriteria(wb)
         fillRoleClassification(wb, [[1, 1, 1, 1]])
         fillEmployeeClassification(wb, [[1]])
+        mutate?.(wb)
         return serialize(wb)
       }
+
+      /**
+       * A workbook with NO version evidence anywhere — the genuine pre-2.0
+       * shape, and the only state the gate may still reject on absence.
+       */
+      const noVersionEvidenceBuffer = async (): Promise<Buffer> =>
+        stripTemplateProps(await validWorkbookBuffer(clearSheetSources))
 
       it('accepts the shipped template version', async () => {
         await expect(
@@ -828,18 +901,156 @@ describe('parseWorkbook', () => {
         ).resolves.toBeDefined()
       })
 
-      // Files predating the 2.0 release carry no version properties at all, so
-      // absent metadata is positive evidence of an old template — never a
-      // reason to proceed and hope.
-      it('rejects a workbook with no version metadata as pre-2.0', async () => {
+      // Files predating the 2.0 release declare a version in none of the four
+      // places, so absence across ALL of them is positive evidence of an old
+      // template. Absence from custom.xml alone is not — see the tier tests.
+      it('rejects a workbook with no version evidence anywhere as pre-2.0', async () => {
         const { errors } = await expectBadRequest(
-          parseWorkbook(await stripTemplateProps(await validWorkbookBuffer())),
+          parseWorkbook(await noVersionEvidenceBuffer()),
         )
 
         expect(errors).toHaveLength(1)
         expect(errors[0].message).toContain('Sniðmátið er af eldri útgáfu')
       })
 
+      /**
+       * The regression this chain was built for: a 2.0 workbook re-saved by an
+       * editor that re-authors the package rather than editing it loses its
+       * CUSTOM properties, and used to be told to migrate a template it was
+       * already on — after being filled in offline over days.
+       *
+       * Each case disables everything above the tier under test, so it is the
+       * named source doing the accepting and nothing else.
+       */
+      describe('falls back through the source chain', () => {
+        it('accepts on core.xml cp:version when custom.xml is gone', async () => {
+          const buffer = await setCoreVersion(
+            await stripTemplateProps(
+              await validWorkbookBuffer(clearSheetSources),
+            ),
+            '2.0',
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Leiðbeiningar mirror when both archive parts are gone', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearColumnBands),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Launagögn column bands when nothing names a version', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearInstructionsCell),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        /**
+         * The bands cannot name a version, only attest the shape — so a 1.x
+         * version reached through the mirror must still reject even though the
+         * bands look current. A tier that accepts on shape ALONE while a more
+         * trustworthy source says 1.x would let exactly the misread this gate
+         * exists to prevent through.
+         */
+        it('rejects an old version from the mirror despite current bands', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '1.4 (2026-08-25) • jafnrettisstofa-launagreining'
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain('(1.4)')
+        })
+
+        /**
+         * Identity survives the fallback too: the mirror carries the template
+         * id after the bullet, so a foreign workbook is still named as foreign
+         * rather than as out of date.
+         */
+        it('rejects a foreign id read from the mirror', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '2.0 (2026-09-08) • einhver-onnur-skra'
+              clearColumnBands(wb)
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain(
+            'ekki launagreiningarsniðmát Jafnréttisstofu',
+          )
+          expect(errors[0].message).not.toContain('eldri útgáfu')
+        })
+      })
+
+      /**
+       * Which tier answered, asserted directly. The behavioural tests above
+       * prove each source can carry a file on its own; this proves the ORDER,
+       * which they cannot — every one of them would still pass if the chain
+       * silently collapsed to its last tier.
+       */
+      describe('reports which source resolved the version', () => {
+        const resolveOn = async (
+          mutate?: (wb: ExcelJS.Workbook) => void,
+          metadata: TemplateMetadata = {
+            version: null,
+            templateId: null,
+            source: TemplateVersionSourceEnum.NONE,
+          },
+        ) => {
+          const wb = await loadTemplate()
+          mutate?.(wb)
+          return resolveTemplateVersion(metadata, wb)
+        }
+
+        it('prefers the archive properties over both cells', async () => {
+          const resolved = await resolveOn(undefined, {
+            version: '2.1',
+            templateId: TEMPLATE_ID,
+            source: TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          })
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          )
+          expect(resolved.version).toBe('2.1')
+        })
+
+        it('prefers the mirror over the bands', async () => {
+          const resolved = await resolveOn()
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.INSTRUCTIONS_CELL,
+          )
+          expect(resolved.version).toBe('2.0')
+          expect(resolved.templateId).toBe(TEMPLATE_ID)
+        })
+
+        it('falls to the bands, which name no version', async () => {
+          const resolved = await resolveOn(clearInstructionsCell)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.COLUMN_BANDS)
+          expect(resolved.version).toBeNull()
+        })
+
+        it('reports NONE on a 1.x-shaped sheet', async () => {
+          const resolved = await resolveOn(clearSheetSources)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.NONE)
+          expect(resolved.version).toBeNull()
+        })
+      })
+
+      // The bands are intact on this fixture, so it doubles as proof that a
+      // declared old version beats a current-looking sheet.
       it('rejects an explicitly older version', async () => {
         const { errors } = await expectBadRequest(
           parseWorkbook(
@@ -897,7 +1108,7 @@ describe('parseWorkbook', () => {
        */
       it('tells the submitter what actually changed', async () => {
         const { errors } = await expectBadRequest(
-          parseWorkbook(await stripTemplateProps(await validWorkbookBuffer())),
+          parseWorkbook(await noVersionEvidenceBuffer()),
         )
 
         const message = errors[0].message
@@ -915,7 +1126,7 @@ describe('parseWorkbook', () => {
        */
       it('delivers the migration steps as separate details entries', async () => {
         const { message, errors } = await expectBadRequest(
-          parseWorkbook(await stripTemplateProps(await validWorkbookBuffer())),
+          parseWorkbook(await noVersionEvidenceBuffer()),
         )
 
         expect(Array.isArray(message)).toBe(true)

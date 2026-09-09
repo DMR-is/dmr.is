@@ -46,6 +46,7 @@ import {
   checkTemplateVersion,
   readTemplateMetadata,
   type TemplateMetadata,
+  TemplateVersionSourceEnum,
 } from './template-version.assert'
 
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
@@ -223,7 +224,11 @@ export const parseWorkbook = async (
   const workbook = new ExcelJS.Workbook()
   // Read from the archive while it is open, checked after the load succeeds:
   // a workbook too corrupt to load has a better error than "wrong version".
-  let templateMetadata: TemplateMetadata = { version: null, templateId: null }
+  let templateMetadata: TemplateMetadata = {
+    version: null,
+    templateId: null,
+    source: TemplateVersionSourceEnum.NONE,
+  }
   try {
     const zip = await JSZip.loadAsync(fileBuffer)
     await assertArchiveWithinBudget(zip)
@@ -266,10 +271,16 @@ export const parseWorkbook = async (
   // ⚠️ VERSION FIRST — before the layout check, and long before any row is
   // read. Template 2.0 reassigned Launagögn L, N and O without moving them, so
   // a 1.x workbook parses to completion and yields wrong pay figures rather
-  // than failing. This is the only check that does not depend on the headers
-  // being intact, and the only one that can name the migration. See
-  // `template-version.assert.ts` for why 1.x is rejected rather than supported.
-  const outdatedTemplate = checkTemplateVersion(templateMetadata)
+  // than failing. This is the only check that can name the migration, and
+  // three of its four sources do not depend on the headers being intact. See
+  // `template-version.assert.ts` for the source chain, and for why 1.x is
+  // rejected rather than supported.
+  //
+  // The workbook is passed in because two of those sources are cells — the
+  // visible version mirror on Leiðbeiningar and Launagögn's column bands —
+  // which are what a workbook re-saved by an editor that discards custom
+  // document properties still carries.
+  const outdatedTemplate = checkTemplateVersion(templateMetadata, workbook)
   if (outdatedTemplate) {
     // `message` and `errors` deliberately do NOT run parallel here, unlike the
     // per-cell throws below. `message` becomes `ApiErrorDto.details`, which the
