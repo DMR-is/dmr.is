@@ -30,6 +30,9 @@ export enum DoeModels {
   REPORT_COMMENT = 'report_comment',
   COMPANY_EVENT = 'company_event',
   COMPANY_COMMENT = 'company_comment',
+  COMPANY_EMAIL = 'company_email',
+  COMPANY_EMAIL_RECIPIENT = 'company_email_recipient',
+  COMPANY_EMAIL_ATTACHMENT = 'company_email_attachment',
   LEGACY_REPORT = 'legacy_report',
   CONFIG = 'config',
 }

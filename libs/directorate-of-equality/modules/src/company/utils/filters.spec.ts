@@ -1,9 +1,15 @@
 import { Op } from 'sequelize'
 
-import { CompanyStatusEnum } from '../models/company.enums'
+import {
+  CompanyReportStatusEnum,
+  CompanySectorEnum,
+  CompanySizeEnum,
+  CompanyStatusEnum,
+} from '../models/company.enums'
 import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
+  buildCompanyListQuery,
   CompanyExpiryFilterEnum,
 } from './filters'
 
@@ -103,5 +109,100 @@ describe('buildCompanyLifecycleStatusWhere', () => {
 
     expect(Object.keys(where)).toEqual(['status'])
     expect(JSON.stringify(where)).not.toContain('CASE')
+  })
+})
+
+/**
+ * The composed builder behind both the company list and the recipient
+ * resolution for a bulk email.
+ *
+ * ⚠️ Those two callers asking the same question through the same code is the
+ * whole point. If they drifted, the count an admin approves on the "senda
+ * tölvupóst (N)" button and the set of companies actually written to would
+ * disagree — silently, and in the direction of mailing companies nobody
+ * selected. These tests pin that every filter the list DTO carries reaches the
+ * query, so a new filter cannot be added to the list and quietly skipped here.
+ */
+describe('buildCompanyListQuery', () => {
+  const conditionsOf = (query: Parameters<typeof buildCompanyListQuery>[0]) => {
+    const { where } = buildCompanyListQuery(query)
+    const and = (where as Record<symbol, unknown[]>)[Op.and]
+    return and ?? [where]
+  }
+
+  it('is inert for an empty query', () => {
+    expect(buildCompanyListQuery({})).toEqual({ where: {}, includes: [] })
+  })
+
+  it('returns the single condition unwrapped rather than in an Op.and', () => {
+    const { where } = buildCompanyListQuery({ finesStarted: true })
+
+    expect(where).toEqual({ finesStarted: true })
+  })
+
+  it('searches name and national id together', () => {
+    const { where } = buildCompanyListQuery({ q: '  Fyrirtæki  ' })
+    const or = (where as Record<symbol, Record<string, unknown>[]>)[Op.or]
+
+    // Trimmed, then wrapped — an untrimmed pattern silently matches nothing.
+    expect(or).toEqual([
+      { name: { [Op.iLike]: '%Fyrirtæki%' } },
+      { nationalId: { [Op.iLike]: '%Fyrirtæki%' } },
+    ])
+  })
+
+  it('distinguishes an explicit `false` boolean from an absent one', () => {
+    // `quarantined: false` is a real filter — "only companies not halted" — and
+    // treating it as unset would widen the recipient set on a bulk send.
+    expect(conditionsOf({ quarantined: false })).toContainEqual({
+      quarantined: false,
+    })
+    expect(buildCompanyListQuery({}).where).toEqual({})
+  })
+
+  it('treats `overdue: false` as no constraint', () => {
+    // Asymmetric with the booleans above, and deliberately so: `overdue` is a
+    // derived expression with no negative form to filter on.
+    expect(buildCompanyListQuery({ overdue: false })).toEqual({
+      where: {},
+      includes: [],
+    })
+  })
+
+  it('combines every filter it is given', () => {
+    const conditions = conditionsOf({
+      q: 'a',
+      employeeCountCategory: CompanySizeEnum.LARGE,
+      companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
+      status: [CompanyStatusEnum.ACTIVE],
+      expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],
+      finesStarted: true,
+      quarantined: false,
+      overdue: true,
+      isatCategoryCode: ['01110'],
+      sector: [CompanySectorEnum.PRIVATE],
+    })
+
+    expect(conditions).toHaveLength(10)
+  })
+
+  it('adds an include for each join-backed filter', () => {
+    const { includes } = buildCompanyListQuery({
+      postcode: ['101'],
+      isatSection: ['O'],
+    })
+
+    // Location and ÍSAT section are resolved through joins rather than columns;
+    // dropping either would silently return companies the filter excluded.
+    expect(includes).toHaveLength(2)
+  })
+
+  it('ignores paging, which belongs to the caller', () => {
+    // ⚠️ The recipient resolution passes the list's own query object through,
+    // paging params included. If they reached the query, a bulk send would mail
+    // page one and report it as everyone matching the filter.
+    const { where } = buildCompanyListQuery({ page: 3, pageSize: 10 })
+
+    expect(where).toEqual({})
   })
 })

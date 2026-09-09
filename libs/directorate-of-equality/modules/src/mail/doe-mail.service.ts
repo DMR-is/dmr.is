@@ -7,6 +7,10 @@ import { ResultWrapper } from '@dmr.is/types'
 import { ReportModel } from '../report/models/report.model'
 import { ReportCommentModel } from '../report-comment/models/report-comment.model'
 import {
+  buildCustomEmailHtml,
+  buildCustomEmailText,
+} from './templates/custom-email.template'
+import {
   buildExternalCommentHtml,
   buildExternalCommentSubject,
   buildExternalCommentText,
@@ -28,6 +32,7 @@ import {
   buildReportDeniedText,
 } from './templates/report-denied.template'
 import {
+  CustomEmailSendResult,
   IDoeMailService,
   ReportMailAttachment,
 } from './doe-mail.service.interface'
@@ -171,6 +176,67 @@ export class DoeMailService implements IDoeMailService {
       reportType: input.reportType,
       context: LOGGING_CONTEXT,
     })
+  }
+
+  async sendCustomEmail(
+    to: string,
+    subject: string,
+    bodyHtml: string,
+    attachments: ReportMailAttachment[] = [],
+  ): Promise<CustomEmailSendResult> {
+    /*
+     * ⚠️ The same guard the report notices use, for a sharper reason here.
+     *
+     * `looksLikeOneAddress` rejects anything containing a comma or semicolon
+     * because nodemailer *splits `to` on commas* — see `recipient.ts`. On the
+     * report path that guard protects against a malformed stored address. Here
+     * the caller is a batch walking a recipient list, so a single row holding
+     * `'a@x.is, b@y.is'` would quietly deliver one company's message to a second
+     * company. This is the last check before that becomes a send.
+     */
+    if (!looksLikeOneAddress(to.trim())) {
+      this.logger.warn('Refusing custom email — recipient is not one address', {
+        context: LOGGING_CONTEXT,
+      })
+      return { ok: false, error: 'Recipient is not a single valid address' }
+    }
+
+    const sent = await this.sendMailResult({
+      ...this.envelope(),
+      to: to.trim(),
+      subject,
+      text: buildCustomEmailText(bodyHtml),
+      html: buildCustomEmailHtml(bodyHtml),
+      ...(attachments.length
+        ? {
+            attachments: attachments.map(({ filename, content }) => ({
+              filename,
+              content,
+            })),
+          }
+        : {}),
+    })
+
+    /*
+     * ⚠️ The result, not a rejection — `sendMail` is decorated `@LogAndHandle()`
+     * and cannot reject. A `try/catch` here would be dead code and every failure
+     * would read as a delivered message. See `sendMailResult`.
+     */
+    if (sent.result.ok === false) {
+      this.logger.error('Failed to send custom email', {
+        context: LOGGING_CONTEXT,
+        errorCode: sent.result.error.code,
+        errorMessage: sent.result.error.message,
+      })
+      return { ok: false, error: sent.result.error.message }
+    }
+
+    this.logger.info('Sent custom email', {
+      context: LOGGING_CONTEXT,
+      subject,
+      attachmentCount: attachments.length,
+    })
+    return { ok: true }
   }
 
   /**

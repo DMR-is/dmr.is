@@ -6,6 +6,7 @@ import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { CompanyEventDto } from '../company/dto/company-event.dto'
 import { CompanyStatusEnum } from '../company/models/company.enums'
 import {
+  CompanyCustomEmailEventType,
   CompanyDeadlineReminderEventType,
   CompanyEventModel,
   CompanyEventTypeEnum,
@@ -183,6 +184,36 @@ export class CompanyEventService implements ICompanyEventService {
       actorUserId: actorUserId ?? null,
       status,
       reason: reason ? `${keyId} — ${reason}` : keyId,
+    })
+  }
+
+  async emitCustomEmailOutcome(
+    companyId: string,
+    status: CompanyStatusEnum,
+    eventType: CompanyCustomEmailEventType,
+    companyEmailId: string,
+    subject: string,
+    actorUserId?: string | null,
+    detail?: string | null,
+  ): Promise<void> {
+    /*
+     * `debug`, not `info`, unlike every other emit here. Those fire once per
+     * admin action; this one fires once per company in a batch that can span the
+     * whole register, and at `info` a single send would put ~1 700 lines through
+     * the log pipeline saying nothing the batch summary does not.
+     */
+    this.logger.debug(
+      `Emitting ${eventType} event for company ${companyId} (email ${companyEmailId})`,
+      { context: LOGGING_CONTEXT, companyId, eventType, companyEmailId },
+    )
+
+    await this.companyEventModel.create({
+      companyId,
+      eventType,
+      actorUserId: actorUserId ?? null,
+      status,
+      reason: detail ? `${subject} — ${detail}` : subject,
+      companyEmailId,
     })
   }
 

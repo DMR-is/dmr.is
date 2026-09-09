@@ -17,6 +17,7 @@ import {
 import { CompanyImportModal } from '../../components/companies/CompanyImportModal'
 import { CompanyTable } from '../../components/companies/CompanyTable'
 import { CreateCompanyModal } from '../../components/companies/CreateCompanyModal'
+import { SendCompanyEmailModal } from '../../components/companies/SendCompanyEmailModal'
 import {
   CompanyExpiryFilterEnum,
   CompanyReportStatusEnum,
@@ -34,9 +35,22 @@ export const CompaniesContainer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
 
-  const { data, isError, filter, setFilter, resetFilter } = useCompanies({
-    pageSize: 10,
-  })
+  /**
+   * The filter the email modal is addressed by, captured when it is opened.
+   *
+   * ⚠️ Held here rather than read live inside the modal, and non-null is what
+   * "open" means. An admin who changes the filter behind the modal must not
+   * thereby change who the message they are about to confirm goes to — and the
+   * modal itself cannot capture it on mount, because it is always mounted (see
+   * the note at its mount site below).
+   */
+  const [emailFilter, setEmailFilter] = useState<Record<
+    string,
+    unknown
+  > | null>(null)
+
+  const { data, isError, filter, setFilter, resetFilter, recipientFilter } =
+    useCompanies({ pageSize: 10 })
 
   const [filters, setFilters] = useState<CompanyFilters>({
     employees: filter.employeeCountCategory
@@ -176,6 +190,16 @@ export const CompaniesContainer = () => {
   // All filtering (incl. daily fines + overdue) is server-side via useCompanies.
   const rows = data?.companies ?? []
 
+  /*
+   * Every company the filter matches, not the page on screen — the send is
+   * addressed by the filter, so this is the number that describes it.
+   *
+   * ⚠️ It can exceed the count the confirmation step then shows: companies with
+   * no address on file, and quarantined ones, are excluded there. That step
+   * lists them with the reason rather than leaving the drop unexplained.
+   */
+  const matchCount = data?.paging?.totalItems ?? 0
+
   const newButton = (
     <Box display="flex" flexDirection="column" rowGap={1} marginTop={2}>
       <Button
@@ -199,6 +223,18 @@ export const CompaniesContainer = () => {
         fluid
       >
         {companiesText.importModal.button}
+      </Button>
+      <Button
+        icon="mail"
+        iconType="outline"
+        onClick={() => setEmailFilter(recipientFilter)}
+        size="small"
+        variant="utility"
+        colorScheme="white"
+        disabled={matchCount === 0}
+        fluid
+      >
+        {`${companiesText.sendEmail.listButton} (${matchCount})`}
       </Button>
     </Box>
   )
@@ -246,6 +282,24 @@ export const CompaniesContainer = () => {
       <CompanyImportModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
+      />
+      {/*
+        ⚠️ Always mounted and toggled through `isOpen`, like every other modal
+        here — NOT conditionally mounted.
+
+        `ModalBase` opens the reakit dialog from an effect that runs on mount
+        when `isVisible` is already true. The click that mounted it is still in
+        flight while `hideOnClickOutside` arms, so reakit reads that same click
+        as an outside click and hides it again: the modal flickers and never
+        opens. Toggling an already-mounted dialog has no such race.
+
+        The filter snapshot that conditional mounting was buying is taken in
+        `emailFilter` instead, at the moment the button is clicked.
+      */}
+      <SendCompanyEmailModal
+        isOpen={emailFilter !== null}
+        onClose={() => setEmailFilter(null)}
+        target={{ mode: 'filter', filter: emailFilter ?? {} }}
       />
     </GridContainer>
   )
