@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common'
 
 import { ResultWrapper } from '@dmr.is/types'
 
@@ -341,6 +341,42 @@ describe('CompanyEmailService', () => {
 
       expect(companyEmailModel.create).not.toHaveBeenCalled()
     })
+
+    it('reports a 413 raised as a bare HttpException as "too large"', async () => {
+      /*
+       * ⚠️ A bare `HttpException`, not a `PayloadTooLargeException` — that is
+       * exactly the shape the S3 branch produces, because the 413 travels back
+       * through `ResultWrapper.unwrap`, which rethrows every error as
+       * `new HttpException(message, code)`. Only local disk reads throw the
+       * subclass, so a subclass check passes in dev and sends the admin looking
+       * for a corrupt file in every deployed environment.
+       */
+      uploadService.fetchObject.mockRejectedValue(
+        new HttpException('too big', HttpStatus.PAYLOAD_TOO_LARGE),
+      )
+
+      await expect(
+        service.send({ ...validDto, attachments: [attachment] }, 'user-1'),
+      ).rejects.toThrow(/total limit/)
+
+      expect(companyEmailModel.create).not.toHaveBeenCalled()
+    })
+
+    it('refuses more than the maximum attachment count at preview', async () => {
+      // The cap belongs on the composing step, not only on send: reaching it at
+      // send means the admin has already cleared the confirmation.
+      await expect(
+        service.preview({
+          ...validDto,
+          attachments: Array.from({ length: 6 }, (_, i) => ({
+            ...attachment,
+            filename: `b${i}.pdf`,
+          })),
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+
+      expect(uploadService.fetchObject).not.toHaveBeenCalled()
+    })
   })
 
   describe('delivery', () => {
@@ -648,6 +684,40 @@ describe('CompanyEmailService', () => {
         'company-emails/batch-1/a.pdf',
         'company-emails/batch-1/b.pdf',
       ])
+    })
+
+    it('still archives when the batch aborts', async () => {
+      /*
+       * ⚠️ An aborted batch has usually already sent to some of its recipients,
+       * so its attachments are as much part of the audit record as a completed
+       * one's. Archiving only on the success path left the staged objects in
+       * `doe-imports/mail-attachment/` with nothing that would ever return for
+       * them.
+       */
+      process.env.AWS_DOE_COMPANY_FILES_BUCKET = 'doe-company-files'
+      uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
+      aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ok'))
+      attachmentModel.findAll.mockResolvedValue([makeAttachmentRow()])
+      recipientModel.findAll.mockRejectedValue(new Error('connection lost'))
+
+      await service.send(
+        {
+          ...validDto,
+          attachments: [
+            { key: 'doe-imports/mail-attachment/x.pdf', filename: 'bref.pdf' },
+          ],
+        },
+        'user-1',
+      )
+
+      expect(companyEmailModel.update).toHaveBeenCalledWith(
+        expect.objectContaining({ status: CompanyEmailStatusEnum.FAILED }),
+        expect.anything(),
+      )
+      expect(uploadService.cleanupAfter).toHaveBeenCalledWith(
+        'doe-imports/mail-attachment/x.pdf',
+        ImportUploadBoundary.MAIL_ATTACHMENT,
+      )
     })
 
     it('strips characters that would break out of the Content-Disposition header', async () => {

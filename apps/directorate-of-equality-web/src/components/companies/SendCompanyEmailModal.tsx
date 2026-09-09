@@ -249,6 +249,19 @@ export const SendCompanyEmailModal = ({
     // picker.
     if (filePickerRef.current) return
 
+    /*
+     * ⚠️ The resolved preview is dropped and the modal rewound to compose, even
+     * though the draft is kept. The preview is only true of the target it was
+     * resolved against, and the caller re-snapshots that target on every open
+     * (see the mount site) — so keeping it would reopen the modal already on
+     * the confirmation step, showing the recipients and the count of the
+     * PREVIOUS filter while the send went to the current one. Rewinding costs
+     * one click; it is the only thing that keeps the count the admin approves
+     * and the recipients they get the same set.
+     */
+    setStep('compose')
+    setPreview(null)
+
     onClose()
   }
 

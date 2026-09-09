@@ -3,9 +3,10 @@ import { Transaction } from 'sequelize'
 
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
-  PayloadTooLargeException,
 } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
@@ -150,6 +151,22 @@ export class CompanyEmailService implements ICompanyEmailService {
   }
 
   async preview(dto: SendCompanyEmailDto): Promise<CompanyEmailPreviewDto> {
+    /*
+     * The same count cap `send` enforces, run here so an over-limit message is
+     * refused while the admin is still composing rather than after they have
+     * cleared the confirmation step.
+     *
+     * ⚠️ Only the count. The total-size cap needs the objects read (see
+     * `fetchAttachments`), and downloading up to 5 MB on every Continue click
+     * to pre-empt a 400 the client already guards against is not worth the
+     * round trip — that one stays at `send`.
+     */
+    if ((dto.attachments?.length ?? 0) > MAX_ATTACHMENTS) {
+      throw new BadRequestException(
+        companyEmailMessages.tooManyAttachments(MAX_ATTACHMENTS),
+      )
+    }
+
     const resolved = await this.resolveRecipients(dto)
 
     const recipients = resolved.filter(
@@ -417,8 +434,18 @@ export class CompanyEmailService implements ICompanyEmailService {
          * above this one — so an oversized attachment is a routine outcome
          * here, not a storage fault. Reporting it as unreadable would send the
          * admin looking for a corrupt file instead of a smaller one.
+         *
+         * ⚠️ Matched on the STATUS, not on `PayloadTooLargeException`. Only the
+         * local branch of `fetchObject` throws the subclass; on S3 the 413
+         * comes back through `ResultWrapper.unwrap` as a bare `HttpException`,
+         * so a subclass check passes in dev and fails in every deployed
+         * environment — losing exactly the distinction this branch exists for.
+         * `ImportUploadService.fetchObject` matches the same way.
          */
-        if (error instanceof PayloadTooLargeException) {
+        if (
+          error instanceof HttpException &&
+          error.getStatus() === HttpStatus.PAYLOAD_TOO_LARGE
+        ) {
           throw new BadRequestException(
             companyEmailMessages.attachmentsTooLarge(
               MAX_ATTACHMENT_TOTAL_BYTES,
@@ -562,6 +589,20 @@ export class CompanyEmailService implements ICompanyEmailService {
           { where: { id: companyEmailId } },
         )
         .catch(() => undefined)
+
+      /*
+       * Attempted here too, not only on the success path. An aborted batch has
+       * still sent to some of its recipients, so its attachments are as much
+       * part of the audit record as a completed one's — and without this the
+       * staged objects sit in `doe-imports/mail-attachment/` with nothing left
+       * that will ever come back for them.
+       *
+       * Best-effort, and deliberately after the status update: the fault that
+       * landed us here is often the database, in which case this fails too and
+       * the objects are simply left for the bucket to age out. It must not
+       * replace the error already logged above.
+       */
+      await this.archiveAttachments(companyEmailId).catch(() => undefined)
     }
   }
 
