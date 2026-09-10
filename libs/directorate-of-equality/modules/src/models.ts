@@ -7,6 +7,9 @@ import { CompanyReportModel } from './company/models/company-report.model'
 import { IsatCategoryModel } from './company/models/isat-category.model'
 import { IsatSectionModel } from './company/models/isat-section.model'
 import { LegacyReportModel } from './company/models/legacy-report.model'
+import { CompanyEmailModel } from './company-email/models/company-email.model'
+import { CompanyEmailAttachmentModel } from './company-email/models/company-email-attachment.model'
+import { CompanyEmailRecipientModel } from './company-email/models/company-email-recipient.model'
 import { ConfigModel } from './config/models/config.model'
 import { PostcodeModel } from './location/models/postcode.model'
 import { RegionModel } from './location/models/region.model'
@@ -61,6 +64,11 @@ export const DOE_MODELS = [
   ReportCommentModel,
   CompanyEventModel,
   CompanyCommentModel,
+  // After CompanyModel and UserModel, both of which the recipient/batch rows
+  // reference.
+  CompanyEmailModel,
+  CompanyEmailRecipientModel,
+  CompanyEmailAttachmentModel,
   LegacyReportModel,
   ConfigModel,
   ApiKeyModel,

@@ -656,4 +656,116 @@ describe('DoeMailService', () => {
 
     expect(logger.error).toHaveBeenCalled()
   })
+
+  describe('sendCustomEmail', () => {
+    it('sends from the same envelope as every other message', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendCustomEmail(
+        'someone@example.is',
+        'Áminning',
+        '<p>Halló</p>',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      // The whole point of routing a custom mail through this service: it
+      // arrives from the sender the approval notice uses, not a second identity.
+      expect(message.from).toBe('Jafnréttisstofa <noreply@jafnretti.is>')
+      expect(message.replyTo).toBe('noreply@jafnretti.is')
+      expect(message.to).toBe('someone@example.is')
+      expect(message.subject).toBe('Áminning')
+    })
+
+    it('sends a text/plain alternative derived from the body', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendCustomEmail(
+        'someone@example.is',
+        'Efni',
+        '<h2>Fyrirsögn</h2><p>Fyrsta&nbsp;lína<br/>Önnur lína</p>',
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.html).toBe(
+        '<h2>Fyrirsögn</h2><p>Fyrsta&nbsp;lína<br/>Önnur lína</p>',
+      )
+      // Not merely non-empty: a missing or tag-laden text part is what costs
+      // deliverability on a send this size.
+      expect(message.text).toBe('Fyrirsögn\n\nFyrsta lína\nÖnnur lína')
+    })
+
+    it('refuses a comma-separated recipient without calling SES', async () => {
+      /*
+       * ⚠️ The case this guard exists for. nodemailer splits `to` on commas, so
+       * a single stored `'a@x.is, b@y.is'` would deliver one company's message
+       * to a second company — and `sendMail` discards `info.rejected`, so the
+       * fan-out would still report success.
+       */
+      const result = await service.sendCustomEmail(
+        'a@example.is, b@example.is',
+        'Efni',
+        '<p>Halló</p>',
+      )
+
+      expect(result).toEqual({
+        ok: false,
+        error: 'Recipient is not a single valid address',
+      })
+      expect(aws.sendMail).not.toHaveBeenCalled()
+    })
+
+    it('reports an err result as a failure and carries the reason', async () => {
+      /*
+       * ⚠️ Resolves an err RESULT rather than rejecting — `sendMail` is
+       * decorated `@LogAndHandle()` and cannot reject. A `try/catch` here would
+       * be unreachable and every SES failure would be recorded as a delivered
+       * message.
+       */
+      aws.sendMail.mockResolvedValue(
+        ResultWrapper.err({ code: 500, message: 'SES rejected the message' }),
+      )
+
+      const result = await service.sendCustomEmail(
+        'someone@example.is',
+        'Efni',
+        '<p>Halló</p>',
+      )
+
+      // The reason, not a bare false: it is written to the recipient row so an
+      // admin can see why one company got nothing.
+      expect(result).toEqual({ ok: false, error: 'SES rejected the message' })
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('attaches the files it is given', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendCustomEmail(
+        'someone@example.is',
+        'Efni',
+        '<p>Halló</p>',
+        [
+          {
+            filename: 'bref.pdf',
+            content: Buffer.from('pdf'),
+            label: 'bref.pdf',
+          },
+        ],
+      )
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message.attachments).toEqual([
+        { filename: 'bref.pdf', content: Buffer.from('pdf') },
+      ])
+    })
+
+    it('omits the attachments key entirely when there are none', async () => {
+      aws.sendMail.mockResolvedValue(ResultWrapper.ok(undefined))
+
+      await service.sendCustomEmail('someone@example.is', 'Efni', '<p>Hi</p>')
+
+      const [message] = aws.sendMail.mock.calls[0]
+      expect(message).not.toHaveProperty('attachments')
+    })
+  })
 })

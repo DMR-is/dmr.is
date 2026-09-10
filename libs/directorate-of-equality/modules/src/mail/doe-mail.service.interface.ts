@@ -63,6 +63,36 @@ export interface IDoeMailService {
     to: string,
     input: ReportDeadlineReminderInput,
   ): Promise<void>
+
+  /**
+   * Sends one admin-authored message to one address.
+   *
+   * Same envelope as every other message here — the point of routing this
+   * through `IDoeMailService` rather than reaching for SES directly is that a
+   * custom mail arrives from the same `Jafnréttisstofa <…>` sender as the
+   * approval notice, not from a second identity nobody recognises.
+   *
+   * ⚠️ **`bodyHtml` must already be sanitised.** This method does not sanitise,
+   * because its caller stores the body it previews and sends, and sanitising in
+   * both places is how the stored copy and the delivered copy start to differ.
+   *
+   * ⚠️ **Returns the outcome; never throws for a send failure.** Unlike the
+   * report notices — which are best-effort because the state change they
+   * announce is already committed and unrecoverable — this failure has somewhere
+   * to go: one recipient row in a batch, which records the error and lets the
+   * rest of the batch continue. A `boolean` would throw the reason away.
+   */
+  sendCustomEmail(
+    to: string,
+    subject: string,
+    bodyHtml: string,
+    attachments?: ReportMailAttachment[],
+  ): Promise<CustomEmailSendResult>
 }
+
+/** Outcome of one custom-email send. `error` is for the recipient row, not the reader. */
+export type CustomEmailSendResult =
+  | { ok: true }
+  | { ok: false; error: string }
 
 export const IDoeMailService = Symbol('IDoeMailService')

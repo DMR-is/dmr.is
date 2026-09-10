@@ -1907,6 +1907,316 @@
         "tags": ["Companies"]
       }
     },
+    "/api/v1/company-emails/attachments/presign": {
+      "post": {
+        "description": "Staging target for one attachment. The client PUTs the file to the returned URL, then passes `key` back with the send.",
+        "operationId": "presignCompanyEmailAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresignCompanyEmailAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignUploadResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/attachments/discard": {
+      "post": {
+        "description": "Delete a staged attachment the admin removed, or cancelled the whole message with, before it was sent. Best-effort and idempotent — a key already gone is still a success. Refused unless the key sits inside the mail-attachment prefix, so it cannot be aimed at an import workbook. Never call it for an attachment already submitted with a batch: until the archive runs, the staged object is that message’s only copy.",
+        "operationId": "discardCompanyEmailAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscardCompanyEmailAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/preview": {
+      "post": {
+        "description": "Resolve the recipients without writing or sending anything. Returns both the companies that will receive the message and the ones excluded, with the reason — the excluded list is what explains any gap between the count on the button and the count actually written to.",
+        "operationId": "previewCompanyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendCompanyEmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyEmailPreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails": {
+      "post": {
+        "description": "202, not 200: recipients are resolved and recorded inside the request, and the sending runs after the commit. The returned counts describe what was queued, not what was delivered — a send addressed at the whole register takes minutes, and holding the request open for it would time out and report a false failure for mail that went out. Per-recipient outcomes land on each company timeline.",
+        "operationId": "sendCompanyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SendCompanyEmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendCompanyEmailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
+    "/api/v1/company-emails/{id}": {
+      "get": {
+        "description": "A sent message, read back — backs the company timeline expanding a CUSTOM_EMAIL_* entry into what was actually sent.",
+        "operationId": "getCompanyEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CompanyEmailDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
     "/api/v1/companies/import/preview": {
       "post": {
         "operationId": "previewCompanyImport",
@@ -5690,7 +6000,10 @@
           "EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
           "SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL",
           "API_KEY_ISSUED",
-          "API_KEY_REVOKED"
+          "API_KEY_REVOKED",
+          "CUSTOM_EMAIL_SENT",
+          "CUSTOM_EMAIL_FAILED",
+          "CUSTOM_EMAIL_SKIPPED"
         ]
       },
       "CompanyReminderTierEnum": {
@@ -5728,6 +6041,12 @@
             "allOf": [
               { "$ref": "#/components/schemas/CompanyReminderTierEnum" }
             ]
+          },
+          "companyEmailId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The custom-email batch this event belongs to, on CUSTOM_EMAIL_* events only; null otherwise. The timeline uses it to fetch the message that was actually sent."
           },
           "createdAt": {
             "type": "string",
@@ -5959,6 +6278,348 @@
         },
         "required": ["body"]
       },
+      "PresignCompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Original file name. Only its extension is used, to build the staging key — the name the recipient sees is sent with the message itself, so this is never what the object is stored as. An extension outside the mail-attachment allow-list is a 400."
+          }
+        },
+        "required": ["filename"]
+      },
+      "PresignUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key the upload lands at. Pass this back to the import endpoint."
+          }
+        },
+        "required": ["url", "key"]
+      },
+      "DiscardCompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Staging key of an attachment the admin removed before sending. Refused unless it sits inside the mail-attachment prefix, so this cannot be pointed at an import workbook or an already-archived message."
+          }
+        },
+        "required": ["key"]
+      },
+      "GetCompaniesQueryDto": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "number", "example": 1, "default": 1 },
+          "pageSize": { "type": "number", "example": 10, "default": 10 },
+          "q": {
+            "type": "string",
+            "description": "Free-text search on company name or national ID."
+          },
+          "employeeCountCategory": {
+            "description": "Return only companies whose employee-count bucket matches.",
+            "allOf": [{ "$ref": "#/components/schemas/CompanySizeEnum" }]
+          },
+          "companyStatus": {
+            "type": "array",
+            "description": "Return only companies whose report status is one of the provided values (same status shown on each company). Omit for no constraint.",
+            "items": { "$ref": "#/components/schemas/CompanyReportStatusEnum" }
+          },
+          "status": {
+            "type": "array",
+            "description": "Return only companies whose register lifecycle status is one of the provided values. Omit for no constraint, i.e. both ACTIVE and INACTIVE. ⚠️ Not to be confused with `companyStatus` above, which is the compliance axis (what the company still owes): this one is whether the company is in the authoritative register at all.",
+            "items": { "$ref": "#/components/schemas/CompanyStatusEnum" }
+          },
+          "expiresWithin": {
+            "type": "array",
+            "description": "Return only companies that have an approved report expiring within the given window. Multiple values are OR-ed; the largest window wins.",
+            "items": { "$ref": "#/components/schemas/CompanyExpiryFilterEnum" }
+          },
+          "finesStarted": {
+            "type": "boolean",
+            "description": "When true, return only companies in the daily-fines process (finesStarted = true)."
+          },
+          "quarantined": {
+            "type": "boolean",
+            "description": "When true, return only quarantined companies (quarantined = true)."
+          },
+          "overdue": {
+            "type": "boolean",
+            "description": "When true, return only companies whose next equality or salary report due date has passed."
+          },
+          "isatCategoryCode": {
+            "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "isatSection": {
+            "description": "Return only companies whose ÍSAT2008 section (bálkur) is one of the given letters, e.g. \"O\" for public administration. Case-insensitive. The premade industry filter — resolved via the company ÍSAT category, so companies with no ÍSAT code are excluded.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sector": {
+            "type": "array",
+            "description": "Return only companies in one of the given ownership sectors — the premade \"private vs government/state\" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
+          },
+          "regionCode": {
+            "description": "Return only companies located in one of the given regions (landshluti), by region code (e.g. \"CAPITAL\"). Resolved via the company postcode.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "postcode": {
+            "description": "Return only companies with one of the given postcodes (póstnúmer, e.g. \"101\").",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sortBy": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanySortByEnum" }]
+          },
+          "direction": {
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanySortDirectionEnum" }
+            ]
+          }
+        }
+      },
+      "CompanyEmailAttachmentInputDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Staging key returned by the attachment presign endpoint. Validated against the mail-attachment prefix server-side."
+          },
+          "filename": {
+            "type": "string",
+            "description": "File name as the recipient should see it."
+          }
+        },
+        "required": ["key", "filename"]
+      },
+      "SendCompanyEmailDto": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Subject line, plain text."
+          },
+          "bodyHtml": {
+            "type": "string",
+            "description": "Message body as HTML from the admin editor. Sanitised server-side before it is stored, previewed or sent."
+          },
+          "companyIds": {
+            "description": "Send to these companies explicitly. Mutually exclusive with `filter`.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "filter": {
+            "description": "Send to every company matching this company-list filter. Resolved with the identical query the list itself runs, and deliberately unpaged — `page`/`pageSize` are ignored. Mutually exclusive with `companyIds`.",
+            "allOf": [{ "$ref": "#/components/schemas/GetCompaniesQueryDto" }]
+          },
+          "recipientEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Override the recipient address for a single-company send, where the admin may correct the company's stored contact email in the compose step. Ignored when more than one company is addressed — there is no one address to override."
+          },
+          "attachments": {
+            "description": "Files to attach, previously staged via the presign endpoint.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailAttachmentInputDto"
+            }
+          }
+        },
+        "required": ["subject", "bodyHtml"]
+      },
+      "CompanyEmailRecipientPreviewDto": {
+        "type": "object",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": {
+            "type": "string",
+            "description": "Company name — what the recipient list shows."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+          }
+        },
+        "required": ["companyId", "companyName"]
+      },
+      "CompanyEmailRecipientStatusEnum": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "SENT",
+          "FAILED",
+          "SKIPPED_NO_EMAIL",
+          "SKIPPED_QUARANTINED"
+        ],
+        "description": "Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED."
+      },
+      "CompanyEmailSkippedPreviewDto": {
+        "type": "object",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": {
+            "type": "string",
+            "description": "Company name — what the recipient list shows."
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address the message will go to, revealed when the recipient row is expanded. Null when no address could be resolved — the company has none on file, or was skipped for quarantine and happens to have none either. `reason` says which."
+          },
+          "reason": {
+            "description": "Why this company is excluded — SKIPPED_NO_EMAIL or SKIPPED_QUARANTINED.",
+            "allOf": [
+              { "$ref": "#/components/schemas/CompanyEmailRecipientStatusEnum" }
+            ]
+          }
+        },
+        "required": ["companyId", "companyName", "reason"]
+      },
+      "CompanyEmailPreviewDto": {
+        "type": "object",
+        "properties": {
+          "bodyHtml": {
+            "type": "string",
+            "description": "The message body as it will be delivered — already run through the same sanitiser the send applies, so the confirmation step shows the bytes that go out rather than the raw editor state."
+          },
+          "recipients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailRecipientPreviewDto"
+            }
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailSkippedPreviewDto"
+            }
+          },
+          "recipientCount": {
+            "type": "number",
+            "description": "Companies that will receive the message."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Companies excluded, for either skip reason."
+          }
+        },
+        "required": [
+          "bodyHtml",
+          "recipients",
+          "skipped",
+          "recipientCount",
+          "skippedCount"
+        ]
+      },
+      "SendCompanyEmailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The batch, for reading the message back later."
+          },
+          "recipientCount": {
+            "type": "number",
+            "description": "Companies queued to receive the message."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Companies excluded before sending — no address on file, or quarantined."
+          }
+        },
+        "required": ["id", "recipientCount", "skippedCount"]
+      },
+      "CompanyEmailStatusEnum": {
+        "type": "string",
+        "enum": ["QUEUED", "SENDING", "COMPLETED", "FAILED"]
+      },
+      "CompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "filename": {
+            "type": "string",
+            "description": "File name as the recipient saw it."
+          },
+          "sizeBytes": { "type": "number" }
+        },
+        "required": ["id", "filename", "sizeBytes"]
+      },
+      "CompanyEmailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "subject": { "type": "string" },
+          "bodyHtml": {
+            "type": "string",
+            "description": "The sanitised HTML exactly as delivered. Safe to render — it was sanitised once, before being stored."
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CompanyEmailStatusEnum" }]
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reviewer who sent it, or null if their user row is gone."
+          },
+          "sentCount": {
+            "type": "number",
+            "description": "Recipients delivered to."
+          },
+          "failedCount": {
+            "type": "number",
+            "description": "Recipients whose send failed."
+          },
+          "skippedCount": {
+            "type": "number",
+            "description": "Recipients skipped before any attempt."
+          },
+          "pendingCount": {
+            "type": "number",
+            "description": "Recipients not yet attempted."
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEmailAttachmentDto"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-19T10:30:00.000Z",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "bodyHtml",
+          "status",
+          "sentCount",
+          "failedCount",
+          "skippedCount",
+          "pendingCount",
+          "attachments",
+          "createdAt"
+        ]
+      },
       "CompanyImportOutcomeEnum": {
         "type": "string",
         "enum": [
@@ -6090,20 +6751,6 @@
           "reactivated",
           "invalid"
         ]
-      },
-      "PresignUploadResponseDto": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "Presigned S3 PUT URL the client uploads the .xlsx to. Expires in 1h."
-          },
-          "key": {
-            "type": "string",
-            "description": "Object key the upload lands at. Pass this back to the import endpoint."
-          }
-        },
-        "required": ["url", "key"]
       },
       "UserDto": {
         "type": "object",

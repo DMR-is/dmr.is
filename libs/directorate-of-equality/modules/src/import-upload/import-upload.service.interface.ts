@@ -8,11 +8,32 @@ import { PresignUploadResponseDto } from './dto/presign-upload-response.dto'
 export enum ImportUploadBoundary {
   ADMIN = 'admin',
   APPLICATION = 'application',
+  /**
+   * Files an admin attaches to a custom email. Staging only — the object is
+   * moved to the company-files bucket once the batch has been sent, so nothing
+   * outbound is ever served from this prefix.
+   *
+   * Its own boundary rather than reusing ADMIN: the prefixes exist so an
+   * endpoint can only read objects staged for its own audience, and an
+   * attachment and an import workbook are read by different endpoints under
+   * different caps.
+   */
+  MAIL_ATTACHMENT = 'mail-attachment',
 }
 
 export interface IImportUploadService {
-  /** Generate a namespaced key + presigned PUT URL for a workbook upload. */
-  createUpload(boundary: ImportUploadBoundary): Promise<PresignUploadResponseDto>
+  /**
+   * Generate a namespaced key + presigned PUT URL for an upload.
+   *
+   * `extension` defaults to `xlsx` — the only kind this served originally — and
+   * must be one the service allows; anything else is a 400. The extension ends
+   * up in the key, so this is the boundary that decides what may be staged at
+   * all.
+   */
+  createUpload(
+    boundary: ImportUploadBoundary,
+    opts?: { extension?: string },
+  ): Promise<PresignUploadResponseDto>
 
   /**
    * Throw unless `key` sits inside `boundary`'s own prefix.
@@ -32,6 +53,21 @@ export interface IImportUploadService {
    * when they call this.
    */
   fetchWorkbook(key: string, boundary: ImportUploadBoundary): Promise<Buffer>
+
+  /**
+   * Validate the key against the boundary, fetch the object from S3 and enforce
+   * `maxBytes` (defaulting to the workbook cap).
+   *
+   * The general form of {@link fetchWorkbook}, which is now a thin wrapper over
+   * it. Split out rather than widening `fetchWorkbook` because that method's
+   * name carries a real contract — callers must already hold a parse slot — and
+   * a mail attachment takes no slot and is held to a far smaller cap.
+   */
+  fetchObject(
+    key: string,
+    boundary: ImportUploadBoundary,
+    maxBytes?: number,
+  ): Promise<Buffer>
 
   /**
    * Best-effort delete of a staged object, but only when `error` says the

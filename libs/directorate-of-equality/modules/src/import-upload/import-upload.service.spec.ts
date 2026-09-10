@@ -111,6 +111,56 @@ describe('ImportUploadService', () => {
       expect(res.key.startsWith('doe-imports/application/')).toBe(true)
     })
 
+    it('defaults to xlsx, so the import path is unaffected by the extension option', async () => {
+      aws.getPresignedUrl.mockResolvedValue(
+        ResultWrapper.ok({ url: 'https://s3/presigned' }),
+      )
+
+      const res = await service.createUpload(ImportUploadBoundary.ADMIN, {})
+
+      expect(res.key.endsWith('.xlsx')).toBe(true)
+    })
+
+    it('stages a mail attachment under its own boundary and extension', async () => {
+      aws.getPresignedUrl.mockResolvedValue(
+        ResultWrapper.ok({ url: 'https://s3/presigned' }),
+      )
+
+      const res = await service.createUpload(
+        ImportUploadBoundary.MAIL_ATTACHMENT,
+        { extension: 'PDF' },
+      )
+
+      // Case-insensitive, and a leading dot is tolerated — the caller passes
+      // whatever it split off a file name.
+      expect(res.key).toMatch(
+        /^doe-imports\/mail-attachment\/[0-9a-f-]{36}\.pdf$/,
+      )
+    })
+
+    it.each([['html'], ['svg'], ['exe'], ['']])(
+      'refuses to stage a .%s mail attachment',
+      async (extension) => {
+        // ⚠️ These objects are handed to recipients outside the Directorate. An
+        // attachment the receiving mail client will run is not something an
+        // admin should be able to introduce by naming a file.
+        await expect(
+          service.createUpload(ImportUploadBoundary.MAIL_ATTACHMENT, {
+            extension,
+          }),
+        ).rejects.toBeInstanceOf(BadRequestException)
+      },
+    )
+
+    it('does not let the mail-attachment extensions leak into the import boundaries', async () => {
+      // ⚠️ The allow-list is per boundary for exactly this reason: widening it
+      // globally would have retired the import path's own extension check,
+      // which is what proves an admin import key was minted by this service.
+      await expect(
+        service.createUpload(ImportUploadBoundary.ADMIN, { extension: 'pdf' }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+
     it('presigns against the DOE imports bucket with the generated key', async () => {
       aws.getPresignedUrl.mockResolvedValue(
         ResultWrapper.ok({ url: 'https://s3/presigned' }),
