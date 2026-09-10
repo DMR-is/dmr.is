@@ -107,7 +107,6 @@ export const SendCompanyEmailModal = ({
   )
   const [attachments, setAttachments] = useState<StagedAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [preview, setPreview] = useState<CompanyEmailPreviewDto | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   /*
@@ -160,6 +159,17 @@ export const SendCompanyEmailModal = ({
    */
   useEffect(() => {
     if (!isOpen) return
+
+    /*
+     * Belt and braces. `handleDismiss`, `handleCancel` and `handleSent` all
+     * abandon any outstanding preview already, so by the time we reopen there
+     * should be nothing stale left to arrive — but this makes that hold however
+     * the modal was closed, including a caller that drops `isOpen` on its own.
+     * The target is re-snapshotted on every open, so a response issued before
+     * this point can no longer be trusted to describe it.
+     */
+    previewSessionRef.current += 1
+
     // Only when there is nothing to protect. A dismissed modal keeps its draft
     // (see `handleDismiss`), and re-seeding on reopen would throw away an
     // address the admin had already corrected for this message.
@@ -191,18 +201,101 @@ export const SendCompanyEmailModal = ({
       : {}),
   })
 
+  /**
+   * The confirmation step's whole content: a resolved preview together with the
+   * exact payload it was resolved for.
+   *
+   * ⚠️ One piece of state holding both, deliberately — NOT a preview alongside
+   * a separately-rebuilt payload. `send` posts `approved.payload`, so the set
+   * of recipients the admin approved and the set the API resolves are produced
+   * from byte-identical input. Rebuilding the payload at send time from current
+   * state is what let a preview taken against one filter be sent against
+   * another; keeping them in one object makes that drift unrepresentable.
+   */
+  const [approved, setApproved] = useState<{
+    payload: ReturnType<typeof buildPayload>
+    preview: CompanyEmailPreviewDto
+  } | null>(null)
+
+  /*
+   * Which composing session an in-flight preview belongs to.
+   *
+   * ⚠️ Bumped whenever the message being composed stops being the one an
+   * outstanding preview was asked about, and a response carrying a stale id is
+   * dropped. Necessary because this component is never unmounted: a request
+   * started for filter A and dismissed mid-flight still resolves, and an
+   * unguarded `onSuccess` would put the modal back on the confirmation step
+   * while it is closed — so the next open would show A's recipients over a
+   * target that is now B. React Query cannot do this for us; it has no idea
+   * the target changed underneath it.
+   */
+  const previewSessionRef = useRef(0)
+
+  /** Abandon any outstanding preview and rewind to compose. Keeps the draft. */
+  const discardPreview = () => {
+    previewSessionRef.current += 1
+    setApproved(null)
+    setStep('compose')
+  }
+
   const presignMutation = useMutation(
     trpc.companyEmail.presignAttachment.mutationOptions(),
   )
 
-  const previewMutation = useMutation({
-    ...trpc.companyEmail.preview.mutationOptions(),
-    onSuccess: (result) => {
-      setPreview(result)
-      setStep('preview')
-    },
-    onError: () => toast.error(t.previewError),
-  })
+  const discardMutation = useMutation(
+    trpc.companyEmail.discardAttachment.mutationOptions(),
+  )
+
+  /**
+   * Delete staged objects the admin has decided against.
+   *
+   * ⚠️ Only ever for attachments that were never submitted with a batch —
+   * removing one in the compose step, or cancelling the whole message. NOT on
+   * an ordinary dismiss, which keeps the draft and therefore keeps its
+   * attachments, and never after `send`, where the staged object is the
+   * message's only copy until the API has archived it.
+   *
+   * Fire and forget, failures swallowed: this is housekeeping on the admin's
+   * own upload. A toast saying a file they already removed could not be
+   * deleted describes nothing they can act on.
+   */
+  const discardStaged = (keys: string[]) => {
+    for (const key of keys) {
+      discardMutation.mutate({ key }, { onError: () => undefined })
+    }
+  }
+
+  /*
+   * ⚠️ No `onSuccess`/`onError` here — they are passed per call in
+   * `requestPreview`, so each one closes over the session and the payload its
+   * own request was issued with. A handler defined here would see only the
+   * latest render's values and could not tell a stale response from a current
+   * one.
+   */
+  const previewMutation = useMutation(
+    trpc.companyEmail.preview.mutationOptions(),
+  )
+
+  const requestPreview = () => {
+    const payload = buildPayload()
+    previewSessionRef.current += 1
+    const session = previewSessionRef.current
+
+    previewMutation.mutate(payload as never, {
+      onSuccess: (result) => {
+        // Dismissed, rewound, or superseded while this was in flight.
+        if (session !== previewSessionRef.current) return
+        setApproved({ payload, preview: result })
+        setStep('preview')
+      },
+      onError: () => {
+        // Same guard: an error toast for a message the admin has already
+        // walked away from is noise about nothing they can act on.
+        if (session !== previewSessionRef.current) return
+        toast.error(t.previewError)
+      },
+    })
+  }
 
   const sendMutation = useMutation({
     ...trpc.companyEmail.send.mutationOptions(),
@@ -212,26 +305,38 @@ export const SendCompanyEmailModal = ({
       // running (or about to start failing).
       toast.success(`${t.successToast} — ${result.recipientCount}`)
       onSent?.()
-      handleClose()
+      handleSent()
     },
     onError: () => toast.error(t.errorToast),
   })
 
   const reset = () => {
-    setStep('compose')
+    discardPreview()
     setSubject('')
     setBodyHtml('')
     setRecipientEmail(
       target.mode === 'company' ? (target.defaultEmail ?? '') : '',
     )
     setAttachments([])
-    setPreview(null)
     editorKey.current += 1
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  /** Explicit cancel, or a send that went through: the draft is finished with. */
-  const handleClose = () => {
+  /**
+   * Explicit cancel: the draft is finished with and its uploads go with it.
+   *
+   * ⚠️ Separate from `handleSent` precisely because of that. Both clear the
+   * draft, but only this one may delete the staged objects — after a send they
+   * belong to the batch.
+   */
+  const handleCancel = () => {
+    discardStaged(attachments.map((a) => a.key))
+    reset()
+    onClose()
+  }
+
+  /** A send that went through. Clears the draft but leaves its uploads alone. */
+  const handleSent = () => {
     reset()
     onClose()
   }
@@ -251,16 +356,16 @@ export const SendCompanyEmailModal = ({
 
     /*
      * ⚠️ The resolved preview is dropped and the modal rewound to compose, even
-     * though the draft is kept. The preview is only true of the target it was
-     * resolved against, and the caller re-snapshots that target on every open
-     * (see the mount site) — so keeping it would reopen the modal already on
-     * the confirmation step, showing the recipients and the count of the
-     * PREVIOUS filter while the send went to the current one. Rewinding costs
-     * one click; it is the only thing that keeps the count the admin approves
-     * and the recipients they get the same set.
+     * though the draft is kept — and any preview still in flight is abandoned
+     * with it. The preview is only true of the target it was resolved against,
+     * and the caller re-snapshots that target on every open (see the mount
+     * site), so keeping either would reopen the modal already on the
+     * confirmation step, showing the recipients and the count of the PREVIOUS
+     * filter while the send went to the current one. Rewinding costs one
+     * click; it is what keeps the count the admin approves and the recipients
+     * they get the same set.
      */
-    setStep('compose')
-    setPreview(null)
+    discardPreview()
 
     onClose()
   }
@@ -335,20 +440,22 @@ export const SendCompanyEmailModal = ({
     !isUploading &&
     (!isSingle || !!recipientEmail.trim())
 
-  const recipientRows: RecipientRow[] = (preview?.recipients ?? []).map(
+  const recipientRows: RecipientRow[] = (
+    approved?.preview.recipients ?? []
+  ).map((r) => ({
+    companyId: r.companyId,
+    companyName: r.companyName,
+    email: r.email ?? null,
+  }))
+
+  const skippedRows: RecipientRow[] = (approved?.preview.skipped ?? []).map(
     (r) => ({
       companyId: r.companyId,
       companyName: r.companyName,
       email: r.email ?? null,
+      note: SKIP_REASON_LABEL[r.reason] ?? undefined,
     }),
   )
-
-  const skippedRows: RecipientRow[] = (preview?.skipped ?? []).map((r) => ({
-    companyId: r.companyId,
-    companyName: r.companyName,
-    email: r.email ?? null,
-    note: SKIP_REASON_LABEL[r.reason] ?? undefined,
-  }))
 
   return (
     <Modal
@@ -423,11 +530,15 @@ export const SendCompanyEmailModal = ({
                   colorScheme="destructive"
                   icon="close"
                   iconType="outline"
-                  onClick={() =>
+                  onClick={() => {
+                    // Nothing has been submitted yet, so the staged object is
+                    // safe to delete: no batch references it and no draft is
+                    // keeping it.
+                    discardStaged([attachment.key])
                     setAttachments((prev) =>
                       prev.filter((a) => a.key !== attachment.key),
                     )
-                  }
+                  }}
                 >
                   {t.removeAttachment}
                 </Button>
@@ -452,14 +563,14 @@ export const SendCompanyEmailModal = ({
           </Box>
 
           <Inline justifyContent="flexEnd" space={2}>
-            <Button variant="ghost" size="small" onClick={handleClose}>
+            <Button variant="ghost" size="small" onClick={handleCancel}>
               {t.cancel}
             </Button>
             <Button
               size="small"
               disabled={!canContinue}
               loading={previewMutation.isPending}
-              onClick={() => previewMutation.mutate(buildPayload() as never)}
+              onClick={requestPreview}
             >
               {t.continue}
             </Button>
@@ -471,7 +582,7 @@ export const SendCompanyEmailModal = ({
             <SkeletonLoader repeat={3} height={24} space={1} />
           )}
 
-          {preview && (
+          {approved && (
             <>
               <Box>
                 <Text variant="small" color="dark300" marginBottom={1}>
@@ -496,7 +607,7 @@ export const SendCompanyEmailModal = ({
                 />
               )}
 
-              {preview.recipientCount === 0 && (
+              {approved.preview.recipientCount === 0 && (
                 <Text variant="small" color="red600">
                   {t.noRecipients}
                 </Text>
@@ -506,8 +617,14 @@ export const SendCompanyEmailModal = ({
                 <Text variant="eyebrow" color="dark400">
                   {t.previewSubjectLabel}
                 </Text>
+                {/*
+                  From the approved payload, not the live `subject` state, for
+                  the same reason `send` posts that payload: what is on screen
+                  at the confirmation step must be what was resolved, never a
+                  later edit that never went through `preview`.
+                */}
                 <Text fontWeight="semiBold" marginBottom={2}>
-                  {subject}
+                  {approved.payload.subject}
                 </Text>
                 <Box border="standard" borderRadius="large">
                   {/*
@@ -523,16 +640,16 @@ export const SendCompanyEmailModal = ({
                   <HTMLEditor
                     readonly
                     disabled
-                    defaultValue={preview.bodyHtml}
+                    defaultValue={approved.preview.bodyHtml}
                     handleUpload={() => new Error('File upload not supported')}
                   />
                 </Box>
-                {attachments.length > 0 && (
+                {!!approved.payload.attachments?.length && (
                   <Box marginTop={2}>
                     <Text variant="eyebrow" color="dark400">
                       {t.attachmentsLabel}
                     </Text>
-                    {attachments.map((attachment) => (
+                    {approved.payload.attachments.map((attachment) => (
                       <Text key={attachment.key} variant="small">
                         {attachment.filename}
                       </Text>
@@ -544,20 +661,18 @@ export const SendCompanyEmailModal = ({
           )}
 
           <Inline justifyContent="flexEnd" space={2}>
-            <Button
-              variant="ghost"
-              size="small"
-              onClick={() => setStep('compose')}
-            >
+            <Button variant="ghost" size="small" onClick={discardPreview}>
               {t.back}
             </Button>
             <Button
               size="small"
-              disabled={!preview || preview.recipientCount === 0}
+              disabled={!approved || approved.preview.recipientCount === 0}
               loading={sendMutation.isPending}
-              onClick={() => sendMutation.mutate(buildPayload() as never)}
+              onClick={() =>
+                approved && sendMutation.mutate(approved.payload as never)
+              }
             >
-              {`${t.send} (${preview?.recipientCount ?? 0})`}
+              {`${t.send} (${approved?.preview.recipientCount ?? 0})`}
             </Button>
           </Inline>
         </Stack>

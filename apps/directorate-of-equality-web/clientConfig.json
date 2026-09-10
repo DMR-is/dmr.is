@@ -1971,6 +1971,61 @@
         "tags": ["Company Emails"]
       }
     },
+    "/api/v1/company-emails/attachments/discard": {
+      "post": {
+        "description": "Delete a staged attachment the admin removed, or cancelled the whole message with, before it was sent. Best-effort and idempotent — a key already gone is still a success. Refused unless the key sits inside the mail-attachment prefix, so it cannot be aimed at an import workbook. Never call it for an attachment already submitted with a batch: until the archive runs, the staged object is that message’s only copy.",
+        "operationId": "discardCompanyEmailAttachment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscardCompanyEmailAttachmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "" },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          },
+          "500": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiErrorDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "",
+        "tags": ["Company Emails"]
+      }
+    },
     "/api/v1/company-emails/preview": {
       "post": {
         "description": "Resolve the recipients without writing or sending anything. Returns both the companies that will receive the message and the ones excluded, with the reason — the excluded list is what explains any gap between the count on the button and the count actually written to.",
@@ -6173,6 +6228,16 @@
           }
         },
         "required": ["url", "key"]
+      },
+      "DiscardCompanyEmailAttachmentDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Staging key of an attachment the admin removed before sending. Refused unless it sits inside the mail-attachment prefix, so this cannot be pointed at an import workbook or an already-archived message."
+          }
+        },
+        "required": ["key"]
       },
       "GetCompaniesQueryDto": {
         "type": "object",

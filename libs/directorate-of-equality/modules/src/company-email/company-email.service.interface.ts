@@ -1,6 +1,7 @@
 import { PresignUploadResponseDto } from '../import-upload/dto/presign-upload-response.dto'
 import { CompanyEmailDto } from './dto/company-email.dto'
 import { CompanyEmailPreviewDto } from './dto/company-email-preview.dto'
+import { DiscardCompanyEmailAttachmentDto } from './dto/discard-company-email-attachment.dto'
 import { PresignCompanyEmailAttachmentDto } from './dto/presign-company-email-attachment.dto'
 import { SendCompanyEmailDto } from './dto/send-company-email.dto'
 import { SendCompanyEmailResponseDto } from './dto/send-company-email-response.dto'
@@ -13,6 +14,19 @@ export interface ICompanyEmailService {
   presignAttachment(
     dto: PresignCompanyEmailAttachmentDto,
   ): Promise<PresignUploadResponseDto>
+
+  /**
+   * Drop a staged attachment the admin removed or cancelled before sending.
+   *
+   * ⚠️ Only ever for an object that was never submitted with a batch. Once
+   * `send` has accepted it the object belongs to that message — it is the only
+   * durable copy of it until `archiveAttachments` has run, and where no archive
+   * bucket is configured it stays the only copy for good.
+   *
+   * Best-effort and idempotent: a key that is already gone is a success, since
+   * the caller's intent — "this object should not be there" — already holds.
+   */
+  discardAttachment(dto: DiscardCompanyEmailAttachmentDto): Promise<void>
 
   /**
    * Resolve who this message would go to, without writing or sending anything.

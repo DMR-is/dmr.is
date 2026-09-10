@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  zDiscardCompanyEmailAttachmentBody,
   zGetCompanyEmailPath,
   zPresignCompanyEmailAttachmentBody,
   zSendCompanyEmailBody,
@@ -15,6 +16,20 @@ export const companyEmailRouter = router({
     .input(zPresignCompanyEmailAttachmentBody)
     .mutation(({ ctx, input }) =>
       ctx.api.presignCompanyEmailAttachment({ body: input }),
+    ),
+
+  // Deletes an attachment the admin removed, or cancelled the message with,
+  // before it was sent. Best-effort on both sides: the staged object is the
+  // admin's own upload and losing it costs nothing, so a failure here must not
+  // surface as an error on top of an action that otherwise succeeded.
+  //
+  // ⚠️ Never call this for an attachment already submitted with a batch. Until
+  // `archiveAttachments` has run, the staged object is that message's only
+  // copy — and where no archive bucket is configured it stays the only one.
+  discardAttachment: protectedProcedure
+    .input(zDiscardCompanyEmailAttachmentBody)
+    .mutation(({ ctx, input }) =>
+      ctx.api.discardCompanyEmailAttachment({ body: input }),
     ),
 
   // A mutation despite reading nothing, because it takes a POST body — the same

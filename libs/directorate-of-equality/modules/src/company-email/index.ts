@@ -8,6 +8,7 @@
 
 export * from './dto/company-email.dto'
 export * from './dto/company-email-preview.dto'
+export * from './dto/discard-company-email-attachment.dto'
 export * from './dto/presign-company-email-attachment.dto'
 export * from './dto/send-company-email.dto'
 export * from './dto/send-company-email-response.dto'

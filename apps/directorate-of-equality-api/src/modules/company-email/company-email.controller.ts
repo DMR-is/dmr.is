@@ -15,6 +15,7 @@ import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger'
 import {
   CompanyEmailDto,
   CompanyEmailPreviewDto,
+  DiscardCompanyEmailAttachmentDto,
   ICompanyEmailService,
   PresignCompanyEmailAttachmentDto,
   SendCompanyEmailDto,
@@ -62,6 +63,20 @@ export class CompanyEmailController {
     @Body() body: PresignCompanyEmailAttachmentDto,
   ): Promise<PresignUploadResponseDto> {
     return this.companyEmailService.presignAttachment(body)
+  }
+
+  @Post('attachments/discard')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @DoeResponse({
+    operationId: 'discardCompanyEmailAttachment',
+    status: HttpStatus.NO_CONTENT,
+    description:
+      'Delete a staged attachment the admin removed, or cancelled the whole message with, before it was sent. Best-effort and idempotent — a key already gone is still a success. Refused unless the key sits inside the mail-attachment prefix, so it cannot be aimed at an import workbook. Never call it for an attachment already submitted with a batch: until the archive runs, the staged object is that message’s only copy.',
+  })
+  async discardAttachment(
+    @Body() body: DiscardCompanyEmailAttachmentDto,
+  ): Promise<void> {
+    return this.companyEmailService.discardAttachment(body)
   }
 
   @Post('preview')

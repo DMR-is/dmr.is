@@ -342,6 +342,24 @@ describe('CompanyEmailService', () => {
       expect(companyEmailModel.create).not.toHaveBeenCalled()
     })
 
+    it('deletes a discarded staged object through the mail-attachment boundary', async () => {
+      await service.discardAttachment({ key: attachment.key })
+
+      /*
+       * ⚠️ No `error` argument. `cleanupAfter` reads that as "terminal, delete
+       * it" — passing one would make this a no-op for anything it classes as
+       * transient, and the object the admin just removed would survive.
+       *
+       * The boundary is what makes a client-supplied key safe to pass: it is
+       * validated there before storage is touched, so this cannot be aimed at
+       * an import workbook.
+       */
+      expect(uploadService.cleanupAfter).toHaveBeenCalledWith(
+        attachment.key,
+        ImportUploadBoundary.MAIL_ATTACHMENT,
+      )
+    })
+
     it('reports a 413 raised as a bare HttpException as "too large"', async () => {
       /*
        * ⚠️ A bare `HttpException`, not a `PayloadTooLargeException` — that is

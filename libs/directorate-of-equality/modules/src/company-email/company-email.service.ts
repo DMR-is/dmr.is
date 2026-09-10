@@ -40,6 +40,7 @@ import {
   CompanyEmailDto,
 } from './dto/company-email.dto'
 import { CompanyEmailPreviewDto } from './dto/company-email-preview.dto'
+import { DiscardCompanyEmailAttachmentDto } from './dto/discard-company-email-attachment.dto'
 import { PresignCompanyEmailAttachmentDto } from './dto/presign-company-email-attachment.dto'
 import {
   MAX_ATTACHMENTS,
@@ -147,6 +148,34 @@ export class CompanyEmailService implements ICompanyEmailService {
     return this.uploadService.createUpload(
       ImportUploadBoundary.MAIL_ATTACHMENT,
       { extension },
+    )
+  }
+
+  async discardAttachment(
+    dto: DiscardCompanyEmailAttachmentDto,
+  ): Promise<void> {
+    /*
+     * `cleanupAfter` with no error means "terminal, delete it", and it
+     * validates the key against the boundary itself before touching storage —
+     * which is what makes it safe to hand a key that arrived from the client.
+     * A key outside `doe-imports/mail-attachment/` is refused and logged there
+     * rather than deleted, so this cannot be aimed at an import workbook or at
+     * an archived message's copy.
+     *
+     * ⚠️ Deliberately no check that the key is unknown to
+     * `CompanyEmailAttachmentModel`. Nothing writes those rows until `send`
+     * accepts the batch, so a staged object being discarded has no row to find
+     * — the absence of one is the normal case, not a signal. What keeps a sent
+     * message's attachment safe is that the client only ever calls this from
+     * the composing step, before any batch exists.
+     *
+     * Never throws: the object is the admin's own upload and losing the race
+     * to delete it is not something they can act on, so a failure here must not
+     * turn removing an attachment into an error they have to dismiss.
+     */
+    await this.uploadService.cleanupAfter(
+      dto.key,
+      ImportUploadBoundary.MAIL_ATTACHMENT,
     )
   }
 
