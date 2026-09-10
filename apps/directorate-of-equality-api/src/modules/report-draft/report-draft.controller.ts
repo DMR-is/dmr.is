@@ -256,7 +256,7 @@ export class ReportDraftController {
     status: HttpStatus.NO_CONTENT,
     include404: true,
     description:
-      "Applies a batch of create/update/remove commands to the draft's content (criteria tree, roles, employees, outlier groups) in one atomic transaction — the single write path for the portal, flushed once per screen navigate. Ids are client-minted UUIDs, so a command may reference a sibling created in the same batch; a repeated CREATE is an idempotent upsert. Omitted collections are untouched; an empty array is a no-op. At most 1000 employee commands per call. 204 on success (the portal refetches the affected reads); 404 if the draft is not owned or already submitted; 400/409 on a malformed or referentially-inconsistent batch (the whole batch rolls back).",
+      "Applies a batch of create/update/remove commands to the draft's content (criteria tree, roles, employees, outlier groups) in one atomic transaction — the single write path for the portal, flushed once per screen navigate. Ids are client-minted UUIDs, so a command may reference a sibling created in the same batch; a repeated CREATE is an idempotent upsert. Omitted collections are untouched; an empty array is a no-op. At most 1000 employee commands per call. 204 on success (the portal refetches the affected reads); 404 if the draft is not owned or already submitted (also if a REMOVE names a step that is already gone, so a batch is not safe to re-send blindly); 400/409 on a malformed or referentially-inconsistent batch (the whole batch rolls back).\n\nREMOVING A STEP DOES NOT DISCARD THE CLASSIFICATIONS STANDING ON IT. Once every command in the batch has been applied, each role/employee assignment whose step no longer exists is moved to the nearest surviving step of the SAME sub-criterion: taking `o` as the order that step held before the batch, the surviving step with the greatest order ≤ `o`, else the smallest order > `o`. Prefer-lower is deliberate — shrinking a scale removes from the top, so a role on the old top step lands on the new top step at full marks rather than dropping to the first step and its minimum score. Orders are evaluated against the post-batch step set, so replacing a sub-criterion's steps wholesale (all removed, a fresh set created) resolves under the same rule. Three exceptions: if the sub-criterion is left with no steps at all the assignment is simply dropped, without error; if the SUB-CRITERION ITSELF is REMOVEd its assignments are dropped outright, with no move; and if the same batch also sends `stepIds` for that role or employee, the explicit value wins and nothing is moved for it. The rule is deterministic and idempotent — an assignment already resolved for a sub-criterion is never moved again.",
   })
   async syncDraft(
     @Param('providerId') providerId: string,
@@ -310,7 +310,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftRolesWithStepsResponseDto,
     description:
-      'Lists the draft\'s employee roles with their assigned step ids inlined — the aggregate of GET …/draft/roles plus one GET …/draft/roles/:roleId/steps per role, so the portal does not have to stitch them together. Ordered by title. `stepIds` is empty for a role that has not been scored yet.',
+      "Lists the draft's employee roles with their assigned step ids inlined — the aggregate of GET …/draft/roles plus one GET …/draft/roles/:roleId/steps per role, so the portal does not have to stitch them together. Ordered by title. `stepIds` is empty for a role that has not been scored yet. A step removed through POST …/draft/sync leaves the role assigned to the nearest surviving step of that sub-criterion, not unassigned — see that endpoint for the rule.",
   })
   async listRolesWithSteps(
     @Param('providerId') providerId: string,
@@ -353,7 +353,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftEmployeesWithStepsResponseDto,
     description:
-      "Same page as GET …/draft/employees (same role-title-then-ordinal ordering), with each employee's personal step ids inlined — the aggregate that replaces one GET …/draft/employees/:employeeId/steps per row. Paginated on the same terms (a report can carry thousands of employees); raise pageSize to fetch the whole set in one call. `stepIds` is empty for an employee scored purely through its role. Scores are NULL until the report is submitted.",
+      "Same page as GET …/draft/employees (same role-title-then-ordinal ordering), with each employee's personal step ids inlined — the aggregate that replaces one GET …/draft/employees/:employeeId/steps per row. Paginated on the same terms (a report can carry thousands of employees); raise pageSize to fetch the whole set in one call. `stepIds` is empty for an employee scored purely through its role. A step removed through POST …/draft/sync leaves the employee assigned to the nearest surviving step of that sub-criterion, not unassigned — see that endpoint for the rule. Scores are NULL until the report is submitted.",
   })
   async listEmployeesWithSteps(
     @Param('providerId') providerId: string,
@@ -396,7 +396,7 @@ export class ReportDraftController {
     include404: true,
     type: GetDraftCriteriaTreeResponseDto,
     description:
-      'The draft\'s complete criteria tree in one payload: every criterion, its sub-criteria, and each sub-criterion\'s scoring steps. Collapses the 1 + N + M fan-out over GET …/draft/criteria, …/criteria/:criterionId/sub-criteria and …/sub-criteria/:subCriterionId/steps. Unpaginated — the tree is capped by the workbook limits (5 criteria, 200 sub-criteria, 8 steps each). Criteria and sub-criteria come back in creation order, steps by `order` ascending; `subCriteria` and `steps` are empty arrays when nothing is defined yet.',
+      "The draft's complete criteria tree in one payload: every criterion, its sub-criteria, and each sub-criterion's scoring steps. Collapses the 1 + N + M fan-out over GET …/draft/criteria, …/criteria/:criterionId/sub-criteria and …/sub-criteria/:subCriterionId/steps. Unpaginated — the tree is capped by the workbook limits (5 criteria, 200 sub-criteria, 8 steps each). Criteria and sub-criteria come back in creation order, steps by `order` ascending; `subCriteria` and `steps` are empty arrays when nothing is defined yet.",
   })
   async getCriteriaTree(
     @Param('providerId') providerId: string,
