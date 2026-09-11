@@ -66,7 +66,7 @@ import {
   buildCompanyStatusWhere,
 } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
-import { notLegallyObligedSql } from './utils/report-status'
+import { hiddenFromDefaultRegisterSql } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { companyMessages } from './company.messages'
 import {
@@ -181,7 +181,7 @@ export class CompanyService implements ICompanyService {
     // Ordered after the explicit filters purely for readability; `conditions`
     // is AND-ed, so position carries no meaning.
     if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
-      conditions.push(literal(`NOT ${notLegallyObligedSql}`))
+      conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
     }
 
     if (!query.includeInactive && !query.status?.length) {

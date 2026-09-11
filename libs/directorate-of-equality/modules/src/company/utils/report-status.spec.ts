@@ -6,6 +6,7 @@ import {
   equalityReportMissingSql,
   equalityReportOverdueSql,
   equalityRequiredSql,
+  hiddenFromDefaultRegisterSql,
   notLegallyObligedSql,
   salaryObligationStatusCaseSql,
   salaryReportMissingSql,
@@ -78,6 +79,26 @@ describe('obligation predicates', () => {
       // as salary_report_required_override. Keying this on size alone would
       // hide exactly the special cases the Directorate tracks by hand.
       expect(notLegallyObligedSql).toContain('salary_report_required_override')
+    })
+  })
+
+  describe('hiddenFromDefaultRegisterSql', () => {
+    const sql = hiddenFromDefaultRegisterSql()
+
+    it('never hides a company with an outstanding action plan', () => {
+      // ⚠️ Being unobliged is not sufficient to hide. A postponed report
+      // survives a reclassification, so a company can owe nothing and still
+      // have unexplained pay outliers waiting on it — and the register is the
+      // only place an admin would see that work.
+      expect(sql).toContain(`NOT ${actionPlanMissingSql()}`)
+    })
+
+    it('is narrower than the obligation question it builds on', () => {
+      // The two answer different questions: "is this company legally obliged"
+      // vs "is it safe to hide". Folding the action-plan guard into
+      // `notLegallyObligedSql` would make the first one lie.
+      expect(sql).toContain(notLegallyObligedSql)
+      expect(notLegallyObligedSql).not.toContain('POSTPONED')
     })
   })
 
@@ -230,10 +251,13 @@ describe('obligation status expressions', () => {
   describe('salaryObligationStatusCaseSql', () => {
     const sql = salaryObligationStatusCaseSql()
 
-    it('answers NOT_REQUIRED before anything else', () => {
+    it('answers NOT_REQUIRED for a company with nothing outstanding', () => {
+      // ⚠️ NOT "before anything else", which is what this asserted until the
+      // ordering bug above was found — the assertion encoded the defect. The
+      // obligation is checked after the action plan; see the test below.
       expect(sql).toContain(`NOT ${salaryRequiredSql}`)
       expect(sql.indexOf('NOT_REQUIRED')).toBeLessThan(
-        sql.indexOf('ACTION_PLAN_MISSING'),
+        sql.indexOf("THEN 'MISSING'"),
       )
     })
 
@@ -241,6 +265,20 @@ describe('obligation status expressions', () => {
       // Same ordering rule as the roll-up, for the same reason.
       expect(sql.indexOf('ACTION_PLAN_MISSING')).toBeLessThan(
         sql.indexOf("THEN 'MISSING'"),
+      )
+    })
+
+    it('tests the action plan BEFORE the obligation itself', () => {
+      // ⚠️ The regression this guards: `salary_report_required` is derived by a
+      // BEFORE INSERT OR UPDATE trigger from the size bucket, so reclassifying a
+      // company down from LARGE flips it to false while any POSTPONED report
+      // stays put. With NOT_REQUIRED tested first, such a company reported
+      // "Á ekki við" for its launagreining while the roll-up beside it said
+      // MISSING_ACTION_PLAN — two columns over the same data, disagreeing.
+      //
+      // An outstanding úrbótaáætlun outlives the obligation that prompted it.
+      expect(sql.indexOf('ACTION_PLAN_MISSING')).toBeLessThan(
+        sql.indexOf('NOT_REQUIRED'),
       )
     })
 

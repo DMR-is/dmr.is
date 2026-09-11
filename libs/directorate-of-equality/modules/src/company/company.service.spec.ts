@@ -1342,6 +1342,16 @@ describe('CompanyService', () => {
       expect(rawSql()).toContain("= 'SMALL'")
     })
 
+    it('keeps a company with an outstanding action plan in the default list', async () => {
+      // ⚠️ Even when it owes nothing. A POSTPONED salary report outlives the
+      // obligation that prompted it (the size flag flips on reclassification,
+      // the report does not), and hiding that company removes the only view an
+      // admin would notice the outstanding úrbótaáætlun in.
+      await service.getAll({} as never)
+
+      expect(rawSql()).toContain("r.status = 'POSTPONED'")
+    })
+
     it('keeps UNKNOWN-size companies in the default list', async () => {
       // The hide is scoped to SMALL, so an unclassified company is never swept
       // out of the default view — it is a queue an admin has to work through.

@@ -831,6 +831,10 @@ export const companiesText = {
   equalityCovered: 'Jafnréttisáætlun í gildi',
   salaryCovered: 'Launagreining í gildi',
   notLegallyObliged: 'Ekki lagaskylt',
+  // ⚠️ Distinct from `notLegallyObliged` on purpose. An UNKNOWN size means
+  // nobody has classified the company yet, so "ekki lagaskylt" would assert a
+  // verdict the register has not reached.
+  unclassifiedSize: 'Stærð óflokkuð',
   location: 'Staður',
   region: 'Landshluti',
   regionPlaceholder: 'Veldu landshluta',

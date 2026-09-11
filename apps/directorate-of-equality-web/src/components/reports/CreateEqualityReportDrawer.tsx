@@ -131,7 +131,18 @@ export const CreateEqualityReportDrawer = () => {
   }
 
   const companiesQuery = useQuery(
-    trpc.company.list.queryOptions({ pageSize: 1000 }),
+    // ⚠️ Inclusion flags are required here. The register hides companies with
+    // no reporting obligation and companies off the register BY DEFAULT, which
+    // is right for a working list of who owes what — but this is a selector,
+    // not the register. An admin filing on a company's behalf must still be
+    // able to pick one that owes nothing (voluntary certification) or one that
+    // has been deregistered. Backend submission eligibility is unchanged and
+    // still has the final say.
+    trpc.company.list.queryOptions({
+      pageSize: 1000,
+      includeNotObliged: true,
+      includeInactive: true,
+    }),
   )
 
   const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({

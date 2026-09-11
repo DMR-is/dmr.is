@@ -369,23 +369,55 @@ export function equalityObligationStatusCaseSql(): string {
  * The salary obligation's own state, as a SQL `CASE` yielding
  * `CompanyObligationStatusEnum`. Drives the list's `Launagreining` column.
  *
- * ⚠️ ACTION_PLAN_MISSING is tested before MISSING for the same reason the
- * roll-up orders them that way: a postponed report is filed but not approved,
- * so both predicates would otherwise describe it.
+ * ⚠️ ACTION_PLAN_MISSING is tested FIRST — before the obligation itself, and
+ * before MISSING.
+ *
+ * Before the obligation, because a postponed report is evidence the company
+ * filed, and that outstanding úrbótaáætlun outlives the obligation that
+ * prompted it. `salary_report_required` is trigger-derived from the size bucket
+ * (BEFORE INSERT OR UPDATE), so reclassifying a company down from LARGE flips it
+ * to false while the postponed report stays exactly where it was. Testing
+ * NOT_REQUIRED first reported "Á ekki við" for a company with unexplained pay
+ * outliers on file — while the roll-up `reportStatus` beside it still said
+ * MISSING_ACTION_PLAN. Two columns, same data, opposite answers.
+ *
+ * Before MISSING, because a postponed report is not APPROVED and so is also not
+ * covered; both predicates would otherwise describe it.
+ *
+ * This mirrors `actionPlanMissingSql` carrying no obligation gate of its own —
+ * gating it here defeated the same guarantee one level up.
  */
 export function salaryObligationStatusCaseSql(): string {
   return `(CASE
-    WHEN NOT ${salaryRequiredSql} THEN '${
-    CompanyObligationStatusEnum.NOT_REQUIRED
-  }'
     WHEN ${actionPlanMissingSql()} THEN '${
     CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+  }'
+    WHEN NOT ${salaryRequiredSql} THEN '${
+    CompanyObligationStatusEnum.NOT_REQUIRED
   }'
     WHEN ${salaryReportMissingSql()} THEN '${
     CompanyObligationStatusEnum.MISSING
   }'
     ELSE '${CompanyObligationStatusEnum.COVERED}'
   END)`
+}
+
+/**
+ * SQL boolean: the company may be hidden from the default register view.
+ *
+ * `notLegallyObligedSql` alone is not a safe hide. An outstanding úrbótaáætlun
+ * survives a reclassification — the report stays POSTPONED while
+ * `salary_report_required` flips false with the size bucket — so a company can
+ * owe nothing *and* still have unexplained pay outliers waiting on it. Hiding
+ * that company removes the only place an admin would see the work.
+ *
+ * Deliberately expressed here rather than folded into `notLegallyObligedSql`:
+ * that predicate answers "is this company legally obliged", which such a company
+ * genuinely is not. This one answers "is it safe to hide", which is a different
+ * question with a different answer.
+ */
+export function hiddenFromDefaultRegisterSql(): string {
+  return `(${notLegallyObligedSql} AND NOT ${actionPlanMissingSql()})`
 }
 
 export function equalityObligationStatusLiteral() {

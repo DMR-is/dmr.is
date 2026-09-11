@@ -3,7 +3,10 @@
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 
-import { type CompanyDto } from '../../gen/fetch/types.gen'
+import {
+  type CompanyDto,
+  CompanySizeEnum,
+} from '../../gen/fetch/types.gen'
 import { companiesText } from '../../lib/text'
 import {
   EQUALITY_DETAIL_LABEL,
@@ -32,6 +35,14 @@ type Props = {
  * nothing" — so that case gets its own tag, using the same wording as the list
  * filter ("Ekki lagaskylt") so the two are recognisably the same idea.
  *
+ * ⚠️ …except at UNKNOWN size, which gets a neutral label instead. Both
+ * obligations read NOT_REQUIRED there, but for a different reason: nobody has
+ * classified the company yet. "Ekki lagaskylt" would state a verdict the
+ * register has not reached, on the one page where someone is in a position to
+ * reach it. This is the same distinction drawn in `notLegallyObligedSql` (which
+ * is SMALL-only) and in the migration that refuses to clear due dates on
+ * UNKNOWN: unreadable is not "owes nothing".
+ *
  * `light` throughout, matching the list.
  */
 export const CompanyObligationTags = ({ company }: Props) => {
@@ -39,9 +50,14 @@ export const CompanyObligationTags = ({ company }: Props) => {
   const salaryLabel = SALARY_DETAIL_LABEL[company.salaryObligationStatus]
 
   if (!equalityLabel && !salaryLabel) {
+    const unclassified =
+      company.employeeCountCategory === CompanySizeEnum.UNKNOWN
+
     return (
-      <Tag variant="dark" outlined disabled light>
-        {companiesText.notLegallyObliged}
+      <Tag variant={unclassified ? 'blue' : 'dark'} outlined disabled light>
+        {unclassified
+          ? companiesText.unclassifiedSize
+          : companiesText.notLegallyObliged}
       </Tag>
     )
   }
