@@ -40,7 +40,7 @@ module.exports = {
     --     load — a company that filed while 50+ and was later reclassified
     --     down. Clearing it is unrecoverable in normal operation: reclassify
     --     back up and the gate re-opens onto a NULL, so the company reads as
-    --     never overdue. This guard is also what makes `down` exact, because
+    --     never overdue. This guard is also what makes "down" exact, because
     --     under it the load seed is the only possible source of the value.
     -- ============================================================
 

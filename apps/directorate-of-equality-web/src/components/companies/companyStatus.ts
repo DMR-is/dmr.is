@@ -81,6 +81,45 @@ export const OBLIGATION_STATUS_TAG_VARIANT: Record<
 }
 
 /**
+ * Detail-header wording for the same states.
+ *
+ * ⚠️ Full sentences, unlike `OBLIGATION_STATUS_LABEL`. In the list a bare
+ * "Vantar" is complete because the column header supplies the subject; the
+ * company header has no column above it, so a row of tags reading
+ * "Vantar / Vantar" would name nothing at all.
+ *
+ * `null` means "render no tag": an obligation the company does not have is not
+ * a state worth a badge on its own page. When BOTH are null the header falls
+ * back to a single "Ekki lagaskylt" tag, so it is never bare.
+ */
+export const EQUALITY_DETAIL_LABEL: Record<
+  CompanyObligationStatusEnum,
+  string | null
+> = {
+  [CompanyObligationStatusEnum.NOT_REQUIRED]: null,
+  [CompanyObligationStatusEnum.MISSING]:
+    REPORT_STATUS_LABEL[CompanyReportStatusEnum.MISSING_EQUALITY_REPORT],
+  // Unreachable on the equality side — an equality report has no outlier
+  // groups and cannot be postponed. Mapped rather than omitted so the record
+  // stays exhaustive if that ever changes.
+  [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]:
+    REPORT_STATUS_LABEL[CompanyReportStatusEnum.MISSING_ACTION_PLAN],
+  [CompanyObligationStatusEnum.COVERED]: companiesText.equalityCovered,
+}
+
+export const SALARY_DETAIL_LABEL: Record<
+  CompanyObligationStatusEnum,
+  string | null
+> = {
+  [CompanyObligationStatusEnum.NOT_REQUIRED]: null,
+  [CompanyObligationStatusEnum.MISSING]:
+    REPORT_STATUS_LABEL[CompanyReportStatusEnum.MISSING_SALARY_REPORT],
+  [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]:
+    REPORT_STATUS_LABEL[CompanyReportStatusEnum.MISSING_ACTION_PLAN],
+  [CompanyObligationStatusEnum.COVERED]: companiesText.salaryCovered,
+}
+
+/**
  * The salary column's MISSING tag is purple, not red, so the two columns are
  * distinguishable at a glance in a row that is missing both. Everything else is
  * shared, so this is expressed as an override rather than a second full map —

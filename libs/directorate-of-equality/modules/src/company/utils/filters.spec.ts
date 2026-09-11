@@ -5,16 +5,16 @@ import {
   CompanyStatusEnum,
 } from '../models/company.enums'
 import {
-  actionPlanMissingSql,
-  equalityReportMissingSql,
-  salaryReportMissingSql,
-} from './report-status'
-import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
   buildCompanyStatusWhere,
   CompanyExpiryFilterEnum,
 } from './filters'
+import {
+  actionPlanMissingSql,
+  equalityReportMissingSql,
+  salaryReportMissingSql,
+} from './report-status'
 
 /**
  * `buildCompanyExpiryWhere` emits raw SQL, so a wrong identifier is not a

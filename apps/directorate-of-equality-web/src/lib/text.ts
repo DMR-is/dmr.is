@@ -825,6 +825,12 @@ export const companiesText = {
   visibilityPlaceholder: 'Fela',
   showNotObliged: 'Sýna ekki lagaskylt',
   showInactive: 'Sýna óvirk',
+  // Detail-header wording. The list can say a bare "Vantar" because the column
+  // header names the obligation; the header has no such context, so each tag
+  // has to name its own subject.
+  equalityCovered: 'Jafnréttisáætlun í gildi',
+  salaryCovered: 'Launagreining í gildi',
+  notLegallyObliged: 'Ekki lagaskylt',
   location: 'Staður',
   region: 'Landshluti',
   regionPlaceholder: 'Veldu landshluta',
