@@ -3,7 +3,9 @@ import { useController, UseControllerProps } from 'react-hook-form'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import {
   fromCalendarDateIso,
+  fromReykjavikDateTimeIso,
   toCalendarDateIso,
+  toReykjavikDateTimeIso,
 } from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
@@ -37,12 +39,13 @@ export const DatePickerController = (props: Props) => {
 
   const error = fieldState.error
 
-  // Without a time input the field is a calendar day, so send the day the user
-  // saw rather than their local midnight expressed as an instant - the latter
-  // lands on the previous day for any browser at a positive UTC offset.
+  // Send the clock face the user saw, not the instant their computer was at. A
+  // calendar day picked at a positive UTC offset otherwise lands on the previous
+  // day, and a skiptafundur time entered from abroad otherwise publishes shifted
+  // by the difference - both fields name a Reykjavik wall clock.
   const handleChange = (date: Date) => {
     field.onChange(
-      props.withTime ? date.toISOString() : toCalendarDateIso(date),
+      props.withTime ? toReykjavikDateTimeIso(date) : toCalendarDateIso(date),
     )
     if (onChange) {
       onChange(date)
@@ -57,10 +60,11 @@ export const DatePickerController = (props: Props) => {
 
   const value =
     typeof field.value === 'string' ? new Date(field.value) : field.value
-  const asDate =
-    value instanceof Date && !props.withTime
-      ? fromCalendarDateIso(value)
-      : value
+  const asDate = !(value instanceof Date)
+    ? value
+    : props.withTime
+      ? fromReykjavikDateTimeIso(value)
+      : fromCalendarDateIso(value)
 
   return (
     <div onBlur={handleFirstBlur}>

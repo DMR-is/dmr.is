@@ -1,8 +1,10 @@
 import {
   atReykjavik,
   fromCalendarDateIso,
+  fromReykjavikDateTimeIso,
   toCalendarDate,
   toCalendarDateIso,
+  toReykjavikDateTimeIso,
 } from './calendarDate'
 
 describe('toCalendarDate', () => {
@@ -77,5 +79,39 @@ describe('toCalendarDateIso / fromCalendarDateIso', () => {
 describe('toCalendarDateIso', () => {
   it('returns the empty value rather than throwing on an unparseable date', () => {
     expect(toCalendarDateIso(new Date('nope'))).toBe('')
+  })
+})
+
+describe('toReykjavikDateTimeIso / fromReykjavikDateTimeIso', () => {
+  /**
+   * Reported by a lawyer who filed from abroad: he entered a skiptafundur time
+   * and the published advert named a different one, his time converted to
+   * Icelandic. The field asks for a clock face, so send the clock face.
+   */
+  it('sends the clock face the user typed, not the instant their computer was at', () => {
+    // what react-datepicker hands back for "6. maí, kl. 14:00", in local time
+    const picked = new Date(2026, 4, 6, 14, 0)
+
+    expect(toReykjavikDateTimeIso(picked)).toBe('2026-05-06T14:00:00.000Z')
+  })
+
+  it('round-trips a stored time back to the same clock face', () => {
+    const seeded = fromReykjavikDateTimeIso('2026-05-06T14:00:00.000Z')
+
+    expect(seeded.getHours()).toBe(14)
+    expect(seeded.getMinutes()).toBe(0)
+    expect(seeded.getDate()).toBe(6)
+    expect(toReykjavikDateTimeIso(seeded)).toBe('2026-05-06T14:00:00.000Z')
+  })
+
+  it('keeps the time of day that a calendar-day field would discard', () => {
+    const picked = new Date(2026, 4, 6, 14, 30)
+
+    expect(toCalendarDateIso(picked)).toBe('2026-05-06T00:00:00.000Z')
+    expect(toReykjavikDateTimeIso(picked)).toBe('2026-05-06T14:30:00.000Z')
+  })
+
+  it('returns the empty value rather than throwing on an unparseable date', () => {
+    expect(toReykjavikDateTimeIso(new Date('nope'))).toBe('')
   })
 })

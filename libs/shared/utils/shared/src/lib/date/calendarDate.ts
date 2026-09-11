@@ -77,3 +77,51 @@ export const fromCalendarDateIso = (value: Date | string) => {
     parsed.getUTCDate(),
   )
 }
+
+/**
+ * Serialises the date *and time* a picker returned, read as a Reykjavik wall
+ * clock.
+ *
+ * `toISOString()` on the picker's `Date` turns the clock face the user typed
+ * into an absolute instant, so "kl. 14:00" entered from a browser at UTC+2
+ * publishes as `kl. 12:00` - the lawyer picks a time for a skiptafundur held in
+ * Reykjavik and the advert names a different one. Re-anchoring the local
+ * Y/M/D H:M at UTC sends the clock face instead, which is what the field asks
+ * for and what the advert prints.
+ *
+ * Use this for fields that carry a real time of day; {@link toCalendarDateIso}
+ * is the equivalent for fields that are only a day.
+ */
+export const toReykjavikDateTimeIso = (date: Date) => {
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds(),
+      date.getMilliseconds(),
+    ),
+  ).toISOString()
+}
+
+/**
+ * Inverse of {@link toReykjavikDateTimeIso}: turns a stored instant back into a
+ * `Date` whose local clock face is the Reykjavik one, so a picker shows the time
+ * that will be printed. This is the same operation as {@link atReykjavik}, named
+ * for the picker call sites.
+ */
+export const fromReykjavikDateTimeIso = (value: Date | string) => {
+  const parsed = value instanceof Date ? value : new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return parsed
+  }
+
+  return atReykjavik(parsed)
+}
