@@ -6,11 +6,26 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  * clock rather than the wall clock of whatever process happens to run.
  *
  * Atlantic/Reykjavik is UTC+0 all year round, so the Icelandic wall clock is the
- * UTC wall clock and shifting by the local offset is enough - no tz database and
- * no `date-fns-tz` needed.
+ * UTC wall clock - no tz database and no `date-fns-tz` needed.
+ *
+ * Built from the UTC parts rather than by adding `getTimezoneOffset()`: that
+ * offset is read at the original instant but the formatter applies the offset at
+ * the shifted one, so around a DST transition in the *reader's* zone the two
+ * disagree. That costs an hour in Berlin and a whole calendar day in Auckland,
+ * Santiago and Lord Howe. The one case this still cannot represent is an instant
+ * landing in a skipped hour, where the runtime moves it forward; the calendar day
+ * survives that, which is what the adverts turn on.
  */
 export const atReykjavik = (date: Date) =>
-  new Date(date.getTime() + date.getTimezoneOffset() * 60_000)
+  new Date(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds(),
+  )
 
 /**
  * Snaps an instant to the UTC midnight it is closest to.
@@ -32,10 +47,18 @@ export const toCalendarDate = (date: Date) =>
  * ended up stored as the previous day. Reading the local Y/M/D and re-anchoring
  * at UTC midnight sends the day the user saw, not the instant their clock was at.
  */
-export const toCalendarDateIso = (date: Date) =>
-  new Date(
+export const toCalendarDateIso = (date: Date) => {
+  // Mirrors the guard in fromCalendarDateIso. Without it an unparseable date
+  // reaches toISOString() and throws RangeError rather than producing the empty
+  // value every caller already handles.
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   ).toISOString()
+}
 
 /**
  * Inverse of {@link toCalendarDateIso}: turns a stored calendar day back into a

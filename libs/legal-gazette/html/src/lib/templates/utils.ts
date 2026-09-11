@@ -1,4 +1,4 @@
-import { isDefined, isNotEmpty, isString } from 'class-validator'
+import { isNotEmpty, isString } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
 
@@ -57,13 +57,12 @@ export function getTableCell({
   return getElement({ text: inner, options: { as: 'td' } })
 }
 
-export const parseAndFormatDate = (
-  date?: unknown,
-): [string, string, string] => {
-  if (!isDefined(date)) return ['', '', '']
-
-  return formatDate(date)
-}
+/**
+ * Alias kept for the ten template modules that import it; `formatDate` already
+ * returns the empty tuple for anything that is not a Date or a parseable string.
+ */
+export const parseAndFormatDate = (date?: unknown): [string, string, string] =>
+  formatDate(date)
 
 export const getStatementLocation = (settlement?: BaseSettlement) => {
   switch (settlement?.statementType) {

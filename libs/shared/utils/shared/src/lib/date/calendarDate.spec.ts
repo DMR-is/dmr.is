@@ -27,6 +27,33 @@ describe('atReykjavik', () => {
     expect(shifted.getDate()).toBe(6)
     expect(shifted.getHours()).toBe(0)
   })
+
+  /**
+   * Offset arithmetic reads getTimezoneOffset() at the original instant while
+   * the formatter applies the offset at the shifted one. Across a year that
+   * cost a whole calendar day six times in Auckland, three in Santiago and
+   * three in Lord Howe.
+   */
+  it('keeps the calendar day across every instant of a year', () => {
+    const step = 20 * 60 * 1000
+    const end = Date.UTC(2027, 0, 1)
+    const wrong: string[] = []
+
+    for (let t = Date.UTC(2026, 0, 1); t < end; t += step) {
+      const instant = new Date(t)
+      const shifted = atReykjavik(instant)
+
+      if (
+        shifted.getDate() !== instant.getUTCDate() ||
+        shifted.getMonth() !== instant.getUTCMonth() ||
+        shifted.getFullYear() !== instant.getUTCFullYear()
+      ) {
+        wrong.push(instant.toISOString())
+      }
+    }
+
+    expect(wrong).toEqual([])
+  })
 })
 
 describe('toCalendarDateIso / fromCalendarDateIso', () => {
@@ -44,5 +71,11 @@ describe('toCalendarDateIso / fromCalendarDateIso', () => {
     expect(seeded.getMonth()).toBe(4)
     expect(seeded.getDate()).toBe(6)
     expect(toCalendarDateIso(seeded)).toBe('2026-05-06T00:00:00.000Z')
+  })
+})
+
+describe('toCalendarDateIso', () => {
+  it('returns the empty value rather than throwing on an unparseable date', () => {
+    expect(toCalendarDateIso(new Date('nope'))).toBe('')
   })
 })
