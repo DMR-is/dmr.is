@@ -34,7 +34,7 @@ export type BaseSettlement = {
   liquidatorName?: string
   liquidatorLocation?: string
   customLiquidatorLocation?: string
-  statementType: 'location' | 'email' | 'custom'
+  statementType: 'location' | 'email' | 'custom' | 'url'
   partnerNationalId?: string | null
   partnerName?: string | null
   partnerDateOfDeath?: Date | string | null

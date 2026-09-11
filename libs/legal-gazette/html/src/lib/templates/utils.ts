@@ -78,8 +78,8 @@ export const parseAndFormatDate = (
 export const getStatementLocation = (settlement?: BaseSettlement) => {
   switch (settlement?.statementType) {
     case 'email':
-      return settlement?.customLiquidatorLocation || ''
     case 'custom':
+    case 'url':
       return settlement?.customLiquidatorLocation || ''
     case 'location':
     default:
@@ -87,11 +87,23 @@ export const getStatementLocation = (settlement?: BaseSettlement) => {
   }
 }
 
+/**
+ * Sentence fragment placed between "Kröfulýsingar skulu sendar skiptastjóra" and the
+ * destination. The location branches deliberately return an empty prefix: the
+ * destination is free text supplied by the liquidator, so a hardcoded "að"
+ * cannot be relied on to agree with its case.
+ */
 export const getStatementPrefix = (settlement?: BaseSettlement) => {
-  if (settlement?.statementType === 'email') {
-    return 'með rafrænum hætti á netfangið '
+  switch (settlement?.statementType) {
+    case 'email':
+      return 'með rafrænum hætti á netfangið '
+    case 'url':
+      return 'með rafrænum hætti á vefsvæðinu '
+    case 'custom':
+    case 'location':
+    default:
+      return ''
   }
-  return 'að '
 }
 
 /**

@@ -21,12 +21,15 @@ const mapVersion = (
   version: AdvertVersionEnum | undefined = DEFAULT_VERSION,
 ): HTMLVersion => version as HTMLVersion
 
+// Mirrored in libs/legal-gazette/html/src/lib/preview/application.ts - keep in sync.
 const mapStatementType = (
   statementType?: string | null,
-): 'location' | 'custom' | 'email' => {
+): 'location' | 'custom' | 'email' | 'url' => {
   switch (statementType) {
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL:
       return 'email'
+    case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL:
+      return 'url'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION:
       return 'custom'
     default:

@@ -6,6 +6,8 @@ import * as z from 'zod'
 import {
   ApplicationRequirementStatementEnum,
   companySchema,
+  getRequirementStatementLocationLabel,
+  requirementsStatementOptions,
   settlementSchemaRefined,
 } from '@dmr.is/legal-gazette-schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
@@ -34,21 +36,6 @@ const schema = settlementSchemaRefined.extend({
   partnerNationalId: z.string().optional().nullable(),
   partnerDateOfDeath: z.string().optional().nullable(),
 })
-
-const requirementsStatementOptions = [
-  {
-    label: 'Staðsetning skiptastjóra',
-    value: 'LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Slá inn staðsetningu',
-    value: 'CUSTOM_LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Tölvupóstur',
-    value: 'CUSTOM_LIQUIDATOR_EMAIL',
-  },
-]
 
 const settlementTypeOptions = [
   {
@@ -340,15 +327,9 @@ export const CreateDeceasedSettlement = ({ onChange }: Props) => {
               ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
             }
             value={state.recallRequirementStatementLocation}
-            label={
-              state.recallRequirementStatementType ===
-              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-                ? 'Staðsetning skiptastjóra'
-                : state.recallRequirementStatementType ===
-                    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
-                  ? 'Slá inn staðsetningu'
-                  : 'Tölvupóstur'
-            }
+            label={getRequirementStatementLocationLabel(
+              state.recallRequirementStatementType,
+            )}
             onChange={(e) =>
               setState((prev) => ({
                 ...prev,

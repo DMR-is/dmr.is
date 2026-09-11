@@ -33,11 +33,14 @@ const mapApplicationTypeToTemplate = (
       return null
   }
 }
-// "custom" | "location" | "email"'.
+// "custom" | "location" | "email" | "url".
+// Mirrored in apps/legal-gazette-api/src/core/html/advert-html.ts - keep in sync.
 const mapStatementType = (statementType: string | null | undefined = '') => {
   switch (statementType) {
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL:
       return 'email'
+    case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL:
+      return 'url'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION:
       return 'custom'
     case ApplicationRequirementStatementEnum.LIQUIDATORLOCATION:

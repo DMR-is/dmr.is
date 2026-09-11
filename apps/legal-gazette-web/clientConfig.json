@@ -7741,7 +7741,8 @@
         "enum": [
           "LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_LOCATION",
-          "CUSTOM_LIQUIDATOR_EMAIL"
+          "CUSTOM_LIQUIDATOR_EMAIL",
+          "CUSTOM_LIQUIDATOR_URL"
         ]
       },
       "SettlementDto": {
@@ -8504,7 +8505,8 @@
             "enum": [
               "LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_LOCATION",
-              "CUSTOM_LIQUIDATOR_EMAIL"
+              "CUSTOM_LIQUIDATOR_EMAIL",
+              "CUSTOM_LIQUIDATOR_URL"
             ]
           },
           "requirementStatementLocation": { "type": "string" },
@@ -8589,7 +8591,8 @@
             "enum": [
               "LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_LOCATION",
-              "CUSTOM_LIQUIDATOR_EMAIL"
+              "CUSTOM_LIQUIDATOR_EMAIL",
+              "CUSTOM_LIQUIDATOR_URL"
             ]
           },
           "requirementStatementLocation": { "type": "string" },
