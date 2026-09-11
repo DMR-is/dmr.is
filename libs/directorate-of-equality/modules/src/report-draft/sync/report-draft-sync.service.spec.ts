@@ -9,6 +9,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { ReportModel } from '../../report/models/report.model'
 import { IReportDraftAssignmentService } from '../assignment/report-draft-assignment.service.interface'
+import { AssignmentOwnerEnum } from '../assignment/report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from '../criterion/report-draft-criterion.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { IReportDraftEmployeeService } from '../employee/report-draft-employee.service.interface'
@@ -67,6 +68,8 @@ describe('ReportDraftSyncService', () => {
     assignment = {
       setRoleSteps: jest.fn(),
       setEmployeeSteps: jest.fn(),
+      snapshotAssignmentsForSteps: jest.fn().mockResolvedValue([]),
+      clampOrphanedAssignments: jest.fn(),
     }
     outlierGroup = {
       createGroup: jest.fn(),
@@ -105,7 +108,9 @@ describe('ReportDraftSyncService', () => {
       criteria: [
         { method: SyncMethodEnum.CREATE, id: 'c1', data: { title: 'A' } },
       ],
-      roles: [{ method: SyncMethodEnum.CREATE, id: 'r1', data: { title: 'R' } }],
+      roles: [
+        { method: SyncMethodEnum.CREATE, id: 'r1', data: { title: 'R' } },
+      ],
     })
     expect(criterion.createCriterion).toHaveBeenCalledWith(REPORT, 'c1', {
       title: 'A',
@@ -121,8 +126,20 @@ describe('ReportDraftSyncService', () => {
         { method: SyncMethodEnum.CREATE, id: 'e2', data: {} },
       ],
     })
-    expect(employee.createEmployee).toHaveBeenNthCalledWith(1, REPORT, 'e1', {}, 6)
-    expect(employee.createEmployee).toHaveBeenNthCalledWith(2, REPORT, 'e2', {}, 7)
+    expect(employee.createEmployee).toHaveBeenNthCalledWith(
+      1,
+      REPORT,
+      'e1',
+      {},
+      6,
+    )
+    expect(employee.createEmployee).toHaveBeenNthCalledWith(
+      2,
+      REPORT,
+      'e2',
+      {},
+      7,
+    )
   })
 
   it('applies folded step assignments after the entity rows', async () => {
@@ -234,7 +251,7 @@ describe('ReportDraftSyncService', () => {
 
   // removeGroup refuses to orphan members, so a group only reads as empty
   // after the batch's own sets have moved its members out.
-  it('removes outlier groups after the batch\'s own membership sets', async () => {
+  it("removes outlier groups after the batch's own membership sets", async () => {
     const order: string[] = []
     outlierGroup.setEmployeeGroup.mockImplementation(() => {
       order.push('set')
@@ -330,5 +347,134 @@ describe('ReportDraftSyncService', () => {
       service.syncDraft('prov-1', COMPANY, { employees }),
     ).rejects.toBeInstanceOf(BadRequestException)
     expect(employee.createEmployee).not.toHaveBeenCalled()
+  })
+
+  describe('step-removal clamping', () => {
+    const roleSnapshot = {
+      owner: AssignmentOwnerEnum.ROLE,
+      ownerId: 'r1',
+      subCriterionId: 'sub-1',
+      order: 5,
+    }
+
+    it('snapshots before any applier runs and clamps after every removal', async () => {
+      const order: string[] = []
+      assignment.snapshotAssignmentsForSteps.mockImplementation(async () => {
+        order.push('snapshot')
+        return [roleSnapshot]
+      })
+      step.updateStep.mockImplementation(async () => order.push('updateStep'))
+      step.removeStep.mockImplementation(async () => order.push('removeStep'))
+      assignment.clampOrphanedAssignments.mockImplementation(async () =>
+        order.push('clamp'),
+      )
+
+      await service.syncDraft('prov-1', COMPANY, {
+        steps: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'step-4',
+            data: { order: 4, score: 40 },
+          },
+          { method: SyncMethodEnum.REMOVE, id: 'step-5' },
+        ],
+      })
+
+      // The snapshot has to precede every write: removeStep destroys the join
+      // rows, and a folded stepIds would clear them even earlier.
+      expect(order).toEqual(['snapshot', 'updateStep', 'removeStep', 'clamp'])
+      expect(
+        assignment.snapshotAssignmentsForSteps,
+      ).toHaveBeenCalledWith(REPORT, ['step-5'])
+      expect(assignment.clampOrphanedAssignments).toHaveBeenCalledWith(REPORT, [
+        roleSnapshot,
+      ])
+    })
+
+    it('does not snapshot when the batch removes no steps', async () => {
+      await service.syncDraft('prov-1', COMPANY, {
+        steps: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'step-1',
+            data: { order: 1 },
+          },
+        ],
+      })
+
+      expect(assignment.snapshotAssignmentsForSteps).not.toHaveBeenCalled()
+      expect(assignment.clampOrphanedAssignments).toHaveBeenCalledWith(
+        REPORT,
+        [],
+      )
+    })
+
+    it('drops the snapshot for an owner whose stepIds the same batch states', async () => {
+      assignment.snapshotAssignmentsForSteps.mockResolvedValue([
+        roleSnapshot,
+        {
+          owner: AssignmentOwnerEnum.EMPLOYEE,
+          ownerId: 'e1',
+          subCriterionId: 'sub-2',
+          order: 3,
+        },
+        {
+          owner: AssignmentOwnerEnum.EMPLOYEE,
+          ownerId: 'e2',
+          subCriterionId: 'sub-2',
+          order: 3,
+        },
+      ])
+
+      await service.syncDraft('prov-1', COMPANY, {
+        steps: [{ method: SyncMethodEnum.REMOVE, id: 'step-5' }],
+        // r1 restates its classifications outright — the explicit value wins.
+        roles: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'r1',
+            data: { stepIds: ['step-4'] },
+          },
+        ],
+        employees: [
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'e1',
+            data: { stepIds: [] },
+          },
+          // A command without a stepIds key says nothing about the
+          // classifications, so e2 still clamps.
+          {
+            method: SyncMethodEnum.UPDATE,
+            id: 'e2',
+            data: { reportEmployeeRoleId: 'r1' },
+          },
+        ],
+      })
+
+      expect(assignment.clampOrphanedAssignments).toHaveBeenCalledWith(REPORT, [
+        {
+          owner: AssignmentOwnerEnum.EMPLOYEE,
+          ownerId: 'e2',
+          subCriterionId: 'sub-2',
+          order: 3,
+        },
+      ])
+    })
+
+    it('clamps only after the report is otherwise consistent, before touchDraft', async () => {
+      const order: string[] = []
+      assignment.snapshotAssignmentsForSteps.mockResolvedValue([roleSnapshot])
+      assignment.clampOrphanedAssignments.mockImplementation(async () =>
+        order.push('clamp'),
+      )
+      reportDraft.touchDraft.mockImplementation(async () => order.push('touch'))
+
+      await service.syncDraft('prov-1', COMPANY, {
+        steps: [{ method: SyncMethodEnum.REMOVE, id: 'step-5' }],
+      })
+
+      expect(order).toEqual(['clamp', 'touch'])
+    })
   })
 })

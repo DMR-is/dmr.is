@@ -20,18 +20,22 @@ import { ReportEmployeeRoleModel } from '../../report-employee/models/report-emp
 import { ReportEmployeeRoleCriterionStepModel } from '../../report-employee/models/report-employee-role-criterion-step.model'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { ReportDraftAssignmentService } from './report-draft-assignment.service'
+import {
+  AssignmentOwnerEnum,
+  PreBatchAssignment,
+} from './report-draft-assignment.service.interface'
 
 const REPORT_ID = 'report-id-1'
 const ROLE_ID = 'role-id-1'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = {
+const COMPANY = ({
   id: 'company-1',
   nationalId: '5500000000',
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown as CompanyDto
+} as unknown) as CompanyDto
 
 // Appliers take an already-resolved draft (no findOwnedDraft).
 const report = { id: REPORT_ID } as ReportModel
@@ -54,6 +58,10 @@ describe('ReportDraftAssignmentService', () => {
   let roleStepFindAll: jest.Mock
   let roleStepDestroy: jest.Mock
   let roleStepBulkCreate: jest.Mock
+  let personalStepFindAll: jest.Mock
+  let personalStepBulkCreate: jest.Mock
+  let roleModelFindAll: jest.Mock
+  let employeeFindAll: jest.Mock
 
   beforeEach(async () => {
     findOwnedDraft = jest.fn().mockResolvedValue({ id: REPORT_ID })
@@ -65,6 +73,10 @@ describe('ReportDraftAssignmentService', () => {
     roleStepFindAll = jest.fn().mockResolvedValue([])
     roleStepDestroy = jest.fn()
     roleStepBulkCreate = jest.fn()
+    personalStepFindAll = jest.fn().mockResolvedValue([])
+    personalStepBulkCreate = jest.fn()
+    roleModelFindAll = jest.fn().mockResolvedValue([{ id: ROLE_ID }])
+    employeeFindAll = jest.fn().mockResolvedValue([{ id: 'emp-1' }])
 
     const module = await Test.createTestingModule({
       providers: [
@@ -73,11 +85,11 @@ describe('ReportDraftAssignmentService', () => {
         { provide: IReportDraftService, useValue: { findOwnedDraft } },
         {
           provide: getModelToken(ReportEmployeeRoleModel),
-          useValue: { findOne: roleFindOne },
+          useValue: { findOne: roleFindOne, findAll: roleModelFindAll },
         },
         {
           provide: getModelToken(ReportEmployeeModel),
-          useValue: { findOne: employeeFindOne },
+          useValue: { findOne: employeeFindOne, findAll: employeeFindAll },
         },
         {
           provide: getModelToken(ReportSubCriterionStepModel),
@@ -101,7 +113,11 @@ describe('ReportDraftAssignmentService', () => {
         },
         {
           provide: getModelToken(ReportEmployeePersonalCriterionStepModel),
-          useValue: { findAll: jest.fn(), destroy: jest.fn(), bulkCreate: jest.fn() },
+          useValue: {
+            findAll: personalStepFindAll,
+            destroy: jest.fn(),
+            bulkCreate: personalStepBulkCreate,
+          },
         },
       ],
     }).compile()
@@ -171,5 +187,271 @@ describe('ReportDraftAssignmentService', () => {
     await expect(
       service.getRoleSteps(PROVIDER_ID, COMPANY, ROLE_ID),
     ).rejects.toThrow(NotFoundException)
+  })
+
+  describe('snapshotAssignmentsForSteps', () => {
+    it('captures each assignment with the step’s pre-batch order and siblings', async () => {
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-5', reportSubCriterionId: 'sub-1', order: 5 },
+      ])
+      // The sub-criterion's pre-batch scale, deliberately out of order.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 2 },
+        { id: 'step-5', reportSubCriterionId: 'sub-1', order: 5 },
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 1 },
+      ])
+      roleStepFindAll.mockResolvedValueOnce([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-5' },
+      ])
+      personalStepFindAll.mockResolvedValueOnce([
+        { reportEmployeeId: 'emp-1', reportSubCriterionStepId: 'step-5' },
+      ])
+
+      const snapshots = await service.snapshotAssignmentsForSteps(report, [
+        'step-5',
+        'step-5',
+      ])
+
+      // Siblings come back nearest-first, below before above.
+      expect(snapshots).toEqual([
+        {
+          owner: AssignmentOwnerEnum.ROLE,
+          ownerId: ROLE_ID,
+          subCriterionId: 'sub-1',
+          order: 5,
+          fallbackStepIds: ['step-2', 'step-1'],
+        },
+        {
+          owner: AssignmentOwnerEnum.EMPLOYEE,
+          ownerId: 'emp-1',
+          subCriterionId: 'sub-1',
+          order: 5,
+          fallbackStepIds: ['step-2', 'step-1'],
+        },
+      ])
+      // Deduped before the lookup.
+      expect(stepFindAll).toHaveBeenNthCalledWith(1, {
+        where: { id: ['step-5'] },
+        attributes: ['id', 'reportSubCriterionId', 'order'],
+      })
+      expect(stepFindAll).toHaveBeenNthCalledWith(2, {
+        where: { reportSubCriterionId: ['sub-1'] },
+        attributes: ['id', 'reportSubCriterionId', 'order'],
+      })
+    })
+
+    it('returns nothing (and does not query the joins) for an empty id list', async () => {
+      expect(await service.snapshotAssignmentsForSteps(report, [])).toEqual([])
+      expect(stepFindAll).not.toHaveBeenCalled()
+      expect(roleStepFindAll).not.toHaveBeenCalled()
+    })
+
+    it('ignores step ids that no longer resolve — removeStep rejects those', async () => {
+      stepFindAll.mockResolvedValueOnce([])
+
+      expect(
+        await service.snapshotAssignmentsForSteps(report, ['gone']),
+      ).toEqual([])
+      expect(roleStepFindAll).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('clampOrphanedAssignments', () => {
+    const roleOnOrder = (
+      order: number,
+      fallbackStepIds: string[] = [],
+    ): PreBatchAssignment => ({
+      owner: AssignmentOwnerEnum.ROLE,
+      ownerId: ROLE_ID,
+      subCriterionId: 'sub-1',
+      order,
+      fallbackStepIds,
+    })
+
+    /** Surviving steps of sub-1, as the post-batch step query would return. */
+    const surviving = (...orders: number[]) =>
+      orders.map((order) => ({
+        id: `step-${order}`,
+        reportSubCriterionId: 'sub-1',
+        order,
+      }))
+
+    beforeEach(() => {
+      subFindAll.mockResolvedValue([{ id: 'sub-1' }])
+    })
+
+    it('moves a top-step role down to the new top step (5 þrep → 4)', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
+
+      // Greatest order ≤ 5 → order 4, which now carries the full 40 points.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+      expect(personalStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('falls to the nearest higher step when nothing survives below', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(3, 4, 5))
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(1)])
+
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-3' },
+      ])
+    })
+
+    it('leaves the assignment off when the sub-criterion has no steps left', async () => {
+      stepFindAll.mockResolvedValueOnce([])
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
+
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('leaves the assignment off when the sub-criterion itself is gone', async () => {
+      subFindAll.mockResolvedValue([])
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
+
+      expect(stepFindAll).not.toHaveBeenCalled()
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('does not move an assignment the sub-criterion already carries', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+      // Post-batch the role already stands on a step of sub-1 — a re-sent batch,
+      // or an explicit stepIds that named a survivor. Re-running must be a no-op.
+      roleStepFindAll.mockResolvedValueOnce([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
+
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('collapses several removed steps of one sub-criterion to the highest order', async () => {
+      // A wholesale template swap: orders 1–5 all removed, 1–4 created fresh.
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(2),
+        roleOnOrder(5),
+        roleOnOrder(3),
+      ])
+
+      // One row, resolved from order 5 — not three, and not order 2's answer.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('clamps a personal assignment through the employee join', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+
+      await service.clampOrphanedAssignments(report, [
+        {
+          owner: AssignmentOwnerEnum.EMPLOYEE,
+          ownerId: 'emp-1',
+          subCriterionId: 'sub-1',
+          order: 5,
+          fallbackStepIds: [],
+        },
+      ])
+
+      expect(personalStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeId: 'emp-1', reportSubCriterionStepId: 'step-4' },
+      ])
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('skips an owner the same batch removed (its FK is gone)', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+      roleModelFindAll.mockResolvedValueOnce([])
+
+      await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
+
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('names the survivor by id when the batch renumbered the scale', async () => {
+      // Steps 1–5, role on the top step; the batch removes it and lifts the
+      // order-3 step to 6. Post-batch orders are no longer on the snapshot's
+      // scale, so only the captured sibling ids can resolve this.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 1 },
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 2 },
+        { id: 'step-4', reportSubCriterionId: 'sub-1', order: 4 },
+        { id: 'step-3', reportSubCriterionId: 'sub-1', order: 6 },
+      ])
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      // step-4 — the rung directly below where the role stood, still there.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('keeps full marks when the batch rescales the surviving orders', async () => {
+      // Steps 1–5, role on the top step. The batch removes that step and
+      // rescales the rest to 10/20/30/40. Compared as numbers, every survivor
+      // now sits above the snapshot's 5, so prefer-lower has nothing below to
+      // land on and the role would be dropped to the bottom rung — the exact
+      // minimum-score outcome the rule exists to prevent.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 10 },
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 20 },
+        { id: 'step-3', reportSubCriterionId: 'sub-1', order: 30 },
+        { id: 'step-4', reportSubCriterionId: 'sub-1', order: 40 },
+      ])
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      // step-4 — the new top, and still the rung below where the role stood.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('walks past siblings the same batch also removed', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2))
+
+      // step-4 and step-3 went with it; step-2 is the nearest one left.
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-2' },
+      ])
+    })
+
+    it('falls back to post-batch orders when no pre-batch sibling survives', async () => {
+      // Wholesale template swap: the captured ids are all gone, the new scale
+      // is the only one there is.
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['old-4', 'old-3', 'old-2', 'old-1']),
+      ])
+
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('is a no-op with nothing snapshotted', async () => {
+      await service.clampOrphanedAssignments(report, [])
+
+      expect(subFindAll).not.toHaveBeenCalled()
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
   })
 })

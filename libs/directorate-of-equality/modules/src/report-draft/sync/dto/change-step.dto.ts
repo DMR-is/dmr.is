@@ -32,8 +32,10 @@ export class StepChangeDataDto {
 }
 
 /**
- * One scoring-step mutation in a sync batch. REMOVE also drops the role/employee
- * assignments pointing at the step.
+ * One scoring-step mutation in a sync batch. REMOVE destroys the join rows
+ * pointing at the step, but the classifications they carried are not lost: sync
+ * re-homes each one to the nearest surviving step of the same sub-criterion,
+ * preferring a lower order. See `syncDraft` and `clampOrphanedAssignments`.
  */
 export class ChangeStepDto {
   @ApiEnum(SyncMethodEnum, { enumName: 'SyncMethodEnum' })
