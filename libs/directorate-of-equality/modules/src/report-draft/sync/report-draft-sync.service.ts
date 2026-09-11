@@ -246,9 +246,11 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
     }
 
     // 8. Re-home the assignments orphaned by the step removals in step 6, to
-    //    the nearest surviving step of the same sub-criterion. Resolved against
-    //    the POST-batch step set, which is what lets a wholesale template swap
-    //    (every step removed, a fresh set created) fall out of the same rule.
+    //    the nearest surviving step of the same sub-criterion — named by the id
+    //    step 0 captured, so a step UPDATE in step 1 that renumbered a survivor
+    //    cannot make the resolution span two scales. Only a wholesale template
+    //    swap (every step removed, a fresh set created) leaves no pre-batch
+    //    sibling to name, and falls back to the POST-batch orders.
     await this.assignmentService.clampOrphanedAssignments(report, orphaned)
 
     // Everything above writes children only. Touch the report row so the

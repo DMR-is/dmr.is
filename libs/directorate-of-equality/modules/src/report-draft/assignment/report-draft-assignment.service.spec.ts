@@ -190,9 +190,15 @@ describe('ReportDraftAssignmentService', () => {
   })
 
   describe('snapshotAssignmentsForSteps', () => {
-    it('captures each assignment with the step’s pre-batch order', async () => {
+    it('captures each assignment with the step’s pre-batch order and siblings', async () => {
       stepFindAll.mockResolvedValueOnce([
         { id: 'step-5', reportSubCriterionId: 'sub-1', order: 5 },
+      ])
+      // The sub-criterion's pre-batch scale, deliberately out of order.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 2 },
+        { id: 'step-5', reportSubCriterionId: 'sub-1', order: 5 },
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 1 },
       ])
       roleStepFindAll.mockResolvedValueOnce([
         { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-5' },
@@ -206,23 +212,30 @@ describe('ReportDraftAssignmentService', () => {
         'step-5',
       ])
 
+      // Siblings come back nearest-first, below before above.
       expect(snapshots).toEqual([
         {
           owner: AssignmentOwnerEnum.ROLE,
           ownerId: ROLE_ID,
           subCriterionId: 'sub-1',
           order: 5,
+          fallbackStepIds: ['step-2', 'step-1'],
         },
         {
           owner: AssignmentOwnerEnum.EMPLOYEE,
           ownerId: 'emp-1',
           subCriterionId: 'sub-1',
           order: 5,
+          fallbackStepIds: ['step-2', 'step-1'],
         },
       ])
       // Deduped before the lookup.
-      expect(stepFindAll).toHaveBeenCalledWith({
+      expect(stepFindAll).toHaveBeenNthCalledWith(1, {
         where: { id: ['step-5'] },
+        attributes: ['id', 'reportSubCriterionId', 'order'],
+      })
+      expect(stepFindAll).toHaveBeenNthCalledWith(2, {
+        where: { reportSubCriterionId: ['sub-1'] },
         attributes: ['id', 'reportSubCriterionId', 'order'],
       })
     })
@@ -244,11 +257,15 @@ describe('ReportDraftAssignmentService', () => {
   })
 
   describe('clampOrphanedAssignments', () => {
-    const roleOnOrder = (order: number): PreBatchAssignment => ({
+    const roleOnOrder = (
+      order: number,
+      fallbackStepIds: string[] = [],
+    ): PreBatchAssignment => ({
       owner: AssignmentOwnerEnum.ROLE,
       ownerId: ROLE_ID,
       subCriterionId: 'sub-1',
       order,
+      fallbackStepIds,
     })
 
     /** Surviving steps of sub-1, as the post-batch step query would return. */
@@ -340,6 +357,7 @@ describe('ReportDraftAssignmentService', () => {
           ownerId: 'emp-1',
           subCriterionId: 'sub-1',
           order: 5,
+          fallbackStepIds: [],
         },
       ])
 
@@ -356,6 +374,77 @@ describe('ReportDraftAssignmentService', () => {
       await service.clampOrphanedAssignments(report, [roleOnOrder(5)])
 
       expect(roleStepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('names the survivor by id when the batch renumbered the scale', async () => {
+      // Steps 1–5, role on the top step; the batch removes it and lifts the
+      // order-3 step to 6. Post-batch orders are no longer on the snapshot's
+      // scale, so only the captured sibling ids can resolve this.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 1 },
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 2 },
+        { id: 'step-4', reportSubCriterionId: 'sub-1', order: 4 },
+        { id: 'step-3', reportSubCriterionId: 'sub-1', order: 6 },
+      ])
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      // step-4 — the rung directly below where the role stood, still there.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('keeps full marks when the batch rescales the surviving orders', async () => {
+      // Steps 1–5, role on the top step. The batch removes that step and
+      // rescales the rest to 10/20/30/40. Compared as numbers, every survivor
+      // now sits above the snapshot's 5, so prefer-lower has nothing below to
+      // land on and the role would be dropped to the bottom rung — the exact
+      // minimum-score outcome the rule exists to prevent.
+      stepFindAll.mockResolvedValueOnce([
+        { id: 'step-1', reportSubCriterionId: 'sub-1', order: 10 },
+        { id: 'step-2', reportSubCriterionId: 'sub-1', order: 20 },
+        { id: 'step-3', reportSubCriterionId: 'sub-1', order: 30 },
+        { id: 'step-4', reportSubCriterionId: 'sub-1', order: 40 },
+      ])
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      // step-4 — the new top, and still the rung below where the role stood.
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
+    })
+
+    it('walks past siblings the same batch also removed', async () => {
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2))
+
+      // step-4 and step-3 went with it; step-2 is the nearest one left.
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['step-4', 'step-3', 'step-2', 'step-1']),
+      ])
+
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-2' },
+      ])
+    })
+
+    it('falls back to post-batch orders when no pre-batch sibling survives', async () => {
+      // Wholesale template swap: the captured ids are all gone, the new scale
+      // is the only one there is.
+      stepFindAll.mockResolvedValueOnce(surviving(1, 2, 3, 4))
+
+      await service.clampOrphanedAssignments(report, [
+        roleOnOrder(5, ['old-4', 'old-3', 'old-2', 'old-1']),
+      ])
+
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        { reportEmployeeRoleId: ROLE_ID, reportSubCriterionStepId: 'step-4' },
+      ])
     })
 
     it('is a no-op with nothing snapshotted', async () => {

@@ -162,10 +162,43 @@ export class ReportDraftAssignmentService
       return []
     }
 
+    // Pre-batch siblings of every affected sub-criterion. Captured here, with
+    // the removals, because this is the last moment they are all on one scale:
+    // a step UPDATE later in the batch may renumber any of them.
+    const siblingRows = await this.stepModel.findAll({
+      where: {
+        reportSubCriterionId: [
+          ...new Set(steps.map((step) => step.reportSubCriterionId)),
+        ],
+      },
+      attributes: ['id', 'reportSubCriterionId', 'order'],
+    })
+    const siblingsBySub = new Map<string, { id: string; order: number }[]>()
+    for (const row of siblingRows) {
+      const bucket = siblingsBySub.get(row.reportSubCriterionId)
+      if (bucket) {
+        bucket.push({ id: row.id, order: row.order })
+      } else {
+        siblingsBySub.set(row.reportSubCriterionId, [
+          { id: row.id, order: row.order },
+        ])
+      }
+    }
+    for (const bucket of siblingsBySub.values()) {
+      bucket.sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : 1))
+    }
+
     const stepMeta = new Map(
       steps.map((step) => [
         step.id,
-        { subCriterionId: step.reportSubCriterionId, order: step.order },
+        {
+          subCriterionId: step.reportSubCriterionId,
+          order: step.order,
+          fallbackStepIds: this.fallbackStepIds(
+            siblingsBySub.get(step.reportSubCriterionId) ?? [],
+            step.id,
+          ),
+        },
       ]),
     )
     const existingIds = [...stepMeta.keys()]
@@ -363,7 +396,9 @@ export class ReportDraftAssignmentService
       if (!survivingSteps || survivingSteps.length === 0) {
         continue
       }
-      const target = this.nearestSurvivingStep(survivingSteps, snapshot.order)
+      const target =
+        this.firstSurvivingStep(snapshot.fallbackStepIds, survivingSteps) ??
+        this.nearestSurvivingStep(survivingSteps, snapshot.order)
       if (!target) {
         continue
       }
@@ -399,13 +434,60 @@ export class ReportDraftAssignmentService
   }
 
   /**
-   * Prefer-lower resolution: the surviving step with the greatest order ≤
-   * `order`, else the smallest order > `order`.
+   * The removed step's pre-batch siblings in preference order: everything below
+   * it, nearest first, then everything above it, nearest first. `sorted` is the
+   * sub-criterion's pre-batch steps by (order, id), so "nearest" is distance in
+   * that sequence — which is prefer-lower stated in identities instead of
+   * numbers, and therefore immune to any renumbering the same batch applies.
+   */
+  private fallbackStepIds(
+    sorted: { id: string; order: number }[],
+    stepId: string,
+  ): string[] {
+    const index = sorted.findIndex((step) => step.id === stepId)
+    if (index < 0) {
+      return []
+    }
+
+    return [
+      ...sorted.slice(0, index).reverse(),
+      ...sorted.slice(index + 1),
+    ].map((step) => step.id)
+  }
+
+  /**
+   * The first of `candidateIds` that is still a step of the sub-criterion after
+   * the batch. Undefined when none is — the wholesale template swap, where the
+   * pre-batch scale is gone entirely and only `nearestSurvivingStep` can answer.
+   */
+  private firstSurvivingStep(
+    candidateIds: string[],
+    steps: { id: string; order: number }[],
+  ): { id: string; order: number } | undefined {
+    for (const id of candidateIds) {
+      const match = steps.find((step) => step.id === id)
+      if (match) {
+        return match
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * Prefer-lower resolution by number: the surviving step with the greatest
+   * order ≤ `order`, else the smallest order > `order`.
    *
    * Preferring lower is what makes the clamp correct rather than merely
    * non-empty. Shrinking a scale removes from the top, so a role that stood on
    * the old top step lands on the new top step — full marks, which is what the
    * applicant meant. Falling to the first step would award the minimum.
+   *
+   * Only reached when no pre-batch sibling survived (`fallbackStepIds`), i.e. a
+   * wholesale template swap, where the whole scale was replaced and the new
+   * orders are the only ones there are. Everywhere else the same rule is walked
+   * over identities instead, so that a batch which renumbers a survivor cannot
+   * make this comparison span two different scales.
    *
    * `order` is not unique in the DB, so ties break on step id to keep the
    * result deterministic across calls.
