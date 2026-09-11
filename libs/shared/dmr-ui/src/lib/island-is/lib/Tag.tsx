@@ -32,6 +32,15 @@ export interface TagProps {
   children: string | ReactNode
   truncate?: boolean
   hyphenate?: boolean
+  /**
+   * Allows the label to break onto a second line instead of overflowing.
+   *
+   * Off by default so a tag stays a single-line pill wherever there is room
+   * for it. Turn it on where the tag's width is decided by something other
+   * than its own content — a fixed-layout table cell, a narrow sidebar — since
+   * there the base `nowrap` lets the label escape its own border.
+   */
+  wrap?: boolean
   textLeft?: boolean
   CustomLink?: FC<React.PropsWithChildren<unknown>>
   whiteBackground?: boolean
@@ -75,6 +84,7 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
       attention,
       truncate,
       hyphenate,
+      wrap,
       textLeft,
       CustomLink,
       whiteBackground,
@@ -89,6 +99,7 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
       [styles.attention]: attention,
       [styles.focusable]: !disabled,
       [styles.hyphenate]: hyphenate,
+      [styles.wrap]: wrap,
       [styles.textLeft]: textLeft,
       [styles.disabled]: disabled,
       [styles.whiteBackground]: whiteBackground,
@@ -109,7 +120,12 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
     // `small` and `eyebrow` share a font size (xxs); they differ only in weight
     // — regular vs semiBold. So this swaps the weight and nothing else.
     const content = (
-      <Text variant={light ? 'small' : 'eyebrow'} as="span" truncate={truncate}>
+      <Text
+        variant={light ? 'small' : 'eyebrow'}
+        as="span"
+        truncate={truncate}
+        className={wrap ? styles.wrapText : undefined}
+      >
         {children}
       </Text>
     )
@@ -139,4 +155,3 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
     )
   },
 )
-

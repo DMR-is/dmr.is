@@ -54,8 +54,22 @@ const renderItem = (item: TableCellItem, i: number) => {
         </Text>
       )
     case 'tag':
+      // ⚠️ `wrap` is not optional here. The table defaults to
+      // `tableLayout: fixed`, so a cell's width is decided by the column, not
+      // by its content — and a `Tag` left on its base `nowrap` clamps its BOX
+      // to the column while its label keeps going, rendering the end of the
+      // text across its own border. Wrapping costs a taller row only for the
+      // labels that would otherwise overflow; every label that already fits is
+      // untouched.
       return (
-        <Tag key={i} variant={item.variant} outlined disabled light={item.light}>
+        <Tag
+          key={i}
+          variant={item.variant}
+          outlined
+          disabled
+          light={item.light}
+          wrap
+        >
           {item.children}
         </Tag>
       )

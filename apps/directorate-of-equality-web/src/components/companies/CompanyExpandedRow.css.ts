@@ -15,14 +15,22 @@ export const reportCard = style({
   },
 })
 
+/**
+ * ⚠️ `minmax(0, 1fr)`, not a bare `1fr`. `1fr` is `minmax(auto, 1fr)`, so a
+ * track refuses to shrink below its content's min-content width — and the
+ * widest value here is the ÍSAT description, which runs to 106 characters. A
+ * bare `1fr` lets a long one push the grid wider than the expanded row and
+ * scroll the table sideways instead of wrapping. `minmax(0, …)` makes the
+ * tracks yield, so the value wraps to as many lines as it needs.
+ */
 export const grid = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: theme.spacing[1],
 
   '@media': {
     '(max-width: 768px)': {
-      gridTemplateColumns: '1fr',
+      gridTemplateColumns: 'minmax(0, 1fr)',
     },
   },
 })
@@ -62,4 +70,18 @@ export const label = style({
   minWidth: 220,
   flexShrink: 0,
   paddingRight: theme.spacing[2],
+})
+
+/**
+ * The value side of each label/value pair.
+ *
+ * `minWidth: 0` for the same reason the grid uses `minmax(0, 1fr)`: a flex
+ * item's default `min-width: auto` refuses to shrink below its longest word, and
+ * the ÍSAT descriptions carry 22-character compounds
+ * ("köfnunarefnissamböndum"). `overflowWrap` is the last resort for a token with
+ * no break opportunity at all, so nothing can spill out of the cell.
+ */
+export const value = style({
+  minWidth: 0,
+  overflowWrap: 'break-word',
 })

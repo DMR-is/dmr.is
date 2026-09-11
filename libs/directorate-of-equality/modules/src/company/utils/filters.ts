@@ -97,27 +97,33 @@ export function buildCompanyIsatWhere(codes: string[]): WhereOptions {
 }
 
 /**
- * Filter by ÍSAT2008 section (bálkur) — the premade industry filter, e.g.
- * section `O` for public administration instead of enumerating every leaf under
- * division 84. Resolved through the company's ÍSAT category, mirroring the
- * postcode → region join: an inner-join `include` selecting no extra columns, so
- * it narrows the result set without changing the selected attributes.
+ * The company's ÍSAT2008 category — always joined, and narrowed to the
+ * requested sections (bálkar) when the premade industry filter is active.
  *
- * Because the join is `required`, companies with no `isat_category_code` are
- * excluded — correct, since an unclassified company belongs to no section and
- * must not be silently swept into one.
+ * The join is unconditional because `CompanyDto.isatCategory` carries the
+ * resolved code and description, and the company table stores only the bare
+ * `isat_category_code`. Without it the field comes back null on every read and
+ * a caller has to resolve every code itself.
  *
- * Returns null when no sections were requested.
+ * ⚠️ `required` is set ONLY while filtering, and the two cases are not
+ * interchangeable. A section filter must exclude companies with no
+ * `isat_category_code` — an unclassified company belongs to no section and must
+ * not be silently swept into one — but that same inner join applied
+ * unconditionally would drop every unclassified company from the plain list.
+ *
+ * `isatCategory` is a `belongsTo`, so the join is 1:1 and cannot multiply rows;
+ * a caller's `distinct: true` count stays correct either way.
  */
-export function buildCompanyIsatSectionInclude(
+export function buildCompanyIsatCategoryInclude(
   sections?: string[],
-): Includeable | null {
-  if (!sections?.length) return null
+): Includeable {
+  if (!sections?.length) {
+    return { model: IsatCategoryModel, as: 'isatCategory', required: false }
+  }
 
   return {
     model: IsatCategoryModel,
     as: 'isatCategory',
-    attributes: [],
     required: true,
     where: { section: { [Op.in]: sections } },
   }
