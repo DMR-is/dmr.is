@@ -30,9 +30,9 @@ export {
  * The minimum a company contributes to an outbound mailing: who it is, where to
  * write, and whether it may be written to at all.
  *
- * `quarantined` is carried rather than filtered out here on purpose. The caller
- * has to be able to *say* a company was excluded and why — a recipient list that
- * silently shrinks is one an admin cannot check.
+ * `quarantined` is carried rather than filtered out here, so the caller can say
+ * a company was excluded and why — a list that silently shrinks cannot be
+ * checked against the count the admin saw.
  */
 export type CompanyMailRecipient = {
   id: string
@@ -45,10 +45,9 @@ export interface ICompanyService {
   getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto>
 
   /**
-   * Every company matching `filter`, **unpaged**, as mail recipients.
+   * Every company matching `filter`, unpaged, as mail recipients.
    *
-   * Runs the identical `where`/`include` the company list runs
-   * (`buildCompanyListQuery`), so "send to everyone matching this filter"
+   * Runs the identical `where`/`include` the company list runs, so a filter
    * resolves to exactly the rows the list would have shown.
    */
   findMailRecipientsByFilter(

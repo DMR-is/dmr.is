@@ -116,12 +116,9 @@ describe('buildCompanyLifecycleStatusWhere', () => {
  * The composed builder behind both the company list and the recipient
  * resolution for a bulk email.
  *
- * ⚠️ Those two callers asking the same question through the same code is the
- * whole point. If they drifted, the count an admin approves on the "senda
- * tölvupóst (N)" button and the set of companies actually written to would
- * disagree — silently, and in the direction of mailing companies nobody
- * selected. These tests pin that every filter the list DTO carries reaches the
- * query, so a new filter cannot be added to the list and quietly skipped here.
+ * These tests pin that every filter the list DTO carries reaches the query, so a
+ * new filter cannot be added to the list and quietly skipped here — which would
+ * put the count an admin approves and the set actually mailed out of step.
  */
 describe('buildCompanyListQuery', () => {
   const conditionsOf = (query: Parameters<typeof buildCompanyListQuery>[0]) => {
@@ -198,9 +195,9 @@ describe('buildCompanyListQuery', () => {
   })
 
   it('ignores paging, which belongs to the caller', () => {
-    // ⚠️ The recipient resolution passes the list's own query object through,
-    // paging params included. If they reached the query, a bulk send would mail
-    // page one and report it as everyone matching the filter.
+    // The recipient resolution passes the list's own query object through, paging
+    // params included. If they reached the query, a bulk send would mail page one
+    // and report it as everyone matching the filter.
     const { where } = buildCompanyListQuery({ page: 3, pageSize: 10 })
 
     expect(where).toEqual({})

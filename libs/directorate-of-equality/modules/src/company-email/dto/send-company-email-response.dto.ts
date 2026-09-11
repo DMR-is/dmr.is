@@ -1,13 +1,9 @@
 import { ApiNumber, ApiUUId } from '@dmr.is/decorators'
 
 /**
- * The receipt for a queued send.
- *
- * ⚠️ Returned **before** anything is delivered — the sending runs after the
- * request's transaction commits, so these are counts of what was *resolved*, not
- * of what arrived. The wording in the UI has to match: "sent to the queue", not
- * "delivered". Per-recipient outcomes land on each company's timeline as the
- * batch runs.
+ * The receipt for a queued send, returned before anything is delivered — these
+ * are counts of what was resolved, not of what arrived, so the UI has to say
+ * "queued". Per-recipient outcomes land on each company's timeline.
  */
 export class SendCompanyEmailResponseDto {
   @ApiUUId({ description: 'The batch, for reading the message back later.' })

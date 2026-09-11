@@ -14,10 +14,8 @@ export const companyEmailMessages = {
   }),
 
   /**
-   * Both branches of the exclusive choice share one message on purpose: from the
-   * admin's side there is one rule — a send is addressed either to named
-   * companies or to a filter — and splitting it into "you gave both" and "you
-   * gave neither" would describe the same misuse twice.
+   * Both branches of the exclusive choice share one message: from the admin's
+   * side there is one rule — named companies or a filter, not both.
    */
   recipientsNotSpecified: (): ErrorMessage => ({
     message:
@@ -31,13 +29,10 @@ export const companyEmailMessages = {
   }),
 
   /**
-   * An address the admin typed, not one read from the register.
-   *
-   * ⚠️ A 400 rather than the silent skip a bad *stored* address gets. A company
-   * whose own record has nothing usable is a fact about the register the
-   * preview reports in its skipped list; a malformed address in the compose
-   * field is a typo the admin can fix, and dropping it quietly would send the
-   * message to everyone else and never say why one person did not get it.
+   * An address the admin typed, not one read from the register — a 400 rather
+   * than the silent skip a bad stored address gets. A typo in the compose field
+   * is something the admin can fix, and dropping it quietly would never say why
+   * one person did not get the message.
    */
   invalidRecipientEmail: (value: string): ErrorMessage => ({
     message: `"${value}" is not a single valid email address`,

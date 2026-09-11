@@ -74,9 +74,8 @@ const LOGGING_CONTEXT = 'CompanyService'
  * Narrows a company row to what an outbound mailing needs.
  *
  * `email` is trimmed here rather than at every call site, and `''` collapses to
- * `null`: the column is plain TEXT with no `@IsEmail` behind it on the write
- * path that matters, so "set to whitespace" and "never set" are the same fact
- * and should not be two cases downstream.
+ * `null` — the column is plain TEXT, so "set to whitespace" and "never set" are
+ * the same fact and should not be two cases downstream.
  */
 const toMailRecipient = (company: CompanyModel): CompanyMailRecipient => ({
   id: company.id,
@@ -184,21 +183,14 @@ export class CompanyService implements ICompanyService {
     const { where, includes } = buildCompanyListQuery(filter)
 
     /*
-     * ⚠️ No `limit`/`offset`, and that is the point: `filter` arrives carrying
-     * the list's paging params, and honouring them would mail page one while
-     * telling the admin it had mailed everyone matching the filter.
+     * No `limit`/`offset`: `filter` arrives carrying the list's paging params,
+     * and honouring them would mail page one while telling the admin it had
+     * mailed everyone matching the filter.
      *
-     * ⚠️ Read through `withReportStatus`, and with the scope's own `attributes`
-     * left alone. Three of the filters (`companyStatus`, `overdue`,
-     * `expiresWithin`) are `literal()` SQL bound to `COMPANY_QUERY_ALIAS`, which
-     * is the alias Sequelize gives the main table under this scope. Narrowing
-     * `attributes` to the four columns actually needed would replace the scope's
-     * attribute set and put that alias in play for no real saving — a few
-     * thousand rows of one table is not the cost worth taking a risk on.
-     *
-     * No de-duplication is needed: both possible includes (`postcode`,
-     * `isatCategory`) are `BelongsTo`, so an inner join on either matches at most
-     * one row per company and cannot fan a company out into two sends.
+     * Read through `withReportStatus` with the scope's own `attributes` left
+     * alone — `companyStatus`, `overdue` and `expiresWithin` are `literal()` SQL
+     * bound to the alias that scope sets up. Both possible includes are
+     * `BelongsTo`, so no de-duplication is needed.
      */
     const rows = await this.companyWithReportStatus.findAll({
       where,

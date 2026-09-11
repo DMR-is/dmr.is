@@ -22,11 +22,9 @@ export const MAX_BODY_LENGTH = 100_000
 export const MAX_ATTACHMENTS = 5
 
 /**
- * How many addresses one single-company send may be aimed at.
- *
- * ⚠️ A cap on *addresses*, not on companies. Each one becomes its own recipient
- * row and its own send, so this is also the number of SES calls and timeline
- * entries a single-company message can produce.
+ * How many addresses one single-company send may be aimed at — a cap on
+ * addresses, not companies. Each becomes its own recipient row, send and
+ * timeline entry.
  */
 export const MAX_RECIPIENT_EMAILS = 10
 
@@ -50,12 +48,11 @@ export class CompanyEmailAttachmentInputDto {
 
 /**
  * One admin-authored message plus who it goes to. Shared by the preview and the
- * send so the two cannot be given different inputs and disagree about the
- * result.
+ * send so the two cannot be given different inputs.
  *
- * ⚠️ `companyIds` and `filter` are exclusive and exactly one is required. That
- * is enforced in the service rather than by a decorator, so the rejection can
- * carry the module's own Icelandic message — see `companyEmailMessages`.
+ * `companyIds` and `filter` are exclusive and exactly one is required, enforced
+ * in the service rather than by a decorator so the rejection carries the
+ * module's own Icelandic message.
  */
 export class SendCompanyEmailDto {
   @ApiString({ description: 'Subject line, plain text.' })

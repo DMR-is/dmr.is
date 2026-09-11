@@ -185,13 +185,9 @@ export class DoeMailService implements IDoeMailService {
     attachments: ReportMailAttachment[] = [],
   ): Promise<CustomEmailSendResult> {
     /*
-     * ⚠️ The same guard the report notices use, for a sharper reason here.
-     *
-     * `looksLikeOneAddress` rejects anything containing a comma or semicolon
-     * because nodemailer *splits `to` on commas* — see `recipient.ts`. On the
-     * report path that guard protects against a malformed stored address. Here
-     * the caller is a batch walking a recipient list, so a single row holding
-     * `'a@x.is, b@y.is'` would quietly deliver one company's message to a second
+     * The same guard the report notices use, for a sharper reason here.
+     * nodemailer splits `to` on commas, so a single recipient row holding
+     * `'a@x.is, b@y.is'` would deliver one company's message to a second
      * company. This is the last check before that becomes a send.
      */
     if (!looksLikeOneAddress(to.trim())) {
@@ -217,11 +213,9 @@ export class DoeMailService implements IDoeMailService {
         : {}),
     })
 
-    /*
-     * ⚠️ The result, not a rejection — `sendMail` is decorated `@LogAndHandle()`
-     * and cannot reject. A `try/catch` here would be dead code and every failure
-     * would read as a delivered message. See `sendMailResult`.
-     */
+    // The result, not a rejection — `sendMail` is decorated `@LogAndHandle()`
+    // and cannot reject, so a `try/catch` here would be dead code. See
+    // `sendMailResult`.
     if (sent.result.ok === false) {
       this.logger.error('Failed to send custom email', {
         context: LOGGING_CONTEXT,

@@ -24,15 +24,11 @@ export class CompanyEmailAttachmentDto {
 }
 
 /**
- * A sent message, read back.
+ * A sent message, read back — backs the timeline expansion.
  *
- * Backs the timeline expansion: an admin looking at "Tölvupóstur sendur" on a
- * company can open the entry and see the message that actually went out.
- *
- * ⚠️ Batch-wide, not per-company. `sentCount`/`failedCount`/`skippedCount`
- * describe the whole send, so an admin reading this from one company's timeline
- * is seeing how the mailing went overall — which is the useful question when the
- * entry in front of them says FAILED.
+ * The counts are batch-wide, not per-company: an admin reading this from one
+ * company's timeline sees how the mailing went overall, which is the useful
+ * question when the entry in front of them says FAILED.
  */
 export class CompanyEmailDto {
   @ApiUUId()

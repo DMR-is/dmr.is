@@ -9,12 +9,9 @@ export enum ImportUploadBoundary {
   ADMIN = 'admin',
   APPLICATION = 'application',
   /**
-   * Files an admin attaches to a custom email. Staging only — the object is
-   * moved to the company-files bucket once the batch has been sent, so nothing
-   * outbound is ever served from this prefix.
-   *
-   * Its own boundary rather than reusing ADMIN: the prefixes exist so an
-   * endpoint can only read objects staged for its own audience, and an
+   * Files an admin attaches to a custom email. Staging only — the object moves
+   * to the company-files bucket once the batch is sent, so nothing outbound is
+   * served from this prefix. Its own boundary rather than reusing ADMIN: an
    * attachment and an import workbook are read by different endpoints under
    * different caps.
    */
@@ -39,9 +36,8 @@ export interface IImportUploadService {
    * Throw unless `key` sits inside `boundary`'s own prefix.
    *
    * Exposed separately from {@link fetchWorkbook} because the parse gate is
-   * acquired *before* the download — a caller must be able to reject a
-   * client-supplied key without first taking a slot, so a bad key cannot occupy
-   * the queue.
+   * acquired before the download — a bad key must be rejectable without first
+   * taking a slot.
    */
   assertKeyWithinBoundary(key: string, boundary: ImportUploadBoundary): void
 
@@ -58,10 +54,9 @@ export interface IImportUploadService {
    * Validate the key against the boundary, fetch the object from S3 and enforce
    * `maxBytes` (defaulting to the workbook cap).
    *
-   * The general form of {@link fetchWorkbook}, which is now a thin wrapper over
-   * it. Split out rather than widening `fetchWorkbook` because that method's
-   * name carries a real contract — callers must already hold a parse slot — and
-   * a mail attachment takes no slot and is held to a far smaller cap.
+   * The general form of {@link fetchWorkbook}, kept separate because that
+   * method's name carries a contract — callers must already hold a parse slot —
+   * and a mail attachment takes no slot.
    */
   fetchObject(
     key: string,

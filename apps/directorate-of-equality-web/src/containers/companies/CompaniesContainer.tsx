@@ -36,13 +36,12 @@ export const CompaniesContainer = () => {
   const [isImportOpen, setIsImportOpen] = useState(false)
 
   /**
-   * The filter the email modal is addressed by, captured when it is opened.
+   * The filter the email modal is addressed by, captured when it is opened;
+   * non-null is what "open" means.
    *
-   * ⚠️ Held here rather than read live inside the modal, and non-null is what
-   * "open" means. An admin who changes the filter behind the modal must not
-   * thereby change who the message they are about to confirm goes to — and the
-   * modal itself cannot capture it on mount, because it is always mounted (see
-   * the note at its mount site below).
+   * Held here rather than read live inside the modal, so changing the filter
+   * behind it cannot change who the message goes to. The modal cannot capture
+   * it on mount, because it is always mounted.
    */
   const [emailFilter, setEmailFilter] = useState<Record<
     string,
@@ -192,11 +191,9 @@ export const CompaniesContainer = () => {
 
   /*
    * Every company the filter matches, not the page on screen — the send is
-   * addressed by the filter, so this is the number that describes it.
-   *
-   * ⚠️ It can exceed the count the confirmation step then shows: companies with
-   * no address on file, and quarantined ones, are excluded there. That step
-   * lists them with the reason rather than leaving the drop unexplained.
+   * addressed by the filter. It can exceed the count the confirmation step
+   * shows, which excludes companies with no address and quarantined ones and
+   * lists them with the reason.
    */
   const matchCount = data?.paging?.totalItems ?? 0
 
@@ -284,17 +281,11 @@ export const CompaniesContainer = () => {
         onClose={() => setIsImportOpen(false)}
       />
       {/*
-        ⚠️ Always mounted and toggled through `isOpen`, like every other modal
-        here — NOT conditionally mounted.
-
-        `ModalBase` opens the reakit dialog from an effect that runs on mount
-        when `isVisible` is already true. The click that mounted it is still in
-        flight while `hideOnClickOutside` arms, so reakit reads that same click
-        as an outside click and hides it again: the modal flickers and never
-        opens. Toggling an already-mounted dialog has no such race.
-
-        The filter snapshot that conditional mounting was buying is taken in
-        `emailFilter` instead, at the moment the button is clicked.
+        Always mounted and toggled through `isOpen`, not conditionally mounted.
+        `ModalBase` opens the reakit dialog from a mount effect, and the click
+        that mounted it is still in flight while `hideOnClickOutside` arms — so
+        reakit hides it again and the modal never opens. The filter snapshot
+        conditional mounting was buying is taken in `emailFilter` instead.
       */}
       <SendCompanyEmailModal
         isOpen={emailFilter !== null}

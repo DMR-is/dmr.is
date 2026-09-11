@@ -87,14 +87,9 @@ export interface ICompanyEventService {
    * Records one company's outcome within a custom-email batch — delivered,
    * failed, or skipped before it was ever attempted.
    *
-   * `subject` goes into `reason`, the way reminder events carry their due date
-   * and API-key events carry their key id. `companyEmailId` is what lets the
-   * timeline fetch the message body, so the entry can show what was sent and not
-   * merely that something was.
-   *
-   * `detail` is appended after an em dash for the two non-delivery outcomes —
-   * the SES error, or why the company was skipped — and omitted on a successful
-   * send, where there is nothing to add.
+   * `subject` goes into `reason`, the way reminder events carry their due date.
+   * `companyEmailId` is what lets the timeline fetch the message body. `detail`
+   * is appended after an em dash on the two non-delivery outcomes only.
    */
   emitCustomEmailOutcome(
     companyId: string,

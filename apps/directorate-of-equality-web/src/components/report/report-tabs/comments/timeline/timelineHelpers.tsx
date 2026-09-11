@@ -139,12 +139,8 @@ export type TimelineItem = Omit<ReportTimelineItemDto, 'comment' | 'event'> & {
         scope?: 'report' | 'company'
         /**
          * Set on CUSTOM_EMAIL_* company events only, and what makes the entry
-         * expandable: the timeline says a message was sent, and this is how the
-         * reader gets to *what* was sent rather than having to take the entry's
-         * word for it.
-         *
-         * Optional and absent on every report event, same arrangement as
-         * `scope` and `isSystem`, so `ReportTimelineItemDto` stays assignable.
+         * expandable. Optional and absent on every report event, same
+         * arrangement as `scope` and `isSystem`.
          */
         companyEmailId?: string | null
       })
@@ -376,9 +372,8 @@ export function timelineEntryText(
       reportText.timeline.companyCreated,
       reportText.timeline.companyCreatedNoActor,
     ],
-    // Actor-aware: the sending reviewer is carried onto every recipient's event,
-    // so these normally render with a name. The no-actor wording is the fallback
-    // for a batch whose sender's user row has since gone.
+    // Actor-aware: the sending reviewer is carried onto every recipient's event.
+    // The no-actor wording covers a batch whose sender's user row has gone.
     CUSTOM_EMAIL_SENT: [
       reportText.timeline.customEmailSent,
       reportText.timeline.customEmailSentNoActor,

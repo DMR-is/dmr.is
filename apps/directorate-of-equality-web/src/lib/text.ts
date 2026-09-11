@@ -951,7 +951,7 @@ export const companiesText = {
     send: 'Senda',
     cancel: 'Hætta við',
 
-    // ⚠️ "Sett í sendingu", not "Sent": the API returns before anything is
+    // "Sett í sendingu", not "Sent": the API returns before anything is
     // delivered, and per-recipient outcomes land on the company timelines.
     successToast: 'Tölvupóstur settur í sendingu',
     errorToast: 'Villa við að senda tölvupóst',

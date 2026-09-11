@@ -63,28 +63,15 @@ const LOGGING_CONTEXT = 'CompanyEmailService'
 const ONE_MB = 1024 * 1024
 
 /**
- * Total raw bytes of attachments on one message.
- *
- * ⚠️ Not an arbitrary number. SES rejects a message over 10MB *after* MIME
- * encoding, and base64 inflates by ~33%, so ~7.5MB of raw file is the real
- * ceiling. 5MB leaves room for the body and headers, and leaves the failure —
- * if it comes — on this side of the boundary, where it is a clear 400 rather
- * than an opaque rejection on every one of a thousand sends.
+ * SES rejects a message over 10MB after MIME encoding, and base64 inflates by
+ * ~33%, so 5MB of raw files leaves room for the body and headers.
  */
 const MAX_ATTACHMENT_TOTAL_BYTES = ONE_MB * 5
 
 /** Per-file cap, so one oversized file is rejected on its own terms. */
 const MAX_SINGLE_ATTACHMENT_BYTES = MAX_ATTACHMENT_TOTAL_BYTES
 
-/**
- * Where the durable copy of an attachment lives once the batch has gone out.
- *
- * Deliberately the company-files bucket rather than the import-staging one: the
- * schema draws that line between "inbound, client-uploaded, transient" and
- * "outbound documents the Directorate issued", and by the time a batch has been
- * sent an attachment is unambiguously the second. It is the same bucket the
- * approval mail's PDFs are archived to, for the same reason.
- */
+/** Durable home for sent attachments — the bucket approval-mail PDFs go to. */
 const archiveBucket = (): string | undefined =>
   process.env.AWS_DOE_COMPANY_FILES_BUCKET?.trim() || undefined
 
@@ -140,10 +127,8 @@ export class CompanyEmailService implements ICompanyEmailService {
   async presignAttachment(
     dto: PresignCompanyEmailAttachmentDto,
   ): Promise<PresignUploadResponseDto> {
-    // Only the extension travels into the key; the rest of the name is server
-    // generated. The name the recipient sees is sent with the message, so
-    // nothing here has to survive as a file name — and no key anywhere is built
-    // from `filename`, including the archive one. See `archiveAttachments`.
+    // Only the extension travels into the key; the rest is server generated. No
+    // key is built from `filename`, including the archive one.
     const extension = dto.filename.split('.').pop() ?? ''
 
     return this.uploadService.createUpload(
@@ -155,25 +140,9 @@ export class CompanyEmailService implements ICompanyEmailService {
   async discardAttachment(
     dto: DiscardCompanyEmailAttachmentDto,
   ): Promise<void> {
-    /*
-     * `cleanupAfter` with no error means "terminal, delete it", and it
-     * validates the key against the boundary itself before touching storage —
-     * which is what makes it safe to hand a key that arrived from the client.
-     * A key outside `doe-imports/mail-attachment/` is refused and logged there
-     * rather than deleted, so this cannot be aimed at an import workbook or at
-     * an archived message's copy.
-     *
-     * ⚠️ Deliberately no check that the key is unknown to
-     * `CompanyEmailAttachmentModel`. Nothing writes those rows until `send`
-     * accepts the batch, so a staged object being discarded has no row to find
-     * — the absence of one is the normal case, not a signal. What keeps a sent
-     * message's attachment safe is that the client only ever calls this from
-     * the composing step, before any batch exists.
-     *
-     * Never throws: the object is the admin's own upload and losing the race
-     * to delete it is not something they can act on, so a failure here must not
-     * turn removing an attachment into an error they have to dismiss.
-     */
+    // `cleanupAfter` validates the key against the boundary before deleting, so a
+    // client-supplied key cannot be aimed outside `doe-imports/mail-attachment/`.
+    // Never throws — a lost cleanup is not something the admin can act on.
     await this.uploadService.cleanupAfter(
       dto.key,
       ImportUploadBoundary.MAIL_ATTACHMENT,
@@ -181,24 +150,15 @@ export class CompanyEmailService implements ICompanyEmailService {
   }
 
   async preview(dto: SendCompanyEmailDto): Promise<CompanyEmailPreviewDto> {
-    /*
-     * The same count cap `send` enforces, run here so an over-limit message is
-     * refused while the admin is still composing rather than after they have
-     * cleared the confirmation step.
-     *
-     * ⚠️ Only the count. The total-size cap needs the objects read (see
-     * `fetchAttachments`), and downloading up to 5 MB on every Continue click
-     * to pre-empt a 400 the client already guards against is not worth the
-     * round trip — that one stays at `send`.
-     */
+    // Count cap only, so an over-limit message is refused while composing. The
+    // size cap needs the objects read, so it stays in `send`.
     if ((dto.attachments?.length ?? 0) > MAX_ATTACHMENTS) {
       throw new BadRequestException(
         companyEmailMessages.tooManyAttachments(MAX_ATTACHMENTS),
       )
     }
 
-    // Validated here as well as in `send`, so a mistyped copy address is caught
-    // while the admin is still composing rather than on the click that sends.
+    // Validated here too, so a mistyped copy address is caught while composing.
     normaliseCopyToEmail(dto.copyToEmail)
 
     const resolved = await this.resolveRecipients(dto)
@@ -211,12 +171,8 @@ export class CompanyEmailService implements ICompanyEmailService {
     )
 
     return {
-      /*
-       * ⚠️ Sanitised here, with the identical pass `send` runs on the identical
-       * input, so the confirmation step renders the bytes that will actually be
-       * delivered. Echoing `dto.bodyHtml` back instead would let an admin
-       * approve markup that sanitise-html strips on the way out.
-       */
+      // Same sanitising pass as `send`, so the confirmation step renders the
+      // bytes that will actually be delivered.
       bodyHtml: simpleSanitize(dto.bodyHtml),
       recipients: recipients.map(({ companyId, companyName, email }) => ({
         companyId,
@@ -244,13 +200,8 @@ export class CompanyEmailService implements ICompanyEmailService {
       (r) => r.status === CompanyEmailRecipientStatusEnum.PENDING,
     )
 
-    /*
-     * Nothing to deliver — either nothing matched, or everything that did is
-     * quarantined or has no address on file. Refused rather than accepted as an
-     * empty batch: a 202 would tell the admin the message was on its way when
-     * no one is ever going to receive it. The modal disables the button in this
-     * state, so reaching here means a direct API call.
-     */
+    // Refused rather than accepted as an empty batch: a 202 would say the message
+    // was on its way when no one is going to receive it.
     if (deliverable.length === 0) {
       throw new BadRequestException(companyEmailMessages.noRecipients())
     }
@@ -262,28 +213,16 @@ export class CompanyEmailService implements ICompanyEmailService {
       )
     }
 
-    // Before `fetchAttachments`, deliberately: a mistyped copy address is a 400
-    // either way, and validating it after the download has spent up to 5MB of
-    // S3 reads on a request that was always going to be refused.
+    // Before `fetchAttachments`, so a mistyped copy address is refused without
+    // spending up to 5MB of S3 reads first.
     const copyToEmail = normaliseCopyToEmail(dto.copyToEmail)
 
-    /*
-     * ⚠️ Attachments are fetched here, in the request, and NOT in the background
-     * loop — even though the loop is where they are used.
-     *
-     * The size cap is only enforceable by reading the objects, and a cap
-     * enforced after the request has returned 202 has nothing to reject to: the
-     * admin has already been told the send was accepted. Reading them now turns
-     * "these files are too big" into a 400 they can act on, and means the loop
-     * starts with buffers in hand rather than a storage dependency it might
-     * fail on halfway through a thousand recipients.
-     */
+    // Fetched in the request, not in the loop: the size cap is only enforceable by
+    // reading the objects, and a cap enforced after the 202 has nothing to reject.
     const buffers = await this.fetchAttachments(attachments)
 
-    // Sanitised before it is stored, and the delivered message and the timeline
-    // read-back both read this stored value. `preview` runs the same pass over
-    // the same input, so what the admin approved and what is stored here are
-    // the same bytes.
+    // Sanitised before storing; delivery and the timeline read-back both use this
+    // stored value, and `preview` runs the same pass.
     const bodyHtml = simpleSanitize(dto.bodyHtml)
 
     const batch = await this.companyEmailModel.create({
@@ -294,12 +233,8 @@ export class CompanyEmailService implements ICompanyEmailService {
       filter: dto.filter
         ? (JSON.parse(JSON.stringify(dto.filter)) as Record<string, unknown>)
         : null,
-      /*
-       * Stored on the batch rather than passed to `deliver`, because `deliver`
-       * also runs as a resume — started by nothing that has the original
-       * request in hand. Together with `copySentAt` this is what lets a resumed
-       * batch know both who the copy is for and whether it has already gone.
-       */
+      // Stored on the batch rather than passed to `deliver`, so a resume knows who
+      // the copy is for. `copySentAt` records whether it has already gone.
       copyToEmail,
     })
 
@@ -326,11 +261,8 @@ export class CompanyEmailService implements ICompanyEmailService {
 
     const recipientCount = deliverable.length
 
-    /*
-     * ⚠️ After the commit, not inside it. The loop reads the rows written above
-     * through its own queries, so starting it before they are visible would have
-     * it find an empty batch and complete having sent nothing.
-     */
+    // After the commit: the loop reads the rows written above through its own
+    // queries, so starting earlier would find an empty batch.
     await this.runAfterCommit(`company email ${batch.id}`, () =>
       this.deliver(
         batch.id,
@@ -405,13 +337,10 @@ export class CompanyEmailService implements ICompanyEmailService {
   }
 
   /**
-   * Turn "who should get this" into a concrete, classified list.
+   * Resolve "who should get this" into a classified list.
    *
-   * ⚠️ Every matched company appears in the result, including the ones that will
-   * receive nothing. Filtering the excluded ones out here is the tempting
-   * simplification and the wrong one: the preview has to be able to say *why*
-   * the count an admin saw on the button is larger than the count of people who
-   * will be written to, and a list that has already dropped them cannot.
+   * Excluded companies are kept in the result, so the preview can say why the
+   * recipient count is smaller than the count of matched companies.
    */
   private async resolveRecipients(
     dto: SendCompanyEmailDto,
@@ -419,10 +348,8 @@ export class CompanyEmailService implements ICompanyEmailService {
     const companyIds = dto.companyIds?.length ? dto.companyIds : undefined
     const filter = dto.filter
 
-    // Exclusive, and one is required. Both-or-neither is the same misuse from
-    // the admin's side — see `recipientsNotSpecified`. Narrowing on the values
-    // rather than on two booleans is what lets the branch below type-check
-    // without an assertion.
+    // Exclusive, and one is required. Narrowing on the values rather than on two
+    // booleans lets the branch below type-check without an assertion.
     if (!!companyIds === !!filter) {
       throw new BadRequestException(
         companyEmailMessages.recipientsNotSpecified(),
@@ -435,12 +362,8 @@ export class CompanyEmailService implements ICompanyEmailService {
           filter as GetCompaniesQueryDto,
         )
 
-    /*
-     * The single-company address list. Offered only when exactly one company is
-     * addressed, because there is otherwise no one company these could be the
-     * addresses *of* — and silently applying an admin-typed address to a
-     * thousand companies is the kind of mistake that cannot be taken back.
-     */
+    // Admin-typed addresses apply only when exactly one company is addressed —
+    // there is otherwise no one company they could be the addresses of.
     const addresses =
       companies.length === 1
         ? normaliseRecipientEmails(dto.recipientEmails)
@@ -452,33 +375,22 @@ export class CompanyEmailService implements ICompanyEmailService {
 
     const [company] = companies
 
-    /*
-     * One skipped row for a quarantined company, not one per address. The
-     * company is halted, which is a fact about the company rather than about
-     * any address the admin typed; N identical "in quarantine" rows would state
-     * it N times and inflate the skipped count against a register where only
-     * one company was passed over.
-     */
+    // One skipped row for the company, not one per address: quarantine is a fact
+    // about the company, and N identical rows would inflate the skipped count.
     if (company.quarantined) {
       return [classify(company, addresses[0])]
     }
 
-    /*
-     * ⚠️ One row — and therefore one message — per address. Not one message
-     * addressed to all of them: the addresses behind a company are its people,
-     * and putting them in a shared To line would tell each of them who else the
-     * Directorate writes to at their employer.
-     */
+    // One message per address, never a shared To line — that would tell each
+    // recipient who else the Directorate writes to at their employer.
     return addresses.map((address) => classify(company, address))
   }
 
   /**
    * Read the staged attachments and enforce the size caps.
    *
-   * Fetches through the mail-attachment boundary, so a caller-supplied key
-   * outside that prefix is refused before it reaches storage — the keys arrive
-   * from the client, and this is what stops one being pointed at an import
-   * workbook or an arbitrary object.
+   * Fetching through the boundary refuses a client-supplied key that points
+   * outside the mail-attachment prefix.
    */
   private async fetchAttachments(
     attachments: { key: string; filename: string }[],
@@ -501,19 +413,9 @@ export class CompanyEmailService implements ICompanyEmailService {
           errorMessage: error instanceof Error ? error.message : String(error),
         })
 
-        /*
-         * Separated because the staging PUT is capped at the import limit, well
-         * above this one — so an oversized attachment is a routine outcome
-         * here, not a storage fault. Reporting it as unreadable would send the
-         * admin looking for a corrupt file instead of a smaller one.
-         *
-         * ⚠️ Matched on the STATUS, not on `PayloadTooLargeException`. Only the
-         * local branch of `fetchObject` throws the subclass; on S3 the 413
-         * comes back through `ResultWrapper.unwrap` as a bare `HttpException`,
-         * so a subclass check passes in dev and fails in every deployed
-         * environment — losing exactly the distinction this branch exists for.
-         * `ImportUploadService.fetchObject` matches the same way.
-         */
+        // Matched on the status, not `PayloadTooLargeException`: on S3 the 413
+        // arrives as a bare `HttpException`. Kept separate from the unreadable
+        // case so the admin looks for a smaller file, not a corrupt one.
         if (
           error instanceof HttpException &&
           error.getStatus() === HttpStatus.PAYLOAD_TOO_LARGE
@@ -531,8 +433,8 @@ export class CompanyEmailService implements ICompanyEmailService {
       }
 
       total += buffer.length
-      // Checked as the running total rather than only at the end, so five files
-      // just under the per-file cap cannot together clear it.
+      // Running total, so several files just under the per-file cap cannot
+      // together clear the batch cap.
       if (total > MAX_ATTACHMENT_TOTAL_BYTES) {
         throw new BadRequestException(
           companyEmailMessages.attachmentsTooLarge(MAX_ATTACHMENT_TOTAL_BYTES),
@@ -548,11 +450,8 @@ export class CompanyEmailService implements ICompanyEmailService {
   /**
    * Walk the batch and send it. Runs detached, after the request has returned.
    *
-   * ⚠️ **Serially, one `await` per recipient.** Not a missed optimisation: SES
-   * enforces a per-second send quota, and a parallel fan-out over the register
-   * would breach it and start collecting throttling rejections — turning a
-   * pacing problem into a thousand failed sends. The reminder task walks its
-   * companies the same way for the same reason.
+   * Serially: SES enforces a per-second quota, and a fan-out over the register
+   * would collect throttling rejections instead.
    */
   private async deliver(
     companyEmailId: string,
@@ -563,15 +462,9 @@ export class CompanyEmailService implements ICompanyEmailService {
     actorUserId: string,
   ): Promise<void> {
     try {
-      /*
-       * ⚠️ Read the status BEFORE claiming it, to tell a first run from a resume.
-       *
-       * It decides whether the rows that were skipped at resolve time still need
-       * their timeline entry. On a first run they do — nothing has written one
-       * yet, and a company that was deliberately not written to is precisely the
-       * outcome an admin needs to see. On a resume they do not, and emitting
-       * again would double every skip entry.
-       */
+      // Read before claiming it, to tell a first run from a resume. Rows skipped at
+      // resolve time need their timeline entry on a first run; emitting again on a
+      // resume would double every skip entry.
       const existing = await this.companyEmailModel.findOne({
         where: { id: companyEmailId },
         attributes: ['status', 'copyToEmail', 'copySentAt'],
@@ -589,14 +482,9 @@ export class CompanyEmailService implements ICompanyEmailService {
         label: attachment.filename,
       }))
 
-      /*
-       * The company's register status is joined here, once for the batch, and
-       * not read per recipient: `emitOutcome` has to record the status the
-       * event happened under, the way every other emitter on
-       * `ICompanyEventService` does, and a filter with no `status` constraint
-       * matches INACTIVE companies too — so a constant would write a false
-       * value onto an immutable timeline row.
-       */
+      // The register status is joined once for the batch: `emitOutcome` records the
+      // status the event happened under, and a filter without a `status` constraint
+      // matches INACTIVE companies too.
       const rows = await this.recipientModel.findAll({
         where: { companyEmailId },
         include: [
@@ -610,12 +498,8 @@ export class CompanyEmailService implements ICompanyEmailService {
         order: [['companyName', 'ASC']],
       })
 
-      /*
-       * Before the recipients, not after: the copy is the sender's own record
-       * of what went out, and a batch that dies halfway through the register
-       * should still have put it in their inbox. It is also why this is not
-       * inside the loop — see `sendCopy`.
-       */
+      // Before the recipients: a batch that dies halfway through the register
+      // should still have put the sender's copy in their inbox.
       await this.sendCopy(
         companyEmailId,
         existing?.copyToEmail ?? null,
@@ -645,12 +529,8 @@ export class CompanyEmailService implements ICompanyEmailService {
         { where: { id: companyEmailId } },
       )
 
-      /*
-       * Best-effort, exactly as on the abort path below. Every recipient row is
-       * already SENT and the batch is already COMPLETED; a storage or database
-       * fault while archiving must not fall through to the catch and rewrite
-       * that batch to FAILED, which would misreport mail that did go out.
-       */
+      // Best-effort. The rows are already SENT and the batch COMPLETED, so an
+      // archiving fault must not fall through and rewrite it to FAILED.
       await this.archiveAttachments(companyEmailId).catch((error) => {
         this.logger.warn('Could not archive company email attachments', {
           context: LOGGING_CONTEXT,
@@ -665,23 +545,16 @@ export class CompanyEmailService implements ICompanyEmailService {
         recipientCount: rows.length,
       })
     } catch (error) {
-      /*
-       * Reached only by a fault that is not one recipient's — the database going
-       * away, or the status update itself failing. A single failed *send* is
-       * handled per row and never lands here, which is the distinction that
-       * matters: one bad address must not stop the other 1 699 messages, and a
-       * database that has stopped answering must not be walked for another hour
-       * writing rows that will never commit.
-       */
+      // Only faults that are not one recipient's — the database going away, or the
+      // status update failing. A single failed send is handled per row.
       this.logger.error('Company email batch aborted', {
         context: LOGGING_CONTEXT,
         companyEmailId,
         errorMessage: error instanceof Error ? error.message : String(error),
       })
 
-      // Best-effort: if the database is what failed, this will fail too, and the
-      // batch is left in SENDING — which is itself the signal that it stopped
-      // partway, with its PENDING rows naming exactly what never went out.
+      // Best-effort. If the database is what failed the batch is left in SENDING,
+      // with its PENDING rows naming exactly what never went out.
       await this.companyEmailModel
         .update(
           { status: CompanyEmailStatusEnum.FAILED, completedAt: new Date() },
@@ -689,41 +562,22 @@ export class CompanyEmailService implements ICompanyEmailService {
         )
         .catch(() => undefined)
 
-      /*
-       * Attempted here too, not only on the success path. An aborted batch has
-       * still sent to some of its recipients, so its attachments are as much
-       * part of the audit record as a completed one's — and without this the
-       * staged objects sit in `doe-imports/mail-attachment/` with nothing left
-       * that will ever come back for them.
-       *
-       * Best-effort, and deliberately after the status update: the fault that
-       * landed us here is often the database, in which case this fails too and
-       * the objects are simply left for the bucket to age out. It must not
-       * replace the error already logged above.
-       */
+      // Also attempted here: an aborted batch has still sent to some recipients, so
+      // its attachments belong in the audit record. Best-effort, and after the
+      // status update, so it cannot replace the error logged above.
       await this.archiveAttachments(companyEmailId).catch(() => undefined)
     }
   }
 
   /**
-   * Put one copy of the message in the sender's inbox.
+   * Put one copy of the message in the sender's inbox, once per batch.
    *
-   * ⚠️ **Once per batch.** Not a BCC header on each message — a send addressed
-   * at the whole register would deliver ~1 700 identical copies to one person,
-   * which is not a copy of the mailing but a denial of service on their inbox.
-   * `copySentAt` is the guard that keeps a resumed batch from sending a second
-   * one.
+   * Not a BCC on each message — a send at the whole register would deliver ~1700
+   * copies to one person. `copySentAt` keeps a resume from sending a second.
    *
-   * Best-effort throughout, like the attachment archiving: the copy is a
-   * courtesy to the sender, and failing to deliver it must not mark a batch
-   * that reached its actual recipients as failed. A failure leaves `copySentAt`
-   * null, so a resume tries again.
-   *
-   * The copy is deliberately identical to what the companies receive — no
-   * added banner — so the sender's record is the message, not a paraphrase of
-   * it. It writes no recipient row and no timeline entry: it belongs to no
-   * company, and counting it among the companies mailed would misstate the
-   * send.
+   * Best-effort: failing to deliver the copy must not mark a batch that reached
+   * its actual recipients as failed. It writes no recipient row and no timeline
+   * entry — it belongs to no company.
    */
   private async sendCopy(
     companyEmailId: string,
@@ -775,13 +629,9 @@ export class CompanyEmailService implements ICompanyEmailService {
     actorUserId: string,
     isFirstRun: boolean,
   ): Promise<void> {
-    /*
-     * Already terminal: either a skip decided when the batch was resolved, or a
-     * row a previous partial run finished. Nothing is sent either way — but on a
-     * first run the skip still needs its timeline entry, because nothing has
-     * written one yet and "we deliberately did not write to this company" is the
-     * outcome an admin most needs to see. On a resume the entry already exists.
-     */
+    // Already terminal: a skip decided when the batch was resolved, or a row a
+    // previous partial run finished. On a first run the skip still needs its
+    // timeline entry; on a resume it already has one.
     if (row.status !== CompanyEmailRecipientStatusEnum.PENDING) {
       if (isFirstRun) {
         await this.emitOutcome(
@@ -801,8 +651,7 @@ export class CompanyEmailService implements ICompanyEmailService {
 
     if (!row.email) {
       // Belt and braces — `classify` already routes an address-less company to
-      // SKIPPED_NO_EMAIL, so reaching this means the row was written by
-      // something that did not.
+      // SKIPPED_NO_EMAIL.
       status = CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL
     } else {
       const result = await this.mailService.sendCustomEmail(
@@ -837,10 +686,8 @@ export class CompanyEmailService implements ICompanyEmailService {
   /**
    * Write the company's timeline entry for its outcome.
    *
-   * Failures here are swallowed: the message has already gone out (or already
-   * definitively not), and losing the audit line for one company must not abort
-   * a batch that is still delivering to the rest. It is logged at `error` so the
-   * gap is discoverable rather than silent.
+   * Failures are swallowed and logged: losing one audit line must not abort a
+   * batch that is still delivering to the rest.
    */
   private async emitOutcome(
     row: CompanyEmailRecipientModel,
@@ -856,16 +703,14 @@ export class CompanyEmailService implements ICompanyEmailService {
     try {
       await this.companyEventService.emitCustomEmailOutcome(
         row.companyId,
-        // Joined onto the row in `deliver`. Falls back only if the company row
-        // has gone, which the foreign key does not allow.
+        // Joined onto the row in `deliver`; the fallback is unreachable while the
+        // foreign key holds.
         row.company?.status ?? CompanyStatusEnum.ACTIVE,
         eventType,
         companyEmailId,
         subject,
-        // The reviewer who sent it. Carried down from the request rather than
-        // left null so the timeline reads "Jóna sendi tölvupóst" — an outbound
-        // message with no name against it is exactly the audit entry that
-        // prompts the question this column answers.
+        // The reviewer who sent it, so the timeline reads "Jóna sendi tölvupóst"
+        // rather than leaving an outbound message with no name against it.
         actorUserId,
         error ?? SKIP_DETAIL[status] ?? null,
       )
@@ -881,20 +726,12 @@ export class CompanyEmailService implements ICompanyEmailService {
   }
 
   /**
-   * Move each attachment from the transient staging prefix to the durable
-   * company-files bucket, once the batch has gone out.
+   * Move each attachment from the staging prefix to the durable company-files
+   * bucket, once the batch has gone out.
    *
-   * ⚠️ **If the archive bucket is unset, nothing is moved and nothing is
-   * deleted.** `AWS_DOE_COMPANY_FILES_BUCKET` is deliberately optional and is
-   * not provisioned yet — `CompanyFileService` treats unset as "archiving is
-   * off" and carries on. Copying that behaviour naively here would mean deleting
-   * the staged object with nowhere to have put it, destroying the only copy of a
-   * file that was genuinely sent to companies. So the staged object is kept
-   * instead, and there is exactly one durable copy either way.
-   *
-   * Best-effort throughout, like `ICompanyFileService.archive`: the mail is
-   * already delivered, and a storage failure must not be reported as a failed
-   * send.
+   * With `AWS_DOE_COMPANY_FILES_BUCKET` unset nothing is moved *and* nothing is
+   * deleted, so the staged object stays as the only copy. Best-effort otherwise:
+   * the mail is already delivered.
    */
   private async archiveAttachments(companyEmailId: string): Promise<void> {
     const bucket = archiveBucket()
@@ -913,11 +750,8 @@ export class CompanyEmailService implements ICompanyEmailService {
     }
 
     for (const row of rows) {
-      // ⚠️ Captured before the row is updated. `row.update` mutates `s3Key` in
-      // place, so reading it again after the update would hand `cleanupAfter`
-      // the *archive* key — which sits outside the mail-attachment prefix, is
-      // refused by the boundary check, and leaves the staged object behind
-      // forever while logging a misleading "outside its prefix" warning.
+      // Captured before the update: `row.update` mutates `s3Key`, and the archive
+      // key sits outside the mail-attachment prefix the boundary check allows.
       const stagedKey = row.s3Key
 
       try {
@@ -927,22 +761,13 @@ export class CompanyEmailService implements ICompanyEmailService {
           MAX_SINGLE_ATTACHMENT_BYTES,
         )
 
-        /*
-         * One copy per batch under the message's own prefix — NOT one per
-         * company. See the note on `CompanyEmailAttachmentModel`.
-         *
-         * ⚠️ Keyed by the staged basename — which the boundary pattern has
-         * already proven to be a server-generated `<uuid>.<ext>` — and not by
-         * `row.filename`. Two attachments on one message may carry the same
-         * name, which would collapse them onto a single key and leave the
-         * second overwriting the only durable copy of the first.
-         */
+        // One copy per batch, keyed by the staged basename rather than `filename`:
+        // two attachments may share a name and collapse onto a single key.
         const stagedName = stagedKey.slice(stagedKey.lastIndexOf('/') + 1)
         const key = `company-emails/${companyEmailId}/${stagedName}`
 
-        // The name the recipient sees, minus the characters that would break
-        // out of the unescaped `Content-Disposition` header `uploadObject`
-        // builds. The stored `filename` itself is left as the admin typed it.
+        // Strip the characters that would break out of the unescaped
+        // `Content-Disposition` header. The stored `filename` is left as typed.
         const headerName = row.filename.replace(/["\\/]|\p{Cc}/gu, '')
 
         const uploaded = await this.aws.uploadObject(
@@ -961,9 +786,8 @@ export class CompanyEmailService implements ICompanyEmailService {
           continue
         }
 
-        // Row first, delete second. If the delete fails the row still points at
-        // a real object in the archive bucket; the reverse order could leave the
-        // row pointing at a staged object that is already gone.
+        // Row first, delete second: a failed delete still leaves the row pointing
+        // at a real object.
         await row.update({ s3Key: key, archived: true })
         await this.uploadService.cleanupAfter(
           stagedKey,
@@ -1004,11 +828,7 @@ export class CompanyEmailService implements ICompanyEmailService {
 
   /**
    * Run `work` once the ambient transaction commits, or immediately when there
-   * is none.
-   *
-   * Lifted from `ReportWorkflowService`, which needs the same thing for the same
-   * reason. The no-transaction branch keeps unit tests and any caller outside
-   * the HTTP pipeline working, where the old inline behaviour is the correct one.
+   * is none — tests and callers outside the HTTP pipeline.
    */
   private async runAfterCommit(
     label: string,
@@ -1039,14 +859,9 @@ export class CompanyEmailService implements ICompanyEmailService {
 /**
  * Clean up the addresses the admin typed, and refuse the ones that are not.
  *
- * Trimmed, blanks dropped, and de-duplicated case-insensitively — the same
- * address typed twice is one message, not two, and finding that out from a
- * duplicate in your inbox is not the way to find it out. Order is the admin's.
- *
- * ⚠️ Throws where `classify` would skip. A company whose *stored* address is
- * unusable is a fact about the register, reported in the preview's skipped
- * list; one of these is a typo in a field the admin is looking at, and a silent
- * skip would deliver to the other addresses and never say why one was dropped.
+ * De-duplicated case-insensitively, keeping the admin's order. Throws where
+ * `classify` skips: these are typos in a field the admin is looking at, and a
+ * silent skip would never say why an address was dropped.
  */
 const normaliseRecipientEmails = (values: string[] | undefined): string[] => {
   const seen = new Set<string>()
@@ -1094,10 +909,8 @@ const normaliseCopyToEmail = (value: string | null | undefined): string | null =
 /**
  * Decide, up front, what will happen to one company.
  *
- * Quarantine is checked **before** the address, and the order is deliberate: a
- * quarantined company with no email on file should read as quarantined, because
- * that is the fact an admin needs to act on. Reporting it as "no address" would
- * send them off to fill in an address for a company that is halted anyway.
+ * Quarantine is checked before the address: a halted company should read as
+ * quarantined rather than send the admin off to fill in an address.
  */
 const classify = (
   company: CompanyMailRecipient,
@@ -1115,9 +928,8 @@ const classify = (
 
   const candidate = overrideEmail ?? company.email
 
-  // `looksLikeOneAddress`, not an email regex. It rejects comma- and
-  // semicolon-separated lists, which nodemailer would otherwise split — sending
-  // one company's message to every address in the field. See `recipient.ts`.
+  // `looksLikeOneAddress`, not an email regex: it rejects separated lists that
+  // nodemailer would otherwise split into several deliveries.
   if (!candidate || !looksLikeOneAddress(candidate)) {
     return {
       ...base,

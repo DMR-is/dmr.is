@@ -18,34 +18,28 @@ export interface ICompanyEmailService {
   /**
    * Drop a staged attachment the admin removed or cancelled before sending.
    *
-   * ⚠️ Only ever for an object that was never submitted with a batch. Once
-   * `send` has accepted it the object belongs to that message — it is the only
-   * durable copy of it until `archiveAttachments` has run, and where no archive
-   * bucket is configured it stays the only copy for good.
-   *
-   * Best-effort and idempotent: a key that is already gone is a success, since
-   * the caller's intent — "this object should not be there" — already holds.
+   * Only ever for an object never submitted with a batch — once `send` has
+   * accepted it, it is the message's only durable copy until
+   * `archiveAttachments` runs. Best-effort and idempotent: a key that is already
+   * gone is a success.
    */
   discardAttachment(dto: DiscardCompanyEmailAttachmentDto): Promise<void>
 
   /**
    * Resolve who this message would go to, without writing or sending anything.
    *
-   * ⚠️ Runs the identical resolution `send` runs, which is the only reason the
-   * preview is worth showing: an admin confirming a count is confirming the set
-   * that will actually be written to, not an estimate of it.
+   * Runs the identical resolution `send` runs, so the count an admin confirms is
+   * the set that will actually be written to.
    */
   preview(dto: SendCompanyEmailDto): Promise<CompanyEmailPreviewDto>
 
   /**
    * Record the batch and queue it.
    *
-   * ⚠️ **Returns before anything is delivered.** Recipients are resolved and
-   * persisted inside the request — so the returned counts are truthful about
-   * what was queued — and the sending itself is handed off after the
-   * transaction commits. A send addressed at the whole register takes minutes;
-   * holding the request open for it would time out and report a false failure
-   * for mail that went out perfectly well.
+   * Returns before anything is delivered: recipients are resolved and persisted
+   * inside the request, so the returned counts are truthful, and the sending is
+   * handed off after the transaction commits. A register-wide send takes
+   * minutes, and holding the request open would report a false failure.
    */
   send(
     dto: SendCompanyEmailDto,

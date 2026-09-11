@@ -695,12 +695,9 @@ describe('DoeMailService', () => {
     })
 
     it('refuses a comma-separated recipient without calling SES', async () => {
-      /*
-       * ⚠️ The case this guard exists for. nodemailer splits `to` on commas, so
-       * a single stored `'a@x.is, b@y.is'` would deliver one company's message
-       * to a second company — and `sendMail` discards `info.rejected`, so the
-       * fan-out would still report success.
-       */
+      // nodemailer splits `to` on commas, so a single stored `'a@x.is, b@y.is'`
+      // would deliver one company's message to a second company — and `sendMail`
+      // discards `info.rejected`, so the fan-out would still report success.
       const result = await service.sendCustomEmail(
         'a@example.is, b@example.is',
         'Efni',
@@ -715,12 +712,9 @@ describe('DoeMailService', () => {
     })
 
     it('reports an err result as a failure and carries the reason', async () => {
-      /*
-       * ⚠️ Resolves an err RESULT rather than rejecting — `sendMail` is
-       * decorated `@LogAndHandle()` and cannot reject. A `try/catch` here would
-       * be unreachable and every SES failure would be recorded as a delivered
-       * message.
-       */
+      // Resolves an err RESULT rather than rejecting: `sendMail` is decorated
+      // `@LogAndHandle()` and cannot reject, so a `try/catch` here would be
+      // unreachable and every SES failure recorded as a delivered message.
       aws.sendMail.mockResolvedValue(
         ResultWrapper.err({ code: 500, message: 'SES rejected the message' }),
       )

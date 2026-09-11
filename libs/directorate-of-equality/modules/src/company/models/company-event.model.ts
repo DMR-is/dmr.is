@@ -38,11 +38,8 @@ import { CompanyModel } from './company.model'
  *   CUSTOM_EMAIL_SENT / CUSTOM_EMAIL_FAILED / CUSTOM_EMAIL_SKIPPED
  *                  → an admin-authored message, one row per company per send.
  *                    `reason` holds the subject and `companyEmailId` points at
- *                    the batch, so the timeline can show what was sent rather
- *                    than only that something was. All three outcomes are
- *                    recorded on purpose: a mail that never went out is the one
- *                    an admin most needs to see, and only logging it would put
- *                    the absence somewhere nobody looks.
+ *                    the batch. All three outcomes are recorded: a mail that
+ *                    never went out is the one an admin most needs to see.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -175,15 +172,11 @@ export class CompanyEventModel extends ImmutableModel<
   reminderTier!: CompanyReminderTierEnum | null
 
   /*
-   * The custom-email batch this event belongs to, null for every other event
-   * type.
+   * The custom-email batch this event belongs to, null for every other type.
    *
-   * A plain nullable column rather than a `@ForeignKey` association: the
-   * `company_email` table lives in its own module, and pointing a
-   * `sequelize-typescript` decorator at it would make `company` import
-   * `company-email`, which already imports `company`. The migration adds the
-   * real FK constraint, so the referential guarantee is kept where it belongs —
-   * in the database — without the module cycle.
+   * A plain nullable column rather than a `@ForeignKey`: a decorator pointed at
+   * `company_email` would make `company` import `company-email`, which already
+   * imports `company`. The migration adds the real FK constraint.
    */
   @Column({ type: DataType.UUID, allowNull: true, field: 'company_email_id' })
   companyEmailId!: string | null

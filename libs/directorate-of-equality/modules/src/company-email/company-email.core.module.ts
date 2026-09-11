@@ -18,13 +18,11 @@ import { ICompanyEmailService } from './company-email.service.interface'
  *
  * Depends on `CompanyCoreModule` rather than reaching into the company tables
  * itself: recipient resolution has to run the identical query the company list
- * runs, and that query lives behind `ICompanyService`. The dependency is
- * one-way — nothing in the company module knows this one exists — so there is no
- * cycle.
+ * runs, which lives behind `ICompanyService`. The dependency is one-way.
  *
- * `AwsModule` is here for the attachment archive only; the sending itself goes
- * through `IDoeMailService`, so a custom message leaves from the same sender
- * identity as every other mail this system issues.
+ * `AwsModule` is for the attachment archive only — sending goes through
+ * `IDoeMailService`, so a custom message leaves from the same sender identity as
+ * every other mail this system issues.
  */
 @Module({
   imports: [

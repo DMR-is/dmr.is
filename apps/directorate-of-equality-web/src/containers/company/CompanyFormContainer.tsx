@@ -198,9 +198,9 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
       </Stack>
       <CompanyTabsContainer company={company} />
       {/*
-        ⚠️ Always mounted and toggled through `isOpen`, never conditionally
-        mounted — see the note at the company list's mount site. A dialog that
-        mounts already-visible is hidden again by the click that opened it.
+        Always mounted and toggled through `isOpen` — see the note at the
+        company list's mount site. A dialog that mounts already-visible is
+        hidden again by the click that opened it.
       */}
       <SendCompanyEmailModal
         isOpen={isEmailOpen}

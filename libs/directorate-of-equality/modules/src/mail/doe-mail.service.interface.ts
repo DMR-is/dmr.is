@@ -67,20 +67,16 @@ export interface IDoeMailService {
   /**
    * Sends one admin-authored message to one address.
    *
-   * Same envelope as every other message here — the point of routing this
-   * through `IDoeMailService` rather than reaching for SES directly is that a
-   * custom mail arrives from the same `Jafnréttisstofa <…>` sender as the
-   * approval notice, not from a second identity nobody recognises.
+   * Routed through `IDoeMailService` rather than SES directly so a custom mail
+   * arrives from the same `Jafnréttisstofa <…>` sender as the approval notice.
    *
-   * ⚠️ **`bodyHtml` must already be sanitised.** This method does not sanitise,
-   * because its caller stores the body it previews and sends, and sanitising in
-   * both places is how the stored copy and the delivered copy start to differ.
+   * `bodyHtml` must already be sanitised — the caller stores the body it
+   * previews and sends, and sanitising in both places is how the stored and
+   * delivered copies start to differ.
    *
-   * ⚠️ **Returns the outcome; never throws for a send failure.** Unlike the
-   * report notices — which are best-effort because the state change they
-   * announce is already committed and unrecoverable — this failure has somewhere
-   * to go: one recipient row in a batch, which records the error and lets the
-   * rest of the batch continue. A `boolean` would throw the reason away.
+   * Returns the outcome and never throws for a send failure, unlike the report
+   * notices: this failure has somewhere to go — one recipient row, which records
+   * the error and lets the rest of the batch continue.
    */
   sendCustomEmail(
     to: string,

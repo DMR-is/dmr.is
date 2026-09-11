@@ -42,9 +42,9 @@ const MAX_ATTACHMENT_TOTAL_BYTES = 5 * 1024 * 1024
 const MAX_RECIPIENTS = 10
 
 /**
- * ⚠️ Must stay in step with `BOUNDARY_EXTENSIONS[MAIL_ATTACHMENT]` on the API.
- * Checked here only so the admin gets a clear message instead of a 400 after a
- * pointless upload — the server's list is the one that decides.
+ * Must stay in step with `BOUNDARY_EXTENSIONS[MAIL_ATTACHMENT]` on the API,
+ * which is the list that actually decides. Checked here only so the admin gets
+ * a clear message instead of a 400 after a pointless upload.
  */
 const ALLOWED_EXTENSIONS = [
   'pdf',
@@ -75,9 +75,8 @@ type StagedAttachment = {
 /**
  * Who the message is addressed to, captured when the modal opens.
  *
- * ⚠️ `filter` is a snapshot of the list's filter at open time, deliberately not
- * a live read. An admin who changes the filter behind the modal must not thereby
- * change who the message they are about to confirm goes to.
+ * `filter` is a snapshot, not a live read: changing the list's filter behind
+ * the modal must not change who the message being confirmed goes to.
  */
 export type SendCompanyEmailTarget =
   | {
@@ -94,11 +93,9 @@ export type SendCompanyEmailTarget =
 /**
  * How the address field should start out for a target.
  *
- * ⚠️ A stored address that does not look finished goes into the *draft* rather
- * than becoming a pill. A pill reads as "this is settled", and the API now
- * refuses an address it cannot send to instead of quietly skipping it — so a
- * half-written value on the company record has to arrive somewhere the admin
- * can see and fix it, with the field's own error message against it.
+ * A stored address that does not look finished goes into the draft rather than
+ * becoming a pill — a pill reads as settled, and the API refuses an address it
+ * cannot send to, so the admin has to be able to see and fix it.
  */
 const seedRecipients = (
   target: SendCompanyEmailTarget,
@@ -130,35 +127,25 @@ export const SendCompanyEmailModal = ({
     () => seedRecipients(target).emails,
   )
   /*
-   * What is in the address box but not yet a pill.
-   *
-   * ⚠️ Held here rather than inside `RecipientEmailsInput`, because "Halda
-   * áfram" has to be able to commit it: an address typed and then clicked
-   * straight past is one the admin believes they entered, and leaving it behind
-   * in a child's state would send the message to everyone except the person
-   * they typed last.
+   * What is in the address box but not yet a pill. Held here rather than inside
+   * `RecipientEmailsInput` because "Halda áfram" has to be able to commit it: an
+   * address typed and then clicked straight past is one the admin believes they
+   * entered.
    */
   const [recipientDraft, setRecipientDraft] = useState(
     () => seedRecipients(target).draft,
   )
   const [copyToEmail, setCopyToEmail] = useState('')
   /*
-   * Whether the admin has edited the copy field themselves.
-   *
-   * ⚠️ Needed because the address it is prefilled with arrives asynchronously
-   * (see `me` below), and can land *after* the modal is open and being typed
-   * in. Without this the seeding effect would overwrite an address the admin
-   * had already corrected the moment the query resolved.
+   * Whether the admin has edited the copy field themselves. The prefill address
+   * arrives asynchronously (see `me`) and can land after typing has started, so
+   * without this the seeding effect would overwrite a corrected address.
    */
   const copyToTouched = useRef(false)
   /*
-   * Whether the admin has touched the address box themselves.
-   *
-   * ⚠️ The same guard as `copyToTouched`, and both feed `hasDraft`. A dismissed
-   * modal deliberately keeps its draft, but subject/body/attachments alone do
-   * not describe one: up to ten hand-typed addresses and a corrected copy
-   * address are work too, and without these the re-seeding effect below threw
-   * all of it away on reopen unless a subject happened to have been typed.
+   * The same guard for the address box. Both feed `hasDraft`: a dismissed modal
+   * keeps its draft, and hand-typed addresses are work too — without these the
+   * re-seeding effect threw them away on reopen.
    */
   const recipientsTouched = useRef(false)
   const [attachments, setAttachments] = useState<StagedAttachment[]>([])
@@ -168,29 +155,19 @@ export const SendCompanyEmailModal = ({
   /*
    * True while the OS file dialog is open.
    *
-   * ⚠️ Opening a native file picker takes focus out of the document, and
-   * returning from it puts focus back on `document.body` — outside the dialog.
-   * `Modal` hardcodes `hideOnClickOutside`, so reakit reads that as the dialog
-   * having been dismissed and fires `onVisibilityChange(false)`: cancelling the
-   * picker closed the whole modal. This flag is what tells a real dismiss from
-   * that one.
+   * Returning from a native picker puts focus on `document.body`, outside the
+   * dialog, and `Modal` hardcodes `hideOnClickOutside` — so reakit reads that as
+   * a dismiss. This flag tells a real dismiss from that one.
    */
   const filePickerRef = useRef(false)
 
   /*
-   * Whether the modal has ever been opened.
+   * Whether the modal has ever been opened. The body is gated on this rather
+   * than on `isOpen`: `ModalBase` renders children regardless of visibility, and
+   * any moment where reakit still considers the dialog visible while `isOpen` is
+   * false would render the title and close button over an empty box.
    *
-   * ⚠️ The body is gated on THIS, not on `isOpen`. `ModalBase` renders its
-   * children regardless of visibility, so gating on `isOpen` gives two sources
-   * of truth for one thing — and any moment where reakit still considers the
-   * dialog visible while `isOpen` has gone false renders the title and close
-   * button over an empty box. Gating on "has ever opened" cannot diverge: once
-   * true it never goes back, so there is no state in which the shell is on
-   * screen without its contents.
-   *
-   * It still buys what the `isOpen` gate was for — a TinyMCE instance is not
-   * booted on every company list and detail page load, only once the admin
-   * actually opens the modal.
+   * It still keeps TinyMCE from booting on every company page load.
    */
   const [hasOpened, setHasOpened] = useState(false)
   useEffect(() => {
@@ -201,13 +178,9 @@ export const SendCompanyEmailModal = ({
   const editorKey = useRef(0)
 
   /*
-   * The sender's own address, which the copy field is prefilled with.
-   *
-   * ⚠️ Not from the session: `authOptions` puts only name, national id, user id
-   * and role on it — there is no email there to read. Gated on `hasOpened` so
-   * the every-company-page mount does not fetch a user record for a modal
-   * nobody has opened; it is the same cached query the timeline already uses,
-   * so on the detail screen it usually resolves instantly.
+   * The sender's own address, which the copy field is prefilled with. Not on the
+   * session — `authOptions` carries no email. Gated on `hasOpened` so an unopened
+   * modal does not fetch a user record; the timeline uses the same cached query.
    */
   const { data: me } = useQuery({
     ...trpc.user.getMyUser.queryOptions(),
@@ -233,12 +206,9 @@ export const SendCompanyEmailModal = ({
   }
 
   /*
-   * What the address box would come to if it were committed now.
-   *
-   * ⚠️ Computed once and read by all three of `hasUnfinishedAddress`,
-   * `canContinue` and `requestPreview`, so the field's cap, the button's
-   * enabled state and the payload cannot disagree about what counts as entered.
-   * `RecipientEmailsInput` runs the identical helper with the identical cap.
+   * What the address box would come to if it were committed now. Computed once
+   * and read by `hasUnfinishedAddress`, `canContinue` and `requestPreview`, so
+   * the cap, the button state and the payload cannot disagree.
    */
   const committedRecipients = commitRecipientDraft(
     recipientEmails,
@@ -255,31 +225,23 @@ export const SendCompanyEmailModal = ({
     copyToTouched.current
 
   /*
-   * ⚠️ Needed because this component is always mounted (see the mount sites).
-   * Its `useState` initialisers ran once when the page loaded, so an admin who
-   * corrects the company's contact email on the info tab and then opens this
-   * would otherwise be shown the address as it was at page load — and send to
-   * it. Re-seeding on open is what keeps the prefill honest.
+   * This component is always mounted, so the `useState` initialisers ran at page
+   * load. Re-seeding on open is what keeps the prefill honest when the admin has
+   * corrected the company's contact email on the info tab since then.
    */
   useEffect(() => {
     if (!isOpen) return
 
     /*
-     * Belt and braces. `handleDismiss`, `handleCancel` and `handleSent` all
-     * abandon any outstanding preview already, so by the time we reopen there
-     * should be nothing stale left to arrive — but this makes that hold however
-     * the modal was closed, including a caller that drops `isOpen` on its own.
-     * The target is re-snapshotted on every open, so a response issued before
-     * this point can no longer be trusted to describe it — and a resolved one
-     * would reopen the modal on the confirmation step for the previous target,
-     * which is why this rewinds rather than only abandoning what is in flight.
-     * A no-op after every close the modal performs itself.
+     * Belt and braces — `handleDismiss`, `handleCancel` and `handleSent` already
+     * abandon any outstanding preview. Rewinds rather than only abandoning what
+     * is in flight: the target is re-snapshotted on every open, so a resolved
+     * preview from before this point describes the previous target.
      */
     discardPreview()
 
-    // Only when there is nothing to protect. A dismissed modal keeps its draft
-    // (see `handleDismiss`), and re-seeding on reopen would throw away an
-    // address the admin had already corrected for this message.
+    // Only when there is nothing to protect. A dismissed modal keeps its draft,
+    // and re-seeding would throw away an already-corrected address.
     if (hasDraft) return
 
     const seed = seedRecipients(target)
@@ -288,15 +250,13 @@ export const SendCompanyEmailModal = ({
     setCopyToEmail(myEmail)
     copyToTouched.current = false
     recipientsTouched.current = false
-    // Deliberately keyed on `isOpen` alone: `target` is a fresh object every
-    // render, so including it would re-seed the field on each keystroke and
-    // make the address uneditable.
+    // Keyed on `isOpen` alone: `target` is a fresh object every render, so
+    // including it would re-seed the field on each keystroke.
   }, [isOpen])
 
   /*
    * `emails` is passed in rather than read from state because `requestPreview`
-   * commits the address box first and React has not re-rendered by then — the
-   * payload has to carry the list including whatever was just committed.
+   * commits the address box first and React has not re-rendered by then.
    */
   const buildPayload = (emails: string[]) => ({
     subject: subject.trim(),
@@ -319,15 +279,13 @@ export const SendCompanyEmailModal = ({
   })
 
   /**
-   * The confirmation step's whole content: a resolved preview together with the
-   * exact payload it was resolved for.
+   * The confirmation step's content: a resolved preview together with the exact
+   * payload it was resolved for.
    *
-   * ⚠️ One piece of state holding both, deliberately — NOT a preview alongside
-   * a separately-rebuilt payload. `send` posts `approved.payload`, so the set
-   * of recipients the admin approved and the set the API resolves are produced
-   * from byte-identical input. Rebuilding the payload at send time from current
-   * state is what let a preview taken against one filter be sent against
-   * another; keeping them in one object makes that drift unrepresentable.
+   * One piece of state holding both, so `send` posts `approved.payload` and the
+   * recipients the admin approved are resolved from byte-identical input.
+   * Rebuilding the payload at send time let a preview taken against one filter
+   * be sent against another.
    */
   const [approved, setApproved] = useState<{
     payload: ReturnType<typeof buildPayload>
@@ -335,16 +293,12 @@ export const SendCompanyEmailModal = ({
   } | null>(null)
 
   /*
-   * Which composing session an in-flight preview belongs to.
+   * Which composing session an in-flight preview belongs to. Bumped whenever the
+   * message stops being the one an outstanding preview was asked about, and a
+   * response carrying a stale id is dropped.
    *
-   * ⚠️ Bumped whenever the message being composed stops being the one an
-   * outstanding preview was asked about, and a response carrying a stale id is
-   * dropped. Necessary because this component is never unmounted: a request
-   * started for filter A and dismissed mid-flight still resolves, and an
-   * unguarded `onSuccess` would put the modal back on the confirmation step
-   * while it is closed — so the next open would show A's recipients over a
-   * target that is now B. React Query cannot do this for us; it has no idea
-   * the target changed underneath it.
+   * Needed because this component is never unmounted: an unguarded `onSuccess`
+   * would put a closed modal back on the confirmation step for the old target.
    */
   const previewSessionRef = useRef(0)
 
@@ -366,15 +320,11 @@ export const SendCompanyEmailModal = ({
   /**
    * Delete staged objects the admin has decided against.
    *
-   * ⚠️ Only ever for attachments that were never submitted with a batch —
-   * removing one in the compose step, or cancelling the whole message. NOT on
-   * an ordinary dismiss, which keeps the draft and therefore keeps its
-   * attachments, and never after `send`, where the staged object is the
-   * message's only copy until the API has archived it.
-   *
-   * Fire and forget, failures swallowed: this is housekeeping on the admin's
-   * own upload. A toast saying a file they already removed could not be
-   * deleted describes nothing they can act on.
+   * Only for attachments never submitted with a batch — removing one while
+   * composing, or cancelling. Not on an ordinary dismiss, which keeps the draft,
+   * and never after `send`, where the staged object is the only copy until the
+   * API has archived it. Fire and forget: failures are housekeeping the admin
+   * cannot act on.
    */
   const discardStaged = (keys: string[]) => {
     for (const key of keys) {
@@ -383,22 +333,17 @@ export const SendCompanyEmailModal = ({
   }
 
   /*
-   * ⚠️ No `onSuccess`/`onError` here — they are passed per call in
-   * `requestPreview`, so each one closes over the session and the payload its
-   * own request was issued with. A handler defined here would see only the
-   * latest render's values and could not tell a stale response from a current
-   * one.
+   * No `onSuccess`/`onError` here — they are passed per call in `requestPreview`,
+   * so each closes over the session and payload its own request was issued with.
    */
   const previewMutation = useMutation(
     trpc.companyEmail.preview.mutationOptions(),
   )
 
   const requestPreview = () => {
-    /*
-     * Commit whatever is still loose in the address box before anything else.
-     * `canContinue` has already refused a box with a remainder, so this is the
-     * same list it was judged on — see `committedRecipients`.
-     */
+    // Commit whatever is still loose in the address box first. `canContinue` has
+    // already refused a box with a remainder, so this is the same list it was
+    // judged on.
     const { emails, remainder } = committedRecipients
     setRecipientEmails(emails)
     setRecipientDraft(remainder)
@@ -415,8 +360,8 @@ export const SendCompanyEmailModal = ({
         setStep('preview')
       },
       onError: () => {
-        // Same guard: an error toast for a message the admin has already
-        // walked away from is noise about nothing they can act on.
+        // Same guard: an error toast for a message the admin has walked away
+        // from is noise.
         if (session !== previewSessionRef.current) return
         toast.error(t.previewError)
       },
@@ -427,8 +372,7 @@ export const SendCompanyEmailModal = ({
     ...trpc.companyEmail.send.mutationOptions(),
     onSuccess: (result) => {
       // "Sett í sendingu", not "Sent" — the API returns before anything is
-      // delivered, and saying otherwise would misreport a batch that is still
-      // running (or about to start failing).
+      // delivered.
       toast.success(`${t.successToast} — ${result.recipientCount}`)
       handleSent()
     },
@@ -455,8 +399,7 @@ export const SendCompanyEmailModal = ({
   /**
    * Explicit cancel: the draft is finished with and its uploads go with it.
    *
-   * ⚠️ Separate from `handleSent` precisely because of that. Both clear the
-   * draft, but only this one may delete the staged objects — after a send they
+   * Separate from `handleSent` for that reason — after a send the staged objects
    * belong to the batch.
    */
   const handleCancel = () => {
@@ -472,28 +415,21 @@ export const SendCompanyEmailModal = ({
   }
 
   /*
-   * Esc and a backdrop click, which are as easy to hit by accident as on
-   * purpose. They close the modal and keep the draft — the shell stays mounted,
-   * so reopening finds the subject, the body and the staged attachments intact.
-   * Resetting here would discard a composed message and up to five uploaded
-   * files on one stray click, with nothing to say it had happened.
+   * Esc and a backdrop click, as easy to hit by accident as on purpose. They
+   * close the modal and keep the draft: the shell stays mounted, so reopening
+   * finds the subject, body and staged attachments intact.
    */
   const handleDismiss = () => {
     // Not a dismiss at all — the OS file dialog took focus. Closing here threw
-    // the admin out of a half-composed message for pressing Cancel on a file
-    // picker.
+    // the admin out of a half-composed message for cancelling a file picker.
     if (filePickerRef.current) return
 
     /*
-     * ⚠️ The resolved preview is dropped and the modal rewound to compose, even
-     * though the draft is kept — and any preview still in flight is abandoned
-     * with it. The preview is only true of the target it was resolved against,
-     * and the caller re-snapshots that target on every open (see the mount
-     * site), so keeping either would reopen the modal already on the
-     * confirmation step, showing the recipients and the count of the PREVIOUS
-     * filter while the send went to the current one. Rewinding costs one
-     * click; it is what keeps the count the admin approves and the recipients
-     * they get the same set.
+     * The resolved preview is dropped and the modal rewound to compose, even
+     * though the draft is kept. The preview is only true of the target it was
+     * resolved against, and the caller re-snapshots that target on every open —
+     * so keeping it would reopen on the confirmation step showing the previous
+     * filter's recipients while the send went to the current one.
      */
     discardPreview()
 
@@ -503,10 +439,9 @@ export const SendCompanyEmailModal = ({
   const openFilePicker = () => {
     filePickerRef.current = true
 
-    // Cleared when the browser window regains focus — i.e. the OS dialog has
-    // closed either way — and a tick later, so the spurious dismiss that
-    // arrives as focus re-enters the document has already been ignored. The
-    // listener removes itself, so a picker opened repeatedly adds only one.
+    // Cleared when the window regains focus — the OS dialog has closed either
+    // way — and a tick later, so the spurious dismiss that arrives as focus
+    // re-enters has already been ignored. The listener removes itself.
     const done = () => {
       window.removeEventListener('focus', done)
       setTimeout(() => {
@@ -519,8 +454,8 @@ export const SendCompanyEmailModal = ({
   }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Belt and braces: `change` can only fire once the picker has closed, and
-    // the ordering against the window focus event is not guaranteed.
+    // Belt and braces: the ordering of `change` against the window focus event
+    // is not guaranteed.
     filePickerRef.current = false
 
     const file = e.target.files?.[0]
@@ -540,7 +475,7 @@ export const SendCompanyEmailModal = ({
     }
 
     // The running total, matching the server: five files each under the cap can
-    // still exceed it together, and SES would reject the whole message.
+    // still exceed it together.
     const total = attachments.reduce((sum, a) => sum + a.sizeBytes, 0)
     if (total + file.size > MAX_ATTACHMENT_TOTAL_BYTES) {
       toast.error(t.attachmentTooLargeError)
@@ -557,10 +492,8 @@ export const SendCompanyEmailModal = ({
         ...prev,
         { key, filename: file.name, sizeBytes: file.size },
       ])
-      // The approved payload is frozen when the preview resolves, so a file
-      // added while one is in flight would be missing from what is actually
-      // sent. Abandoning the preview costs one click and keeps the
-      // confirmation step describing the draft as it stands.
+      // The approved payload is frozen when the preview resolves, so a file added
+      // while one is in flight would be missing from what is actually sent.
       discardPreview()
     } catch {
       toast.error(t.attachmentUploadError)
@@ -571,13 +504,12 @@ export const SendCompanyEmailModal = ({
 
   /*
    * Loose text in the address or copy field that is not a whole address. The
-   * field shows its own message; this is what stops "Halda áfram" from either
-   * dropping it silently or sending it to an API that will 400.
+   * field shows its own message; this stops "Halda áfram" from dropping it
+   * silently or sending it to an API that will 400.
    */
   const hasUnfinishedAddress =
     // Anything committing would leave behind — a half-typed address, or whole
-    // ones with no room under the cap. Either way the admin can see it in the
-    // box, so continuing would drop an address they believe they entered.
+    // ones with no room under the cap.
     !!committedRecipients.remainder ||
     (!!copyToEmail.trim() && !isCompleteEmail(copyToEmail))
 
@@ -587,7 +519,7 @@ export const SendCompanyEmailModal = ({
     !isUploading &&
     !hasUnfinishedAddress &&
     // Whole addresses still sitting in the box count: `requestPreview` commits
-    // them, so refusing here would block a form the admin has in fact filled in.
+    // them, so refusing here would block a form the admin has filled in.
     (!isSingle || committedRecipients.emails.length > 0)
 
   const recipientRows: RecipientRow[] = (
@@ -619,11 +551,8 @@ export const SendCompanyEmailModal = ({
       width="large"
       /*
        * Pins the title and this row, so a long message scrolls between them
-       * rather than taking "Senda" off the bottom of a modal the admin then has
-       * to scroll back down through to find.
-       *
-       * Gated on `hasOpened` like the body, for the same reason: the shell must
-       * not be on screen with an action row over an empty box.
+       * rather than taking "Senda" off the bottom. Gated on `hasOpened` like the
+       * body, so the shell is never on screen over an empty box.
        */
       footer={
         !hasOpened ? null : step === 'compose' ? (
@@ -675,10 +604,8 @@ export const SendCompanyEmailModal = ({
           )}
 
           {/*
-            Offered on a bulk send too, and safely: the API sends exactly one
-            copy per batch rather than a BCC on every message, so this is one
-            mail to the sender whether the batch is one company or the whole
-            register.
+            Safe on a bulk send: the API sends exactly one copy per batch rather
+            than a BCC on every message.
           */}
           <Box>
             <TextInput
@@ -752,17 +679,14 @@ export const SendCompanyEmailModal = ({
                   icon="close"
                   iconType="outline"
                   onClick={() => {
-                    // Nothing has been submitted yet, so the staged object is
-                    // safe to delete: no batch references it and no draft is
-                    // keeping it.
+                    // Nothing submitted yet, so the staged object is safe to
+                    // delete: no batch references it.
                     discardStaged([attachment.key])
                     setAttachments((prev) =>
                       prev.filter((a) => a.key !== attachment.key),
                     )
-                    // ⚠️ A preview in flight would otherwise freeze this file
-                    // into the approved payload after it has been deleted —
-                    // the confirmation step listing an attachment the send
-                    // then fails to read.
+                    // A preview in flight would otherwise freeze this file into
+                    // the approved payload after it has been deleted.
                     discardPreview()
                   }}
                 >
@@ -808,9 +732,9 @@ export const SendCompanyEmailModal = ({
               />
 
               {/*
-                Why the count here can be smaller than the one on the button
-                that opened this modal. Rendered before the message preview so
-                the discrepancy is answered where it is noticed.
+                Why the count here can be smaller than the one on the button that
+                opened the modal. Rendered before the message preview so the
+                discrepancy is answered where it is noticed.
               */}
               {skippedRows.length > 0 && (
                 <CompanyEmailRecipientList
@@ -827,9 +751,8 @@ export const SendCompanyEmailModal = ({
               )}
 
               {/*
-                From the approved payload, like everything else on this step —
-                the copy address that was resolved with the preview, not a
-                later edit that never went through it.
+                From the approved payload — the copy address resolved with the
+                preview, not a later edit that never went through it.
               */}
               {!!approved.payload.copyToEmail && (
                 <Text variant="small" color="dark400">
@@ -842,24 +765,17 @@ export const SendCompanyEmailModal = ({
                   {t.previewSubjectLabel}
                 </Text>
                 {/*
-                  From the approved payload, not the live `subject` state, for
-                  the same reason `send` posts that payload: what is on screen
-                  at the confirmation step must be what was resolved, never a
-                  later edit that never went through `preview`.
+                  From the approved payload, not the live `subject` state: what is
+                  on screen at the confirmation step must be what was resolved.
                 */}
                 <Text fontWeight="semiBold" marginBottom={2}>
                   {approved.payload.subject}
                 </Text>
                 <Box border="standard" borderRadius="large">
                   {/*
-                    Read-only editor rather than `dangerouslySetInnerHTML`, the
-                    same way a stored report body is rendered.
-
-                    ⚠️ `preview.bodyHtml`, not the local editor state: the API
-                    returns the body already sanitised, so anything the
-                    sanitiser strips is gone before the admin approves it rather
-                    than after. Otherwise this step would show markup the
-                    recipient never gets.
+                    `preview.bodyHtml`, not the local editor state: the API returns
+                    the body already sanitised, so anything stripped is gone before
+                    the admin approves it rather than after.
                   */}
                   <HTMLEditor
                     readonly

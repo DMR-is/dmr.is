@@ -29,12 +29,10 @@ type Props = {
   /**
    * Action row pinned to the bottom of the modal.
    *
-   * ⚠️ Passing this changes how the modal scrolls: the title row and this
-   * footer stay put and only `children` scrolls between them. Leave it out —
-   * as every existing caller does — and the whole card scrolls exactly as
-   * before. It is one prop rather than two because a modal that pins its
-   * buttons and lets its title scroll away reads as broken, so the two always
-   * travel together.
+   * Passing this changes how the modal scrolls: the title row and this footer
+   * stay put and only `children` scrolls between them. Left out, the whole card
+   * scrolls as before. One prop rather than two because a modal that pins its
+   * buttons and lets its title scroll away reads as broken.
    */
   footer?: React.ReactNode
   toggleClose?: () => void
@@ -113,11 +111,9 @@ export const Modal = ({
                 <GridColumn span={columnSpan} offset={columnOffset}>
                   <Box
                     className={styles.modalContent({
-                      /*
-                       * The card must stop scrolling when the chrome is pinned:
-                       * the scroll moves to `pinnedBody`, and leaving it here as
-                       * well would let the whole card creep behind the title.
-                       */
+                      // The card must stop scrolling when the chrome is
+                      // pinned: the scroll moves to `pinnedBody`, and leaving
+                      // it here too would let the card creep behind the title.
                       overflow:
                         allowOverflow || hasPinnedChrome
                           ? 'visible'
@@ -129,11 +125,9 @@ export const Modal = ({
                       <>
                         <Box className={styles.pinnedHeader}>{header}</Box>
                         {/*
-                          ⚠️ `tabIndex={0}` because this box is the modal's only
-                          scroll container. A scrollable region that nothing can
-                          focus is unreachable by keyboard whenever its content
-                          has no focusable elements of its own (WCAG 2.1.1) —
-                          and the caller, not this component, decides that.
+                          `tabIndex={0}` because this box is the modal's only
+                          scroll container, and a scrollable region nothing can
+                          focus is unreachable by keyboard (WCAG 2.1.1).
                         */}
                         <Box className={styles.pinnedBody} tabIndex={0}>
                           {children}

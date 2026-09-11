@@ -37,11 +37,9 @@ export class CompanyEmailSkippedPreviewDto extends CompanyEmailRecipientPreviewD
 /**
  * What the confirmation step shows before anything is sent.
  *
- * ⚠️ `recipients` and `skipped` are both returned, and the counts are meant to
- * be read together: the list screen's button counts every company matching the
- * filter, and this is where an admin finds out that some of them will not be
- * written to and why. A preview that returned only the deliverable set would
- * show a smaller number than the button with nothing to explain the gap.
+ * `recipients` and `skipped` are read together: the list's button counts every
+ * company matching the filter, and this is where an admin finds out which of
+ * them will not be written to, and why.
  */
 export class CompanyEmailPreviewDto {
   @ApiString({

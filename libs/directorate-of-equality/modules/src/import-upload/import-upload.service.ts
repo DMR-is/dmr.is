@@ -78,8 +78,7 @@ const MAX_UPLOAD_BYTES = ONE_MB * 20
 /**
  * Single wording for every place a cap is enforced. Takes the cap because it is
  * no longer one number — a mail attachment is held to a much smaller limit than
- * an import workbook, and a message naming the wrong one sends the caller off
- * shrinking a file that was never too big.
+ * an import workbook.
  */
 const tooLargeMessage = (maxBytes: number) =>
   `Uploaded file exceeds the ${maxBytes / ONE_MB}MB limit`
@@ -90,17 +89,13 @@ const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
  * Which extensions each boundary may stage — an allow-list, and a security
  * control rather than a convenience.
  *
- * ⚠️ **Per boundary, not global.** The import boundaries stay `xlsx`-only, which
- * is the contract they have always had: their keys are minted by this service
- * and can be nothing else, so a key arriving with any other extension is
- * necessarily forged and is rejected before it reaches storage. Widening the set
- * globally to serve mail attachments would have quietly retired that check for
- * the import path too, buying nothing.
+ * Per boundary, not global. The import boundaries stay `xlsx`-only: their keys
+ * are minted by this service, so any other extension is necessarily forged.
+ * Widening the set globally to serve mail attachments would quietly retire that
+ * check for the import path too.
  *
- * The mail-attachment set omits `.html`, `.svg` and anything executable on
- * purpose. These objects are handed to recipients outside the Directorate, and
- * an attachment the receiving mail client will run is not something an admin
- * should be able to introduce by naming a file.
+ * The mail-attachment set omits `.html`, `.svg` and anything executable — these
+ * objects are handed to recipients outside the Directorate.
  */
 const BOUNDARY_EXTENSIONS: Record<ImportUploadBoundary, readonly string[]> = {
   [ImportUploadBoundary.ADMIN]: ['xlsx'],
@@ -131,9 +126,8 @@ const keyPattern = (boundary: ImportUploadBoundary) =>
 /**
  * Matches a key for any known boundary — used when the boundary isn't known yet.
  *
- * Built per boundary and OR-ed, rather than crossing every boundary with every
- * extension: the cross product would accept `doe-imports/admin/<uuid>.png`,
- * which no boundary should.
+ * Built per boundary and OR-ed rather than crossing every boundary with every
+ * extension, which would accept `doe-imports/admin/<uuid>.png`.
  */
 const anyKeyPattern = new RegExp(
   Object.values(ImportUploadBoundary)

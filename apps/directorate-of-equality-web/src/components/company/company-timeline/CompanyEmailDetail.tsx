@@ -21,11 +21,9 @@ type Props = {
 /**
  * The "Sjá tölvupóst" toggle on a CUSTOM_EMAIL_* timeline entry.
  *
- * ⚠️ The fetch is gated on `isOpen`, not merely rendered lazily. Every recipient
- * of a batch gets one of these entries, so a timeline showing several would
- * otherwise fire a request per entry for the same message on first paint. React
- * Query dedupes the identical key, but the toggle is what keeps a closed entry
- * from asking at all.
+ * The fetch is gated on `isOpen`, not merely rendered lazily: every recipient of
+ * a batch gets one of these entries, so a timeline showing several would fire a
+ * request per entry on first paint.
  */
 export const CompanyEmailDetail = ({ companyEmailId }: Props) => {
   const trpc = useTRPC()

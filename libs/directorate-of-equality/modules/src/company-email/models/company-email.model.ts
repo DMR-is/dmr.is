@@ -11,16 +11,13 @@ import { CompanyEmailRecipientModel } from './company-email-recipient.model'
 /**
  * One admin-authored message, and the record that it was sent.
  *
- * The batch is the durable artifact, not the individual sends: an admin writes
- * one email and it goes to between one and every company on the register. The
- * per-company outcomes hang off it (`CompanyEmailRecipientModel`), and so do the
- * attachments — one copy of each, because a file attached to this message is a
- * property of the message and not of each of its 1 700 recipients.
+ * The batch is the durable artifact, not the individual sends: per-company
+ * outcomes hang off it (`CompanyEmailRecipientModel`), and so do the attachments
+ * — one copy of each, because a file belongs to the message rather than to each
+ * of its recipients.
  *
- * `subject` and `bodyHtml` are stored so the timeline can show what was sent
- * rather than only that something was. `bodyHtml` is stored **already
- * sanitised**, which is what lets the preview, the delivered mail and the
- * read-back be the same bytes rather than three passes that could disagree.
+ * `bodyHtml` is stored already sanitised, which is what lets the preview, the
+ * delivered mail and the read-back be the same bytes.
  */
 type CompanyEmailAttributes = {
   subject: string
@@ -70,10 +67,9 @@ export class CompanyEmailModel extends MutableModel<
    * The company-list filter this batch was addressed by, or null when the admin
    * picked companies explicitly.
    *
-   * Kept for the audit trail rather than for re-execution: re-running it later
-   * would resolve a *different* set, since the register moves. What actually
-   * received the mail is the recipient rows; this records what the admin
-   * believed they were selecting when they sent it.
+   * Kept for the audit trail, not for re-execution: the register moves, so
+   * re-running it would resolve a different set. The recipient rows are what
+   * actually received the mail.
    */
   @Column({ type: DataType.JSONB, allowNull: true })
   filter!: Record<string, unknown> | null
@@ -82,12 +78,10 @@ export class CompanyEmailModel extends MutableModel<
    * One address that gets a copy of this message — the admin who sent it, as a
    * rule.
    *
-   * ⚠️ **One copy per batch, not a BCC on every message.** A real BCC header on
-   * a send addressed at the whole register would deliver ~1 700 identical
-   * copies to one inbox. This is the whole recipient list for the copy, and it
-   * is deliberately not a `company_email_recipient` row: it belongs to no
-   * company, so it has no timeline to be written to and must not be counted
-   * among the companies that were mailed.
+   * One copy per batch, not a BCC on every message, which on a register-wide
+   * send would deliver ~1700 identical copies to one inbox. Deliberately not a
+   * `company_email_recipient` row: it belongs to no company, so it has no
+   * timeline and must not be counted among the companies mailed.
    */
   @Column({ type: DataType.TEXT, allowNull: true, field: 'copy_to_email' })
   copyToEmail!: string | null
@@ -95,10 +89,9 @@ export class CompanyEmailModel extends MutableModel<
   /**
    * When the copy went out, and the guard that it goes out only once.
    *
-   * ⚠️ Null after a *failed* copy as well as before an attempted one, which is
-   * deliberate: a resumed batch retries it. Null with a COMPLETED batch and a
-   * non-null `copyToEmail` therefore means the copy never made it — the log
-   * says why.
+   * Null after a failed copy as well as before an attempted one, so a resume
+   * retries it. Null on a COMPLETED batch with a `copyToEmail` set means the
+   * copy never made it — the log says why.
    */
   @Column({ type: DataType.DATE, allowNull: true, field: 'copy_sent_at' })
   copySentAt!: Date | null

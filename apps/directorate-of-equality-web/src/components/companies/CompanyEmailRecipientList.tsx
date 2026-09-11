@@ -29,12 +29,10 @@ type Props = {
 /**
  * A collapsed count that opens into the addresses behind it.
  *
- * ⚠️ Company names collapsed, addresses on expand — that split is the design,
- * not a space saving. Checking a thousand-recipient send by reading a thousand
- * email addresses is not a thing anyone will do; checking it by reading company
- * names is. The addresses still have to be *reachable*, because "did this go to
- * the right address for this company" is the question that comes up when
- * something goes wrong.
+ * Company names collapsed, addresses on expand: nobody checks a thousand-
+ * recipient send by reading a thousand addresses, but they do read company
+ * names. The addresses still have to be reachable for "did this go to the right
+ * address" when something goes wrong.
  */
 export const CompanyEmailRecipientList = ({
   heading,
@@ -47,9 +45,9 @@ export const CompanyEmailRecipientList = ({
 
   /*
    * Companies appearing on more than one row — a single-company send addressed
-   * to several people. Their addresses stay visible collapsed, because the name
-   * alone would print "Fyrirtæki ehf." three times with nothing to tell the
-   * rows apart, and the reason there are three is precisely the addresses.
+   * to several people. Their addresses stay visible collapsed, since the name
+   * alone would print "Fyrirtæki ehf." three times with nothing to tell the rows
+   * apart.
    */
   const seen = new Set<string>()
   const repeated = new Set<string>()
@@ -79,10 +77,9 @@ export const CompanyEmailRecipientList = ({
       <Box
         component="ul"
         /*
-         * ⚠️ `role="list"` alongside the `ul`, not instead of it. Safari drops
-         * list semantics from a `ul` whose `list-style` is `none` — which the
-         * grid needs — and the role is what puts "list, 42 items" back for a
-         * screen-reader user, who is here to check a count.
+         * `role="list"` alongside the `ul`, not instead of it: Safari drops list
+         * semantics from a `ul` with `list-style: none`, which the grid needs,
+         * and a screen-reader user is here to check a count.
          */
         role="list"
         className={styles.list}
@@ -92,9 +89,8 @@ export const CompanyEmailRecipientList = ({
         marginTop={1}
       >
         {/*
-          ⚠️ Keyed on the address as well as the company. One company can appear
-          more than once: a single-company send may name several addresses, and
-          each is its own message and its own row.
+          Keyed on the address as well as the company: a single-company send may
+          name several addresses, and each is its own row.
         */}
         {rows.map((row) => (
           <Box

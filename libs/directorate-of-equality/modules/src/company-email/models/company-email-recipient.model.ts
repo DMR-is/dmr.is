@@ -8,31 +8,21 @@ import { CompanyEmailRecipientStatusEnum } from './company-email.enums'
 import { CompanyEmailModel } from './company-email.model'
 
 /**
- * One company's place in a batch, resolved **before** the first message goes
- * out and updated as the send walks the list.
+ * One company's place in a batch, resolved before the first message goes out and
+ * updated as the send walks the list.
  *
- * ⚠️ Resolving up front rather than iterating a live query is the load-bearing
- * decision here, and it buys three things:
+ * Resolving up front rather than iterating a live query is what makes the
+ * preview honest (the modal lists the rows the job will walk), the batch
+ * resumable (PENDING rows state exactly what is left) and double-sending
+ * impossible.
  *
- *   1. The preview is honest. What step 2 of the modal lists is literally the
- *      rows the job will walk, so a company edited mid-send cannot silently join
- *      or leave the batch after the admin approved a count.
- *   2. The batch is resumable. A container that dies mid-send leaves PENDING
- *      rows, which is a precise statement of what still has to go out — where a
- *      live query would have to guess.
- *   3. It cannot double-send. Re-walking a filter would re-include companies
- *      already mailed.
+ * `companyName` and `email` are snapshots, not projections of the company row:
+ * correcting an address next week must not rewrite where last week's mail went.
  *
- * `companyName` and `email` are **snapshots**, not projections of the company
- * row. An admin who corrects a company's address a week later must not thereby
- * rewrite the record of where last week's mail actually went.
- *
- * ⚠️ **One row per address, which is usually but not always one row per
- * company.** A single-company send may name several addresses in the compose
- * step, and each gets its own row, its own send and its own timeline entry —
- * they are separate messages, not one message with several addressees, so no
- * recipient learns who else was written to. The uniqueness that keeps a resume
- * safe is therefore on (batch, company, email), not on (batch, company).
+ * One row per address, which is usually but not always one row per company — a
+ * single-company send may name several, and each is its own message, so no
+ * recipient learns who else was written to. Hence the resume uniqueness is on
+ * (batch, company, email).
  */
 type CompanyEmailRecipientAttributes = {
   companyEmailId: string
@@ -71,9 +61,8 @@ export class CompanyEmailRecipientModel extends MutableModel<
   companyName!: string
 
   /**
-   * Null when no address could be resolved for the company — either because it
-   * has none on file, or because it was skipped for quarantine and happens to
-   * have none either. `status` is what says which, not this.
+   * Null when no address could be resolved — no address on file, or skipped for
+   * quarantine and none on file either. `status` is what says which.
    */
   @Column({ type: DataType.TEXT, allowNull: true })
   email!: string | null

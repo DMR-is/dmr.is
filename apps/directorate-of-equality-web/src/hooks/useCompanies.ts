@@ -42,13 +42,10 @@ export function useCompanies(fixedQuery?: Partial<GetCompaniesInput>) {
     )
 
   /**
-   * The filter as the server sees it, minus paging.
-   *
-   * ⚠️ Paging is stripped because the other consumer of this is "send an email
-   * to everyone matching this filter". The API ignores `page`/`pageSize` on that
-   * path anyway, but leaving them in would put them in the audit snapshot stored
-   * with the batch, where they read as though the send had been limited to a
-   * page.
+   * The filter as the server sees it, minus paging. The other consumer is "send
+   * an email to everyone matching this filter", where `page`/`pageSize` are
+   * ignored but would still land in the batch's audit snapshot, reading as
+   * though the send had been limited to a page.
    */
   const { page: _page, pageSize: _pageSize, ...recipientFilter } = activeFilter
 

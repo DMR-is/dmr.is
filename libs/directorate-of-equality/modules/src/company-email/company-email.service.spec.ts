@@ -106,9 +106,9 @@ describe('CompanyEmailService', () => {
     })
 
     it('skips a quarantined company and says why', async () => {
-      // ⚠️ `quarantined` means all outbound activity is halted. It must not be
-      // silently dropped either: a recipient list that shrinks with no
-      // explanation is one an admin cannot check against the count they saw.
+      // `quarantined` halts all outbound activity, but the company must still be
+      // listed: a recipient list that shrinks with no explanation cannot be
+      // checked against the count the admin saw.
       companyService.findMailRecipientsByIds.mockResolvedValue([
         makeCompany({ quarantined: true }),
       ])
@@ -122,8 +122,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('reports a quarantined company with no email as quarantined', async () => {
-      // Order matters: quarantine is the fact an admin needs, and calling it
-      // "no address" would send them off to fill one in for a halted company.
+      // Order matters: calling a halted company "no address" would send the admin
+      // off to fill one in.
       companyService.findMailRecipientsByIds.mockResolvedValue([
         makeCompany({ quarantined: true, email: null }),
       ])
@@ -139,8 +139,8 @@ describe('CompanyEmailService', () => {
       ['null', null],
       ['empty', ''],
       ['not an address', 'ekki-netfang'],
-      // The one that matters most: nodemailer splits `to` on commas, so this
-      // would have delivered one company's message to a second company.
+      // nodemailer splits `to` on commas, so this would have delivered one
+      // company's message to a second company.
       ['a comma-separated list', 'a@x.is, b@y.is'],
     ])('skips a company whose email is %s', async (_label, email) => {
       companyService.findMailRecipientsByIds.mockResolvedValue([
@@ -153,8 +153,8 @@ describe('CompanyEmailService', () => {
       expect(preview.skipped[0].reason).toBe(
         CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL,
       )
-      // Nulled rather than echoed back: the address is unusable, and showing it
-      // in the preview would suggest it is what the mail would have gone to.
+      // Nulled rather than echoed back: showing an unusable address would suggest
+      // the mail would have gone to it.
       expect(preview.skipped[0].email).toBeNull()
     })
 
@@ -169,8 +169,7 @@ describe('CompanyEmailService', () => {
 
     it('makes one recipient out of each address on a single-company send', async () => {
       // One row per address, because each is its own message — see
-      // `resolveRecipients`. The company appears once per address, which is
-      // what the confirmation step lists.
+      // `resolveRecipients`.
       const preview = await service.preview({
         ...validDto,
         recipientEmails: ['framkvaemdastjori@x.is', 'mannaudur@x.is'],
@@ -188,8 +187,7 @@ describe('CompanyEmailService', () => {
     })
 
     it('trims and de-duplicates the addresses case-insensitively', async () => {
-      // The same address twice is one message. Finding that out from a
-      // duplicate in your inbox is not the way to find it out.
+      // The same address twice is one message.
       const preview = await service.preview({
         ...validDto,
         recipientEmails: [' Skra@Fyrirtaeki.is ', 'skra@fyrirtaeki.is', '  '],
@@ -201,9 +199,9 @@ describe('CompanyEmailService', () => {
     })
 
     it('rejects an address that is not a single address', async () => {
-      // ⚠️ A 400, not the silent skip an unusable *stored* address gets: this
-      // one is a typo in a field the admin is looking at. The comma case is the
-      // one that matters — nodemailer splits `to` on commas.
+      // A 400, not the silent skip an unusable stored address gets: this one is a
+      // typo in a field the admin is looking at. The comma case matters most —
+      // nodemailer splits `to` on commas.
       await expect(
         service.preview({
           ...validDto,
@@ -213,8 +211,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('gives a quarantined company one skipped row however many addresses were typed', async () => {
-      // The company is halted, which is a fact about the company and not about
-      // any address — repeating it per address would inflate the skipped count.
+      // Quarantine is a fact about the company; repeating it per address would
+      // inflate the skipped count.
       companyService.findMailRecipientsByIds.mockResolvedValue([
         makeCompany({ quarantined: true }),
       ])
@@ -232,9 +230,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('ignores typed addresses when more than one company is addressed', async () => {
-      // ⚠️ There is no single company a bulk send's addresses could belong to,
-      // and quietly applying one admin-typed address to every company is not
-      // recoverable.
+      // There is no single company a bulk send's addresses could belong to, and
+      // applying one typed address to every company is not recoverable.
       companyService.findMailRecipientsByIds.mockResolvedValue([
         makeCompany({ id: 'a', email: 'a@x.is' }),
         makeCompany({ id: 'b', email: 'b@x.is' }),
@@ -282,9 +279,8 @@ describe('CompanyEmailService', () => {
         filter: { quarantined: false } as never,
       })
 
-      // The list's own resolution, not a second copy of the filter logic — this
-      // is what keeps the count an admin approves and the set that is written to
-      // in agreement.
+      // The list's own resolution, not a second copy of the filter logic — what
+      // keeps the approved count and the set written to in agreement.
       expect(companyService.findMailRecipientsByFilter).toHaveBeenCalledWith({
         quarantined: false,
       })
@@ -293,11 +289,8 @@ describe('CompanyEmailService', () => {
 
   describe('preview', () => {
     it('returns the body already sanitised, so the confirmation step matches what is sent', async () => {
-      /*
-       * ⚠️ The admin approves what this step renders. Echoing the raw editor
-       * state back would let them sign off on markup that sanitise-html strips
-       * on the way out, and the recipient would get something else.
-       */
+      // The admin approves what this step renders. Echoing the raw editor state
+      // back would let them sign off on markup sanitise-html strips on the way out.
       const preview = await service.preview({
         ...validDto,
         bodyHtml: '<p onclick="steal()">Halló</p><script>x()</script>',
@@ -315,8 +308,8 @@ describe('CompanyEmailService', () => {
       )
 
       const [created] = companyEmailModel.create.mock.calls[0]
-      // Stored sanitised, so the delivered mail and the timeline read-back are
-      // the same bytes — and the same ones `preview` showed for this input.
+      // Stored sanitised, so the delivered mail, the timeline read-back and what
+      // `preview` showed are the same bytes.
       expect(created.bodyHtml).toBe('<p>Halló</p>')
     })
 
@@ -370,7 +363,7 @@ describe('CompanyEmailService', () => {
       await service.send({ ...validDto, attachments: [attachment] }, 'user-1')
 
       // The boundary is what stops a client-supplied key being pointed at an
-      // import workbook or an arbitrary object.
+      // import workbook.
       expect(uploadService.fetchObject).toHaveBeenCalledWith(
         attachment.key,
         ImportUploadBoundary.MAIL_ATTACHMENT,
@@ -379,9 +372,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('rejects attachments whose combined size exceeds the cap', async () => {
-      // ⚠️ The running total, not the per-file size: five files each just under
-      // the per-file cap would otherwise clear it together and be rejected by
-      // SES instead — after the admin had been told the send was accepted.
+      // The running total, not the per-file size: five files each just under the
+      // per-file cap would otherwise clear it together and be rejected by SES.
       uploadService.fetchObject.mockResolvedValue(Buffer.alloc(ONE_MB * 3))
 
       await expect(
@@ -410,15 +402,8 @@ describe('CompanyEmailService', () => {
     it('deletes a discarded staged object through the mail-attachment boundary', async () => {
       await service.discardAttachment({ key: attachment.key })
 
-      /*
-       * ⚠️ No `error` argument. `cleanupAfter` reads that as "terminal, delete
-       * it" — passing one would make this a no-op for anything it classes as
-       * transient, and the object the admin just removed would survive.
-       *
-       * The boundary is what makes a client-supplied key safe to pass: it is
-       * validated there before storage is touched, so this cannot be aimed at
-       * an import workbook.
-       */
+      // No `error` argument — `cleanupAfter` reads that as "terminal, delete it".
+      // The boundary is what makes a client-supplied key safe to pass.
       expect(uploadService.cleanupAfter).toHaveBeenCalledWith(
         attachment.key,
         ImportUploadBoundary.MAIL_ATTACHMENT,
@@ -426,14 +411,9 @@ describe('CompanyEmailService', () => {
     })
 
     it('reports a 413 raised as a bare HttpException as "too large"', async () => {
-      /*
-       * ⚠️ A bare `HttpException`, not a `PayloadTooLargeException` — that is
-       * exactly the shape the S3 branch produces, because the 413 travels back
-       * through `ResultWrapper.unwrap`, which rethrows every error as
-       * `new HttpException(message, code)`. Only local disk reads throw the
-       * subclass, so a subclass check passes in dev and sends the admin looking
-       * for a corrupt file in every deployed environment.
-       */
+      // A bare `HttpException`, the shape the S3 branch produces: the 413 travels
+      // back through `ResultWrapper.unwrap`, which rethrows as
+      // `new HttpException(message, code)`. Only local disk reads throw the subclass.
       uploadService.fetchObject.mockRejectedValue(
         new HttpException('too big', HttpStatus.PAYLOAD_TOO_LARGE),
       )
@@ -446,8 +426,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('refuses more than the maximum attachment count at preview', async () => {
-      // The cap belongs on the composing step, not only on send: reaching it at
-      // send means the admin has already cleared the confirmation.
+      // The cap belongs on the composing step: reaching it at send means the admin
+      // has already cleared the confirmation.
       await expect(
         service.preview({
           ...validDto,
@@ -470,8 +450,7 @@ describe('CompanyEmailService', () => {
         companyName: 'Fyrirtæki ehf.',
         email: 'skra@fyrirtaeki.is',
         status: CompanyEmailRecipientStatusEnum.PENDING,
-        // Joined in `deliver`, and the value the timeline event is recorded
-        // under — see the INACTIVE case below.
+        // Joined in `deliver`, and the value the timeline event is recorded under.
         company: { id: 'company-1', status: CompanyStatusEnum.ACTIVE },
         update: jest.fn(),
         ...overrides,
@@ -526,8 +505,8 @@ describe('CompanyEmailService', () => {
       }
 
       it('sends exactly one copy however many recipients the batch has', async () => {
-        // ⚠️ The whole point of the design. A per-message BCC on a send aimed
-        // at the register would put ~1 700 identical copies in one inbox.
+        // A per-message BCC on a send aimed at the register would put ~1700
+        // identical copies in one inbox.
         queuedWithCopy()
         recipientModel.findAll.mockResolvedValue([
           makeRow({ companyId: 'a', email: 'a@x.is' }),
@@ -596,8 +575,8 @@ describe('CompanyEmailService', () => {
       })
 
       it('completes the batch even when the copy cannot be sent', async () => {
-        // The copy is a courtesy to the sender. Mail that reached the companies
-        // must not be recorded as a failed batch because of it.
+        // Mail that reached the companies must not be recorded as a failed batch
+        // because the sender's copy did not go.
         queuedWithCopy()
         recipientModel.findAll.mockResolvedValue([makeRow()])
         mailService.sendCustomEmail.mockImplementation(async (to: string) =>
@@ -625,8 +604,8 @@ describe('CompanyEmailService', () => {
       })
 
       it('writes no recipient row and no timeline entry for the copy', async () => {
-        // It belongs to no company: counting it among the companies mailed
-        // would misstate the send.
+        // It belongs to no company: counting it among the companies mailed would
+        // misstate the send.
         queuedWithCopy()
         recipientModel.findAll.mockResolvedValue([makeRow()])
 
@@ -651,10 +630,8 @@ describe('CompanyEmailService', () => {
     })
 
     it("records the event under the company's own register status", async () => {
-      // Nothing constrains a send to ACTIVE companies — a filter with no
-      // `status` matches INACTIVE ones too, and `findMailRecipientsByIds` does
-      // not filter at all. `company_event.status` is NOT NULL on an immutable
-      // table, so a constant here would be a false audit row.
+      // Nothing constrains a send to ACTIVE companies, and `company_event.status`
+      // is NOT NULL on an immutable table — a constant here would be a false row.
       recipientModel.findAll.mockResolvedValue([
         makeRow({
           company: { id: 'company-1', status: CompanyStatusEnum.INACTIVE },
@@ -675,8 +652,7 @@ describe('CompanyEmailService', () => {
     })
 
     it('records a failed send without stopping the batch', async () => {
-      // ⚠️ The core resilience property: one bad address must not cost the other
-      // 1 699 companies their message.
+      // One bad address must not cost the other 1699 companies their message.
       const rows = [makeRow({ companyId: 'a' }), makeRow({ companyId: 'b' })]
       recipientModel.findAll.mockResolvedValue(rows)
       mailService.sendCustomEmail
@@ -703,12 +679,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('records a skipped company on its timeline without attempting a send', async () => {
-      /*
-       * ⚠️ The skip is the outcome an admin most needs to see — "we deliberately
-       * did not write to this company" — and nothing else writes it: the resolve
-       * step only sets the row's status. An early return here left
-       * CUSTOM_EMAIL_SKIPPED unreachable and the company's timeline silent.
-       */
+      // Nothing else writes the skip — the resolve step only sets the row's
+      // status. An early return here left CUSTOM_EMAIL_SKIPPED unreachable.
       const row = makeRow({
         status: CompanyEmailRecipientStatusEnum.SKIPPED_QUARANTINED,
       })
@@ -731,8 +703,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('does not re-record a skip when resuming a batch already in SENDING', async () => {
-      // A container that died mid-send leaves the batch in SENDING. Re-walking
-      // it must not double every skip entry that the first run already wrote.
+      // A container that died mid-send leaves the batch in SENDING. Re-walking it
+      // must not double every skip entry the first run wrote.
       companyEmailModel.findOne.mockResolvedValue({
         status: CompanyEmailStatusEnum.SENDING,
       })
@@ -746,8 +718,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('marks the batch FAILED when the loop itself faults', async () => {
-      // A database fault, not one recipient's — this must abort rather than
-      // walk another 1 699 rows writing updates that will never commit.
+      // A database fault, not one recipient's — abort rather than walk another
+      // 1699 rows writing updates that will never commit.
       recipientModel.findAll.mockRejectedValue(new Error('connection lost'))
 
       await service.send(validDto, 'user-1')
@@ -768,8 +740,8 @@ describe('CompanyEmailService', () => {
 
       await service.send(validDto, 'user-1')
 
-      // The mail is already out; losing one audit line must not abort a batch
-      // that is still delivering to everyone else.
+      // The mail is already out; losing one audit line must not abort a batch that
+      // is still delivering.
       expect(mailService.sendCustomEmail).toHaveBeenCalledTimes(2)
       expect(companyEmailModel.update).toHaveBeenCalledWith(
         expect.objectContaining({ status: CompanyEmailStatusEnum.COMPLETED }),
@@ -821,8 +793,8 @@ describe('CompanyEmailService', () => {
         'user-1',
       )
 
-      // ⚠️ One copy per BATCH, not per recipient — a company-keyed archive would
-      // write the same file once per company.
+      // One copy per BATCH, not per recipient — a company-keyed archive would write
+      // the same file once per company.
       expect(aws.uploadObject).toHaveBeenCalledWith(
         'doe-company-files',
         // The staged basename, not `filename`: server generated, so unique.
@@ -831,13 +803,9 @@ describe('CompanyEmailService', () => {
         expect.any(Buffer),
       )
       expect(row.archived).toBe(true)
-      /*
-       * ⚠️ The STAGING key, not the archive key it was just updated to.
-       * `row.update` mutates `s3Key` in place, so reading it back after the
-       * update hands `cleanupAfter` a key outside the mail-attachment prefix —
-       * which the boundary check refuses, leaving the staged object behind
-       * forever behind a misleading "outside its prefix" warning.
-       */
+      // The STAGING key, not the archive key it was just updated to: `row.update`
+      // mutates `s3Key` in place, and a key outside the mail-attachment prefix is
+      // refused by the boundary check.
       expect(uploadService.cleanupAfter).toHaveBeenCalledWith(
         'doe-imports/mail-attachment/x.pdf',
         ImportUploadBoundary.MAIL_ATTACHMENT,
@@ -845,12 +813,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('keeps the staged object when no archive bucket is configured', async () => {
-      /*
-       * ⚠️ The live state today: AWS_DOE_COMPANY_FILES_BUCKET is deliberately
-       * optional and that bucket is not provisioned. Deleting the staged object
-       * with nowhere to have put it would destroy the only copy of a file that
-       * really was sent to companies.
-       */
+      // AWS_DOE_COMPANY_FILES_BUCKET is optional and not provisioned. Deleting the
+      // staged object with nowhere to have put it would destroy the only copy.
       delete process.env.AWS_DOE_COMPANY_FILES_BUCKET
       uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
       attachmentModel.findAll.mockResolvedValue([makeAttachmentRow()])
@@ -871,13 +835,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('gives two attachments sharing a filename separate archive keys', async () => {
-      /*
-       * ⚠️ Nothing stops an admin attaching two files called the same thing —
-       * the client caps count and size, not names. Keying the archive by
-       * `filename` would put both under one key and leave the second
-       * overwriting the only durable copy of the first, after the staged
-       * objects it could have been recovered from are already cleaned up.
-       */
+      // Nothing stops an admin attaching two files with the same name. Keying the
+      // archive by `filename` would leave the second overwriting the first.
       process.env.AWS_DOE_COMPANY_FILES_BUCKET = 'doe-company-files'
       uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
       aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ok'))
@@ -905,13 +864,8 @@ describe('CompanyEmailService', () => {
     })
 
     it('still archives when the batch aborts', async () => {
-      /*
-       * ⚠️ An aborted batch has usually already sent to some of its recipients,
-       * so its attachments are as much part of the audit record as a completed
-       * one's. Archiving only on the success path left the staged objects in
-       * `doe-imports/mail-attachment/` with nothing that would ever return for
-       * them.
-       */
+      // An aborted batch has usually already sent to some recipients, so its
+      // attachments belong in the audit record too.
       process.env.AWS_DOE_COMPANY_FILES_BUCKET = 'doe-company-files'
       uploadService.fetchObject.mockResolvedValue(Buffer.alloc(10))
       aws.uploadObject.mockResolvedValue(ResultWrapper.ok('ok'))

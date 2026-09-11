@@ -3,10 +3,9 @@ import { Includeable, literal, Op, WhereOptions } from 'sequelize'
 import { DoeModels } from '../../constants'
 import { PostcodeModel } from '../../location/models/postcode.model'
 import { RegionModel } from '../../location/models/region.model'
-// ⚠️ `import type`, deliberately. `get-companies-query.dto.ts` imports
+// `import type`, deliberately: `get-companies-query.dto.ts` imports
 // `CompanyExpiryFilterEnum` from this file at runtime, so a value import back
-// the other way would close a require cycle. Type-only is erased at compile
-// time and leaves the one-way runtime edge intact.
+// would close a require cycle.
 import type { GetCompaniesQueryDto } from '../dto/get-companies-query.dto'
 import {
   CompanyReportStatusEnum,
@@ -200,19 +199,16 @@ export function buildCompanyExpiryWhere(
 
 /**
  * Every filter on the company list, composed into one `where` plus the joins it
- * needs. Paging and sorting are deliberately NOT here — they are the caller's,
- * and the two callers disagree about them.
+ * needs. Paging and sorting are the caller's — the two callers disagree.
  *
- * ⚠️ This exists so the company list and the "send email to everyone matching
- * this filter" recipient resolution cannot drift apart. They are the same
- * question asked twice, and a second hand-rolled copy of these conditions would
- * eventually answer it differently — meaning the count an admin approves and
- * the set that actually receives the mail would disagree, silently, in the
- * direction of mailing companies they did not select.
+ * Exists so the list and the "send to everyone matching this filter" recipient
+ * resolution cannot drift apart: a second copy of these conditions would
+ * eventually answer the same question differently, in the direction of mailing
+ * companies nobody selected.
  *
- * ⚠️ The result must be run through the `withReportStatus` scope. Three of these
- * builders (`companyStatus`, `overdue`, `expiresWithin`) return `literal()` SQL
- * bound to `COMPANY_QUERY_ALIAS`; off the bare model the alias does not resolve.
+ * The result must be run through the `withReportStatus` scope — `companyStatus`,
+ * `overdue` and `expiresWithin` return `literal()` SQL bound to
+ * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
  */
 export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
   where: WhereOptions

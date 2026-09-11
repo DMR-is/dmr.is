@@ -141,7 +141,7 @@ describe('ImportUploadService', () => {
     it.each([['html'], ['svg'], ['exe'], ['']])(
       'refuses to stage a .%s mail attachment',
       async (extension) => {
-        // ⚠️ These objects are handed to recipients outside the Directorate. An
+        // These objects are handed to recipients outside the Directorate. An
         // attachment the receiving mail client will run is not something an
         // admin should be able to introduce by naming a file.
         await expect(
@@ -153,7 +153,7 @@ describe('ImportUploadService', () => {
     )
 
     it('does not let the mail-attachment extensions leak into the import boundaries', async () => {
-      // ⚠️ The allow-list is per boundary for exactly this reason: widening it
+      // The allow-list is per boundary for this reason: widening it
       // globally would have retired the import path's own extension check,
       // which is what proves an admin import key was minted by this service.
       await expect(

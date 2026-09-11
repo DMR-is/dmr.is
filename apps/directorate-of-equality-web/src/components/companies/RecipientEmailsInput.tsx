@@ -14,12 +14,10 @@ const t = companiesText.sendEmail
 /**
  * What counts as an address worth turning into a pill.
  *
- * ⚠️ Deliberately stricter than the API's `looksLikeOneAddress`, which only
- * rejects what a transport would mis-split. This one also wants a dot in the
- * domain, because its job is different: the server is deciding whether a value
- * is *safe to send*, and this is deciding whether the admin has finished
- * typing. Committing `jon@fyrirtaeki` into a pill the moment they hit space
- * would take the cursor away mid-address.
+ * Stricter than the API's `looksLikeOneAddress`, which only rejects what a
+ * transport would mis-split: this one decides whether the admin has finished
+ * typing, so it also wants a dot in the domain. Committing `jon@fyrirtaeki`
+ * on the first space would take the cursor away mid-address.
  */
 export const isCompleteEmail = (value: string): boolean =>
   /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(value.trim())
@@ -27,20 +25,14 @@ export const isCompleteEmail = (value: string): boolean =>
 /**
  * Take everything finished out of the draft and add it to the list.
  *
- * Returns the new list together with whatever could not be committed, which the
- * caller puts back in the input. Splitting on separators as well as whitespace
- * is what makes a pasted `a@x.is, b@x.is` land as two pills.
+ * Returns the new list plus whatever could not be committed, which the caller
+ * puts back in the input. Splitting on separators as well as whitespace is what
+ * makes a pasted `a@x.is, b@x.is` land as two pills.
  *
- * ⚠️ Pure, and exported, because the parent has to be able to run it on
- * "Halda áfram" as well: an address typed but never followed by a space is one
- * the admin believes they have entered, and dropping it silently at preview
- * time would send the message to everyone except the person they typed last.
- *
- * ⚠️ The cap is enforced here rather than by the caller trimming the result,
- * and that is the whole point: an address that does not fit goes back into the
- * remainder, never on the floor. Truncating instead would leave the admin
- * looking at `max` pills with nothing to say that the rest of what they pasted
- * was dropped — the same silent loss this function exists to prevent.
+ * Pure and exported so the parent can run it on "Halda áfram" too: an address
+ * typed but never followed by a space is one the admin believes they entered.
+ * The cap is enforced here so an address that does not fit goes back into the
+ * remainder rather than on the floor.
  */
 export const commitRecipientDraft = (
   emails: string[],
@@ -57,9 +49,8 @@ export const commitRecipientDraft = (
       continue
     }
 
-    // Same address twice is one message — see `normaliseRecipientEmails` on the
-    // API, which does the same thing for callers that are not this form. Not
-    // pushed back: a duplicate is nothing the admin has to act on.
+    // The same address twice is one message. Not pushed back — a duplicate is
+    // nothing the admin has to act on.
     if (seen.has(token.toLowerCase())) continue
 
     if (next.length >= max) {
@@ -87,9 +78,8 @@ type Props = {
 /**
  * Addresses as removable pills, the way every mail client writes a To field.
  *
- * The draft text is held by the parent rather than here, because the parent
- * needs it at preview time — see `commitRecipientDraft`. This component owns
- * only when a draft becomes a pill.
+ * The draft text is held by the parent, which needs it at preview time — see
+ * `commitRecipientDraft`. This component owns only when a draft becomes a pill.
  */
 export const RecipientEmailsInput = ({
   label,
@@ -103,13 +93,9 @@ export const RecipientEmailsInput = ({
   const inputRef = useRef<HTMLInputElement>(null)
   /*
    * Whether the admin has asked for the draft to become a pill — by leaving the
-   * field or by pressing a separator key.
-   *
-   * ⚠️ What gates the error message, rather than showing it the moment the draft
-   * is not yet a whole address: without this the field goes red on the first
-   * character of every address typed into it, and re-announces the error on
-   * each keystroke after that. Cleared again on the next keystroke, so fixing a
-   * flagged address clears the flag as the admin types.
+   * field or pressing a separator key. Gates the error message: without it the
+   * field goes red on the first character of every address and re-announces on
+   * each keystroke. Cleared on the next keystroke, so fixing clears the flag.
    */
   const [hasTriedToCommit, setHasTriedToCommit] = useState(false)
 
@@ -120,8 +106,8 @@ export const RecipientEmailsInput = ({
 
     setHasTriedToCommit(true)
 
-    // Anything that could not become a pill — malformed, or past the cap —
-    // comes back as the remainder and stays visible in the box.
+    // Anything that could not become a pill — malformed, or past the cap — comes
+    // back as the remainder and stays visible in the box.
     const { emails: next, remainder } = commitRecipientDraft(emails, draft, max)
     onChange(next)
     onDraftChange(remainder)
@@ -129,12 +115,9 @@ export const RecipientEmailsInput = ({
 
   const remove = (email: string) => {
     onChange(emails.filter((e) => e !== email))
-    /*
-     * ⚠️ Focus has to be put somewhere deliberately: the button that took the
-     * click is about to be unmounted, and a keyboard user who lands on
-     * `document.body` has lost their place in the dialog entirely. The input is
-     * where they were working.
-     */
+    // Focus has to be placed deliberately: the button that took the click is
+    // about to unmount, and a keyboard user would otherwise land on
+    // `document.body`, outside the dialog.
     inputRef.current?.focus()
   }
 
@@ -142,15 +125,15 @@ export const RecipientEmailsInput = ({
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === ',' || e.key === ';') {
-      // ⚠️ Enter would otherwise submit the surrounding form, and the separator
-      // keys would be typed into the value that is about to become a pill.
+      // Enter would otherwise submit the surrounding form, and the separator keys
+      // would be typed into the value that is about to become a pill.
       e.preventDefault()
       commit()
       return
     }
 
-    // Familiar from every mail client: backspace at the start of an empty box
-    // takes the last address back for editing rather than merely deleting it.
+    // Familiar from every mail client: backspace in an empty box takes the last
+    // address back for editing rather than merely deleting it.
     if (e.key === 'Backspace' && !draft && emails.length) {
       e.preventDefault()
       onChange(emails.slice(0, -1))
@@ -159,17 +142,14 @@ export const RecipientEmailsInput = ({
   }
 
   /*
-   * Judged per token, the way `commitRecipientDraft` splits it — so the message
-   * describes what committing would actually do with the box. A remainder of
-   * `'k@x.is l@x.is'` after a paste over the cap is two whole addresses with no
-   * room, not one malformed one, and saying "invalid address" there would send
-   * the admin looking for a typo that is not present.
+   * Judged per token, the way `commitRecipientDraft` splits it, so the message
+   * describes what committing would do. A remainder of `'k@x.is l@x.is'` is two
+   * whole addresses with no room, not one malformed address.
    */
   const tokens = draft.split(/[\s,;]+/).filter(Boolean)
   const isDraftIncomplete = tokens.some((token) => !isCompleteEmail(token))
-  // Whole addresses with no room left for them. Flagged rather than swallowed:
-  // `commit` leaves them in the box, and without a message the admin would be
-  // looking at an address that never becomes a recipient.
+  // Whole addresses with no room left. Flagged rather than swallowed: `commit`
+  // leaves them in the box, where they would otherwise never become recipients.
   const isOverCap = !isDraftIncomplete && tokens.length > 0 && isFull
 
   const errorMessage = !hasTriedToCommit
@@ -190,10 +170,9 @@ export const RecipientEmailsInput = ({
             The style reset is inline because the bullets and padding are the
             browser's, not the theme's.
 
-            ⚠️ `role="list"` alongside the `ul`, not instead of it: Safari drops
-            list semantics from a `ul` whose `list-style` is `none`, which is
-            exactly what the reset below sets — and the role is what puts the
-            count back. Same reason as on `CompanyEmailRecipientList`.
+            `role="list"` alongside the `ul`: Safari drops list semantics from a
+            `ul` with `list-style: none`, which the reset below sets. Same reason
+            as on `CompanyEmailRecipientList`.
           */}
           <Box
             component="ul"
@@ -223,8 +202,8 @@ export const RecipientEmailsInput = ({
                   icon="close"
                   iconType="outline"
                   // Names the address, not just "remove": a screen-reader user
-                  // tabbing through five identical buttons cannot otherwise
-                  // tell which one drops which recipient.
+                  // tabbing through identical buttons cannot otherwise tell
+                  // which one drops which recipient.
                   aria-label={`${t.removeRecipient} ${email}`}
                   onClick={() => remove(email)}
                 />
@@ -243,28 +222,25 @@ export const RecipientEmailsInput = ({
         backgroundColor="blue"
         name="recipientEmailDraft"
         label={label}
-        // `text`, not `email`: the field holds a draft that may briefly be a
-        // paste of several addresses, and the browser's own single-address
-        // validation would flag that as invalid while it is being split up.
+        // `text`, not `email`: the draft may briefly be a paste of several
+        // addresses, which the browser's own validation would flag as invalid.
         type="text"
         inputMode="email"
         autoComplete="off"
         value={draft}
         /*
-         * ⚠️ Never disabled, not even at the cap. The cap is reached by
-         * committing an address *from this field*, so disabling it there would
-         * take focus off the element the admin is typing in and drop it on
-         * `document.body` — a keyboard user would be thrown out of the dialog
-         * by successfully adding a recipient. It refuses the entry and says so
-         * instead.
+         * Never disabled, not even at the cap — the cap is reached by committing
+         * an address from this very field, so disabling it would drop focus on
+         * `document.body` and throw a keyboard user out of the dialog. It
+         * refuses the entry and says so instead.
          */
         onChange={(e) => {
           setHasTriedToCommit(false)
           onDraftChange(e.target.value)
         }}
         onKeyDown={handleKeyDown}
-        // The address someone typed and then clicked away from is one they
-        // consider entered. Leaving it as loose text would silently drop it.
+        // An address someone typed and then clicked away from is one they consider
+        // entered. Leaving it as loose text would silently drop it.
         onBlur={commit}
         hasError={!!errorMessage}
         errorMessage={errorMessage}
