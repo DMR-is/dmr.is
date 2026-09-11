@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 
 import { Box } from '@dmr.is/ui/components/island-is/Box'
+import { Icon } from '@dmr.is/ui/components/island-is/Icon'
 import { Inline } from '@dmr.is/ui/components/island-is/Inline'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
@@ -12,6 +13,7 @@ import { type TableCellItem } from '@dmr.is/ui/components/Tables/Table'
 
 import {
   type CompanyDto,
+  type CompanyObligationStatusEnum,
   CompanyStatusEnum,
   type Paging,
 } from '../../gen/fetch/types.gen'
@@ -20,13 +22,127 @@ import { companiesText, overviewText, sharedText } from '../../lib/text'
 import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
 import { CompanyExpandedRow } from './CompanyExpandedRow'
 import {
-  COMPANY_STATUS_LABEL,
-  COMPANY_STATUS_TAG_VARIANT,
-  REPORT_STATUS_LABEL,
-  REPORT_STATUS_TAG_VARIANT,
+  OBLIGATION_STATUS_LABEL,
+  OBLIGATION_STATUS_TAG_VARIANT,
+  SALARY_OBLIGATION_TAG_VARIANT,
 } from './companyStatus'
 
 import { type ColumnDef, type SortingState } from '@tanstack/react-table'
+
+/**
+ * One obligation's cell: its own state, plus the overdue marker when the
+ * deadline for THIS obligation has passed.
+ *
+ * The overdue flag is gated server-side on the obligation
+ * (`equalityReportOverdueSql` / `salaryReportOverdueSql`), so it cannot appear
+ * beside "Á ekki við" — a company that owes nothing has no deadline to miss,
+ * whatever date the register seeded onto it.
+ */
+const ObligationCell = ({
+  status,
+  overdue,
+  variants,
+}: {
+  status: CompanyObligationStatusEnum
+  overdue: boolean
+  variants: typeof OBLIGATION_STATUS_TAG_VARIANT
+}) => {
+  const variant = variants[status]
+  const label = OBLIGATION_STATUS_LABEL[status]
+
+  // NOT_REQUIRED has no tag variant on purpose: muted text, not a badge.
+  if (!variant) {
+    return (
+      <Text variant="small" color="dark300">
+        {label}
+      </Text>
+    )
+  }
+
+  const items: TableCellItem[] = [
+    { type: 'tag', variant, children: label, light: true },
+  ]
+
+  if (overdue) {
+    items.push({
+      type: 'tag',
+      variant: 'red',
+      children: companiesText.overdueTag,
+      light: true,
+    })
+  }
+
+  return <TableCell items={items} />
+}
+
+/**
+ * The flag icons, at most one per axis.
+ *
+ * ⚠️ TWO independent axes, not three states in one slot:
+ *
+ *   register — INACTIVE, or nothing. This used to be a tag in the status
+ *     column; it moved here when that column split in two. The icon is always
+ *     rendered when it applies (only its label needs hover), which is what
+ *     keeps the register-status filter from returning a page of rows that look
+ *     identical.
+ *
+ *   activity — var, else dagsektir, else nothing. ⚠️ The precedence is domain
+ *     logic and must not be "fixed" into two icons: var is an admin halt on all
+ *     activity for the company, so the daily-fines process is stopped or never
+ *     started while it is on. Showing only the var when both flags are set is
+ *     the correct answer, not a lost fact.
+ */
+const CompanyFlagIcons = ({ company }: { company: CompanyDto }) => {
+  const { status, quarantined, finesStarted } = company
+
+  const icons: {
+    key: string
+    icon: 'closeCircle' | 'informationCircle' | 'warning'
+    color: 'red600' | 'blue400' | 'yellow600'
+    text: string
+  }[] = []
+
+  if (status === CompanyStatusEnum.INACTIVE) {
+    icons.push({
+      key: 'register',
+      icon: 'closeCircle',
+      color: 'red600',
+      text: companiesText.companyInactive,
+    })
+  }
+
+  if (quarantined) {
+    icons.push({
+      key: 'activity',
+      icon: 'informationCircle',
+      color: 'blue400',
+      text: overviewText.companyQuarantined,
+    })
+  } else if (finesStarted) {
+    icons.push({
+      key: 'activity',
+      icon: 'warning',
+      color: 'yellow600',
+      text: overviewText.companyFinesStarted,
+    })
+  }
+
+  if (!icons.length) return null
+
+  return (
+    <Inline space={1} alignY="center">
+      {icons.map(({ key, icon, color, text }) => (
+        // `Tooltip` hardcodes informationCircle and takes no `icon` prop, so the
+        // trigger is passed as children to get a per-axis icon.
+        <Tooltip key={key} text={text} placement="left">
+          <span>
+            <Icon icon={icon} color={color} size="medium" />
+          </span>
+        </Tooltip>
+      ))}
+    </Inline>
+  )
+}
 
 type Props = {
   rows: CompanyDto[]
@@ -63,66 +179,36 @@ export const CompanyTable = ({
         enableSorting: true,
       },
       {
-        id: 'status',
-        header: sharedText.statusLabel,
+        id: 'equalityObligation',
+        header: companiesText.equalityColumn,
         enableSorting: false,
-        cell: ({ row }) => {
-          const status = row.original.reportStatus
-          const items: TableCellItem[] = [
-            {
-              type: 'tag',
-              variant: REPORT_STATUS_TAG_VARIANT[status],
-              children: REPORT_STATUS_LABEL[status],
-            },
-          ]
-          // Off the register. Rendered here rather than in its own column
-          // because it is the exception, not a value every row carries — and
-          // without it the register-status filter could narrow the list to
-          // INACTIVE companies that looked identical to every other row.
-          if (row.original.status === CompanyStatusEnum.INACTIVE) {
-            items.push({
-              type: 'tag',
-              variant: COMPANY_STATUS_TAG_VARIANT[CompanyStatusEnum.INACTIVE],
-              children: COMPANY_STATUS_LABEL[CompanyStatusEnum.INACTIVE],
-            })
-          }
-          // Overdue obligation — prompts the admin to look at the company and
-          // possibly start the daily-fines process.
-          if (
-            row.original.equalityReportOverdue ||
-            row.original.salaryReportOverdue
-          ) {
-            items.push({
-              type: 'tag',
-              variant: 'red',
-              children: companiesText.overdueTag,
-            })
-          }
-          return <TableCell items={items} />
-        },
+        cell: ({ row }) => (
+          <ObligationCell
+            status={row.original.equalityObligationStatus}
+            overdue={row.original.equalityReportOverdue}
+            variants={OBLIGATION_STATUS_TAG_VARIANT}
+          />
+        ),
       },
       {
-        id: 'companyStatus',
-        header: () => null,
-        size: 40,
+        id: 'salaryObligation',
+        header: companiesText.salaryColumn,
         enableSorting: false,
-        cell: ({ row }) => {
-          const { quarantined, finesStarted } = row.original
-          if (!quarantined && !finesStarted) return null
-          const text = quarantined
-            ? overviewText.companyQuarantined
-            : overviewText.companyFinesStarted
-          return (
-            <Box display="flex" justifyContent="center" alignItems="center">
-              <Tooltip
-                text={text}
-                placement="left"
-                color="blue400"
-                iconSize="medium"
-              />
-            </Box>
-          )
-        },
+        cell: ({ row }) => (
+          <ObligationCell
+            status={row.original.salaryObligationStatus}
+            overdue={row.original.salaryReportOverdue}
+            variants={SALARY_OBLIGATION_TAG_VARIANT}
+          />
+        ),
+      },
+      {
+        id: 'companyFlags',
+        header: () => null,
+        // Two icons wide. One per axis — see CompanyFlagIcons.
+        size: 72,
+        enableSorting: false,
+        cell: ({ row }) => <CompanyFlagIcons company={row.original} />,
       },
     ],
     [],

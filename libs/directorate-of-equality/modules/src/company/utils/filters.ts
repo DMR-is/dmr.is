@@ -10,25 +10,53 @@ import {
 } from '../models/company.enums'
 import { IsatCategoryModel } from '../models/isat-category.model'
 import {
+  actionPlanMissingSql,
   COMPANY_QUERY_ALIAS,
-  companyReportStatusCaseSql,
+  equalityReportMissingSql,
   equalityReportOverdueSql,
   legacyCertificationExpiringSql,
+  salaryReportMissingSql,
   salaryReportOverdueSql,
 } from './report-status'
 
 /**
- * Filter the company list by compliance status. Filters on the very same
- * `CASE` expression that drives the displayed `reportStatus` column (see
- * `report-status.ts`), so the value an admin sees and the value they filter on
- * are guaranteed to match.
+ * The predicate behind each selectable compliance status — the very same
+ * expressions the displayed columns are built from (see `report-status.ts`), so
+ * what an admin sees and what they filter on cannot diverge.
+ *
+ * SATISFACTORY is the absence of the other three rather than an expression of
+ * its own, which is what keeps it exhaustive: a fourth obligation added later
+ * lands in the roll-up and in this map, and "nothing outstanding" narrows to
+ * match without anyone remembering to edit it.
+ */
+const STATUS_PREDICATE: Record<CompanyReportStatusEnum, () => string> = {
+  [CompanyReportStatusEnum.MISSING_EQUALITY_REPORT]: equalityReportMissingSql,
+  [CompanyReportStatusEnum.MISSING_ACTION_PLAN]: actionPlanMissingSql,
+  [CompanyReportStatusEnum.MISSING_SALARY_REPORT]: salaryReportMissingSql,
+  [CompanyReportStatusEnum.SATISFACTORY]: () =>
+    `(NOT ${equalityReportMissingSql()} AND NOT ${actionPlanMissingSql()} AND NOT ${salaryReportMissingSql()})`,
+}
+
+/**
+ * Filter the company list by compliance status.
+ *
+ * ⚠️ An OR over the per-obligation predicates, NOT a test against the roll-up
+ * `reportStatus`. The list shows each missing obligation as its own column
+ * value, so a company missing both reports carries both. Matching the roll-up
+ * would return only the companies whose *highest-priority* problem is the one
+ * selected — filtering "Vantar launagreiningu" would silently skip every
+ * company that is also missing its jafnréttisáætlun, while the list visibly
+ * shows them missing the launagreining.
+ *
+ * Selecting several statuses therefore means "missing any of these", which is
+ * what a multi-select reads as.
  */
 export function buildCompanyStatusWhere(
   statuses: CompanyReportStatusEnum[],
 ): WhereOptions {
   if (!statuses.length) return {}
-  const values = statuses.map((status) => `'${status}'`).join(', ')
-  return literal(`${companyReportStatusCaseSql()} IN (${values})`)
+  const predicates = statuses.map((status) => STATUS_PREDICATE[status]())
+  return literal(`(${predicates.join(' OR ')})`)
 }
 
 /**

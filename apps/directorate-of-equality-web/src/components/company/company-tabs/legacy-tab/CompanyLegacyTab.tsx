@@ -10,7 +10,11 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { LegacyReportDto } from '../../../../gen/fetch'
 import { companiesText, serverErrorText, sharedText } from '../../../../lib/text'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
-import { formatIsoDate, formatNationalId } from '../../../../lib/utils'
+import {
+  formatIsoDate,
+  formatNationalId,
+  formatTimestampDate,
+} from '../../../../lib/utils'
 import { InfoItems } from '../../../report/report-tabs/company-tab/InfoItems'
 
 const t = companiesText.detailView.legacy
@@ -32,10 +36,10 @@ const date = (v: string | null | undefined) => (v ? formatIsoDate(v) : t.unknown
 
 /**
  * A SharePoint Created/Modified stamp — a real instant, unlike the sheet's day
- * cells, so it goes through `Date` rather than `formatIsoDate`.
+ * cells, so it goes through `formatTimestampDate` rather than `formatIsoDate`.
  */
 const timestamp = (v: Date | string | null | undefined) =>
-  v ? new Date(v).toLocaleDateString('is-IS') : t.unknown
+  v ? formatTimestampDate(v) : t.unknown
 
 const bool = (v: boolean | null | undefined) =>
   v === null || v === undefined

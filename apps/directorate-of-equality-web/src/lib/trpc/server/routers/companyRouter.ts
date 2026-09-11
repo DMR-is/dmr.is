@@ -47,6 +47,12 @@ const zGetCompaniesQuery = z.object({
   finesStarted: z.boolean().optional(),
   quarantined: z.boolean().optional(),
   overdue: z.boolean().optional(),
+  // ⚠️ The two default-on hides, as opt-in reveals. This schema is hand-written
+  // and strips anything it does not name, so omitting these here would drop
+  // them silently — the toggle would appear to do nothing, with no error
+  // anywhere. Absent means "hidden", which is the server's default.
+  includeNotObliged: z.boolean().optional(),
+  includeInactive: z.boolean().optional(),
   isatCategoryCode: z.array(z.string()).optional(),
   isatSection: z.array(z.string()).optional(),
   sector: z.array(z.enum(['UNKNOWN', 'PRIVATE', 'PUBLIC'])).optional(),

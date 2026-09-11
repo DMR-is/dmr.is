@@ -4,16 +4,12 @@ import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
-import { Tag } from '@dmr.is/ui/components/island-is/Tag'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
-import {
-  REPORT_STATUS_LABEL,
-  REPORT_STATUS_TAG_VARIANT,
-} from '../../components/companies/companyStatus'
+import { CompanyObligationTags } from '../../components/company/CompanyObligationTags'
 import { CompanyDto } from '../../gen/fetch'
 import { NAV_PATHS } from '../../lib/constants'
 import { companiesText, headerText } from '../../lib/text'
@@ -90,13 +86,7 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
           >
             <Text variant="h3">{company.name}</Text>
             <Box>
-              <Tag
-                variant={REPORT_STATUS_TAG_VARIANT[company.reportStatus]}
-                disabled
-                outlined
-              >
-                {REPORT_STATUS_LABEL[company.reportStatus]}
-              </Tag>
+              <CompanyObligationTags company={company} />
             </Box>
           </Box>
           {company.quarantined && (

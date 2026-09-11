@@ -62,6 +62,40 @@ export const formatIsoDate = (v: string | null | undefined) => {
 }
 
 /**
+ * A real instant off the API (a `TIMESTAMPTZ`, e.g. `company.nextEqualityReportDueAt`
+ * or `report.createdAt`) as `dd.mm.yyyy` in the viewer's own zone.
+ *
+ * ⚠️ NOT `toLocaleDateString('is-IS')`, which is what this replaces. That call
+ * renders `3/29/2026` wherever the runtime lacks Icelandic locale data and
+ * falls back to en-US — which is every environment we ship to, browser and
+ * Node alike, unless full ICU happens to be present. It fails silently: no
+ * error, no warning, just a US date in an Icelandic admin UI. Building the
+ * string ourselves removes the dependency entirely.
+ *
+ * ⚠️ NOT `formatIsoDate` either, even though both render `dd.mm.yyyy`. That one
+ * splits on `-` and expects a bare `YYYY-MM-DD`; handed a timestamp it returns
+ * `29T23:59:59.000Z.03.2026`, because the day part carries the rest of the
+ * string with it. The two helpers exist because the two shapes genuinely differ:
+ * a DATEONLY carries no zone and must NOT be parsed as an instant, and an
+ * instant must be read in the viewer's zone rather than split as text.
+ *
+ * Local parts, not UTC: these values are real moments, so the date a viewer
+ * should see is the date it was where they are. The register writes its seeded
+ * deadlines at 23:59:59+00 precisely so the calendar day survives that reading
+ * for anyone at or behind UTC.
+ */
+export const formatTimestampDate = (
+  v: string | Date | null | undefined,
+): string => {
+  if (!v) return '—'
+  const date = v instanceof Date ? v : new Date(v)
+  if (Number.isNaN(date.getTime())) return '—'
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${day}.${month}.${date.getFullYear()}`
+}
+
+/**
  * A pay rate with its unit attached. Always prefer this to bare `formatSalary`
  * for tímakaup: `4.884` under a label like "Meðallaun" reads as a monthly salary
  * two orders of magnitude too low, and nothing on the page corrects the

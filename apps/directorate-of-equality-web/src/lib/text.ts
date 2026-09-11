@@ -806,6 +806,35 @@ export const companiesText = {
   overdue: 'Skiladagur',
   overdueTag: 'Skiladagur liðinn',
   quarantine: 'Í var',
+  // The two obligation columns. The column header carries the noun, so the
+  // cell only has to carry the state — "Vantar" under "Jafnréttisáætlun" reads
+  // as the full sentence. The FILTER keeps the spelled-out labels
+  // (REPORT_STATUS_LABEL) because a filter chip has no header above it.
+  equalityColumn: 'Jafnréttisáætlun',
+  salaryColumn: 'Launagreining',
+  obligationNotRequired: 'Á ekki við',
+  obligationMissing: 'Vantar',
+  obligationActionPlanMissing: 'Vantar úrbótaáætlun',
+  obligationCovered: 'Í gildi',
+  // Register status, moved off the row and onto an icon.
+  companyInactive: 'Fyrirtæki er ekki í skrá',
+  // The default-hide escape hatch. Labelled by what it REVEALS, because the
+  // hiding is the default state and a label naming the hidden group would read
+  // as "filter down to these".
+  visibility: 'Engin skilaskylda',
+  visibilityPlaceholder: 'Fela',
+  showNotObliged: 'Sýna ekki lagaskylt',
+  showInactive: 'Sýna óvirk',
+  // Detail-header wording. The list can say a bare "Vantar" because the column
+  // header names the obligation; the header has no such context, so each tag
+  // has to name its own subject.
+  equalityCovered: 'Jafnréttisáætlun í gildi',
+  salaryCovered: 'Launagreining í gildi',
+  notLegallyObliged: 'Ekki lagaskylt',
+  // ⚠️ Distinct from `notLegallyObliged` on purpose. An UNKNOWN size means
+  // nobody has classified the company yet, so "ekki lagaskylt" would assert a
+  // verdict the register has not reached.
+  unclassifiedSize: 'Stærð óflokkuð',
   location: 'Staður',
   region: 'Landshluti',
   regionPlaceholder: 'Veldu landshluta',

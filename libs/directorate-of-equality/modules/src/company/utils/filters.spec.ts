@@ -1,11 +1,20 @@
 import { Op } from 'sequelize'
 
-import { CompanyStatusEnum } from '../models/company.enums'
+import {
+  CompanyReportStatusEnum,
+  CompanyStatusEnum,
+} from '../models/company.enums'
 import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
+  buildCompanyStatusWhere,
   CompanyExpiryFilterEnum,
 } from './filters'
+import {
+  actionPlanMissingSql,
+  equalityReportMissingSql,
+  salaryReportMissingSql,
+} from './report-status'
 
 /**
  * `buildCompanyExpiryWhere` emits raw SQL, so a wrong identifier is not a
@@ -103,5 +112,66 @@ describe('buildCompanyLifecycleStatusWhere', () => {
 
     expect(Object.keys(where)).toEqual(['status'])
     expect(JSON.stringify(where)).not.toContain('CASE')
+  })
+})
+
+/**
+ * The compliance filter. Its contract is that it selects exactly the companies
+ * whose list row shows the tag being filtered on — and the list now shows one
+ * value per obligation rather than a single roll-up, which is what these
+ * assertions are here to hold in place.
+ */
+describe('buildCompanyStatusWhere', () => {
+  const sqlFor = (statuses: CompanyReportStatusEnum[]): string =>
+    (buildCompanyStatusWhere(statuses) as { val: string }).val
+
+  it('is inert when nothing is selected', () => {
+    expect(buildCompanyStatusWhere([])).toEqual({})
+  })
+
+  it('matches on the obligation predicate, never on the roll-up CASE', () => {
+    // ⚠️ The roll-up names only a company's MOST PRESSING problem. Filtering
+    // against it would skip every company whose launagreining is missing
+    // *behind* a missing jafnréttisáætlun — while the list visibly shows those
+    // companies missing the launagreining. The filter and the column have to
+    // read the same expression.
+    const sql = sqlFor([CompanyReportStatusEnum.MISSING_SALARY_REPORT])
+
+    expect(sql).toContain(salaryReportMissingSql())
+    expect(sql).not.toContain('CASE')
+    expect(sql).not.toContain('MISSING_SALARY_REPORT')
+  })
+
+  it('ORs several statuses into "missing any of these"', () => {
+    const sql = sqlFor([
+      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
+      CompanyReportStatusEnum.MISSING_ACTION_PLAN,
+    ])
+
+    expect(sql).toContain(equalityReportMissingSql())
+    expect(sql).toContain(actionPlanMissingSql())
+    expect(sql).toContain(' OR ')
+  })
+
+  it('treats SATISFACTORY as the absence of every other status', () => {
+    // Not an expression of its own: derived by negation so that a fourth
+    // obligation added later narrows "nothing outstanding" automatically,
+    // rather than quietly leaving newly non-compliant companies in it.
+    const sql = sqlFor([CompanyReportStatusEnum.SATISFACTORY])
+
+    expect(sql).toContain(`NOT ${equalityReportMissingSql()}`)
+    expect(sql).toContain(`NOT ${actionPlanMissingSql()}`)
+    expect(sql).toContain(`NOT ${salaryReportMissingSql()}`)
+  })
+
+  it('keeps SATISFACTORY disjoint from the statuses it negates', () => {
+    // Selecting everything must not exclude everything: the OR of all four has
+    // to stay satisfiable for any company, which it only is while SATISFACTORY
+    // is the complement of the other three rather than an extra conjunct.
+    const all = sqlFor(Object.values(CompanyReportStatusEnum))
+
+    expect(all).toContain(' OR ')
+    expect(all.startsWith('(')).toBe(true)
+    expect(all.endsWith(')')).toBe(true)
   })
 })

@@ -35,6 +35,19 @@ export interface TagProps {
   textLeft?: boolean
   CustomLink?: FC<React.PropsWithChildren<unknown>>
   whiteBackground?: boolean
+  /**
+   * Renders the label at regular weight instead of semi-bold.
+   *
+   * The default is island-ui's `eyebrow` (600), which is built for a tag that
+   * appears once or twice on a page and has to be noticed. In a dense table it
+   * works against itself: every row shouts, so nothing stands out, and a column
+   * of bold pills reads heavier than the company names beside it. `light` keeps
+   * the same size and colour and drops only the weight.
+   *
+   * Colour still carries the meaning, so this does not weaken the signal — it
+   * stops the signal competing with the data it annotates.
+   */
+  light?: boolean
 }
 
 // Inlined from @island.is/shared/utils
@@ -65,6 +78,7 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
       textLeft,
       CustomLink,
       whiteBackground,
+      light,
       ...props
     }: TagProps,
     ref,
@@ -92,8 +106,10 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
     }
 
 
+    // `small` and `eyebrow` share a font size (xxs); they differ only in weight
+    // — regular vs semiBold. So this swaps the weight and nothing else.
     const content = (
-      <Text variant="eyebrow" as="span" truncate={truncate}>
+      <Text variant={light ? 'small' : 'eyebrow'} as="span" truncate={truncate}>
         {children}
       </Text>
     )
