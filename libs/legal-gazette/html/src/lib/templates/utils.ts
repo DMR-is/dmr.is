@@ -1,6 +1,8 @@
-import { isDefined, isNotEmpty, isString } from 'class-validator'
+import { isNotEmpty, isString } from 'class-validator'
 import format from 'date-fns/format'
 import is from 'date-fns/locale/is'
+
+import { atReykjavik } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { ICELANDIC_WEEKDAYS_POSSESIVE_MAP } from '../constants'
 import { BaseSettlement } from './types'
@@ -55,25 +57,12 @@ export function getTableCell({
   return getElement({ text: inner, options: { as: 'td' } })
 }
 
-export const parseAndFormatDate = (
-  date?: unknown,
-): [string, string, string] => {
-  if (!isDefined(date)) return ['', '', '']
-  if (date instanceof Date) {
-    if (isNaN(date.getTime())) {
-      return ['', '', '']
-    }
-    return formatDate(date)
-  }
-  if (typeof date === 'string') {
-    const parsedDate = new Date(date)
-    if (!isNaN(parsedDate.getTime())) {
-      return formatDate(parsedDate)
-    }
-  }
-
-  return ['', '', '']
-}
+/**
+ * Alias kept for the ten template modules that import it; `formatDate` already
+ * returns the empty tuple for anything that is not a Date or a parseable string.
+ */
+export const parseAndFormatDate = (date?: unknown): [string, string, string] =>
+  formatDate(date)
 
 export const getStatementLocation = (settlement?: BaseSettlement) => {
   switch (settlement?.statementType) {
@@ -119,28 +108,27 @@ export const formatNationalId = (nationalId = '') => {
  * @returns [fully formatted date, weekday, time]
  */
 export const formatDate = (date: unknown): [string, string, string] => {
-  if (date instanceof Date) {
-    if (isNaN(date.getTime())) {
-      return ['', '', '']
-    }
-    return [
-      format(date, 'd. MMMM yyyy', { locale: is }),
-      getPossesiveDay(format(date, 'EEEE', { locale: is })),
-      format(date, "'kl.' HH:mm", { locale: is }),
-    ]
-  }
-  if (typeof date === 'string') {
-    const parsedDate = new Date(date)
-    if (!isNaN(parsedDate.getTime())) {
-      return [
-        format(parsedDate, 'd. MMMM yyyy', { locale: is }),
-        getPossesiveDay(format(parsedDate, 'EEEE', { locale: is })),
-        format(parsedDate, "'kl.' HH:mm", { locale: is }),
-      ]
-    }
+  const parsedDate =
+    date instanceof Date
+      ? date
+      : typeof date === 'string'
+        ? new Date(date)
+        : undefined
+
+  if (!parsedDate || isNaN(parsedDate.getTime())) {
+    return ['', '', '']
   }
 
-  return ['', '', '']
+  // date-fns formats in the process timezone - the API container for a
+  // published advert, the reader's browser for a preview - which made the same
+  // stored instant render as two different calendar days.
+  const reykjavikDate = atReykjavik(parsedDate)
+
+  return [
+    format(reykjavikDate, 'd. MMMM yyyy', { locale: is }),
+    getPossesiveDay(format(reykjavikDate, 'EEEE', { locale: is })),
+    format(reykjavikDate, "'kl.' HH:mm", { locale: is }),
+  ]
 }
 
 export const getPossesiveDay = (day: string) => {

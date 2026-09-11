@@ -5,6 +5,10 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import {
+  fromReykjavikDateTimeIso,
+  toReykjavikDateTimeIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateAdvert } from '../../hooks/useUpdateAdvert'
 
@@ -50,10 +54,12 @@ export const DivisionMeetingFields = ({
             showTimeInput
             placeholderText=""
             selected={
-              divisionMeetingDate ? new Date(divisionMeetingDate) : null
+              divisionMeetingDate
+                ? fromReykjavikDateTimeIso(divisionMeetingDate)
+                : null
             }
             handleChange={(date) =>
-              updateDivisionMeetingDate(date.toISOString())
+              updateDivisionMeetingDate(toReykjavikDateTimeIso(date))
             }
           />
         </GridColumn>

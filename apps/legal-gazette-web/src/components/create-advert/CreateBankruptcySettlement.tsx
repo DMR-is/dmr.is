@@ -12,6 +12,7 @@ import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -121,7 +122,7 @@ export const CreateBankruptcySettlement = ({ onChange }: Props) => {
           handleChange={(date) =>
             setState((prev) => ({
               ...prev,
-              deadlineDate: date.toISOString(),
+              deadlineDate: toCalendarDateIso(date),
             }))
           }
         />

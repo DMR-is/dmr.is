@@ -5,6 +5,7 @@ import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
 import { AlertMessage } from '@dmr.is/ui/components/island-is/AlertMessage'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateApplication } from '../../../../../hooks/useUpdateApplication'
 import {
@@ -113,7 +114,7 @@ export const RecallBankruptcySettlementFields = () => {
             updateLocalOnly({
               fields: {
                 settlementFields: {
-                  deadlineDate: val.toISOString(),
+                  deadlineDate: toCalendarDateIso(val),
                 },
               },
             })

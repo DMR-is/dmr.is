@@ -5,6 +5,7 @@ import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useTRPC } from '../../lib/trpc/client/trpc'
 
@@ -76,11 +77,11 @@ export const CreateAdvertCourtDistrict = ({ onChange }: Props) => {
           handleChange={(date) => {
             setState((prev) => ({
               ...prev,
-              judgmentDate: date.toISOString(),
+              judgmentDate: toCalendarDateIso(date),
             }))
             onChange({
               ...state,
-              judgmentDate: date.toISOString(),
+              judgmentDate: toCalendarDateIso(date),
             })
           }}
         />

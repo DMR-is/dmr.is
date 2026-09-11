@@ -7,6 +7,7 @@ import { useQuery } from '@dmr.is/trpc/client/trpc'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
 import { useTRPC } from '../../../../lib/trpc/client/trpc'
@@ -66,7 +67,9 @@ export const RecallAdvertFields = () => {
             onChange={(val) =>
               updateLocalOnly({
                 fields: {
-                  courtAndJudgmentFields: { judgmentDate: val.toISOString() },
+                  courtAndJudgmentFields: {
+                    judgmentDate: toCalendarDateIso(val),
+                  },
                 },
               })
             }

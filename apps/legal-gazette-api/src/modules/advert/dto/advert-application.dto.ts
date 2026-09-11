@@ -10,9 +10,11 @@ import {
 import { ApiProperty, IntersectionType } from '@nestjs/swagger'
 
 import {
+  ApiDate,
   ApiDateTime,
   ApiDateTimeArray,
   ApiEnum,
+  ApiOptionalDate,
   ApiOptionalDateTime,
   ApiOptionalEnum,
   ApiOptionalString,
@@ -75,7 +77,7 @@ export class RecallAdvertFieldsDto {
   @ApiUUId()
   courtDistrictId!: string
 
-  @ApiDateTime()
+  @ApiDate()
   judgmentDate!: Date
 
   @ApiOptionalEnum(SettlementType)
@@ -90,7 +92,7 @@ export class RecallAdvertFieldsDto {
   @ApiString()
   settlementAddress!: string
 
-  @ApiDateTime()
+  @ApiDate()
   settlementDate!: Date
 
   @ApiString()
@@ -136,7 +138,7 @@ export class RecallDeceasedPartnerFieldsDto {
   @ApiOptionalString()
   partnerNationalId?: string
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   partnerDateOfDeath?: Date
 }
 
