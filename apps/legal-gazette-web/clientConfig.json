@@ -7742,7 +7742,8 @@
           "LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_LOCATION",
           "CUSTOM_LIQUIDATOR_EMAIL",
-          "CUSTOM_LIQUIDATOR_URL"
+          "CUSTOM_LIQUIDATOR_URL",
+          "CUSTOM_OTHER"
         ]
       },
       "SettlementDto": {
@@ -8506,7 +8507,8 @@
               "LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_EMAIL",
-              "CUSTOM_LIQUIDATOR_URL"
+              "CUSTOM_LIQUIDATOR_URL",
+              "CUSTOM_OTHER"
             ]
           },
           "requirementStatementLocation": { "type": "string" },
@@ -8592,7 +8594,8 @@
               "LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_LOCATION",
               "CUSTOM_LIQUIDATOR_EMAIL",
-              "CUSTOM_LIQUIDATOR_URL"
+              "CUSTOM_LIQUIDATOR_URL",
+              "CUSTOM_OTHER"
             ]
           },
           "requirementStatementLocation": { "type": "string" },

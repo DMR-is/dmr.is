@@ -9,6 +9,7 @@ export enum ApplicationRequirementStatementEnum {
   CUSTOMLIQUIDATORLOCATION = 'CUSTOM_LIQUIDATOR_LOCATION',
   CUSTOMLIQUIDATOREMAIL = 'CUSTOM_LIQUIDATOR_EMAIL',
   CUSTOMLIQUIDATORURL = 'CUSTOM_LIQUIDATOR_URL',
+  CUSTOMOTHER = 'CUSTOM_OTHER',
 }
 
 /**
@@ -36,6 +37,10 @@ export const requirementsStatementOptions: Array<{
     label: 'Vefsvæði',
     value: ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL,
   },
+  {
+    label: 'Annað',
+    value: ApplicationRequirementStatementEnum.CUSTOMOTHER,
+  },
 ]
 
 const REQUIREMENT_STATEMENT_LOCATION_LABELS: Record<
@@ -48,6 +53,7 @@ const REQUIREMENT_STATEMENT_LOCATION_LABELS: Record<
     'Innslegin staðsetning',
   [ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL]: 'Tölvupóstur',
   [ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL]: 'Vefslóð',
+  [ApplicationRequirementStatementEnum.CUSTOMOTHER]: 'Annað',
 }
 
 /**

@@ -24,12 +24,14 @@ const mapVersion = (
 // Mirrored in libs/legal-gazette/html/src/lib/preview/application.ts - keep in sync.
 const mapStatementType = (
   statementType?: string | null,
-): 'location' | 'custom' | 'email' | 'url' => {
+): 'location' | 'custom' | 'email' | 'url' | 'other' => {
   switch (statementType) {
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATOREMAIL:
       return 'email'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORURL:
       return 'url'
+    case ApplicationRequirementStatementEnum.CUSTOMOTHER:
+      return 'other'
     case ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION:
       return 'custom'
     default:
