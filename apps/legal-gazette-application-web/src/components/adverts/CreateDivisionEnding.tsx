@@ -22,6 +22,7 @@ import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
@@ -93,9 +94,10 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
   )
 
   const preview = getAdvertHTMLMarkup({
-    templateType: ApplicationTypeEnum.RECALLBANKRUPTCY
-      ? LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY
-      : LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED,
+    templateType:
+      application?.type === ApplicationTypeEnum.RECALLDECEASED
+        ? LegalGazetteHTMLTemplates.DIVISION_ENDING_DECEASED
+        : LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY,
     signature: state.signature,
     endingDate: state.endingDate,
     title: 'Skiptalok',
@@ -299,7 +301,7 @@ export const CreateDivisionEnding = ({ applicationId }: Props) => {
             onChange={(date) => {
               handleSetState('signature', {
                 ...state.signature,
-                date: date.toISOString(),
+                date: toCalendarDateIso(date),
               })
               setErrors((prev) =>
                 prev?.properties

@@ -1,6 +1,10 @@
 import { useController, UseControllerProps } from 'react-hook-form'
 
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
   MAX_SELECTABLE_YEAR,
@@ -33,8 +37,13 @@ export const DatePickerController = (props: Props) => {
 
   const error = fieldState.error
 
+  // Without a time input the field is a calendar day, so send the day the user
+  // saw rather than their local midnight expressed as an instant - the latter
+  // lands on the previous day for any browser at a positive UTC offset.
   const handleChange = (date: Date) => {
-    field.onChange(date.toISOString())
+    field.onChange(
+      props.withTime ? date.toISOString() : toCalendarDateIso(date),
+    )
     if (onChange) {
       onChange(date)
     }
@@ -46,8 +55,12 @@ export const DatePickerController = (props: Props) => {
     }
   }
 
-  const asDate =
+  const value =
     typeof field.value === 'string' ? new Date(field.value) : field.value
+  const asDate =
+    value instanceof Date && !props.withTime
+      ? fromCalendarDateIso(value)
+      : value
 
   return (
     <div onBlur={handleFirstBlur}>

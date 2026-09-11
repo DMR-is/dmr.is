@@ -21,6 +21,7 @@ import {
   getInvalidPublishingDatesInRange,
   getNextValidPublishingDate,
 } from '@dmr.is/utils-client/dateUtils'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 import { get } from '@dmr.is/utils-shared/lodash/get'
 
 import { ApplicationTypeEnum } from '../../gen/fetch'
@@ -243,7 +244,7 @@ export const CreateDivisionMeeting = ({ applicationId }: Props) => {
             onChange={(date) => {
               handleSetState('signature', {
                 ...state.signature,
-                date: date.toISOString(),
+                date: toCalendarDateIso(date),
               })
               clearFieldError('signature')
             }}

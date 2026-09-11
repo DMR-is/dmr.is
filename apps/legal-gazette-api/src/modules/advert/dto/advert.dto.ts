@@ -12,6 +12,7 @@ import { ApiProperty, OmitType, PartialType, PickType } from '@nestjs/swagger'
 import {
   ApiDateTimeArray,
   ApiOptionalBoolean,
+  ApiOptionalDate,
   ApiOptionalDateTime,
   ApiOptionalDto,
   ApiOptionalDtoArray,
@@ -215,13 +216,13 @@ export class CreateAdvertInternalDto {
   @ApiOptionalUuid()
   applicationId?: string
 
-  @ApiOptionalDateTime({ description: 'Date of signature' })
+  @ApiOptionalDate({ description: 'Date of signature' })
   signatureDate?: Date
 
   @ApiOptionalUuid()
   statusId?: string
 
-  @ApiOptionalDateTime()
+  @ApiOptionalDate()
   judgementDate?: Date | null
 
   @ApiOptionalDateTime()

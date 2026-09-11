@@ -1,0 +1,48 @@
+import {
+  atReykjavik,
+  fromCalendarDateIso,
+  toCalendarDate,
+  toCalendarDateIso,
+} from './calendarDate'
+
+describe('toCalendarDate', () => {
+  const utcMidnight = '2026-05-06T00:00:00.000Z'
+
+  it.each([
+    ['a browser at UTC+2', '2026-05-05T22:00:00.000Z'],
+    ['a browser at UTC+12', '2026-05-05T12:00:00.000Z'],
+    ['a browser at UTC-4', '2026-05-06T04:00:00.000Z'],
+    ['a browser at UTC+0', utcMidnight],
+  ])('recovers the picked calendar day from %s', (_label, input) => {
+    expect(toCalendarDate(new Date(input)).toISOString()).toBe(utcMidnight)
+  })
+})
+
+describe('atReykjavik', () => {
+  it('reports the UTC wall clock whatever the process timezone is', () => {
+    const shifted = atReykjavik(new Date('2026-05-06T00:00:00.000Z'))
+
+    expect(shifted.getFullYear()).toBe(2026)
+    expect(shifted.getMonth()).toBe(4)
+    expect(shifted.getDate()).toBe(6)
+    expect(shifted.getHours()).toBe(0)
+  })
+})
+
+describe('toCalendarDateIso / fromCalendarDateIso', () => {
+  it('sends the day the user saw, not the instant their clock was at', () => {
+    // what react-datepicker hands back for "6. maí", in local time
+    const picked = new Date(2026, 4, 6)
+
+    expect(toCalendarDateIso(picked)).toBe('2026-05-06T00:00:00.000Z')
+  })
+
+  it('round-trips a stored calendar day back to the same local day', () => {
+    const seeded = fromCalendarDateIso('2026-05-06T00:00:00.000Z')
+
+    expect(seeded.getFullYear()).toBe(2026)
+    expect(seeded.getMonth()).toBe(4)
+    expect(seeded.getDate()).toBe(6)
+    expect(toCalendarDateIso(seeded)).toBe('2026-05-06T00:00:00.000Z')
+  })
+})
