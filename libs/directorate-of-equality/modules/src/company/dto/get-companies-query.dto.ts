@@ -126,6 +126,24 @@ export class GetCompaniesQueryDto extends PagingQuery {
   @IsBoolean()
   overdue?: boolean
 
+  @ApiOptionalBoolean({
+    description:
+      'When true, also return companies that owe no report at all ("ekki lagaskylt": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled "owes nothing". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  includeNotObliged?: boolean
+
+  @ApiOptionalBoolean({
+    description:
+      'When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page.',
+  })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  includeInactive?: boolean
+
   @ApiOptionalArray({
     type: String,
     isArray: true,

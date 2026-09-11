@@ -18,6 +18,8 @@ type TagItem = {
   type: 'tag'
   children: React.ReactNode
   variant?: React.ComponentProps<typeof Tag>['variant']
+  /** Regular-weight label; see `Tag`'s own note on why a table wants this. */
+  light?: React.ComponentProps<typeof Tag>['light']
 }
 
 type IconItem = {
@@ -53,7 +55,7 @@ const renderItem = (item: TableCellItem, i: number) => {
       )
     case 'tag':
       return (
-        <Tag key={i} variant={item.variant} outlined disabled>
+        <Tag key={i} variant={item.variant} outlined disabled light={item.light}>
           {item.children}
         </Tag>
       )

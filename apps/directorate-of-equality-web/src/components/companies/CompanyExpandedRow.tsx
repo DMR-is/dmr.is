@@ -13,16 +13,15 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { type CompanyDto, ReportStatusEnum } from '../../gen/fetch/types.gen'
 import { companiesText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { COMPANY_SIZE_LABEL, formatNationalId } from '../../lib/utils'
+import {
+  COMPANY_SIZE_LABEL,
+  formatNationalId,
+  formatTimestampDate,
+} from '../../lib/utils'
 import * as styles from './CompanyExpandedRow.css'
 
 type Props = {
   company: CompanyDto
-}
-
-const formatDate = (iso: string | null | undefined) => {
-  if (!iso) return '–'
-  return new Date(iso).toLocaleDateString('is-IS')
 }
 
 type FieldRow = { label: string; value: React.ReactNode }
@@ -64,12 +63,12 @@ const DueDate = ({
 }) => {
   if (!iso) return <>–</>
   return (
-    <Inline space={1} alignY="center">
+    <Inline space={2} alignY="center" flexWrap="wrap">
       <Text variant="small" color={overdue ? 'red600' : undefined}>
-        {formatDate(iso)}
+        {formatTimestampDate(iso)}
       </Text>
       {overdue && (
-        <Tag variant="red" outlined disabled>
+        <Tag variant="red" outlined disabled light>
           {companiesText.overdueTag}
         </Tag>
       )}
@@ -80,7 +79,7 @@ const DueDate = ({
 const ReportStatusTag = ({ status }: { status: string }) => {
   const { label = status, variant = 'blue' } = STATUS_MAP[status] ?? {}
   return (
-    <Tag variant={variant} outlined disabled>
+    <Tag variant={variant} outlined disabled light>
       {label}
     </Tag>
   )
@@ -186,7 +185,7 @@ export const CompanyExpandedRow = ({ company }: Props) => {
                   </Text>
                   <Text variant="small" color="dark300">
                     {companiesText.expandedRow.validUntilPrefix}{' '}
-                    {formatDate(r.validUntil)}
+                    {formatTimestampDate(r.validUntil)}
                   </Text>
                 </Stack>
                 <ReportStatusTag status={r.status} />
@@ -214,7 +213,7 @@ export const CompanyExpandedRow = ({ company }: Props) => {
                   </Text>
                   <Text variant="small" color="dark300">
                     {companiesText.expandedRow.validUntilPrefix}{' '}
-                    {formatDate(r.validUntil)}
+                    {formatTimestampDate(r.validUntil)}
                   </Text>
                 </Stack>
                 <ReportStatusTag status={r.status} />

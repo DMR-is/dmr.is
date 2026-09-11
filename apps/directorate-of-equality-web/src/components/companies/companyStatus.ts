@@ -1,9 +1,11 @@
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
   CompanyStatusEnum,
 } from '../../gen/fetch/types.gen'
+import { companiesText } from '../../lib/text'
 
 // Icelandic labels + tag colours for the company report status. The status
 // itself is computed server-side and returned on `CompanyDto.reportStatus`;
@@ -26,13 +28,87 @@ export const REPORT_STATUS_TAG_VARIANT: Record<
   [CompanyReportStatusEnum.SATISFACTORY]: 'mint',
 }
 
-// Priority order — most critical first — matching the server's evaluation.
+// Priority order — most critical first — matching the server's evaluation
+// (see `companyReportStatusCaseSql`): equality, then the action plan, then the
+// salary report. The action plan precedes the salary report because a postponed
+// report is filed but not approved; getting this order wrong here would show
+// the filter in an order the results do not follow.
 export const STATUS_FILTER_OPTIONS = [
   CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
-  CompanyReportStatusEnum.MISSING_SALARY_REPORT,
   CompanyReportStatusEnum.MISSING_ACTION_PLAN,
+  CompanyReportStatusEnum.MISSING_SALARY_REPORT,
   CompanyReportStatusEnum.SATISFACTORY,
 ].map((value) => ({ value, label: REPORT_STATUS_LABEL[value] }))
+
+// ---------------------------------------------------------------------------
+// Per-obligation columns
+//
+// The list gives each obligation its own column, so a cell renders
+// `CompanyDto.equalityObligationStatus` / `salaryObligationStatus` rather than
+// the roll-up `reportStatus`. The roll-up names only the most pressing problem,
+// so a company missing both reports would leave the launagreining column empty.
+// ---------------------------------------------------------------------------
+
+export const OBLIGATION_STATUS_LABEL: Record<
+  CompanyObligationStatusEnum,
+  string
+> = {
+  [CompanyObligationStatusEnum.NOT_REQUIRED]:
+    companiesText.obligationNotRequired,
+  [CompanyObligationStatusEnum.MISSING]: companiesText.obligationMissing,
+  [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]:
+    companiesText.obligationActionPlanMissing,
+  [CompanyObligationStatusEnum.COVERED]: companiesText.obligationCovered,
+}
+
+/**
+ * Tag colour per obligation state, or `null` for NOT_REQUIRED.
+ *
+ * ⚠️ `null` is the point, not an oversight. "Á ekki við" renders as muted text,
+ * never as a tag: it is the absence of a state, and it is the single most
+ * common value in the launagreining column — every company below 50 employees
+ * sits in it. Tagging it would put a badge saying nothing on the majority of
+ * rows and drown the states that do need attention.
+ */
+export const OBLIGATION_STATUS_TAG_VARIANT: Record<
+  CompanyObligationStatusEnum,
+  'red' | 'mint' | 'purple' | 'dark' | null
+> = {
+  [CompanyObligationStatusEnum.NOT_REQUIRED]: null,
+  [CompanyObligationStatusEnum.MISSING]: 'red',
+  [CompanyObligationStatusEnum.ACTION_PLAN_MISSING]: 'dark',
+  [CompanyObligationStatusEnum.COVERED]: 'mint',
+}
+
+/**
+ * The salary column's MISSING tag is purple, not red, so the two columns are
+ * distinguishable at a glance in a row that is missing both. Everything else is
+ * shared, so this is expressed as an override rather than a second full map —
+ * a second map would drift.
+ */
+export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT =
+  {
+    ...OBLIGATION_STATUS_TAG_VARIANT,
+    [CompanyObligationStatusEnum.MISSING]: 'purple',
+  }
+
+/**
+ * The two default-on hides, as opt-in reveals.
+ *
+ * The admin register is a working list of who owes what, so companies that owe
+ * nothing ("ekki lagaskylt") and companies off the register are hidden unless
+ * asked for. Each value maps to its own boolean server param — the same shape
+ * as FLAG_FILTER_OPTIONS below.
+ *
+ * ⚠️ "Ekki lagaskylt" is NOT "0–24". Some companies under 25 employees are
+ * required to report by arrangement, recorded on the company as
+ * `salaryReportRequiredOverride`, and they stay visible. The server owns that
+ * rule (`notLegallyObligedSql`); do not restate it here.
+ */
+export const VISIBILITY_FILTER_OPTIONS = [
+  { value: 'notObliged', label: companiesText.showNotObliged },
+  { value: 'inactive', label: companiesText.showInactive },
+]
 
 export const EXPIRES_FILTER_OPTIONS = [
   { value: '30d', label: 'Rennur út innan 30 daga' },

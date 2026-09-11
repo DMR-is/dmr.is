@@ -135,6 +135,31 @@ describe('ReportDeadlineReminderService', () => {
       }
     })
 
+    it('gates every band on the obligation, not the due date alone', async () => {
+      // ⚠️ The bug this guards is not hypothetical and not cosmetic: the
+      // register load seeds next_equality_report_due_at from the old SharePoint
+      // sheet for companies of EVERY size, so companies below 25 — which owe no
+      // jafnréttisáætlun at all — carry live past dates. Selecting on the date
+      // alone mails them a statutory deadline notice for an obligation they do
+      // not have, and does it to the whole band in one un-deduped pass the
+      // first time EMAIL_REMINDER_JOB_ENABLED reads true.
+      await service.run()
+
+      for (const call of findAll.mock.calls) {
+        const and = call[0].where[Op.and]
+        expect(and).toBeDefined()
+        expect(and.val).toContain('"CompanyModel"."salary_report_required"')
+      }
+
+      // The equality tiers additionally admit anyone 25+, which the salary
+      // tiers must NOT — a 25-49 company owes the plan but not the analysis.
+      const equalityGate = findAll.mock.calls[0][0].where[Op.and].val
+      const salaryGate = findAll.mock.calls[4][0].where[Op.and].val
+
+      expect(equalityGate).toContain("IN ('MEDIUM', 'LARGE')")
+      expect(salaryGate).not.toContain("IN ('MEDIUM', 'LARGE')")
+    })
+
     it('builds contiguous, non-overlapping bands per tier', async () => {
       await service.run()
 

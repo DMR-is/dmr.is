@@ -66,6 +66,7 @@ import {
   buildCompanyStatusWhere,
 } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
+import { notLegallyObligedSql } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { companyMessages } from './company.messages'
 import {
@@ -166,6 +167,25 @@ export class CompanyService implements ICompanyService {
 
     if (query.overdue) {
       conditions.push(buildCompanyOverdueWhere())
+    }
+
+    // ⚠️ Two DEFAULT-ON hides, both suppressed by an explicit request on the
+    // same axis. The admin register is a working list of who owes what, and
+    // roughly 250 companies that owe nothing plus every deregistered company
+    // crowd it out — but a default that cannot be escaped is worse than no
+    // default. `employeeCountCategory` and `status` are the controls for these
+    // two axes, so setting either means the admin has already answered the
+    // question the default was guessing at: filtering to Óvirkt has to return
+    // óvirk companies, not an empty page.
+    //
+    // Ordered after the explicit filters purely for readability; `conditions`
+    // is AND-ed, so position carries no meaning.
+    if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+      conditions.push(literal(`NOT ${notLegallyObligedSql}`))
+    }
+
+    if (!query.includeInactive && !query.status?.length) {
+      conditions.push({ status: CompanyStatusEnum.ACTIVE })
     }
 
     if (query.isatCategoryCode?.length) {

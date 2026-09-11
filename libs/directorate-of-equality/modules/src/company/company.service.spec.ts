@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
@@ -51,11 +53,13 @@ describe('CompanyService', () => {
   let isatSectionFindAll: jest.Mock
   let postcodeFindOne: jest.Mock
   let legacyReportFindAll: jest.Mock
+  let findAndCountAll: jest.Mock
 
   beforeEach(async () => {
     findOneOrThrow = jest.fn()
     findOne = jest.fn()
     create = jest.fn()
+    findAndCountAll = jest.fn().mockResolvedValue({ rows: [], count: 0 })
     isatFindByPk = jest.fn()
     isatSectionFindAll = jest.fn()
     postcodeFindOne = jest.fn()
@@ -78,6 +82,7 @@ describe('CompanyService', () => {
       findOneOrThrow,
       findOne,
       create,
+      findAndCountAll,
     }
     companyModelMock.scope = jest.fn(() => companyModelMock)
 
@@ -1255,6 +1260,97 @@ describe('CompanyService', () => {
       )
     })
   })
+
+  /**
+   * `getAll` applies TWO hides that are on by default — companies that owe
+   * nothing, and companies off the register. A default that removes rows is
+   * only safe while it can be escaped, so these assertions pin both the hiding
+   * and every way out of it. Asserted on the emitted `where`, because the point
+   * is which rows the query can reach at all.
+   */
+  describe('getAll — default hides', () => {
+    /** Raw SQL from every `literal()` condition, joined. */
+    const rawSql = (): string => {
+      const where = findAndCountAll.mock.calls[0][0].where
+      const clauses = (where as Record<symbol, { val?: string }[]>)[Op.and] ?? []
+      return clauses.map((c) => c?.val ?? '').join(' ')
+    }
+
+    /**
+     * The `status` condition, as the list of lifecycle values it admits.
+     *
+     * ⚠️ Not `JSON.stringify`: Sequelize keys the operator with the `Op.in`
+     * SYMBOL, and stringify silently drops symbol keys — `{status: {[Op.in]:
+     * ['INACTIVE']}}` serialises to `{"status":{}}`, so a naive assertion sees
+     * an empty object and cannot tell "filtered to INACTIVE" from "not
+     * filtered at all". Returns `null` when no status condition was emitted.
+     */
+    const statusValues = (): string[] | null => {
+      const where = findAndCountAll.mock.calls[0][0].where
+      const clauses = (where as Record<symbol, unknown[]>)[Op.and] ?? []
+      for (const clause of clauses) {
+        const status = (clause as { status?: unknown })?.status
+        if (status === undefined) continue
+        if (typeof status === 'string') return [status]
+        return (status as Record<symbol, string[]>)[Op.in] ?? []
+      }
+      return null
+    }
+
+    it('hides unobliged and inactive companies when nothing is asked for', async () => {
+      await service.getAll({} as never)
+
+      expect(rawSql()).toContain("= 'SMALL'")
+      expect(statusValues()).toEqual(['ACTIVE'])
+    })
+
+    it('includes the unobliged when explicitly asked', async () => {
+      await service.getAll({ includeNotObliged: true } as never)
+
+      expect(rawSql()).not.toContain("= 'SMALL'")
+    })
+
+    it('includes the inactive when explicitly asked', async () => {
+      await service.getAll({ includeInactive: true } as never)
+
+      expect(statusValues()).toBeNull()
+    })
+
+    it('stands down the obligation hide when a size is chosen', async () => {
+      // ⚠️ Otherwise picking "0–24" in the sidebar returns only the handful of
+      // 0–24 companies carrying a salary override — a filter that visibly does
+      // the opposite of what it says.
+      await service.getAll({ employeeCountCategory: 'SMALL' } as never)
+
+      expect(rawSql()).not.toContain('NOT (')
+    })
+
+    it('stands down the register hide when a register status is chosen', async () => {
+      // ⚠️ Otherwise filtering to Óvirkt returns an empty page: the explicit
+      // request and the default contradict each other, and the default wins.
+      await service.getAll({ status: ['INACTIVE'] } as never)
+
+      expect(statusValues()).toEqual(['INACTIVE'])
+    })
+
+    it('keeps the obligation hide when only a register status is chosen', async () => {
+      // The two defaults stand down independently: asking about the register
+      // says nothing about whether unobliged companies should reappear, so
+      // "óvirk companies" still means "óvirk companies that owe something".
+      await service.getAll({ status: ['INACTIVE'] } as never)
+
+      expect(rawSql()).toContain("= 'SMALL'")
+    })
+
+    it('keeps UNKNOWN-size companies in the default list', async () => {
+      // The hide is scoped to SMALL, so an unclassified company is never swept
+      // out of the default view — it is a queue an admin has to work through.
+      await service.getAll({} as never)
+
+      expect(rawSql()).not.toContain('UNKNOWN')
+    })
+  })
+
 })
 
 function makeLegacyReportModel(
