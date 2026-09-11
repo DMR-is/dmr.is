@@ -120,7 +120,12 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
     // `small` and `eyebrow` share a font size (xxs); they differ only in weight
     // — regular vs semiBold. So this swaps the weight and nothing else.
     const content = (
-      <Text variant={light ? 'small' : 'eyebrow'} as="span" truncate={truncate}>
+      <Text
+        variant={light ? 'small' : 'eyebrow'}
+        as="span"
+        truncate={truncate}
+        className={wrap ? styles.wrapText : undefined}
+      >
         {children}
       </Text>
     )
@@ -150,4 +155,3 @@ export const Tag = forwardRef<HTMLButtonElement & HTMLAnchorElement, TagProps>(
     )
   },
 )
-

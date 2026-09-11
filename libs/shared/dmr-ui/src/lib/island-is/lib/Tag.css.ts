@@ -43,6 +43,11 @@ export const wrap = style({
   height: 'auto',
 })
 
+// Let the label shrink below its longest word so overflowWrap can break it.
+export const wrapText = style({
+  minWidth: 0,
+})
+
 export const textLeft = style({
   textAlign: 'left',
 })
