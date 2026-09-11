@@ -1,4 +1,8 @@
-import { CompanySizeEnum, type WageGapEmployeeDto } from '../gen/fetch'
+import {
+  type CompanyDto,
+  CompanySizeEnum,
+  type WageGapEmployeeDto,
+} from '../gen/fetch'
 import { reportText, sharedText } from './text'
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -247,4 +251,27 @@ export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
   [CompanySizeEnum.SMALL]: '0–24',
   [CompanySizeEnum.MEDIUM]: '25–49',
   [CompanySizeEnum.LARGE]: '50+',
+}
+
+/**
+ * The company's ÍSAT2008 classification, as the dotted code plus its Icelandic
+ * description ("01.11.0 — Kornrækt…").
+ *
+ * Falls back to the bare `isatCategoryCode` when the resolved `isatCategory` is
+ * absent. The code is a plain column on the company and always present, while
+ * the description needs the reference table joined in (see
+ * `buildCompanyIsatCategoryInclude` on the API side) — showing the code alone
+ * beats showing nothing for a company that does have a classification.
+ *
+ * `undefined` means genuinely unclassified, which both callers render as their
+ * own empty-value fallback.
+ */
+export const formatIsatCategory = (company: CompanyDto) => {
+  const { isatCategory, isatCategoryCode } = company
+
+  if (isatCategory) {
+    return `${isatCategory.codeDotted} — ${isatCategory.description}`
+  }
+
+  return isatCategoryCode ?? undefined
 }

@@ -22,6 +22,27 @@ export const hyphenate = style({
   height: 'auto',
 })
 
+/**
+ * Lets a label that does not fit break onto a second line.
+ *
+ * The base container is `whiteSpace: nowrap` with `maxWidth: 100%` and no
+ * overflow rule, so in a fixed-width context — a `tableLayout: fixed` cell,
+ * above all — the BOX clamps to the column while the TEXT keeps going, and the
+ * label renders across its own border. Wrapping is the only outcome that keeps
+ * the whole label readable: clipping loses the end of it, and an ellipsis
+ * truncates domain terms ("Vantar úrbótaáæ…") that the reader needs in full.
+ *
+ * `overflowWrap` covers the remaining case of a single unbreakable word, which
+ * has no space to wrap at.
+ */
+export const wrap = style({
+  whiteSpace: 'normal',
+  overflowWrap: 'break-word',
+  padding: '4px 8px',
+  minHeight: 32,
+  height: 'auto',
+})
+
 export const textLeft = style({
   textAlign: 'left',
 })

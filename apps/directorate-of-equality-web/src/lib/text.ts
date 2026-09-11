@@ -811,7 +811,7 @@ export const companiesText = {
   // as the full sentence. The FILTER keeps the spelled-out labels
   // (REPORT_STATUS_LABEL) because a filter chip has no header above it.
   equalityColumn: 'Jafnréttisáætlun',
-  salaryColumn: 'Launagreining',
+  salaryColumn: 'Skýrslugjöf',
   obligationNotRequired: 'Á ekki við',
   obligationMissing: 'Vantar',
   obligationActionPlanMissing: 'Vantar úrbótaáætlun',
@@ -823,13 +823,13 @@ export const companiesText = {
   // as "filter down to these".
   visibility: 'Engin skilaskylda',
   visibilityPlaceholder: 'Fela',
-  showNotObliged: 'Sýna ekki lagaskylt',
+  showNotObliged: 'Sýna óskyldug',
   showInactive: 'Sýna óvirk',
   // Detail-header wording. The list can say a bare "Vantar" because the column
   // header names the obligation; the header has no such context, so each tag
   // has to name its own subject.
   equalityCovered: 'Jafnréttisáætlun í gildi',
-  salaryCovered: 'Launagreining í gildi',
+  salaryCovered: 'Skýrslugjöf í gildi',
   notLegallyObliged: 'Ekki lagaskylt',
   // ⚠️ Distinct from `notLegallyObliged` on purpose. An UNKNOWN size means
   // nobody has classified the company yet, so "ekki lagaskylt" would assert a
@@ -868,8 +868,8 @@ export const companiesText = {
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
     viewReport: 'Opna skýrslu',
-    equalityDueAt: 'Næsti skiladagur jafnréttisáætlunar',
-    salaryDueAt: 'Næsti skiladagur launagreiningar',
+    equalityDueAt: 'Næstu skil jafnréttisáætlunar',
+    salaryDueAt: 'Næstu skil skýrslu',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',

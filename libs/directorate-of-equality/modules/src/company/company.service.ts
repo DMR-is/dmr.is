@@ -57,7 +57,7 @@ import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
 import {
   buildCompanyExpiryWhere,
-  buildCompanyIsatSectionInclude,
+  buildCompanyIsatCategoryInclude,
   buildCompanyIsatWhere,
   buildCompanyLifecycleStatusWhere,
   buildCompanyLocationInclude,
@@ -116,10 +116,18 @@ export class CompanyService implements ICompanyService {
    * Re-read a company through the `withReportStatus` scope and map it to a DTO.
    * Used after a write (create) where the in-memory instance has no computed
    * `reportStatus` virtual yet.
+   *
+   * The ÍSAT category is joined here, not left to the caller: the company table
+   * stores only the bare `isat_category_code`, so without it every single
+   * company read returns `isatCategory: null` and the resolved code and
+   * description are unavailable to anyone reading a `CompanyDto`.
    */
   private async loadCompanyDto(id: string): Promise<CompanyDto> {
     const company = await this.companyWithReportStatus.findOneOrThrow(
-      { where: { id } },
+      {
+        where: { id },
+        include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
+      },
       companyMessages.notFound(id),
     )
 
@@ -201,9 +209,14 @@ export class CompanyService implements ICompanyService {
       regionCodes: query.regionCode,
     })
 
-    const isatSectionInclude = buildCompanyIsatSectionInclude(query.isatSection)
+    // Always joined — it carries the resolved ÍSAT code and description onto
+    // the DTO — and additionally narrows the rows when the section filter is
+    // active. See `buildCompanyIsatCategoryInclude`.
+    const isatCategoryInclude = buildCompanyIsatCategoryInclude(
+      query.isatSection,
+    )
 
-    const includes = [locationInclude, isatSectionInclude].filter(
+    const includes = [locationInclude, isatCategoryInclude].filter(
       (include): include is Includeable => include !== null,
     )
 
@@ -839,17 +852,11 @@ export class CompanyService implements ICompanyService {
 
     await company.update({ isatCategoryCode: code })
 
-    // Scoped, like every other CompanyDto read: the derived columns
-    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals the
-    // `withReportStatus` scope selects, and come back undefined without it.
-    // Re-read rather than `loadCompanyDto` because the response carries the
-    // resolved ISAT category and that helper does not include it.
-    const updated = await this.companyWithReportStatus.findOneOrThrow({
-      where: { id },
-      include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
-    })
-
-    return updated.fromModel()
+    // Re-read rather than mapping the in-memory instance: the derived columns
+    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals only
+    // the `withReportStatus` scope selects, and the response has to carry the
+    // newly resolved ÍSAT category. `loadCompanyDto` does both.
+    return this.loadCompanyDto(id)
   }
 
   /**

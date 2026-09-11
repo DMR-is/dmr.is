@@ -13,7 +13,7 @@ import { companiesText } from '../../lib/text'
 // the displayed value and the filter value always agree.
 export const REPORT_STATUS_LABEL: Record<CompanyReportStatusEnum, string> = {
   [CompanyReportStatusEnum.MISSING_EQUALITY_REPORT]: 'Vantar jafnréttisáætlun',
-  [CompanyReportStatusEnum.MISSING_SALARY_REPORT]: 'Vantar launagreiningu',
+  [CompanyReportStatusEnum.MISSING_SALARY_REPORT]: 'Vantar skýrslugjöf',
   [CompanyReportStatusEnum.MISSING_ACTION_PLAN]: 'Vantar úrbótaáætlun',
   [CompanyReportStatusEnum.SATISFACTORY]: 'Fullnægjandi',
 }

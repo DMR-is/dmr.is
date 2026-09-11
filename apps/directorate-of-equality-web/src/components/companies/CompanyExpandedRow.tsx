@@ -15,6 +15,7 @@ import { companiesText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
   COMPANY_SIZE_LABEL,
+  formatIsatCategory,
   formatNationalId,
   formatTimestampDate,
 } from '../../lib/utils'
@@ -36,7 +37,9 @@ const FieldGrid = ({ fields }: { fields: FieldRow[] }) => (
               {label}
             </Text>
           </div>
-          <Text variant="small">{value ?? '–'}</Text>
+          <div className={styles.value}>
+            <Text variant="small">{value ?? '–'}</Text>
+          </div>
         </Box>
       </Box>
     ))}
@@ -111,6 +114,10 @@ export const CompanyExpandedRow = ({ company }: Props) => {
     {
       label: companiesText.expandedRow.avgEmployees,
       value: COMPANY_SIZE_LABEL[company.employeeCountCategory],
+    },
+    {
+      label: companiesText.isatCategory,
+      value: formatIsatCategory(company),
     },
     {
       label: companiesText.expandedRow.salaryRequired,
