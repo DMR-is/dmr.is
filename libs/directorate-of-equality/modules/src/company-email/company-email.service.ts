@@ -91,11 +91,48 @@ const EVENT_FOR_STATUS: Record<
   [CompanyEmailRecipientStatusEnum.PENDING]: null,
 }
 
-/** English detail appended to the timeline entry for the non-delivery outcomes. */
+/** Detail appended to the timeline entry for the two skip outcomes. */
 const SKIP_DETAIL: Partial<Record<CompanyEmailRecipientStatusEnum, string>> = {
   [CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL]: 'ekkert netfang skráð',
   [CompanyEmailRecipientStatusEnum.SKIPPED_QUARANTINED]: 'fyrirtæki í sóttkví',
 }
+
+const UNKNOWN_FAILURE_DETAIL = 'óþekkt villa hjá póstþjónustu'
+
+/**
+ * The same, for a failed send — classified from the transport's own message.
+ *
+ * The raw text is an SES or nodemailer string: it names AWS error codes, regions
+ * and verified identities, and it is written for whoever reads the log. It stays
+ * on the recipient row and in the log; the timeline gets one of these instead,
+ * in the same register as `SKIP_DETAIL`.
+ *
+ * First match wins, so the order is the specificity order. Anything unmatched
+ * falls through to `UNKNOWN_FAILURE_DETAIL` rather than being echoed.
+ */
+const FAILURE_DETAIL_PATTERNS: [RegExp, string][] = [
+  [
+    /not verified|invalid domain|missing '@'|invalidparameter|not a single valid address|mailbox unavailable|user unknown|does not exist|no such user/i,
+    'netfangið var ekki samþykkt',
+  ],
+  [
+    /throttl|maximum sending rate|quota exceeded|too many requests|sending .*(paused|disabled)/i,
+    'sendingarkvóti fullnýttur',
+  ],
+  [
+    /too large|message length|size exceeds|payload too large/i,
+    'skeytið of stórt',
+  ],
+  [
+    /timeout|etimedout|econnrefused|econnreset|enotfound|socket hang up|network|security token|credential|unable to connect/i,
+    'náðist ekki samband við póstþjónustu',
+  ],
+]
+
+const failureDetail = (error: string | null): string =>
+  FAILURE_DETAIL_PATTERNS.find(
+    ([pattern]) => error && pattern.test(error),
+  )?.[1] ?? UNKNOWN_FAILURE_DETAIL
 
 /** A recipient as resolved, before any row is written. */
 type ResolvedRecipient = {
@@ -639,7 +676,7 @@ export class CompanyEmailService implements ICompanyEmailService {
           companyEmailId,
           subject,
           row.status,
-          null,
+          row.error,
           actorUserId,
         )
       }
@@ -712,7 +749,11 @@ export class CompanyEmailService implements ICompanyEmailService {
         // The reviewer who sent it, so the timeline reads "Jóna sendi tölvupóst"
         // rather than leaving an outbound message with no name against it.
         actorUserId,
-        error ?? SKIP_DETAIL[status] ?? null,
+        // Never the raw `error` — see `failureDetail`. The transport's own text
+        // stays on the recipient row and in the log.
+        status === CompanyEmailRecipientStatusEnum.FAILED
+          ? failureDetail(error)
+          : (SKIP_DETAIL[status] ?? null),
       )
     } catch (eventError) {
       this.logger.error('Could not record company email outcome on timeline', {

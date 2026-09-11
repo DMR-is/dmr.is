@@ -678,6 +678,58 @@ describe('CompanyEmailService', () => {
       )
     })
 
+    it("keeps the transport's own wording off the timeline", async () => {
+      // The raw SES text names regions, verified identities and AWS error codes.
+      // It belongs on the row and in the log, not in front of a reviewer.
+      const row = makeRow()
+      recipientModel.findAll.mockResolvedValue([row])
+      mailService.sendCustomEmail.mockResolvedValue({
+        ok: false,
+        error:
+          'Email address is not verified. The following identities failed the check in region EU-WEST-1: skra@fyrirtaeki.is',
+      })
+
+      await service.send(validDto, 'user-1')
+
+      expect(row.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: expect.stringContaining('EU-WEST-1'),
+        }),
+      )
+      expect(companyEventService.emitCustomEmailOutcome).toHaveBeenCalledWith(
+        'company-1',
+        expect.anything(),
+        CompanyEventTypeEnum.CUSTOM_EMAIL_FAILED,
+        'batch-1',
+        'Áminning',
+        'user-1',
+        'netfangið var ekki samþykkt',
+      )
+    })
+
+    it('falls back to a generic reason for an unrecognised failure', async () => {
+      // Echoing an unmatched message back would put exactly what the mapping
+      // exists to keep out on the timeline, on the one path nobody anticipated.
+      const row = makeRow()
+      recipientModel.findAll.mockResolvedValue([row])
+      mailService.sendCustomEmail.mockResolvedValue({
+        ok: false,
+        error: 'SignatureDoesNotMatch: request signature we calculated differs',
+      })
+
+      await service.send(validDto, 'user-1')
+
+      expect(companyEventService.emitCustomEmailOutcome).toHaveBeenCalledWith(
+        'company-1',
+        expect.anything(),
+        CompanyEventTypeEnum.CUSTOM_EMAIL_FAILED,
+        'batch-1',
+        'Áminning',
+        'user-1',
+        'óþekkt villa hjá póstþjónustu',
+      )
+    })
+
     it('records a skipped company on its timeline without attempting a send', async () => {
       // Nothing else writes the skip — the resolve step only sets the row's
       // status. An early return here left CUSTOM_EMAIL_SKIPPED unreachable.
