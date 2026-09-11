@@ -213,9 +213,6 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
           // "Halda áfram" until one is typed.
           defaultEmail: company.email ?? null,
         }}
-        // The send writes a CUSTOM_EMAIL_* event per recipient, so the
-        // timeline is stale the moment the batch runs.
-        onSent={invalidateCompany}
       />
     </Box>
   )

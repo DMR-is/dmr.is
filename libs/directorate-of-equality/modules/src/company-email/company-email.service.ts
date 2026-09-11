@@ -587,7 +587,19 @@ export class CompanyEmailService implements ICompanyEmailService {
         { where: { id: companyEmailId } },
       )
 
-      await this.archiveAttachments(companyEmailId)
+      /*
+       * Best-effort, exactly as on the abort path below. Every recipient row is
+       * already SENT and the batch is already COMPLETED; a storage or database
+       * fault while archiving must not fall through to the catch and rewrite
+       * that batch to FAILED, which would misreport mail that did go out.
+       */
+      await this.archiveAttachments(companyEmailId).catch((error) => {
+        this.logger.warn('Could not archive company email attachments', {
+          context: LOGGING_CONTEXT,
+          companyEmailId,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        })
+      })
 
       this.logger.info('Finished sending company email', {
         context: LOGGING_CONTEXT,

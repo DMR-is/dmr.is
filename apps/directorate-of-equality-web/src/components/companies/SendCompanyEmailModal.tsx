@@ -87,15 +87,12 @@ type Props = {
   isOpen: boolean
   onClose: () => void
   target: SendCompanyEmailTarget
-  /** Called after a successful queue, so the caller can refresh a timeline. */
-  onSent?: () => void
 }
 
 export const SendCompanyEmailModal = ({
   isOpen,
   onClose,
   target,
-  onSent,
 }: Props) => {
   const trpc = useTRPC()
 
@@ -166,9 +163,12 @@ export const SendCompanyEmailModal = ({
      * should be nothing stale left to arrive — but this makes that hold however
      * the modal was closed, including a caller that drops `isOpen` on its own.
      * The target is re-snapshotted on every open, so a response issued before
-     * this point can no longer be trusted to describe it.
+     * this point can no longer be trusted to describe it — and a resolved one
+     * would reopen the modal on the confirmation step for the previous target,
+     * which is why this rewinds rather than only abandoning what is in flight.
+     * A no-op after every close the modal performs itself.
      */
-    previewSessionRef.current += 1
+    discardPreview()
 
     // Only when there is nothing to protect. A dismissed modal keeps its draft
     // (see `handleDismiss`), and re-seeding on reopen would throw away an
@@ -304,7 +304,6 @@ export const SendCompanyEmailModal = ({
       // delivered, and saying otherwise would misreport a batch that is still
       // running (or about to start failing).
       toast.success(`${t.successToast} — ${result.recipientCount}`)
-      onSent?.()
       handleSent()
     },
     onError: () => toast.error(t.errorToast),
@@ -427,6 +426,11 @@ export const SendCompanyEmailModal = ({
         ...prev,
         { key, filename: file.name, sizeBytes: file.size },
       ])
+      // The approved payload is frozen when the preview resolves, so a file
+      // added while one is in flight would be missing from what is actually
+      // sent. Abandoning the preview costs one click and keeps the
+      // confirmation step describing the draft as it stands.
+      discardPreview()
     } catch {
       toast.error(t.attachmentUploadError)
     } finally {
@@ -538,6 +542,11 @@ export const SendCompanyEmailModal = ({
                     setAttachments((prev) =>
                       prev.filter((a) => a.key !== attachment.key),
                     )
+                    // ⚠️ A preview in flight would otherwise freeze this file
+                    // into the approved payload after it has been deleted —
+                    // the confirmation step listing an attachment the send
+                    // then fails to read.
+                    discardPreview()
                   }}
                 >
                   {t.removeAttachment}
