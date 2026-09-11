@@ -44,6 +44,7 @@ import { DiscardCompanyEmailAttachmentDto } from './dto/discard-company-email-at
 import { PresignCompanyEmailAttachmentDto } from './dto/presign-company-email-attachment.dto'
 import {
   MAX_ATTACHMENTS,
+  MAX_RECIPIENT_EMAILS,
   SendCompanyEmailDto,
 } from './dto/send-company-email.dto'
 import { SendCompanyEmailResponseDto } from './dto/send-company-email-response.dto'
@@ -196,6 +197,10 @@ export class CompanyEmailService implements ICompanyEmailService {
       )
     }
 
+    // Validated here as well as in `send`, so a mistyped copy address is caught
+    // while the admin is still composing rather than on the click that sends.
+    normaliseCopyToEmail(dto.copyToEmail)
+
     const resolved = await this.resolveRecipients(dto)
 
     const recipients = resolved.filter(
@@ -257,6 +262,11 @@ export class CompanyEmailService implements ICompanyEmailService {
       )
     }
 
+    // Before `fetchAttachments`, deliberately: a mistyped copy address is a 400
+    // either way, and validating it after the download has spent up to 5MB of
+    // S3 reads on a request that was always going to be refused.
+    const copyToEmail = normaliseCopyToEmail(dto.copyToEmail)
+
     /*
      * ⚠️ Attachments are fetched here, in the request, and NOT in the background
      * loop — even though the loop is where they are used.
@@ -284,6 +294,13 @@ export class CompanyEmailService implements ICompanyEmailService {
       filter: dto.filter
         ? (JSON.parse(JSON.stringify(dto.filter)) as Record<string, unknown>)
         : null,
+      /*
+       * Stored on the batch rather than passed to `deliver`, because `deliver`
+       * also runs as a resume — started by nothing that has the original
+       * request in hand. Together with `copySentAt` this is what lets a resumed
+       * batch know both who the copy is for and whether it has already gone.
+       */
+      copyToEmail,
     })
 
     await this.recipientModel.bulkCreate(
@@ -380,6 +397,7 @@ export class CompanyEmailService implements ICompanyEmailService {
         counts[CompanyEmailRecipientStatusEnum.SKIPPED_NO_EMAIL] +
         counts[CompanyEmailRecipientStatusEnum.SKIPPED_QUARANTINED],
       pendingCount: counts[CompanyEmailRecipientStatusEnum.PENDING],
+      copyToEmail: batch.copyToEmail,
       attachments,
       createdAt: batch.createdAt,
       completedAt: batch.completedAt,
@@ -418,15 +436,40 @@ export class CompanyEmailService implements ICompanyEmailService {
         )
 
     /*
-     * The single-company override. Offered only when exactly one company is
-     * addressed, because there is otherwise no one address it could mean — and
-     * silently applying one admin-typed address to a thousand companies is the
-     * kind of mistake that cannot be taken back.
+     * The single-company address list. Offered only when exactly one company is
+     * addressed, because there is otherwise no one company these could be the
+     * addresses *of* — and silently applying an admin-typed address to a
+     * thousand companies is the kind of mistake that cannot be taken back.
      */
-    const override =
-      companies.length === 1 ? dto.recipientEmail?.trim() || null : null
+    const addresses =
+      companies.length === 1
+        ? normaliseRecipientEmails(dto.recipientEmails)
+        : []
 
-    return companies.map((company) => classify(company, override))
+    if (!addresses.length) {
+      return companies.map((company) => classify(company, null))
+    }
+
+    const [company] = companies
+
+    /*
+     * One skipped row for a quarantined company, not one per address. The
+     * company is halted, which is a fact about the company rather than about
+     * any address the admin typed; N identical "in quarantine" rows would state
+     * it N times and inflate the skipped count against a register where only
+     * one company was passed over.
+     */
+    if (company.quarantined) {
+      return [classify(company, addresses[0])]
+    }
+
+    /*
+     * ⚠️ One row — and therefore one message — per address. Not one message
+     * addressed to all of them: the addresses behind a company are its people,
+     * and putting them in a shared To line would tell each of them who else the
+     * Directorate writes to at their employer.
+     */
+    return addresses.map((address) => classify(company, address))
   }
 
   /**
@@ -531,7 +574,7 @@ export class CompanyEmailService implements ICompanyEmailService {
        */
       const existing = await this.companyEmailModel.findOne({
         where: { id: companyEmailId },
-        attributes: ['status'],
+        attributes: ['status', 'copyToEmail', 'copySentAt'],
       })
       const isFirstRun = existing?.status !== CompanyEmailStatusEnum.SENDING
 
@@ -566,6 +609,21 @@ export class CompanyEmailService implements ICompanyEmailService {
         ],
         order: [['companyName', 'ASC']],
       })
+
+      /*
+       * Before the recipients, not after: the copy is the sender's own record
+       * of what went out, and a batch that dies halfway through the register
+       * should still have put it in their inbox. It is also why this is not
+       * inside the loop — see `sendCopy`.
+       */
+      await this.sendCopy(
+        companyEmailId,
+        existing?.copyToEmail ?? null,
+        existing?.copySentAt ?? null,
+        subject,
+        bodyHtml,
+        mailAttachments,
+      )
 
       for (const row of rows) {
         await this.deliverOne(
@@ -644,6 +702,66 @@ export class CompanyEmailService implements ICompanyEmailService {
        * replace the error already logged above.
        */
       await this.archiveAttachments(companyEmailId).catch(() => undefined)
+    }
+  }
+
+  /**
+   * Put one copy of the message in the sender's inbox.
+   *
+   * ⚠️ **Once per batch.** Not a BCC header on each message — a send addressed
+   * at the whole register would deliver ~1 700 identical copies to one person,
+   * which is not a copy of the mailing but a denial of service on their inbox.
+   * `copySentAt` is the guard that keeps a resumed batch from sending a second
+   * one.
+   *
+   * Best-effort throughout, like the attachment archiving: the copy is a
+   * courtesy to the sender, and failing to deliver it must not mark a batch
+   * that reached its actual recipients as failed. A failure leaves `copySentAt`
+   * null, so a resume tries again.
+   *
+   * The copy is deliberately identical to what the companies receive — no
+   * added banner — so the sender's record is the message, not a paraphrase of
+   * it. It writes no recipient row and no timeline entry: it belongs to no
+   * company, and counting it among the companies mailed would misstate the
+   * send.
+   */
+  private async sendCopy(
+    companyEmailId: string,
+    copyToEmail: string | null,
+    copySentAt: Date | null,
+    subject: string,
+    bodyHtml: string,
+    mailAttachments: { filename: string; content: Buffer; label: string }[],
+  ): Promise<void> {
+    if (!copyToEmail || copySentAt) return
+
+    try {
+      const result = await this.mailService.sendCustomEmail(
+        copyToEmail,
+        subject,
+        bodyHtml,
+        mailAttachments,
+      )
+
+      if (!result.ok) {
+        this.logger.warn('Could not send the company email copy', {
+          context: LOGGING_CONTEXT,
+          companyEmailId,
+          errorMessage: result.error,
+        })
+        return
+      }
+
+      await this.companyEmailModel.update(
+        { copySentAt: new Date() },
+        { where: { id: companyEmailId } },
+      )
+    } catch (error) {
+      this.logger.warn('Could not send the company email copy', {
+        context: LOGGING_CONTEXT,
+        companyEmailId,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
@@ -916,6 +1034,61 @@ export class CompanyEmailService implements ICompanyEmailService {
       }
     })
   }
+}
+
+/**
+ * Clean up the addresses the admin typed, and refuse the ones that are not.
+ *
+ * Trimmed, blanks dropped, and de-duplicated case-insensitively — the same
+ * address typed twice is one message, not two, and finding that out from a
+ * duplicate in your inbox is not the way to find it out. Order is the admin's.
+ *
+ * ⚠️ Throws where `classify` would skip. A company whose *stored* address is
+ * unusable is a fact about the register, reported in the preview's skipped
+ * list; one of these is a typo in a field the admin is looking at, and a silent
+ * skip would deliver to the other addresses and never say why one was dropped.
+ */
+const normaliseRecipientEmails = (values: string[] | undefined): string[] => {
+  const seen = new Set<string>()
+  const addresses: string[] = []
+
+  for (const value of values ?? []) {
+    const address = value.trim()
+    if (!address) continue
+
+    if (!looksLikeOneAddress(address)) {
+      throw new BadRequestException(
+        companyEmailMessages.invalidRecipientEmail(address),
+      )
+    }
+
+    const key = address.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    addresses.push(address)
+  }
+
+  if (addresses.length > MAX_RECIPIENT_EMAILS) {
+    throw new BadRequestException(
+      companyEmailMessages.tooManyRecipientEmails(MAX_RECIPIENT_EMAILS),
+    )
+  }
+
+  return addresses
+}
+
+/** The copy address, or null when the admin cleared the field. Same rules. */
+const normaliseCopyToEmail = (value: string | null | undefined): string | null => {
+  const address = value?.trim()
+  if (!address) return null
+
+  if (!looksLikeOneAddress(address)) {
+    throw new BadRequestException(
+      companyEmailMessages.invalidCopyToEmail(address),
+    )
+  }
+
+  return address
 }
 
 /**

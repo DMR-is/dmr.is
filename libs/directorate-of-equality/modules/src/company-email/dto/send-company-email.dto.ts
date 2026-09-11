@@ -21,6 +21,15 @@ export const MAX_SUBJECT_LENGTH = 200
 export const MAX_BODY_LENGTH = 100_000
 export const MAX_ATTACHMENTS = 5
 
+/**
+ * How many addresses one single-company send may be aimed at.
+ *
+ * ⚠️ A cap on *addresses*, not on companies. Each one becomes its own recipient
+ * row and its own send, so this is also the number of SES calls and timeline
+ * entries a single-company message can produce.
+ */
+export const MAX_RECIPIENT_EMAILS = 10
+
 export class CompanyEmailAttachmentInputDto {
   @ApiString({
     description:
@@ -87,15 +96,29 @@ export class SendCompanyEmailDto {
   @Type(() => GetCompaniesQueryDto)
   filter?: GetCompaniesQueryDto
 
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    required: false,
+    description:
+      "Addresses for a single-company send, replacing the company's stored contact email. Each one gets its own message — they are not a joint To line and no recipient sees the others — and each gets its own recipient row and timeline entry, so `recipientCount` counts addresses here rather than companies. Ignored when more than one company is addressed: there is no one company whose address these could be. An entry that is not a single address is a 400, not a silent skip.",
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_RECIPIENT_EMAILS)
+  @IsString({ each: true })
+  @MaxLength(320, { each: true })
+  recipientEmails?: string[]
+
   @ApiOptionalString({
     nullable: true,
     description:
-      "Override the recipient address for a single-company send, where the admin may correct the company's stored contact email in the compose step. Ignored when more than one company is addressed — there is no one address to override.",
+      'Send **one** copy of the message to this address, whoever the batch is addressed to — normally the admin sending it. Deliberately one copy per batch and not a per-message BCC: a send aimed at the whole register would otherwise put ~1 700 identical copies in one inbox. The copy is not a recipient row, gets no timeline entry, and its failure never fails the batch.',
   })
   @IsOptional()
   @IsString()
   @MaxLength(320)
-  recipientEmail?: string | null
+  copyToEmail?: string | null
 
   @ApiProperty({
     type: CompanyEmailAttachmentInputDto,

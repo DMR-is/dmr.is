@@ -56,7 +56,10 @@ export class CompanyEmailPreviewDto {
   @ApiProperty({ type: CompanyEmailSkippedPreviewDto, isArray: true })
   skipped!: CompanyEmailSkippedPreviewDto[]
 
-  @ApiNumber({ description: 'Companies that will receive the message.' })
+  @ApiNumber({
+    description:
+      'Messages that will be sent. One per company as a rule — but a single-company send may name several addresses, and each of those is its own message, so this counts addresses rather than companies.',
+  })
   recipientCount!: number
 
   @ApiNumber({ description: 'Companies excluded, for either skip reason.' })

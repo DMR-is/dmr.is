@@ -158,18 +158,83 @@ describe('CompanyEmailService', () => {
       expect(preview.skipped[0].email).toBeNull()
     })
 
-    it('applies the address override for a single company', async () => {
+    it('replaces the stored address with the one the admin typed', async () => {
       const preview = await service.preview({
         ...validDto,
-        recipientEmail: 'annad@fyrirtaeki.is',
+        recipientEmails: ['annad@fyrirtaeki.is'],
       })
 
       expect(preview.recipients[0].email).toBe('annad@fyrirtaeki.is')
     })
 
-    it('ignores the address override when more than one company is addressed', async () => {
-      // ⚠️ There is no single address a bulk send could mean, and quietly
-      // applying one admin-typed address to every company is not recoverable.
+    it('makes one recipient out of each address on a single-company send', async () => {
+      // One row per address, because each is its own message — see
+      // `resolveRecipients`. The company appears once per address, which is
+      // what the confirmation step lists.
+      const preview = await service.preview({
+        ...validDto,
+        recipientEmails: ['framkvaemdastjori@x.is', 'mannaudur@x.is'],
+      })
+
+      expect(preview.recipientCount).toBe(2)
+      expect(preview.recipients.map((r) => r.email)).toEqual([
+        'framkvaemdastjori@x.is',
+        'mannaudur@x.is',
+      ])
+      expect(preview.recipients.map((r) => r.companyId)).toEqual([
+        'company-1',
+        'company-1',
+      ])
+    })
+
+    it('trims and de-duplicates the addresses case-insensitively', async () => {
+      // The same address twice is one message. Finding that out from a
+      // duplicate in your inbox is not the way to find it out.
+      const preview = await service.preview({
+        ...validDto,
+        recipientEmails: [' Skra@Fyrirtaeki.is ', 'skra@fyrirtaeki.is', '  '],
+      })
+
+      expect(preview.recipients.map((r) => r.email)).toEqual([
+        'Skra@Fyrirtaeki.is',
+      ])
+    })
+
+    it('rejects an address that is not a single address', async () => {
+      // ⚠️ A 400, not the silent skip an unusable *stored* address gets: this
+      // one is a typo in a field the admin is looking at. The comma case is the
+      // one that matters — nodemailer splits `to` on commas.
+      await expect(
+        service.preview({
+          ...validDto,
+          recipientEmails: ['a@x.is, b@y.is'],
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException)
+    })
+
+    it('gives a quarantined company one skipped row however many addresses were typed', async () => {
+      // The company is halted, which is a fact about the company and not about
+      // any address — repeating it per address would inflate the skipped count.
+      companyService.findMailRecipientsByIds.mockResolvedValue([
+        makeCompany({ quarantined: true }),
+      ])
+
+      const preview = await service.preview({
+        ...validDto,
+        recipientEmails: ['a@x.is', 'b@x.is'],
+      })
+
+      expect(preview.recipientCount).toBe(0)
+      expect(preview.skipped).toHaveLength(1)
+      expect(preview.skipped[0].reason).toBe(
+        CompanyEmailRecipientStatusEnum.SKIPPED_QUARANTINED,
+      )
+    })
+
+    it('ignores typed addresses when more than one company is addressed', async () => {
+      // ⚠️ There is no single company a bulk send's addresses could belong to,
+      // and quietly applying one admin-typed address to every company is not
+      // recoverable.
       companyService.findMailRecipientsByIds.mockResolvedValue([
         makeCompany({ id: 'a', email: 'a@x.is' }),
         makeCompany({ id: 'b', email: 'b@x.is' }),
@@ -178,7 +243,7 @@ describe('CompanyEmailService', () => {
       const preview = await service.preview({
         ...validDto,
         companyIds: ['a', 'b'],
-        recipientEmail: 'override@x.is',
+        recipientEmails: ['override@x.is'],
       })
 
       expect(preview.recipients.map((r) => r.email)).toEqual([
@@ -448,6 +513,141 @@ describe('CompanyEmailService', () => {
         'user-1',
         null,
       )
+    })
+
+    describe('the copy to the sender', () => {
+      /** A queued batch that also carries a copy address. */
+      const queuedWithCopy = (copySentAt: Date | null = null) => {
+        companyEmailModel.findOne.mockResolvedValue({
+          status: CompanyEmailStatusEnum.QUEUED,
+          copyToEmail: 'disa@jafnretti.is',
+          copySentAt,
+        })
+      }
+
+      it('sends exactly one copy however many recipients the batch has', async () => {
+        // ⚠️ The whole point of the design. A per-message BCC on a send aimed
+        // at the register would put ~1 700 identical copies in one inbox.
+        queuedWithCopy()
+        recipientModel.findAll.mockResolvedValue([
+          makeRow({ companyId: 'a', email: 'a@x.is' }),
+          makeRow({ companyId: 'b', email: 'b@x.is' }),
+          makeRow({ companyId: 'c', email: 'c@x.is' }),
+        ])
+
+        await service.send(
+          { ...validDto, copyToEmail: 'disa@jafnretti.is' },
+          'user-1',
+        )
+
+        const copies = mailService.sendCustomEmail.mock.calls.filter(
+          ([to]) => to === 'disa@jafnretti.is',
+        )
+        expect(copies).toHaveLength(1)
+        // Identical to what the companies receive, not a paraphrase of it.
+        expect(copies[0].slice(1, 3)).toEqual(['Áminning', '<p>Halló</p>'])
+      })
+
+      it('stores the copy address on the batch', async () => {
+        await service.send(
+          { ...validDto, copyToEmail: '  disa@jafnretti.is  ' },
+          'user-1',
+        )
+
+        expect(companyEmailModel.create).toHaveBeenCalledWith(
+          expect.objectContaining({ copyToEmail: 'disa@jafnretti.is' }),
+        )
+      })
+
+      it('records when the copy went out, so a resume cannot send a second', async () => {
+        queuedWithCopy()
+        recipientModel.findAll.mockResolvedValue([makeRow()])
+
+        await service.send(
+          { ...validDto, copyToEmail: 'disa@jafnretti.is' },
+          'user-1',
+        )
+
+        expect(companyEmailModel.update).toHaveBeenCalledWith(
+          expect.objectContaining({ copySentAt: expect.any(Date) }),
+          { where: { id: 'batch-1' } },
+        )
+      })
+
+      it('does not repeat the copy on a resumed batch', async () => {
+        companyEmailModel.findOne.mockResolvedValue({
+          status: CompanyEmailStatusEnum.SENDING,
+          copyToEmail: 'disa@jafnretti.is',
+          copySentAt: new Date(),
+        })
+        recipientModel.findAll.mockResolvedValue([makeRow()])
+
+        await service.send(
+          { ...validDto, copyToEmail: 'disa@jafnretti.is' },
+          'user-1',
+        )
+
+        expect(mailService.sendCustomEmail).not.toHaveBeenCalledWith(
+          'disa@jafnretti.is',
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+        )
+      })
+
+      it('completes the batch even when the copy cannot be sent', async () => {
+        // The copy is a courtesy to the sender. Mail that reached the companies
+        // must not be recorded as a failed batch because of it.
+        queuedWithCopy()
+        recipientModel.findAll.mockResolvedValue([makeRow()])
+        mailService.sendCustomEmail.mockImplementation(async (to: string) =>
+          to === 'disa@jafnretti.is'
+            ? { ok: false, error: 'SES sagði nei' }
+            : { ok: true },
+        )
+
+        await service.send(
+          { ...validDto, copyToEmail: 'disa@jafnretti.is' },
+          'user-1',
+        )
+
+        expect(companyEmailModel.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: CompanyEmailStatusEnum.COMPLETED,
+          }),
+          { where: { id: 'batch-1' } },
+        )
+        // Left null on a failure, which is what lets a resume try again.
+        expect(companyEmailModel.update).not.toHaveBeenCalledWith(
+          expect.objectContaining({ copySentAt: expect.any(Date) }),
+          expect.anything(),
+        )
+      })
+
+      it('writes no recipient row and no timeline entry for the copy', async () => {
+        // It belongs to no company: counting it among the companies mailed
+        // would misstate the send.
+        queuedWithCopy()
+        recipientModel.findAll.mockResolvedValue([makeRow()])
+
+        await service.send(
+          { ...validDto, copyToEmail: 'disa@jafnretti.is' },
+          'user-1',
+        )
+
+        expect(recipientModel.bulkCreate).toHaveBeenCalledWith([
+          expect.objectContaining({ email: 'skra@fyrirtaeki.is' }),
+        ])
+        expect(companyEventService.emitCustomEmailOutcome).toHaveBeenCalledTimes(
+          1,
+        )
+      })
+
+      it('rejects a copy address that is not a single address', async () => {
+        await expect(
+          service.preview({ ...validDto, copyToEmail: 'a@x.is, b@y.is' }),
+        ).rejects.toBeInstanceOf(BadRequestException)
+      })
     })
 
     it("records the event under the company's own register status", async () => {

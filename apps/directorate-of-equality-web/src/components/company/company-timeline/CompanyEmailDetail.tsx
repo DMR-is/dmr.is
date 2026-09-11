@@ -94,6 +94,20 @@ export const CompanyEmailDetail = ({ companyEmailId }: Props) => {
                 handleUpload={() => new Error('File upload not supported')}
               />
 
+              {/*
+                Part of the record of what went out: one copy of this message
+                also went to this address, which is not a recipient of the batch
+                and therefore appears on no company's timeline.
+              */}
+              {!!data.copyToEmail && (
+                <Box marginTop={2}>
+                  <Text variant="eyebrow" color="dark400">
+                    {t.customEmailCopyTo}
+                  </Text>
+                  <Text variant="small">{data.copyToEmail}</Text>
+                </Box>
+              )}
+
               {data.attachments.length > 0 && (
                 <Box marginTop={2}>
                   <Text variant="eyebrow" color="dark400">

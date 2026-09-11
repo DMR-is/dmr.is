@@ -26,6 +26,13 @@ import { CompanyEmailModel } from './company-email.model'
  * `companyName` and `email` are **snapshots**, not projections of the company
  * row. An admin who corrects a company's address a week later must not thereby
  * rewrite the record of where last week's mail actually went.
+ *
+ * ⚠️ **One row per address, which is usually but not always one row per
+ * company.** A single-company send may name several addresses in the compose
+ * step, and each gets its own row, its own send and its own timeline entry —
+ * they are separate messages, not one message with several addressees, so no
+ * recipient learns who else was written to. The uniqueness that keeps a resume
+ * safe is therefore on (batch, company, email), not on (batch, company).
  */
 type CompanyEmailRecipientAttributes = {
   companyEmailId: string

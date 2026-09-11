@@ -767,6 +767,7 @@ export const reportText = {
     customEmailLoading: 'Sæki tölvupóst…',
     customEmailError: 'Ekki tókst að sækja tölvupóstinn',
     customEmailAttachments: 'Viðhengi',
+    customEmailCopyTo: 'Afrit sent á',
     reminderTierSixMonths: 'Sex mánaða áminning',
     reminderTierTwoMonths: 'Tveggja mánaða áminning',
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
@@ -906,9 +907,16 @@ export const companiesText = {
     stepComposeHeading: 'Efni',
     subjectLabel: 'Efni',
     bodyLabel: 'Skilaboð',
-    recipientEmailLabel: 'Netfang viðtakanda',
-    recipientEmailHint:
-      'Forskráð netfang fyrirtækisins. Hægt er að breyta því fyrir þennan póst.',
+    recipientEmailsLabel: 'Netföng viðtakenda',
+    recipientEmailsHint:
+      'Netfang fyrirtækisins er forskráð. Ýttu á bil eða Enter til að bæta við fleiri netföngum — hvert þeirra fær sinn eigin póst og sér ekki hin.',
+    recipientEmailsFull: 'Hámarksfjölda netfanga er náð',
+    recipientEmailInvalid: 'Sláðu inn gilt netfang',
+    removeRecipient: 'Fjarlægja netfangið',
+    copyToLabel: 'Falið afrit (BCC)',
+    copyToHint:
+      'Eitt afrit af póstinum er sent á þetta netfang, óháð fjölda viðtakenda. Viðtakendur sjá það ekki.',
+    copyToInvalid: 'Sláðu inn gilt netfang eða skildu reitinn eftir auðan',
     attachmentsLabel: 'Viðhengi',
     addAttachment: 'Bæta við viðhengi',
     removeAttachment: 'Fjarlægja',
@@ -933,6 +941,7 @@ export const companiesText = {
     noEmailPlaceholder: '—',
     previewHeading: 'Forskoðun',
     previewSubjectLabel: 'Efni',
+    previewCopyToLabel: 'Afrit sent á',
     previewLoading: 'Sæki viðtakendur…',
     previewError: 'Ekki tókst að sækja viðtakendur',
     previewMessage:

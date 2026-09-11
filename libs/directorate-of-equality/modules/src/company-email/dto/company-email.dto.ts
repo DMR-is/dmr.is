@@ -68,6 +68,13 @@ export class CompanyEmailDto {
   @ApiNumber({ description: 'Recipients not yet attempted.' })
   pendingCount!: number
 
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Address that received a copy of this message — normally the sender. Null when none was asked for. One copy per batch, never a per-recipient BCC, and no company received it as a recipient.',
+  })
+  copyToEmail!: string | null
+
   @ApiProperty({ type: CompanyEmailAttachmentDto, isArray: true })
   attachments!: CompanyEmailAttachmentDto[]
 

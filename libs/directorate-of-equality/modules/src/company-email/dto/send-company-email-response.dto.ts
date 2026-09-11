@@ -13,7 +13,10 @@ export class SendCompanyEmailResponseDto {
   @ApiUUId({ description: 'The batch, for reading the message back later.' })
   id!: string
 
-  @ApiNumber({ description: 'Companies queued to receive the message.' })
+  @ApiNumber({
+    description:
+      'Messages queued. One per company as a rule — but a single-company send may name several addresses, and each is queued as its own message.',
+  })
   recipientCount!: number
 
   @ApiNumber({

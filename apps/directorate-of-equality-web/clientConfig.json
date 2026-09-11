@@ -6348,10 +6348,15 @@
             "description": "Send to every company matching this company-list filter. Resolved with the identical query the list itself runs, and deliberately unpaged — `page`/`pageSize` are ignored. Mutually exclusive with `companyIds`.",
             "allOf": [{ "$ref": "#/components/schemas/GetCompaniesQueryDto" }]
           },
-          "recipientEmail": {
+          "recipientEmails": {
+            "description": "Addresses for a single-company send, replacing the company's stored contact email. Each one gets its own message — they are not a joint To line and no recipient sees the others — and each gets its own recipient row and timeline entry, so `recipientCount` counts addresses here rather than companies. Ignored when more than one company is addressed: there is no one company whose address these could be. An entry that is not a single address is a 400, not a silent skip.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "copyToEmail": {
             "type": "string",
             "nullable": true,
-            "description": "Override the recipient address for a single-company send, where the admin may correct the company's stored contact email in the compose step. Ignored when more than one company is addressed — there is no one address to override."
+            "description": "Send **one** copy of the message to this address, whoever the batch is addressed to — normally the admin sending it. Deliberately one copy per batch and not a per-message BCC: a send aimed at the whole register would otherwise put ~1 700 identical copies in one inbox. The copy is not a recipient row, gets no timeline entry, and its failure never fails the batch."
           },
           "attachments": {
             "description": "Files to attach, previously staged via the presign endpoint.",
@@ -6433,7 +6438,7 @@
           },
           "recipientCount": {
             "type": "number",
-            "description": "Companies that will receive the message."
+            "description": "Messages that will be sent. One per company as a rule — but a single-company send may name several addresses, and each of those is its own message, so this counts addresses rather than companies."
           },
           "skippedCount": {
             "type": "number",
@@ -6458,7 +6463,7 @@
           },
           "recipientCount": {
             "type": "number",
-            "description": "Companies queued to receive the message."
+            "description": "Messages queued. One per company as a rule — but a single-company send may name several addresses, and each is queued as its own message."
           },
           "skippedCount": {
             "type": "number",
@@ -6515,6 +6520,11 @@
           "pendingCount": {
             "type": "number",
             "description": "Recipients not yet attempted."
+          },
+          "copyToEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Address that received a copy of this message — normally the sender. Null when none was asked for. One copy per batch, never a per-recipient BCC, and no company received it as a recipient."
           },
           "attachments": {
             "type": "array",

@@ -24,14 +24,22 @@ import {
   CompanyEmailRecipientList,
   RecipientRow,
 } from './CompanyEmailRecipientList'
+import {
+  commitRecipientDraft,
+  isCompleteEmail,
+  RecipientEmailsInput,
+} from './RecipientEmailsInput'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 const t = companiesText.sendEmail
 
 /** Mirrors the server caps, so a rejection is caught before the upload. */
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_TOTAL_BYTES = 5 * 1024 * 1024
+
+/** Mirrors `MAX_RECIPIENT_EMAILS` on the API. */
+const MAX_RECIPIENTS = 10
 
 /**
  * ⚠️ Must stay in step with `BOUNDARY_EXTENSIONS[MAIL_ATTACHMENT]` on the API.
@@ -83,6 +91,25 @@ export type SendCompanyEmailTarget =
       filter: Record<string, unknown>
     }
 
+/**
+ * How the address field should start out for a target.
+ *
+ * ⚠️ A stored address that does not look finished goes into the *draft* rather
+ * than becoming a pill. A pill reads as "this is settled", and the API now
+ * refuses an address it cannot send to instead of quietly skipping it — so a
+ * half-written value on the company record has to arrive somewhere the admin
+ * can see and fix it, with the field's own error message against it.
+ */
+const seedRecipients = (
+  target: SendCompanyEmailTarget,
+): { emails: string[]; draft: string } => {
+  const stored = target.mode === 'company' ? (target.defaultEmail ?? '') : ''
+
+  return isCompleteEmail(stored)
+    ? { emails: [stored.trim()], draft: '' }
+    : { emails: [], draft: stored }
+}
+
 type Props = {
   isOpen: boolean
   onClose: () => void
@@ -99,9 +126,41 @@ export const SendCompanyEmailModal = ({
   const [step, setStep] = useState<'compose' | 'preview'>('compose')
   const [subject, setSubject] = useState('')
   const [bodyHtml, setBodyHtml] = useState('')
-  const [recipientEmail, setRecipientEmail] = useState(
-    target.mode === 'company' ? (target.defaultEmail ?? '') : '',
+  const [recipientEmails, setRecipientEmails] = useState<string[]>(
+    () => seedRecipients(target).emails,
   )
+  /*
+   * What is in the address box but not yet a pill.
+   *
+   * ⚠️ Held here rather than inside `RecipientEmailsInput`, because "Halda
+   * áfram" has to be able to commit it: an address typed and then clicked
+   * straight past is one the admin believes they entered, and leaving it behind
+   * in a child's state would send the message to everyone except the person
+   * they typed last.
+   */
+  const [recipientDraft, setRecipientDraft] = useState(
+    () => seedRecipients(target).draft,
+  )
+  const [copyToEmail, setCopyToEmail] = useState('')
+  /*
+   * Whether the admin has edited the copy field themselves.
+   *
+   * ⚠️ Needed because the address it is prefilled with arrives asynchronously
+   * (see `me` below), and can land *after* the modal is open and being typed
+   * in. Without this the seeding effect would overwrite an address the admin
+   * had already corrected the moment the query resolved.
+   */
+  const copyToTouched = useRef(false)
+  /*
+   * Whether the admin has touched the address box themselves.
+   *
+   * ⚠️ The same guard as `copyToTouched`, and both feed `hasDraft`. A dismissed
+   * modal deliberately keeps its draft, but subject/body/attachments alone do
+   * not describe one: up to ten hand-typed addresses and a corrected copy
+   * address are work too, and without these the re-seeding effect below threw
+   * all of it away on reopen unless a subject happened to have been typed.
+   */
+  const recipientsTouched = useRef(false)
   const [attachments, setAttachments] = useState<StagedAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
 
@@ -141,11 +200,59 @@ export const SendCompanyEmailModal = ({
   // getter ref), so clearing state alone leaves the old body on screen.
   const editorKey = useRef(0)
 
+  /*
+   * The sender's own address, which the copy field is prefilled with.
+   *
+   * ⚠️ Not from the session: `authOptions` puts only name, national id, user id
+   * and role on it — there is no email there to read. Gated on `hasOpened` so
+   * the every-company-page mount does not fetch a user record for a modal
+   * nobody has opened; it is the same cached query the timeline already uses,
+   * so on the detail screen it usually resolves instantly.
+   */
+  const { data: me } = useQuery({
+    ...trpc.user.getMyUser.queryOptions(),
+    enabled: hasOpened,
+  })
+  const myEmail = me?.email ?? ''
+
+  useEffect(() => {
+    if (copyToTouched.current) return
+    setCopyToEmail(myEmail)
+  }, [myEmail])
+
   const isSingle = target.mode === 'company'
+
+  const handleRecipientsChange = (next: string[]) => {
+    recipientsTouched.current = true
+    setRecipientEmails(next)
+  }
+
+  const handleRecipientDraftChange = (next: string) => {
+    recipientsTouched.current = true
+    setRecipientDraft(next)
+  }
+
+  /*
+   * What the address box would come to if it were committed now.
+   *
+   * ⚠️ Computed once and read by all three of `hasUnfinishedAddress`,
+   * `canContinue` and `requestPreview`, so the field's cap, the button's
+   * enabled state and the payload cannot disagree about what counts as entered.
+   * `RecipientEmailsInput` runs the identical helper with the identical cap.
+   */
+  const committedRecipients = commitRecipientDraft(
+    recipientEmails,
+    recipientDraft,
+    MAX_RECIPIENTS,
+  )
 
   /** Anything the admin has typed or uploaded and would not want silently dropped. */
   const hasDraft =
-    !!subject.trim() || !!bodyHtml.trim() || attachments.length > 0
+    !!subject.trim() ||
+    !!bodyHtml.trim() ||
+    attachments.length > 0 ||
+    recipientsTouched.current ||
+    copyToTouched.current
 
   /*
    * ⚠️ Needed because this component is always mounted (see the mount sites).
@@ -174,23 +281,33 @@ export const SendCompanyEmailModal = ({
     // (see `handleDismiss`), and re-seeding on reopen would throw away an
     // address the admin had already corrected for this message.
     if (hasDraft) return
-    setRecipientEmail(
-      target.mode === 'company' ? (target.defaultEmail ?? '') : '',
-    )
+
+    const seed = seedRecipients(target)
+    setRecipientEmails(seed.emails)
+    setRecipientDraft(seed.draft)
+    setCopyToEmail(myEmail)
+    copyToTouched.current = false
+    recipientsTouched.current = false
     // Deliberately keyed on `isOpen` alone: `target` is a fresh object every
     // render, so including it would re-seed the field on each keystroke and
     // make the address uneditable.
   }, [isOpen])
 
-  const buildPayload = () => ({
+  /*
+   * `emails` is passed in rather than read from state because `requestPreview`
+   * commits the address box first and React has not re-rendered by then — the
+   * payload has to carry the list including whatever was just committed.
+   */
+  const buildPayload = (emails: string[]) => ({
     subject: subject.trim(),
     bodyHtml,
     ...(isSingle
       ? {
           companyIds: [target.companyId],
-          recipientEmail: recipientEmail.trim() || null,
+          recipientEmails: emails,
         }
       : { filter: target.filter }),
+    ...(copyToEmail.trim() ? { copyToEmail: copyToEmail.trim() } : {}),
     ...(attachments.length
       ? {
           attachments: attachments.map(({ key, filename }) => ({
@@ -277,7 +394,16 @@ export const SendCompanyEmailModal = ({
   )
 
   const requestPreview = () => {
-    const payload = buildPayload()
+    /*
+     * Commit whatever is still loose in the address box before anything else.
+     * `canContinue` has already refused a box with a remainder, so this is the
+     * same list it was judged on — see `committedRecipients`.
+     */
+    const { emails, remainder } = committedRecipients
+    setRecipientEmails(emails)
+    setRecipientDraft(remainder)
+
+    const payload = buildPayload(emails)
     previewSessionRef.current += 1
     const session = previewSessionRef.current
 
@@ -313,9 +439,14 @@ export const SendCompanyEmailModal = ({
     discardPreview()
     setSubject('')
     setBodyHtml('')
-    setRecipientEmail(
-      target.mode === 'company' ? (target.defaultEmail ?? '') : '',
-    )
+
+    const seed = seedRecipients(target)
+    setRecipientEmails(seed.emails)
+    setRecipientDraft(seed.draft)
+    setCopyToEmail(myEmail)
+    copyToTouched.current = false
+    recipientsTouched.current = false
+
     setAttachments([])
     editorKey.current += 1
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -438,11 +569,26 @@ export const SendCompanyEmailModal = ({
     }
   }
 
+  /*
+   * Loose text in the address or copy field that is not a whole address. The
+   * field shows its own message; this is what stops "Halda áfram" from either
+   * dropping it silently or sending it to an API that will 400.
+   */
+  const hasUnfinishedAddress =
+    // Anything committing would leave behind — a half-typed address, or whole
+    // ones with no room under the cap. Either way the admin can see it in the
+    // box, so continuing would drop an address they believe they entered.
+    !!committedRecipients.remainder ||
+    (!!copyToEmail.trim() && !isCompleteEmail(copyToEmail))
+
   const canContinue =
     !!subject.trim() &&
     !!bodyHtml.trim() &&
     !isUploading &&
-    (!isSingle || !!recipientEmail.trim())
+    !hasUnfinishedAddress &&
+    // Whole addresses still sitting in the box count: `requestPreview` commits
+    // them, so refusing here would block a form the admin has in fact filled in.
+    (!isSingle || committedRecipients.emails.length > 0)
 
   const recipientRows: RecipientRow[] = (
     approved?.preview.recipients ?? []
@@ -471,20 +617,91 @@ export const SendCompanyEmailModal = ({
       }}
       toggleClose={handleDismiss}
       width="large"
+      /*
+       * Pins the title and this row, so a long message scrolls between them
+       * rather than taking "Senda" off the bottom of a modal the admin then has
+       * to scroll back down through to find.
+       *
+       * Gated on `hasOpened` like the body, for the same reason: the shell must
+       * not be on screen with an action row over an empty box.
+       */
+      footer={
+        !hasOpened ? null : step === 'compose' ? (
+          <Inline justifyContent="flexEnd" space={2}>
+            <Button variant="ghost" size="small" onClick={handleCancel}>
+              {t.cancel}
+            </Button>
+            <Button
+              size="small"
+              disabled={!canContinue}
+              loading={previewMutation.isPending}
+              onClick={requestPreview}
+            >
+              {t.continue}
+            </Button>
+          </Inline>
+        ) : (
+          <Inline justifyContent="flexEnd" space={2}>
+            <Button variant="ghost" size="small" onClick={discardPreview}>
+              {t.back}
+            </Button>
+            <Button
+              size="small"
+              disabled={!approved || approved.preview.recipientCount === 0}
+              loading={sendMutation.isPending}
+              onClick={() =>
+                approved && sendMutation.mutate(approved.payload as never)
+              }
+            >
+              {`${t.send} (${approved?.preview.recipientCount ?? 0})`}
+            </Button>
+          </Inline>
+        )
+      }
     >
       {/* Gated on `hasOpened`, deliberately — see the note on that state. */}
       {!hasOpened ? null : step === 'compose' ? (
         <Stack space={3}>
           {isSingle && (
-            <TextInput
-              name="recipientEmail"
-              label={t.recipientEmailLabel}
-              type="email"
-              size="xs"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
+            <RecipientEmailsInput
+              label={t.recipientEmailsLabel}
+              hint={t.recipientEmailsHint}
+              emails={recipientEmails}
+              draft={recipientDraft}
+              max={MAX_RECIPIENTS}
+              onChange={handleRecipientsChange}
+              onDraftChange={handleRecipientDraftChange}
             />
           )}
+
+          {/*
+            Offered on a bulk send too, and safely: the API sends exactly one
+            copy per batch rather than a BCC on every message, so this is one
+            mail to the sender whether the batch is one company or the whole
+            register.
+          */}
+          <Box>
+            <TextInput
+              name="copyToEmail"
+              label={t.copyToLabel}
+              type="email"
+              size="xs"
+              value={copyToEmail}
+              onChange={(e) => {
+                copyToTouched.current = true
+                setCopyToEmail(e.target.value)
+              }}
+              hasError={!!copyToEmail.trim() && !isCompleteEmail(copyToEmail)}
+              errorMessage={
+                !!copyToEmail.trim() && !isCompleteEmail(copyToEmail)
+                  ? t.copyToInvalid
+                  : undefined
+              }
+            />
+            <Text variant="small" color="dark400" marginTop={1}>
+              {t.copyToHint}
+            </Text>
+          </Box>
 
           <TextInput
             name="subject"
@@ -571,19 +788,6 @@ export const SendCompanyEmailModal = ({
             </Text>
           </Box>
 
-          <Inline justifyContent="flexEnd" space={2}>
-            <Button variant="ghost" size="small" onClick={handleCancel}>
-              {t.cancel}
-            </Button>
-            <Button
-              size="small"
-              disabled={!canContinue}
-              loading={previewMutation.isPending}
-              onClick={requestPreview}
-            >
-              {t.continue}
-            </Button>
-          </Inline>
         </Stack>
       ) : (
         <Stack space={3}>
@@ -619,6 +823,17 @@ export const SendCompanyEmailModal = ({
               {approved.preview.recipientCount === 0 && (
                 <Text variant="small" color="red600">
                   {t.noRecipients}
+                </Text>
+              )}
+
+              {/*
+                From the approved payload, like everything else on this step —
+                the copy address that was resolved with the preview, not a
+                later edit that never went through it.
+              */}
+              {!!approved.payload.copyToEmail && (
+                <Text variant="small" color="dark400">
+                  {t.previewCopyToLabel}: {approved.payload.copyToEmail}
                 </Text>
               )}
 
@@ -669,21 +884,6 @@ export const SendCompanyEmailModal = ({
             </>
           )}
 
-          <Inline justifyContent="flexEnd" space={2}>
-            <Button variant="ghost" size="small" onClick={discardPreview}>
-              {t.back}
-            </Button>
-            <Button
-              size="small"
-              disabled={!approved || approved.preview.recipientCount === 0}
-              loading={sendMutation.isPending}
-              onClick={() =>
-                approved && sendMutation.mutate(approved.payload as never)
-              }
-            >
-              {`${t.send} (${approved?.preview.recipientCount ?? 0})`}
-            </Button>
-          </Inline>
         </Stack>
       )}
     </Modal>

@@ -28,6 +28,8 @@ type CompanyEmailAttributes = {
   createdByUserId: string
   status: CompanyEmailStatusEnum
   filter: Record<string, unknown> | null
+  copyToEmail: string | null
+  copySentAt: Date | null
   completedAt: Date | null
 }
 
@@ -37,6 +39,8 @@ type CompanyEmailCreateAttributes = {
   createdByUserId: string
   status?: CompanyEmailStatusEnum
   filter?: Record<string, unknown> | null
+  copyToEmail?: string | null
+  copySentAt?: Date | null
   completedAt?: Date | null
 }
 
@@ -73,6 +77,31 @@ export class CompanyEmailModel extends MutableModel<
    */
   @Column({ type: DataType.JSONB, allowNull: true })
   filter!: Record<string, unknown> | null
+
+  /**
+   * One address that gets a copy of this message — the admin who sent it, as a
+   * rule.
+   *
+   * ⚠️ **One copy per batch, not a BCC on every message.** A real BCC header on
+   * a send addressed at the whole register would deliver ~1 700 identical
+   * copies to one inbox. This is the whole recipient list for the copy, and it
+   * is deliberately not a `company_email_recipient` row: it belongs to no
+   * company, so it has no timeline to be written to and must not be counted
+   * among the companies that were mailed.
+   */
+  @Column({ type: DataType.TEXT, allowNull: true, field: 'copy_to_email' })
+  copyToEmail!: string | null
+
+  /**
+   * When the copy went out, and the guard that it goes out only once.
+   *
+   * ⚠️ Null after a *failed* copy as well as before an attempted one, which is
+   * deliberate: a resumed batch retries it. Null with a COMPLETED batch and a
+   * non-null `copyToEmail` therefore means the copy never made it — the log
+   * says why.
+   */
+  @Column({ type: DataType.DATE, allowNull: true, field: 'copy_sent_at' })
+  copySentAt!: Date | null
 
   @Column({ type: DataType.DATE, allowNull: true, field: 'completed_at' })
   completedAt!: Date | null

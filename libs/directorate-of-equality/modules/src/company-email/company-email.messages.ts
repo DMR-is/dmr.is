@@ -30,6 +30,30 @@ export const companyEmailMessages = {
     translatedMessage: 'Engin fyrirtæki fundust sem hægt er að senda á',
   }),
 
+  /**
+   * An address the admin typed, not one read from the register.
+   *
+   * ⚠️ A 400 rather than the silent skip a bad *stored* address gets. A company
+   * whose own record has nothing usable is a fact about the register the
+   * preview reports in its skipped list; a malformed address in the compose
+   * field is a typo the admin can fix, and dropping it quietly would send the
+   * message to everyone else and never say why one person did not get it.
+   */
+  invalidRecipientEmail: (value: string): ErrorMessage => ({
+    message: `"${value}" is not a single valid email address`,
+    translatedMessage: `„${value}“ er ekki gilt netfang`,
+  }),
+
+  invalidCopyToEmail: (value: string): ErrorMessage => ({
+    message: `Copy-to address "${value}" is not a single valid email address`,
+    translatedMessage: `Netfangið fyrir afrit („${value}“) er ekki gilt`,
+  }),
+
+  tooManyRecipientEmails: (max: number): ErrorMessage => ({
+    message: `At most ${max} recipient addresses are allowed on one message`,
+    translatedMessage: `Hámark ${max} netföng eru leyfð`,
+  }),
+
   attachmentsTooLarge: (maxBytes: number): ErrorMessage => ({
     message: `Attachments exceed the ${maxBytes / ONE_MB}MB total limit`,
     translatedMessage: `Viðhengi mega samtals ekki vera stærri en ${maxBytes / ONE_MB} MB`,
