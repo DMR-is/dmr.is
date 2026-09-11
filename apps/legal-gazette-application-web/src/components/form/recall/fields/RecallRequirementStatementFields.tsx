@@ -3,13 +3,16 @@
 import { useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { RecallApplicationWebSchema } from '@dmr.is/legal-gazette-schemas'
+import {
+  ApplicationRequirementStatementEnum,
+  getRequirementStatementLocationLabel,
+  RecallApplicationWebSchema,
+  requirementsStatementOptions,
+} from '@dmr.is/legal-gazette-schemas'
 import { GridColumn} from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 
-import { ApplicationRequirementStatementEnum } from '../../../../gen/fetch'
 import { useUpdateApplication } from '../../../../hooks/useUpdateApplication'
-import { requirementsStatementOptions } from '../../../../lib/constants'
 import { InputController } from '../../controllers/InputController'
 import { SelectController } from '../../controllers/SelectController'
 
@@ -89,15 +92,9 @@ export const RecallRequirementStatementFields = () => {
           key={recallRequirementStatementType}
           name={'fields.settlementFields.recallRequirementStatementLocation'}
           required
-          label={
-            recallRequirementStatementType ===
-            ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-              ? 'Staðsetning skiptastjóra'
-              : recallRequirementStatementType ===
-                  ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
-                ? 'Innslegin staðsetning'
-                : 'Tölvupóstur'
-          }
+          label={getRequirementStatementLocationLabel(
+            recallRequirementStatementType,
+          )}
           onChange={(val) =>
             // Save to localStorage only - server sync happens on navigation
             updateLocalOnly({
