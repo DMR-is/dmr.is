@@ -1,8 +1,10 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey, HasMany } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { UserModel as UserModelRef } from '../../user/models/user.model'
 import { UserModel } from '../../user/models/user.model'
 import { CompanyEmailStatusEnum } from './company-email.enums'
 import { CompanyEmailAttachmentModel } from './company-email-attachment.model'
@@ -103,7 +105,7 @@ export class CompanyEmailModel extends MutableModel<
     foreignKey: 'createdByUserId',
     as: 'createdBy',
   })
-  createdBy?: UserModel
+  createdBy?: UserModelRef
 
   @HasMany(() => CompanyEmailRecipientModel, {
     foreignKey: 'companyEmailId',

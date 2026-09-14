@@ -1,10 +1,13 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
+import type { CompanyModel as CompanyModelRef } from '../../company/models/company.model'
 import { CompanyModel } from '../../company/models/company.model'
 import { DoeModels } from '../../constants'
 import { CompanyEmailRecipientStatusEnum } from './company-email.enums'
+import type { CompanyEmailModel as CompanyEmailModelRef } from './company-email.model'
 import { CompanyEmailModel } from './company-email.model'
 
 /**
@@ -84,8 +87,8 @@ export class CompanyEmailRecipientModel extends MutableModel<
     foreignKey: 'companyEmailId',
     as: 'companyEmail',
   })
-  companyEmail?: CompanyEmailModel
+  companyEmail?: CompanyEmailModelRef
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
-  company?: CompanyModel
+  company?: CompanyModelRef
 }
