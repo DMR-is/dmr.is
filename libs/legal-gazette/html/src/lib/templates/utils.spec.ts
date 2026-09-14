@@ -1,3 +1,4 @@
+import { LegalGazetteHTMLTemplates } from '../constants'
 import { getDivisionEndingBankruptcyTemplate } from './division-ending-bankruptcy'
 import { getRecallBankruptcyTemplate } from './recall-bankruptcy'
 import { formatDate, parseAndFormatDate } from './utils'
@@ -50,6 +51,7 @@ describe('advert templates', () => {
     })
 
     const divisionEnding = getDivisionEndingBankruptcyTemplate({
+      templateType: LegalGazetteHTMLTemplates.DIVISION_ENDING_BANKRUPTCY,
       courtDistrict: 'Héraðsdóms Reykjavíkur',
       judgementDate: judgementDate.toISOString(),
       endingDate: new Date('2026-07-30T00:00:00.000Z').toISOString(),

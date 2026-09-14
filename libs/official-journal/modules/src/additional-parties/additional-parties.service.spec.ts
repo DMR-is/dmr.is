@@ -41,10 +41,19 @@ describe('AdditionalPartiesService', () => {
       ]),
     }
 
+    const sequelize = {
+      transaction: jest.fn(),
+    }
+
     const service = new AdditionalPartiesService(
-      logger as ConstructorParameters<typeof AdditionalPartiesService>[0],
+      logger as unknown as ConstructorParameters<
+        typeof AdditionalPartiesService
+      >[0],
       additionalPartiesModel as unknown as typeof AdditionalPartiesModel,
       involvedPartyModel as unknown as typeof AdvertInvolvedPartyModel,
+      sequelize as unknown as ConstructorParameters<
+        typeof AdditionalPartiesService
+      >[3],
     )
 
     await service.syncCaseAdditionalParties('case-id', {
