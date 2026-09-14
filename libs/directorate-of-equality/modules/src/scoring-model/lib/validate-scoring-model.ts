@@ -29,6 +29,24 @@ const approximately = (actual: number, expected: number): boolean =>
 
 const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0)
 
+/**
+ * Sub-criterion titles are not unique — nothing stops "Menntun" appearing under
+ * two criteria, and a model built from the catalog will often have repeats. So
+ * a reason names the parent too, in the same `Ábyrgð / Mannaforráð` form the
+ * submission validator uses.
+ */
+const labelFor = (
+  criteria: readonly ScoringCriterionDto[],
+): Map<string, string> => {
+  const labels = new Map<string, string>()
+  for (const criterion of criteria) {
+    for (const sub of criterion.subCriteria) {
+      labels.set(sub.id, `${criterion.title} / ${sub.title}`)
+    }
+  }
+  return labels
+}
+
 type ScoringModelShape = {
   criteria: ScoringCriterionDto[]
   roles: ScoringRoleDto[]
@@ -83,6 +101,8 @@ export const validateScoringModel = (
   }
 
   const allSubs = criteria.flatMap((c) => c.subCriteria)
+  const labels = labelFor(criteria)
+  const label = (id: string): string => labels.get(id) ?? id
 
   if (allSubs.length === 0) {
     reasons.add(
@@ -106,7 +126,7 @@ export const validateScoringModel = (
     if (sub.steps.length === 0) {
       reasons.add(
         ScoringValidationScopeEnum.STEPS,
-        `Undirviðmiðið „${sub.title}“ hefur engin þrep`,
+        `Undirviðmiðið „${label(sub.id)}“ hefur engin þrep`,
       )
       continue
     }
@@ -118,7 +138,7 @@ export const validateScoringModel = (
     if (sub.steps.length < MIN_STEPS || sub.steps.length > MAX_STEPS) {
       reasons.add(
         ScoringValidationScopeEnum.STEPS,
-        `Undirviðmiðið „${sub.title}“ hefur ${sub.steps.length} þrep; leyfilegt bil er ${MIN_STEPS}–${MAX_STEPS}`,
+        `Undirviðmiðið „${label(sub.id)}“ hefur ${sub.steps.length} þrep; leyfilegt bil er ${MIN_STEPS}–${MAX_STEPS}`,
       )
     }
 
@@ -127,7 +147,7 @@ export const validateScoringModel = (
     if (!contiguous) {
       reasons.add(
         ScoringValidationScopeEnum.STEPS,
-        `Þrep undirviðmiðsins „${sub.title}“ verða að vera samfelld frá 1; fundust ${orders.join(', ')}`,
+        `Þrep undirviðmiðsins „${label(sub.id)}“ verða að vera samfelld frá 1; fundust ${orders.join(', ')}`,
       )
     }
   }
@@ -155,20 +175,18 @@ export const validateScoringModel = (
 
     for (const subId of jobBasedSubIds) {
       if (!assigned.has(subId)) {
-        const sub = allSubs.find((s) => s.id === subId)
         reasons.add(
           ScoringValidationScopeEnum.ROLE_ASSIGNMENTS,
-          `Starfið „${role.title}“: vantar úthlutun fyrir „${sub?.title ?? subId}“`,
+          `Starfið „${role.title}“: vantar úthlutun fyrir „${label(subId)}“`,
         )
       }
     }
 
     for (const assignment of role.stepAssignments) {
       if (personalSubIds.has(assignment.subCriterionId)) {
-        const sub = allSubs.find((s) => s.id === assignment.subCriterionId)
         reasons.add(
           ScoringValidationScopeEnum.ROLE_ASSIGNMENTS,
-          `Starfið „${role.title}“: „${sub?.title ?? assignment.subCriterionId}“ er einstaklingsbundið viðmið og er metið á starfsmann, ekki starf`,
+          `Starfið „${role.title}“: „${label(assignment.subCriterionId)}“ er einstaklingsbundið viðmið og er metið á starfsmann, ekki starf`,
         )
       }
     }

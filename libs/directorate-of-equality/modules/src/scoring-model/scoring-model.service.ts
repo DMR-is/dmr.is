@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 
 import { CompanyDto } from '../company/dto/company.dto'
+import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
 import {
   CreateScoringCriterionDto,
   ScoringCriterionDto,
@@ -14,6 +19,11 @@ import {
   ScoringModelSummaryDto,
   ScoringRoleDto,
 } from './dto/scoring-model.dto'
+import {
+  CreateScoringRoleDto,
+  SetScoringRoleStepAssignmentsDto,
+  UpdateScoringRoleDto,
+} from './dto/scoring-role.dto'
 import { SetScoringStepsDto } from './dto/scoring-step.dto'
 import {
   CreateScoringSubCriterionDto,
@@ -40,6 +50,10 @@ export class ScoringModelService implements IScoringModelService {
     private readonly subCriterionModel: typeof ScoringSubCriterionModel,
     @InjectModel(ScoringSubCriterionStepModel)
     private readonly stepModel: typeof ScoringSubCriterionStepModel,
+    @InjectModel(ScoringRoleModel)
+    private readonly roleModel: typeof ScoringRoleModel,
+    @InjectModel(ScoringRoleStepModel)
+    private readonly roleStepModel: typeof ScoringRoleStepModel,
   ) {}
 
   /**
@@ -372,6 +386,141 @@ export class ScoringModelService implements IScoringModelService {
           // impossible rather than something the validator has to catch.
           stepOrder: index + 1,
           description: step.description,
+        })),
+      )
+    }
+
+    return this.reload(company, modelId)
+  }
+
+  /** Asserts the role belongs to this model, not merely that it exists. */
+  private async findOwnedRole(
+    modelId: string,
+    roleId: string,
+  ): Promise<ScoringRoleModel> {
+    const role = await this.roleModel.findOne({
+      where: { id: roleId, scoringModelId: modelId },
+    })
+
+    if (!role) {
+      throw new NotFoundException('Starf fannst ekki í þessu starfsmati')
+    }
+
+    return role
+  }
+
+  async createRole(
+    company: CompanyDto,
+    modelId: string,
+    input: CreateScoringRoleDto,
+  ): Promise<ScoringModelDto> {
+    await this.findOwnedModel(company, modelId)
+
+    await this.roleModel.create({
+      scoringModelId: modelId,
+      title: input.title,
+    })
+
+    return this.reload(company, modelId)
+  }
+
+  async updateRole(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+    input: UpdateScoringRoleDto,
+  ): Promise<ScoringModelDto> {
+    await this.findOwnedModel(company, modelId)
+    const role = await this.findOwnedRole(modelId, roleId)
+
+    await role.update({
+      ...(input.title !== undefined ? { title: input.title } : {}),
+    })
+
+    return this.reload(company, modelId)
+  }
+
+  async deleteRole(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+  ): Promise<ScoringModelDto> {
+    await this.findOwnedModel(company, modelId)
+    const role = await this.findOwnedRole(modelId, roleId)
+
+    // The assignments go with it through the FK cascade.
+    await role.destroy()
+
+    return this.reload(company, modelId)
+  }
+
+  async setRoleStepAssignments(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+    input: SetScoringRoleStepAssignmentsDto,
+  ): Promise<ScoringModelDto> {
+    const model = await this.findOwnedModel(company, modelId)
+    await this.findOwnedRole(modelId, roleId)
+
+    // An incomplete set is reported by the validator, not refused here. An
+    // incoherent one is refused: it does not describe a model that could exist,
+    // so accepting it would store a row nothing could ever score.
+    const stepsBySubCriterion = new Map<string, Set<string>>()
+    const personalSubIds = new Set<string>()
+
+    for (const criterion of model.criteria ?? []) {
+      for (const sub of criterion.subCriteria ?? []) {
+        stepsBySubCriterion.set(
+          sub.id,
+          new Set((sub.steps ?? []).map((step) => step.id)),
+        )
+        if (criterion.type === ReportCriterionTypeEnum.PERSONAL) {
+          personalSubIds.add(sub.id)
+        }
+      }
+    }
+
+    const seen = new Set<string>()
+
+    for (const assignment of input.assignments) {
+      const steps = stepsBySubCriterion.get(assignment.subCriterionId)
+
+      if (!steps) {
+        throw new BadRequestException(
+          `Undirviðmið „${assignment.subCriterionId}“ er ekki í þessu starfsmati`,
+        )
+      }
+
+      if (personalSubIds.has(assignment.subCriterionId)) {
+        throw new BadRequestException(
+          `Undirviðmið „${assignment.subCriterionId}“ er einstaklingsbundið og er metið á starfsmann, ekki starf`,
+        )
+      }
+
+      if (!steps.has(assignment.stepId)) {
+        throw new BadRequestException(
+          `Þrepið „${assignment.stepId}“ tilheyrir ekki undirviðmiðinu „${assignment.subCriterionId}“`,
+        )
+      }
+
+      if (seen.has(assignment.subCriterionId)) {
+        throw new BadRequestException(
+          `Undirviðmiðið „${assignment.subCriterionId}“ kemur oftar en einu sinni fyrir; starf fær nákvæmlega eina úthlutun á hvert undirviðmið`,
+        )
+      }
+
+      seen.add(assignment.subCriterionId)
+    }
+
+    await this.roleStepModel.destroy({ where: { scoringRoleId: roleId } })
+
+    if (input.assignments.length > 0) {
+      await this.roleStepModel.bulkCreate(
+        input.assignments.map((assignment) => ({
+          scoringRoleId: roleId,
+          scoringSubCriterionId: assignment.subCriterionId,
+          scoringSubCriterionStepId: assignment.stepId,
         })),
       )
     }

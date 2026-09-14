@@ -351,6 +351,29 @@ describe('validateScoringModel', () => {
     })
   })
 
+  // Sub-criterion titles are not unique across criteria, and a model built from
+  // the catalog will often repeat one. Without the parent, four reasons read
+  // identically and name nothing a caller can act on.
+  it('names the parent criterion so duplicate sub-criterion titles stay distinct', () => {
+    const model = validModel()
+    for (const c of model.criteria) {
+      c.subCriteria[0].title = 'Menntun'
+    }
+    model.roles[0].stepAssignments = []
+
+    const messages = messagesOf(model).filter((m) =>
+      m.includes('vantar úthlutun'),
+    )
+
+    expect(messages).toHaveLength(4)
+    expect(new Set(messages).size).toBe(4)
+    expect(messages).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('RESPONSIBILITY / Menntun'),
+      ]),
+    )
+  })
+
   it('caps the reason list so a pathological model cannot flood the response', () => {
     const many = Array.from({ length: 400 }, (_, i) =>
       sub({ id: `s${i}`, weight: 0.25, stepOrders: [] }),

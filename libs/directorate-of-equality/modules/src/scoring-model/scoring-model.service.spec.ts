@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common'
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -12,6 +12,8 @@ import { ReportCriterionTypeEnum } from '../report-criterion/models/report-crite
 import { ScoringModelStatusEnum } from './dto/scoring-validation.dto'
 import { ScoringCriterionModel } from './models/scoring-criterion.model'
 import { ScoringModelModel } from './models/scoring-model.model'
+import { ScoringRoleModel } from './models/scoring-role.model'
+import { ScoringRoleStepModel } from './models/scoring-role-step.model'
 import { ScoringSubCriterionModel } from './models/scoring-sub-criterion.model'
 import { ScoringSubCriterionStepModel } from './models/scoring-sub-criterion-step.model'
 import { ScoringModelService } from './scoring-model.service'
@@ -54,6 +56,10 @@ describe('ScoringModelService', () => {
   let subCreate: jest.Mock
   let stepDestroy: jest.Mock
   let stepBulkCreate: jest.Mock
+  let roleFindOne: jest.Mock
+  let roleCreate: jest.Mock
+  let roleStepDestroy: jest.Mock
+  let roleStepBulkCreate: jest.Mock
 
   beforeEach(async () => {
     modelFindOne = jest.fn().mockResolvedValue(loadedModel())
@@ -65,6 +71,10 @@ describe('ScoringModelService', () => {
     subCreate = jest.fn()
     stepDestroy = jest.fn()
     stepBulkCreate = jest.fn()
+    roleFindOne = jest.fn().mockResolvedValue(null)
+    roleCreate = jest.fn()
+    roleStepDestroy = jest.fn()
+    roleStepBulkCreate = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -88,6 +98,17 @@ describe('ScoringModelService', () => {
         {
           provide: getModelToken(ScoringSubCriterionStepModel),
           useValue: { destroy: stepDestroy, bulkCreate: stepBulkCreate },
+        },
+        {
+          provide: getModelToken(ScoringRoleModel),
+          useValue: { findOne: roleFindOne, create: roleCreate },
+        },
+        {
+          provide: getModelToken(ScoringRoleStepModel),
+          useValue: {
+            destroy: roleStepDestroy,
+            bulkCreate: roleStepBulkCreate,
+          },
         },
       ],
     }).compile()
@@ -362,6 +383,139 @@ describe('ScoringModelService', () => {
       ).rejects.toThrow(NotFoundException)
 
       expect(stepDestroy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('setRoleStepAssignments', () => {
+    const ROLE_ID = 'role-1'
+    const JOB_SUB = 'job-sub'
+    const JOB_STEP = 'job-step'
+    const PERSONAL_SUB = 'personal-sub'
+    const PERSONAL_STEP = 'personal-step'
+
+    const treeWithBothKinds = () =>
+      loadedModel({
+        criteria: [
+          {
+            id: CRITERION_ID,
+            type: ReportCriterionTypeEnum.RESPONSIBILITY,
+            title: 'Ábyrgð',
+            description: 'd',
+            subCriteria: [
+              {
+                id: JOB_SUB,
+                title: 'Mannaforráð',
+                description: 'd',
+                weight: 100,
+                steps: [{ id: JOB_STEP, stepOrder: 1, description: 'a' }],
+              },
+            ],
+          },
+          {
+            id: 'personal-criterion',
+            type: ReportCriterionTypeEnum.PERSONAL,
+            title: 'Frammistaða',
+            description: 'd',
+            subCriteria: [
+              {
+                id: PERSONAL_SUB,
+                title: 'Menntun',
+                description: 'd',
+                weight: 0,
+                steps: [{ id: PERSONAL_STEP, stepOrder: 1, description: 'a' }],
+              },
+            ],
+          },
+        ],
+      })
+
+    beforeEach(() => {
+      modelFindOne.mockResolvedValue(treeWithBothKinds())
+      roleFindOne.mockResolvedValue({ id: ROLE_ID })
+    })
+
+    it('replaces the whole set rather than merging into it', async () => {
+      await service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+        assignments: [{ subCriterionId: JOB_SUB, stepId: JOB_STEP }],
+      })
+
+      expect(roleStepDestroy).toHaveBeenCalledWith({
+        where: { scoringRoleId: ROLE_ID },
+      })
+      expect(roleStepBulkCreate).toHaveBeenCalledWith([
+        {
+          scoringRoleId: ROLE_ID,
+          scoringSubCriterionId: JOB_SUB,
+          scoringSubCriterionStepId: JOB_STEP,
+        },
+      ])
+    })
+
+    // Incomplete is reported by the validator; only incoherent is refused.
+    it('accepts a set that does not cover every sub-criterion', async () => {
+      const result = await service.setRoleStepAssignments(
+        COMPANY,
+        MODEL_ID,
+        ROLE_ID,
+        { assignments: [] },
+      )
+
+      expect(roleStepDestroy).toHaveBeenCalled()
+      expect(roleStepBulkCreate).not.toHaveBeenCalled()
+      expect(result.validation.status).toBe(ScoringModelStatusEnum.INVALID)
+    })
+
+    it('refuses a step belonging to a different sub-criterion', async () => {
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [
+            { subCriterionId: JOB_SUB, stepId: PERSONAL_STEP },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(roleStepDestroy).not.toHaveBeenCalled()
+    })
+
+    it('refuses a sub-criterion outside this model', async () => {
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [{ subCriterionId: 'elsewhere', stepId: JOB_STEP }],
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('refuses a personal sub-criterion, which is scored per employee', async () => {
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [
+            { subCriterionId: PERSONAL_SUB, stepId: PERSONAL_STEP },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
+
+    it('refuses the same sub-criterion twice', async () => {
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [
+            { subCriterionId: JOB_SUB, stepId: JOB_STEP },
+            { subCriterionId: JOB_SUB, stepId: JOB_STEP },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException)
+
+      expect(roleStepDestroy).not.toHaveBeenCalled()
+    })
+
+    it('refuses a role belonging to another model', async () => {
+      roleFindOne.mockResolvedValue(null)
+
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [],
+        }),
+      ).rejects.toThrow(NotFoundException)
     })
   })
 

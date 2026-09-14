@@ -17,13 +17,16 @@ import { CompanyDto } from '@dmr.is/doe-modules/company'
 import {
   CreateScoringCriterionDto,
   CreateScoringModelDto,
+  CreateScoringRoleDto,
   CreateScoringSubCriterionDto,
   GetScoringModelsResponseDto,
   IScoringModelService,
   ScoringModelDto,
   ScoringModelSummaryDto,
+  SetScoringRoleStepAssignmentsDto,
   SetScoringStepsDto,
   UpdateScoringCriterionDto,
+  UpdateScoringRoleDto,
   UpdateScoringSubCriterionDto,
 } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
@@ -295,6 +298,84 @@ export class ScoringModelController {
       modelId,
       criterionId,
       subCriterionId,
+      body,
+    )
+  }
+
+  @Post(':modelId/roles')
+  @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
+  @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
+  @PartnerResponse({
+    operationId: 'createScoringRole',
+    type: ScoringModelDto,
+    description:
+      'Adds a job (starf). A job owns the job-based criteria: its step assignments are what score every employee who holds it, so an employee never carries job-based þrep of their own — only personal ones. Newly created jobs have no assignments, which the model reports until they are set.',
+  })
+  createRole(
+    @CurrentCompany() company: CompanyDto,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+    @Body() body: CreateScoringRoleDto,
+  ): Promise<ScoringModelDto> {
+    return this.scoringModelService.createRole(company, modelId, body)
+  }
+
+  @Patch(':modelId/roles/:roleId')
+  @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
+  @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
+  @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
+  @PartnerResponse({
+    operationId: 'updateScoringRole',
+    type: ScoringModelDto,
+    description:
+      'Renames a job. Its step assignments are untouched — they are held by id, not by title.',
+  })
+  updateRole(
+    @CurrentCompany() company: CompanyDto,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+    @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Body() body: UpdateScoringRoleDto,
+  ): Promise<ScoringModelDto> {
+    return this.scoringModelService.updateRole(company, modelId, roleId, body)
+  }
+
+  @Delete(':modelId/roles/:roleId')
+  @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
+  @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
+  @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
+  @PartnerResponse({
+    operationId: 'deleteScoringRole',
+    type: ScoringModelDto,
+    description:
+      'Deletes a job and its step assignments. A filing that names this job in an employee’s `roleTitle` will no longer resolve, so delete it only once no employee is mapped to it.',
+  })
+  deleteRole(
+    @CurrentCompany() company: CompanyDto,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+    @Param('roleId', ParseUUIDPipe) roleId: string,
+  ): Promise<ScoringModelDto> {
+    return this.scoringModelService.deleteRole(company, modelId, roleId)
+  }
+
+  @Put(':modelId/roles/:roleId/step-assignments')
+  @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
+  @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
+  @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
+  @PartnerResponse({
+    operationId: 'setScoringRoleStepAssignments',
+    type: ScoringModelDto,
+    description:
+      'Replaces a job’s whole set of step assignments — one þrep per job-based sub-criterion. Sent whole rather than one at a time because exactly one assignment per job per sub-criterion is a constraint the table itself holds, so a partial write cannot move a job from one þrep to another without deleting first. An incomplete set is accepted and reported like any other incompleteness; an incoherent one is refused with a 400: a step belonging to a different sub-criterion, a sub-criterion outside this model, a personal sub-criterion, or the same sub-criterion twice.',
+  })
+  setRoleStepAssignments(
+    @CurrentCompany() company: CompanyDto,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+    @Param('roleId', ParseUUIDPipe) roleId: string,
+    @Body() body: SetScoringRoleStepAssignmentsDto,
+  ): Promise<ScoringModelDto> {
+    return this.scoringModelService.setRoleStepAssignments(
+      company,
+      modelId,
+      roleId,
       body,
     )
   }

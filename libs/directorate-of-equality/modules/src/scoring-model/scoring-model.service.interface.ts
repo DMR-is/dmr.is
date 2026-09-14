@@ -9,6 +9,11 @@ import {
   ScoringModelDto,
   ScoringModelSummaryDto,
 } from './dto/scoring-model.dto'
+import {
+  CreateScoringRoleDto,
+  SetScoringRoleStepAssignmentsDto,
+  UpdateScoringRoleDto,
+} from './dto/scoring-role.dto'
 import { SetScoringStepsDto } from './dto/scoring-step.dto'
 import {
   CreateScoringSubCriterionDto,
@@ -92,6 +97,40 @@ export interface IScoringModelService {
     criterionId: string,
     subCriterionId: string,
     input: SetScoringStepsDto,
+  ): Promise<ScoringModelDto>
+
+  createRole(
+    company: CompanyDto,
+    modelId: string,
+    input: CreateScoringRoleDto,
+  ): Promise<ScoringModelDto>
+
+  updateRole(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+    input: UpdateScoringRoleDto,
+  ): Promise<ScoringModelDto>
+
+  deleteRole(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+  ): Promise<ScoringModelDto>
+
+  /**
+   * Replaces a job's whole set of step assignments.
+   *
+   * An incomplete set is accepted and reported, like every other kind of
+   * incompleteness. An *incoherent* one is refused: a step belonging to a
+   * different sub-criterion, a sub-criterion outside this model, a personal
+   * sub-criterion, or the same sub-criterion twice.
+   */
+  setRoleStepAssignments(
+    company: CompanyDto,
+    modelId: string,
+    roleId: string,
+    input: SetScoringRoleStepAssignmentsDto,
   ): Promise<ScoringModelDto>
 }
 
