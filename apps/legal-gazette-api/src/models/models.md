@@ -40,6 +40,38 @@ is the argument. `TypeCategoryDto` and `TypeWithCategoriesDto` therefore live in
 `type-categories.dto.ts`, which nothing in the cycle imports at value level,
 rather than in `type-categories.model.ts`.
 
+**Which decorators are affected.** `ApiDto` and `ApiOptionalDto` pass
+`type: classRef` - eager, and therefore unsafe inside a cycle. `ApiDtoArray` and
+`ApiOptionalDtoArray` pass `type: () => classRef`; the thunk defers the read, so
+they are immune. That distinction, not the property name, decides which sites
+need the treatment.
+
+**`type-categories` was not the only site.** Three eager arguments remain in
+`advert.model.ts`, each paired with a leaf model that imports `advert.model.ts`
+back at value level:
+
+| site | argument | cycle partner |
+|---|---|---|
+| `advert.model.ts:784` | `@ApiOptionalDto(SettlementDto)` | `settlement.model.ts` |
+| `advert.model.ts:799` | `@ApiDto(StatusDto)` | `status.model.ts` |
+| `advert.model.ts:817` | `@ApiOptionalDto(SignatureDto)` | `signature.model.ts` |
+
+Importing the leaf model *before* `advert.model.ts` throws
+`Cannot access 'XDto' before initialization`. Nothing enters that way today, so
+the suite passes - but `core/utils/advert-status.util.ts` and six specs import
+from `status.model.ts` directly and survive only because something pulls
+`advert.model.ts` in first. Under `ts-jest` the same order produced `undefined`
+silently; under swc it is a hard crash, so the next import added in the wrong
+place breaks the suite rather than shipping a wrong schema.
+
+The fix is the same move: lift `AdvertDto` and its siblings into an
+`advert.dto.ts` that nothing in the cycle imports at value level. Deliberately
+not done here - it is larger than the transform switch should absorb.
+
+The other four eager sites in that class are safe: `CourtDistrictDto` (781),
+`CategoryDto` (793), `TypeDto` (796) and `UserDto` (808) - none of those modules
+imports `advert.model.ts` back, so there is no cycle to be early in.
+
 This one was a live bug, not just an swc artefact. Entering the graph through
 `type.model.ts` - which `estate.util.ts` does - previously passed `undefined` to
 `ApiProperty({ type })` and `Type(() => classRef)`, silently producing a wrong
