@@ -22,8 +22,6 @@ import { CompanyTabsContainer } from './CompanyTabsContainer'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
-const dailyFinesText = companiesText.dailyFinesModal
-const quarantineText = companiesText.quarantineModal
 
 type CompanyFormContainerProps = {
   company: CompanyDto
@@ -31,16 +29,16 @@ type CompanyFormContainerProps = {
 
 type CompanyConfirmationModalType = 'fines' | 'quarantine'
 
+const confirmationModalText = {
+  fines: companiesText.dailyFinesModal,
+  quarantine: companiesText.quarantineModal,
+}
+
 export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const [companyConfirmationText, setCompanyConfirmationText] = useState<{
-    title: string
-    description: string
-    confirmButton: string
-    type: CompanyConfirmationModalType
-  }>()
-
+  const [confirmationType, setConfirmationType] =
+    useState<CompanyConfirmationModalType>()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const invalidateCompany = () => {
@@ -158,12 +156,7 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   iconType="outline"
                   loading={updateFines.isPending}
                   onClick={() => {
-                    setCompanyConfirmationText({
-                      title: dailyFinesText.title,
-                      description: dailyFinesText.description,
-                      confirmButton: dailyFinesText.confirmButton,
-                      type: 'fines',
-                    })
+                    setConfirmationType('fines')
                     setIsModalOpen(true)
                   }}
                 >
@@ -179,12 +172,7 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   iconType="outline"
                   loading={updateQuarantine.isPending}
                   onClick={() => {
-                    setCompanyConfirmationText({
-                      title: quarantineText.title,
-                      description: quarantineText.description,
-                      confirmButton: quarantineText.confirmButton,
-                      type: 'quarantine',
-                    })
+                    setConfirmationType('quarantine')
                     setIsModalOpen(true)
                   }}
                 >
@@ -197,27 +185,37 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
       </Stack>
       <CompanyTabsContainer company={company} />
       <CompanyConfirmationModal
-        text={{
-          title: companyConfirmationText?.title ?? '',
-          description: companyConfirmationText?.description ?? '',
-          confirmButton: companyConfirmationText?.confirmButton ?? '',
-        }}
-        companyName={company.name}
+        text={
+          confirmationType && {
+            title: confirmationModalText[confirmationType].title,
+            description: confirmationModalText[confirmationType].description(
+              <Text key="company-name" as="span" fontWeight="semiBold">
+                {company.name}
+              </Text>,
+            ),
+            confirmButton:
+              confirmationModalText[confirmationType].confirmButton,
+          }
+        }
         visible={isModalOpen}
         isLoading={updateQuarantine.isPending || updateFines.isPending}
-        onClose={() => {
-          setIsModalOpen(false)
-          setCompanyConfirmationText(undefined)
-        }}
+        onClose={() => setIsModalOpen(false)}
         onSubmit={() => {
-          companyConfirmationText && companyConfirmationText?.type === 'fines'
-            ? updateFines.mutate({ id: company.id, finesStarted: true })
-            : updateQuarantine.mutate({
-                id: company.id,
-                quarantined: true,
-              })
-          setIsModalOpen(false)
-          setCompanyConfirmationText(undefined)
+          if (!confirmationType) return
+          // Close once the request settles so the confirm button can show its
+          // pending state instead of the modal vanishing on click.
+          const closeOnSettled = { onSettled: () => setIsModalOpen(false) }
+          if (confirmationType === 'fines') {
+            updateFines.mutate(
+              { id: company.id, finesStarted: true },
+              closeOnSettled,
+            )
+          } else {
+            updateQuarantine.mutate(
+              { id: company.id, quarantined: true },
+              closeOnSettled,
+            )
+          }
         }}
       />
     </Box>

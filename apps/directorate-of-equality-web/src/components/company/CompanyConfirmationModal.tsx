@@ -1,8 +1,7 @@
 'use client'
 
-import React from 'react'
+import type { ReactNode } from 'react'
 
-import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { Modal } from '@dmr.is/ui/components/Modal/Modal'
@@ -10,12 +9,11 @@ import { Modal } from '@dmr.is/ui/components/Modal/Modal'
 import * as styles from './CompanyConfirmationModal.css'
 
 interface CompanyConfirmationModalProps {
-  text: {
+  text?: {
     title: string
-    description: string
+    description: ReactNode
     confirmButton: string
   }
-  companyName: string
   visible: boolean
   isLoading?: boolean
   onClose: () => void
@@ -23,7 +21,6 @@ interface CompanyConfirmationModalProps {
 }
 export const CompanyConfirmationModal = ({
   text,
-  companyName,
   visible,
   isLoading = false,
   onClose,
@@ -40,8 +37,8 @@ export const CompanyConfirmationModal = ({
     >
       <form onSubmit={(e) => e.preventDefault()}>
         <div className={styles.modalContent}>
-          <Text variant="h3">{text.title + ' - ' + companyName}</Text>
-          <Text marginBottom={3}>{text.description}</Text>
+          <Text variant="h3">{text?.title}</Text>
+          <Text marginBottom={3}>{text?.description}</Text>
           <Button
             fluid
             size="default"
@@ -50,7 +47,7 @@ export const CompanyConfirmationModal = ({
             disabled={isLoading}
             loading={isLoading}
           >
-            {text.confirmButton}
+            {text?.confirmButton}
           </Button>
         </div>
       </form>

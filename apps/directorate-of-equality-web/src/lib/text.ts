@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 export const frontPageText = {
   heroTitle: 'Ritstjórn Jafnréttisstofu',
   heroImageAlt: 'Ritstjórn Jafnréttisstofu',
@@ -930,7 +932,7 @@ export const companiesText = {
   detailView: {
     heading: 'Upplýsingar um fyrirtæki',
     tabInfo: 'Upplýsingar',
-    tabReports: 'Skýrslur',
+    tabReports: 'Innsendingar',
     tabApiKeys: 'Aðgangslyklar',
     tabLegacy: 'Eldri gögn',
     tabsLabel: 'Fyrirtækjaflippar',
@@ -1121,13 +1123,21 @@ export const companiesText = {
   },
   quarantineModal: {
     title: 'Setja í var',
-    description: 'Ertu viss um að þú viljir setja fyrirtækið í var?',
+    // The company name stays its own node so the caller can emphasise it.
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir setja ',
+      companyName,
+      ' í var?',
+    ],
     confirmButton: 'Staðfesta',
   },
   dailyFinesModal: {
     title: 'Hefja dagsektarferli',
-    description:
-      'Ertu viss um að þú viljir hefja dagsektarferli fyrir fyrirtækið?',
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir hefja dagsektarferli fyrir ',
+      companyName,
+      '?',
+    ],
     confirmButton: 'Staðfesta',
   },
 }

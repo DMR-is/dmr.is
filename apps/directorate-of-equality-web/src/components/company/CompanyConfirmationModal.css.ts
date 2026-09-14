@@ -10,5 +10,4 @@ export const modalContent = style({
   display: 'flex',
   flexDirection: 'column',
   gap: spacing[3],
-  rowGap: spacing[3],
 })
