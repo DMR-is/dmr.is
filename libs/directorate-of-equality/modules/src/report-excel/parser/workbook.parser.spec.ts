@@ -1873,16 +1873,12 @@ describe('parseWorkbook', () => {
    * leading `Starfsmat:` read as part of the sentence.
    */
   describe('error line formatting', () => {
-    // `expectBadRequest` types `message` as the single-string case; the
-    // error-list paths put one formatted line per problem in an array.
-    const lines = (message: string): string[] => message as unknown as string[]
-
     it('labels the sheet, with no location to report', async () => {
       const { message } = await expectBadRequest(
         parseWorkbook(templateBuffer()),
       )
 
-      expect(lines(message)).toEqual(
+      expect(message).toEqual(
         expect.arrayContaining([
           'Blað: Launagögn – Að minnsta kosti eitt starf er nauðsynlegt',
         ]),
@@ -1913,7 +1909,7 @@ describe('parseWorkbook', () => {
 
       const { message } = await expectBadRequest(parseInMemory(wb))
 
-      expect(lines(message)).toEqual(
+      expect(message).toEqual(
         expect.arrayContaining([
           expect.stringMatching(
             /^Blað: Starfsmat \(dálkur G\) – Þrep 99 er utan leyfilegs bils/,

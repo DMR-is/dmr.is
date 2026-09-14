@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common'
 
 import { Paging } from '@dmr.is/shared-dto'
 
+import { GetReportOutlierGroupsResponseDto } from '../report/dto/get-report-outlier-groups-response.dto'
 import {
   EqualityContentTypeEnum,
   GenderEnum,
@@ -11,6 +12,8 @@ import {
 } from '../report/models/report.enums'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { ReportEmployeeOutlierDto } from '../report-employee/dto/report-employee-outlier.dto'
+import { ReportOutlierGroupDto } from '../report-employee/dto/report-outlier-group.dto'
+import { BenefitsBreakdownDto } from '../report-statistics/dto/benefits-breakdown.dto'
 import { SalaryByGenderAndScoreDto } from '../report-statistics/dto/salary-by-gender-and-score.dto'
 import { getBrowser } from './lib/browser'
 import { ReportPdfService } from './report-pdf.service'
@@ -120,6 +123,28 @@ function makeOutlier(
     deviationPercent: -5,
     payStatus: 'UNDERPAID',
     contributionShare: 42.5,
+    remedyDate: '2027-03-01',
+    ...overrides,
+  }
+}
+
+/**
+ * A complete `ReportOutlierGroupDto`. `reportId` defaults to `'r1'`, the id
+ * every test in this file generates for — a group carrying a different report's
+ * id is not a shape `getOutlierGroups(reportId)` can return.
+ */
+function makeGroup(
+  overrides: Partial<ReportOutlierGroupDto> = {},
+): ReportOutlierGroupDto {
+  return {
+    id: 'g1',
+    reportId: 'r1',
+    name: 'Hópur A',
+    reason: 'Skýring á mismun',
+    action: 'Úrbót fyrirhuguð',
+    signatureName: 'Jón J. Jónsson',
+    signatureRole: 'Framkvæmdastjóri',
+    remedyDate: '2027-03-01',
     ...overrides,
   }
 }
@@ -145,7 +170,12 @@ function makeService(reportOverrides = {}) {
         paging: makePaging(),
       }),
     ),
-    getOutlierGroups: jest.fn(async () => ({ groups: [] })),
+    // Annotated, like `getOutliers` above: without a return type the empty
+    // default infers `groups: never[]`, and every `mockResolvedValue` in this
+    // file is then checked against `never` instead of `ReportOutlierGroupDto`.
+    getOutlierGroups: jest.fn(
+      async (): Promise<GetReportOutlierGroupsResponseDto> => ({ groups: [] }),
+    ),
     getEqualityContentPdf: jest.fn(async () => ({
       pdf: Buffer.alloc(0),
       fileName: 'aaetlun.pdf',
@@ -155,29 +185,43 @@ function makeService(reportOverrides = {}) {
     getRegularHourlyWageByScoreAll: jest.fn(async () => statistics),
     // Monthly krónur, fetched separately from the rate statistics — see the
     // note on `payComponents` in the salary template.
-    getBenefitsBreakdown: jest.fn(async () => ({
-      male: {
-        averageAdditionalSalary: 0,
-        averageBonusSalary: 0,
-        averageTotal: 0,
-        count: 0,
-      },
-      female: {
-        averageAdditionalSalary: 0,
-        averageBonusSalary: 0,
-        averageTotal: 0,
-        count: 0,
-      },
-      overall: {
-        averageAdditionalSalary: 0,
-        averageBonusSalary: 0,
-        averageTotal: 0,
-        count: 0,
-      },
-      additionalWageGapPercent: null,
-      bonusWageGapPercent: null,
-      totalWageGapPercent: null,
-    })),
+    // Annotated for the same reason as `getOutlierGroups`: inferred, this mock
+    // silently returned a `GenderBenefitsDto` without any of the three
+    // `median*` fields — a shape the statistics service cannot produce.
+    getBenefitsBreakdown: jest.fn(
+      async (): Promise<BenefitsBreakdownDto> => ({
+        male: {
+          averageAdditionalSalary: 0,
+          averageBonusSalary: 0,
+          averageTotal: 0,
+          medianAdditionalSalary: 0,
+          medianBonusSalary: 0,
+          medianTotal: 0,
+          count: 0,
+        },
+        female: {
+          averageAdditionalSalary: 0,
+          averageBonusSalary: 0,
+          averageTotal: 0,
+          medianAdditionalSalary: 0,
+          medianBonusSalary: 0,
+          medianTotal: 0,
+          count: 0,
+        },
+        overall: {
+          averageAdditionalSalary: 0,
+          averageBonusSalary: 0,
+          averageTotal: 0,
+          medianAdditionalSalary: 0,
+          medianBonusSalary: 0,
+          medianTotal: 0,
+          count: 0,
+        },
+        additionalWageGapPercent: null,
+        bonusWageGapPercent: null,
+        totalWageGapPercent: null,
+      }),
+    ),
   }
 
   const service = new ReportPdfService(
@@ -262,7 +306,7 @@ describe('ReportPdfService', () => {
         expect(result.fileName).toBe('jafnrettisaaetlun-r1.pdf')
       })
 
-      it("reads the content from the LINKED equality report on a salary report", async () => {
+      it('reads the content from the LINKED equality report on a salary report', async () => {
         // A salary report's equality block is a different row, and its content
         // lives there — fetching by `report.id` would find nothing.
         const { service, reportService } = makeService({
@@ -467,8 +511,8 @@ describe('ReportPdfService', () => {
       const { service, reportService } = makeService()
       reportService.getOutlierGroups.mockResolvedValue({
         groups: [
-          { id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' },
-          { id: 'g2', name: 'Hópur B', reason: 'r', action: 'a' },
+          makeGroup({ id: 'g1', name: 'Hópur A' }),
+          makeGroup({ id: 'g2', name: 'Hópur B' }),
         ],
       })
 
@@ -520,7 +564,7 @@ describe('ReportPdfService', () => {
     it('returns null when groups exist but none has members', async () => {
       const { service, reportService } = makeService()
       reportService.getOutlierGroups.mockResolvedValue({
-        groups: [{ id: 'g1', name: 'Hópur A', reason: 'r', action: 'a' }],
+        groups: [makeGroup({ id: 'g1', name: 'Hópur A' })],
       })
       reportService.getOutliers.mockResolvedValue({
         outliers: [],
