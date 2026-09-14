@@ -5,6 +5,17 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "tsc": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "tsc -p tsconfig.lib.json --noEmit",
+          "tsc -p tsconfig.spec.json --noEmit"
+        ],
+        "cwd": "libs/logging-next",
+        "forwardAllArgs": false
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
