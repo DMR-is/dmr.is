@@ -26,14 +26,16 @@ describe('getHtmlTextLength', () => {
     })
 
     it('does not count attributes', () => {
-      expect(getHtmlTextLength('<p class="x" style="color:red">Halló</p>')).toBe(
-        5,
-      )
+      expect(
+        getHtmlTextLength('<p class="x" style="color:red">Halló</p>'),
+      ).toBe(5)
     })
 
     it('counts text across nested tags', () => {
       expect(
-        getHtmlTextLength('<p><strong>Auglýsing</strong> um <em>úrskurð</em></p>'),
+        getHtmlTextLength(
+          '<p><strong>Auglýsing</strong> um <em>úrskurð</em></p>',
+        ),
       ).toBe(20)
     })
 
