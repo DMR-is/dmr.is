@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 
 import { LoggingModule } from '@dmr.is/logging'
 import { AwsModule } from '@dmr.is/shared-modules'
@@ -14,7 +14,16 @@ export { IPdfService }
 @Module({
   // UserModule is here for RoleGuard on the case routes, which resolves the
   // caller against the staff user table via IUserService.
-  imports: [LoggingModule, UtilityModule, AwsModule, UserModule],
+  // `forwardRef` because UtilityModule reaches back here:
+  // utility -> application -> case -> pdf. Entering the cycle at
+  // utility (pdf.service.ts imports IUtilityService from it) leaves
+  // UtilityModule mid-evaluation when this array is built.
+  imports: [
+    LoggingModule,
+    forwardRef(() => UtilityModule),
+    AwsModule,
+    UserModule,
+  ],
   controllers: [PdfController],
   providers: [
     {

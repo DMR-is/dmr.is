@@ -23,7 +23,7 @@ import {
 } from '@dmr.is/utils-server/serverUtils'
 
 import { caseDetailedMigrate } from '../case/migrations/case-detailed.migrate'
-import { IUtilityService } from '../utility/utility.module'
+import { IUtilityService } from '../utility/utility.service.interface'
 import { pdfCss } from './pdf.css'
 import { IPdfService, IssuePdfAdvertInput } from './pdf.service.interface'
 import { advertPdfTemplate } from './pdf-advert-template'

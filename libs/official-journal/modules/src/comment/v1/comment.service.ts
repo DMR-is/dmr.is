@@ -20,7 +20,7 @@ import {
 import { ResultWrapper } from '@dmr.is/types'
 
 import { IApplicationService } from '../../application/application.service.interface'
-import { IUtilityService } from '../../utility/utility.module'
+import { IUtilityService } from '../../utility/utility.service.interface'
 import { caseCommentMigrate } from './migrations/case-comment.migrate'
 import { CaseCommentModel } from './models/case-comment.model'
 import { CaseCommentTypeModel } from './models/case-comment-type.model'

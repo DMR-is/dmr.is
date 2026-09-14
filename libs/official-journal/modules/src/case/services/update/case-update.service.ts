@@ -28,12 +28,16 @@ import {
   UserDto,
 } from '@dmr.is/shared-dto'
 import { ResultWrapper } from '@dmr.is/types'
-import { getFastTrack, getNextStatus, getPreviousStatus } from '@dmr.is/utils-server/serverUtils'
+import {
+  getFastTrack,
+  getNextStatus,
+  getPreviousStatus,
+} from '@dmr.is/utils-server/serverUtils'
 
 import { IApplicationService } from '../../../application/application.service.interface'
 import { ICommentServiceV2 } from '../../../comment/v2'
 import { IPriceService } from '../../../price/price.service.interface'
-import { IUtilityService } from '../../../utility/utility.module'
+import { IUtilityService } from '../../../utility/utility.service.interface'
 import { updateCaseBodyMapper } from '../../mappers/case-update-body.mapper'
 import {
   CaseAdditionModel,
