@@ -15,7 +15,11 @@ import {
   type TemplateMetadata,
   TemplateVersionSourceEnum,
 } from './template-version.assert'
-import { parseWorkbook } from './workbook.parser'
+import {
+  NO_TEMPLATE_METADATA,
+  parseLoadedWorkbook,
+  parseWorkbook,
+} from './workbook.parser'
 
 // CI runs this project's tests concurrently with several other Nx projects on
 // shared CPU, and exceljs's xlsx generation/parsing is heavy enough to
@@ -58,6 +62,48 @@ const toArrayBuffer = (buf: Buffer): ArrayBuffer =>
 const loadTemplate = async (): Promise<ExcelJS.Workbook> => {
   const wb = new ExcelJS.Workbook()
   await wb.xlsx.load(toArrayBuffer(templateBuffer()))
+  return wb
+}
+
+/**
+ * The shipped template is 606KB zipped but ~9.6MB of uncompressed sheet XML, so
+ * `loadTemplate()` costs ~350ms of exceljs SAX parsing — per test, ~25 times
+ * over. Load it once and deep-clone the parsed model instead, which is still a
+ * fully independent workbook each caller can mutate freely.
+ *
+ * `structuredClone`, not `JSON.parse(JSON.stringify(…))`: the model serialises
+ * to ~106MB of JSON and going through a string is several times SLOWER than the
+ * structured algorithm.
+ *
+ * Costs peak RSS in exchange for wall time: measured at 1.36 -> 2.22 GB for
+ * this spec file in isolation (+64%). Fine today - CI is ubuntu-latest with
+ * 16 GB, nx.json sets parallel: 1, and nothing raises
+ * --max-old-space-size, so Node's default ceiling leaves headroom. Given this
+ * library's exceljs OOM history that is a number worth having rather than
+ * guessing at: if this file ever runs short of heap, dropping back to a plain
+ * `loadTemplate()` here is the first thing to try.
+ */
+let cachedTemplateModel: ExcelJS.Workbook['model'] | undefined
+
+const freshTemplate = async (): Promise<ExcelJS.Workbook> => {
+  if (!cachedTemplateModel) {
+    cachedTemplateModel = (await loadTemplate()).model
+  }
+  const wb = new ExcelJS.Workbook()
+  const model = structuredClone(cachedTemplateModel)
+  // A model round trip is NOT a lossless clone. exceljs' Worksheet model
+  // getter emits merges as `merges`, but its setter reads `mergeCells` - the
+  // names do not match, so `wb.model = wb.model` drops every merged range
+  // (660 across the shipped template) and every continuation cell then reads
+  // null. Nothing asserted today lands on one, but the byte-path tests
+  // serialize from this clone, so without it they would be asserting against a
+  // workbook that differs from the real template in 660 places.
+  ;(
+    model as unknown as { worksheets: Array<Record<string, unknown>> }
+  ).worksheets.forEach((ws) => {
+    ws.mergeCells = ws.merges
+  })
+  wb.model = model
   return wb
 }
 
@@ -139,6 +185,29 @@ const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
     'exceljs writeBuffer produced an invalid xlsx after 3 attempts',
   )
 }
+
+/**
+ * Async shim over the value-level entrypoint, so the existing
+ * `expectBadRequest` helper (and every `await` below) still applies.
+ *
+ * `NO_TEMPLATE_METADATA` is not a way around the version gate — it is the
+ * archive tier answering "nothing", which leaves the gate to the three
+ * sheet-level sources. The shipped template resolves to 2.0 through
+ * `INSTRUCTIONS_CELL` on its own, so these tests exercise the fallback chain
+ * rather than skipping it. `serialize()` injects the custom properties, so the
+ * byte-path tests below cover the `CUSTOM_PROPERTIES` tier.
+ *
+ * Tests whose subject is the BYTES deliberately keep going through
+ * `parseInMemory(wb)` and are marked where they appear.
+ */
+const parseInMemory = async (wb: ExcelJS.Workbook): Promise<ParsedReportDto> =>
+  parseLoadedWorkbook(wb, NO_TEMPLATE_METADATA)
+
+// Let the worker reclaim the cached model before the next suite in it starts;
+// see the RSS figure on `freshTemplate` above.
+afterAll(() => {
+  cachedTemplateModel = undefined
+})
 
 const writeEmployeeRow = (
   wb: ExcelJS.Workbook,
@@ -309,7 +378,7 @@ const expectBadRequest = async (
 }
 
 const buildValidFilled = async (): Promise<Buffer> => {
-  const wb = await loadTemplate()
+  const wb = await freshTemplate()
   writeEmployeeRow(wb, 1, {
     name: 'Nafn 1',
     role: 'Forstöðumaður',
@@ -477,7 +546,7 @@ describe('parseWorkbook', () => {
     })
 
     it('reads cached formula results from Undirviðmið autofill cells', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'A',
         role: 'R',
@@ -517,6 +586,8 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
+      // BYTE PATH, deliberately: whether exceljs preserves a cached formula
+      // result THROUGH serialization is the whole point here.
       const formulaReport = await parseWorkbook(await serialize(wb))
       const resp = formulaReport.criteria.find(
         (c) => c.type === ReportCriterionTypeEnum.RESPONSIBILITY,
@@ -531,7 +602,7 @@ describe('parseWorkbook', () => {
     })
 
     it('rejects Undirviðmið formulas without cached results with an exact cell location', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'A',
         role: 'R',
@@ -559,6 +630,7 @@ describe('parseWorkbook', () => {
       fillEmployeeClassification(wb, [[1]])
 
       const { errors } = await expectBadRequest(
+        // BYTE PATH, deliberately: see the sibling test above.
         parseWorkbook(await serialize(wb)),
       )
 
@@ -577,7 +649,7 @@ describe('parseWorkbook', () => {
 
   describe('ordinal derivation (column A is a formula in the real template)', () => {
     it('derives ordinal from row position, ignoring the =ROW()-5 formula in column A', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'A',
         role: 'R',
@@ -622,7 +694,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1], [1]])
 
-      const report = await parseWorkbook(await serialize(wb))
+      const report = await parseInMemory(wb)
 
       // Row 6 → ordinal 1, row 7 → ordinal 2 (matches the sheet's "#" column).
       expect(report.employees.map((e) => e.ordinal)).toEqual([1, 2])
@@ -631,7 +703,7 @@ describe('parseWorkbook', () => {
 
   describe('inflated rowCount (whole-column formatting)', () => {
     it('stays bounded and parses correctly when a stray far-down cell inflates sheet.rowCount', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'A',
         role: 'R',
@@ -661,6 +733,8 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
+      // BYTE PATH, deliberately: `sheet.rowCount` after a load is what
+      // inflates; setting the stray cell in memory would not reproduce it.
       const report = await parseWorkbook(await serialize(wb))
 
       // Only the real row is parsed; the stray far-down cell is never reached.
@@ -670,7 +744,7 @@ describe('parseWorkbook', () => {
 
   describe('parse-layer errors', () => {
     it('rejects unknown gender value', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
@@ -691,9 +765,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
       expect(errors.some((e) => e.message.includes('Óþekkt kyn „Other“'))).toBe(
         true,
       )
@@ -709,7 +781,7 @@ describe('parseWorkbook', () => {
       it('accepts the shipped template', async () => {
         // The positive case matters as much as the negative one: an assertion
         // that is too strict would reject every real upload.
-        const wb = await loadTemplate()
+        const wb = await freshTemplate()
         writeEmployeeRow(wb, 1, {
           name: 'X',
           role: 'R',
@@ -730,6 +802,8 @@ describe('parseWorkbook', () => {
         fillRoleClassification(wb, [[1, 1, 1, 1]])
         fillEmployeeClassification(wb, [[1]])
 
+        // BYTE PATH, deliberately: the shipped template surviving a full
+        // serialize -> guards -> load round trip is the assertion.
         await expect(parseWorkbook(await serialize(wb))).resolves.toBeDefined()
       })
 
@@ -748,15 +822,13 @@ describe('parseWorkbook', () => {
       ])(
         'rejects a stale %s layout at %s and says so once',
         async (sheetName, column, staleHeader) => {
-          const wb = await loadTemplate()
+          const wb = await freshTemplate()
           const sheet = wb.getWorksheet(sheetName)
           if (!sheet) throw new Error(`no ${sheetName} sheet`)
           // Reproduce the pre-shift header without touching any data row.
           sheet.getCell(`${column}5`).value = staleHeader
 
-          const { errors } = await expectBadRequest(
-            parseWorkbook(await serialize(wb)),
-          )
+          const { errors } = await expectBadRequest(parseInMemory(wb))
 
           expect(
             errors.some((e) =>
@@ -860,11 +932,20 @@ describe('parseWorkbook', () => {
        * A workbook that is otherwise entirely valid, so only the version can
        * fail it. `mutate` runs before serialization, which is the only point
        * the sheet-level sources can be reached.
+       *
+       * The un-mutated form is deterministic and is what most of the tests
+       * below want, so it is built once. Every consumer either parses it or
+       * reopens it through `JSZip.loadAsync`, both of which read — nothing in
+       * this block writes through the returned Buffer. A `mutate` call is
+       * never cached: that is the whole point of passing one.
        */
+      let cachedValidWorkbook: Buffer | undefined
+
       const validWorkbookBuffer = async (
         mutate?: (wb: ExcelJS.Workbook) => void,
       ): Promise<Buffer> => {
-        const wb = await loadTemplate()
+        if (!mutate && cachedValidWorkbook) return cachedValidWorkbook
+        const wb = await freshTemplate()
         writeEmployeeRow(wb, 1, {
           name: 'X',
           role: 'R',
@@ -885,15 +966,27 @@ describe('parseWorkbook', () => {
         fillRoleClassification(wb, [[1, 1, 1, 1]])
         fillEmployeeClassification(wb, [[1]])
         mutate?.(wb)
-        return serialize(wb)
+        const buffer = await serialize(wb)
+        if (!mutate) cachedValidWorkbook = buffer
+        return buffer
       }
 
       /**
        * A workbook with NO version evidence anywhere — the genuine pre-2.0
        * shape, and the only state the gate may still reject on absence.
+       *
+       * Cached for the same reason and on the same terms as the valid one.
        */
-      const noVersionEvidenceBuffer = async (): Promise<Buffer> =>
-        stripTemplateProps(await validWorkbookBuffer(clearSheetSources))
+      let cachedNoVersionEvidence: Buffer | undefined
+
+      const noVersionEvidenceBuffer = async (): Promise<Buffer> => {
+        if (!cachedNoVersionEvidence) {
+          cachedNoVersionEvidence = await stripTemplateProps(
+            await validWorkbookBuffer(clearSheetSources),
+          )
+        }
+        return cachedNoVersionEvidence
+      }
 
       it('accepts the shipped template version', async () => {
         await expect(
@@ -1006,7 +1099,7 @@ describe('parseWorkbook', () => {
             source: TemplateVersionSourceEnum.NONE,
           },
         ) => {
-          const wb = await loadTemplate()
+          const wb = await freshTemplate()
           mutate?.(wb)
           return resolveTemplateVersion(metadata, wb)
         }
@@ -1151,7 +1244,7 @@ describe('parseWorkbook', () => {
     it.each([0.8, 1])(
       'rejects a carried-over starfshlutfall of %s as paid hours',
       async (paidHours) => {
-        const wb = await loadTemplate()
+        const wb = await freshTemplate()
         writeEmployeeRow(wb, 1, {
           name: 'X',
           role: 'R',
@@ -1172,9 +1265,7 @@ describe('parseWorkbook', () => {
         fillRoleClassification(wb, [[1, 1, 1, 1]])
         fillEmployeeClassification(wb, [[1]])
 
-        const { errors } = await expectBadRequest(
-          parseWorkbook(await serialize(wb)),
-        )
+        const { errors } = await expectBadRequest(parseInMemory(wb))
         expect(
           errors.some((e) =>
             e.message.includes(
@@ -1188,7 +1279,7 @@ describe('parseWorkbook', () => {
     // 2080 is the mistake this bound exists for: the annual total entered
     // where the 12-month basis asks for a monthly average.
     it('rejects paid hours above the template bound', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
@@ -1209,9 +1300,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
       expect(
         errors.some((e) =>
           e.message.includes('Greiddar stundir 2080 eru utan leyfilegs bils'),
@@ -1220,7 +1309,7 @@ describe('parseWorkbook', () => {
     })
 
     it('rejects required missing field with specific column reference', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       // Only fill partial row — omit role (Starf), which is still required.
       // field (Svið) and department (Deild) are intentionally optional.
       writeEmployeeRow(wb, 1, {
@@ -1243,9 +1332,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
       expect(
         errors.some(
           (e) =>
@@ -1256,7 +1343,7 @@ describe('parseWorkbook', () => {
     })
 
     it('rejects step order outside 1..numSteps', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
@@ -1277,9 +1364,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[99, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
       expect(
         errors.some((e) =>
           e.message.includes('Þrep 99 er utan leyfilegs bils'),
@@ -1290,7 +1375,7 @@ describe('parseWorkbook', () => {
 
   describe('capacity beyond the legacy layout', () => {
     it('parses roles past the old 8-column limit (named-range driven)', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       const roleTitles = Array.from(
         { length: 9 },
         (_, i) => `Hlutverk ${i + 1}`,
@@ -1325,7 +1410,7 @@ describe('parseWorkbook', () => {
         roleTitles.map(() => [1]),
       )
 
-      const report = await parseWorkbook(await serialize(wb))
+      const report = await parseInMemory(wb)
 
       expect(report.roles).toHaveLength(9)
       expect(report.roles[8].title).toBe('Hlutverk 9')
@@ -1362,7 +1447,7 @@ describe('parseWorkbook', () => {
     }
 
     it('parses more employees than Einstaklingsmat provisions rows for, once the employer extends the sheet', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
       // The employer's own extension: one personal step per employee, running
       // past the shipped row 510.
@@ -1371,7 +1456,7 @@ describe('parseWorkbook', () => {
         Array.from({ length: EMPLOYEES_PAST_PROVISIONED_ROWS }, () => [1]),
       )
 
-      const report = await parseWorkbook(await serialize(wb))
+      const report = await parseInMemory(wb)
 
       expect(report.employees).toHaveLength(EMPLOYEES_PAST_PROVISIONED_ROWS)
       // The tail employees are the ones the old 500-row cap rejected outright.
@@ -1381,7 +1466,7 @@ describe('parseWorkbook', () => {
     })
 
     it('rejects when Einstaklingsmat is shorter than the employee list rather than silently dropping steps', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeManyEmployees(wb, EMPLOYEES_PAST_PROVISIONED_ROWS)
       // Employer extended Launagögn but NOT Einstaklingsmat: blanks would read
       // as "no assignment" and understate every tail employee's score.
@@ -1390,9 +1475,7 @@ describe('parseWorkbook', () => {
         Array.from({ length: 500 }, () => [1]),
       )
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
 
       expect(errors).toEqual(
         expect.arrayContaining([
@@ -1425,7 +1508,7 @@ describe('parseWorkbook', () => {
     ]
 
     const buildShuffled = async (): Promise<Buffer> => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'Nafn 1',
         role: 'Forstöðumaður',
@@ -1490,7 +1573,7 @@ describe('parseWorkbook', () => {
    */
   describe('column alignment guard', () => {
     it('refuses to read Starfsmat when a column header contradicts the resolved sub-criterion', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'Nafn 1',
         role: 'Forstöðumaður',
@@ -1518,9 +1601,7 @@ describe('parseWorkbook', () => {
       starfsmat.getCell('G5').value = 'Hæfni'
       starfsmat.getCell('G6').value = 'Eitthvað allt annað'
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
 
       expect(errors).toEqual(
         expect.arrayContaining([
@@ -1538,7 +1619,7 @@ describe('parseWorkbook', () => {
     })
 
     it('accepts headers that agree with the resolved sub-criterion', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'Nafn 1',
         role: 'Forstöðumaður',
@@ -1567,7 +1648,7 @@ describe('parseWorkbook', () => {
       starfsmat.getCell('M5').value = 'Hæfni'
       starfsmat.getCell('M6').value = 'Formleg menntun'
 
-      const report = await parseWorkbook(await serialize(wb))
+      const report = await parseInMemory(wb)
       expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
   })
@@ -1624,7 +1705,7 @@ describe('parseWorkbook', () => {
       errors.filter((e) => e.message.includes('samkvæmt röð undirviðmiðanna'))
 
     it('keeps later columns aligned when a middle Undirviðmið row is rejected', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, EMPLOYEE)
       fillCriteriaAndSubCriteria(wb)
       // Row 7 is Álag → column I. Blanking Skilgreining makes the parser
@@ -1634,9 +1715,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 2, 3, 4]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
 
       // The row reports its own problem, and nothing else moves.
       expect(errors).toEqual(
@@ -1652,7 +1731,7 @@ describe('parseWorkbook', () => {
     })
 
     it('does not blame Undirviðmið when its parent Viðmið row was the rejected one', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, EMPLOYEE)
       fillCriteriaAndSubCriteria(wb)
       // Viðmið row 8 is Vinnuaðstæður. Blanking its Lýsing rejects the
@@ -1663,9 +1742,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[1, 2, 3, 4]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
 
       expect(errors).toEqual(
         expect.arrayContaining([
@@ -1688,7 +1765,7 @@ describe('parseWorkbook', () => {
 
   describe('step bound comes from the declared Fjöldi þrepa', () => {
     it('accepts a step order above the description count when column G declares it', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'Nafn 1',
         role: 'Forstöðumaður',
@@ -1738,9 +1815,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[5, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { errors } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { errors } = await expectBadRequest(parseInMemory(wb))
 
       expect(errors.map((e) => e.message)).toEqual(
         expect.arrayContaining([
@@ -1757,7 +1832,7 @@ describe('parseWorkbook', () => {
 
   describe('unreadable column headers', () => {
     it('treats a non-text header as unverifiable rather than a mismatch', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'Nafn 1',
         role: 'Forstöðumaður',
@@ -1786,7 +1861,7 @@ describe('parseWorkbook', () => {
       starfsmat.getCell('G5').value = 30
       starfsmat.getCell('G6').value = 30
 
-      const report = await parseWorkbook(await serialize(wb))
+      const report = await parseInMemory(wb)
       expect(report.roles[0].stepAssignments).toHaveLength(JOB_SUB_COUNT)
     })
   })
@@ -1815,7 +1890,7 @@ describe('parseWorkbook', () => {
     })
 
     it('labels the sheet and keeps the column location', async () => {
-      const wb = await loadTemplate()
+      const wb = await freshTemplate()
       writeEmployeeRow(wb, 1, {
         name: 'X',
         role: 'R',
@@ -1836,9 +1911,7 @@ describe('parseWorkbook', () => {
       fillRoleClassification(wb, [[99, 1, 1, 1]])
       fillEmployeeClassification(wb, [[1]])
 
-      const { message } = await expectBadRequest(
-        parseWorkbook(await serialize(wb)),
-      )
+      const { message } = await expectBadRequest(parseInMemory(wb))
 
       expect(lines(message)).toEqual(
         expect.arrayContaining([

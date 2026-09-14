@@ -49,6 +49,27 @@ import {
   TemplateVersionSourceEnum,
 } from './template-version.assert'
 
+/**
+ * What `parseWorkbook` starts from before it has opened the archive, and what a
+ * caller that only has a parsed workbook passes in.
+ *
+ * Not "no version" — the archive is only the FIRST of four sources
+ * `resolveTemplateVersion` walks. The remaining three read the workbook itself
+ * (the Leiðbeiningar mirror, the 2.0 column bands), which is exactly the case
+ * of a file re-saved by an editor that discarded the custom document
+ * properties. Passing this is asking for the gate to be decided by the sheet.
+ *
+ * Frozen because it is now one shared object rather than a literal rebuilt per
+ * call. Nothing mutates a `TemplateMetadata` today — `resolveTemplateVersion`
+ * returns fresh objects — and freezing keeps it that way loudly instead of
+ * letting a future in-place edit leak across every caller.
+ */
+export const NO_TEMPLATE_METADATA: TemplateMetadata = Object.freeze({
+  version: null,
+  templateId: null,
+  source: TemplateVersionSourceEnum.NONE,
+})
+
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
 const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
 
@@ -224,11 +245,7 @@ export const parseWorkbook = async (
   const workbook = new ExcelJS.Workbook()
   // Read from the archive while it is open, checked after the load succeeds:
   // a workbook too corrupt to load has a better error than "wrong version".
-  let templateMetadata: TemplateMetadata = {
-    version: null,
-    templateId: null,
-    source: TemplateVersionSourceEnum.NONE,
-  }
+  let templateMetadata: TemplateMetadata = NO_TEMPLATE_METADATA
   try {
     const zip = await JSZip.loadAsync(fileBuffer)
     await assertArchiveWithinBudget(zip)
@@ -266,6 +283,28 @@ export const parseWorkbook = async (
     })
   }
 
+  return parseLoadedWorkbook(workbook, templateMetadata)
+}
+
+/**
+ * The value-level half of `parseWorkbook`: everything from the version gate
+ * down, against a workbook that is already parsed.
+ *
+ * Split out because the byte half is expensive and most of what the parser spec
+ * asserts has nothing to do with bytes — see the note on `freshTemplate` in
+ * `workbook.parser.spec.ts`. `parseWorkbook` remains the only entrypoint the
+ * application uses.
+ *
+ * `templateMetadata` is a parameter rather than something this function derives
+ * because it cannot: `CUSTOM_PROPERTIES` and `CORE_PROPERTIES` live in the
+ * archive, which is gone by the time a workbook exists. Callers holding only a
+ * workbook pass `NO_TEMPLATE_METADATA` and let the three sheet-level sources
+ * decide.
+ */
+export const parseLoadedWorkbook = (
+  workbook: ExcelJS.Workbook,
+  templateMetadata: TemplateMetadata,
+): ParsedReportDto => {
   const errors = new ErrorBag()
 
   // ⚠️ VERSION FIRST — before the layout check, and long before any row is
