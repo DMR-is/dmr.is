@@ -231,6 +231,45 @@ describe('validateScoringModel', () => {
       expect(scopesOf(model)).toContain(ScoringValidationScopeEnum.STEPS)
     })
 
+    it('refuses a scale shorter than the filing allows', () => {
+      const model = validModel()
+      model.criteria[0].subCriteria[0] = sub({
+        id: 'r1',
+        weight: 25,
+        stepOrders: [1],
+      })
+
+      expect(messagesOf(model)).toEqual(
+        expect.arrayContaining([expect.stringContaining('leyfilegt bil er')]),
+      )
+    })
+
+    it('refuses a scale longer than the filing allows', () => {
+      const model = validModel()
+      model.criteria[0].subCriteria[0] = sub({
+        id: 'r1',
+        weight: 25,
+        stepOrders: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      })
+
+      expect(messagesOf(model)).toEqual(
+        expect.arrayContaining([expect.stringContaining('leyfilegt bil er')]),
+      )
+    })
+
+    // 2..8 inclusive, matching `assertParsedPayloadIntegrity`. A scale this
+    // validator accepts must never be refused at submit for its length.
+    it.each([2, 8])('accepts a scale of %i steps', (n) => {
+      const model = validModel()
+      model.criteria[0].subCriteria[0] = sub({
+        id: 'r1',
+        weight: 25,
+        stepOrders: Array.from({ length: n }, (_, i) => i + 1),
+      })
+
+      expect(scopesOf(model)).not.toContain(ScoringValidationScopeEnum.STEPS)
+    })
+
     it('accepts contiguous orders given out of sequence', () => {
       const model = validModel()
       model.criteria[0].subCriteria[0] = sub({

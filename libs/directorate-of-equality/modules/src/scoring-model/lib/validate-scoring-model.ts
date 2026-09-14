@@ -2,6 +2,8 @@ import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-cr
 import {
   MANDATORY_JOB_BASED_CRITERIA,
   MAX_PERSONAL_CRITERIA,
+  MAX_STEPS,
+  MIN_STEPS,
 } from '../../report-excel/workbook.schema'
 import { ScoringCriterionDto } from '../dto/scoring-criterion.dto'
 import { ScoringRoleDto } from '../dto/scoring-model.dto'
@@ -107,6 +109,17 @@ export const validateScoringModel = (
         `Undirviðmiðið „${sub.title}“ hefur engin þrep`,
       )
       continue
+    }
+
+    // The same bounds `assertParsedPayloadIntegrity` enforces on every filing
+    // path. Without this a scale of one step, or of twelve, reads VALID here
+    // and is refused at submit — the precise failure this validation exists to
+    // prevent.
+    if (sub.steps.length < MIN_STEPS || sub.steps.length > MAX_STEPS) {
+      reasons.add(
+        ScoringValidationScopeEnum.STEPS,
+        `Undirviðmiðið „${sub.title}“ hefur ${sub.steps.length} þrep; leyfilegt bil er ${MIN_STEPS}–${MAX_STEPS}`,
+      )
     }
 
     const orders = sub.steps.map((s) => s.stepOrder).sort((a, b) => a - b)

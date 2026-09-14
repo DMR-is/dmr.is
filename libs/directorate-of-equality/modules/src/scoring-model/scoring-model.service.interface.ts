@@ -9,6 +9,7 @@ import {
   ScoringModelDto,
   ScoringModelSummaryDto,
 } from './dto/scoring-model.dto'
+import { SetScoringStepsDto } from './dto/scoring-step.dto'
 import {
   CreateScoringSubCriterionDto,
   UpdateScoringSubCriterionDto,
@@ -78,6 +79,19 @@ export interface IScoringModelService {
     modelId: string,
     criterionId: string,
     subCriterionId: string,
+  ): Promise<ScoringModelDto>
+
+  /**
+   * Replaces a sub-criterion's whole scale. Step order comes from array
+   * position, so a gap is not possible rather than merely rejected; any role
+   * assignment onto the old steps is dropped with them and reported.
+   */
+  setSteps(
+    company: CompanyDto,
+    modelId: string,
+    criterionId: string,
+    subCriterionId: string,
+    input: SetScoringStepsDto,
   ): Promise<ScoringModelDto>
 }
 

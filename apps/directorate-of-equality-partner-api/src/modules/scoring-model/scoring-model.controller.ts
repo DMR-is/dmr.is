@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common'
 import { ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger'
@@ -21,6 +22,7 @@ import {
   IScoringModelService,
   ScoringModelDto,
   ScoringModelSummaryDto,
+  SetScoringStepsDto,
   UpdateScoringCriterionDto,
   UpdateScoringSubCriterionDto,
 } from '@dmr.is/doe-modules/scoring-model'
@@ -267,6 +269,33 @@ export class ScoringModelController {
       modelId,
       criterionId,
       subCriterionId,
+    )
+  }
+
+  @Put(':modelId/criteria/:criterionId/sub-criteria/:subCriterionId/steps')
+  @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
+  @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
+  @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
+  @ApiParam({ name: 'subCriterionId', type: String, format: 'uuid' })
+  @PartnerResponse({
+    operationId: 'setScoringSubCriterionSteps',
+    type: ScoringModelDto,
+    description:
+      'Replaces a sub-criterion’s whole scale (þrep). A `PUT` of the complete array rather than one step at a time: a þrep’s score is derived from its position over the scale’s length, so the orders must run 1..n with no gaps, and building them one call at a time would pass through states with no single call able to repair them. Position in the array is the þrep number — there is no order to send. Any role step assignment onto the old scale is dropped with it, and the model then reports that job as missing an assignment.',
+  })
+  setSteps(
+    @CurrentCompany() company: CompanyDto,
+    @Param('modelId', ParseUUIDPipe) modelId: string,
+    @Param('criterionId', ParseUUIDPipe) criterionId: string,
+    @Param('subCriterionId', ParseUUIDPipe) subCriterionId: string,
+    @Body() body: SetScoringStepsDto,
+  ): Promise<ScoringModelDto> {
+    return this.scoringModelService.setSteps(
+      company,
+      modelId,
+      criterionId,
+      subCriterionId,
+      body,
     )
   }
 }

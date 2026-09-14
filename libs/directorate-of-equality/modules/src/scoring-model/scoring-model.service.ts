@@ -14,6 +14,7 @@ import {
   ScoringModelSummaryDto,
   ScoringRoleDto,
 } from './dto/scoring-model.dto'
+import { SetScoringStepsDto } from './dto/scoring-step.dto'
 import {
   CreateScoringSubCriterionDto,
   ScoringSubCriterionDto,
@@ -37,6 +38,8 @@ export class ScoringModelService implements IScoringModelService {
     private readonly criterionModel: typeof ScoringCriterionModel,
     @InjectModel(ScoringSubCriterionModel)
     private readonly subCriterionModel: typeof ScoringSubCriterionModel,
+    @InjectModel(ScoringSubCriterionStepModel)
+    private readonly stepModel: typeof ScoringSubCriterionStepModel,
   ) {}
 
   /**
@@ -338,6 +341,40 @@ export class ScoringModelService implements IScoringModelService {
     const sub = await this.findOwnedSubCriterion(criterionId, subCriterionId)
 
     await sub.destroy()
+
+    return this.reload(company, modelId)
+  }
+
+  async setSteps(
+    company: CompanyDto,
+    modelId: string,
+    criterionId: string,
+    subCriterionId: string,
+    input: SetScoringStepsDto,
+  ): Promise<ScoringModelDto> {
+    await this.findOwnedModel(company, modelId)
+    await this.findOwnedCriterion(modelId, criterionId)
+    await this.findOwnedSubCriterion(criterionId, subCriterionId)
+
+    // Replace rather than reconcile. Any role assignment onto the old steps
+    // goes with them through the FK cascade, and the model then reports that
+    // job as missing an assignment — dropped where the caller can see it,
+    // rather than re-homed onto a step they did not choose.
+    await this.stepModel.destroy({
+      where: { scoringSubCriterionId: subCriterionId },
+    })
+
+    if (input.steps.length > 0) {
+      await this.stepModel.bulkCreate(
+        input.steps.map((step, index) => ({
+          scoringSubCriterionId: subCriterionId,
+          // Position is the þrep number. Deriving it here is what makes a gap
+          // impossible rather than something the validator has to catch.
+          stepOrder: index + 1,
+          description: step.description,
+        })),
+      )
+    }
 
     return this.reload(company, modelId)
   }

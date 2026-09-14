@@ -13,6 +13,7 @@ import { ScoringModelStatusEnum } from './dto/scoring-validation.dto'
 import { ScoringCriterionModel } from './models/scoring-criterion.model'
 import { ScoringModelModel } from './models/scoring-model.model'
 import { ScoringSubCriterionModel } from './models/scoring-sub-criterion.model'
+import { ScoringSubCriterionStepModel } from './models/scoring-sub-criterion-step.model'
 import { ScoringModelService } from './scoring-model.service'
 
 const MODEL_ID = 'model-1'
@@ -51,6 +52,8 @@ describe('ScoringModelService', () => {
   let criterionCreate: jest.Mock
   let subFindOne: jest.Mock
   let subCreate: jest.Mock
+  let stepDestroy: jest.Mock
+  let stepBulkCreate: jest.Mock
 
   beforeEach(async () => {
     modelFindOne = jest.fn().mockResolvedValue(loadedModel())
@@ -60,6 +63,8 @@ describe('ScoringModelService', () => {
     criterionCreate = jest.fn()
     subFindOne = jest.fn().mockResolvedValue(null)
     subCreate = jest.fn()
+    stepDestroy = jest.fn()
+    stepBulkCreate = jest.fn()
 
     const module = await Test.createTestingModule({
       providers: [
@@ -79,6 +84,10 @@ describe('ScoringModelService', () => {
         {
           provide: getModelToken(ScoringSubCriterionModel),
           useValue: { findOne: subFindOne, create: subCreate },
+        },
+        {
+          provide: getModelToken(ScoringSubCriterionStepModel),
+          useValue: { destroy: stepDestroy, bulkCreate: stepBulkCreate },
         },
       ],
     }).compile()
@@ -294,6 +303,65 @@ describe('ScoringModelService', () => {
         description: 'd',
         weight: 5,
       })
+    })
+  })
+
+  describe('setSteps', () => {
+    beforeEach(() => {
+      criterionFindOne.mockResolvedValue({ id: CRITERION_ID })
+      subFindOne.mockResolvedValue({ id: SUB_ID })
+    })
+
+    // Position is the þrep number. Deriving it from the array is what makes a
+    // gap impossible rather than something the validator has to catch.
+    it('numbers the steps from their position, not from the caller', async () => {
+      await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
+        steps: [
+          { description: 'lægst' },
+          { description: 'mið' },
+          { description: 'hæst' },
+        ],
+      })
+
+      expect(stepBulkCreate).toHaveBeenCalledWith([
+        { scoringSubCriterionId: SUB_ID, stepOrder: 1, description: 'lægst' },
+        { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
+        { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
+      ])
+    })
+
+    it('clears the old scale before writing the new one', async () => {
+      await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
+        steps: [{ description: 'a' }, { description: 'b' }],
+      })
+
+      expect(stepDestroy).toHaveBeenCalledWith({
+        where: { scoringSubCriterionId: SUB_ID },
+      })
+      expect(stepDestroy.mock.invocationCallOrder[0]).toBeLessThan(
+        stepBulkCreate.mock.invocationCallOrder[0],
+      )
+    })
+
+    it('clears the scale and writes nothing when given an empty array', async () => {
+      await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
+        steps: [],
+      })
+
+      expect(stepDestroy).toHaveBeenCalled()
+      expect(stepBulkCreate).not.toHaveBeenCalled()
+    })
+
+    it('refuses a sub-criterion outside the named criterion', async () => {
+      subFindOne.mockResolvedValue(null)
+
+      await expect(
+        service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
+          steps: [{ description: 'a' }],
+        }),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(stepDestroy).not.toHaveBeenCalled()
     })
   })
 

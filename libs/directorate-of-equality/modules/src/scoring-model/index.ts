@@ -1,5 +1,6 @@
 export * from './dto/scoring-criterion.dto'
 export * from './dto/scoring-model.dto'
+export * from './dto/scoring-step.dto'
 export * from './dto/scoring-sub-criterion.dto'
 export * from './dto/scoring-validation.dto'
 export * from './lib/validate-scoring-model'
