@@ -23,6 +23,7 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import { IReportService } from '../report/report.service.interface'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
@@ -44,7 +45,54 @@ export class ReportFinalizeService implements IReportFinalizeService {
     private readonly reportEventModel: typeof ReportEventModel,
     @Inject(IReportAutoReviewService)
     private readonly autoReviewService: IReportAutoReviewService,
+    @Inject(IReportService)
+    private readonly reportService: IReportService,
   ) {}
+
+  /**
+   * The equality report a new salary submission will be filed against, for a
+   * caller that does not name one — every partner-API submission, since that
+   * contract omits the field.
+   *
+   * Lives beside `assertEqualityReportApproved` and is called from the same
+   * place, which is the point: this must run **after** the idempotent replay
+   * check, never before it. Resolving first made a retry of an
+   * already-filed report answer 404 once its equality report stopped being
+   * active, instead of replaying — a report that was successfully filed
+   * becoming un-retryable because a precondition for NEW submissions had since
+   * lapsed.
+   *
+   * Ordered by `approvedAt DESC`, which decides the rare case of two approved
+   * plans still in force: a company that re-filed before the previous one
+   * expired is working under the newer.
+   *
+   * **Delegates rather than querying**, and that is the whole point. This
+   * resolution has to select exactly what `GET /reports/salary/eligibility` and
+   * `GET /reports/equality/active` already told the caller, because those two
+   * are the pre-check for this submission. It once filtered
+   * `parentCompanyId: null` — equality reports the company filed as the parent
+   * — while both of those routes join on `companyId` alone and so also match a
+   * subsidiary. A company covered by a group equality report therefore read
+   * `eligible: true`, received a real report id, submitted, and was refused;
+   * and since the partner contract no longer carries `equalityReportId`, it had
+   * no field left to override the answer with. It could not file at all.
+   *
+   * Sharing the lookup is what keeps the pre-check and the submission from ever
+   * disagreeing again. It also collapses two round trips into one indexed join.
+   */
+  async resolveActiveEqualityReportId(companyId: string): Promise<string> {
+    const equalityReport =
+      await this.reportService.findActiveEqualityForCompany(companyId)
+
+    if (!equalityReport) {
+      // The same sentence `GET .../reports/equality/active` answers with, so a
+      // caller that skipped the eligibility pre-check reads one message from
+      // either route.
+      throw new NotFoundException('No approved equality report is in force')
+    }
+
+    return equalityReport.id
+  }
 
   /**
    * Schema invariant: a SALARY row's `equality_report_id` must point to an
@@ -135,7 +183,11 @@ export class ReportFinalizeService implements IReportFinalizeService {
     )
     if (blocking) {
       throw new ConflictException(
-        `Company already has a ${type} report in status ${blocking.status} (providerId: ${blocking.providerId ?? 'n/a'}). Resolve it before submitting another.`,
+        `Company already has a ${type} report in status ${
+          blocking.status
+        } (providerId: ${
+          blocking.providerId ?? 'n/a'
+        }). Resolve it before submitting another.`,
       )
     }
 

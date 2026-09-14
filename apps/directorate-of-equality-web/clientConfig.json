@@ -5429,9 +5429,13 @@
             "type": "string",
             "format": "uuid",
             "description": "Identifier of the newly created report row."
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "True when the providerId had already been used and this call filed nothing — the report named here is the earlier one, and the body just sent was not read. A corrected re-file needs a new providerId."
           }
         },
-        "required": ["reportId"]
+        "required": ["reportId", "replayed"]
       },
       "AdminEqualityReportDto": {
         "type": "object",
@@ -6385,6 +6389,14 @@
           "overdue": {
             "type": "boolean",
             "description": "When true, return only companies whose next equality or salary report due date has passed."
+          },
+          "includeNotObliged": {
+            "type": "boolean",
+            "description": "When true, also return companies that owe no report at all (\"ekki lagaskylt\": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled \"owes nothing\". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis."
+          },
+          "includeInactive": {
+            "type": "boolean",
+            "description": "When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page."
           },
           "isatCategoryCode": {
             "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",

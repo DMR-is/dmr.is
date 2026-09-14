@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common'
+import { ConflictException, NotFoundException } from '@nestjs/common'
 import { getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
@@ -11,6 +11,7 @@ import { ReportStatusEnum, ReportTypeEnum } from '../report/models/report.enums'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
+import { IReportService } from '../report/report.service.interface'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
 import { ReportFinalizeService } from './report-finalize.service'
@@ -37,6 +38,7 @@ describe('ReportFinalizeService', () => {
   let companyReportBulkCreate: jest.Mock
   let companyReportFindAll: jest.Mock
   let autoReviewEvaluate: jest.Mock
+  let findActiveEqualityForCompany: jest.Mock
 
   beforeEach(async () => {
     reportFindAll = jest.fn().mockResolvedValue([])
@@ -55,6 +57,8 @@ describe('ReportFinalizeService', () => {
       reason: 'Engin frávik greind.',
       signals: {},
     })
+
+    findActiveEqualityForCompany = jest.fn().mockResolvedValue(null)
 
     const module = await Test.createTestingModule({
       providers: [
@@ -82,6 +86,10 @@ describe('ReportFinalizeService', () => {
         {
           provide: IReportAutoReviewService,
           useValue: { evaluate: autoReviewEvaluate },
+        },
+        {
+          provide: IReportService,
+          useValue: { findActiveEqualityForCompany },
         },
       ],
     }).compile()
@@ -218,6 +226,56 @@ describe('ReportFinalizeService', () => {
       )
     })
   })
+
+  /**
+   * The submission's own resolution of the equality report it will be filed
+   * against. Had no direct test: its only coverage was mock-call ordering in
+   * the report-create spec, which mis-asserts rather than fails if a query is
+   * inserted.
+   */
+  describe('resolveActiveEqualityReportId', () => {
+    it('returns the id the shared lookup resolves', async () => {
+      findActiveEqualityForCompany.mockResolvedValue({ id: 'equality-1' })
+
+      await expect(
+        service.resolveActiveEqualityReportId('company-1'),
+      ).resolves.toBe('equality-1')
+
+      expect(findActiveEqualityForCompany).toHaveBeenCalledWith('company-1')
+    })
+
+    // The regression this replaced: the resolution used to filter
+    // `parentCompanyId: null`, selecting only equality reports the company
+    // filed as the parent, while the eligibility and active routes join on
+    // `companyId` alone and so also match a subsidiary. A company covered by a
+    // group report read `eligible: true`, submitted, and was refused — with no
+    // field left to override it, since the partner contract dropped
+    // `equalityReportId`. Delegating is what keeps the pre-check and the
+    // submission from disagreeing, so the delegation itself is the assertion.
+    it('asks the same lookup the eligibility routes answer from, so a subsidiary resolves too', async () => {
+      findActiveEqualityForCompany.mockResolvedValue({ id: 'group-equality' })
+
+      await expect(
+        service.resolveActiveEqualityReportId('subsidiary-company'),
+      ).resolves.toBe('group-equality')
+
+      // No second query of its own: a divergent one is how the two answers
+      // drifted apart in the first place.
+      expect(companyReportFindAll).not.toHaveBeenCalled()
+    })
+
+    it('404s with the sentence the active-report route answers with', async () => {
+      findActiveEqualityForCompany.mockResolvedValue(null)
+
+      await expect(
+        service.resolveActiveEqualityReportId('company-1'),
+      ).rejects.toThrow(NotFoundException)
+      await expect(
+        service.resolveActiveEqualityReportId('company-1'),
+      ).rejects.toThrow('No approved equality report is in force')
+    })
+  })
+
 })
 
 function makeCompanySnapshot(

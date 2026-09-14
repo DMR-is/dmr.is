@@ -3,6 +3,7 @@ import { APP_GUARD, Reflector } from '@nestjs/core'
 
 import { AppModule } from '../../../app/app.module'
 import { PUBLIC_ROUTE_METADATA } from '../../decorators/public-route.decorator'
+import { RequireActiveCompanyGuard } from '../active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../api-key/api-key.guard'
 import { RequireApiScopeGuard } from '../api-key-scope/require-api-scope.guard'
 import { PartnerCompanyGuard } from '../partner-company/partner-company.guard'
@@ -45,7 +46,12 @@ const contextWith = (
 
 const guard = () => new DeclaredAccessGuard(mockLogger as never, new Reflector())
 
-const FULL_CHAIN = [ApiKeyGuard, PartnerCompanyGuard, RequireApiScopeGuard]
+const FULL_CHAIN = [
+  ApiKeyGuard,
+  PartnerCompanyGuard,
+  RequireApiScopeGuard,
+  RequireActiveCompanyGuard,
+]
 
 describe('DeclaredAccessGuard', () => {
   beforeEach(() => jest.clearAllMocks())
@@ -74,7 +80,10 @@ describe('DeclaredAccessGuard', () => {
     // Nest unions the two rather than overriding, so the guard must too.
     expect(
       guard().canActivate(
-        contextWith([ApiKeyGuard, PartnerCompanyGuard], [RequireApiScopeGuard]),
+        contextWith(
+          [ApiKeyGuard, PartnerCompanyGuard],
+          [RequireApiScopeGuard, RequireActiveCompanyGuard],
+        ),
       ),
     ).toBe(true)
   })
@@ -90,6 +99,14 @@ describe('DeclaredAccessGuard', () => {
       ['authentication without scope enforcement', [ApiKeyGuard, PartnerCompanyGuard]],
       ['identity without authentication', [PartnerCompanyGuard, RequireApiScopeGuard]],
       ['scope enforcement alone', [RequireApiScopeGuard]],
+      // Added for the reason the scope case exists: the decorator was declared
+      // on the controller while its own spec mocked the reflector for every
+      // case, so nothing observed the real chain and the guard could be deleted
+      // from `@UseGuards` with every test still green.
+      [
+        'everything but the register check',
+        [ApiKeyGuard, PartnerCompanyGuard, RequireApiScopeGuard],
+      ],
     ]
 
     for (const [label, chain] of cases) {
