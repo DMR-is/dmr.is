@@ -14,8 +14,15 @@ export const ACTIVE_COMPANY_METADATA = 'doeRequireActiveCompany'
  * explain.
  *
  * Still metadata rather than a bare guard, because the guard is inert without
- * it: that keeps the rule greppable, and keeps a future route able to opt out
- * deliberately (by declaring nothing) instead of by forgetting.
+ * it: that keeps the rule greppable, and a surface that has not declared it
+ * fails open rather than silently refusing every caller.
+ *
+ * It is **not** an opt-out mechanism, despite reading like one. The guard
+ * resolves with `getAllAndOverride([handler, class])`, so a handler that
+ * declares nothing inherits the class-level `true` — there is no way to
+ * decline from a route, and nothing exposes one. Excusing a future route would
+ * mean a `@SkipActiveCompany()` that sets the metadata `false` at handler
+ * level, which does not exist and should not be added until a route needs it.
  */
 export const RequireActiveCompany = () =>
   SetMetadata(ACTIVE_COMPANY_METADATA, true)

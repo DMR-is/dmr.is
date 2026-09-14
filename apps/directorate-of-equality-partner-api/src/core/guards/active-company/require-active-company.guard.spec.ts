@@ -1,7 +1,4 @@
-import {
-  ConflictException,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { ConflictException, InternalServerErrorException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
 import { CompanyStatusEnum } from '@dmr.is/doe-modules/company'
@@ -53,7 +50,9 @@ describe('RequireActiveCompanyGuard', () => {
     const guard = guardFor(true)
 
     expect(
-      guard.canActivate(contextFor(companyWithStatus(CompanyStatusEnum.ACTIVE))),
+      guard.canActivate(
+        contextFor(companyWithStatus(CompanyStatusEnum.ACTIVE)),
+      ),
     ).toBe(true)
   })
 

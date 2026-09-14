@@ -34,6 +34,7 @@ import {
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
 import { AutoReviewDecisionEnum } from '../report/models/report-event.model'
+import { IReportService } from '../report/report.service.interface'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { ReportContentService } from '../report-content/report-content.service'
 import { IReportContentService } from '../report-content/report-content.service.interface'
@@ -105,6 +106,7 @@ describe('ReportCreateService', () => {
   let subCriterionStepBulkCreate: jest.Mock
   let reportResultCreateForReport: jest.Mock
   let autoReviewEvaluate: jest.Mock
+  let findActiveEqualityForCompany: jest.Mock
   let configGetByKey: jest.Mock
 
   beforeEach(async () => {
@@ -163,6 +165,7 @@ describe('ReportCreateService', () => {
     reportResultCreateForReport = jest
       .fn()
       .mockResolvedValue({ id: 'result-1' })
+    findActiveEqualityForCompany = jest.fn().mockResolvedValue(null)
     autoReviewEvaluate = jest.fn().mockResolvedValue({
       decision: AutoReviewDecisionEnum.AUTO_APPROVE,
       reason: 'Engin frávik greind.',
@@ -257,6 +260,10 @@ describe('ReportCreateService', () => {
         {
           provide: IReportFinalizeService,
           useClass: ReportFinalizeService,
+        },
+        {
+          provide: IReportService,
+          useValue: { findActiveEqualityForCompany },
         },
         {
           provide: IConfigService,
@@ -890,12 +897,12 @@ describe('ReportCreateService', () => {
 
     it("resolves the company's active report and files against it", async () => {
       const input = withoutEqualityReportId()
-      // `makeInput` leaves `providerId` null, so no tuple lookup happens: the
-      // first `findOne` is the resolution's, the second is the invariant check.
-      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
-      reportFindOne
-        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
-        .mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
+      // Resolution delegates to the same lookup the eligibility routes answer
+      // from; the remaining `findOne` is the schema invariant check.
+      findActiveEqualityForCompany.mockResolvedValue({
+        id: RESOLVED_EQUALITY_ID,
+      })
+      reportFindOne.mockResolvedValueOnce({ id: RESOLVED_EQUALITY_ID })
 
       await service.createSalary(input)
 
@@ -906,8 +913,7 @@ describe('ReportCreateService', () => {
 
     it('refuses a new submission when no approved report is in force', async () => {
       const input = withoutEqualityReportId()
-      companyReportFindAll.mockResolvedValueOnce([{ reportId: 'eq-candidate' }])
-      reportFindOne.mockResolvedValueOnce(null)
+      findActiveEqualityForCompany.mockResolvedValue(null)
 
       await expect(service.createSalary(input)).rejects.toThrow(
         NotFoundException,
@@ -924,7 +930,7 @@ describe('ReportCreateService', () => {
       const input = withoutEqualityReportId()
       const FILED_REPORT_ID = '00000000-0000-0000-0000-0000000000ea'
       input.providerType = ReportProviderEnum.OTHER
-      input.providerId = '6511881219:vendor-submission-1'
+      input.providerId = '5555555555:vendor-submission-1'
 
       // The tuple lookup finds the earlier submission; every later `findOne`
       // answers null, so an equality resolution reaching the database would

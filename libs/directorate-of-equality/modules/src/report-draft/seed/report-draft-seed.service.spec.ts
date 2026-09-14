@@ -25,13 +25,13 @@ const REPORT_ID = 'report-id-1'
 const KEY = 'doe-imports/application/abc.xlsx'
 const PROVIDER_ID = 'island-is-application-uuid-draft'
 
-const COMPANY = ({
+const COMPANY = {
   id: 'company-1',
   nationalId: '5500000000',
   employeeCountCategory: CompanySizeEnum.LARGE,
   status: CompanyStatusEnum.ACTIVE,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
-} as unknown) as CompanyDto
+} as unknown as CompanyDto
 
 // What the parser actually hands this service: a payload the API would accept,
 // which since `assertParsedPayloadValid` means the cross-field rules too — all
@@ -42,7 +42,7 @@ const COMPANY = ({
 // score and that is the fixture's business (step 1 scores 0, so the employee
 // still totals 0 as before).
 const validParsed = () =>
-  padToSemanticValidity(({
+  padToSemanticValidity({
     roles: [
       {
         title: 'Sérfræðingur',
@@ -90,7 +90,7 @@ const validParsed = () =>
         personalStepAssignments: [],
       },
     ],
-  } as unknown) as ParsedReportDto)
+  } as unknown as ParsedReportDto)
 
 describe('ReportDraftSeedService', () => {
   let service: ReportDraftSeedService

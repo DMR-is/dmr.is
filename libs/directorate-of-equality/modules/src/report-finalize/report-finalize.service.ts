@@ -23,6 +23,7 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
+import { IReportService } from '../report/report.service.interface'
 import { AUTO_REVIEW_ENFORCE } from '../report-auto-review/report-auto-review.constants'
 import { IReportAutoReviewService } from '../report-auto-review/report-auto-review.service.interface'
 import { CreateReportCompanySnapshotDto } from '../report-create/dto/create-report.dto'
@@ -44,6 +45,8 @@ export class ReportFinalizeService implements IReportFinalizeService {
     private readonly reportEventModel: typeof ReportEventModel,
     @Inject(IReportAutoReviewService)
     private readonly autoReviewService: IReportAutoReviewService,
+    @Inject(IReportService)
+    private readonly reportService: IReportService,
   ) {}
 
   /**
@@ -62,24 +65,24 @@ export class ReportFinalizeService implements IReportFinalizeService {
    * Ordered by `approvedAt DESC`, which decides the rare case of two approved
    * plans still in force: a company that re-filed before the previous one
    * expired is working under the newer.
+   *
+   * **Delegates rather than querying**, and that is the whole point. This
+   * resolution has to select exactly what `GET /reports/salary/eligibility` and
+   * `GET /reports/equality/active` already told the caller, because those two
+   * are the pre-check for this submission. It once filtered
+   * `parentCompanyId: null` — equality reports the company filed as the parent
+   * — while both of those routes join on `companyId` alone and so also match a
+   * subsidiary. A company covered by a group equality report therefore read
+   * `eligible: true`, received a real report id, submitted, and was refused;
+   * and since the partner contract no longer carries `equalityReportId`, it had
+   * no field left to override the answer with. It could not file at all.
+   *
+   * Sharing the lookup is what keeps the pre-check and the submission from ever
+   * disagreeing again. It also collapses two round trips into one indexed join.
    */
   async resolveActiveEqualityReportId(companyId: string): Promise<string> {
-    const parentSnapshots = await this.companyReportModel.findAll({
-      where: { companyId, parentCompanyId: null },
-      attributes: ['reportId'],
-    })
-
-    const equalityReport = parentSnapshots.length
-      ? await this.reportModel.findOne({
-          where: {
-            id: { [Op.in]: parentSnapshots.map((row) => row.reportId) },
-            type: ReportTypeEnum.EQUALITY,
-            status: ReportStatusEnum.APPROVED,
-            validUntil: { [Op.gt]: new Date() },
-          },
-          order: [['approvedAt', 'DESC']],
-        })
-      : null
+    const equalityReport =
+      await this.reportService.findActiveEqualityForCompany(companyId)
 
     if (!equalityReport) {
       // The same sentence `GET .../reports/equality/active` answers with, so a

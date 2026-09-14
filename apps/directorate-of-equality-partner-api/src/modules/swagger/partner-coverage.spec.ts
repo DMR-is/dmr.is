@@ -152,10 +152,12 @@ describe('partner surface coverage', () => {
 
   it('guards a substantial surface', () => {
     // Anti-vacuity floor: every assertion above is "no offenders", so an empty
-    // handler list would satisfy all of them. Deliberately well below the real
-    // count rather than tracking it — this catches a broken reflection walk,
-    // not a route added or retired, and a floor set at the census has to be
-    // edited by every change that touches the surface.
-    expect(routedHandlers(app).length).toBeGreaterThan(5)
+    // handler list would satisfy all of them. Below the real count rather than
+    // tracking it — this catches a broken reflection walk, not a route added or
+    // retired, and a floor set at the census has to be edited by every change
+    // that touches the surface. Close enough beneath it to still fail if the
+    // walk returns a fraction of the surface, which a floor of 5 against a
+    // census of 10 would not.
+    expect(routedHandlers(app).length).toBeGreaterThan(8)
   })
 })

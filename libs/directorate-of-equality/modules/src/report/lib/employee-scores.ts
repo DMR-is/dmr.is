@@ -27,23 +27,54 @@ import {
   roleLabel,
   subCriterionLabel,
 } from './parsed-payload-issues'
-import { collectParsedPayloadSemantics } from './parsed-payload-semantics'
+import {
+  collectParsedPayloadSemantics,
+  subKey,
+} from './parsed-payload-semantics'
 
+/**
+ * Composite Map keys over a criterion/sub-criterion pair, and over that pair
+ * plus a step.
+ *
+ * Both separate with NUL, via the shared {@link subKey} — the one byte that
+ * cannot occur in a title. They used to join with `|`, which was sound while
+ * these rules only ever ran on a workbook. They now run on a `ParsedReportDto`
+ * arriving as JSON, where `criterionTitle` and `subTitle` are bare
+ * `@ApiString()` with no pattern and no length bound, so `|` is a legal
+ * character in either.
+ *
+ * The collision is trivially reachable and silent: `('A|B', 'C', 1)` and
+ * `('A', 'B|C', 1)` produced the same key. The semantics gate, keyed on NUL,
+ * correctly saw two distinct sub-criteria and passed a payload assigning both —
+ * and then one step score overwrote the other in `stepScoreByKey`. No error was
+ * raised, and the resulting score is an employee's x-coordinate in the wage-gap
+ * regression.
+ */
 export const stepKey = (
   criterionTitle: string,
   subTitle: string,
   stepOrder: number,
-) => `${criterionTitle}|${subTitle}|${stepOrder}`
+) => `${subKey(criterionTitle, subTitle)}\0${stepOrder}`
 
 /** The same pair without a step — see `knownSubKeys`. */
 const subPairKey = (criterionTitle: string, subTitle: string) =>
-  `${criterionTitle}|${subTitle}`
+  subKey(criterionTitle, subTitle)
 
 /**
- * The single gate every scoring payload passes, whichever channel it arrived
- * on: the island.is portal, an imported workbook, or a partner API submission.
- * Both the analysis preview and the submission call it, so a payload that
- * previews clean cannot be refused at submit for a reason the preview knew.
+ * The gate every scoring **payload** passes, whichever channel it arrived on:
+ * an imported workbook, a partner API submission, or the island.is portal's
+ * direct submit. Both the analysis preview and the submission call it, so a
+ * payload that previews clean cannot be refused at submit for a reason the
+ * preview knew.
+ *
+ * **The island.is draft path is not covered, and cannot be by this function.**
+ * The portal runs it once, when a draft is seeded from a workbook
+ * (`report-draft-seed.service.ts`); every edit afterwards goes through the
+ * draft CRUD and sync endpoints, and `report-draft-submit.service.ts`
+ * re-scores through `persistScores` without re-validating. Deleting a
+ * sub-criterion or clearing a classification after seed still lowers a score
+ * and submits clean. Guarding that path means reading the persisted tree, not
+ * a `ParsedReportDto` — it never holds one.
  *
  * **Every fault is reported at once.** The checks used to throw on the first
  * one, which turned a first-time field mapping into one round trip per

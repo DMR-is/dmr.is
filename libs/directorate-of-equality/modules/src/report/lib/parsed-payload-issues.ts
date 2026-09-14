@@ -125,9 +125,11 @@ export class PayloadIssueBag {
 /**
  * How a criterion / sub-criterion pair is named to a human, everywhere.
  *
- * Not `stepKey`, which joins the same two titles with `|` for use as a Map key.
+ * Not `stepKey`, which joins the same two titles with NUL for use as a Map key.
  * That internal form used to reach users verbatim — *"vísar í óþekkt þrep
- * Ábyrgð|Mannaforráð|3"* — which asks the reader to know the delimiter.
+ * Ábyrgð|Mannaforráð|3"*, back when it joined with `|` — which asks the reader
+ * to know the delimiter, and is unreadable now that the delimiter is a byte
+ * that does not render.
  */
 export const subCriterionLabel = (
   criterionTitle: string,

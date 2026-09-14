@@ -173,6 +173,11 @@ export class PartnerController {
     operationId: 'submitPartnerSalaryReport',
     status: HttpStatus.CREATED,
     type: CreateReportResponseDto,
+    // Both are described in prose below and neither was declared, so no
+    // generated client modelled them: 404 when the company has no in-force
+    // equality report, 503 when the write collided and should be retried.
+    include404: true,
+    errors: [400, 401, 403, 409, 500, 503],
     alsoSucceedsWith: {
       status: HttpStatus.OK,
       description:

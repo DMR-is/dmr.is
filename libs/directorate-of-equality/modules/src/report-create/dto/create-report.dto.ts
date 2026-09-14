@@ -116,7 +116,14 @@ export class CreateReportCompanySnapshotDto {
  * identifier" for the island.is client change that pairs with its removal.
  */
 export class CreateReportDto {
-  @ApiUUID({
+  // `ApiOptionalUUID`, not `ApiUUID`: the latter is `ApiProperty` + `IsUUID()`
+  // with no `IsOptional()`, so making the field optional in TypeScript alone
+  // left the validator demanding it. `POST report-create/salary` takes this DTO
+  // as a live `@Body()` behind the global pipe, so omitting the field — exactly
+  // what the description invites — failed with a 400 before any resolution ran.
+  // The partner path never noticed: it builds the DTO server-side and never
+  // crosses the pipe.
+  @ApiOptionalUUID({
     description:
       'FK to the approved EQUALITY report this salary was audited against. Omit it to have the creation service resolve the company’s active one — which is what the partner API does, since its contract does not carry the field.',
   })

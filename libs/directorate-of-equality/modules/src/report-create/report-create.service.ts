@@ -146,10 +146,11 @@ export class ReportCreateService implements IReportCreateService {
 
     await this.finalizeService.assertEqualityReportApproved(equalityReportId)
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.SALARY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.SALARY,
+      )
 
     const outliersPostponed = input.outliersPostponed ?? false
 
@@ -200,13 +201,12 @@ export class ReportCreateService implements IReportCreateService {
     // 3–7. Child insertion (roles, criteria → sub-criteria → steps, role↔step
     //       joins, employees, employee↔personal-step joins). Shared with the
     //       report-draft Excel-seed path via the report-content module.
-    const {
-      employeeOrdinalToId,
-    } = await this.contentService.persistParsedChildren(
-      report.id,
-      input.parsed,
-      employeeScores,
-    )
+    const { employeeOrdinalToId } =
+      await this.contentService.persistParsedChildren(
+        report.id,
+        input.parsed,
+        employeeScores,
+      )
 
     // 8. Outlier groups + outlier rows. Every detected outlier belongs to
     //    exactly one group (group_id NOT NULL):
@@ -313,10 +313,11 @@ export class ReportCreateService implements IReportCreateService {
       return replay
     }
 
-    const withdrawnReportIds = await this.finalizeService.withdrawInflightSibling(
-      submittingCompany.companyId,
-      ReportTypeEnum.EQUALITY,
-    )
+    const withdrawnReportIds =
+      await this.finalizeService.withdrawInflightSibling(
+        submittingCompany.companyId,
+        ReportTypeEnum.EQUALITY,
+      )
 
     const report = await this.createReportRow({
       type: ReportTypeEnum.EQUALITY,

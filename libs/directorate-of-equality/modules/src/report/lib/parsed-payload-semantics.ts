@@ -148,8 +148,8 @@ const checkMinimumPopulation = (
  * raw byte made this file register as binary, which meant `grep` and `rg`
  * skipped it silently and every rule in here was invisible to code search.
  */
-type SubKey = string
-const subKey = (criterionTitle: string, subTitle: string): SubKey =>
+export type SubKey = string
+export const subKey = (criterionTitle: string, subTitle: string): SubKey =>
   `${criterionTitle}\0${subTitle}`
 
 const splitSubKey = (key: SubKey): [string, string] => {

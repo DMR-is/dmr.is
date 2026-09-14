@@ -5,6 +5,7 @@ import { CompanyModel } from '../company/models/company.model'
 import { CompanyReportModel } from '../company/models/company-report.model'
 import { ReportModel } from '../report/models/report.model'
 import { ReportEventModel } from '../report/models/report-event.model'
+import { ReportCoreModule } from '../report/report.core.module'
 import { ReportAutoReviewCoreModule } from '../report-auto-review/report-auto-review.core.module'
 import { ReportFinalizeService } from './report-finalize.service'
 import { IReportFinalizeService } from './report-finalize.service.interface'
@@ -18,6 +19,7 @@ import { IReportFinalizeService } from './report-finalize.service.interface'
       ReportEventModel,
     ]),
     ReportAutoReviewCoreModule,
+    ReportCoreModule,
   ],
   providers: [
     {

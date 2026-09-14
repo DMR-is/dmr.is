@@ -135,9 +135,11 @@ describe('employee-scores', () => {
       try {
         assertParsedPayloadValid(parsed)
       } catch (e) {
-        const message = ((e as BadRequestException).getResponse() as {
-          message: string[]
-        }).message
+        const message = (
+          (e as BadRequestException).getResponse() as {
+            message: string[]
+          }
+        ).message
         details = message
       }
 
@@ -206,9 +208,11 @@ describe('employee-scores', () => {
     try {
       assertParsedPayloadValid(parsed)
     } catch (e) {
-      details = ((e as BadRequestException).getResponse() as {
-        message: string[]
-      }).message
+      details = (
+        (e as BadRequestException).getResponse() as {
+          message: string[]
+        }
+      ).message
     }
 
     // The pair does not exist, so the semantic rule owns the message and the
@@ -246,9 +250,11 @@ describe('employee-scores', () => {
       try {
         assertParsedPayloadValid(parsed)
       } catch (e) {
-        details = ((e as BadRequestException).getResponse() as {
-          message: string[]
-        }).message
+        details = (
+          (e as BadRequestException).getResponse() as {
+            message: string[]
+          }
+        ).message
       }
 
       // One message, not one per fault. An oversized payload will never be
@@ -293,9 +299,11 @@ describe('employee-scores', () => {
       try {
         assertParsedPayloadValid(parsed)
       } catch (e) {
-        details = ((e as BadRequestException).getResponse() as {
-          message: string[]
-        }).message
+        details = (
+          (e as BadRequestException).getResponse() as {
+            message: string[]
+          }
+        ).message
       }
 
       expect(details.length).toBeLessThanOrEqual(MAX_ISSUES + 1)
