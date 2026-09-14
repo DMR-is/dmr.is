@@ -1,4 +1,4 @@
-import { Includeable, literal, Op, Order, WhereOptions } from 'sequelize'
+import { literal, Op, Order } from 'sequelize'
 
 import {
   BadRequestException,
@@ -55,19 +55,8 @@ import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
-import {
-  buildCompanyExpiryWhere,
-  buildCompanyIsatCategoryInclude,
-  buildCompanyIsatWhere,
-  buildCompanyLifecycleStatusWhere,
-  buildCompanyListQuery,
-  buildCompanyLocationInclude,
-  buildCompanyOverdueWhere,
-  buildCompanySectorWhere,
-  buildCompanyStatusWhere,
-} from './utils/filters'
+import { buildCompanyListQuery } from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
-import { hiddenFromDefaultRegisterSql } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { companyMessages } from './company.messages'
 import {
@@ -153,95 +142,10 @@ export class CompanyService implements ICompanyService {
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
     const { limit, offset } = getLimitAndOffset(query)
 
-    const conditions: WhereOptions[] = []
-
-    if (query.q) {
-      const pattern = `%${query.q.trim()}%`
-      conditions.push({
-        [Op.or]: [
-          { name: { [Op.iLike]: pattern } },
-          { nationalId: { [Op.iLike]: pattern } },
-        ],
-      })
-    }
-
-    if (query.employeeCountCategory !== undefined) {
-      conditions.push({ employeeCountCategory: query.employeeCountCategory })
-    }
-
-    if (query.companyStatus?.length) {
-      conditions.push(buildCompanyStatusWhere(query.companyStatus))
-    }
-
-    if (query.status?.length) {
-      conditions.push(buildCompanyLifecycleStatusWhere(query.status))
-    }
-
-    if (query.expiresWithin?.length) {
-      conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
-    }
-
-    if (query.finesStarted !== undefined) {
-      conditions.push({ finesStarted: query.finesStarted })
-    }
-
-    if (query.quarantined !== undefined) {
-      conditions.push({ quarantined: query.quarantined })
-    }
-
-    if (query.overdue) {
-      conditions.push(buildCompanyOverdueWhere())
-    }
-
-    // ⚠️ Two DEFAULT-ON hides, both suppressed by an explicit request on the
-    // same axis. The admin register is a working list of who owes what, and
-    // roughly 250 companies that owe nothing plus every deregistered company
-    // crowd it out — but a default that cannot be escaped is worse than no
-    // default. `employeeCountCategory` and `status` are the controls for these
-    // two axes, so setting either means the admin has already answered the
-    // question the default was guessing at: filtering to Óvirkt has to return
-    // óvirk companies, not an empty page.
-    //
-    // Ordered after the explicit filters purely for readability; `conditions`
-    // is AND-ed, so position carries no meaning.
-    if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
-      conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
-    }
-
-    if (!query.includeInactive && !query.status?.length) {
-      conditions.push({ status: CompanyStatusEnum.ACTIVE })
-    }
-
-    if (query.isatCategoryCode?.length) {
-      conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
-    }
-
-    if (query.sector?.length) {
-      conditions.push(buildCompanySectorWhere(query.sector))
-    }
-
-    const locationInclude = buildCompanyLocationInclude({
-      postcodes: query.postcode,
-      regionCodes: query.regionCode,
-    })
-
-    // Always joined — it carries the resolved ÍSAT code and description onto
-    // the DTO — and additionally narrows the rows when the section filter is
-    // active. See `buildCompanyIsatCategoryInclude`.
-    const isatCategoryInclude = buildCompanyIsatCategoryInclude(
-      query.isatSection,
-    )
-
-    const includes = [locationInclude, isatCategoryInclude].filter(
-      (include): include is Includeable => include !== null,
-    )
-
-    const where: WhereOptions =
-      conditions.length === 0
-        ? {}
-        : conditions.length === 1
-          ? conditions[0]
-          : { [Op.and]: conditions }
+    // Shared with `findMailRecipientsByFilter` on purpose: the count this
+    // list shows is the count the "send to everyone matching this filter"
+    // button promises, so both sides have to resolve the identical query.
+    const { where, includes } = buildCompanyListQuery(query)
 
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
@@ -335,8 +239,9 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const result =
-      await this.nationalRegistryService.getEntityByNationalId(nationalId)
+    const result = await this.nationalRegistryService.getEntityByNationalId(
+      nationalId,
+    )
 
     if (!result.entity) {
       throw new NotFoundException(
@@ -420,7 +325,9 @@ export class CompanyService implements ICompanyService {
    * "every new company is sector-classified" is NOT true; do not write code
    * that assumes it, and do not expect an automated backfill to arrive.
    */
-  private async resolveRskEnrichment(nationalId: string): Promise<{
+  private async resolveRskEnrichment(
+    nationalId: string,
+  ): Promise<{
     status?: CompanyStatusEnum
     address?: string | null
     postcodeId?: string | null
@@ -500,7 +407,9 @@ export class CompanyService implements ICompanyService {
    * form we do not map all yield UNKNOWN, which an admin can correct by hand
    * later. `sectorOverride` stays false — nothing here is an admin decision.
    */
-  private async resolveSectorOnly(nationalId: string): Promise<{
+  private async resolveSectorOnly(
+    nationalId: string,
+  ): Promise<{
     sector: CompanySectorEnum
     legalFormId: string | null
     legalFormName: string | null
@@ -576,10 +485,9 @@ export class CompanyService implements ICompanyService {
       { context: LOGGING_CONTEXT },
     )
 
-    const entity =
-      await this.rskCompanyRegistryService.getLegalEntityByNationalId(
-        nationalId,
-      )
+    const entity = await this.rskCompanyRegistryService.getLegalEntityByNationalId(
+      nationalId,
+    )
 
     const mapped = mapRskLegalEntity(entity)
 
@@ -662,8 +570,9 @@ export class CompanyService implements ICompanyService {
       return existing.fromModel()
     }
 
-    const registry =
-      await this.nationalRegistryService.getEntityByNationalId(nationalId)
+    const registry = await this.nationalRegistryService.getEntityByNationalId(
+      nationalId,
+    )
 
     const name = registry.entity?.nafn ?? fallbackName
 

@@ -178,3 +178,169 @@ describe('buildCompanyStatusWhere', () => {
     expect(all.endsWith(')')).toBe(true)
   })
 })
+
+/**
+ * The composed builder behind both the company list and the recipient
+ * resolution for a bulk email.
+ *
+ * These tests pin that every filter the list DTO carries reaches the query, so a
+ * new filter cannot be added to the list and quietly skipped here — which would
+ * put the count an admin approves and the set actually mailed out of step.
+ */
+describe('buildCompanyListQuery', () => {
+  type ListQuery = Parameters<typeof buildCompanyListQuery>[0]
+
+  // `page`/`pageSize` are required on the DTO but defaulted at runtime, and no
+  // case here is about paging. Supplying them once keeps each test to the
+  // filter it is actually exercising.
+  const build = (overrides: Partial<ListQuery> = {}) =>
+    buildCompanyListQuery({ page: 1, pageSize: 10, ...overrides })
+
+  const conditionsOf = (overrides: Partial<ListQuery> = {}) => {
+    const { where } = build(overrides)
+    const and = (where as Record<symbol, unknown[]>)[Op.and]
+    return and ?? [where]
+  }
+
+  // Both hides lifted, so a test can assert on one filter without the two
+  // default conditions padding every result.
+  const unhidden = { includeNotObliged: true, includeInactive: true }
+
+  /**
+   * The hides belong to the builder rather than to the list's call site: the
+   * recipient resolution runs the same function, and a send that skipped them
+   * would mail deregistered and not-obliged companies that never appeared in
+   * the list the admin approved.
+   */
+  describe('the default-on register hides', () => {
+    it('hides not-obliged and deregistered companies by default', () => {
+      const conditions = conditionsOf()
+
+      expect(conditions).toHaveLength(2)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+      expect(conditions[1]).toEqual({ status: CompanyStatusEnum.ACTIVE })
+    })
+
+    it('lifts the obligation hide when the admin asks for it explicitly', () => {
+      expect(conditionsOf({ includeNotObliged: true })).toEqual([
+        { status: CompanyStatusEnum.ACTIVE },
+      ])
+    })
+
+    it('lifts the obligation hide when filtering on the same axis', () => {
+      // Filtering by size means the admin has already answered the question the
+      // default was guessing at.
+      expect(
+        conditionsOf({ employeeCountCategory: CompanySizeEnum.LARGE }),
+      ).toEqual([
+        { employeeCountCategory: CompanySizeEnum.LARGE },
+        { status: CompanyStatusEnum.ACTIVE },
+      ])
+    })
+
+    it('lifts the status hide when the admin asks for it explicitly', () => {
+      const conditions = conditionsOf({ includeInactive: true })
+
+      expect(conditions).toHaveLength(1)
+      expect((conditions[0] as { val: string }).val).toMatch(/^NOT /)
+    })
+
+    it('lifts the status hide when filtering to a lifecycle status', () => {
+      // Filtering to Óvirkt has to return óvirk companies, not an empty page.
+      const conditions = conditionsOf({ status: [CompanyStatusEnum.INACTIVE] })
+
+      // The lifecycle filter survives and the ACTIVE hide is gone; only the
+      // unrelated obligation hide is left alongside it.
+      expect(conditions).toHaveLength(2)
+      expect(conditions[0]).toEqual(
+        buildCompanyLifecycleStatusWhere([CompanyStatusEnum.INACTIVE]),
+      )
+      expect((conditions[1] as { val: string }).val).toMatch(/^NOT /)
+    })
+  })
+
+  it('returns the single condition unwrapped rather than in an Op.and', () => {
+    const { where } = build({ ...unhidden, finesStarted: true })
+
+    expect(where).toEqual({ finesStarted: true })
+  })
+
+  it('searches name and national id together', () => {
+    const { where } = build({ ...unhidden, q: '  Fyrirtæki  ' })
+    const or = (where as Record<symbol, Record<string, unknown>[]>)[Op.or]
+
+    // Trimmed, then wrapped — an untrimmed pattern silently matches nothing.
+    expect(or).toEqual([
+      { name: { [Op.iLike]: '%Fyrirtæki%' } },
+      { nationalId: { [Op.iLike]: '%Fyrirtæki%' } },
+    ])
+  })
+
+  it('distinguishes an explicit `false` boolean from an absent one', () => {
+    // `quarantined: false` is a real filter — "only companies not halted" — and
+    // treating it as unset would widen the recipient set on a bulk send.
+    expect(conditionsOf({ ...unhidden, quarantined: false })).toContainEqual({
+      quarantined: false,
+    })
+    expect(build(unhidden).where).toEqual({})
+  })
+
+  it('treats `overdue: false` as no constraint', () => {
+    // Asymmetric with the booleans above, and deliberately so: `overdue` is a
+    // derived expression with no negative form to filter on.
+    expect(build({ ...unhidden, overdue: false }).where).toEqual({})
+  })
+
+  it('combines every filter it is given', () => {
+    const conditions = conditionsOf({
+      ...unhidden,
+      q: 'a',
+      employeeCountCategory: CompanySizeEnum.LARGE,
+      companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
+      status: [CompanyStatusEnum.ACTIVE],
+      expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],
+      finesStarted: true,
+      quarantined: false,
+      overdue: true,
+      isatCategoryCode: ['01110'],
+      sector: [CompanySectorEnum.PRIVATE],
+    })
+
+    expect(conditions).toHaveLength(10)
+  })
+
+  it('always joins ÍSAT, so the resolved code reaches the DTO', () => {
+    // Unconditional and not `required`, otherwise every unclassified company
+    // would drop out of the plain list.
+    const { includes } = build({})
+
+    expect(includes).toEqual([
+      expect.objectContaining({ as: 'isatCategory', required: false }),
+    ])
+  })
+
+  it('adds an include for each join-backed filter', () => {
+    const { includes } = build({
+      postcode: ['101'],
+      isatSection: ['O'],
+    })
+
+    // Location and ÍSAT section are resolved through joins rather than columns;
+    // dropping either would silently return companies the filter excluded.
+    expect(includes).toHaveLength(2)
+    expect(includes[1]).toMatchObject({ as: 'isatCategory', required: true })
+  })
+
+  it('ignores paging, which belongs to the caller', () => {
+    // The recipient resolution passes the list's own query object through, paging
+    // params included. If they reached the query, a bulk send would mail page one
+    // and report it as everyone matching the filter.
+    const { where } = build({
+      ...unhidden,
+      page: 3,
+      pageSize: 10,
+    })
+
+    expect(where).toEqual({})
+  })
+})

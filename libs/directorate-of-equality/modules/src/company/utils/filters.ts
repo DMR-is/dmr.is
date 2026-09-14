@@ -18,6 +18,7 @@ import {
   COMPANY_QUERY_ALIAS,
   equalityReportMissingSql,
   equalityReportOverdueSql,
+  hiddenFromDefaultRegisterSql,
   legacyCertificationExpiringSql,
   salaryReportMissingSql,
   salaryReportOverdueSql,
@@ -89,7 +90,9 @@ export function buildCompanyLifecycleStatusWhere(
  * / `salaryReportOverdue` columns shown on each company.
  */
 export function buildCompanyOverdueWhere(): WhereOptions {
-  return literal(`(${equalityReportOverdueSql()} OR ${salaryReportOverdueSql()})`)
+  return literal(
+    `(${equalityReportOverdueSql()} OR ${salaryReportOverdueSql()})`,
+  )
 }
 
 /**
@@ -193,8 +196,10 @@ export enum CompanyExpiryFilterEnum {
 }
 
 function maxExpiryInterval(values: CompanyExpiryFilterEnum[]): string {
-  if (values.includes(CompanyExpiryFilterEnum.SOON)) return "INTERVAL '6 months'"
-  if (values.includes(CompanyExpiryFilterEnum.MONTHS_3)) return "INTERVAL '3 months'"
+  if (values.includes(CompanyExpiryFilterEnum.SOON))
+    return "INTERVAL '6 months'"
+  if (values.includes(CompanyExpiryFilterEnum.MONTHS_3))
+    return "INTERVAL '3 months'"
   return "INTERVAL '30 days'"
 }
 
@@ -238,13 +243,17 @@ export function buildCompanyExpiryWhere(
  * Exists so the list and the "send to everyone matching this filter" recipient
  * resolution cannot drift apart: a second copy of these conditions would
  * eventually answer the same question differently, in the direction of mailing
- * companies nobody selected.
+ * companies nobody selected. That includes the two default-on hides below —
+ * they belong here rather than at the list's call site precisely because a
+ * recipient set that ignores them mails companies the admin was never shown.
  *
  * The result must be run through the `withReportStatus` scope — `companyStatus`,
  * `overdue` and `expiresWithin` return `literal()` SQL bound to
  * `COMPANY_QUERY_ALIAS`, which does not resolve off the bare model.
  */
-export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
+export function buildCompanyListQuery(
+  query: GetCompaniesQueryDto,
+): {
   where: WhereOptions
   includes: Includeable[]
 } {
@@ -288,6 +297,25 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     conditions.push(buildCompanyOverdueWhere())
   }
 
+  // ⚠️ Two DEFAULT-ON hides, both suppressed by an explicit request on the
+  // same axis. The admin register is a working list of who owes what, and
+  // roughly 250 companies that owe nothing plus every deregistered company
+  // crowd it out — but a default that cannot be escaped is worse than no
+  // default. `employeeCountCategory` and `status` are the controls for these
+  // two axes, so setting either means the admin has already answered the
+  // question the default was guessing at: filtering to Óvirkt has to return
+  // óvirk companies, not an empty page.
+  //
+  // Ordered after the explicit filters purely for readability; `conditions`
+  // is AND-ed, so position carries no meaning.
+  if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+    conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
+  }
+
+  if (!query.includeInactive && !query.status?.length) {
+    conditions.push({ status: CompanyStatusEnum.ACTIVE })
+  }
+
   if (query.isatCategoryCode?.length) {
     conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
   }
@@ -296,20 +324,26 @@ export function buildCompanyListQuery(query: GetCompaniesQueryDto): {
     conditions.push(buildCompanySectorWhere(query.sector))
   }
 
-  const includes = [
-    buildCompanyLocationInclude({
-      postcodes: query.postcode,
-      regionCodes: query.regionCode,
-    }),
-    buildCompanyIsatSectionInclude(query.isatSection),
-  ].filter((include): include is Includeable => include !== null)
+  const locationInclude = buildCompanyLocationInclude({
+    postcodes: query.postcode,
+    regionCodes: query.regionCode,
+  })
+
+  // Always joined — it carries the resolved ÍSAT code and description onto the
+  // DTO — and additionally narrows the rows when the section filter is
+  // active. See `buildCompanyIsatCategoryInclude`.
+  const isatCategoryInclude = buildCompanyIsatCategoryInclude(query.isatSection)
+
+  const includes = [locationInclude, isatCategoryInclude].filter(
+    (include): include is Includeable => include !== null,
+  )
 
   const where: WhereOptions =
     conditions.length === 0
       ? {}
       : conditions.length === 1
-        ? conditions[0]
-        : { [Op.and]: conditions }
+      ? conditions[0]
+      : { [Op.and]: conditions }
 
   return { where, includes }
 }
