@@ -48,7 +48,10 @@ export class ScoringModelDto {
   @ApiDtoArray(ScoringRoleDto)
   roles!: ScoringRoleDto[]
 
-  @ApiDto(ScoringModelValidationDto)
+  @ApiDto(ScoringModelValidationDto, {
+    description:
+      'Whether the model is complete enough to file against, and every reason it is not. Returned on reads and on every write, including the write that caused it — an `INVALID` model is the normal intermediate state while one is being authored, not a failed call.',
+  })
   validation!: ScoringModelValidationDto
 }
 

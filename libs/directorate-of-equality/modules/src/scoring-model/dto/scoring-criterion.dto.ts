@@ -76,7 +76,10 @@ export class GetScoringCriteriaResponseDto {
   @ApiDtoArray(ScoringCriterionDto)
   criteria!: ScoringCriterionDto[]
 
-  @ApiDto(ScoringModelValidationDto)
+  @ApiDto(ScoringModelValidationDto, {
+    description:
+      'The whole model’s validity, not this list’s — the weight rules are global, so a change to one criterion can be what makes another part of the model add up.',
+  })
   validation!: ScoringModelValidationDto
 }
 
