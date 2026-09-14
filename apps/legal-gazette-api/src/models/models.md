@@ -30,7 +30,7 @@ tsc emits `design:type = Function`, swc emits `Object`.
 
 Safe without the alias: `X | null`, `X[]`, same-file self-references, and
 members of a `type X = { … }` alias, which are erased entirely. When auditing,
-match `!:` as well as `?:` - 22 of the 28 sites here are `!:`, so a `?:`-only
+match `!:` as well as `?:` - 20 of the 28 sites here are `!:`, so a `?:`-only
 search reports the tree clean when it is not.
 
 ## 2. Decorator _arguments_ - keep them out of the cycle
@@ -57,20 +57,55 @@ back at value level:
 | `advert.model.ts:817` | `@ApiOptionalDto(SignatureDto)` | `signature.model.ts` |
 
 Importing the leaf model *before* `advert.model.ts` throws
-`Cannot access 'XDto' before initialization`. Nothing enters that way today, so
-the suite passes - but `core/utils/advert-status.util.ts` and six specs import
-from `status.model.ts` directly and survive only because something pulls
-`advert.model.ts` in first. Under `ts-jest` the same order produced `undefined`
-silently; under swc it is a hard crash, so the next import added in the wrong
-place breaks the suite rather than shipping a wrong schema.
+`Cannot access 'XDto' before initialization`. Under `ts-jest` the same order
+produced `undefined` silently; under swc it is a hard crash, so the next import
+added in the wrong place breaks the suite rather than shipping a wrong schema.
+`core/utils/advert-status.util.ts` and six specs import from `status.model.ts`
+directly and survive only because something pulls `advert.model.ts` in first.
 
 The fix is the same move: lift `AdvertDto` and its siblings into an
 `advert.dto.ts` that nothing in the cycle imports at value level. Deliberately
 not done here - it is larger than the transform switch should absorb.
 
-The other four eager sites in that class are safe: `CourtDistrictDto` (781),
-`CategoryDto` (793), `TypeDto` (796) and `UserDto` (808) - none of those modules
-imports `advert.model.ts` back, so there is no cycle to be early in.
+### What actually resolves today - measure, do not infer
+
+**The "does that module import `advert.model.ts` back?" rule does not predict the
+outcome.** Reading the metadata directly is the only reliable check:
+
+```
+Reflect.getMetadata('swagger/apiModelProperties', AdvertDto.prototype, '<prop>').type
+```
+
+Measured on this branch, in the ordinary import order:
+
+| property | eager site | resolves to |
+|---|---|---|
+| `courtDistrict` | 781 | **`undefined`** |
+| `settlement` | 784 | **`undefined`** |
+| `signature` | 817 | **`undefined`** |
+| `category` | 793 | `CategoryDto` |
+| `type` | 796 | `TypeDto` |
+| `status` | 799 | `StatusDto` |
+| `assignedUser` | 808 | `UserDto` |
+
+So three of the seven are **already shipping `ApiProperty({ type: undefined })`
+and `Type(() => undefined)`** - a wrong OpenAPI `$ref` and no class-transformer
+nesting - not merely latent. This is **pre-existing**: the same three are
+`undefined` on the merge base under `ts-jest`. The transform switch neither
+causes nor worsens it.
+
+`status` resolves correctly in the ordinary order but still throws if
+`status.model.ts` is imported first, so it is order-fragile rather than safe.
+
+**`courtDistrict` is unexplained.** `court-district.model.ts` imports only
+`@dmr.is/legal-gazette-html`, `@dmr.is/shared-models-base`, `../core/constants`
+(which has no imports of its own) and a base DTO - no path back to
+`advert.model.ts` - yet it resolves to `undefined` in both import orders tested,
+so it is not order-dependent either. `assignedUser` uses the same
+`@ApiOptionalDto` decorator and resolves fine, so the decorator variant is not
+the cause. Do not treat the cycle rule as sufficient until this is understood.
+
+Tracked in #1506 along with the `advert.dto.ts` extraction.
 
 This one was a live bug, not just an swc artefact. Entering the graph through
 `type.model.ts` - which `estate.util.ts` does - previously passed `undefined` to
