@@ -57,6 +57,30 @@ describe('lean-search-tracking utils', () => {
       })
     })
 
+    it('classifies fully quoted queries as phrases, without the quotes', () => {
+      const result = classifyLeanSearchQuery('"three little words"')
+
+      expect(result).toEqual({
+        normalizedQuery: 'three little words',
+        queryKind: LeanSearchQueryKind.Phrase,
+        queryHash: expect.any(String),
+        queryLength: 18,
+        queryTokenCount: 3,
+      })
+    })
+
+    it('hashes a phrase the same as the equivalent free-text query', () => {
+      expect(classifyLeanSearchQuery('"three little words"').queryHash).toBe(
+        classifyLeanSearchQuery('three little words').queryHash,
+      )
+    })
+
+    it('does not treat partially quoted queries as phrases', () => {
+      expect(classifyLeanSearchQuery('lög "um veiðar"').queryKind).toBe(
+        LeanSearchQueryKind.FreeText,
+      )
+    })
+
     it('classifies single-token wildcard queries', () => {
       const result = classifyLeanSearchQuery('search*')
 

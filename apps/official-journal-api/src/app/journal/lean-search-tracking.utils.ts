@@ -12,6 +12,7 @@ import {
 const INTERNAL_CASE_NUMBER_PATTERN = /^\d{11}$/
 const PUBLICATION_NUMBER_PATTERN = /^(\d+)\s*\/\s*(\d{4})$/
 const PREFIX_WILDCARD_PATTERN = /^(\S+)\*$/
+const PHRASE_PATTERN = /^"(.+)"$/
 
 const normalizeQuery = (query?: string): string => {
   return (query ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -61,7 +62,16 @@ export const classifyLeanSearchQuery = (
   let normalizedQuery = normalized
   let queryKind: LeanSearchQueryKind = LeanSearchQueryKind.FreeText
 
-  if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
+  const phraseMatch = normalized.match(PHRASE_PATTERN)
+  const phrase = phraseMatch?.[1].trim()
+
+  if (phrase) {
+    // Record the phrase without its quotes so a quoted search and the same
+    // words unquoted share a query hash and can be compared directly. The
+    // query kind is what tells the two apart.
+    queryKind = LeanSearchQueryKind.Phrase
+    normalizedQuery = phrase
+  } else if (INTERNAL_CASE_NUMBER_PATTERN.test(normalized)) {
     queryKind = LeanSearchQueryKind.InternalCaseNumber
   } else {
     const publicationNumberMatch = normalized.match(PUBLICATION_NUMBER_PATTERN)

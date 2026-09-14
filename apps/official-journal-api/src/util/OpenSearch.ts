@@ -59,12 +59,23 @@ export const getOsPaging = (
   return paging
 }
 
+// The share of query terms that must match within a single field. Without
+// this, `operator: 'or'` means one term out of four is enough to match, and
+// `most_fields` then sums those weak hits across nine fields.
+//
+// 75% is deliberately gentle: it floors to 1 for one- and two-word queries, so
+// those behave exactly as before, and only tightens at 3+ terms. That keeps
+// cross-field queries such as "<institution> <subject>" working, since the
+// requirement applies per field rather than across the document.
+const MIN_TERMS_MATCHED = '75%'
+
 function buildTextQuery(search: string) {
   return {
     multi_match: {
       query: search,
       type: 'most_fields',
       operator: 'or',
+      minimum_should_match: MIN_TERMS_MATCHED,
       fields: [
         'title^5',
         'involvedParty.title.stemmed^5',
@@ -76,6 +87,67 @@ function buildTextQuery(search: string) {
         'publicationNumber.full',
         'caseNumber',
       ],
+    },
+  }
+}
+
+// A query is treated as a phrase only when the whole thing is quoted.
+// Mixed quoting - foo "bar baz" - is intentionally not supported yet.
+const PHRASE_QUERY_PATTERN = /^"(.+)"$/
+
+// How much an adjacent-words match is worth on top of the normal bag-of-words
+// score. Tuning knob - raise it if phrase hits should dominate more strongly.
+const PHRASE_RANK_BOOST = 3
+
+// Fields that phrase matching can safely target. `.compound` is deliberately
+// excluded: the dictionary_decompounder emits subwords at the same position as
+// their parent token, so adjacency on that field is not meaningful.
+const PHRASE_FIELDS = [
+  'title^5',
+  'involvedParty.title.stemmed^5',
+  'title.stemmed^3',
+  'bodyText.stemmed^0.9',
+]
+
+function buildPhraseQuery(phrase: string, boost?: number) {
+  return {
+    multi_match: {
+      query: phrase,
+      type: 'phrase',
+      fields: PHRASE_FIELDS,
+      // Boosted (ranking) use is allowed a little slack so near-adjacent
+      // matches still benefit. Quoted search stays strict.
+      slop: boost === undefined ? 0 : 1,
+      ...(boost === undefined ? {} : { boost }),
+    },
+  }
+}
+
+// Prefix matching runs the user's fragment through the field's own analyzer,
+// which makes the unstemmed fields the reliable ones: a partial word has no
+// predictable stem, and `is_stop` can delete the fragment outright. The
+// stemmed fields are kept alongside for the cases where they do resolve.
+const PREFIX_FIELDS = [
+  { field: 'title', boost: 8, slop: 2 },
+  { field: 'title.stemmed', boost: 8, slop: 2 },
+  { field: 'involvedParty.title', boost: 5, slop: 1 },
+  { field: 'involvedParty.title.stemmed', boost: 5, slop: 1 },
+]
+
+function buildPrefixQuery(prefixValue: string) {
+  return {
+    bool: {
+      should: PREFIX_FIELDS.map(({ field, boost, slop }) => ({
+        match_phrase_prefix: {
+          [field]: {
+            query: prefixValue,
+            slop,
+            max_expansions: 50,
+            boost,
+          },
+        },
+      })),
+      minimum_should_match: 1,
     },
   }
 }
@@ -144,6 +216,8 @@ export const getOsBody = (
 ): { body: any; alias: string; page: number; size: number } => {
   const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
   const q = qp?.search?.trim() ?? ''
+  const phraseMatch = q.match(PHRASE_QUERY_PATTERN)
+  const phrase = phraseMatch?.[1].trim() || null
 
   const pageSize = Math.min(Math.max(1, qp?.pageSize ?? 20), 100)
   // OpenSearch rejects from + size > index.max_result_window (default 10000).
@@ -224,41 +298,27 @@ export const getOsBody = (
   const wildcardMatch = q.match(/^(\S+)\*$/)
 
   if (q) {
-    if (wildcardMatch && !q.includes(' ')) {
+    if (phrase) {
+      // PHRASE MODE
+      // The whole query was quoted, so the user asked for adjacency rather
+      // than a bag of words. Require the phrase instead of OR-ing tokens.
+      must.push(buildPhraseQuery(phrase))
+    } else if (wildcardMatch && !q.includes(' ')) {
       const prefixValue = wildcardMatch[1]
 
-      must.push({
-        bool: {
-          should: [
-            {
-              match_phrase_prefix: {
-                'title.stemmed': {
-                  query: prefixValue,
-                  slop: 2,
-                  max_expansions: 50,
-                  boost: 8,
-                },
-              },
-            },
-            {
-              match_phrase_prefix: {
-                'involvedParty.title.stemmed': {
-                  query: prefixValue,
-                  slop: 1,
-                  max_expansions: 50,
-                  boost: 5,
-                },
-              },
-            },
-          ],
-          minimum_should_match: 1,
-        },
-      })
+      must.push(buildPrefixQuery(prefixValue))
 
       should.push(buildTextQuery(prefixValue))
     } else {
       // NORMAL MODE
       must.push(buildTextQuery(q))
+
+      // Rank documents where the words actually appear next to each other
+      // above those that merely contain them somewhere. Recall is unchanged;
+      // this only contributes score.
+      if (q.includes(' ')) {
+        should.push(buildPhraseQuery(q, PHRASE_RANK_BOOST))
+      }
     }
   } else {
     must.push({ match_all: {} })
