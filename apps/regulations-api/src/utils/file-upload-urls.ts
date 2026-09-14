@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import S3 from 'aws-sdk/clients/s3'
 import file_type from 'file-type'
 import fetch from 'node-fetch'
 import { PassThrough, Readable } from 'stream'
@@ -14,6 +13,9 @@ import {
   MEDIA_BUCKET_FOLDER,
   OLD_SERVER,
 } from '../constants'
+
+import { S3Client } from '@aws-sdk/client-s3'
+import { Upload } from '@aws-sdk/lib-storage'
 
 const QUERY_REPLACEMENT = '__q__'
 
@@ -135,7 +137,7 @@ const uploadFile = async (fileInfo: FileUrlMapping) => {
   const doLog = !!MEDIA_BUCKET_FOLDER || process.env.NODE_ENV !== 'production'
 
   try {
-    const s3 = new S3({ region: AWS_REGION_NAME })
+    const s3 = new S3Client({ region: AWS_REGION_NAME })
     const res = await fetch(oldUrlFull)
     if (!res.ok) {
       throw new Error(`Error fetching '${oldUrlFull}' (${res.status})`)
@@ -151,14 +153,19 @@ const uploadFile = async (fileInfo: FileUrlMapping) => {
       ContentType = (await file_type.fromStream(fileB))?.mime
     }
 
-    await s3
-      .upload({
+    // `Body` is a stream of unknown length, so this goes through lib-storage's
+    // multipart Upload rather than PutObjectCommand, which needs a known
+    // content length. Same helper the rest of the upload path already uses.
+    await new Upload({
+      client: s3,
+      params: {
         Bucket: AWS_BUCKET_NAME,
         Key: fileKey,
         ContentType,
         Body,
-      })
-      .promise()
+      },
+    })
+      .done()
       .then((data) => {
         doLog &&
           console.info('🆗 Uploaded', {

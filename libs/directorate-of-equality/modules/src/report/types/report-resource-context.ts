@@ -1,4 +1,4 @@
-import { ReportStatusEnum } from '../models/report.model'
+import { ReportStatusEnum } from '../models/report.enums'
 
 export enum ReportRoleEnum {
   REVIEWER = 'REVIEWER',

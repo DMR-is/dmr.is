@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import {
   BelongsTo,
   Column,
@@ -12,6 +13,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 import { simpleSanitize } from '@dmr.is/utils-server/cleanLegacyHtml'
 
 import { CompanyModel } from '../../company/models/company.model'
+import type { CompanyReportModel as CompanyReportModelRef } from '../../company/models/company-report.model'
 import { CompanyReportModel } from '../../company/models/company-report.model'
 import { DoeModels } from '../../constants'
 import { ReportCommentModel } from '../../report-comment/models/report-comment.model'
@@ -439,7 +441,7 @@ export class ReportModel extends MutableModel<
     foreignKey: 'reportId',
     as: 'companyReport',
   })
-  companyReport?: CompanyReportModel
+  companyReport?: CompanyReportModelRef
 
   @HasMany(() => ReportCommentModel, { foreignKey: 'reportId', as: 'comments' })
   comments?: ReportCommentModel[]
@@ -517,7 +519,7 @@ export class ReportModel extends MutableModel<
           : model.reviewer === null
             ? null
             : UserModel.fromModel(model.reviewer),
-      createdAt: model.createdAt
+      createdAt: model.createdAt,
     }
   }
 

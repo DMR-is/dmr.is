@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import S3 from 'aws-sdk/clients/s3'
 import { exec } from 'child_process'
 import fs from 'fs'
 import { mkdir, readFile, rm, unlink, writeFile } from 'fs/promises'
@@ -40,6 +39,11 @@ import {
 import { formatDate as fmt } from '../utils/misc'
 import { fetchModifiedDate, getRegulation } from './Regulation'
 
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
 import arrayToObject from '@hugsmidjan/qj/arrayToObject'
 import { SECOND } from '@hugsmidjan/qj/time'
 
@@ -497,7 +501,26 @@ const cleanUpRegulationBodyInput = (
 
 // ---------------------------------------------------------------------------
 
-const s3 = new S3({ region: AWS_REGION_NAME })
+// Built lazily, matching getS3Client() in utils/file-upload.ts. v2 constructed
+// happily with an unset region and only failed on use; v3 throws "Region is
+// missing" from the constructor, which at module scope would take the whole
+// process down at import time rather than at the first S3 call.
+//
+// Lazy is necessary but not sufficient: AWS_REGION_NAME falls back to '' when
+// none of the three env vars is set (constants.ts, where the matching throw is
+// deliberately commented out), and `new S3Client({ region: '' })` throws
+// *synchronously*. Both callers below therefore construct inside their own
+// try/catch, so a missing region degrades to "render without the cache" the way
+// v2 did, instead of escaping past the handler and killing PDF generation.
+let s3Client: S3Client | undefined
+
+const getS3Client = () => {
+  if (!s3Client) {
+    s3Client = new S3Client({ region: AWS_REGION_NAME })
+  }
+  return s3Client
+}
+
 const doLog = !!MEDIA_BUCKET_FOLDER
 
 /**
@@ -515,44 +538,56 @@ const doLog = !!MEDIA_BUCKET_FOLDER
  * swallowed every error identically, which is why a completely dead cache went
  * unnoticed.
  */
-const fetchPdf = (fileKey: string) =>
-  s3
-    .getObject({ Bucket: AWS_BUCKET_NAME, Key: fileKey })
-    .promise()
-    .then(
-      (res) =>
-        ({
-          contents: res.Body as Buffer,
-          modifiedDate:
-            toISODateTime(res.LastModified?.toISOString()) || ('' as const),
-        }) as const,
+const fetchPdf = async (fileKey: string) => {
+  // getS3Client() is inside the try on purpose: it can throw synchronously, and
+  // a `.catch()` chained onto the send() call would never see it.
+  try {
+    const res = await getS3Client().send(
+      new GetObjectCommand({ Bucket: AWS_BUCKET_NAME, Key: fileKey }),
     )
-    .catch((error: unknown) => {
-      const code = (error as { code?: string })?.code
-      if (code !== 'NoSuchKey' && code !== 'NotFound') {
-        console.error('Unable to read cached PDF', fileKey, code ?? error)
-      }
-      return { contents: false, modifiedDate: '' } as const
-    })
+    // v2 resolved `Body` to a Buffer; v3 resolves it to a stream. Typed as
+    // the plain `Buffer` the rest of this file uses -- narrowing it here to
+    // Buffer<ArrayBuffer> would just push a mismatch onto makeRegulationPdf.
+    const contents: Buffer = Buffer.from(await res.Body!.transformToByteArray())
+    return {
+      contents,
+      modifiedDate:
+        toISODateTime(res.LastModified?.toISOString()) || ('' as const),
+    } as const
+  } catch (error: unknown) {
+    // v2 reported this as `code`, v3 reports it as `name`. Reading the wrong
+    // one would turn every ordinary cache miss into an error log.
+    const code = (error as { name?: string })?.name
+    if (code !== 'NoSuchKey' && code !== 'NotFound') {
+      console.error('Unable to read cached PDF', fileKey, code ?? error)
+    }
+    return { contents: false, modifiedDate: '' } as const
+  }
+}
 
-const uploadPdf = (fileKey: string, pdfContents: Buffer) =>
-  s3
-    .upload({
-      Bucket: AWS_BUCKET_NAME,
-      Key: fileKey,
-      ContentType: 'application/pdf',
-      Body: pdfContents,
-    })
-    .promise()
-    .then((data) => {
-      doLog && console.info('🆗 Uploaded', data.Key)
-    })
-    .catch((error: unknown) => {
-      // Upload failures used to log at `console.info`, so an S3 client built
-      // with an empty region failed silently for months.
-      const message = error instanceof Error ? error.message : error
-      console.error('Unable to cache PDF', fileKey, message)
-    })
+const uploadPdf = async (fileKey: string, pdfContents: Buffer) => {
+  // Caching is best-effort: this must never reject, or a failure here would
+  // discard an already-rendered PDF. getS3Client() is inside the try for the
+  // same reason as in fetchPdf -- it can throw synchronously.
+  try {
+    await getS3Client().send(
+      new PutObjectCommand({
+        Bucket: AWS_BUCKET_NAME,
+        Key: fileKey,
+        ContentType: 'application/pdf',
+        Body: pdfContents,
+      }),
+    )
+    // v2's upload() echoed the key back; PutObjectCommand does not, and
+    // fileKey is what it was given anyway.
+    doLog && console.info('🆗 Uploaded', fileKey)
+  } catch (error: unknown) {
+    // Upload failures used to log at `console.info`, so an S3 client built
+    // with an empty region failed silently for months.
+    const message = error instanceof Error ? error.message : error
+    console.error('Unable to cache PDF', fileKey, message)
+  }
+}
 
 type RegOpts = {
   name: RegQueryName

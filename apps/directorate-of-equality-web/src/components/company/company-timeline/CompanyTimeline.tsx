@@ -144,6 +144,9 @@ function adaptTimeline(
           toStatus:
             (item.event.toStatus as unknown as ReportStatusEnum) ?? null,
           reason: eventBody(item.event, keysByKeyId),
+          // Null on every event but the three CUSTOM_EMAIL_* ones; where it is
+          // set, the entry becomes expandable into the message that was sent.
+          companyEmailId: item.event.companyEmailId ?? null,
           createdAt: item.event.createdAt,
         }
       : null,
