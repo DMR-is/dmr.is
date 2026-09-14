@@ -14,6 +14,7 @@ import { ApiProperty, PickType } from '@nestjs/swagger'
 
 import {
   ApiBoolean,
+  ApiDate,
   ApiDateTime,
   ApiDto,
   ApiHTML,
@@ -80,7 +81,7 @@ export class CreateDivisionEndingDto {
   @ApiDateTime()
   scheduledAt!: Date
 
-  @ApiDateTime()
+  @ApiDate()
   endingDate!: Date
 
   @ApiOptionalNumber()

@@ -6,6 +6,7 @@ import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toCalendarDateIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 import { useUpdateApplication } from '../../../hooks/useUpdateApplication'
 import { DatePickerController } from '../controllers/DatePickerController'
@@ -78,7 +79,7 @@ export const SignatureFields = () => {
                 name="signature.date"
                 label="Dagsetning undirritunar"
                 onChange={(date) =>
-                  onChangeHandler('date', date?.toISOString() ?? '')
+                  onChangeHandler('date', date ? toCalendarDateIso(date) : '')
                 }
               />
             </GridColumn>

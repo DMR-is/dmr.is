@@ -6,6 +6,10 @@ import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 type Signature = z.infer<typeof signatureSchemaRefined>
 
@@ -63,8 +67,8 @@ export const CreateAdvertSignature = ({ onChange }: Props) => {
           label="Dagsetning undirritunar"
           name="signature-signature-date"
           placeholderText={undefined}
-          selected={state.date ? new Date(state.date) : undefined}
-          handleChange={(date) => handleChange('date', date.toISOString())}
+          selected={state.date ? fromCalendarDateIso(state.date) : undefined}
+          handleChange={(date) => handleChange('date', toCalendarDateIso(date))}
         />
       </GridColumn>
       <GridColumn span={['12/12', '6/12']}>

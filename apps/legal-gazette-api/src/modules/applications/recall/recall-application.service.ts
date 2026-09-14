@@ -14,6 +14,7 @@ import {
 } from '@dmr.is/legal-gazette-schemas'
 import { type Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 import { addBusinessDays, getNextValidPublishingDate } from '@dmr.is/utils-server/dateUtils'
+import { toCalendarDate } from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
   RECALL_BANKRUPTCY_ADVERT_TYPE_ID,
@@ -313,6 +314,10 @@ export class RecallApplicationService implements IRecallApplicationService {
       applicationId: applicationId,
     })
 
+    // The Skiptalok inherits its urskurdardagur from the Innkollun, so it has to
+    // come from the Innkollun that actually ran: without an order and a status
+    // filter Postgres decided which row won, and a rejected or superseded one
+    // could hand over a date the public never saw.
     const { judgementDate, courtDistrictId } =
       await this.advertModel.findOneOrThrow({
         attributes: ['id', 'judgementDate', 'courtDistrictId'],
@@ -324,7 +329,9 @@ export class RecallApplicationService implements IRecallApplicationService {
               RECALL_DECEASED_ADVERT_TYPE_ID,
             ],
           },
+          ...notTerminatedWhere,
         },
+        order: [['createdAt', 'DESC']],
       })
 
     if (!judgementDate) {
@@ -614,7 +621,9 @@ export class RecallApplicationService implements IRecallApplicationService {
         data = check.data
         settlementOverrides = {
           deadline: data.fields.settlementFields.deadlineDate
-            ? new Date(data.fields.settlementFields.deadlineDate)
+            ? toCalendarDate(
+                new Date(data.fields.settlementFields.deadlineDate),
+              )
             : undefined,
         }
         break
@@ -636,7 +645,9 @@ export class RecallApplicationService implements IRecallApplicationService {
         data = check.data
         settlementOverrides = {
           dateOfDeath: check.data.fields.settlementFields.dateOfDeath
-            ? new Date(check.data.fields.settlementFields.dateOfDeath)
+            ? toCalendarDate(
+                new Date(check.data.fields.settlementFields.dateOfDeath),
+              )
             : undefined,
           settlementType: check.data.fields.settlementFields
             .type as SettlementType,
@@ -646,7 +657,9 @@ export class RecallApplicationService implements IRecallApplicationService {
             check.data.fields.settlementFields.partnerNationalId ?? undefined,
           partnerDateOfDeath: check.data.fields.settlementFields
             .partnerDateOfDeath
-            ? new Date(check.data.fields.settlementFields.partnerDateOfDeath)
+            ? toCalendarDate(
+                new Date(check.data.fields.settlementFields.partnerDateOfDeath),
+              )
             : undefined,
         }
         break
@@ -683,7 +696,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       createdByNationalId: user.nationalId,
       signature: {
         ...data.signature,
-        date: data.signature?.date ? new Date(data.signature.date) : undefined,
+        date: data.signature?.date
+          ? toCalendarDate(new Date(data.signature.date))
+          : undefined,
       },
       title: title,
       additionalText: data.additionalText,
@@ -693,7 +708,9 @@ export class RecallApplicationService implements IRecallApplicationService {
       divisionMeetingLocation:
         data.fields.divisionMeetingFields?.meetingLocation,
       judgementDate: data.fields.courtAndJudgmentFields?.judgmentDate
-        ? new Date(data.fields.courtAndJudgmentFields.judgmentDate)
+        ? toCalendarDate(
+            new Date(data.fields.courtAndJudgmentFields.judgmentDate),
+          )
         : undefined,
       courtDistrictId: data.fields.courtAndJudgmentFields?.courtDistrict.id,
       communicationChannels: data.communicationChannels,

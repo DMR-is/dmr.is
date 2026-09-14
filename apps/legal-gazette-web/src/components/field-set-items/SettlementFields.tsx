@@ -12,6 +12,10 @@ import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Select } from '@dmr.is/ui/components/island-is/Select'
 import { Stack } from '@dmr.is/ui/components/island-is/Stack'
+import {
+  fromCalendarDateIso,
+  toCalendarDateIso,
+} from '@dmr.is/utils-shared/date/calendarDate'
 
 import {
   ApplicationRequirementStatementEnum,
@@ -177,10 +181,12 @@ export const SettlementFields = ({
               label="Frestdagur"
               locale="is"
               selected={
-                settlement.deadline ? new Date(settlement.deadline) : undefined
+                settlement.deadline
+                  ? fromCalendarDateIso(settlement.deadline)
+                  : undefined
               }
               handleChange={(date) => {
-                updateSettlementDeadline(date.toISOString())
+                updateSettlementDeadline(toCalendarDateIso(date))
               }}
             />
           </GridColumn>
@@ -198,11 +204,11 @@ export const SettlementFields = ({
               locale="is"
               selected={
                 settlement.dateOfDeath
-                  ? new Date(settlement.dateOfDeath)
+                  ? fromCalendarDateIso(settlement.dateOfDeath)
                   : undefined
               }
               handleChange={(date) => {
-                updateSettlementDateOfDeath(date.toISOString())
+                updateSettlementDateOfDeath(toCalendarDateIso(date))
               }}
             />
           </GridColumn>
@@ -246,11 +252,11 @@ export const SettlementFields = ({
                 locale="is"
                 selected={
                   settlement.partnerDateOfDeath
-                    ? new Date(settlement.partnerDateOfDeath)
+                    ? fromCalendarDateIso(settlement.partnerDateOfDeath)
                     : undefined
                 }
                 handleChange={(date) => {
-                  updatePartnerDateOfDeath(date.toISOString())
+                  updatePartnerDateOfDeath(toCalendarDateIso(date))
                 }}
               />
             </GridColumn>

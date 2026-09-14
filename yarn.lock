@@ -4289,6 +4289,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dmr.is/legal-gazette-html@workspace:libs/legal-gazette/html"
   dependencies:
+    "@dmr.is/utils-shared": "npm:*"
     class-validator: "npm:^0.14.1"
     date-fns: "npm:2.30.0"
   languageName: unknown

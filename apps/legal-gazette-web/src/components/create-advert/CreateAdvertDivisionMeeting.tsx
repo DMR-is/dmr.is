@@ -6,6 +6,7 @@ import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { Input } from '@dmr.is/ui/components/island-is/Input'
 import { Text } from '@dmr.is/ui/components/island-is/Text'
+import { toReykjavikDateTimeIso } from '@dmr.is/utils-shared/date/calendarDate'
 
 type DivisonMeeting = z.infer<typeof divisionMeetingSchemaRefined>
 
@@ -50,8 +51,9 @@ export const CreateAdvertDivisionMeeting = ({ required, onChange }: Props) => {
           name="meetingDate"
           showTimeInput
           handleChange={(date) => {
-            setState((prev) => ({ ...prev, meetingDate: date.toISOString() }))
-            onChange({ ...state, meetingDate: date.toISOString() })
+            const meetingDate = toReykjavikDateTimeIso(date)
+            setState((prev) => ({ ...prev, meetingDate }))
+            onChange({ ...state, meetingDate })
           }}
           required={required}
           placeholderText={undefined}
