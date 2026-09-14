@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -17,6 +18,7 @@ import {
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
 import {
   ForeclosurePropertyDto,
@@ -71,7 +73,7 @@ export class ForeclosureModel extends ParanoidModel<
   foreclosureDate!: Date
 
   @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  advert!: AdvertModelRef
 
   @HasMany(() => ForeclosurePropertyModel)
   properties!: ForeclosurePropertyModel[]

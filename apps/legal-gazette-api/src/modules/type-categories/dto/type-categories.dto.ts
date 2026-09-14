@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 
 import { ApiOptionalUuid } from '@dmr.is/decorators'
 
-import { TypeWithCategoriesDto } from '../../../models/type-categories.model'
+import { TypeWithCategoriesDto } from '../../../models/type-categories.dto'
 
 export class TypeWithCategoriesQueryDto {
   @ApiOptionalUuid()

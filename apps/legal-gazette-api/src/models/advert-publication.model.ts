@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import endOfDay from 'date-fns/endOfDay'
 import startOfDay from 'date-fns/startOfDay'
 import { BulkCreateOptions, Op, WhereOptions } from 'sequelize'
@@ -21,6 +22,7 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { LegalGazetteModels } from '../core/constants'
 import { mapVersionToIndex } from '../core/utils'
 import type { GetPublicationsQueryDto } from '../modules/advert/publications/dto/publication.dto'
+import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
@@ -211,7 +213,7 @@ export class AdvertPublicationModel extends ParanoidModel<
   }
 
   @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  advert!: AdvertModelRef
 
   getPublishedHtml(): string {
     if (this.publishedHtml) {
