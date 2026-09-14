@@ -9,6 +9,7 @@ import {
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ScoringModelModel as ScoringModelModelRef } from './scoring-model.model'
 import { ScoringModelModel } from './scoring-model.model'
 import { ScoringRoleStepModel } from './scoring-role-step.model'
 
@@ -42,7 +43,7 @@ export class ScoringRoleModel extends MutableModel<
     foreignKey: 'scoringModelId',
     as: 'scoringModel',
   })
-  scoringModel?: ScoringModelModel
+  scoringModel?: ScoringModelModelRef
 
   @HasMany(() => ScoringRoleStepModel, {
     foreignKey: 'scoringRoleId',

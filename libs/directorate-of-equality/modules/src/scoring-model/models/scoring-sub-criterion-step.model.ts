@@ -3,6 +3,7 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ScoringSubCriterionModel as ScoringSubCriterionModelRef } from './scoring-sub-criterion.model'
 import { ScoringSubCriterionModel } from './scoring-sub-criterion.model'
 
 type ScoringSubCriterionStepAttributes = {
@@ -45,5 +46,5 @@ export class ScoringSubCriterionStepModel extends MutableModel<
     foreignKey: 'scoringSubCriterionId',
     as: 'scoringSubCriterion',
   })
-  scoringSubCriterion?: ScoringSubCriterionModel
+  scoringSubCriterion?: ScoringSubCriterionModelRef
 }

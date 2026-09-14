@@ -33,6 +33,8 @@ import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 
 import { CurrentCompany } from '../../core/decorators/current-company.decorator'
 import { PartnerResponse } from '../../core/decorators/partner-response.decorator'
+import { RequireActiveCompany } from '../../core/guards/active-company/require-active-company.decorator'
+import { RequireActiveCompanyGuard } from '../../core/guards/active-company/require-active-company.guard'
 import { ApiKeyGuard } from '../../core/guards/api-key/api-key.guard'
 import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-scope.decorator'
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
@@ -57,6 +59,11 @@ import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-c
  *
  * Guard order is the same as the rest of the partner surface, for the same
  * reasons — see `PartnerController`.
+ *
+ * `@RequireActiveCompany` covers this surface too. A company that has fallen
+ * off Jafnréttisstofa's register gets one answer everywhere, and authoring a
+ * starfsmat it cannot file against is exactly the half-working surface that
+ * decision rejected.
  */
 @Controller({
   path: 'partner/scoring-models',
@@ -64,10 +71,12 @@ import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-c
 })
 @ApiTags('Partner')
 @ApiSecurity('apiKey')
+@RequireActiveCompany()
 @UseGuards(
   ApiKeyGuard,
   PartnerCompanyGuard,
   RequireApiScopeGuard,
+  RequireActiveCompanyGuard,
   ApiKeyThrottlerGuard,
 )
 export class ScoringModelController {

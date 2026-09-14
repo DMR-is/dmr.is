@@ -10,6 +10,7 @@ import { MutableModel, MutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
+import type { ScoringModelModel as ScoringModelModelRef } from './scoring-model.model'
 import { ScoringModelModel } from './scoring-model.model'
 import { ScoringSubCriterionModel } from './scoring-sub-criterion.model'
 
@@ -59,7 +60,7 @@ export class ScoringCriterionModel extends MutableModel<
     foreignKey: 'scoringModelId',
     as: 'scoringModel',
   })
-  scoringModel?: ScoringModelModel
+  scoringModel?: ScoringModelModelRef
 
   @HasMany(() => ScoringSubCriterionModel, {
     foreignKey: 'scoringCriterionId',

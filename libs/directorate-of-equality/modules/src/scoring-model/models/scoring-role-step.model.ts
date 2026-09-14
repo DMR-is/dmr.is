@@ -3,8 +3,10 @@ import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ScoringRoleModel as ScoringRoleModelRef } from './scoring-role.model'
 import { ScoringRoleModel } from './scoring-role.model'
 import { ScoringSubCriterionModel } from './scoring-sub-criterion.model'
+import type { ScoringSubCriterionStepModel as ScoringSubCriterionStepModelRef } from './scoring-sub-criterion-step.model'
 import { ScoringSubCriterionStepModel } from './scoring-sub-criterion-step.model'
 
 type ScoringRoleStepAttributes = {
@@ -55,11 +57,11 @@ export class ScoringRoleStepModel extends ImmutableModel<
     foreignKey: 'scoringRoleId',
     as: 'scoringRole',
   })
-  scoringRole?: ScoringRoleModel
+  scoringRole?: ScoringRoleModelRef
 
   @BelongsTo(() => ScoringSubCriterionStepModel, {
     foreignKey: 'scoringSubCriterionStepId',
     as: 'step',
   })
-  step?: ScoringSubCriterionStepModel
+  step?: ScoringSubCriterionStepModelRef
 }
