@@ -35,6 +35,11 @@ import { CompanyModel } from './company.model'
  *                    company has no email on file, so nothing could be sent.
  *                    Same `reason`/idempotency rule as the SENT events: one row
  *                    per company per due date, not one per run.
+ *   CUSTOM_EMAIL_SENT / CUSTOM_EMAIL_FAILED / CUSTOM_EMAIL_SKIPPED
+ *                  → an admin-authored message, one row per company per send.
+ *                    `reason` holds the subject and `companyEmailId` points at
+ *                    the batch. All three outcomes are recorded: a mail that
+ *                    never went out is the one an admin most needs to see.
  */
 export enum CompanyEventTypeEnum {
   CREATED = 'CREATED',
@@ -49,7 +54,16 @@ export enum CompanyEventTypeEnum {
   SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL = 'SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL',
   API_KEY_ISSUED = 'API_KEY_ISSUED',
   API_KEY_REVOKED = 'API_KEY_REVOKED',
+  CUSTOM_EMAIL_SENT = 'CUSTOM_EMAIL_SENT',
+  CUSTOM_EMAIL_FAILED = 'CUSTOM_EMAIL_FAILED',
+  CUSTOM_EMAIL_SKIPPED = 'CUSTOM_EMAIL_SKIPPED',
 }
+
+/** The three outcomes one company can have within a custom-email batch. */
+export type CompanyCustomEmailEventType =
+  | CompanyEventTypeEnum.CUSTOM_EMAIL_SENT
+  | CompanyEventTypeEnum.CUSTOM_EMAIL_FAILED
+  | CompanyEventTypeEnum.CUSTOM_EMAIL_SKIPPED
 
 /**
  * Deadline-reminder event types the reminder task may emit — both the
@@ -92,6 +106,7 @@ type CompanyEventAttributes = {
   toStatus: CompanyStatusEnum | null
   reason: string | null
   reminderTier: CompanyReminderTierEnum | null
+  companyEmailId: string | null
 }
 
 type CompanyEventCreateAttributes = {
@@ -103,6 +118,7 @@ type CompanyEventCreateAttributes = {
   toStatus?: CompanyStatusEnum | null
   reason?: string | null
   reminderTier?: CompanyReminderTierEnum | null
+  companyEmailId?: string | null
 }
 
 @ImmutableTable({ tableName: DoeModels.COMPANY_EVENT })
@@ -155,6 +171,16 @@ export class CompanyEventModel extends ImmutableModel<
   })
   reminderTier!: CompanyReminderTierEnum | null
 
+  /*
+   * The custom-email batch this event belongs to, null for every other type.
+   *
+   * A plain nullable column rather than a `@ForeignKey`: a decorator pointed at
+   * `company_email` would make `company` import `company-email`, which already
+   * imports `company`. The migration adds the real FK constraint.
+   */
+  @Column({ type: DataType.UUID, allowNull: true, field: 'company_email_id' })
+  companyEmailId!: string | null
+
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
   company?: CompanyModel
 
@@ -175,6 +201,7 @@ export class CompanyEventModel extends ImmutableModel<
       toStatus: model.toStatus,
       reason: model.reason,
       reminderTier: model.reminderTier,
+      companyEmailId: model.companyEmailId,
       createdAt: model.createdAt,
     }
   }

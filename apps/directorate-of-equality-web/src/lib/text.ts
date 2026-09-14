@@ -769,6 +769,24 @@ export const reportText = {
       'Reyndi að senda áminningu um jafnréttisskýrslu en ekkert netfang fannst',
     reminderNoEmailSalary:
       'Reyndi að senda áminningu um jafnlaunaskýrslu en ekkert netfang fannst',
+    // Admin-authored mail. All three outcomes are recorded, and the two
+    // non-deliveries are worded as such: an entry that read "sendi tölvupóst"
+    // for a message that never arrived is worse than no entry at all.
+    customEmailSent: 'sendi tölvupóst',
+    customEmailSentNoActor: 'Tölvupóstur sendur á fyrirtæki {company}',
+    customEmailFailed: 'sendi tölvupóst sem komst ekki til skila',
+    customEmailFailedNoActor:
+      'Tölvupóstur til fyrirtækis {company} komst ekki til skila',
+    customEmailSkipped: 'sendi tölvupóst sem var ekki sendur',
+    customEmailSkippedNoActor:
+      'Tölvupóstur til fyrirtækis {company} var ekki sendur',
+    customEmailSubject: 'Efni',
+    customEmailShow: 'Sjá tölvupóst',
+    customEmailHide: 'Fela tölvupóst',
+    customEmailLoading: 'Sæki tölvupóst…',
+    customEmailError: 'Ekki tókst að sækja tölvupóstinn',
+    customEmailAttachments: 'Viðhengi',
+    customEmailCopyTo: 'Afrit sent á',
     reminderTierSixMonths: 'Sex mánaða áminning',
     reminderTierTwoMonths: 'Tveggja mánaða áminning',
     reminderTierTwoWeeks: 'Tveggja vikna áminning',
@@ -926,6 +944,65 @@ export const companiesText = {
       invalid: 'Ógildar línur',
     },
     rowPrefix: 'Lína',
+  },
+  sendEmail: {
+    // Both entry points, list and detail, open the same modal.
+    listButton: 'Senda tölvupóst',
+    detailButton: 'Senda tölvupóst',
+    title: 'Senda tölvupóst',
+
+    // Step 1 — compose
+    stepComposeHeading: 'Efni',
+    subjectLabel: 'Efni',
+    bodyLabel: 'Skilaboð',
+    recipientEmailsLabel: 'Netföng viðtakenda',
+    recipientEmailsHint:
+      'Netfang fyrirtækisins er forskráð. Ýttu á bil eða Enter til að bæta við fleiri netföngum — hvert þeirra fær sinn eigin póst og sér ekki hin.',
+    recipientEmailsFull: 'Hámarksfjölda netfanga er náð',
+    recipientEmailInvalid: 'Sláðu inn gilt netfang',
+    removeRecipient: 'Fjarlægja netfangið',
+    copyToLabel: 'Falið afrit (BCC)',
+    copyToHint:
+      'Eitt afrit af póstinum er sent á þetta netfang, óháð fjölda viðtakenda. Viðtakendur sjá það ekki.',
+    copyToInvalid: 'Sláðu inn gilt netfang eða skildu reitinn eftir auðan',
+    attachmentsLabel: 'Viðhengi',
+    addAttachment: 'Bæta við viðhengi',
+    removeAttachment: 'Fjarlægja',
+    attachmentUploading: 'Hleð upp…',
+    attachmentLimits: 'Að hámarki 5 viðhengi, samtals 5 MB.',
+    attachmentTooManyError: 'Að hámarki er hægt að hengja við 5 skrár',
+    attachmentTooLargeError: 'Viðhengi mega samtals ekki vera stærri en 5 MB',
+    attachmentTypeError: 'Þessi skráargerð er ekki leyfð sem viðhengi',
+    attachmentUploadError: 'Ekki tókst að hlaða upp viðhengi',
+    continue: 'Halda áfram',
+
+    // Step 2 — confirm
+    stepPreviewHeading: 'Yfirlit',
+    recipientsHeading: 'Viðtakendur',
+    showRecipients: 'Sýna netföng',
+    hideRecipients: 'Fela netföng',
+    // The gap between the button count and this one is deliberate and explained
+    // by the skipped list below it.
+    skippedHeading: 'Ekki sent',
+    skippedNoEmail: 'Ekkert netfang skráð',
+    skippedQuarantined: 'Fyrirtæki í vari',
+    noEmailPlaceholder: '—',
+    previewHeading: 'Forskoðun',
+    previewSubjectLabel: 'Efni',
+    previewCopyToLabel: 'Afrit sent á',
+    previewLoading: 'Sæki viðtakendur…',
+    previewError: 'Ekki tókst að sækja viðtakendur',
+    previewMessage:
+      'Vinsamlegast farðu vel yfir tölvupóstinn og viðtakendur áður en þú sendir.',
+    noRecipients: 'Engin fyrirtæki með skráð netfang fundust',
+    back: 'Til baka',
+    send: 'Senda',
+    cancel: 'Hætta við',
+
+    // "Sett í sendingu", not "Sent": the API returns before anything is
+    // delivered, and per-recipient outcomes land on the company timelines.
+    successToast: 'Tölvupóstur settur í sendingu',
+    errorToast: 'Villa við að senda tölvupóst',
   },
   detailView: {
     heading: 'Upplýsingar um fyrirtæki',

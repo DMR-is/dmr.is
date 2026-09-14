@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -9,6 +11,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
+import { SendCompanyEmailModal } from '../../components/companies/SendCompanyEmailModal'
 import { CompanyObligationTags } from '../../components/company/CompanyObligationTags'
 import { CompanyDto } from '../../gen/fetch'
 import { NAV_PATHS } from '../../lib/constants'
@@ -27,6 +30,7 @@ type CompanyFormContainerProps = {
 export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const [isEmailOpen, setIsEmailOpen] = useState(false)
 
   const invalidateCompany = () => {
     queryClient.invalidateQueries({
@@ -132,6 +136,17 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
               </Box>
             </Box>
           )}
+          <Box marginBottom={4} display="flex" columnGap={2}>
+            <Button
+              size="small"
+              variant="text"
+              icon="mail"
+              iconType="outline"
+              onClick={() => setIsEmailOpen(true)}
+            >
+              {companiesText.sendEmail.detailButton}
+            </Button>
+          </Box>
           {(!company.finesStarted || !company.quarantined) && (
             <Box marginBottom={4} display="flex" columnGap={2}>
               {!company.finesStarted && (
@@ -172,6 +187,23 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />
+      {/*
+        Always mounted and toggled through `isOpen` — see the note at the
+        company list's mount site. A dialog that mounts already-visible is
+        hidden again by the click that opened it.
+      */}
+      <SendCompanyEmailModal
+        isOpen={isEmailOpen}
+        onClose={() => setIsEmailOpen(false)}
+        target={{
+          mode: 'company',
+          companyId: company.id,
+          // The company's stored contact email, prefilled and editable. Null
+          // when none is on file, which leaves the field empty and blocks
+          // "Halda áfram" until one is typed.
+          defaultEmail: company.email ?? null,
+        }}
+      />
     </Box>
   )
 }

@@ -1,0 +1,132 @@
+import { Type } from 'class-transformer'
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator'
+
+import { ApiProperty } from '@nestjs/swagger'
+
+import { ApiOptionalString, ApiString } from '@dmr.is/decorators'
+
+import { GetCompaniesQueryDto } from '../../company/dto/get-companies-query.dto'
+
+/** Hard caps, shared by the DTO's validation and the service's own checks. */
+export const MAX_SUBJECT_LENGTH = 200
+export const MAX_BODY_LENGTH = 100_000
+export const MAX_ATTACHMENTS = 5
+
+/**
+ * How many addresses one single-company send may be aimed at — a cap on
+ * addresses, not companies. Each becomes its own recipient row, send and
+ * timeline entry.
+ */
+export const MAX_RECIPIENT_EMAILS = 10
+
+export class CompanyEmailAttachmentInputDto {
+  @ApiString({
+    description:
+      'Staging key returned by the attachment presign endpoint. Validated against the mail-attachment prefix server-side.',
+  })
+  @IsString()
+  @MaxLength(256)
+  key!: string
+
+  @ApiString({
+    description: 'File name as the recipient should see it.',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  filename!: string
+}
+
+/**
+ * One admin-authored message plus who it goes to. Shared by the preview and the
+ * send so the two cannot be given different inputs.
+ *
+ * `companyIds` and `filter` are exclusive and exactly one is required, enforced
+ * in the service rather than by a decorator so the rejection carries the
+ * module's own Icelandic message.
+ */
+export class SendCompanyEmailDto {
+  @ApiString({ description: 'Subject line, plain text.' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(MAX_SUBJECT_LENGTH)
+  subject!: string
+
+  @ApiString({
+    description:
+      'Message body as HTML from the admin editor. Sanitised server-side before it is stored, previewed or sent.',
+  })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(MAX_BODY_LENGTH)
+  bodyHtml!: string
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    required: false,
+    description:
+      'Send to these companies explicitly. Mutually exclusive with `filter`.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  companyIds?: string[]
+
+  @ApiProperty({
+    type: GetCompaniesQueryDto,
+    required: false,
+    description:
+      'Send to every company matching this company-list filter. Resolved with the identical query the list itself runs, and deliberately unpaged — `page`/`pageSize` are ignored. Mutually exclusive with `companyIds`.',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GetCompaniesQueryDto)
+  filter?: GetCompaniesQueryDto
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    required: false,
+    description:
+      "Addresses for a single-company send, replacing the company's stored contact email. Each one gets its own message — they are not a joint To line and no recipient sees the others — and each gets its own recipient row and timeline entry, so `recipientCount` counts addresses here rather than companies. Ignored when more than one company is addressed: there is no one company whose address these could be. An entry that is not a single address is a 400, not a silent skip.",
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_RECIPIENT_EMAILS)
+  @IsString({ each: true })
+  @MaxLength(320, { each: true })
+  recipientEmails?: string[]
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'Send **one** copy of the message to this address, whoever the batch is addressed to — normally the admin sending it. Deliberately one copy per batch and not a per-message BCC: a send aimed at the whole register would otherwise put ~1 700 identical copies in one inbox. The copy is not a recipient row, gets no timeline entry, and its failure never fails the batch.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  copyToEmail?: string | null
+
+  @ApiProperty({
+    type: CompanyEmailAttachmentInputDto,
+    isArray: true,
+    required: false,
+    description: 'Files to attach, previously staged via the presign endpoint.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_ATTACHMENTS)
+  @ValidateNested({ each: true })
+  @Type(() => CompanyEmailAttachmentInputDto)
+  attachments?: CompanyEmailAttachmentInputDto[]
+}
