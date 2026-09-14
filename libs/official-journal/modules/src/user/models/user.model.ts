@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   BelongsToMany,
@@ -15,6 +16,7 @@ import {
 
 import { AdvertInvolvedPartyModel } from '../../journal/models'
 import { UserInvolvedPartiesModel } from './user-involved-parties.model'
+import type { UserRoleModel as UserRoleModelRef } from './user-role.model'
 import { UserRoleModel } from './user-role.model'
 
 @DefaultScope(() => ({
@@ -75,7 +77,7 @@ export class UserModel extends Model {
   roleId!: string
 
   @BelongsTo(() => UserRoleModel, { as: 'role' })
-  role!: UserRoleModel
+  role!: UserRoleModelRef
 
   @BelongsToMany(() => AdvertInvolvedPartyModel, {
     through: { model: () => UserInvolvedPartiesModel },

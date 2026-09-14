@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -8,13 +9,20 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import type { AdvertTypeModel as AdvertTypeModelRef } from '../../advert-type/models'
 import { AdvertTypeModel } from '../../advert-type/models'
+import type {
+  AdvertDepartmentModel as AdvertDepartmentModelRef,
+  AdvertInvolvedPartyModel as AdvertInvolvedPartyModelRef,
+} from '../../journal/models'
 import {
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
 } from '../../journal/models'
 import { UserModel } from '../../user/models/user.model'
+import type { CaseModel as CaseModelRef } from './case.model'
 import { CaseModel } from './case.model'
+import type { CaseStatusModel as CaseStatusModelRef } from './case-status.model'
 import { CaseStatusModel } from './case-status.model'
 
 @Table({ tableName: 'case_history', timestamps: false })
@@ -104,19 +112,19 @@ export class CaseHistoryModel extends Model {
   created!: string
 
   @BelongsTo(() => CaseModel)
-  case!: CaseModel
+  case!: CaseModelRef
 
   @BelongsTo(() => AdvertDepartmentModel)
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   @BelongsTo(() => AdvertTypeModel)
-  type!: AdvertTypeModel
+  type!: AdvertTypeModelRef
 
   @BelongsTo(() => CaseStatusModel)
-  status!: CaseStatusModel
+  status!: CaseStatusModelRef
 
   @BelongsTo(() => AdvertInvolvedPartyModel)
-  involvedParty!: AdvertInvolvedPartyModel
+  involvedParty!: AdvertInvolvedPartyModelRef
 
   @BelongsTo(() => UserModel)
   adminUser!: UserModel | null

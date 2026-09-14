@@ -1,12 +1,9 @@
-import {
-  BelongsTo,
-  Column,
-  DataType,
-  ForeignKey,
-} from 'sequelize-typescript'
+// Association annotations use a type-only alias - see `src/models.md`.
+import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
+import type { AdvertInvolvedPartyModel as AdvertInvolvedPartyModelRef } from '../../journal/models/advert-involved-party.model'
 import { AdvertInvolvedPartyModel } from '../../journal/models/advert-involved-party.model'
 
 type AdditionalPartiesAttributes = {
@@ -50,5 +47,5 @@ export class AdditionalPartiesModel extends ParanoidModel<
   caseId?: string | null
 
   @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
-  involvedParty!: AdvertInvolvedPartyModel
+  involvedParty!: AdvertInvolvedPartyModelRef
 }

@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   BelongsToMany,
@@ -11,29 +12,40 @@ import {
 } from 'sequelize-typescript'
 
 import { AdditionalPartiesModel } from '../../additional-parties/models/additional-parties.model'
+import type { AdvertTypeModel as AdvertTypeModelRef } from '../../advert-type/models'
 import { AdvertTypeModel } from '../../advert-type/models'
 import {
   ApplicationAttachmentModel,
   CaseAttachmentsModel,
 } from '../../attachments/models'
 import { CommentModel } from '../../comment/v2/models/comment.model'
+import type {
+  AdvertDepartmentModel as AdvertDepartmentModelRef,
+  AdvertInvolvedPartyModel as AdvertInvolvedPartyModelRef,
+  AdvertModel as AdvertModelRef,
+} from '../../journal/models'
 import {
   AdvertCategoryModel,
   AdvertDepartmentModel,
   AdvertInvolvedPartyModel,
   AdvertModel,
 } from '../../journal/models'
+import type { SignatureModel as SignatureModelRef } from '../../signature/models/signature.model'
 import { SignatureModel } from '../../signature/models/signature.model'
+import type { UserModel as UserModelRef } from '../../user/models/user.model'
 import { UserModel } from '../../user/models/user.model'
 import { CaseAdditionModel } from './case-addition.model'
 import { CaseAdditionsModel } from './case-additions.model'
 import { CaseCategoriesModel } from './case-categories.model'
 import { CaseChannelModel } from './case-channel.model'
 import { CaseChannelsModel } from './case-channels.model'
+import type { CaseCommunicationStatusModel as CaseCommunicationStatusModelRef } from './case-communication-status.model'
 import { CaseCommunicationStatusModel } from './case-communication-status.model'
 import { CaseHistoryModel } from './case-history.model'
+import type { CaseStatusModel as CaseStatusModelRef } from './case-status.model'
 import { CaseStatusModel } from './case-status.model'
 import { CaseTagModel } from './case-tag.model'
+import type { CaseTransactionModel as CaseTransactionModelRef } from './case-transaction.model'
 import { CaseTransactionModel } from './case-transaction.model'
 
 @Table({ tableName: 'case_case', timestamps: false })
@@ -70,7 +82,7 @@ export class CaseModel extends Model {
   statusId!: string
 
   @BelongsTo(() => CaseStatusModel, 'status_id')
-  status!: CaseStatusModel
+  status!: CaseStatusModelRef
 
   @Column({ type: DataType.UUID, field: 'tag_id' })
   tagId!: string
@@ -85,7 +97,7 @@ export class CaseModel extends Model {
   involvedPartyId!: string
 
   @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
-  involvedParty!: AdvertInvolvedPartyModel
+  involvedParty!: AdvertInvolvedPartyModelRef
 
   @HasMany(() => AdditionalPartiesModel, 'case_id')
   additionalParties?: AdditionalPartiesModel[]
@@ -119,13 +131,13 @@ export class CaseModel extends Model {
   assignedUserId!: string | null
 
   @BelongsTo(() => UserModel, 'assigned_user_id')
-  assignedUser?: UserModel
+  assignedUser?: UserModelRef
 
   @Column({ type: DataType.UUID, field: 'case_communication_status_id' })
   communicationStatusId!: string
 
   @BelongsTo(() => CaseCommunicationStatusModel, 'case_communication_status_id')
-  communicationStatus!: CaseCommunicationStatusModel
+  communicationStatus!: CaseCommunicationStatusModelRef
 
   @Column({
     type: DataType.STRING,
@@ -169,7 +181,7 @@ export class CaseModel extends Model {
   departmentId!: string
 
   @BelongsTo(() => AdvertDepartmentModel, 'department_id')
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   @Column({
     type: DataType.UUID,
@@ -202,14 +214,14 @@ export class CaseModel extends Model {
   hideSignatureDate?: boolean
 
   @BelongsTo(() => AdvertTypeModel, 'advert_type_id')
-  advertType!: AdvertTypeModel
+  advertType!: AdvertTypeModelRef
 
   @ForeignKey(() => AdvertModel)
   @Column({ type: DataType.UUID, field: 'advert_id', allowNull: true })
   advertId?: string
 
   @BelongsTo(() => AdvertModel, 'advert_id')
-  advert?: AdvertModel
+  advert?: AdvertModelRef
 
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => CaseCategoriesModel },
@@ -225,7 +237,7 @@ export class CaseModel extends Model {
   comments?: CommentModel[]
 
   @HasOne(() => SignatureModel)
-  signature!: SignatureModel
+  signature!: SignatureModelRef
 
   @BelongsToMany(() => ApplicationAttachmentModel, {
     through: { model: () => CaseAttachmentsModel },
@@ -261,7 +273,7 @@ export class CaseModel extends Model {
   transactionId!: string | null
 
   @BelongsTo(() => CaseTransactionModel)
-  transaction?: CaseTransactionModel
+  transaction?: CaseTransactionModelRef
 
   @HasMany(() => CaseHistoryModel)
   history!: CaseHistoryModel[]
