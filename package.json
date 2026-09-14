@@ -186,7 +186,6 @@
     "adm-zip": "0.6.0",
     "@tootallnate/once": "2.0.1",
     "@smithy/config-resolver": "4.6.16",
-    "next/sharp": "0.35.3",
     "esbuild": "0.28.2",
     "@angular-devkit/core/picomatch": "4.0.5",
     "dd-trace/path-to-regexp": "0.1.13",
