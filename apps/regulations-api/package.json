@@ -14,7 +14,6 @@
     "@fastify/redis": "8.0.0",
     "@hugsmidjan/qj": "4.23.0",
     "@opensearch-project/opensearch": "2.13.0",
-    "aws-sdk": "2.1692.0",
     "date-fns": "2.30.0",
     "elastic-builder": "2.31.0",
     "fastify": "5.11.3",
