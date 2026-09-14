@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react'
+
 export const frontPageText = {
   heroTitle: 'Ritstjórn Jafnréttisstofu',
   heroImageAlt: 'Ritstjórn Jafnréttisstofu',
   heroDescription:
-    'Hér má finna jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
+    'Hér má finna jafnréttisáætlanir og skýrslur um kynbundinn launamun, ásamt úrbótaáætlunum.',
   heildarlisti: {
     description:
       'Yfirlit yfir innsendingar sem eru óúthlutaðar og ekki í vinnslu',
@@ -46,7 +48,7 @@ export const frontPageText = {
 export const overviewText = {
   heroTitle: 'Vinnslusvæði',
   heroDescription:
-    'Hér má finna yfirlit yfir allar innsendar jafnréttisáætlanir og skýrslur um kynjabundinn launamun, ásamt úrbótaáætlunum.',
+    'Hér má finna yfirlit yfir allar innsendar jafnréttisáætlanir og skýrslur um kynbundinn launamun, ásamt úrbótaáætlunum.',
   imageAlt: 'Innsendingar',
   breadcrumbOverview: 'Yfirlit',
   tabInnsendingar: 'Innsendingar',
@@ -98,11 +100,11 @@ export const overviewText = {
     pdfReadError: 'Ekki tókst að lesa skrána. Prófaðu aftur.',
   },
   createSalaryReport: {
-    drawerLabel: 'Skrá launagreiningu',
+    drawerLabel: 'Skrá skýrslugjöf',
     buttonLabel: 'Skýrslugjöf',
-    heading: 'Ný launagreining',
+    heading: 'Ný skýrslugjöf',
     excelHeading: 'Excel innflutningur',
-    excelPlaceholder: 'Veldu Excel skrá til að flytja inn launagreiningargögn',
+    excelPlaceholder: 'Veldu Excel skrá til að flytja inn gögnin',
     switchFile: 'Skipta um skrá',
     chooseFile: 'Velja skrá',
     downloadTemplate: 'Sækja sniðmát',
@@ -205,11 +207,11 @@ export const overviewText = {
     },
     missingEqualityTitle: 'Samþykkta jafnréttisáætlun vantar',
     missingEqualityMessage:
-      'Ekki er hægt að senda inn launagreiningu fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
+      'Ekki er hægt að senda inn skýrslugjöf fyrir þetta fyrirtæki fyrr en það er með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun fyrst.',
     missingEqualityToast:
-      'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en launagreining er send inn.',
+      'Fyrirtækið er ekki með samþykkta jafnréttisáætlun í gildi. Skráðu jafnréttisáætlun áður en skýrslugjöf er send inn.',
     inflightConflictToast:
-      'Fyrirtækið er nú þegar með launagreiningu í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný launagreining er send inn.',
+      'Fyrirtækið er nú þegar með skýrslugjöf í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný skýrslugjöf er send inn.',
   },
 }
 
@@ -1007,7 +1009,7 @@ export const companiesText = {
   detailView: {
     heading: 'Upplýsingar um fyrirtæki',
     tabInfo: 'Upplýsingar',
-    tabReports: 'Skýrslur',
+    tabReports: 'Innsendingar',
     tabApiKeys: 'Aðgangslyklar',
     tabLegacy: 'Eldri gögn',
     tabsLabel: 'Fyrirtækjaflippar',
@@ -1195,6 +1197,25 @@ export const companiesText = {
       placeholder: 'Bættu við athugasemd',
       submit: 'Vista athugasemd',
     },
+  },
+  quarantineModal: {
+    title: 'Setja í var',
+    // The company name stays its own node so the caller can emphasise it.
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir setja ',
+      companyName,
+      ' í var?',
+    ],
+    confirmButton: 'Staðfesta',
+  },
+  dailyFinesModal: {
+    title: 'Hefja dagsektarferli',
+    description: (companyName: ReactNode): ReactNode[] => [
+      'Ertu viss um að þú viljir hefja dagsektarferli fyrir ',
+      companyName,
+      '?',
+    ],
+    confirmButton: 'Staðfesta',
   },
 }
 
