@@ -1,4 +1,3 @@
-import S3 from 'aws-sdk/clients/s3'
 import fetch from 'node-fetch'
 import { QueryTypes } from 'sequelize'
 
@@ -12,7 +11,9 @@ import { removeHistoryAfterRegId } from '../utils/misc'
 import { db } from '../utils/sequelize'
 import { getRegulationById, getRegulationChanges } from './Regulation'
 
-const s3 = new S3({
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3'
+
+const s3 = new S3Client({
   region: process.env.AWS_REGION_NAME || 'eu-west-1',
 })
 
@@ -188,18 +189,21 @@ export async function createChangeSuggestion(
     }
 
     try {
-      const s3Object = await s3
-        .getObject({
+      const s3Object = await s3.send(
+        new GetObjectCommand({
           Bucket: bucketName,
           Key: data.filekey,
-        })
-        .promise()
+        }),
+      )
 
       if (!s3Object.Body) {
         throw new Error(`File not found in S3: ${data.filekey}`)
       }
 
-      textContent = s3Object.Body.toString('utf-8') as HTMLText
+      // v2 handed back a Buffer here; v3 streams, so the read is explicit.
+      textContent = (await s3Object.Body.transformToString(
+        'utf-8',
+      )) as HTMLText
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'
