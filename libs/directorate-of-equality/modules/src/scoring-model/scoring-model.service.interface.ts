@@ -1,4 +1,6 @@
 import { CompanyDto } from '../company/dto/company.dto'
+import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
+import { PartnerEmployeeDto } from './dto/partner-salary-payload.dto'
 import {
   CreateScoringCriterionDto,
   UpdateScoringCriterionDto,
@@ -132,6 +134,20 @@ export interface IScoringModelService {
     roleId: string,
     input: SetScoringRoleStepAssignmentsDto,
   ): Promise<ScoringModelDto>
+
+  /**
+   * Expands a stored model plus a payroll extract into the `ParsedReportDto`
+   * the submission pipeline takes. The seam: nothing downstream of it knows a
+   * scoring model exists.
+   *
+   * Refuses a model the company does not own, and a payload whose ids do not
+   * resolve inside it.
+   */
+  expandToParsedPayload(
+    company: CompanyDto,
+    modelId: string,
+    employees: PartnerEmployeeDto[],
+  ): Promise<ParsedReportDto>
 }
 
 export const IScoringModelService = Symbol('IScoringModelService')

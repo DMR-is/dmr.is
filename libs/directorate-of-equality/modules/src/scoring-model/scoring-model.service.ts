@@ -7,6 +7,8 @@ import { InjectModel } from '@nestjs/sequelize'
 
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
+import { ParsedReportDto } from '../report-excel/dto/parsed-report.dto'
+import { PartnerEmployeeDto } from './dto/partner-salary-payload.dto'
 import {
   CreateScoringCriterionDto,
   ScoringCriterionDto,
@@ -30,6 +32,7 @@ import {
   ScoringSubCriterionDto,
   UpdateScoringSubCriterionDto,
 } from './dto/scoring-sub-criterion.dto'
+import { expandToParsedPayload } from './lib/expand-to-parsed-payload'
 import { validateScoringModel } from './lib/validate-scoring-model'
 import { ScoringCriterionModel } from './models/scoring-criterion.model'
 import { ScoringModelModel } from './models/scoring-model.model'
@@ -452,6 +455,19 @@ export class ScoringModelService implements IScoringModelService {
     await role.destroy()
 
     return this.reload(company, modelId)
+  }
+
+  async expandToParsedPayload(
+    company: CompanyDto,
+    modelId: string,
+    employees: PartnerEmployeeDto[],
+  ): Promise<ParsedReportDto> {
+    const model = this.toDto(await this.findOwnedModel(company, modelId))
+
+    return expandToParsedPayload(
+      { criteria: model.criteria, roles: model.roles },
+      employees,
+    )
   }
 
   async setRoleStepAssignments(

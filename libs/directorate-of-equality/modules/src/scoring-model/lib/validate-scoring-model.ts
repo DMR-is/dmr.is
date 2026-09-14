@@ -104,6 +104,26 @@ export const validateScoringModel = (
   const labels = labelFor(criteria)
   const label = (id: string): string => labels.get(id) ?? id
 
+  // The submission pipeline keys on `(criterionTitle, subTitle)`, so two
+  // sub-criteria sharing both titles collapse onto one key there. Titles are
+  // unconstrained here, which makes that reachable — and without this rule the
+  // model reads VALID and the expansion refuses it at filing instead, which is
+  // the "previews clean, rejected at submit" failure this validation exists to
+  // prevent.
+  const seenPairs = new Set<string>()
+  for (const criterion of criteria) {
+    for (const sub of criterion.subCriteria) {
+      const pair = `${criterion.title}\0${sub.title}`
+      if (seenPairs.has(pair)) {
+        reasons.add(
+          ScoringValidationScopeEnum.SUB_CRITERIA,
+          `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
+        )
+      }
+      seenPairs.add(pair)
+    }
+  }
+
   if (allSubs.length === 0) {
     reasons.add(
       ScoringValidationScopeEnum.SUB_CRITERIA,

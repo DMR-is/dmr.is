@@ -374,6 +374,32 @@ describe('validateScoringModel', () => {
     )
   })
 
+  // The pipeline keys on (criterionTitle, subTitle), so a duplicate pair would
+  // collapse two rows onto one key. Caught here rather than by the expansion
+  // throwing at filing.
+  it('refuses two sub-criteria sharing both titles', () => {
+    const model = validModel()
+    model.criteria[0].subCriteria.push({
+      ...model.criteria[0].subCriteria[0],
+      id: 'duplicate',
+      weight: 0,
+    })
+
+    expect(messagesOf(model)).toEqual(
+      expect.arrayContaining([expect.stringContaining('einkvæm')]),
+    )
+  })
+
+  it('allows the same sub-criterion title under two different criteria', () => {
+    const model = validModel()
+    model.criteria[0].subCriteria[0].title = 'Menntun'
+    model.criteria[1].subCriteria[0].title = 'Menntun'
+
+    expect(messagesOf(model)).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('einkvæm')]),
+    )
+  })
+
   it('caps the reason list so a pathological model cannot flood the response', () => {
     const many = Array.from({ length: 400 }, (_, i) =>
       sub({ id: `s${i}`, weight: 0.25, stepOrders: [] }),
