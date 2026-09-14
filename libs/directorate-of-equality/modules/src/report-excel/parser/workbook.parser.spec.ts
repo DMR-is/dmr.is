@@ -75,9 +75,13 @@ const loadTemplate = async (): Promise<ExcelJS.Workbook> => {
  * to ~106MB of JSON and going through a string is several times SLOWER than the
  * structured algorithm.
  *
- * Costs peak RSS in exchange for wall time. exceljs dominates this file's
- * memory either way, but if it ever starts running out of heap, dropping back
- * to a plain `loadTemplate()` here is the first thing to try.
+ * Costs peak RSS in exchange for wall time: measured at 1.36 -> 2.22 GB for
+ * this spec file in isolation (+64%). Fine today - CI is ubuntu-latest with
+ * 16 GB, nx.json sets parallel: 1, and nothing raises
+ * --max-old-space-size, so Node's default ceiling leaves headroom. Given this
+ * library's exceljs OOM history that is a number worth having rather than
+ * guessing at: if this file ever runs short of heap, dropping back to a plain
+ * `loadTemplate()` here is the first thing to try.
  */
 let cachedTemplateModel: ExcelJS.Workbook['model'] | undefined
 
@@ -86,7 +90,20 @@ const freshTemplate = async (): Promise<ExcelJS.Workbook> => {
     cachedTemplateModel = (await loadTemplate()).model
   }
   const wb = new ExcelJS.Workbook()
-  wb.model = structuredClone(cachedTemplateModel)
+  const model = structuredClone(cachedTemplateModel)
+  // A model round trip is NOT a lossless clone. exceljs' Worksheet model
+  // getter emits merges as `merges`, but its setter reads `mergeCells` - the
+  // names do not match, so `wb.model = wb.model` drops every merged range
+  // (660 across the shipped template) and every continuation cell then reads
+  // null. Nothing asserted today lands on one, but the byte-path tests
+  // serialize from this clone, so without it they would be asserting against a
+  // workbook that differs from the real template in 660 places.
+  ;(
+    model as unknown as { worksheets: Array<Record<string, unknown>> }
+  ).worksheets.forEach((ws) => {
+    ws.mergeCells = ws.merges
+  })
+  wb.model = model
   return wb
 }
 
@@ -185,6 +202,12 @@ const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
  */
 const parseInMemory = async (wb: ExcelJS.Workbook): Promise<ParsedReportDto> =>
   parseLoadedWorkbook(wb, NO_TEMPLATE_METADATA)
+
+// Let the worker reclaim the cached model before the next suite in it starts;
+// see the RSS figure on `freshTemplate` above.
+afterAll(() => {
+  cachedTemplateModel = undefined
+})
 
 const writeEmployeeRow = (
   wb: ExcelJS.Workbook,
