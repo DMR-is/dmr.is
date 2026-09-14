@@ -1,9 +1,12 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ImmutableModel, ImmutableTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
+import type { ReportSubCriterionStepModel as ReportSubCriterionStepModelRef } from '../../report-criterion/models/report-sub-criterion-step.model'
 import { ReportSubCriterionStepModel } from '../../report-criterion/models/report-sub-criterion-step.model'
+import type { ReportEmployeeModel as ReportEmployeeModelRef } from './report-employee.model'
 import { ReportEmployeeModel } from './report-employee.model'
 
 type ReportEmployeePersonalCriterionStepAttributes = {
@@ -41,11 +44,11 @@ export class ReportEmployeePersonalCriterionStepModel extends ImmutableModel<
     foreignKey: 'reportEmployeeId',
     as: 'reportEmployee',
   })
-  reportEmployee?: ReportEmployeeModel
+  reportEmployee?: ReportEmployeeModelRef
 
   @BelongsTo(() => ReportSubCriterionStepModel, {
     foreignKey: 'reportSubCriterionStepId',
     as: 'subCriterionStep',
   })
-  subCriterionStep?: ReportSubCriterionStepModel
+  subCriterionStep?: ReportSubCriterionStepModelRef
 }

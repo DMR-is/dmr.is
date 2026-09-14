@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
@@ -5,6 +6,7 @@ import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { DoeModels } from '../../constants'
 import { UserModel } from '../../user/models/user.model'
 import type { CompanyCommentDto } from '../dto/company-comment.dto'
+import type { CompanyModel as CompanyModelRef } from './company.model'
 import { CompanyModel } from './company.model'
 
 /**
@@ -78,7 +80,7 @@ export class CompanyCommentModel extends ParanoidModel<
   isSystem!: boolean
 
   @BelongsTo(() => CompanyModel, { foreignKey: 'companyId', as: 'company' })
-  company?: CompanyModel
+  company?: CompanyModelRef
 
   @BelongsTo(() => UserModel, { foreignKey: 'authorUserId', as: 'author' })
   author?: UserModel | null

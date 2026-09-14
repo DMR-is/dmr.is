@@ -1,9 +1,11 @@
+// Association annotations use a type-only alias — see `src/models.ts`.
 import { BelongsTo, Column, DataType, ForeignKey } from 'sequelize-typescript'
 
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { DoeModels } from '../../constants'
 import { ReportStatusEnum } from '../../report/models/report.enums'
+import type { ReportModel as ReportModelRef } from '../../report/models/report.model'
 import { ReportModel } from '../../report/models/report.model'
 import { ReportRoleEnum } from '../../report/types/report-resource-context'
 import { UserModel } from '../../user/models/user.model'
@@ -69,7 +71,7 @@ export class ReportCommentModel extends ParanoidModel<
   reportStatus!: ReportStatusEnum
 
   @BelongsTo(() => ReportModel, { foreignKey: 'reportId', as: 'report' })
-  report?: ReportModel
+  report?: ReportModelRef
 
   @BelongsTo(() => UserModel, { foreignKey: 'authorUserId', as: 'author' })
   author?: UserModel | null
