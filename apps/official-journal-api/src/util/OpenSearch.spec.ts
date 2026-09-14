@@ -49,8 +49,10 @@ describe('getOsBody', () => {
       ['a leading quoted segment', 'lög "um veiðar"'],
       ['a bare quote character', '"""'],
     ])('does not treat %s as a phrase', (_label, search) => {
-      // A greedy `.+` swallowed the inner quotes and turned these into one
-      // strict adjacency, which returns nothing where an OR match used to.
+      // Only a fully quoted query is a phrase. The old greedy `.+` matched
+      // the two-segment shapes and collapsed them into a single strict
+      // adjacency over tokens never meant to be adjacent; the other rows
+      // already fell through and are here to keep it that way.
       expect(phraseClauses(mustOf(search))).toHaveLength(0)
       expect(bagOfWordsClauses(mustOf(search))).toHaveLength(1)
     })

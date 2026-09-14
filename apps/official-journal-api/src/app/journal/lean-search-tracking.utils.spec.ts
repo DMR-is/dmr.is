@@ -9,6 +9,11 @@ import {
   normalizeLeanSearchFilters,
 } from './lean-search-tracking.utils'
 
+// Mirrors normalizeQuery() so the assertions below pin the normalization
+// rather than restating the input.
+const normalizeForTest = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/g, ' ')
+
 describe('lean-search-tracking utils', () => {
   describe('classifyLeanSearchQuery', () => {
     it('classifies empty queries', () => {
@@ -79,14 +84,17 @@ describe('lean-search-tracking utils', () => {
       'lög "um veiðar"',
       '"lög" "um veiðar"',
       '"lög" og "veiðar"',
+      '"Lög"   OG  "Veiðar"',
       '"""',
     ])('does not treat partially quoted query %s as a phrase', (search) => {
       const result = classifyLeanSearchQuery(search)
 
       expect(result.queryKind).toBe(LeanSearchQueryKind.FreeText)
-      // The quote characters used to survive into the stored query, so these
-      // rows grouped with nothing.
-      expect(result.normalizedQuery).toBe(search.toLowerCase())
+      // The old greedy pattern read these as phrases and stored them with the
+      // outer quote pair stripped and the inner ones left in. As free text the
+      // query is stored exactly as typed, quotes included - only lowercased
+      // and whitespace-collapsed.
+      expect(result.normalizedQuery).toBe(normalizeForTest(search))
     })
 
     it('classifies single-token wildcard queries', () => {

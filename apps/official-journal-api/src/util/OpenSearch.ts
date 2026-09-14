@@ -71,11 +71,18 @@ export const getOsPaging = (
 // the hazard here: the threshold is evaluated against one field at a time,
 // never across the document.
 //
-// The denominator also differs per field. `title` and `bodyText` declare no
-// analyzer, so they use `standard` and keep stopwords, while the `.stemmed`
-// variants drop them. Since `most_fields` matches on any field, the stemmed
-// fields hold the lower bar and govern recall; the raw fields mostly shift
-// ranking, because a document failing `title^5` loses its largest score term.
+// The denominator also differs per field, and not in the direction the raw
+// integers suggest. `title` and `bodyText` declare no analyzer, so they use
+// `standard` and keep stopwords; the `.stemmed` and `.compound` variants run
+// chains carrying `is_stop` and drop them.
+//
+// Work a five-word query with two stopwords through it: `bodyText` needs three
+// of five, but two of those are stopwords that any body text supplies for
+// free, so it clears on ONE content word - while `bodyText.stemmed` needs two
+// of its three. Since `most_fields` matches on any field, the raw fields are
+// the permissive ones and govern recall; the stemmed fields mostly shift
+// ranking. `publicationNumber.full` and `caseNumber` are `keyword`, so they
+// analyze to a single term and the threshold never applies to them.
 const MIN_TERMS_MATCHED = '75%'
 
 function buildTextQuery(search: string) {
