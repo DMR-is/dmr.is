@@ -1119,6 +1119,17 @@ export const companiesText = {
       submit: 'Vista athugasemd',
     },
   },
+  quarantineModal: {
+    title: 'Setja í var',
+    description: 'Ertu viss um að þú viljir setja fyrirtækið í var?',
+    confirmButton: 'Staðfesta',
+  },
+  dailyFinesModal: {
+    title: 'Hefja dagsektarferli',
+    description:
+      'Ertu viss um að þú viljir hefja dagsektarferli fyrir fyrirtækið?',
+    confirmButton: 'Staðfesta',
+  },
 }
 
 export const usersText = {

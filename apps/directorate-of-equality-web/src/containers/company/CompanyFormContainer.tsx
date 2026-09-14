@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Box } from '@dmr.is/ui/components/island-is/Box'
 import { Breadcrumbs } from '@dmr.is/ui/components/island-is/Breadcrumbs'
 import { Button } from '@dmr.is/ui/components/island-is/Button'
@@ -9,6 +11,7 @@ import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { AlertMessage } from '@island.is/island-ui/core'
 
+import { CompanyConfirmationModal } from '../../components/company/CompanyConfirmationModal'
 import { CompanyObligationTags } from '../../components/company/CompanyObligationTags'
 import { CompanyDto } from '../../gen/fetch'
 import { NAV_PATHS } from '../../lib/constants'
@@ -19,14 +22,26 @@ import { CompanyTabsContainer } from './CompanyTabsContainer'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = companiesText.detailView
+const dailyFinesText = companiesText.dailyFinesModal
+const quarantineText = companiesText.quarantineModal
 
 type CompanyFormContainerProps = {
   company: CompanyDto
 }
 
+type CompanyConfirmationModalType = 'fines' | 'quarantine'
+
 export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
   const trpc = useTRPC()
   const queryClient = useQueryClient()
+  const [companyConfirmationText, setCompanyConfirmationText] = useState<{
+    title: string
+    description: string
+    confirmButton: string
+    type: CompanyConfirmationModalType
+  }>()
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const invalidateCompany = () => {
     queryClient.invalidateQueries({
@@ -142,9 +157,15 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   icon="gavel"
                   iconType="outline"
                   loading={updateFines.isPending}
-                  onClick={() =>
-                    updateFines.mutate({ id: company.id, finesStarted: true })
-                  }
+                  onClick={() => {
+                    setCompanyConfirmationText({
+                      title: dailyFinesText.title,
+                      description: dailyFinesText.description,
+                      confirmButton: dailyFinesText.confirmButton,
+                      type: 'fines',
+                    })
+                    setIsModalOpen(true)
+                  }}
                 >
                   {t.finesButton}
                 </Button>
@@ -157,12 +178,15 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
                   icon="lockClosed"
                   iconType="outline"
                   loading={updateQuarantine.isPending}
-                  onClick={() =>
-                    updateQuarantine.mutate({
-                      id: company.id,
-                      quarantined: true,
+                  onClick={() => {
+                    setCompanyConfirmationText({
+                      title: quarantineText.title,
+                      description: quarantineText.description,
+                      confirmButton: quarantineText.confirmButton,
+                      type: 'quarantine',
                     })
-                  }
+                    setIsModalOpen(true)
+                  }}
                 >
                   {t.quarantineButton}
                 </Button>
@@ -172,6 +196,30 @@ export function CompanyFormContainer({ company }: CompanyFormContainerProps) {
         </Stack>
       </Stack>
       <CompanyTabsContainer company={company} />
+      <CompanyConfirmationModal
+        text={{
+          title: companyConfirmationText?.title ?? '',
+          description: companyConfirmationText?.description ?? '',
+          confirmButton: companyConfirmationText?.confirmButton ?? '',
+        }}
+        companyName={company.name}
+        visible={isModalOpen}
+        isLoading={updateQuarantine.isPending || updateFines.isPending}
+        onClose={() => {
+          setIsModalOpen(false)
+          setCompanyConfirmationText(undefined)
+        }}
+        onSubmit={() => {
+          companyConfirmationText && companyConfirmationText?.type === 'fines'
+            ? updateFines.mutate({ id: company.id, finesStarted: true })
+            : updateQuarantine.mutate({
+                id: company.id,
+                quarantined: true,
+              })
+          setIsModalOpen(false)
+          setCompanyConfirmationText(undefined)
+        }}
+      />
     </Box>
   )
 }
