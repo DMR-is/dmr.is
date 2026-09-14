@@ -1,4 +1,8 @@
-import { applicationCallbackUrl, InvalidCallbackUrlError } from './xroadUtils'
+import {
+  ApplicationCallbackPath,
+  applicationCallbackUrl,
+  InvalidCallbackUrlError,
+} from './xroadUtils'
 
 const BASE = 'https://securityserver.internal/r1/IS-DEV/GOV/10000/dmr'
 const ID = '3f8a1c2e-5b7d-4e91-a0c6-8d2f4b6e9a13'

@@ -51,12 +51,7 @@ describe('PdfController route guards', () => {
   it('no longer exposes the url companion routes', () => {
     // Deleted rather than guarded: nothing called them, and the link they
     // returned cannot carry the bearer header these routes now require.
-    expect(
-      (PdfController.prototype as Record<string, unknown>).getPdfUrlByCaseId,
-    ).toBeUndefined()
-    expect(
-      (PdfController.prototype as Record<string, unknown>)
-        .getPdfUrlByApplicationId,
-    ).toBeUndefined()
+    expect('getPdfUrlByCaseId' in PdfController.prototype).toBe(false)
+    expect('getPdfUrlByApplicationId' in PdfController.prototype).toBe(false)
   })
 })
