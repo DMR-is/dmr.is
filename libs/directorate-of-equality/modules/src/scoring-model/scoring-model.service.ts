@@ -85,6 +85,20 @@ export class ScoringModelService implements IScoringModelService {
           ],
         },
       ],
+      // Without this the tree comes back in whatever order Postgres returns,
+      // which shifts between calls and reshuffles a caller's list for no
+      // reason. Steps are ordered in `toDto` by `stepOrder`, which is their
+      // own meaning; everything else has none, so insertion order it is.
+      order: [
+        [{ model: ScoringCriterionModel, as: 'criteria' }, 'createdAt', 'ASC'],
+        [
+          { model: ScoringCriterionModel, as: 'criteria' },
+          { model: ScoringSubCriterionModel, as: 'subCriteria' },
+          'createdAt',
+          'ASC',
+        ],
+        [{ model: ScoringRoleModel, as: 'roles' }, 'createdAt', 'ASC'],
+      ],
     })
 
     if (!model) {

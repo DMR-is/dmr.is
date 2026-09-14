@@ -1,6 +1,8 @@
 import {
   ApiDtoArray,
   ApiNumber,
+  ApiOptionalNumber,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -50,13 +52,18 @@ export class CreateScoringSubCriterionDto {
   weight!: number
 }
 
+/**
+ * PATCH semantics: an omitted key is left alone, never cleared. The fields use
+ * the `ApiOptional*` decorators rather than `required: false`, which only
+ * relaxes the published document — class-validator still refuses the request.
+ */
 export class UpdateScoringSubCriterionDto {
-  @ApiString({ minLength: 1, required: false })
+  @ApiOptionalString({ minLength: 1 })
   title?: string
 
-  @ApiString({ minLength: 1, required: false })
+  @ApiOptionalString({ minLength: 1 })
   description?: string
 
-  @ApiNumber({ required: false })
+  @ApiOptionalNumber()
   weight?: number
 }

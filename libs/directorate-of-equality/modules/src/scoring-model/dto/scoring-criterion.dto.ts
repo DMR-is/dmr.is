@@ -3,6 +3,8 @@ import {
   ApiDtoArray,
   ApiEnum,
   ApiNumber,
+  ApiOptionalEnum,
+  ApiOptionalString,
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
@@ -45,17 +47,21 @@ export class CreateScoringCriterionDto {
   description!: string
 }
 
+/**
+ * PATCH semantics: an omitted key is left alone, never cleared. The fields use
+ * the `ApiOptional*` decorators rather than `required: false`, which only
+ * relaxes the published document — class-validator still refuses the request.
+ */
 export class UpdateScoringCriterionDto {
-  @ApiEnum(ReportCriterionTypeEnum, {
+  @ApiOptionalEnum(ReportCriterionTypeEnum, {
     enumName: 'ReportCriterionTypeEnum',
-    required: false,
   })
   type?: ReportCriterionTypeEnum
 
-  @ApiString({ minLength: 1, required: false })
+  @ApiOptionalString({ minLength: 1 })
   title?: string
 
-  @ApiString({ minLength: 1, required: false })
+  @ApiOptionalString({ minLength: 1 })
   description?: string
 }
 
