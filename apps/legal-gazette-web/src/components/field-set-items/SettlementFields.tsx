@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 
+import {
+  getRequirementStatementLocationLabel,
+  requirementsStatementOptions,
+} from '@dmr.is/legal-gazette-schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
 import { GridColumn } from '@dmr.is/ui/components/island-is/GridColumn'
 import { GridRow } from '@dmr.is/ui/components/island-is/GridRow'
@@ -20,7 +24,6 @@ import {
   DivisionEndingAdvertTypes,
 } from '../../lib/constants'
 import { AdvertSettlement } from '../../lib/trpc/types'
-import { requirementsStatementOptions } from '../create-advert/CreateBankruptcySettlement'
 
 const settlementTypeOptions = [
   { label: 'Hefðbundið dánarbú', value: 'DEFAULT' },
@@ -303,15 +306,9 @@ export const SettlementFields = ({
             size="sm"
             backgroundColor="blue"
             name="settlement-liquidator-location"
-            label={
-              defaultRecallStatementType?.value ===
-              ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-                ? 'Staðsetning skiptastjóra'
-                : defaultRecallStatementType?.value ===
-                    ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
-                  ? 'Innslegin staðsetning'
-                  : 'Tölvupóstur'
-            }
+            label={getRequirementStatementLocationLabel(
+              defaultRecallStatementType?.value,
+            )}
             value={recallStatementLocation}
             onChange={(evt) => setRecallStatementLocation(evt.target.value)}
             onBlur={(evt) => updateRecallStatementLocation(evt.target.value)}

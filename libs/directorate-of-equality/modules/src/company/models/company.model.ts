@@ -15,10 +15,13 @@ import type { CompanyDto } from '../dto/company.dto'
 import {
   companyHasLegacyReportsLiteral,
   companyReportStatusLiteral,
+  equalityObligationStatusLiteral,
   equalityReportOverdueLiteral,
+  salaryObligationStatusLiteral,
   salaryReportOverdueLiteral,
 } from '../utils/report-status'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
@@ -79,6 +82,8 @@ type CompanyCreateAttributes = {
     attributes: {
       include: [
         [companyReportStatusLiteral(), 'reportStatus'],
+        [equalityObligationStatusLiteral(), 'equalityObligationStatus'],
+        [salaryObligationStatusLiteral(), 'salaryObligationStatus'],
         [equalityReportOverdueLiteral(), 'equalityReportOverdue'],
         [salaryReportOverdueLiteral(), 'salaryReportOverdue'],
         [companyHasLegacyReportsLiteral(), 'hasLegacyReports'],
@@ -226,8 +231,22 @@ export class CompanyModel extends MutableModel<
   // Derived compliance status — not a stored column. Populated by the
   // `withReportStatus` scope; undefined when the model is loaded outside it, so
   // every CompanyDto read goes through that scope.
+  //
+  // The ROLL-UP: one value for the whole company, most pressing problem first.
+  // The two obligation columns below are what the admin list renders per
+  // report type — this one cannot answer a column, because it collapses a
+  // company missing both reports to a single value.
   @Column(DataType.VIRTUAL)
   reportStatus!: CompanyReportStatusEnum
+
+  // Derived per-obligation status, one per report type. Same predicates as
+  // `reportStatus` (see `utils/report-status.ts`), so the column an admin reads
+  // and the roll-up can never disagree.
+  @Column(DataType.VIRTUAL)
+  equalityObligationStatus!: CompanyObligationStatusEnum
+
+  @Column(DataType.VIRTUAL)
+  salaryObligationStatus!: CompanyObligationStatusEnum
 
   // Derived overdue flags — true when the matching next-due date has passed.
   // Populated by the `withReportStatus` scope alongside `reportStatus`.
@@ -267,6 +286,8 @@ export class CompanyModel extends MutableModel<
       legalFormId: model.legalFormId,
       legalFormName: model.legalFormName,
       reportStatus: model.reportStatus,
+      equalityObligationStatus: model.equalityObligationStatus,
+      salaryObligationStatus: model.salaryObligationStatus,
       equalityReportOverdue: model.equalityReportOverdue,
       salaryReportOverdue: model.salaryReportOverdue,
       hasLegacyReports: model.hasLegacyReports,

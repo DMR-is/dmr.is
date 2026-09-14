@@ -240,14 +240,15 @@ function expectedScoreFor(roleTitle: string): number {
 function expectedHourlyWageFor(
   employee: ParsedReportDto['employees'][number],
 ): number {
+  // Restated independently of `computeRegularWages` on purpose: if the two
+  // ever disagree, that is the finding. Aukagreiðslur are absent because they
+  // are not part of regluleg laun — adding them here would make this helper
+  // agree with a formula the product no longer uses.
   const regularWages =
     employee.baseSalary +
     (employee.additionalFixedOvertime ?? 0) +
     (employee.additionalFixedCarAllowance ?? 0) +
-    (employee.bonusOccasionalCarAllowance ?? 0) +
-    (employee.bonusOccasionalOvertime ?? 0) +
-    (employee.bonusPayments ?? 0) +
-    (employee.bonusOther ?? 0)
+    (employee.additionalFixedOther ?? 0)
 
   return regularWages / employee.paidHours
 }
@@ -333,9 +334,9 @@ function makeEmployee(
     baseSalary,
     additionalFixedOvertime: null,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     personalStepAssignments: [],
   }

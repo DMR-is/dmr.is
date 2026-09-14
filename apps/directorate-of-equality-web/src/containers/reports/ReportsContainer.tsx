@@ -39,7 +39,7 @@ import {
   COLUMNS,
 } from '../../lib/constants'
 import { overviewText, serverErrorText, sharedText } from '../../lib/text'
-import { formatNationalId } from '../../lib/utils'
+import { formatNationalId, formatTimestampDate } from '../../lib/utils'
 
 import { type ColumnDef } from '@tanstack/react-table'
 
@@ -113,7 +113,7 @@ function mapReportToCase(report: ReportListItemDto): Case {
   return {
     id: report.id,
     date: report.createdAt
-      ? new Date(report.createdAt).toLocaleDateString('is-IS')
+      ? formatTimestampDate(report.createdAt)
       : '',
     type: report.includesImprovementPlan
       ? 'Úrbótaáætlun'

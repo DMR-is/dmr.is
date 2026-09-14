@@ -3,12 +3,123 @@ import {
   computeCompensationAggregates,
   computeSalaryAggregateSnapshot,
   computeSalaryRegression,
+  computeSalaryScoreBucketSnapshots,
   getRegularHourlyWage,
   roundSalaryAggregateSnapshot,
   roundSalaryResultSnapshot,
 } from './compensation-aggregates'
+import { computeWageGapDecomposition } from './wage-gap-decomposition'
 
 describe('compensation-aggregates', () => {
+  /**
+   * An employee paid entirely in incidental pay has no regluleg laun under
+   * template 2.0, so their tímakaup is 0. These pin that such a sample is
+   * EXCLUDED rather than averaged in — see `usableSalarySamples`.
+   */
+  describe('unusable samples (zero / non-finite tímakaup)', () => {
+    it('leaves the cohort metrics untouched', () => {
+      const real = [
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.FEMALE, salary: 3000 },
+      ]
+
+      expect(
+        computeSalaryAggregateSnapshot([
+          ...real,
+          { gender: GenderEnum.FEMALE, salary: 0 },
+        ]),
+      ).toEqual(computeSalaryAggregateSnapshot(real))
+    })
+
+    it('does not drag the minimum to zero', () => {
+      const snapshot = computeSalaryAggregateSnapshot([
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.MALE, salary: 0 },
+      ])
+
+      expect(snapshot.overall.minimum).toBe(4000)
+      expect(snapshot.overall.average).toBe(4000)
+    })
+
+    it('excludes them from the cohort counts', () => {
+      const buckets = computeSalaryScoreBucketSnapshots([
+        { gender: GenderEnum.MALE, score: 150, salary: 4000 },
+        { gender: GenderEnum.FEMALE, score: 150, salary: 0 },
+      ])
+
+      expect(buckets).toHaveLength(1)
+      expect(buckets[0].counts).toEqual({
+        overall: 1,
+        male: 1,
+        female: 0,
+        neutral: 0,
+      })
+    })
+
+    // Filtered before the range is derived, so an unusable sample at a distant
+    // score cannot emit a bucket containing nobody.
+    it('does not stretch the score range or emit an empty bucket', () => {
+      const buckets = computeSalaryScoreBucketSnapshots([
+        { gender: GenderEnum.MALE, score: 150, salary: 4000 },
+        { gender: GenderEnum.FEMALE, score: 950, salary: 0 },
+      ])
+
+      expect(buckets).toHaveLength(1)
+      expect(buckets[0].rangeFrom).toBe(100)
+    })
+
+    it('ignores non-finite salaries too', () => {
+      const snapshot = computeSalaryAggregateSnapshot([
+        { gender: GenderEnum.MALE, salary: 4000 },
+        { gender: GenderEnum.FEMALE, salary: Number.NaN },
+        { gender: GenderEnum.FEMALE, salary: Number.POSITIVE_INFINITY },
+      ])
+
+      expect(snapshot.overall.average).toBe(4000)
+      expect(snapshot.female.average).toBeNull()
+    })
+
+    /**
+     * ⚠️ **The invariant that matters.** `ReportResultService` feeds one
+     * employee array to both the aggregates and the decomposition, and freezes
+     * both onto the same `report_result` row. If only one of them filters, that
+     * single row reports a decomposition excluding somebody next to averages
+     * that include them at zero. This asserts the two agree on the population.
+     */
+    it('counts the same population as the wage-gap decomposition', () => {
+      const employees = [
+        { ordinal: 1, gender: GenderEnum.MALE, score: 200, hourlyWage: 4000 },
+        { ordinal: 2, gender: GenderEnum.FEMALE, score: 300, hourlyWage: 3000 },
+        { ordinal: 3, gender: GenderEnum.FEMALE, score: 250, hourlyWage: 0 },
+      ]
+
+      const decomposition = computeWageGapDecomposition({
+        employees,
+        benchmarkPercent: 3.9,
+      })
+      const snapshot = computeSalaryAggregateSnapshot(
+        employees.map((e) => ({ gender: e.gender, salary: e.hourlyWage })),
+      )
+      // NEUTRAL is bundled into FEMALE on both sides, so male + female is the
+      // whole counted population.
+      const decompositionCounted =
+        decomposition.counts.male + decomposition.counts.female
+      const snapshotCounted = computeSalaryScoreBucketSnapshots(
+        employees.map((e) => ({
+          gender: e.gender,
+          score: e.score,
+          salary: e.hourlyWage,
+        })),
+      ).reduce((total, bucket) => total + bucket.counts.overall, 0)
+
+      expect(decomposition.counts.excluded).toBe(1)
+      expect(decompositionCounted).toBe(2)
+      expect(snapshotCounted).toBe(decompositionCounted)
+      // And the average is of the two usable wages, not three with a zero.
+      expect(snapshot.overall.average).toBe(3500)
+    })
+  })
+
   it('bundles NEUTRAL into FEMALE for cohort metrics and wage gaps', () => {
     const snapshot = computeSalaryAggregateSnapshot([
       { gender: GenderEnum.MALE, salary: 100 },
@@ -118,11 +229,14 @@ describe('compensation-aggregates', () => {
     })
   })
 
-  // ONE snapshot, on reglulegt tímakaup. There is deliberately no base-pay-only
-  // counterpart: `baseSalary / paidHours` would divide base pay alone by a
-  // denominator that includes the overtime hours which earned the additional and
-  // bonus pay. Under the old FTE divisor both variants were coherent; under an
-  // hours divisor only the total-pay numerator is.
+  // ONE snapshot, on reglulegt tímakaup = (grunnlaun + viðbótarlaun) / greiddar
+  // stundir. Aukagreiðslur are excluded, and so are the incidental hours that
+  // earned them — `CompensationEmployeeInput` therefore carries no bonus field
+  // at all, which is the strongest form the exclusion can take: it is not
+  // possible to pass incidental pay in here and have it silently counted.
+  // There is deliberately no base-pay-only counterpart either: `baseSalary /
+  // paidHours` would divide base pay alone by a denominator that still includes
+  // the FIXED overtime hours which earned the additional pay.
   it('computes one report-level hourly-wage snapshot with score buckets', () => {
     const aggregates = computeCompensationAggregates({
       employees: [
@@ -130,11 +244,10 @@ describe('compensation-aggregates', () => {
           reportEmployeeRoleId: 'role-b',
           score: 120,
           gender: GenderEnum.MALE,
-          // 550.000 regluleg laun over 200 klst → 2.750 kr./klst.
+          // 500.000 regluleg laun over 200 klst → 2.500 kr./klst.
           paidHours: 200,
           baseSalary: 400000,
           additionalSalary: 100000,
-          bonusSalary: 50000,
         },
         {
           reportEmployeeRoleId: 'role-a',
@@ -145,19 +258,18 @@ describe('compensation-aggregates', () => {
           paidHours: 100,
           baseSalary: 300000,
           additionalSalary: 50000,
-          bonusSalary: null,
         },
       ],
     })
 
-    expect(aggregates.report.snapshot.totals.overall.average).toBe(3125)
+    expect(aggregates.report.snapshot.totals.overall.average).toBe(3000)
     expect(aggregates.report.snapshot.scoreBuckets).toEqual([
       expect.objectContaining({
         rangeFrom: 100,
         rangeTo: 200,
         counts: { overall: 1, male: 1, female: 0, neutral: 0 },
         totals: expect.objectContaining({
-          overall: expect.objectContaining({ average: 2750 }),
+          overall: expect.objectContaining({ average: 2500 }),
         }),
       }),
       expect.objectContaining({
@@ -169,24 +281,6 @@ describe('compensation-aggregates', () => {
         }),
       }),
     ])
-  })
-
-  it('treats a null bonusSalary as zero in the hourly rate', () => {
-    const aggregates = computeCompensationAggregates({
-      employees: [
-        {
-          reportEmployeeRoleId: 'role-a',
-          score: 100,
-          gender: GenderEnum.MALE,
-          paidHours: 100,
-          baseSalary: 300000,
-          additionalSalary: 50000,
-          bonusSalary: null,
-        },
-      ],
-    })
-
-    expect(aggregates.report.snapshot.totals.overall.average).toBe(3500)
   })
 
   it('rounds result snapshots including bucket totals', () => {
@@ -271,13 +365,11 @@ describe('compensation-aggregates', () => {
       paidHours: 200,
       baseSalary: 1000000,
       additionalSalary: 0,
-      bonusSalary: null,
     })
     const half = getRegularHourlyWage({
       paidHours: 100,
       baseSalary: 500000,
       additionalSalary: 0,
-      bonusSalary: null,
     })
 
     expect(full).toBe(5000)

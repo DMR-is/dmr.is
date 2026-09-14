@@ -86,6 +86,16 @@ export const overviewText = {
     successToast: 'Skýrsla send inn',
     inflightConflictToast:
       'Fyrirtækið er nú þegar með jafnréttisáætlun í stöðunni „{status}“. Ljúktu afgreiðslu hennar áður en ný jafnréttisáætlun er send inn.',
+    // Choosing between the two representations the content may take.
+    contentModeHeading: 'Innihald jafnréttisáætlunar',
+    contentModeText: 'Slá inn texta',
+    contentModePdf: 'Hlaða upp PDF',
+    pdfPlaceholder: 'Veldu PDF skrá með jafnréttisáætlun fyrirtækisins',
+    choosePdf: 'Velja skrá',
+    switchPdf: 'Skipta um skrá',
+    pdfTooLarge: 'Skráin er of stór. Hámarksstærð er 4 MB.',
+    pdfNotAPdf: 'Skráin er ekki PDF. Veldu skrá sem endar á .pdf.',
+    pdfReadError: 'Ekki tókst að lesa skrána. Prófaðu aftur.',
   },
   createSalaryReport: {
     drawerLabel: 'Skrá launagreiningu',
@@ -306,6 +316,9 @@ export const reportText = {
     approvedDateLabel: 'Dagsetning samþykktar',
     expiryLabel: 'Gildistími',
     responsibleLabel: 'Ábyrgðaraðili',
+    // The embedded PDF viewer, for plans the company uploaded as a file.
+    pdfFrameTitle: 'Jafnréttisáætlun fyrirtækisins',
+    pdfOpenInNewTab: 'Opna í nýjum flipa',
   },
   salaryTab: {
     emptyTitle: 'Engin skýrslugjöf ',
@@ -641,14 +654,20 @@ export const reportText = {
      * ── Pay-component split by gender ────────────────────────────────────────
      *
      * ⚠️ `Aukagreiðslur`, NOT `hlunnindi`. The template's own computed columns
-     * are P "Viðbótarlaun" (`=SUM(J:K)`) and Q "Aukagreiðslur" (`=SUM(L:O)`), so
+     * are P "Viðbótarlaun" (`=SUM(J:L)`) and Q "Aukagreiðslur" (`=SUM(M:O)`), so
      * that is the submitter-facing vocabulary. "Hlunnindi" had crept into the
      * formula docs and was corrected out 2026-08-20.
+     *
+     * ⚠️ Since template 2.0, `Samtals` here is NOT regluleg laun: aukagreiðslur
+     * are excluded from that and from reglulegt tímakaup. The two numbers sit on
+     * the same page, so the description has to say which is which — a reader who
+     * assumes this table adds up to the headline rate will not be able to make
+     * the figures reconcile.
      */
     components: {
       heading: 'Viðbótarlaun og aukagreiðslur',
       description:
-        'Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum.',
+        'Meðaltal viðbótarlauna og aukagreiðslna á mánuði, eftir kyni. Krónur á mánuði — ekki tímakaup, og ekki deilt með greiddum stundum. Aukagreiðslur (tilfallandi greiðslur) teljast ekki með í reglulegum launum og hafa því ekki áhrif á reglulegt tímakaup.',
       genderHeader: 'Kyn',
       additionalHeader: 'Viðbótarlaun',
       bonusHeader: 'Aukagreiðslur',
@@ -805,6 +824,35 @@ export const companiesText = {
   overdue: 'Skiladagur',
   overdueTag: 'Skiladagur liðinn',
   quarantine: 'Í var',
+  // The two obligation columns. The column header carries the noun, so the
+  // cell only has to carry the state — "Vantar" under "Jafnréttisáætlun" reads
+  // as the full sentence. The FILTER keeps the spelled-out labels
+  // (REPORT_STATUS_LABEL) because a filter chip has no header above it.
+  equalityColumn: 'Jafnréttisáætlun',
+  salaryColumn: 'Skýrslugjöf',
+  obligationNotRequired: 'Á ekki við',
+  obligationMissing: 'Vantar',
+  obligationActionPlanMissing: 'Vantar úrbótaáætlun',
+  obligationCovered: 'Í gildi',
+  // Register status, moved off the row and onto an icon.
+  companyInactive: 'Fyrirtæki er ekki í skrá',
+  // The default-hide escape hatch. Labelled by what it REVEALS, because the
+  // hiding is the default state and a label naming the hidden group would read
+  // as "filter down to these".
+  visibility: 'Engin skilaskylda',
+  visibilityPlaceholder: 'Fela',
+  showNotObliged: 'Sýna óskyldug',
+  showInactive: 'Sýna óvirk',
+  // Detail-header wording. The list can say a bare "Vantar" because the column
+  // header names the obligation; the header has no such context, so each tag
+  // has to name its own subject.
+  equalityCovered: 'Jafnréttisáætlun í gildi',
+  salaryCovered: 'Skýrslugjöf í gildi',
+  notLegallyObliged: 'Ekki lagaskylt',
+  // ⚠️ Distinct from `notLegallyObliged` on purpose. An UNKNOWN size means
+  // nobody has classified the company yet, so "ekki lagaskylt" would assert a
+  // verdict the register has not reached.
+  unclassifiedSize: 'Stærð óflokkuð',
   location: 'Staður',
   region: 'Landshluti',
   regionPlaceholder: 'Veldu landshluta',
@@ -838,8 +886,8 @@ export const companiesText = {
     contactPerson: 'Tengiliður',
     contactEmail: 'Netfang tengiliðar',
     viewReport: 'Opna skýrslu',
-    equalityDueAt: 'Næsti skiladagur jafnréttisáætlunar',
-    salaryDueAt: 'Næsti skiladagur launagreiningar',
+    equalityDueAt: 'Næstu skil jafnréttisáætlunar',
+    salaryDueAt: 'Næstu skil skýrslu',
   },
   createModal: {
     title: 'Skrá nýtt fyrirtæki',

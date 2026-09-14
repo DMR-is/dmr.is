@@ -312,8 +312,9 @@ function employeesSql() {
         `${escStr(e.startDate)}, ${num(e.paidHours)}, ` +
         `${num(Number(e.baseSalary).toFixed(2))}, ` +
         `${nullableSalary(e.additionalFixedOvertime)}, ${nullableSalary(e.additionalFixedCarAllowance)}, ` +
-        `${nullableSalary(e.bonusOccasionalCarAllowance)}, ${nullableSalary(e.bonusOccasionalOvertime)}, ` +
-        `${nullableSalary(e.bonusPayments)}, ${nullableSalary(e.bonusOther)}, ` +
+        `${nullableSalary(e.additionalFixedOther)}, ` +
+        `${nullableSalary(e.bonusOccasionalOvertime)}, ${nullableSalary(e.bonusOccasionalCarAllowance)}, ` +
+        `${nullableSalary(e.bonusOther)}, ` +
         `${escStr(e.gender)}, ${escStr(roleId)}, ${num(Number(score).toFixed(2))})`
       )
     })
@@ -342,8 +343,8 @@ BEGIN;
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
   start_date, paid_hours, base_salary,
-  additional_fixed_overtime, additional_fixed_car_allowance,
-  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
+  additional_fixed_overtime, additional_fixed_car_allowance, additional_fixed_other,
+  bonus_occasional_overtime, bonus_occasional_car_allowance, bonus_other,
   gender, report_employee_role_id, score) VALUES
 ${empValues};
 
@@ -383,7 +384,7 @@ BEGIN;
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 3.90, 'v3',
+VALUES (${escStr(resultId)}, ${escStr(RICH_SAL)}, 3.90, 'v4',
   ${escJson(salarySnapshot)}, ${escJson(wageGapSnapshot)});
 
 COMMIT;

@@ -190,9 +190,9 @@ function makeParsed(): ParsedReportDto {
         baseSalary: 1000000,
         additionalFixedOvertime: 100000,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         personalStepAssignments: [
           {

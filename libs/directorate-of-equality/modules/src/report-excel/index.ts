@@ -8,5 +8,7 @@
 
 export * from './dto/import-error.dto'
 export * from './dto/parsed-report.dto'
+export * from './parser/workbook.parser'
 export * from './report-excel.core.module'
 export * from './report-excel.service.interface'
+export * from './workbook.schema'

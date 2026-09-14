@@ -6,6 +6,7 @@ import {
   ReportTypeEnum,
 } from '../../report/models/report.enums'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySizeEnum,
 } from '../models/company.enums'
@@ -148,8 +149,8 @@ function activeLegacyCertificationExists(type: ReportTypeEnum): string {
  *
  *   1. **The obligation.** The sheet carries a `Gildistími` for companies of
  *      every size (see the load script), so `legacy_report` holds live dates
- *      for companies below 25 that owe nothing. Without `equalityRequired` /
- *      `salaryRequired` the filter would put them in a renewal queue the status
+ *      for companies below 25 that owe nothing. Without `equalityRequiredSql` /
+ *      `salaryRequiredSql` the filter would put them in a renewal queue the status
  *      column simultaneously calls SATISFACTORY.
  *   2. **The report supersedes the certificate.** Coverage is the *union* of an
  *      APPROVED report and a live legacy certificate, so it ends at the later
@@ -189,10 +190,10 @@ export function legacyCertificationExpiringSql(interval: string): string {
     )
   )`
 
-  return `(${expiring(ReportTypeEnum.EQUALITY, equalityRequired)} OR ${expiring(
-    ReportTypeEnum.SALARY,
-    salaryRequired,
-  )})`
+  return `(${expiring(
+    ReportTypeEnum.EQUALITY,
+    equalityRequiredSql,
+  )} OR ${expiring(ReportTypeEnum.SALARY, salaryRequiredSql)})`
 }
 
 /**
@@ -231,30 +232,111 @@ function postponedSalaryExists(): string {
   )`
 }
 
-// Salary report required: the size-driven flag (LARGE) or an admin override.
-const salaryRequired = `("${COMPANY_QUERY_ALIAS}"."salary_report_required" = true OR "${COMPANY_QUERY_ALIAS}"."salary_report_required_override" = true)`
-
-// Equality report required: 25+ employees (MEDIUM|LARGE), or a salary
-// obligation (which presupposes the equality plan).
-const equalityRequired = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" IN ('${CompanySizeEnum.MEDIUM}', '${CompanySizeEnum.LARGE}') OR ${salaryRequired})`
+/**
+ * SQL boolean: the company owes a salary report — the size-driven flag (LARGE,
+ * set by the `company_sync_salary_report_required` trigger) or an admin
+ * override.
+ *
+ * Exported because four separate things have to agree on who owes what: the
+ * status expressions below, the per-obligation columns, the list filter, and
+ * `ReportDeadlineReminderTask`. Restating the rule in any of them is how the
+ * register and the mailer come to disagree.
+ *
+ * ⚠️ Qualified with `COMPANY_QUERY_ALIAS` — the Sequelize model name, which is
+ * also the alias a plain `CompanyModel.findAll()` emits (`FROM "company" AS
+ * "CompanyModel"`), so this is usable outside the `withReportStatus` scope.
+ */
+export const salaryRequiredSql = `("${COMPANY_QUERY_ALIAS}"."salary_report_required" = true OR "${COMPANY_QUERY_ALIAS}"."salary_report_required_override" = true)`
 
 /**
- * The single source of truth for a company's compliance status, as a SQL
- * `CASE` yielding `CompanyReportStatusEnum` values in priority order (most
- * critical first). Used both to populate the `reportStatus` column (via the
- * model's `withReportStatus` scope) and to filter the company list, so the
- * column an admin sees and the filter they apply can never diverge.
+ * SQL boolean: the company owes an equality plan — 25+ employees (MEDIUM|LARGE),
+ * or a salary obligation, which presupposes the plan.
+ *
+ * UNKNOWN and SMALL owe nothing. See `CompanySizeEnum`: UNKNOWN imposes no
+ * obligation until an admin classifies the company, rather than asserting the
+ * company is small.
+ */
+export const equalityRequiredSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" IN ('${CompanySizeEnum.MEDIUM}', '${CompanySizeEnum.LARGE}') OR ${salaryRequiredSql})`
+
+/**
+ * SQL boolean: the company owes no report of any kind — "ekki lagaskylt".
+ *
+ * ⚠️ SMALL specifically, not `NOT equalityRequiredSql`, even though the two
+ * differ only on UNKNOWN. UNKNOWN means the size was never established (an
+ * auto-provisioned company nobody has classified yet), and this predicate
+ * exists to hide companies from the default admin list. Hiding the
+ * unclassified would remove exactly the queue an admin has to work through,
+ * and nothing else surfaces it — so an open question must not be filed away as
+ * a settled "owes nothing". Same distinction the register load draws when it
+ * refuses to clear a due date on UNKNOWN.
+ *
+ * ⚠️ Reads the salary obligation, so a 0–24 company carrying
+ * `salary_report_required_override` is NOT swept up. That override is the
+ * Directorate's record of a special case, and it is the whole reason this
+ * cannot be `employee_count_category = 'SMALL'` on its own.
+ */
+export const notLegallyObligedSql = `("${COMPANY_QUERY_ALIAS}"."employee_count_category" = '${CompanySizeEnum.SMALL}' AND NOT ${salaryRequiredSql})`
+
+/**
+ * SQL boolean: the company owes an equality plan and nothing covers it.
+ */
+export function equalityReportMissingSql(): string {
+  return `(${equalityRequiredSql} AND NOT ${reportCovered(
+    ReportTypeEnum.EQUALITY,
+  )})`
+}
+
+/**
+ * SQL boolean: an úrbótaáætlun is outstanding — a salary report sits in
+ * POSTPONED with its outlier explanations deferred.
+ *
+ * ⚠️ This is a state OF the launagreining, not a separate obligation. The
+ * company has filed; the report is parked. Hence `salaryReportMissingSql`
+ * excludes it rather than both being true at once.
+ */
+export function actionPlanMissingSql(): string {
+  return `(${postponedSalaryExists()})`
+}
+
+/**
+ * SQL boolean: the company owes a salary report, nothing covers it, and none is
+ * postponed.
+ *
+ * ⚠️ The postponed exclusion is what makes this and `actionPlanMissingSql`
+ * mutually exclusive. Without it both are true for a postponed report — it is
+ * not APPROVED, so it is not covered — and the company reads as missing a
+ * launagreining it has actually filed.
+ */
+export function salaryReportMissingSql(): string {
+  return `(${salaryRequiredSql} AND NOT ${reportCovered(
+    ReportTypeEnum.SALARY,
+  )} AND NOT ${actionPlanMissingSql()})`
+}
+
+/**
+ * The roll-up compliance status, as a SQL `CASE` yielding
+ * `CompanyReportStatusEnum` values in priority order (most critical first).
+ * Populates the `reportStatus` column via the model's `withReportStatus` scope;
+ * drives the detail header and list sorting.
+ *
+ * ⚠️ Built from the same three predicates as the per-obligation expressions
+ * below, so the roll-up and the columns cannot disagree. Change a rule in one
+ * of the predicates, never here.
+ *
+ * ⚠️ The action-plan branch precedes the salary branch. See the ordering note
+ * on `CompanyReportStatusEnum`; the declaration order of the enum members is
+ * NOT the evaluation order.
  */
 export function companyReportStatusCaseSql(): string {
   return `(CASE
-    WHEN ${equalityRequired} AND NOT ${reportCovered(
-    ReportTypeEnum.EQUALITY,
-  )} THEN '${CompanyReportStatusEnum.MISSING_EQUALITY_REPORT}'
-    WHEN ${salaryRequired} AND NOT ${reportCovered(
-    ReportTypeEnum.SALARY,
-  )} THEN '${CompanyReportStatusEnum.MISSING_SALARY_REPORT}'
-    WHEN ${postponedSalaryExists()} THEN '${
+    WHEN ${equalityReportMissingSql()} THEN '${
+    CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
+  }'
+    WHEN ${actionPlanMissingSql()} THEN '${
     CompanyReportStatusEnum.MISSING_ACTION_PLAN
+  }'
+    WHEN ${salaryReportMissingSql()} THEN '${
+    CompanyReportStatusEnum.MISSING_SALARY_REPORT
   }'
     ELSE '${CompanyReportStatusEnum.SATISFACTORY}'
   END)`
@@ -265,17 +347,112 @@ export function companyReportStatusLiteral() {
 }
 
 /**
- * SQL boolean: the company's next equality-report due date exists and is in the
- * past. Surfaced on `CompanyDto.equalityReportOverdue` so admins can spot
- * companies that need attention (and possibly the daily-fines process).
+ * The equality obligation's own state, as a SQL `CASE` yielding
+ * `CompanyObligationStatusEnum`. Drives the list's `Jafnréttisáætlun` column.
+ *
+ * ⚠️ Never yields ACTION_PLAN_MISSING: an equality report has no outlier groups
+ * and cannot be postponed.
  */
-export function equalityReportOverdueSql(): string {
-  return `("${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
+export function equalityObligationStatusCaseSql(): string {
+  return `(CASE
+    WHEN NOT ${equalityRequiredSql} THEN '${
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
+    WHEN ${equalityReportMissingSql()} THEN '${
+    CompanyObligationStatusEnum.MISSING
+  }'
+    ELSE '${CompanyObligationStatusEnum.COVERED}'
+  END)`
 }
 
-/** SQL boolean: the company's next salary-report due date exists and is past. */
+/**
+ * The salary obligation's own state, as a SQL `CASE` yielding
+ * `CompanyObligationStatusEnum`. Drives the list's `Launagreining` column.
+ *
+ * ⚠️ ACTION_PLAN_MISSING is tested FIRST — before the obligation itself, and
+ * before MISSING.
+ *
+ * Before the obligation, because a postponed report is evidence the company
+ * filed, and that outstanding úrbótaáætlun outlives the obligation that
+ * prompted it. `salary_report_required` is trigger-derived from the size bucket
+ * (BEFORE INSERT OR UPDATE), so reclassifying a company down from LARGE flips it
+ * to false while the postponed report stays exactly where it was. Testing
+ * NOT_REQUIRED first reported "Á ekki við" for a company with unexplained pay
+ * outliers on file — while the roll-up `reportStatus` beside it still said
+ * MISSING_ACTION_PLAN. Two columns, same data, opposite answers.
+ *
+ * Before MISSING, because a postponed report is not APPROVED and so is also not
+ * covered; both predicates would otherwise describe it.
+ *
+ * This mirrors `actionPlanMissingSql` carrying no obligation gate of its own —
+ * gating it here defeated the same guarantee one level up.
+ */
+export function salaryObligationStatusCaseSql(): string {
+  return `(CASE
+    WHEN ${actionPlanMissingSql()} THEN '${
+    CompanyObligationStatusEnum.ACTION_PLAN_MISSING
+  }'
+    WHEN NOT ${salaryRequiredSql} THEN '${
+    CompanyObligationStatusEnum.NOT_REQUIRED
+  }'
+    WHEN ${salaryReportMissingSql()} THEN '${
+    CompanyObligationStatusEnum.MISSING
+  }'
+    ELSE '${CompanyObligationStatusEnum.COVERED}'
+  END)`
+}
+
+/**
+ * SQL boolean: the company may be hidden from the default register view.
+ *
+ * `notLegallyObligedSql` alone is not a safe hide. An outstanding úrbótaáætlun
+ * survives a reclassification — the report stays POSTPONED while
+ * `salary_report_required` flips false with the size bucket — so a company can
+ * owe nothing *and* still have unexplained pay outliers waiting on it. Hiding
+ * that company removes the only place an admin would see the work.
+ *
+ * Deliberately expressed here rather than folded into `notLegallyObligedSql`:
+ * that predicate answers "is this company legally obliged", which such a company
+ * genuinely is not. This one answers "is it safe to hide", which is a different
+ * question with a different answer.
+ */
+export function hiddenFromDefaultRegisterSql(): string {
+  return `(${notLegallyObligedSql} AND NOT ${actionPlanMissingSql()})`
+}
+
+export function equalityObligationStatusLiteral() {
+  return literal(equalityObligationStatusCaseSql())
+}
+
+export function salaryObligationStatusLiteral() {
+  return literal(salaryObligationStatusCaseSql())
+}
+
+/**
+ * SQL boolean: the company owes an equality plan and its next due date has
+ * passed. Surfaced on `CompanyDto.equalityReportOverdue` so admins can spot
+ * companies that need attention (and possibly the daily-fines process).
+ *
+ * ⚠️ Gated on the obligation, not on the date alone. The register load seeds
+ * `next_equality_report_due_at` from the old sheet's `Gildistíma
+ * jafnréttisáætlunar` for companies of EVERY size — unlike the salary column,
+ * which it size-gates on insert and actively clears on upsert — so most
+ * companies below 25 carry a past date against a plan they do not owe. Without
+ * this gate they read as overdue, which is what put "Skiladagur liðinn" beside
+ * "Fullnægjandi" in the admin list.
+ */
+export function equalityReportOverdueSql(): string {
+  return `(${equalityRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_equality_report_due_at" < NOW())`
+}
+
+/**
+ * SQL boolean: the company owes a salary report and its next due date has
+ * passed. Gated on the obligation for the same reason as the equality side —
+ * the seeded dates outlive a reclassification, and an admin clearing
+ * `salary_report_required_override` must not leave a live overdue flag behind.
+ */
 export function salaryReportOverdueSql(): string {
-  return `("${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
+  return `(${salaryRequiredSql} AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" IS NOT NULL AND "${COMPANY_QUERY_ALIAS}"."next_salary_report_due_at" < NOW())`
 }
 
 export function equalityReportOverdueLiteral() {

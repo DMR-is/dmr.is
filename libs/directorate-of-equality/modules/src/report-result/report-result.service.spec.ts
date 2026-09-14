@@ -80,34 +80,16 @@ describe('ReportResultService', () => {
         id: 'result-1',
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v3',
+        calculationVersion: 'v4',
         salary: {
-          totals: { overall: { average: 3125 } },
+          totals: { overall: { average: 3000 } },
           scoreBuckets: [],
         },
       }),
     })
     employeeFindAll.mockResolvedValue([
-      makeEmployee(
-        1,
-        'role-b',
-        120,
-        GenderEnum.MALE,
-        200,
-        400000,
-        100000,
-        50000,
-      ),
-      makeEmployee(
-        2,
-        'role-a',
-        220,
-        GenderEnum.FEMALE,
-        100,
-        300000,
-        50000,
-        null,
-      ),
+      makeEmployee(1, 'role-b', 120, GenderEnum.MALE, 200, 400000, 100000),
+      makeEmployee(2, 'role-a', 220, GenderEnum.FEMALE, 100, 300000, 50000),
     ])
     configFindOne.mockResolvedValue({ value: '3.9' })
     resultCreate.mockResolvedValue({ id: 'result-1' })
@@ -118,11 +100,11 @@ describe('ReportResultService', () => {
       expect.objectContaining({
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v3',
+        calculationVersion: 'v4',
         salarySnapshot: expect.objectContaining({
           totals: expect.objectContaining({
-            overall: expect.objectContaining({ average: 3125 }),
-            male: expect.objectContaining({ average: 2750 }),
+            overall: expect.objectContaining({ average: 3000 }),
+            male: expect.objectContaining({ average: 2500 }),
             female: expect.objectContaining({ average: 3500 }),
           }),
           scoreBuckets: expect.arrayContaining([
@@ -140,7 +122,7 @@ describe('ReportResultService', () => {
         }),
       }),
     )
-    expect(result.salary.totals.overall.average).toBe(3125)
+    expect(result.salary.totals.overall.average).toBe(3000)
   })
 
   /**
@@ -160,26 +142,8 @@ describe('ReportResultService', () => {
       fromModel: jest.fn().mockReturnValue({ id: 'result-1' }),
     })
     employeeFindAll.mockResolvedValue([
-      makeEmployee(
-        1,
-        'role-b',
-        120,
-        GenderEnum.MALE,
-        200,
-        400000,
-        100000,
-        50000,
-      ),
-      makeEmployee(
-        2,
-        'role-a',
-        220,
-        GenderEnum.FEMALE,
-        100,
-        300000,
-        50000,
-        null,
-      ),
+      makeEmployee(1, 'role-b', 120, GenderEnum.MALE, 200, 400000, 100000),
+      makeEmployee(2, 'role-a', 220, GenderEnum.FEMALE, 100, 300000, 50000),
     ])
     configFindOne.mockResolvedValue({ value: '3.9' })
     resultCreate.mockResolvedValue({ id: 'result-1' })
@@ -256,9 +220,9 @@ describe('ReportResultService', () => {
         id: 'result-1',
         reportId: REPORT_ID,
         salaryDifferenceThresholdPercent: 3.9,
-        calculationVersion: 'v3',
+        calculationVersion: 'v4',
         salary: {
-          totals: { overall: { average: 3125 } },
+          totals: { overall: { average: 3000 } },
           scoreBuckets: [],
         },
       }),
@@ -266,7 +230,7 @@ describe('ReportResultService', () => {
 
     const result = await service.getByReportId(REPORT_ID)
 
-    expect(result.salary.totals.overall.average).toBe(3125)
+    expect(result.salary.totals.overall.average).toBe(3000)
   })
 })
 
@@ -278,7 +242,6 @@ function makeEmployee(
   paidHours: number,
   baseSalary: number,
   additionalSalary: number,
-  bonusSalary: number | null,
 ) {
   return {
     ordinal,
@@ -288,14 +251,15 @@ function makeEmployee(
     paidHours,
     baseSalary,
     // Plain object cast to the model: the derived getters don't fire, so keep
-    // the parent totals as explicit own-properties for the service to read.
+    // the parent total as an explicit own-property for the service to read.
+    // No bonus parent: aukagreiðslur do not reach reglulegt tímakaup, so the
+    // service never asks for one.
     additionalSalary,
-    bonusSalary,
     additionalFixedOvertime: null,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
   } as unknown as ReportEmployeeModel
 }

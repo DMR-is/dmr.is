@@ -1,4 +1,4 @@
-import { literal, Op, Order } from 'sequelize'
+import { Includeable, literal, Op, Order, WhereOptions } from 'sequelize'
 
 import {
   BadRequestException,
@@ -55,8 +55,19 @@ import { CompanyModel } from './models/company.model'
 import { IsatCategoryModel } from './models/isat-category.model'
 import { IsatSectionModel } from './models/isat-section.model'
 import { LegacyReportModel } from './models/legacy-report.model'
-import { buildCompanyListQuery } from './utils/filters'
+import {
+  buildCompanyExpiryWhere,
+  buildCompanyIsatCategoryInclude,
+  buildCompanyIsatWhere,
+  buildCompanyLifecycleStatusWhere,
+  buildCompanyListQuery,
+  buildCompanyLocationInclude,
+  buildCompanyOverdueWhere,
+  buildCompanySectorWhere,
+  buildCompanyStatusWhere,
+} from './utils/filters'
 import { ResolvedSector, resolveSector } from './utils/legal-form-sector'
+import { hiddenFromDefaultRegisterSql } from './utils/report-status'
 import { mapRskLegalEntity } from './utils/rsk-company-mapping'
 import { companyMessages } from './company.messages'
 import {
@@ -121,10 +132,18 @@ export class CompanyService implements ICompanyService {
    * Re-read a company through the `withReportStatus` scope and map it to a DTO.
    * Used after a write (create) where the in-memory instance has no computed
    * `reportStatus` virtual yet.
+   *
+   * The ÍSAT category is joined here, not left to the caller: the company table
+   * stores only the bare `isat_category_code`, so without it every single
+   * company read returns `isatCategory: null` and the resolved code and
+   * description are unavailable to anyone reading a `CompanyDto`.
    */
   private async loadCompanyDto(id: string): Promise<CompanyDto> {
     const company = await this.companyWithReportStatus.findOneOrThrow(
-      { where: { id } },
+      {
+        where: { id },
+        include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
+      },
       companyMessages.notFound(id),
     )
 
@@ -134,7 +153,95 @@ export class CompanyService implements ICompanyService {
   async getAll(query: GetCompaniesQueryDto): Promise<GetCompaniesResponseDto> {
     const { limit, offset } = getLimitAndOffset(query)
 
-    const { where, includes } = buildCompanyListQuery(query)
+    const conditions: WhereOptions[] = []
+
+    if (query.q) {
+      const pattern = `%${query.q.trim()}%`
+      conditions.push({
+        [Op.or]: [
+          { name: { [Op.iLike]: pattern } },
+          { nationalId: { [Op.iLike]: pattern } },
+        ],
+      })
+    }
+
+    if (query.employeeCountCategory !== undefined) {
+      conditions.push({ employeeCountCategory: query.employeeCountCategory })
+    }
+
+    if (query.companyStatus?.length) {
+      conditions.push(buildCompanyStatusWhere(query.companyStatus))
+    }
+
+    if (query.status?.length) {
+      conditions.push(buildCompanyLifecycleStatusWhere(query.status))
+    }
+
+    if (query.expiresWithin?.length) {
+      conditions.push(buildCompanyExpiryWhere(query.expiresWithin))
+    }
+
+    if (query.finesStarted !== undefined) {
+      conditions.push({ finesStarted: query.finesStarted })
+    }
+
+    if (query.quarantined !== undefined) {
+      conditions.push({ quarantined: query.quarantined })
+    }
+
+    if (query.overdue) {
+      conditions.push(buildCompanyOverdueWhere())
+    }
+
+    // ⚠️ Two DEFAULT-ON hides, both suppressed by an explicit request on the
+    // same axis. The admin register is a working list of who owes what, and
+    // roughly 250 companies that owe nothing plus every deregistered company
+    // crowd it out — but a default that cannot be escaped is worse than no
+    // default. `employeeCountCategory` and `status` are the controls for these
+    // two axes, so setting either means the admin has already answered the
+    // question the default was guessing at: filtering to Óvirkt has to return
+    // óvirk companies, not an empty page.
+    //
+    // Ordered after the explicit filters purely for readability; `conditions`
+    // is AND-ed, so position carries no meaning.
+    if (!query.includeNotObliged && query.employeeCountCategory === undefined) {
+      conditions.push(literal(`NOT ${hiddenFromDefaultRegisterSql()}`))
+    }
+
+    if (!query.includeInactive && !query.status?.length) {
+      conditions.push({ status: CompanyStatusEnum.ACTIVE })
+    }
+
+    if (query.isatCategoryCode?.length) {
+      conditions.push(buildCompanyIsatWhere(query.isatCategoryCode))
+    }
+
+    if (query.sector?.length) {
+      conditions.push(buildCompanySectorWhere(query.sector))
+    }
+
+    const locationInclude = buildCompanyLocationInclude({
+      postcodes: query.postcode,
+      regionCodes: query.regionCode,
+    })
+
+    // Always joined — it carries the resolved ÍSAT code and description onto
+    // the DTO — and additionally narrows the rows when the section filter is
+    // active. See `buildCompanyIsatCategoryInclude`.
+    const isatCategoryInclude = buildCompanyIsatCategoryInclude(
+      query.isatSection,
+    )
+
+    const includes = [locationInclude, isatCategoryInclude].filter(
+      (include): include is Includeable => include !== null,
+    )
+
+    const where: WhereOptions =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]
+          : { [Op.and]: conditions }
 
     const sortDir = (
       query.direction ?? CompanySortDirectionEnum.ASC
@@ -161,16 +268,15 @@ export class CompanyService implements ICompanyService {
       order = [['name', sortDir]]
     }
 
-    const { rows, count } = await this.companyWithReportStatus
-      .findAndCountAll({
-        where,
-        order,
-        limit,
-        offset,
-        distinct: true,
-        col: 'id',
-        ...(includes.length ? { include: includes } : {}),
-      })
+    const { rows, count } = await this.companyWithReportStatus.findAndCountAll({
+      where,
+      order,
+      limit,
+      offset,
+      distinct: true,
+      col: 'id',
+      ...(includes.length ? { include: includes } : {}),
+    })
 
     const companies = rows.map((c) => c.fromModel())
     const paging = generatePaging(companies, query.page, query.pageSize, count)
@@ -201,7 +307,9 @@ export class CompanyService implements ICompanyService {
     return rows.map(toMailRecipient)
   }
 
-  async findMailRecipientsByIds(ids: string[]): Promise<CompanyMailRecipient[]> {
+  async findMailRecipientsByIds(
+    ids: string[],
+  ): Promise<CompanyMailRecipient[]> {
     if (!ids.length) return []
 
     const rows = await this.companyModel.findAll({
@@ -546,8 +654,9 @@ export class CompanyService implements ICompanyService {
     nationalId: string,
     fallbackName?: string,
   ): Promise<CompanyDto> {
-    const existing = await this.companyWithReportStatus
-      .findOne({ where: { nationalId } })
+    const existing = await this.companyWithReportStatus.findOne({
+      where: { nationalId },
+    })
 
     if (existing) {
       return existing.fromModel()
@@ -797,17 +906,11 @@ export class CompanyService implements ICompanyService {
 
     await company.update({ isatCategoryCode: code })
 
-    // Scoped, like every other CompanyDto read: the derived columns
-    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals the
-    // `withReportStatus` scope selects, and come back undefined without it.
-    // Re-read rather than `loadCompanyDto` because the response carries the
-    // resolved ISAT category and that helper does not include it.
-    const updated = await this.companyWithReportStatus.findOneOrThrow({
-      where: { id },
-      include: [{ model: IsatCategoryModel, as: 'isatCategory' }],
-    })
-
-    return updated.fromModel()
+    // Re-read rather than mapping the in-memory instance: the derived columns
+    // (reportStatus, the two overdue flags, hasLegacyReports) are virtuals only
+    // the `withReportStatus` scope selects, and the response has to carry the
+    // newly resolved ÍSAT category. `loadCompanyDto` does both.
+    return this.loadCompanyDto(id)
   }
 
   /**
@@ -875,10 +978,7 @@ export class CompanyService implements ICompanyService {
 
     const override = dto.sector !== CompanySectorEnum.UNKNOWN
 
-    if (
-      company.sector === dto.sector &&
-      company.sectorOverride === override
-    ) {
+    if (company.sector === dto.sector && company.sectorOverride === override) {
       return this.loadCompanyDto(id)
     }
 

@@ -24,8 +24,10 @@ import { IConfigService } from '../config/config.service.interface'
 import { CONFIG_KEYS, parseNumericConfig } from '../config/lib/numeric-config'
 import { DEFAULT_OUTLIER_GROUP_NAME } from '../constants'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { resolveEqualityContent } from '../report/lib/equality-content'
 import {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
@@ -35,7 +37,10 @@ import {
   ReportEventModel,
   ReportEventTypeEnum,
 } from '../report/models/report-event.model'
-import { IReportService } from '../report/report.service.interface'
+import {
+  EqualityContentPdf,
+  IReportService,
+} from '../report/report.service.interface'
 import {
   type ReportResourceContext,
   ReportRoleEnum,
@@ -338,9 +343,22 @@ export class ApplicationService implements IApplicationService {
       correctionDeadline: report.correctionDeadline,
       companies: companyRows.map((row) => CompanyReportModel.fromModel(row)),
       equalityReport,
+      // PDF content is withheld here for the same reason as everywhere else —
+      // the bytes are served by the dedicated equality-content route, not
+      // inlined as base64 on a detail read. `equalityReportContentType` is what
+      // tells the applicant which of the two they are looking at.
+      // Withheld only for PDF — tested that way round, not `=== HTML`, so an
+      // unset type reads as the rich text it has always been rather than
+      // blanking content that is really there.
       equalityReportContent:
-        report.type === ReportTypeEnum.EQUALITY
+        report.type === ReportTypeEnum.EQUALITY &&
+        report.equalityReportContentType !== EqualityContentTypeEnum.PDF
           ? report.equalityReportContent
+          : null,
+      equalityReportContentType: report.equalityReportContentType,
+      equalityReportContentFilename:
+        report.type === ReportTypeEnum.EQUALITY
+          ? report.equalityReportContentFilename
           : null,
       salaryDataBasis: report.salaryDataBasis,
       salaryDataPeriod: report.salaryDataPeriod,
@@ -462,10 +480,12 @@ export class ApplicationService implements IApplicationService {
       )
     }
 
-    await this.reportModel.update(
-      { equalityReportContent: input.equalityReportContent },
-      { where: { id: report.id } },
-    )
+    // Replaces content and representation together: a correction may switch a
+    // report from HTML to PDF or back, and leaving the old type behind would
+    // describe the new content wrongly.
+    await this.reportModel.update(resolveEqualityContent(input), {
+      where: { id: report.id },
+    })
 
     await this.markApplicantResponded(report.id)
 
@@ -841,7 +861,12 @@ export class ApplicationService implements IApplicationService {
       contactTitle: input.contactTitle ?? null,
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
+      // Passed through unresolved — `ReportCreateService` is the single place
+      // that turns these three into the stored columns, so the either/or rule
+      // is applied once rather than once per caller of that service.
       equalityReportContent: input.equalityReportContent,
+      equalityReportPdf: input.equalityReportPdf,
+      equalityReportPdfFilename: input.equalityReportPdfFilename,
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,
@@ -970,6 +995,26 @@ export class ApplicationService implements IApplicationService {
       result,
       includesImprovementPlan: outlierCount > 0,
     }
+  }
+
+  async getEqualityContentPdf(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<EqualityContentPdf> {
+    this.logger.debug('Fetching uploaded equality plan from application portal', {
+      context: LOGGING_CONTEXT,
+      companyId: company.id,
+      providerId,
+    })
+
+    // Ownership first: resolving the tuple is what makes this the company's own
+    // report rather than any report whose id was guessed.
+    const report = await this.findOwnedReportByProviderTuple(
+      providerId,
+      company,
+    )
+
+    return this.reportService.getEqualityContentPdf(report.id)
   }
 
   async getReportOutliers(

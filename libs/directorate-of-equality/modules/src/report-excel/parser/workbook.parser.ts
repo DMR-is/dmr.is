@@ -33,6 +33,7 @@ import {
 import { ImportErrorDto } from '../dto/import-error.dto'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { validateSemantics } from '../validators/semantic.validator'
+import { SHEETS } from '../workbook.schema'
 import {
   parseEmployeeClassifications,
   parseRoleClassifications,
@@ -41,6 +42,12 @@ import { parseCriteriaTree } from './criteria.parser'
 import { parseEmployees } from './employees.parser'
 import { ErrorBag } from './errors'
 import { assertWorkbookLayout } from './layout.assert'
+import {
+  checkTemplateVersion,
+  readTemplateMetadata,
+  type TemplateMetadata,
+  TemplateVersionSourceEnum,
+} from './template-version.assert'
 
 const SHARED_STRINGS_PATH = 'xl/sharedStrings.xml'
 const WORKSHEET_XML_RE = /^xl\/worksheets\/sheet\d+\.xml$/
@@ -215,9 +222,17 @@ export const parseWorkbook = async (
   fileBuffer: Buffer,
 ): Promise<ParsedReportDto> => {
   const workbook = new ExcelJS.Workbook()
+  // Read from the archive while it is open, checked after the load succeeds:
+  // a workbook too corrupt to load has a better error than "wrong version".
+  let templateMetadata: TemplateMetadata = {
+    version: null,
+    templateId: null,
+    source: TemplateVersionSourceEnum.NONE,
+  }
   try {
     const zip = await JSZip.loadAsync(fileBuffer)
     await assertArchiveWithinBudget(zip)
+    templateMetadata = await readTemplateMetadata(zip)
     const guardedBuffer = await guardMissingSharedStrings(zip, fileBuffer)
     // exceljs declares its own `Buffer extends ArrayBuffer` shape that
     // conflicts with Node 20's `Buffer extends Uint8Array<ArrayBufferLike>`.
@@ -253,7 +268,40 @@ export const parseWorkbook = async (
 
   const errors = new ErrorBag()
 
-  // ⚠️ Layout FIRST, and bail on mismatch. Every parser below reads by
+  // ⚠️ VERSION FIRST — before the layout check, and long before any row is
+  // read. Template 2.0 reassigned Launagögn L, N and O without moving them, so
+  // a 1.x workbook parses to completion and yields wrong pay figures rather
+  // than failing. This is the only check that can name the migration, and
+  // three of its four sources do not depend on the headers being intact. See
+  // `template-version.assert.ts` for the source chain, and for why 1.x is
+  // rejected rather than supported.
+  //
+  // The workbook is passed in because two of those sources are cells — the
+  // visible version mirror on Leiðbeiningar and Launagögn's column bands —
+  // which are what a workbook re-saved by an editor that discards custom
+  // document properties still carries.
+  const outdatedTemplate = checkTemplateVersion(templateMetadata, workbook)
+  if (outdatedTemplate) {
+    // `message` and `errors` deliberately do NOT run parallel here, unlike the
+    // per-cell throws below. `message` becomes `ApiErrorDto.details`, which the
+    // island.is portal renders as a bulleted list once it has more than one
+    // entry — and these are migration steps, so a list is what they should be.
+    // `errors` stays a single ImportErrorDto because this is one problem with
+    // the workbook, not five, and that array is the structured per-location
+    // list. Splitting it would invent four locations that do not exist.
+    const error: ImportErrorDto = {
+      sheet: SHEETS.EMPLOYEES,
+      row: null,
+      column: null,
+      message: outdatedTemplate.join(' '),
+    }
+    throw new BadRequestException({
+      message: outdatedTemplate,
+      errors: [error],
+    })
+  }
+
+  // ⚠️ Layout SECOND, and bail on mismatch. Every parser below reads by
   // hard-coded column letter, so against an older template they would each
   // report their own per-row failures — describing the submitter's data rather
   // than the stale sheet that caused it. One accurate error beats a page of

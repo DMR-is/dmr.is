@@ -162,9 +162,9 @@ module.exports = {
           `${e.paidHours},${money(e.baseSalary)},${money(
             e.additionalFixedOvertime,
           )},` +
-          `${money(e.additionalFixedCarAllowance)},NULL,NULL,${money(
-            e.bonusPayments,
-          )},NULL,` +
+          `${money(e.additionalFixedCarAllowance)},${money(
+            e.additionalFixedOther,
+          )},NULL,NULL,NULL,` +
           `'${e.gender}','${roleIdByTitle.get(e.role)}',${e.score}.00)`,
       )
       .join(',\n')
@@ -277,14 +277,14 @@ ${roleStepSql};
 
 INSERT INTO report_employee (id, report_id, ordinal, field, department,
   start_date, paid_hours, base_salary,
-  additional_fixed_overtime, additional_fixed_car_allowance,
-  bonus_occasional_car_allowance, bonus_occasional_overtime, bonus_payments, bonus_other,
+  additional_fixed_overtime, additional_fixed_car_allowance, additional_fixed_other,
+  bonus_occasional_overtime, bonus_occasional_car_allowance, bonus_other,
   gender, report_employee_role_id, score) VALUES
 ${employeeSql};
 
 INSERT INTO report_result (id, report_id, salary_difference_threshold_percent,
   calculation_version, salary_snapshot, wage_gap_decomposition_snapshot)
-VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v3', '${salarySnap}', '${wageGapSnap}');
+VALUES ('${resultId}', '${SAL_REPORT_ID}', 3.90, 'v4', '${salarySnap}', '${wageGapSnap}');
 
 INSERT INTO report_outlier_group (id, report_id, name, reason, action, signature_name, signature_role, remedy_date)
 VALUES ('${groupId}', '${SAL_REPORT_ID}', 'Lágmarksmengi — launasetning við nýliðun',

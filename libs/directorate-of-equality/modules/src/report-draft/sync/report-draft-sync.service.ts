@@ -3,7 +3,11 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common'
 import { Logger, LOGGER_PROVIDER } from '@dmr.is/logging'
 
 import { CompanyDto } from '../../company/dto/company.dto'
-import { IReportDraftAssignmentService } from '../assignment/report-draft-assignment.service.interface'
+import {
+  AssignmentOwnerEnum,
+  IReportDraftAssignmentService,
+  PreBatchAssignment,
+} from '../assignment/report-draft-assignment.service.interface'
 import { IReportDraftCriterionService } from '../criterion/report-draft-criterion.service.interface'
 import { IReportDraftService } from '../draft/report-draft.service.interface'
 import { IReportDraftEmployeeService } from '../employee/report-draft-employee.service.interface'
@@ -11,6 +15,8 @@ import { IReportDraftOutlierGroupService } from '../outlier-group/report-draft-o
 import { IReportDraftRoleService } from '../role/report-draft-role.service.interface'
 import { IReportDraftStepService } from '../step/report-draft-step.service.interface'
 import { IReportDraftSubCriterionService } from '../sub-criterion/report-draft-sub-criterion.service.interface'
+import { EmployeeChangeDataDto } from './dto/change-employee.dto'
+import { RoleChangeDataDto } from './dto/change-role.dto'
 import { SyncDraftDto } from './dto/sync-draft.dto'
 import { IReportDraftSyncService } from './report-draft-sync.service.interface'
 import { SyncMethodEnum } from './sync-method.enum'
@@ -57,6 +63,7 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
 
   /**
    * Applies the batch in dependency order under the request transaction:
+   *   0. snapshot the assignments the batch's step removals will destroy
    *   1. create/update the criteria tree (criteria → sub → steps)
    *   2. create/update roles and employees (rows only)
    *   3. apply folded step assignments (role + employee `stepIds`)
@@ -64,11 +71,20 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
    *   5. clear folded outlier-group membership (`outlierGroupId: null`)
    *   6. removals, dependents first (employees → steps → sub → criteria → roles)
    *   7. apply outlier-group membership, then remove groups
-   *   8. touch the report row so the prune cron sees child-only edits
+   *   8. re-home the assignments orphaned by step removals (step 0's snapshot)
+   *   9. touch the report row so the prune cron sees child-only edits
    * Any failure throws and the CLS transaction rolls the whole batch back.
    * Referential integrity is enforced inline by the appliers (role/group remove
    * refuse to orphan; membership must name an employee and a group of this
    * draft) plus DB FKs.
+   *
+   * Steps 0 and 8 exist because a step assignment is addressed by step id, not
+   * by (sub-criterion, order): removing a step used to drop every assignment
+   * standing on it without a word, and the portal — which reads id → order —
+   * then had nothing to fall back on but the first step, silently marking a
+   * top-scoring role as 1. þrep. See `clampOrphanedAssignments` for the
+   * prefer-lower rule and why it, rather than any non-empty answer, is the
+   * correct one.
    *
    * Sync deliberately does NOT judge membership against the detected-outlier
    * set. Detection is derived from the whole draft and this endpoint is chunked
@@ -102,6 +118,25 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
         `A sync batch carries at most ${MAX_EMPLOYEE_COMMANDS} employee commands (got ${employeeCommandCount}); chunk the employees`,
       )
     }
+
+    // 0. Snapshot what the step removals are about to destroy. This has to run
+    //    before any write: `removeStep` destroys the join rows outright, and a
+    //    folded `stepIds` in step 3 would clear them even earlier.
+    //
+    //    An owner whose `stepIds` this same batch sets explicitly is left out —
+    //    that value is the applicant's own answer (it is how the Flokkun starfa
+    //    screen saves) and must not be second-guessed by a clamp.
+    const orphaned =
+      steps.removes.length === 0
+        ? []
+        : (
+            await this.assignmentService.snapshotAssignmentsForSteps(
+              report,
+              steps.removes,
+            )
+          ).filter(
+            (snapshot) => !this.setsStepsExplicitly(snapshot, roles, employees),
+          )
 
     // 1. Criteria tree — parents before children.
     for (const c of criteria.creates) {
@@ -210,6 +245,14 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       await this.outlierGroupService.removeGroup(report, id)
     }
 
+    // 8. Re-home the assignments orphaned by the step removals in step 6, to
+    //    the nearest surviving step of the same sub-criterion — named by the id
+    //    step 0 captured, so a step UPDATE in step 1 that renumbered a survivor
+    //    cannot make the resolution span two scales. Only a wholesale template
+    //    swap (every step removed, a fresh set created) leaves no pre-batch
+    //    sibling to name, and falls back to the POST-batch orders.
+    await this.assignmentService.clampOrphanedAssignments(report, orphaned)
+
     // Everything above writes children only. Touch the report row so the
     // abandoned-draft reaper sees an actively-edited draft as active.
     await this.reportDraftService.touchDraft(report.id)
@@ -218,6 +261,28 @@ export class ReportDraftSyncService implements IReportDraftSyncService {
       context: LOGGING_CONTEXT,
       reportId: report.id,
     })
+  }
+
+  /**
+   * Whether this batch also states the owner's assignments outright, in which
+   * case the explicit value wins and the snapshot is discarded. Only a `stepIds`
+   * key counts — a command that merely renames a role says nothing about its
+   * classifications.
+   */
+  private setsStepsExplicitly(
+    snapshot: PreBatchAssignment,
+    roles: Partitioned<RoleChangeDataDto>,
+    employees: Partitioned<EmployeeChangeDataDto>,
+  ): boolean {
+    const commands =
+      snapshot.owner === AssignmentOwnerEnum.ROLE
+        ? [...roles.creates, ...roles.updates]
+        : [...employees.creates, ...employees.updates]
+
+    return commands.some(
+      (command) =>
+        command.id === snapshot.ownerId && command.data.stepIds !== undefined,
+    )
   }
 
   /**

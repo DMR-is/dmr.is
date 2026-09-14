@@ -2,6 +2,7 @@ import { PagingQuery } from '@dmr.is/shared-dto'
 
 import { CompanyDto } from '../company/dto/company.dto'
 import { EqualityReportSummaryDto } from '../report/dto/equality-report-summary.dto'
+import { EqualityContentPdf } from '../report/report.service.interface'
 import { CreateReportResponseDto } from '../report-create/dto/create-report-response.dto'
 import { GetReportOutliersResponseDto } from '../report-employee/dto/get-report-outliers-response.dto'
 import { SalaryAnalysisRequestDto } from '../report-statistics/dto/salary-analysis.request.dto'
@@ -39,6 +40,18 @@ export interface IApplicationService {
     providerId: string,
     company: CompanyDto,
   ): Promise<ApplicationReportDetailDto>
+  /**
+   * The applicant's own uploaded equality plan, read back.
+   *
+   * Needed during a correction: the applicant is being asked to revise a plan
+   * they can no longer see, because the detail read withholds the PDF bytes.
+   * Scoped by the same provider/company tuple as every other read here, so a
+   * company can only fetch its own.
+   */
+  getEqualityContentPdf(
+    providerId: string,
+    company: CompanyDto,
+  ): Promise<EqualityContentPdf>
   getReportOutliers(
     providerId: string,
     company: CompanyDto,

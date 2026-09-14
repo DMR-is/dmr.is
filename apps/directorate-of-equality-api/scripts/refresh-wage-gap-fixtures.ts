@@ -26,24 +26,25 @@
 import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
-import {
-  scenarioEmployees,
-  scenarioHourlyWage,
-} from '../db/lib/scenario-cohort'
-import { getRegularHourlyWage } from '../src/modules/report/lib/compensation-aggregates'
+import { getRegularHourlyWage } from '@dmr.is/doe-modules/report'
 import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
-} from '../src/modules/report/lib/employee-scores'
+} from '@dmr.is/doe-modules/report'
 import {
   computeWageGapDecomposition,
   roundWageGapDecompositionSnapshot,
   type WageGapDecompositionSnapshot,
   type WageGapEmployeeInput,
-} from '../src/modules/report/lib/wage-gap-decomposition'
-import { GenderEnum } from '../src/modules/report/models/report.enums'
-import type { ParsedReportDto } from '../src/modules/report-excel/dto/parsed-report.dto'
-import { buildChartFromEmployeePoints } from '../src/modules/report-statistics/lib/build-chart'
+} from '@dmr.is/doe-modules/report'
+import { GenderEnum } from '@dmr.is/doe-modules/report'
+import type { ParsedReportDto } from '@dmr.is/doe-modules/report-excel'
+import { buildChartFromEmployeePoints } from '@dmr.is/doe-modules/report-statistics'
+
+import {
+  scenarioEmployees,
+  scenarioHourlyWage,
+} from '../db/lib/scenario-cohort'
 
 /**
  * **The demo gap.** Every woman's pay in the 100-employee sheet is scaled by
@@ -99,9 +100,9 @@ function scalePay(
     baseSalary: Math.round(employee.baseSalary * factor),
     additionalFixedOvertime: scale(employee.additionalFixedOvertime),
     additionalFixedCarAllowance: scale(employee.additionalFixedCarAllowance),
-    bonusOccasionalCarAllowance: scale(employee.bonusOccasionalCarAllowance),
+    additionalFixedOther: scale(employee.additionalFixedOther),
     bonusOccasionalOvertime: scale(employee.bonusOccasionalOvertime),
-    bonusPayments: scale(employee.bonusPayments),
+    bonusOccasionalCarAllowance: scale(employee.bonusOccasionalCarAllowance),
     bonusOther: scale(employee.bonusOther),
   }
 }
@@ -112,12 +113,8 @@ const hourlyWageOf = (employee: ParsedReportDto['employees'][number]): number =>
     baseSalary: employee.baseSalary,
     additionalSalary:
       (employee.additionalFixedOvertime ?? 0) +
-      (employee.additionalFixedCarAllowance ?? 0),
-    bonusSalary:
-      (employee.bonusOccasionalCarAllowance ?? 0) +
-      (employee.bonusOccasionalOvertime ?? 0) +
-      (employee.bonusPayments ?? 0) +
-      (employee.bonusOther ?? 0),
+      (employee.additionalFixedCarAllowance ?? 0) +
+      (employee.additionalFixedOther ?? 0),
   })
 
 /**

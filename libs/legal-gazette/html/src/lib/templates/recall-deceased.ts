@@ -4,7 +4,7 @@ import { RecallDeceasedSettlement, RecallDeceasedTemplateProps } from './types'
 import {
   formatNationalId,
   getElement,
-  getStatementLocation,
+  getStatementDestination,
   getStatementPrefix,
   getTableCell,
   getTableHeaderCell,
@@ -78,7 +78,7 @@ const getOutro = ({
   })
 
   const secondParagraph = getElement({
-    text: `Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementLocation(settlement)}`,
+    text: `Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementDestination(settlement)}`,
   })
 
   return `${firstParagraph}${secondParagraph}`

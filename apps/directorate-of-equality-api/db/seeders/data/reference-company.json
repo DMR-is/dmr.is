@@ -16,7 +16,7 @@
       "baseSalary": 215400,
       "additionalFixedOvertime": 46400,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -28,7 +28,7 @@
       "baseSalary": 464000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -40,7 +40,7 @@
       "baseSalary": 460500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -52,7 +52,7 @@
       "baseSalary": 348100,
       "additionalFixedOvertime": 69500,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 20600,
+      "additionalFixedOther": 20600,
       "role": "Fullvinnandi"
     },
     {
@@ -64,7 +64,7 @@
       "baseSalary": 439400,
       "additionalFixedOvertime": 59600,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -76,7 +76,7 @@
       "baseSalary": 153400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -88,7 +88,7 @@
       "baseSalary": 507800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -100,7 +100,7 @@
       "baseSalary": 566300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 35400,
+      "additionalFixedOther": 35400,
       "role": "Hlutastarf"
     },
     {
@@ -112,7 +112,7 @@
       "baseSalary": 415600,
       "additionalFixedOvertime": 45900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -124,7 +124,7 @@
       "baseSalary": 399800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -136,7 +136,7 @@
       "baseSalary": 500200,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -148,7 +148,7 @@
       "baseSalary": 453500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -160,7 +160,7 @@
       "baseSalary": 227900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 14500,
-      "bonusPayments": 12400,
+      "additionalFixedOther": 12400,
       "role": "Hlutastarf"
     },
     {
@@ -172,7 +172,7 @@
       "baseSalary": 392700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -184,7 +184,7 @@
       "baseSalary": 401400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -196,7 +196,7 @@
       "baseSalary": 383000,
       "additionalFixedOvertime": 79000,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -208,7 +208,7 @@
       "baseSalary": 253000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -220,7 +220,7 @@
       "baseSalary": 483400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 16900,
+      "additionalFixedOther": 16900,
       "role": "Fullvinnandi"
     },
     {
@@ -232,7 +232,7 @@
       "baseSalary": 202100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 7300,
+      "additionalFixedOther": 7300,
       "role": "Hlutastarf"
     },
     {
@@ -244,7 +244,7 @@
       "baseSalary": 303400,
       "additionalFixedOvertime": 39300,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 12700,
+      "additionalFixedOther": 12700,
       "role": "Fullvinnandi"
     },
     {
@@ -256,7 +256,7 @@
       "baseSalary": 234800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 15700,
+      "additionalFixedOther": 15700,
       "role": "Hlutastarf"
     },
     {
@@ -268,7 +268,7 @@
       "baseSalary": 434700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 20100,
+      "additionalFixedOther": 20100,
       "role": "Fullvinnandi"
     },
     {
@@ -280,7 +280,7 @@
       "baseSalary": 326300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -292,7 +292,7 @@
       "baseSalary": 348500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 27600,
-      "bonusPayments": 16400,
+      "additionalFixedOther": 16400,
       "role": "Hlutastarf"
     },
     {
@@ -304,7 +304,7 @@
       "baseSalary": 327300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 13400,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -316,7 +316,7 @@
       "baseSalary": 342700,
       "additionalFixedOvertime": 53900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -328,7 +328,7 @@
       "baseSalary": 267200,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 21000,
+      "additionalFixedOther": 21000,
       "role": "Fullvinnandi"
     },
     {
@@ -340,7 +340,7 @@
       "baseSalary": 425100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 16000,
+      "additionalFixedOther": 16000,
       "role": "Fullvinnandi"
     },
     {
@@ -352,7 +352,7 @@
       "baseSalary": 454700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -364,7 +364,7 @@
       "baseSalary": 468300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -376,7 +376,7 @@
       "baseSalary": 356000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 24200,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -388,7 +388,7 @@
       "baseSalary": 398000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 29500,
+      "additionalFixedOther": 29500,
       "role": "Fullvinnandi"
     },
     {
@@ -400,7 +400,7 @@
       "baseSalary": 357600,
       "additionalFixedOvertime": 47000,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -412,7 +412,7 @@
       "baseSalary": 384000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 12000,
+      "additionalFixedOther": 12000,
       "role": "Fullvinnandi"
     },
     {
@@ -424,7 +424,7 @@
       "baseSalary": 589200,
       "additionalFixedOvertime": 81600,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -436,7 +436,7 @@
       "baseSalary": 239200,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 11400,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -448,7 +448,7 @@
       "baseSalary": 456100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -460,7 +460,7 @@
       "baseSalary": 508500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 30400,
+      "additionalFixedOther": 30400,
       "role": "Fullvinnandi"
     },
     {
@@ -472,7 +472,7 @@
       "baseSalary": 252900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -484,7 +484,7 @@
       "baseSalary": 436000,
       "additionalFixedOvertime": 80800,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 28600,
+      "additionalFixedOther": 28600,
       "role": "Hlutastarf"
     },
     {
@@ -496,7 +496,7 @@
       "baseSalary": 438400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 34800,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -508,7 +508,7 @@
       "baseSalary": 444800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -520,7 +520,7 @@
       "baseSalary": 337700,
       "additionalFixedOvertime": 70000,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -532,7 +532,7 @@
       "baseSalary": 468100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -544,7 +544,7 @@
       "baseSalary": 423000,
       "additionalFixedOvertime": 55300,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -556,7 +556,7 @@
       "baseSalary": 298900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 23400,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -568,7 +568,7 @@
       "baseSalary": 537700,
       "additionalFixedOvertime": 78800,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -580,7 +580,7 @@
       "baseSalary": 474100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 33400,
+      "additionalFixedOther": 33400,
       "role": "Fullvinnandi"
     },
     {
@@ -592,7 +592,7 @@
       "baseSalary": 380300,
       "additionalFixedOvertime": 72900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -604,7 +604,7 @@
       "baseSalary": 308800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -616,7 +616,7 @@
       "baseSalary": 370900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -628,7 +628,7 @@
       "baseSalary": 160700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -640,7 +640,7 @@
       "baseSalary": 265000,
       "additionalFixedOvertime": 57300,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 8900,
+      "additionalFixedOther": 8900,
       "role": "Hlutastarf"
     },
     {
@@ -652,7 +652,7 @@
       "baseSalary": 310100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 7100,
+      "additionalFixedOther": 7100,
       "role": "Hlutastarf"
     },
     {
@@ -664,7 +664,7 @@
       "baseSalary": 425900,
       "additionalFixedOvertime": 86700,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -676,7 +676,7 @@
       "baseSalary": 473700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -688,7 +688,7 @@
       "baseSalary": 427100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -700,7 +700,7 @@
       "baseSalary": 529300,
       "additionalFixedOvertime": 59200,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -712,7 +712,7 @@
       "baseSalary": 603200,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -724,7 +724,7 @@
       "baseSalary": 403800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -736,7 +736,7 @@
       "baseSalary": 498600,
       "additionalFixedOvertime": 72800,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -748,7 +748,7 @@
       "baseSalary": 430900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 31400,
+      "additionalFixedOther": 31400,
       "role": "Fullvinnandi"
     },
     {
@@ -760,7 +760,7 @@
       "baseSalary": 304900,
       "additionalFixedOvertime": 51000,
       "additionalFixedCarAllowance": 23500,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -772,7 +772,7 @@
       "baseSalary": 220500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 14100,
+      "additionalFixedOther": 14100,
       "role": "Hlutastarf"
     },
     {
@@ -784,7 +784,7 @@
       "baseSalary": 419800,
       "additionalFixedOvertime": 89700,
       "additionalFixedCarAllowance": 16600,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -796,7 +796,7 @@
       "baseSalary": 393800,
       "additionalFixedOvertime": 52800,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 13900,
+      "additionalFixedOther": 13900,
       "role": "Fullvinnandi"
     },
     {
@@ -808,7 +808,7 @@
       "baseSalary": 556700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 34900,
-      "bonusPayments": 14200,
+      "additionalFixedOther": 14200,
       "role": "Fullvinnandi"
     },
     {
@@ -820,7 +820,7 @@
       "baseSalary": 353000,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -832,7 +832,7 @@
       "baseSalary": 280500,
       "additionalFixedOvertime": 40300,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 14000,
+      "additionalFixedOther": 14000,
       "role": "Fullvinnandi"
     },
     {
@@ -844,7 +844,7 @@
       "baseSalary": 352800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -856,7 +856,7 @@
       "baseSalary": 495500,
       "additionalFixedOvertime": 57100,
       "additionalFixedCarAllowance": 21200,
-      "bonusPayments": 33100,
+      "additionalFixedOther": 33100,
       "role": "Fullvinnandi"
     },
     {
@@ -868,7 +868,7 @@
       "baseSalary": 178800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 8500,
+      "additionalFixedOther": 8500,
       "role": "Hlutastarf"
     },
     {
@@ -880,7 +880,7 @@
       "baseSalary": 448400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 24400,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -892,7 +892,7 @@
       "baseSalary": 450900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -904,7 +904,7 @@
       "baseSalary": 577200,
       "additionalFixedOvertime": 119400,
       "additionalFixedCarAllowance": 30500,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -916,7 +916,7 @@
       "baseSalary": 311300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -928,7 +928,7 @@
       "baseSalary": 256500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 7600,
+      "additionalFixedOther": 7600,
       "role": "Hlutastarf"
     },
     {
@@ -940,7 +940,7 @@
       "baseSalary": 444400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 31100,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -952,7 +952,7 @@
       "baseSalary": 344800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -964,7 +964,7 @@
       "baseSalary": 587800,
       "additionalFixedOvertime": 65300,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -976,7 +976,7 @@
       "baseSalary": 405600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 27200,
+      "additionalFixedOther": 27200,
       "role": "Fullvinnandi"
     },
     {
@@ -988,7 +988,7 @@
       "baseSalary": 319800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 8600,
+      "additionalFixedOther": 8600,
       "role": "Hlutastarf"
     },
     {
@@ -1000,7 +1000,7 @@
       "baseSalary": 298400,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1012,7 +1012,7 @@
       "baseSalary": 404700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1024,7 +1024,7 @@
       "baseSalary": 342900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 26700,
-      "bonusPayments": 13300,
+      "additionalFixedOther": 13300,
       "role": "Hlutastarf"
     },
     {
@@ -1036,7 +1036,7 @@
       "baseSalary": 286700,
       "additionalFixedOvertime": 49900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1048,7 +1048,7 @@
       "baseSalary": 422500,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1060,7 +1060,7 @@
       "baseSalary": 396300,
       "additionalFixedOvertime": 50900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1072,7 +1072,7 @@
       "baseSalary": 565500,
       "additionalFixedOvertime": 117500,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1084,7 +1084,7 @@
       "baseSalary": 357800,
       "additionalFixedOvertime": 41100,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1096,7 +1096,7 @@
       "baseSalary": 479600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 25000,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1108,7 +1108,7 @@
       "baseSalary": 508600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1120,7 +1120,7 @@
       "baseSalary": 469800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1132,7 +1132,7 @@
       "baseSalary": 536300,
       "additionalFixedOvertime": 64700,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 24100,
+      "additionalFixedOther": 24100,
       "role": "Fullvinnandi"
     },
     {
@@ -1144,7 +1144,7 @@
       "baseSalary": 423500,
       "additionalFixedOvertime": 63200,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1156,7 +1156,7 @@
       "baseSalary": 515700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1168,7 +1168,7 @@
       "baseSalary": 221900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1180,7 +1180,7 @@
       "baseSalary": 471600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1192,7 +1192,7 @@
       "baseSalary": 309800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1204,7 +1204,7 @@
       "baseSalary": 244300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 16200,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1216,7 +1216,7 @@
       "baseSalary": 437900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1228,7 +1228,7 @@
       "baseSalary": 329900,
       "additionalFixedOvertime": 61000,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1240,7 +1240,7 @@
       "baseSalary": 355800,
       "additionalFixedOvertime": 77100,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1252,7 +1252,7 @@
       "baseSalary": 680100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 37900,
+      "additionalFixedOther": 37900,
       "role": "Fullvinnandi"
     },
     {
@@ -1264,7 +1264,7 @@
       "baseSalary": 402600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1276,7 +1276,7 @@
       "baseSalary": 378600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 30200,
-      "bonusPayments": 27800,
+      "additionalFixedOther": 27800,
       "role": "Fullvinnandi"
     },
     {
@@ -1288,7 +1288,7 @@
       "baseSalary": 302500,
       "additionalFixedOvertime": 46900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 7900,
+      "additionalFixedOther": 7900,
       "role": "Hlutastarf"
     },
     {
@@ -1300,7 +1300,7 @@
       "baseSalary": 541800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 23600,
+      "additionalFixedOther": 23600,
       "role": "Fullvinnandi"
     },
     {
@@ -1312,7 +1312,7 @@
       "baseSalary": 406200,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1324,7 +1324,7 @@
       "baseSalary": 488800,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 34300,
-      "bonusPayments": 37500,
+      "additionalFixedOther": 37500,
       "role": "Fullvinnandi"
     },
     {
@@ -1336,7 +1336,7 @@
       "baseSalary": 535600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1348,7 +1348,7 @@
       "baseSalary": 314600,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1360,7 +1360,7 @@
       "baseSalary": 381400,
       "additionalFixedOvertime": 70900,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1372,7 +1372,7 @@
       "baseSalary": 431700,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 20600,
-      "bonusPayments": 9500,
+      "additionalFixedOther": 9500,
       "role": "Fullvinnandi"
     },
     {
@@ -1384,7 +1384,7 @@
       "baseSalary": 219900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     },
     {
@@ -1396,7 +1396,7 @@
       "baseSalary": 376900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Fullvinnandi"
     },
     {
@@ -1408,7 +1408,7 @@
       "baseSalary": 475300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 22400,
-      "bonusPayments": 36900,
+      "additionalFixedOther": 36900,
       "role": "Fullvinnandi"
     },
     {
@@ -1420,7 +1420,7 @@
       "baseSalary": 364300,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 14400,
-      "bonusPayments": 7500,
+      "additionalFixedOther": 7500,
       "role": "Fullvinnandi"
     },
     {
@@ -1432,7 +1432,7 @@
       "baseSalary": 529900,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 0,
-      "bonusPayments": 20900,
+      "additionalFixedOther": 20900,
       "role": "Fullvinnandi"
     },
     {
@@ -1444,7 +1444,7 @@
       "baseSalary": 213100,
       "additionalFixedOvertime": 0,
       "additionalFixedCarAllowance": 7900,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "role": "Hlutastarf"
     }
   ],

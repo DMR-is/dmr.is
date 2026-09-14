@@ -44,10 +44,14 @@ export enum ApplicationStatusEnum {
   FINISHED = 'FINISHED',
 }
 
+// Duplicate of the canonical enum in @dmr.is/legal-gazette-schemas
+// (libs/legal-gazette/schemas/src/lib/constants.ts) - keep both in sync.
 export enum ApplicationRequirementStatementEnum {
   LIQUIDATORLOCATION = 'LIQUIDATOR_LOCATION',
   CUSTOMLIQUIDATORLOCATION = 'CUSTOM_LIQUIDATOR_LOCATION',
   CUSTOMLIQUIDATOREMAIL = 'CUSTOM_LIQUIDATOR_EMAIL',
+  CUSTOMLIQUIDATORURL = 'CUSTOM_LIQUIDATOR_URL',
+  CUSTOMOTHER = 'CUSTOM_OTHER',
 }
 export enum IslandIsCommonApplicationEventsEnum {
   APPROVE = 'APPROVE',

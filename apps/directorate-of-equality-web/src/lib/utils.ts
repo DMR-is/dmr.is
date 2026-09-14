@@ -1,4 +1,8 @@
-import { CompanySizeEnum, type WageGapEmployeeDto } from '../gen/fetch'
+import {
+  type CompanyDto,
+  CompanySizeEnum,
+  type WageGapEmployeeDto,
+} from '../gen/fetch'
 import { reportText, sharedText } from './text'
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -59,6 +63,40 @@ export const formatIsoDate = (v: string | null | undefined) => {
   const [year, month, day] = v.split('-')
   if (!year || !month || !day) return '—'
   return `${day}.${month}.${year}`
+}
+
+/**
+ * A real instant off the API (a `TIMESTAMPTZ`, e.g. `company.nextEqualityReportDueAt`
+ * or `report.createdAt`) as `dd.mm.yyyy` in the viewer's own zone.
+ *
+ * ⚠️ NOT `toLocaleDateString('is-IS')`, which is what this replaces. That call
+ * renders `3/29/2026` wherever the runtime lacks Icelandic locale data and
+ * falls back to en-US — which is every environment we ship to, browser and
+ * Node alike, unless full ICU happens to be present. It fails silently: no
+ * error, no warning, just a US date in an Icelandic admin UI. Building the
+ * string ourselves removes the dependency entirely.
+ *
+ * ⚠️ NOT `formatIsoDate` either, even though both render `dd.mm.yyyy`. That one
+ * splits on `-` and expects a bare `YYYY-MM-DD`; handed a timestamp it returns
+ * `29T23:59:59.000Z.03.2026`, because the day part carries the rest of the
+ * string with it. The two helpers exist because the two shapes genuinely differ:
+ * a DATEONLY carries no zone and must NOT be parsed as an instant, and an
+ * instant must be read in the viewer's zone rather than split as text.
+ *
+ * Local parts, not UTC: these values are real moments, so the date a viewer
+ * should see is the date it was where they are. The register writes its seeded
+ * deadlines at 23:59:59+00 precisely so the calendar day survives that reading
+ * for anyone at or behind UTC.
+ */
+export const formatTimestampDate = (
+  v: string | Date | null | undefined,
+): string => {
+  if (!v) return '—'
+  const date = v instanceof Date ? v : new Date(v)
+  if (Number.isNaN(date.getTime())) return '—'
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${day}.${month}.${date.getFullYear()}`
 }
 
 /**
@@ -213,4 +251,27 @@ export const COMPANY_SIZE_LABEL: Record<CompanySizeEnum, string> = {
   [CompanySizeEnum.SMALL]: '0–24',
   [CompanySizeEnum.MEDIUM]: '25–49',
   [CompanySizeEnum.LARGE]: '50+',
+}
+
+/**
+ * The company's ÍSAT2008 classification, as the dotted code plus its Icelandic
+ * description ("01.11.0 — Kornrækt…").
+ *
+ * Falls back to the bare `isatCategoryCode` when the resolved `isatCategory` is
+ * absent. The code is a plain column on the company and always present, while
+ * the description needs the reference table joined in (see
+ * `buildCompanyIsatCategoryInclude` on the API side) — showing the code alone
+ * beats showing nothing for a company that does have a classification.
+ *
+ * `undefined` means genuinely unclassified, which both callers render as their
+ * own empty-value fallback.
+ */
+export const formatIsatCategory = (company: CompanyDto) => {
+  const { isatCategory, isatCategoryCode } = company
+
+  if (isatCategory) {
+    return `${isatCategory.codeDotted} — ${isatCategory.description}`
+  }
+
+  return isatCategoryCode ?? undefined
 }

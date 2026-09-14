@@ -94,7 +94,6 @@ export function deriveEmployeeScores(
       paidHours: employee.paidHours,
       baseSalary: employee.baseSalary,
       additionalSalary: employee.additionalSalary,
-      bonusSalary: employee.bonusSalary,
     }
   })
 }

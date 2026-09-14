@@ -9,6 +9,12 @@ import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import { ParsedReportDto } from '../dto/parsed-report.dto'
 import { TEMPLATE_BASE64 } from '../template-data'
+import {
+  resolveTemplateVersion,
+  TEMPLATE_ID,
+  type TemplateMetadata,
+  TemplateVersionSourceEnum,
+} from './template-version.assert'
 import { parseWorkbook } from './workbook.parser'
 
 // CI runs this project's tests concurrently with several other Nx projects on
@@ -20,6 +26,15 @@ import { parseWorkbook } from './workbook.parser'
 jest.setTimeout(20000)
 
 const templateBuffer = () => Buffer.from(TEMPLATE_BASE64, 'base64')
+
+/** `docProps/custom.xml` exactly as `template.xlsx` ships it. */
+const TEMPLATE_CUSTOM_PROPS_XML =
+  '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+  '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="2" name="TemplateId"><vt:lpwstr>jafnrettisstofa-launagreining</vt:lpwstr></property>' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="3" name="TemplateReleased"><vt:lpwstr>2026-09-08</vt:lpwstr></property>' +
+  '<property fmtid="{D5CDD505-2E9C-101B-9397-08002B2CF9AE}" pid="4" name="TemplateVersion"><vt:lpwstr>2.0</vt:lpwstr></property>' +
+  '</Properties>'
 
 /**
  * The uncompressed size jszip reads out of the central directory. Not on the
@@ -92,13 +107,33 @@ const normaliseTableStylesForExcelJsWrite = (wb: ExcelJS.Workbook): void => {
  * got 0" on the subsequent load). It's non-deterministic and re-serialising
  * fixes it, so validate the output and retry a couple of times before giving up.
  */
+/**
+ * ⚠️ **exceljs drops `docProps/custom.xml` on write**, and strips `cp:version`
+ * from `core.xml` as well — so a workbook round-tripped through `writeBuffer`
+ * loses the template version and reads as 1.x to `checkTemplateVersion`.
+ *
+ * That is an artefact of the test harness, not of anything a submitter does:
+ * real files come from Excel, which preserves both, and the download endpoint
+ * serves `template.xlsx` byte-for-byte. Re-injecting the properties here keeps
+ * these fixtures faithful to a real upload.
+ *
+ * If a test ever needs to exercise the gate itself, build the buffer WITHOUT
+ * this — see the version-gate tests, which strip the entry back out on purpose.
+ * Do not "fix" a failing round-trip by relaxing the gate.
+ */
+const injectTemplateProps = async (buf: Buffer): Promise<Buffer> => {
+  const zip = await JSZip.loadAsync(buf)
+  zip.file('docProps/custom.xml', TEMPLATE_CUSTOM_PROPS_XML)
+  return zip.generateAsync({ type: 'nodebuffer' })
+}
+
 const serialize = async (wb: ExcelJS.Workbook): Promise<Buffer> => {
   normaliseTableStylesForExcelJsWrite(wb)
   for (let attempt = 0; attempt < 3; attempt++) {
     const buf = Buffer.from(
       (await wb.xlsx.writeBuffer()) as unknown as ArrayBuffer,
     )
-    if (isValidXlsx(buf)) return buf
+    if (isValidXlsx(buf)) return injectTemplateProps(buf)
   }
   throw new Error(
     'exceljs writeBuffer produced an invalid xlsx after 3 attempts',
@@ -116,9 +151,9 @@ const writeEmployeeRow = (
     baseSalary: number
     additionalFixedOvertime: number | null
     additionalFixedCarAllowance: number | null
-    bonusOccasionalCarAllowance: number | null
+    additionalFixedOther: number | null
     bonusOccasionalOvertime: number | null
-    bonusPayments: number | null
+    bonusOccasionalCarAllowance: number | null
     bonusOther: number | null
     field: string
     department: string
@@ -138,9 +173,9 @@ const writeEmployeeRow = (
   s.getCell(`I${r}`).value = values.baseSalary
   s.getCell(`J${r}`).value = values.additionalFixedOvertime
   s.getCell(`K${r}`).value = values.additionalFixedCarAllowance
-  s.getCell(`L${r}`).value = values.bonusOccasionalCarAllowance
+  s.getCell(`L${r}`).value = values.additionalFixedOther
   s.getCell(`M${r}`).value = values.bonusOccasionalOvertime
-  s.getCell(`N${r}`).value = values.bonusPayments
+  s.getCell(`N${r}`).value = values.bonusOccasionalCarAllowance
   s.getCell(`O${r}`).value = values.bonusOther
 }
 
@@ -248,7 +283,7 @@ const fillCriteriaAndSubCriteria = (wb: ExcelJS.Workbook) => {
 const expectBadRequest = async (
   promise: Promise<unknown>,
 ): Promise<{
-  message: string
+  message: string[]
   errors: {
     message: string
     sheet: string
@@ -261,7 +296,7 @@ const expectBadRequest = async (
     await promise
   } catch (e) {
     return (e as BadRequestException).getResponse() as {
-      message: string
+      message: string[]
       errors: {
         message: string
         sheet: string
@@ -283,9 +318,9 @@ const buildValidFilled = async (): Promise<Buffer> => {
     baseSalary: 900000,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: 50000,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     field: 'Stjórnun',
     department: 'Framkvæmd',
@@ -299,9 +334,9 @@ const buildValidFilled = async (): Promise<Buffer> => {
     baseSalary: 700000,
     additionalFixedOvertime: 50000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     field: 'Tækni',
     department: 'Tækni',
@@ -315,9 +350,9 @@ const buildValidFilled = async (): Promise<Buffer> => {
     baseSalary: 600000,
     additionalFixedOvertime: 40000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: 10000,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     field: 'Rekstur',
     department: 'Verkstæði',
@@ -451,9 +486,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -505,9 +540,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -551,9 +586,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -567,9 +602,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -605,9 +640,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -644,9 +679,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -683,9 +718,9 @@ describe('parseWorkbook', () => {
           baseSalary: 650000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
-          bonusOccasionalCarAllowance: null,
+          additionalFixedOther: null,
           bonusOccasionalOvertime: null,
-          bonusPayments: null,
+          bonusOccasionalCarAllowance: null,
           bonusOther: null,
           field: 'X',
           department: 'X',
@@ -701,6 +736,15 @@ describe('parseWorkbook', () => {
       it.each([
         ['Launagögn', 'E', 'Starfshlutfall (0-1)'],
         ['Undirviðmið', 'G', 'Hámarksstig'],
+        // The three template-2.0 REASSIGNMENTS, spelled with their real 1.x
+        // headers. Unlike the two above, these columns never moved — they sit
+        // where they always did and mean something else, which is why the
+        // header is the only thing left to tell them apart. If a future edit
+        // shortens the M/N prefixes in `layout.assert.ts` to a shared
+        // `Tilfallandi / mæld`, the N case here is what fails.
+        ['Launagögn', 'L', 'Tilfallandi / mældur bifreiðastyrkur (kr.)'],
+        ['Launagögn', 'N', 'Bónusgreiðslur (kr.)'],
+        ['Launagögn', 'O', 'Önnur hlunnindi eða greiðslur (kr.)'],
       ])(
         'rejects a stale %s layout at %s and says so once',
         async (sheetName, column, staleHeader) => {
@@ -726,6 +770,375 @@ describe('parseWorkbook', () => {
     })
 
     /**
+     * The version gate — four sources in trust order, because the most
+     * trustworthy one is the one an editor is likeliest to throw away.
+     *
+     * It matters more than the layout assertion because template 2.0
+     * REASSIGNED Launagögn L, N and O without moving them. A 1.x workbook whose
+     * headers were edited (or a sheet rebuilt by a tool that rewrites them)
+     * parses to completion and files fixed pay as incidental — a complete,
+     * confident, wrong answer.
+     *
+     * ⚠️ **Each tier is tested by DISABLING the ones above it**, not by
+     * stripping custom.xml and hoping. A test that only removed the top source
+     * would pass against a gate that had stopped checking versions entirely,
+     * which is the one bug this chain could plausibly introduce. `SOURCES`
+     * below names every disabling step so a tier cannot be added without
+     * saying how to switch it off.
+     */
+    describe('template version', () => {
+      const stripTemplateProps = async (buf: Buffer): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        zip.remove('docProps/custom.xml')
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      const setTemplateVersion = async (
+        buf: Buffer,
+        version: string,
+      ): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        zip.file(
+          'docProps/custom.xml',
+          TEMPLATE_CUSTOM_PROPS_XML.replace(
+            '<vt:lpwstr>2.0</vt:lpwstr>',
+            `<vt:lpwstr>${version}</vt:lpwstr>`,
+          ),
+        )
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      /**
+       * Put `cp:version` back into `docProps/core.xml`.
+       *
+       * ⚠️ It has to be re-added rather than merely left alone: exceljs's
+       * writer drops `cp:version` while keeping `cp:category`, so a serialized
+       * fixture reaches this suite with source 2 already half-disabled. The
+       * shipped `template.xlsx` does carry it.
+       */
+      const setCoreVersion = async (
+        buf: Buffer,
+        version: string,
+      ): Promise<Buffer> => {
+        const zip = await JSZip.loadAsync(buf)
+        const core = await zip.file('docProps/core.xml')!.async('string')
+        zip.file(
+          'docProps/core.xml',
+          core.replace(
+            '<cp:category>',
+            `<cp:version>${version}</cp:version><cp:category>`,
+          ),
+        )
+        return zip.generateAsync({ type: 'nodebuffer' })
+      }
+
+      /** Blank the visible version mirror on Leiðbeiningar (source 3). */
+      const clearInstructionsCell = (wb: ExcelJS.Workbook): void => {
+        wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value = null
+      }
+
+      /**
+       * Blank Launagögn's fixed/incidental column bands (source 4), which is
+       * the state 1.x shipped in — row 4 entirely empty.
+       *
+       * Written at the merge ANCHORS (`I4`, `M4`), since that is where the
+       * value lives and where the assert reads it.
+       */
+      const clearColumnBands = (wb: ExcelJS.Workbook): void => {
+        const sheet = wb.getWorksheet('Launagögn')!
+        sheet.getCell('I4').value = null
+        sheet.getCell('M4').value = null
+      }
+
+      /** Every sheet-level source, for the tests that need a genuine 1.x shape. */
+      const clearSheetSources = (wb: ExcelJS.Workbook): void => {
+        clearInstructionsCell(wb)
+        clearColumnBands(wb)
+      }
+
+      /**
+       * A workbook that is otherwise entirely valid, so only the version can
+       * fail it. `mutate` runs before serialization, which is the only point
+       * the sheet-level sources can be reached.
+       */
+      const validWorkbookBuffer = async (
+        mutate?: (wb: ExcelJS.Workbook) => void,
+      ): Promise<Buffer> => {
+        const wb = await loadTemplate()
+        writeEmployeeRow(wb, 1, {
+          name: 'X',
+          role: 'R',
+          gender: 'Kona',
+          paidHours: 173.33,
+          baseSalary: 650000,
+          additionalFixedOvertime: 0,
+          additionalFixedCarAllowance: null,
+          additionalFixedOther: null,
+          bonusOccasionalOvertime: null,
+          bonusOccasionalCarAllowance: null,
+          bonusOther: null,
+          field: 'X',
+          department: 'X',
+          startDate: new Date('2024-01-01'),
+        })
+        fillCriteriaAndSubCriteria(wb)
+        fillRoleClassification(wb, [[1, 1, 1, 1]])
+        fillEmployeeClassification(wb, [[1]])
+        mutate?.(wb)
+        return serialize(wb)
+      }
+
+      /**
+       * A workbook with NO version evidence anywhere — the genuine pre-2.0
+       * shape, and the only state the gate may still reject on absence.
+       */
+      const noVersionEvidenceBuffer = async (): Promise<Buffer> =>
+        stripTemplateProps(await validWorkbookBuffer(clearSheetSources))
+
+      it('accepts the shipped template version', async () => {
+        await expect(
+          parseWorkbook(await validWorkbookBuffer()),
+        ).resolves.toBeDefined()
+      })
+
+      // Files predating the 2.0 release declare a version in none of the four
+      // places, so absence across ALL of them is positive evidence of an old
+      // template. Absence from custom.xml alone is not — see the tier tests.
+      it('rejects a workbook with no version evidence anywhere as pre-2.0', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        expect(errors).toHaveLength(1)
+        expect(errors[0].message).toContain('Sniðmátið er af eldri útgáfu')
+      })
+
+      /**
+       * The regression this chain was built for: a 2.0 workbook re-saved by an
+       * editor that re-authors the package rather than editing it loses its
+       * CUSTOM properties, and used to be told to migrate a template it was
+       * already on — after being filled in offline over days.
+       *
+       * Each case disables everything above the tier under test, so it is the
+       * named source doing the accepting and nothing else.
+       */
+      describe('falls back through the source chain', () => {
+        it('accepts on core.xml cp:version when custom.xml is gone', async () => {
+          const buffer = await setCoreVersion(
+            await stripTemplateProps(
+              await validWorkbookBuffer(clearSheetSources),
+            ),
+            '2.0',
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Leiðbeiningar mirror when both archive parts are gone', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearColumnBands),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        it('accepts on the Launagögn column bands when nothing names a version', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer(clearInstructionsCell),
+          )
+
+          await expect(parseWorkbook(buffer)).resolves.toBeDefined()
+        })
+
+        /**
+         * The bands cannot name a version, only attest the shape — so a 1.x
+         * version reached through the mirror must still reject even though the
+         * bands look current. A tier that accepts on shape ALONE while a more
+         * trustworthy source says 1.x would let exactly the misread this gate
+         * exists to prevent through.
+         */
+        it('rejects an old version from the mirror despite current bands', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '1.4 (2026-08-25) • jafnrettisstofa-launagreining'
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain('(1.4)')
+        })
+
+        /**
+         * Identity survives the fallback too: the mirror carries the template
+         * id after the bullet, so a foreign workbook is still named as foreign
+         * rather than as out of date.
+         */
+        it('rejects a foreign id read from the mirror', async () => {
+          const buffer = await stripTemplateProps(
+            await validWorkbookBuffer((wb) => {
+              wb.getWorksheet('Leiðbeiningar')!.getCell('C4').value =
+                '2.0 (2026-09-08) • einhver-onnur-skra'
+              clearColumnBands(wb)
+            }),
+          )
+
+          const { errors } = await expectBadRequest(parseWorkbook(buffer))
+          expect(errors[0].message).toContain(
+            'ekki launagreiningarsniðmát Jafnréttisstofu',
+          )
+          expect(errors[0].message).not.toContain('eldri útgáfu')
+        })
+      })
+
+      /**
+       * Which tier answered, asserted directly. The behavioural tests above
+       * prove each source can carry a file on its own; this proves the ORDER,
+       * which they cannot — every one of them would still pass if the chain
+       * silently collapsed to its last tier.
+       */
+      describe('reports which source resolved the version', () => {
+        const resolveOn = async (
+          mutate?: (wb: ExcelJS.Workbook) => void,
+          metadata: TemplateMetadata = {
+            version: null,
+            templateId: null,
+            source: TemplateVersionSourceEnum.NONE,
+          },
+        ) => {
+          const wb = await loadTemplate()
+          mutate?.(wb)
+          return resolveTemplateVersion(metadata, wb)
+        }
+
+        it('prefers the archive properties over both cells', async () => {
+          const resolved = await resolveOn(undefined, {
+            version: '2.1',
+            templateId: TEMPLATE_ID,
+            source: TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          })
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.CUSTOM_PROPERTIES,
+          )
+          expect(resolved.version).toBe('2.1')
+        })
+
+        it('prefers the mirror over the bands', async () => {
+          const resolved = await resolveOn()
+
+          expect(resolved.source).toBe(
+            TemplateVersionSourceEnum.INSTRUCTIONS_CELL,
+          )
+          expect(resolved.version).toBe('2.0')
+          expect(resolved.templateId).toBe(TEMPLATE_ID)
+        })
+
+        it('falls to the bands, which name no version', async () => {
+          const resolved = await resolveOn(clearInstructionsCell)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.COLUMN_BANDS)
+          expect(resolved.version).toBeNull()
+        })
+
+        it('reports NONE on a 1.x-shaped sheet', async () => {
+          const resolved = await resolveOn(clearSheetSources)
+
+          expect(resolved.source).toBe(TemplateVersionSourceEnum.NONE)
+          expect(resolved.version).toBeNull()
+        })
+      })
+
+      // The bands are intact on this fixture, so it doubles as proof that a
+      // declared old version beats a current-looking sheet.
+      it('rejects an explicitly older version', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(
+            await setTemplateVersion(await validWorkbookBuffer(), '1.4'),
+          ),
+        )
+
+        expect(errors[0].message).toContain('(1.4)')
+      })
+
+      // Componentwise compare, not string compare: '2.10' must read as newer
+      // than '2.9', which a lexical comparison gets backwards.
+      it.each(['2.0', '2.1', '2.10', '3.0'])(
+        'accepts version %s',
+        async (version) => {
+          await expect(
+            parseWorkbook(
+              await setTemplateVersion(await validWorkbookBuffer(), version),
+            ),
+          ).resolves.toBeDefined()
+        },
+      )
+
+      /**
+       * A current-enough version on a workbook that is not ours. Without the
+       * id check this reaches the column parsers with only `assertWorkbookLayout`
+       * in the way. The message must NOT say "out of date" — the file isn't.
+       */
+      it('rejects a foreign workbook that carries a recent TemplateVersion', async () => {
+        const buf = await validWorkbookBuffer()
+        const zip = await JSZip.loadAsync(buf)
+        zip.file(
+          'docProps/custom.xml',
+          TEMPLATE_CUSTOM_PROPS_XML.replace(
+            'jafnrettisstofa-launagreining',
+            'einhver-onnur-skra',
+          ),
+        )
+
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await zip.generateAsync({ type: 'nodebuffer' })),
+        )
+
+        expect(errors[0].message).toContain(
+          'ekki launagreiningarsniðmát Jafnréttisstofu',
+        )
+        expect(errors[0].message).not.toContain('eldri útgáfu')
+      })
+
+      /**
+       * The message is the whole cost of rejecting: the workbook is filled in
+       * offline over days, so "wrong version" alone throws that work away
+       * without saying what to redo. It has to name the columns that moved and
+       * the one whose definition changed.
+       */
+      it('tells the submitter what actually changed', async () => {
+        const { errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        const message = errors[0].message
+        expect(message).toContain('A–K')
+        expect(message).toContain('L–O')
+        expect(message).toContain('Greiddar stundir')
+      })
+
+      /**
+       * `message` becomes `ApiErrorDto.details`, which the island.is portal
+       * renders as a bulleted list when it holds more than one entry and as
+       * plain text when it holds one. These are migration steps, so they must
+       * arrive split — re-joining them into a single entry silently turns the
+       * applicant's instructions back into a wall of text.
+       */
+      it('delivers the migration steps as separate details entries', async () => {
+        const { message, errors } = await expectBadRequest(
+          parseWorkbook(await noVersionEvidenceBuffer()),
+        )
+
+        expect(Array.isArray(message)).toBe(true)
+        expect(message.length).toBeGreaterThan(1)
+        // No entry may smuggle a newline: the portal renders each verbatim.
+        message.forEach((entry) => expect(entry).not.toContain('\n'))
+        // One structured error, though — this is one bad workbook, not five.
+        expect(errors).toHaveLength(1)
+      })
+    })
+
+    /**
      * The mirror of the 2080 case: column E previously held
      * `Starfshlutfall (0–1)`, so a value carried over from an older sheet — or
      * from a submitter filling in the field they remember — is a plain positive
@@ -747,9 +1160,9 @@ describe('parseWorkbook', () => {
           baseSalary: 650000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
-          bonusOccasionalCarAllowance: null,
+          additionalFixedOther: null,
           bonusOccasionalOvertime: null,
-          bonusPayments: null,
+          bonusOccasionalCarAllowance: null,
           bonusOther: null,
           field: 'X',
           department: 'X',
@@ -784,9 +1197,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -818,9 +1231,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -852,9 +1265,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',
@@ -891,9 +1304,9 @@ describe('parseWorkbook', () => {
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
-          bonusOccasionalCarAllowance: null,
+          additionalFixedOther: null,
           bonusOccasionalOvertime: null,
-          bonusPayments: null,
+          bonusOccasionalCarAllowance: null,
           bonusOther: null,
           field: 'Svið',
           department: 'Deild',
@@ -935,9 +1348,9 @@ describe('parseWorkbook', () => {
           baseSalary: 500000,
           additionalFixedOvertime: 0,
           additionalFixedCarAllowance: null,
-          bonusOccasionalCarAllowance: null,
+          additionalFixedOther: null,
           bonusOccasionalOvertime: null,
-          bonusPayments: null,
+          bonusOccasionalCarAllowance: null,
           bonusOther: null,
           field: 'Svið',
           department: 'Deild',
@@ -1021,9 +1434,9 @@ describe('parseWorkbook', () => {
         baseSalary: 900000,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'Stjórnun',
         department: 'Framkvæmd',
@@ -1086,9 +1499,9 @@ describe('parseWorkbook', () => {
         baseSalary: 900000,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'Stjórnun',
         department: 'Framkvæmd',
@@ -1134,9 +1547,9 @@ describe('parseWorkbook', () => {
         baseSalary: 900000,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'Stjórnun',
         department: 'Framkvæmd',
@@ -1179,9 +1592,9 @@ describe('parseWorkbook', () => {
       baseSalary: 900000,
       additionalFixedOvertime: 0,
       additionalFixedCarAllowance: null,
-      bonusOccasionalCarAllowance: null,
+      additionalFixedOther: null,
       bonusOccasionalOvertime: null,
-      bonusPayments: null,
+      bonusOccasionalCarAllowance: null,
       bonusOther: null,
       field: 'Stjórnun',
       department: 'Framkvæmd',
@@ -1284,9 +1697,9 @@ describe('parseWorkbook', () => {
         baseSalary: 900000,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'Stjórnun',
         department: 'Framkvæmd',
@@ -1353,9 +1766,9 @@ describe('parseWorkbook', () => {
         baseSalary: 900000,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'Stjórnun',
         department: 'Framkvæmd',
@@ -1411,9 +1824,9 @@ describe('parseWorkbook', () => {
         baseSalary: 1,
         additionalFixedOvertime: 0,
         additionalFixedCarAllowance: null,
-        bonusOccasionalCarAllowance: null,
+        additionalFixedOther: null,
         bonusOccasionalOvertime: null,
-        bonusPayments: null,
+        bonusOccasionalCarAllowance: null,
         bonusOther: null,
         field: 'X',
         department: 'X',

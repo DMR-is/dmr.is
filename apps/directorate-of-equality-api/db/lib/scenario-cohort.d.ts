@@ -17,7 +17,7 @@ export type ScenarioEmployee = {
   paidHours: number
   baseSalary: number
   additionalFixedOvertime: number
-  bonusPayments: number | null
+  additionalFixedOther: number | null
 }
 
 export const SEEDED_PAID_HOURS: number

@@ -556,7 +556,7 @@ The final `score` on `report_employee` is derived from the steps that apply to t
 
 ## Results aggregation
 
-`report_result` holds one immutable report-level snapshot of **reglulegt tímakaup** — `(baseSalary + additionalSalary + bonusSalary) / paidHours`, where `additionalSalary` / `bonusSalary` are the derived sums of their sub-component columns (see `report_employee`). It is stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL, and it carries report-level totals plus score-bucket breakdowns.
+`report_result` holds one immutable report-level snapshot of **reglulegt tímakaup** — `(baseSalary + additionalSalary) / paidHours`, where `additionalSalary` is the derived sum of the three FIXED sub-component columns (see `report_employee`). `bonusSalary` is deliberately absent from the numerator: tilfallandi greiðslur stopped counting toward regluleg laun with Excel template 2.0, and `paid_hours` narrowed to match. It is stored as JSONB because the service reads results by `report_id` rather than querying individual metrics in SQL, and it carries report-level totals plus score-bucket breakdowns.
 
 There was previously a _second_ snapshot for base pay alone (`baseSalary / workRatio`). It is gone, and not merely as a simplification: with an **hours** denominator, dividing a base-pay-only numerator by hours that include the overtime which earned the additional and bonus pay is arithmetically incoherent. Under the old full-time-equivalent divisor both variants were coherent; under this one, only the total-pay numerator is. The column is named `salary_snapshot` rather than reusing `base_snapshot` so the name cannot outlive the meaning.
 
@@ -868,9 +868,9 @@ Submission-time snapshot of a company participating in a report. `company_id` po
 | `base_salary`                    | `decimal(14, 2)`                       |
 | `additional_fixed_overtime`      | `decimal(14, 2)` (nullable)            |
 | `additional_fixed_car_allowance` | `decimal(14, 2)` (nullable)            |
-| `bonus_occasional_car_allowance` | `decimal(14, 2)` (nullable)            |
+| `additional_fixed_other`         | `decimal(14, 2)` (nullable)            |
 | `bonus_occasional_overtime`      | `decimal(14, 2)` (nullable)            |
-| `bonus_payments`                 | `decimal(14, 2)` (nullable)            |
+| `bonus_occasional_car_allowance` | `decimal(14, 2)` (nullable)            |
 | `bonus_other`                    | `decimal(14, 2)` (nullable)            |
 | `gender`                         | `GenderEnum`                           |
 | `report_employee_role_id`        | `fk → report_employee_role`            |
@@ -882,16 +882,34 @@ computed and frozen when the report is submitted, so it is `NULL` while the
 report is a `DRAFT` (the applicant is still building it up); submitted reports
 always carry a score. (Migration `m-20260630-report-employee-score-nullable`.)
 
-The two parent salary concepts are **derived, not stored**. Each is the sum of its
-sub-component columns, with a `NULL` child treated as `0`:
+The six pay children split into two bands, matching Launagögn columns J–O in
+Excel template 2.0. The two parent salary concepts are **derived, not stored** —
+each is the sum of its band, with a `NULL` child treated as `0`:
 
-- **viðbótarlaun** (`additionalSalary`) = `additional_fixed_overtime` + `additional_fixed_car_allowance`
-- **aukagreiðslur** (`bonusSalary`) = `bonus_occasional_car_allowance` + `bonus_occasional_overtime` + `bonus_payments` + `bonus_other`
+- **viðbótarlaun** (`additionalSalary`) — *fastar greiðslur aðrar en grunnlaun*
+  = `additional_fixed_overtime` + `additional_fixed_car_allowance` + `additional_fixed_other`
+- **aukagreiðslur** (`bonusSalary`) — *tilfallandi greiðslur*
+  = `bonus_occasional_overtime` + `bonus_occasional_car_allowance` + `bonus_other`
 
 `ReportEmployeeModel` exposes both as computed getters and the API returns them
 alongside the raw children. A `NULL` child means "not entered", distinct from an
 entered `0` — only stored children carry that distinction; the derived parents
 never do.
+
+⚠️ **Only viðbótarlaun feeds regluleg laun.** `regluleg laun = base_salary +
+additionalSalary`; aukagreiðslur are reported on their own and excluded from
+every tímakaup figure. `paid_hours` is scoped to match — fixed overtime hours
+included, incidental hours excluded — so numerator and denominator cover the
+same ground. See [`docs/launagreining.md`](../docs/launagreining.md).
+
+Two columns changed with template 2.0 (migration
+`m-20260908-report-employee-fixed-other`): `additional_fixed_other` was added
+for the reassigned column L, and `bonus_payments` was **merged into
+`bonus_other` and dropped** — `Bónusgreiðslur` no longer exists as a field, and
+bonuses now belong in *Aðrar tilfallandi greiðslur / hlunnindi*. The merge left
+every historic aukagreiðslur total unchanged (both columns summed into it with
+equal weight); only the per-component split of pre-2.0 rows was lost, and it is
+not recoverable from the migration's `down`.
 
 ### `report_employee_role`
 
@@ -967,7 +985,7 @@ Aggregated per-report salary stats. Stored as an immutable calculation snapshot.
 | `id`                                  | `uuid` PK                                                                                                                                                                                                                                                                                                                      |
 | `report_id`                           | `fk → report` (unique)                                                                                                                                                                                                                                                                                                         |
 | `salary_difference_threshold_percent` | `decimal(5, 2)` nullable threshold snapshot from `config` at time of creation                                                                                                                                                                                                                                                  |
-| `calculation_version`                 | `text` (column default `v1`, but every row written by `ReportResultService` is stamped `v3` explicitly — the default only applies to a hand-written insert. `v2` had a lift-only lágmarksmengi and `isCorrectable`/`correctableCount` in the snapshot; `v1` evaluated FTE-adjusted monthly pay. Neither is comparable to `v3`) |
+| `calculation_version`                 | `text` (column default `v1`, but every row written by `ReportResultService` is stamped `v4` explicitly — the default only applies to a hand-written insert. `v4` dropped aukagreiðslur from regluleg laun (template 2.0); the snapshot SHAPE is identical to `v3`, so a v3 row deserialises perfectly and is simply not comparable — anyone with incidental pay reads lower under v4. `v3` had a two-directional lágmarksmengi; `v2` had a lift-only one plus `isCorrectable`/`correctableCount`; `v1` evaluated FTE-adjusted monthly pay. None are comparable with each other) |
 | `salary_snapshot`                     | `jsonb` reglulegt tímakaup aggregate snapshot                                                                                                                                                                                                                                                                                  |
 | `wage_gap_decomposition_snapshot`     | `jsonb` Oaxaca-Blinder decomposition, NOT NULL                                                                                                                                                                                                                                                                                 |
 

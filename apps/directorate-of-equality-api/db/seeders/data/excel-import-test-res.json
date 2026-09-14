@@ -794,7 +794,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 42000,
+      "additionalFixedOther": 42000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -843,7 +843,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 38000,
+      "additionalFixedOther": 38000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -892,7 +892,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 21000,
+      "additionalFixedOther": 21000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -941,7 +941,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "additionalFixedOther": 2000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -990,7 +990,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 6000,
+      "additionalFixedOther": 6000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1039,7 +1039,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1088,7 +1088,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1137,7 +1137,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 9000,
+      "additionalFixedOther": 9000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1186,7 +1186,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1235,7 +1235,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 18000,
+      "additionalFixedOther": 18000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1284,7 +1284,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "additionalFixedOther": 1000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1333,7 +1333,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "additionalFixedOther": 7000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1382,7 +1382,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1431,7 +1431,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1480,7 +1480,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1529,7 +1529,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "additionalFixedOther": 2000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1578,7 +1578,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1627,7 +1627,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1676,7 +1676,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1725,7 +1725,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1774,7 +1774,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1823,7 +1823,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1872,7 +1872,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "additionalFixedOther": 1000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1921,7 +1921,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 17000,
+      "additionalFixedOther": 17000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -1970,7 +1970,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2019,7 +2019,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2068,7 +2068,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2117,7 +2117,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 8000,
+      "additionalFixedOther": 8000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2166,7 +2166,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "additionalFixedOther": 1000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2215,7 +2215,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2264,7 +2264,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2313,7 +2313,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2362,7 +2362,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2411,7 +2411,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2460,7 +2460,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2509,7 +2509,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 34000,
+      "additionalFixedOther": 34000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2558,7 +2558,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 5000,
+      "additionalFixedOther": 5000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2607,7 +2607,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "additionalFixedOther": 4000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2656,7 +2656,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2705,7 +2705,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2754,7 +2754,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 17000,
+      "additionalFixedOther": 17000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2803,7 +2803,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2852,7 +2852,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 14000,
+      "additionalFixedOther": 14000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2901,7 +2901,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2950,7 +2950,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 0,
+      "additionalFixedOther": 0,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -2999,7 +2999,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3048,7 +3048,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3097,7 +3097,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3146,7 +3146,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 5000,
+      "additionalFixedOther": 5000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3195,7 +3195,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 18000,
+      "additionalFixedOther": 18000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3244,7 +3244,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 5000,
+      "additionalFixedOther": 5000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3293,7 +3293,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 16000,
+      "additionalFixedOther": 16000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3342,7 +3342,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 12000,
+      "additionalFixedOther": 12000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3391,7 +3391,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3440,7 +3440,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 16000,
+      "additionalFixedOther": 16000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3489,7 +3489,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 17000,
+      "additionalFixedOther": 17000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3538,7 +3538,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "additionalFixedOther": 7000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3587,7 +3587,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3636,7 +3636,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "additionalFixedOther": 7000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3685,7 +3685,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3734,7 +3734,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "additionalFixedOther": 4000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3783,7 +3783,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 3000,
+      "additionalFixedOther": 3000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3832,7 +3832,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 1000,
+      "additionalFixedOther": 1000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3881,7 +3881,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3930,7 +3930,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "additionalFixedOther": 2000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -3979,7 +3979,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4028,7 +4028,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4077,7 +4077,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4126,7 +4126,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "additionalFixedOther": 2000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4175,7 +4175,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 45000,
+      "additionalFixedOther": 45000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4224,7 +4224,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 15000,
+      "additionalFixedOther": 15000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4273,7 +4273,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4322,7 +4322,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4371,7 +4371,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 7000,
+      "additionalFixedOther": 7000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4420,7 +4420,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4469,7 +4469,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 8000,
+      "additionalFixedOther": 8000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4518,7 +4518,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4567,7 +4567,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "additionalFixedOther": 4000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4616,7 +4616,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 9000,
+      "additionalFixedOther": 9000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4665,7 +4665,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4714,7 +4714,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "additionalFixedOther": 4000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4763,7 +4763,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 12000,
+      "additionalFixedOther": 12000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4812,7 +4812,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4861,7 +4861,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4910,7 +4910,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 6000,
+      "additionalFixedOther": 6000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -4959,7 +4959,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5008,7 +5008,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 22000,
+      "additionalFixedOther": 22000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5057,7 +5057,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5106,7 +5106,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5155,7 +5155,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 14000,
+      "additionalFixedOther": 14000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5204,7 +5204,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 4000,
+      "additionalFixedOther": 4000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5253,7 +5253,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5302,7 +5302,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5351,7 +5351,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 16000,
+      "additionalFixedOther": 16000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5400,7 +5400,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5449,7 +5449,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5498,7 +5498,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 10000,
+      "additionalFixedOther": 10000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5547,7 +5547,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": 2000,
+      "additionalFixedOther": 2000,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5596,7 +5596,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {
@@ -5645,7 +5645,7 @@
       "additionalFixedCarAllowance": null,
       "bonusOccasionalCarAllowance": null,
       "bonusOccasionalOvertime": null,
-      "bonusPayments": null,
+      "additionalFixedOther": null,
       "bonusOther": null,
       "personalStepAssignments": [
         {

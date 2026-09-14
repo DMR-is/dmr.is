@@ -78,8 +78,9 @@ export const parseAndFormatDate = (
 export const getStatementLocation = (settlement?: BaseSettlement) => {
   switch (settlement?.statementType) {
     case 'email':
-      return settlement?.customLiquidatorLocation || ''
     case 'custom':
+    case 'url':
+    case 'other':
       return settlement?.customLiquidatorLocation || ''
     case 'location':
     default:
@@ -87,11 +88,78 @@ export const getStatementLocation = (settlement?: BaseSettlement) => {
   }
 }
 
-export const getStatementPrefix = (settlement?: BaseSettlement) => {
-  if (settlement?.statementType === 'email') {
-    return 'með rafrænum hætti á netfangið '
+export const escapeHtml = (value?: string | null): string =>
+  (value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+/**
+ * The href for a liquidator-supplied web address, or null when it cannot be
+ * turned into a safe one. Only http(s) is allowed: the advert HTML is rendered
+ * through dangerouslySetInnerHTML, so a "javascript:" value would execute.
+ * A bare host such as "krofur.is/123" is assumed to be https, because that is
+ * what people type, but the advert still displays exactly what they entered.
+ */
+export const getStatementUrlHref = (value?: string | null): string | null => {
+  const trimmed = (value ?? '').trim()
+  if (!trimmed || /\s/.test(trimmed)) return null
+
+  const candidate = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`
+
+  try {
+    const url = new URL(candidate)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
+    return url.href
+  } catch {
+    return null
   }
-  return 'að '
+}
+
+/**
+ * The destination as it appears in the advert body, already HTML.
+ *
+ * Every branch is escaped. The value is free text typed by the liquidator and
+ * the advert is rendered through dangerouslySetInnerHTML, so an unescaped
+ * destination is script execution in the preview and on the public web. Only
+ * the "url" branch adds markup of its own, around the escaped value.
+ */
+export const getStatementDestination = (settlement?: BaseSettlement) => {
+  const location = getStatementLocation(settlement)
+
+  if (settlement?.statementType !== 'url') {
+    return escapeHtml(location)
+  }
+
+  const href = getStatementUrlHref(location)
+
+  return href
+    ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(location)}</a>`
+    : escapeHtml(location)
+}
+
+/**
+ * Sentence fragment placed between "Kröfulýsingar skulu sendar skiptastjóra" and the
+ * destination. The location branches deliberately return an empty prefix: the
+ * destination is free text supplied by the liquidator, so a hardcoded "að"
+ * cannot be relied on to agree with its case.
+ */
+export const getStatementPrefix = (settlement?: BaseSettlement) => {
+  switch (settlement?.statementType) {
+    case 'email':
+      return 'með rafrænum hætti á netfangið '
+    case 'url':
+      return 'með rafrænum hætti á vefsvæðinu '
+    case 'custom':
+    case 'location':
+    case 'other':
+    default:
+      return ''
+  }
 }
 
 /**

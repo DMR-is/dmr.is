@@ -4,8 +4,9 @@ import { isBase64 } from 'validator'
 import {
   ApiDto,
   ApiEnum,
-  ApiHTML,
+  ApiOptionalBase64File,
   ApiOptionalDtoArray,
+  ApiOptionalHTML,
   ApiOptionalNumber,
   ApiOptionalString,
   ApiString,
@@ -63,9 +64,16 @@ export class SubmitEqualityReportDto {
   @ApiString()
   contactPhone!: string
 
-  @ApiHTML({
+  /*
+   * Optional, not absent: a report's content is EITHER this or
+   * `equalityReportPdf`, and the submit is rejected unless exactly one arrives.
+   * That rule lives in `resolveEqualityContent` rather than here, because the
+   * DTO can only see one field at a time and the other three write paths need
+   * the same rule to mean the same thing.
+   */
+  @ApiOptionalHTML({
     description:
-      'Narrative gender-equality plan as plain HTML. Persisted as `report.equality_report_content` and rendered into the approved PDF, so send the markup itself — not a base64 blob, not a document.',
+      'Narrative gender-equality plan as plain HTML. Persisted as `report.equality_report_content` and rendered into the approved PDF, so send the markup itself — not a base64 blob, not a document. Mutually exclusive with `equalityReportPdf`.',
   })
   @Transform(({ value }) => {
     // Base64 is no longer part of the contract, but the island.is client still
@@ -79,7 +87,26 @@ export class SubmitEqualityReportDto {
     }
     return value
   })
-  equalityReportContent!: string
+  equalityReportContent?: string
+
+  /*
+   * ⚠️ **No `@Transform`, and that is deliberate — see `ApiOptionalBase64File`.**
+   * The decode above is for markup; running it over a PDF would replace every
+   * byte that is not valid UTF-8 with U+FFFD and corrupt the file silently.
+   * Base64 stays base64 the whole way here: validated, persisted and served
+   * back as-is.
+   */
+  @ApiOptionalBase64File({
+    description:
+      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',
+  })
+  equalityReportPdf?: string
+
+  @ApiOptionalString({
+    description:
+      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied.',
+  })
+  equalityReportPdfFilename?: string
 
   @ApiOptionalNumber({ nullable: true })
   averageEmployeeMaleCount?: number | null

@@ -177,9 +177,17 @@ export function assertParsedPayloadIntegrity(
       )
     }
 
+    // Aukagreiðslur are deliberately NOT part of this sum any more, so an
+    // employee paid entirely in incidental pay now fails here where they
+    // previously passed. That is a real category of person, not only a
+    // data-entry error, and admitting them is planned — but it cannot be done
+    // by relaxing this guard alone: their tímakaup is 0, and the decomposition
+    // takes `Math.log(hourlyWage)`, so letting them through returns -Infinity
+    // and NaNs every downstream figure. Admitting them needs an explicit,
+    // visible exclusion set. See `.plans/doe/plan-launalidir-2-0.md` §Deferred.
     if (computeRegularWages(employee) <= 0) {
       throw new BadRequestException(
-        `Starfsmaður með raðnúmer ${employee.ordinal} er með engin regluleg laun; grunnlaun, viðbótarlaun og aukagreiðslur mega ekki vera 0 samanlagt`,
+        `Starfsmaður með raðnúmer ${employee.ordinal} er með engin regluleg laun; grunnlaun og viðbótarlaun mega ekki vera 0 samanlagt`,
       )
     }
 

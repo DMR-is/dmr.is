@@ -18,6 +18,7 @@ import {
   assertParsedPayloadIntegrity,
   computeEmployeeScores,
 } from '../report/lib/employee-scores'
+import { resolveEqualityContent } from '../report/lib/equality-content'
 import { rethrowReportWriteError } from '../report/lib/report-identifier'
 import { resolveSalaryDataBasis } from '../report/lib/salary-data-basis'
 import { computeWageGapDecomposition } from '../report/lib/wage-gap-decomposition'
@@ -325,7 +326,7 @@ export class ReportCreateService implements IReportCreateService {
       contactTitle: input.contactTitle ?? null,
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
-      equalityReportContent: input.equalityReportContent,
+      ...resolveEqualityContent(input),
       averageEmployeeMaleCount: input.averageEmployeeMaleCount,
       averageEmployeeFemaleCount: input.averageEmployeeFemaleCount,
       averageEmployeeNeutralCount: input.averageEmployeeNeutralCount,

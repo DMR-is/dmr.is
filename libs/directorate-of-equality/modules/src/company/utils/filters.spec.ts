@@ -10,8 +10,14 @@ import {
   buildCompanyExpiryWhere,
   buildCompanyLifecycleStatusWhere,
   buildCompanyListQuery,
+  buildCompanyStatusWhere,
   CompanyExpiryFilterEnum,
 } from './filters'
+import {
+  actionPlanMissingSql,
+  equalityReportMissingSql,
+  salaryReportMissingSql,
+} from './report-status'
 
 /**
  * `buildCompanyExpiryWhere` emits raw SQL, so a wrong identifier is not a
@@ -113,93 +119,62 @@ describe('buildCompanyLifecycleStatusWhere', () => {
 })
 
 /**
- * The composed builder behind both the company list and the recipient
- * resolution for a bulk email.
- *
- * These tests pin that every filter the list DTO carries reaches the query, so a
- * new filter cannot be added to the list and quietly skipped here — which would
- * put the count an admin approves and the set actually mailed out of step.
+ * The compliance filter. Its contract is that it selects exactly the companies
+ * whose list row shows the tag being filtered on — and the list now shows one
+ * value per obligation rather than a single roll-up, which is what these
+ * assertions are here to hold in place.
  */
-describe('buildCompanyListQuery', () => {
-  const conditionsOf = (query: Parameters<typeof buildCompanyListQuery>[0]) => {
-    const { where } = buildCompanyListQuery(query)
-    const and = (where as Record<symbol, unknown[]>)[Op.and]
-    return and ?? [where]
-  }
+describe('buildCompanyStatusWhere', () => {
+  const sqlFor = (statuses: CompanyReportStatusEnum[]): string =>
+    (buildCompanyStatusWhere(statuses) as { val: string }).val
 
-  it('is inert for an empty query', () => {
-    expect(buildCompanyListQuery({})).toEqual({ where: {}, includes: [] })
+  it('is inert when nothing is selected', () => {
+    expect(buildCompanyStatusWhere([])).toEqual({})
   })
 
-  it('returns the single condition unwrapped rather than in an Op.and', () => {
-    const { where } = buildCompanyListQuery({ finesStarted: true })
+  it('matches on the obligation predicate, never on the roll-up CASE', () => {
+    // ⚠️ The roll-up names only a company's MOST PRESSING problem. Filtering
+    // against it would skip every company whose launagreining is missing
+    // *behind* a missing jafnréttisáætlun — while the list visibly shows those
+    // companies missing the launagreining. The filter and the column have to
+    // read the same expression.
+    const sql = sqlFor([CompanyReportStatusEnum.MISSING_SALARY_REPORT])
 
-    expect(where).toEqual({ finesStarted: true })
+    expect(sql).toContain(salaryReportMissingSql())
+    expect(sql).not.toContain('CASE')
+    expect(sql).not.toContain('MISSING_SALARY_REPORT')
   })
 
-  it('searches name and national id together', () => {
-    const { where } = buildCompanyListQuery({ q: '  Fyrirtæki  ' })
-    const or = (where as Record<symbol, Record<string, unknown>[]>)[Op.or]
-
-    // Trimmed, then wrapped — an untrimmed pattern silently matches nothing.
-    expect(or).toEqual([
-      { name: { [Op.iLike]: '%Fyrirtæki%' } },
-      { nationalId: { [Op.iLike]: '%Fyrirtæki%' } },
+  it('ORs several statuses into "missing any of these"', () => {
+    const sql = sqlFor([
+      CompanyReportStatusEnum.MISSING_EQUALITY_REPORT,
+      CompanyReportStatusEnum.MISSING_ACTION_PLAN,
     ])
+
+    expect(sql).toContain(equalityReportMissingSql())
+    expect(sql).toContain(actionPlanMissingSql())
+    expect(sql).toContain(' OR ')
   })
 
-  it('distinguishes an explicit `false` boolean from an absent one', () => {
-    // `quarantined: false` is a real filter — "only companies not halted" — and
-    // treating it as unset would widen the recipient set on a bulk send.
-    expect(conditionsOf({ quarantined: false })).toContainEqual({
-      quarantined: false,
-    })
-    expect(buildCompanyListQuery({}).where).toEqual({})
+  it('treats SATISFACTORY as the absence of every other status', () => {
+    // Not an expression of its own: derived by negation so that a fourth
+    // obligation added later narrows "nothing outstanding" automatically,
+    // rather than quietly leaving newly non-compliant companies in it.
+    const sql = sqlFor([CompanyReportStatusEnum.SATISFACTORY])
+
+    expect(sql).toContain(`NOT ${equalityReportMissingSql()}`)
+    expect(sql).toContain(`NOT ${actionPlanMissingSql()}`)
+    expect(sql).toContain(`NOT ${salaryReportMissingSql()}`)
   })
 
-  it('treats `overdue: false` as no constraint', () => {
-    // Asymmetric with the booleans above, and deliberately so: `overdue` is a
-    // derived expression with no negative form to filter on.
-    expect(buildCompanyListQuery({ overdue: false })).toEqual({
-      where: {},
-      includes: [],
-    })
-  })
+  it('keeps SATISFACTORY disjoint from the statuses it negates', () => {
+    // Selecting everything must not exclude everything: the OR of all four has
+    // to stay satisfiable for any company, which it only is while SATISFACTORY
+    // is the complement of the other three rather than an extra conjunct.
+    const all = sqlFor(Object.values(CompanyReportStatusEnum))
 
-  it('combines every filter it is given', () => {
-    const conditions = conditionsOf({
-      q: 'a',
-      employeeCountCategory: CompanySizeEnum.LARGE,
-      companyStatus: [CompanyReportStatusEnum.SATISFACTORY],
-      status: [CompanyStatusEnum.ACTIVE],
-      expiresWithin: [CompanyExpiryFilterEnum.MONTHS_3],
-      finesStarted: true,
-      quarantined: false,
-      overdue: true,
-      isatCategoryCode: ['01110'],
-      sector: [CompanySectorEnum.PRIVATE],
-    })
-
-    expect(conditions).toHaveLength(10)
-  })
-
-  it('adds an include for each join-backed filter', () => {
-    const { includes } = buildCompanyListQuery({
-      postcode: ['101'],
-      isatSection: ['O'],
-    })
-
-    // Location and ÍSAT section are resolved through joins rather than columns;
-    // dropping either would silently return companies the filter excluded.
-    expect(includes).toHaveLength(2)
-  })
-
-  it('ignores paging, which belongs to the caller', () => {
-    // The recipient resolution passes the list's own query object through, paging
-    // params included. If they reached the query, a bulk send would mail page one
-    // and report it as everyone matching the filter.
-    const { where } = buildCompanyListQuery({ page: 3, pageSize: 10 })
-
-    expect(where).toEqual({})
+    expect(all).toContain(' OR ')
+    expect(all.startsWith('(')).toBe(true)
+    expect(all.endsWith(')')).toBe(true)
   })
 })

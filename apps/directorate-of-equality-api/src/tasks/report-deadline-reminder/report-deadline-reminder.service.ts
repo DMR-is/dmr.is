@@ -1,4 +1,4 @@
-import { Op, WhereOptions } from 'sequelize'
+import { literal, Op, WhereOptions } from 'sequelize'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
@@ -9,6 +9,8 @@ import {
   CompanyModel,
   CompanyReminderTierEnum,
   CompanyStatusEnum,
+  equalityRequiredSql,
+  salaryRequiredSql,
 } from '@dmr.is/doe-modules/company'
 import { ICompanyEventService } from '@dmr.is/doe-modules/company-event'
 import {
@@ -29,6 +31,27 @@ type DeadlineKind = {
   /** Company column holding the due date. */
   dueField: 'nextEqualityReportDueAt' | 'nextSalaryReportDueAt'
   reportType: ReportTypeEnum
+  /**
+   * SQL boolean: does the company actually owe this report?
+   *
+   * ⚠️ Load-bearing, and imported rather than restated. A due date being in the
+   * past is NOT the same as a deadline being owed: the register load seeds
+   * `next_equality_report_due_at` from the old SharePoint sheet's `Gildistíma
+   * jafnréttisáætlunar` for companies of EVERY size, so companies below 25 —
+   * which owe no plan at all — carry live dates. Without this gate they fall
+   * into the tiers below and are mailed a statutory deadline notice for an
+   * obligation they do not have.
+   *
+   * The salary side was never exposed to that (the load size-gates it on insert
+   * and clears it on upsert), but it is gated here too: an admin clearing
+   * `salary_report_required_override` must not leave the company being mailed
+   * against a date the approval flow wrote while the override stood.
+   *
+   * These are the same expressions the register's own status columns and list
+   * filter are built from (`@dmr.is/doe-modules/company`), so the mailer and the
+   * admin UI cannot come to disagree about who owes what.
+   */
+  obligation: string
   /** Event recorded once a reminder is sent. */
   sentEventType: CompanyDeadlineReminderEventType
   /** Event recorded when a reminder is due but no email is on file. */
@@ -39,6 +62,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
   {
     dueField: 'nextEqualityReportDueAt',
     reportType: ReportTypeEnum.EQUALITY,
+    obligation: equalityRequiredSql,
     sentEventType: CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
@@ -46,6 +70,7 @@ const DEADLINE_KINDS: DeadlineKind[] = [
   {
     dueField: 'nextSalaryReportDueAt',
     reportType: ReportTypeEnum.SALARY,
+    obligation: salaryRequiredSql,
     sentEventType: CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_SENT,
     noEmailEventType:
       CompanyEventTypeEnum.SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL,
@@ -135,15 +160,22 @@ export class ReportDeadlineReminderService
     tier: Tier,
     now: Date,
   ): Promise<void> {
-    // Active, non-quarantined companies whose deadline currently sits in this
-    // tier's band. `quarantined` is an admin halt switch — no outbound activity
-    // for those companies (see PR #1321) — so they are excluded at the query
-    // level. Per-tier dedup happens per-company below.
+    // Active, non-quarantined companies that OWE this report and whose deadline
+    // currently sits in this tier's band. `quarantined` is an admin halt switch
+    // — no outbound activity for those companies (see PR #1321) — so they are
+    // excluded at the query level. Per-tier dedup happens per-company below.
+    //
+    // ⚠️ `kind.obligation` is raw SQL qualified with the `CompanyModel` alias,
+    // which is what Sequelize names the table in this very query
+    // (`FROM "company" AS "CompanyModel"`). It is not user input — the two
+    // values are module constants. See the note on `DeadlineKind.obligation`
+    // for why a due date alone is not enough.
     const companies = await this.companyModel.findAll({
       where: {
         status: CompanyStatusEnum.ACTIVE,
         quarantined: false,
         [kind.dueField]: tier.dueRange(now),
+        [Op.and]: literal(kind.obligation),
       },
     })
 

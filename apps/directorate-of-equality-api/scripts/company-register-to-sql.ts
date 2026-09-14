@@ -1926,11 +1926,18 @@ const main = async (): Promise<void> => {
 --
 -- ⚠️ THE DEADLINE MAILER. This file seeds next_salary_report_due_at and
 -- next_equality_report_due_at, and ReportDeadlineReminderTask selects on
--- status/quarantined/due-date alone — no report, no certificate, nothing
--- else — with per-tier dedup keyed on *_DEADLINE_REMINDER_SENT events this
--- load does not write. Its tiers span roughly (now - 30 days, now + 6 months],
--- so a long-lapsed certificate is never selected — but every seeded deadline
--- inside that window is, in one pass, un-deduped.
+-- status/quarantined/due-date plus the OBLIGATION (equalityRequiredSql /
+-- salaryRequiredSql, imported from the company module so the mailer and the
+-- register cannot disagree) — but no report and no certificate — with per-tier
+-- dedup keyed on *_DEADLINE_REMINDER_SENT events this load does not write. Its
+-- tiers span roughly (now - 30 days, now + 6 months], so a long-lapsed
+-- certificate is never selected — but every seeded deadline inside that window
+-- belonging to a company that owes the report is, in one pass, un-deduped.
+--
+-- The obligation gate is newer than the seeding below and narrows the hazard
+-- rather than removing it: before it, the ungated next_equality_report_due_at
+-- seeded here put companies below 25 — which owe no plan — into the bands too.
+-- It does NOT make an un-reviewed load safe to run against a live mailer.
 --
 -- The hazard is not this psql run. It is the FIRST RUN OF THE TASK AFTER
 -- EMAIL_REMINDER_JOB_ENABLED next reads "true", whenever that happens. Confirm

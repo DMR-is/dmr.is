@@ -4,7 +4,7 @@ import { RecallBankruptcySettlement } from './types'
 import {
   formatNationalId,
   getElement,
-  getStatementLocation,
+  getStatementDestination,
   getStatementPrefix,
   getTableCell,
   getTableHeaderCell,
@@ -51,7 +51,7 @@ const getOutro = ({
 
   const secondParagraph = getElement({
     text: `
-    Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementLocation(settlement)}`,
+    Kröfulýsingar skulu sendar skiptastjóra ${statementPrefix}${getStatementDestination(settlement)}`,
   })
 
   const thirdParagraph = getElement({

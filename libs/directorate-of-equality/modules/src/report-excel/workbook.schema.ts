@@ -140,6 +140,12 @@ export const NAMED_RANGES = {
   // capacity is driven by the template's geometry, not code constants.
   ROLE_STEP_INPUTS: 'ROLE_STEP_INPUTS',
   EMP_STEP_INPUTS: 'EMP_STEP_INPUTS',
+  /**
+   * Points at `Leiðbeiningar!C4`, the VISIBLE mirror of the template version.
+   * Read only as a fallback by `template-version.assert.ts` when the archive's
+   * document properties have been dropped — see the tier table there.
+   */
+  TEMPLATE_VERSION: 'TemplateVersion',
 } as const
 
 /**

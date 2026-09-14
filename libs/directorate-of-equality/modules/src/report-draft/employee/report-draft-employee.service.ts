@@ -42,9 +42,9 @@ const EMPLOYEE_PATCH_KEYS = [
   'baseSalary',
   'additionalFixedOvertime',
   'additionalFixedCarAllowance',
-  'bonusOccasionalCarAllowance',
+  'additionalFixedOther',
   'bonusOccasionalOvertime',
-  'bonusPayments',
+  'bonusOccasionalCarAllowance',
   'bonusOther',
 ] as const
 
@@ -273,9 +273,9 @@ export class ReportDraftEmployeeService implements IReportDraftEmployeeService {
       baseSalary: data.baseSalary as number,
       additionalFixedOvertime: data.additionalFixedOvertime ?? null,
       additionalFixedCarAllowance: data.additionalFixedCarAllowance ?? null,
-      bonusOccasionalCarAllowance: data.bonusOccasionalCarAllowance ?? null,
+      additionalFixedOther: data.additionalFixedOther ?? null,
       bonusOccasionalOvertime: data.bonusOccasionalOvertime ?? null,
-      bonusPayments: data.bonusPayments ?? null,
+      bonusOccasionalCarAllowance: data.bonusOccasionalCarAllowance ?? null,
       bonusOther: data.bonusOther ?? null,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)

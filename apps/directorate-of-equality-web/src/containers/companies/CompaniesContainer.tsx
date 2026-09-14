@@ -68,6 +68,10 @@ export const CompaniesContainer = () => {
     isatCategoryCode: filter.isatCategoryCode ?? [],
     isatSection: filter.isatSection ?? [],
     sector: (filter.sector ?? []) as CompanySectorEnum[],
+    visibility: [
+      ...(filter.includeNotObliged ? ['notObliged'] : []),
+      ...(filter.includeInactive ? ['inactive'] : []),
+    ],
   })
 
   const trpc = useTRPC()
@@ -149,6 +153,15 @@ export const CompaniesContainer = () => {
       })
     } else if (key === 'expires') {
       setFilter({ expiresWithin: val as CompanyExpiryFilterEnum[], page: 1 })
+    } else if (key === 'visibility') {
+      // Combined multi-select; each value maps to its own boolean server param.
+      // `null` rather than `false` so an unset reveal leaves the URL clean —
+      // the server hides by default, so absence already means "hidden".
+      setFilter({
+        includeNotObliged: val.includes('notObliged') ? true : null,
+        includeInactive: val.includes('inactive') ? true : null,
+        page: 1,
+      })
     } else if (key === 'flags') {
       // Combined multi-select; each value maps to its own boolean server param.
       setFilter({
@@ -183,6 +196,7 @@ export const CompaniesContainer = () => {
       isatCategoryCode: [],
       isatSection: [],
       sector: [],
+      visibility: [],
     })
   }
 

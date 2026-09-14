@@ -992,9 +992,7 @@ describe('ReportCreateService', () => {
         parentCompanyId: null,
       })
 
-      await expect(service.createSalary(input)).rejects.toThrow(
-        /EQUALITY/,
-      )
+      await expect(service.createSalary(input)).rejects.toThrow(/EQUALITY/)
     })
 
     it('checks ownership before type, so a foreign tuple reveals nothing about it', async () => {
@@ -1359,9 +1357,9 @@ function makeInput(): CreateReportDto {
           baseSalary: 1000000,
           additionalFixedOvertime: 100000,
           additionalFixedCarAllowance: null,
-          bonusOccasionalCarAllowance: null,
+          additionalFixedOther: null,
           bonusOccasionalOvertime: null,
-          bonusPayments: null,
+          bonusOccasionalCarAllowance: null,
           bonusOther: null,
           personalStepAssignments: [
             {
@@ -1413,9 +1411,9 @@ function makeInputWithDetectedOutlier(): CreateReportDto {
     baseSalary: baseSalary as number,
     additionalFixedOvertime: 100000,
     additionalFixedCarAllowance: null,
-    bonusOccasionalCarAllowance: null,
+    additionalFixedOther: null,
     bonusOccasionalOvertime: null,
-    bonusPayments: null,
+    bonusOccasionalCarAllowance: null,
     bonusOther: null,
     personalStepAssignments: [
       {

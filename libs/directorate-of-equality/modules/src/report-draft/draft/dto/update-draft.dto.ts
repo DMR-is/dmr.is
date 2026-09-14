@@ -1,4 +1,5 @@
 import {
+  ApiOptionalBase64File,
   ApiOptionalEnum,
   ApiOptionalHTML,
   ApiOptionalNumber,
@@ -75,7 +76,21 @@ export class UpdateDraftDto {
   @ApiOptionalHTML({
     nullable: true,
     description:
-      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`.',
+      'Narrative gender-equality plan as base64-encoded HTML. Decoded server-side and persisted as `report.equality_report_content`. Mutually exclusive with `equalityReportPdf`.',
   })
   equalityReportContent?: string | null
+
+  @ApiOptionalBase64File({
+    nullable: true,
+    description:
+      'Narrative gender-equality plan as a base64-encoded PDF, stored verbatim. Mutually exclusive with `equalityReportContent`. Max 4MB decoded.',
+  })
+  equalityReportPdf?: string | null
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'File name of the uploaded PDF, shown in the review UI. Required when `equalityReportPdf` is supplied.',
+  })
+  equalityReportPdfFilename?: string | null
 }

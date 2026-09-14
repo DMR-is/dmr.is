@@ -15,13 +15,48 @@ and asserted in the specs beside it.
 Everything rests on one quantity, **reglulegt tímakaup**:
 
 ```
-Regluleg laun      = grunnlaun + viðbótarlaun + aukagreiðslur
+Viðbótarlaun       = fastar greiðslur aðrar en grunnlaun
+Aukagreiðslur      = tilfallandi greiðslur
+Regluleg laun      = grunnlaun + viðbótarlaun
 Reglulegt tímakaup = regluleg laun / greiddar stundir
 ```
+
+**Tilfallandi greiðslur teljast ekki með.** `Aukagreiðslur` are still collected,
+still stored and still reported on their own — they are simply not part of
+regluleg laun.
+
+> ⚠️ **This changed with Excel template 2.0 (2026-09-08).** Regluleg laun
+> previously included aukagreiðslur. Figures produced before and after are **not
+> comparable**: anyone with incidental pay now shows a lower tímakaup than the
+> same input produced before. `report_result` rows written under the new rule
+> are stamped `calculation_version = 'v4'`; `v3` and earlier used the wide sum.
 
 `greiddar stundir` is collected per employee (column E of the Launagögn sheet).
 It replaced `starfshlutfall`: an FTE ratio is a _proxy_ for time worked, and
 dividing by both it and actual hours double-counts the part-time correction.
+
+Since template 2.0 it means **fastar yfirvinnustundir meðtaldar, en ekki
+tilfallandi greiddar stundir**. That narrowing is deliberately paired with the
+one above: numerator and denominator now cover the same scope, so the rate has
+fixed pay over the hours that fixed pay is for. Widening either alone
+reintroduces the mismatch — do not add aukagreiðslur back without also
+restoring incidental hours, and vice versa.
+
+### The six pay components
+
+Collected per employee (Launagögn columns J–O), grouped into two bands:
+
+| Band                                      | Column | Component                               |
+| ----------------------------------------- | ------ | --------------------------------------- |
+| **Fastar greiðslur** → viðbótarlaun       | J      | Föst yfirvinna                          |
+|                                           | K      | Föst bifreiðahlunnindi                  |
+|                                           | L      | Aðrar reglulegar greiðslur / hlunnindi  |
+| **Tilfallandi greiðslur** → aukagreiðslur | M      | Tilfallandi / mæld yfirvinna            |
+|                                           | N      | Tilfallandi / mældur bifreiðastyrkur    |
+|                                           | O      | Aðrar tilfallandi greiðslur / hlunnindi |
+
+`Bónusgreiðslur` was a distinct field before 2.0 and no longer exists; bonuses
+belong in column O.
 
 ### What counts as a valid `greiddar stundir`
 

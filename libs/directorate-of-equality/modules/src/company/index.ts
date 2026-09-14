@@ -40,3 +40,21 @@ export * from './models/company.model'
 export * from './models/isat-category.model'
 export * from './models/isat-section.model'
 export * from './models/legacy-report.model'
+
+/**
+ * The two obligation predicates, by name — NOT `export *` from
+ * `utils/report-status`.
+ *
+ * That module is internal: it also holds the query alias, the legacy-coverage
+ * builders and every status `CASE`, all of which exist to be composed into the
+ * company read scope and the list filter, and none of which another module has
+ * any business assembling for itself.
+ *
+ * These two are the exception because "does this company owe this report" is a
+ * rule that has to hold *outside* the register too — `ReportDeadlineReminderTask`
+ * decides who receives a statutory deadline notice on it. Restating it there
+ * rather than importing it is how the mailer and the admin list come to
+ * disagree about who owes what, which is exactly the bug this export exists to
+ * prevent.
+ */
+export { equalityRequiredSql, salaryRequiredSql } from './utils/report-status'

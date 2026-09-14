@@ -118,9 +118,9 @@ export class ReportContentService implements IReportContentService {
         baseSalary: employee.baseSalary,
         additionalFixedOvertime: employee.additionalFixedOvertime,
         additionalFixedCarAllowance: employee.additionalFixedCarAllowance,
-        bonusOccasionalCarAllowance: employee.bonusOccasionalCarAllowance,
+        additionalFixedOther: employee.additionalFixedOther,
         bonusOccasionalOvertime: employee.bonusOccasionalOvertime,
-        bonusPayments: employee.bonusPayments,
+        bonusOccasionalCarAllowance: employee.bonusOccasionalCarAllowance,
         bonusOther: employee.bonusOther,
         gender: employee.gender,
         reportEmployeeRoleId: this.requireRoleId(

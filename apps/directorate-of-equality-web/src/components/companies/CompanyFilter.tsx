@@ -19,6 +19,7 @@ import {
   FLAG_FILTER_OPTIONS,
   SECTOR_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
+  VISIBILITY_FILTER_OPTIONS,
 } from './companyStatus'
 import { IsatCategoryFilter } from './IsatCategoryFilter'
 import { IsatSectionFilter } from './IsatSectionFilter'
@@ -44,6 +45,12 @@ export type CompanyFilters = {
   isatCategoryCode: string[]
   isatSection: string[]
   sector: string[]
+  /**
+   * Opt-in reveals for the two groups the list hides by default — companies
+   * with no reporting obligation, and companies off the register. Empty means
+   * both hidden, which is the default state rather than "no filter applied".
+   */
+  visibility: string[]
 }
 
 type Props = {
@@ -116,6 +123,7 @@ export const CompanyFilter = ({
                 filters.sector,
                 filters.isatSection,
                 filters.isatCategoryCode,
+                filters.visibility,
               )}
               iconVariant="small"
             >
@@ -161,6 +169,16 @@ export const CompanyFilter = ({
                   onChange={(codes) =>
                     onFiltersChange('isatCategoryCode', codes)
                   }
+                />
+                <MultiSelectFilter
+                  name="visibility"
+                  label={companiesText.visibility}
+                  placeholder={companiesText.visibilityPlaceholder}
+                  noOptionsMessage={companiesText.filterNoResults}
+                  isSearchable={false}
+                  options={VISIBILITY_FILTER_OPTIONS}
+                  selected={filters.visibility}
+                  onChange={(val) => onFiltersChange('visibility', val)}
                 />
               </Stack>
             </AccordionItem>

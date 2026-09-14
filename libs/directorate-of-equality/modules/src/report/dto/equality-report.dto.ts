@@ -5,7 +5,10 @@ import {
   ApiUUId,
 } from '@dmr.is/decorators'
 
-import { ReportStatusEnum } from '../models/report.enums'
+import {
+  EqualityContentTypeEnum,
+  ReportStatusEnum,
+} from '../models/report.enums'
 
 /**
  * Equality content always returned in a report detail view.
@@ -33,8 +36,24 @@ export class EqualityReportDto {
   @ApiEnum(ReportStatusEnum, { enumName: 'ReportStatusEnum' })
   status!: ReportStatusEnum
 
+  /**
+   * The rich-text body — **null whenever `contentType` is PDF**, where the
+   * bytes are served by `GET /reports/:id/equality-content/pdf` instead of
+   * riding along on every read. Read `contentType` to tell that case apart
+   * from a report with no content submitted yet.
+   */
   @ApiOptionalString({ nullable: true })
   content!: string | null
+
+  @ApiEnum(EqualityContentTypeEnum, { enumName: 'EqualityContentTypeEnum' })
+  contentType!: EqualityContentTypeEnum
+
+  @ApiOptionalString({
+    nullable: true,
+    description:
+      'File name of the uploaded PDF. Non-null exactly when `contentType` is PDF.',
+  })
+  contentFilename!: string | null
 
   @ApiOptionalDateTime({ nullable: true })
   approvedAt!: Date | null

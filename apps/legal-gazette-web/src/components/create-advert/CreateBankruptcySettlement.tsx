@@ -4,6 +4,8 @@ import * as z from 'zod'
 
 import {
   ApplicationRequirementStatementEnum,
+  getRequirementStatementLocationLabel,
+  requirementsStatementOptions,
   settlementSchemaRefined,
 } from '@dmr.is/legal-gazette-schemas'
 import { DatePicker } from '@dmr.is/ui/components/island-is/DatePicker'
@@ -20,21 +22,6 @@ import { useMutation } from '@tanstack/react-query'
 const schema = settlementSchemaRefined.extend({
   deadlineDate: z.iso.datetime(),
 })
-
-export const requirementsStatementOptions = [
-  {
-    label: 'Staðsetning skiptastjóra',
-    value: 'LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Slá inn staðsetningu',
-    value: 'CUSTOM_LIQUIDATOR_LOCATION',
-  },
-  {
-    label: 'Tölvupóstur',
-    value: 'CUSTOM_LIQUIDATOR_EMAIL',
-  },
-]
 
 type Settlement = z.infer<typeof schema>
 
@@ -222,15 +209,9 @@ export const CreateBankruptcySettlement = ({ onChange }: Props) => {
             ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
           }
           value={state.recallRequirementStatementLocation}
-          label={
-            state.recallRequirementStatementType ===
-            ApplicationRequirementStatementEnum.LIQUIDATORLOCATION
-              ? 'Staðsetning skiptastjóra'
-              : state.recallRequirementStatementType ===
-                  ApplicationRequirementStatementEnum.CUSTOMLIQUIDATORLOCATION
-                ? 'Slá inn staðsetningu'
-                : 'Tölvupóstur'
-          }
+          label={getRequirementStatementLocationLabel(
+            state.recallRequirementStatementType,
+          )}
           onChange={(e) =>
             setState((prev) => ({
               ...prev,

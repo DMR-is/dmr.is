@@ -15,6 +15,7 @@ import {
 import { UserDto } from '../../user/dto/user.dto'
 import {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -129,8 +130,15 @@ export class ReportDto {
   @ApiOptionalDateTime({ nullable: true })
   correctionDeadline!: Date | null
 
+  /** Null when `equalityReportContentType` is PDF — see `EqualityReportDto.content`. */
   @ApiOptionalString({ nullable: true })
   equalityReportContent!: string | null
+
+  @ApiEnum(EqualityContentTypeEnum, { enumName: 'EqualityContentTypeEnum' })
+  equalityReportContentType!: EqualityContentTypeEnum
+
+  @ApiOptionalString({ nullable: true })
+  equalityReportContentFilename!: string | null
 
   @ApiOptionalDto(UserDto, { nullable: true })
   reviewer?: UserDto | null

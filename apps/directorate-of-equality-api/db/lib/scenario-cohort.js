@@ -114,7 +114,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: Math.round(SEEDED_PAID_HOURS * factor * 100) / 100,
       baseSalary: Math.round(employee.baseSalary * factor),
       additionalFixedOvertime: scale(employee.additionalFixedOvertime),
-      bonusPayments: scale(employee.bonusPayments),
+      additionalFixedOther: scale(employee.additionalFixedOther),
     }
   }
 
@@ -130,7 +130,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: emp1Salary,
       additionalFixedOvertime: 50000,
-      bonusPayments: 100000,
+      additionalFixedOther: 100000,
     },
     {
       ordinal: 2,
@@ -143,7 +143,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: 703000,
       additionalFixedOvertime: 50000,
-      bonusPayments: 80000,
+      additionalFixedOther: 80000,
     },
     {
       ordinal: 3,
@@ -156,7 +156,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: 602000,
       additionalFixedOvertime: 30000,
-      bonusPayments: 50000,
+      additionalFixedOther: 50000,
     },
     {
       ordinal: 4,
@@ -169,7 +169,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: 598000,
       additionalFixedOvertime: 30000,
-      bonusPayments: 40000,
+      additionalFixedOther: 40000,
     },
     {
       ordinal: 5,
@@ -182,7 +182,7 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: 502000,
       additionalFixedOvertime: 10000,
-      bonusPayments: null,
+      additionalFixedOther: null,
     },
     {
       ordinal: 6,
@@ -195,17 +195,25 @@ function scenarioEmployees(hasOutliers) {
       paidHours: SEEDED_PAID_HOURS,
       baseSalary: 498000,
       additionalFixedOvertime: 10000,
-      bonusPayments: null,
+      additionalFixedOther: null,
     },
   ].map(sized)
 }
 
-/** Reglulegt tímakaup: (grunnlaun + viðbótarlaun + aukagreiðslur) / greiddar stundir. */
+/**
+ * Reglulegt tímakaup: (grunnlaun + viðbótarlaun) / greiddar stundir.
+ *
+ * These cohorts carry no incidental pay at all — what used to sit in
+ * `bonusPayments` was always a fixed monthly amount and now lives in
+ * `additionalFixedOther`, so every seeded wage is numerically unchanged by the
+ * 2.0 re-cut and the engineered outlier scenarios still land where they were
+ * tuned to land.
+ */
 function scenarioHourlyWage(employee) {
   return (
     (employee.baseSalary +
       (employee.additionalFixedOvertime ?? 0) +
-      (employee.bonusPayments ?? 0)) /
+      (employee.additionalFixedOther ?? 0)) /
     employee.paidHours
   )
 }

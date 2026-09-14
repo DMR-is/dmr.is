@@ -10,6 +10,23 @@ export enum ReportTypeEnum {
   EQUALITY = 'EQUALITY',
 }
 
+/**
+ * How to read `report.equality_report_content`.
+ *
+ *   HTML  rich text — the original representation, and what every report
+ *         created before the PDF path existed carries.
+ *   PDF   the base64-encoded bytes the company uploaded, stored verbatim.
+ *
+ * The two are mutually exclusive by construction: they share the one content
+ * column, so a report has one content in one representation and there is no
+ * state where both are set. `equality_report_content_filename` is non-null
+ * exactly when this is PDF — see the CHECK in m-20260903.
+ */
+export enum EqualityContentTypeEnum {
+  HTML = 'HTML',
+  PDF = 'PDF',
+}
+
 export enum ReportStatusEnum {
   DRAFT = 'DRAFT',
   SUBMITTED = 'SUBMITTED',

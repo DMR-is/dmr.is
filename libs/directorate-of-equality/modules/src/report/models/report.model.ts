@@ -23,6 +23,7 @@ import type { ReportDto } from '../dto/report.dto'
 import { ReportListItemDto } from '../dto/report-list-item.dto'
 import {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
@@ -34,12 +35,31 @@ import {
 // from `report.model.ts` directly. New code should prefer `report.enums.ts`.
 export {
   CommunicationStatusEnum,
+  EqualityContentTypeEnum,
   GenderEnum,
   ReportProviderEnum,
   ReportStatusEnum,
   ReportTypeEnum,
   SalaryDataBasisEnum,
 } from './report.enums'
+
+/**
+ * The content a read DTO may carry.
+ *
+ * ⚠️ **PDF content is deliberately withheld here.** The base64 of a 4MB PDF is
+ * ~5.5MB of string, and `equalityReportContent` rides along on report detail,
+ * draft detail and the linked-equality block of every salary report — so
+ * returning it would put multiple megabytes on reads that only ever wanted the
+ * metadata. Callers that actually want the bytes fetch them from the dedicated
+ * `equality-content/pdf` route, which streams them once.
+ *
+ * `contentType` tells a reader which case it is in, so an empty `content` is
+ * never ambiguous between "PDF, ask elsewhere" and "nothing submitted yet".
+ */
+const equalityContentForRead = (model: ReportModel): string | null =>
+  model.equalityReportContentType === EqualityContentTypeEnum.PDF
+    ? null
+    : model.equalityReportContent
 
 type ReportAttributes = {
   type: ReportTypeEnum
@@ -76,6 +96,8 @@ type ReportAttributes = {
   validUntil: Date | null
   correctionDeadline: Date | null
   equalityReportContent: string | null
+  equalityReportContentType: EqualityContentTypeEnum
+  equalityReportContentFilename: string | null
 }
 
 type ReportCreateAttributes = {
@@ -113,6 +135,8 @@ type ReportCreateAttributes = {
   validUntil?: Date | null
   correctionDeadline?: Date | null
   equalityReportContent?: string | null
+  equalityReportContentType?: EqualityContentTypeEnum
+  equalityReportContentFilename?: string | null
 }
 
 /**
@@ -379,6 +403,27 @@ export class ReportModel extends MutableModel<
   })
   equalityReportContent!: string | null
 
+  /**
+   * How to read `equalityReportContent` — rich text, or a base64 PDF stored
+   * verbatim. Never null: every pre-existing report is HTML and the column
+   * defaults accordingly, so readers can switch on this without a null case.
+   */
+  @Column({
+    type: DataType.TEXT,
+    allowNull: false,
+    defaultValue: EqualityContentTypeEnum.HTML,
+    field: 'equality_report_content_type',
+  })
+  equalityReportContentType!: EqualityContentTypeEnum
+
+  /** Name of the uploaded PDF. Non-null exactly when the type is PDF. */
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+    field: 'equality_report_content_filename',
+  })
+  equalityReportContentFilename!: string | null
+
   @BelongsTo(() => ReportModel, {
     foreignKey: 'equalityReportId',
     as: 'equalityReport',
@@ -463,7 +508,9 @@ export class ReportModel extends MutableModel<
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,
       correctionDeadline: model.correctionDeadline,
-      equalityReportContent: model.equalityReportContent,
+      equalityReportContent: equalityContentForRead(model),
+      equalityReportContentType: model.equalityReportContentType,
+      equalityReportContentFilename: model.equalityReportContentFilename,
       reviewer:
         model.reviewer === undefined
           ? undefined
@@ -510,13 +557,22 @@ export class ReportModel extends MutableModel<
    * original is left untouched.
    */
   static fromModelToEqualityReport(model: ReportModel): EqualityReportDto {
+    /*
+     * ⚠️ **Withheld BEFORE sanitising, and the order matters.** For a
+     * PDF-backed report this column holds base64, not markup —
+     * `simpleSanitize` would treat it as HTML and mangle it into something
+     * that is neither. `equalityContentForRead` returns null for those, so
+     * only real HTML ever reaches the sanitiser.
+     */
+    const content = equalityContentForRead(model)
+
     return {
       id: model.id,
       identifier: model.identifier,
       status: model.status,
-      content: model.equalityReportContent
-        ? simpleSanitize(model.equalityReportContent)
-        : model.equalityReportContent,
+      content: content ? simpleSanitize(content) : content,
+      contentType: model.equalityReportContentType,
+      contentFilename: model.equalityReportContentFilename,
       approvedAt: model.approvedAt,
       validUntil: model.validUntil,
       correctionDeadline: model.correctionDeadline,
