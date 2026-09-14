@@ -43,6 +43,25 @@ describe('getOsBody', () => {
       expect(phraseClauses(mustOf('"123/2024"'))).toHaveLength(1)
     })
 
+    it.each([
+      ['two quoted segments', '"lög" "um veiðar"'],
+      ['quoted segments joined by a word', '"lög" og "veiðar"'],
+      ['a leading quoted segment', 'lög "um veiðar"'],
+      ['a bare quote character', '"""'],
+    ])('does not treat %s as a phrase', (_label, search) => {
+      // A greedy `.+` swallowed the inner quotes and turned these into one
+      // strict adjacency, which returns nothing where an OR match used to.
+      expect(phraseClauses(mustOf(search))).toHaveLength(0)
+      expect(bagOfWordsClauses(mustOf(search))).toHaveLength(1)
+    })
+
+    it('detects a phrase the same way whatever the whitespace', () => {
+      expect(mustOf('"three   little\nwords"')[0].multi_match).toMatchObject({
+        query: 'three little words',
+        type: 'phrase',
+      })
+    })
+
     it('falls back to normal search when the quotes are empty', () => {
       expect(bagOfWordsClauses(mustOf('""'))).toHaveLength(1)
       expect(bagOfWordsClauses(mustOf('"   "'))).toHaveLength(1)
@@ -78,10 +97,11 @@ describe('getOsBody', () => {
       expect(bag.multi_match.minimum_should_match).toBe('75%')
     })
 
-    it('leaves short queries able to match on one term', () => {
-      // 75% floors to 1 at two terms, so these keep their current recall.
-      // Guards the cross-field case: "<institution> <subject>" where no single
-      // field holds both terms.
+    it('applies the same threshold regardless of term count', () => {
+      // `buildTextQuery` emits the constant unconditionally. The floor to 1 at
+      // two terms - which is what protects the cross-field case - is computed
+      // by OpenSearch at query time and cannot be exercised from a unit test.
+      // This pins the wiring, not that guarantee.
       const [bag] = bagOfWordsClauses(mustOf('reglugerd veidar'))
 
       expect(bag.multi_match.minimum_should_match).toBe('75%')

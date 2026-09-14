@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 
 import { GetAdvertsQueryParams } from '@dmr.is/shared-dto'
 
+import { extractPhrase } from '../../util/phrase'
 import {
   LeanSearchQueryKind,
   LeanSearchTrackingEventDto,
@@ -12,7 +13,6 @@ import {
 const INTERNAL_CASE_NUMBER_PATTERN = /^\d{11}$/
 const PUBLICATION_NUMBER_PATTERN = /^(\d+)\s*\/\s*(\d{4})$/
 const PREFIX_WILDCARD_PATTERN = /^(\S+)\*$/
-const PHRASE_PATTERN = /^"(.+)"$/
 
 const normalizeQuery = (query?: string): string => {
   return (query ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -62,8 +62,7 @@ export const classifyLeanSearchQuery = (
   let normalizedQuery = normalized
   let queryKind: LeanSearchQueryKind = LeanSearchQueryKind.FreeText
 
-  const phraseMatch = normalized.match(PHRASE_PATTERN)
-  const phrase = phraseMatch?.[1].trim()
+  const phrase = extractPhrase(normalized)
 
   if (phrase) {
     // Record the phrase without its quotes so a quoted search and the same

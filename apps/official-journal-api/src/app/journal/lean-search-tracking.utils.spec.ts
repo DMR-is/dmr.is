@@ -75,10 +75,18 @@ describe('lean-search-tracking utils', () => {
       )
     })
 
-    it('does not treat partially quoted queries as phrases', () => {
-      expect(classifyLeanSearchQuery('lög "um veiðar"').queryKind).toBe(
-        LeanSearchQueryKind.FreeText,
-      )
+    it.each([
+      'lög "um veiðar"',
+      '"lög" "um veiðar"',
+      '"lög" og "veiðar"',
+      '"""',
+    ])('does not treat partially quoted query %s as a phrase', (search) => {
+      const result = classifyLeanSearchQuery(search)
+
+      expect(result.queryKind).toBe(LeanSearchQueryKind.FreeText)
+      // The quote characters used to survive into the stored query, so these
+      // rows grouped with nothing.
+      expect(result.normalizedQuery).toBe(search.toLowerCase())
     })
 
     it('classifies single-token wildcard queries', () => {

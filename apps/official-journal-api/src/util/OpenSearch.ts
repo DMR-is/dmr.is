@@ -3,6 +3,8 @@ import startOfDay from 'date-fns/startOfDay'
 
 import { GetAdvertsQueryParams, Paging } from '@dmr.is/shared-dto'
 
+import { extractPhrase } from './phrase'
+
 function normalizeToArray(value: string | string[]): string[] {
   if (Array.isArray(value)) return value
 
@@ -63,10 +65,17 @@ export const getOsPaging = (
 // this, `operator: 'or'` means one term out of four is enough to match, and
 // `most_fields` then sums those weak hits across nine fields.
 //
-// 75% is deliberately gentle: it floors to 1 for one- and two-word queries, so
-// those behave exactly as before, and only tightens at 3+ terms. That keeps
-// cross-field queries such as "<institution> <subject>" working, since the
-// requirement applies per field rather than across the document.
+// Percentages round down, so 75% floors to 1 at two terms and only starts
+// biting at three. That floor is what keeps a cross-field query such as
+// "<institution> <subject>" working - not the per-field application, which is
+// the hazard here: the threshold is evaluated against one field at a time,
+// never across the document.
+//
+// The denominator also differs per field. `title` and `bodyText` declare no
+// analyzer, so they use `standard` and keep stopwords, while the `.stemmed`
+// variants drop them. Since `most_fields` matches on any field, the stemmed
+// fields hold the lower bar and govern recall; the raw fields mostly shift
+// ranking, because a document failing `title^5` loses its largest score term.
 const MIN_TERMS_MATCHED = '75%'
 
 function buildTextQuery(search: string) {
@@ -90,10 +99,6 @@ function buildTextQuery(search: string) {
     },
   }
 }
-
-// A query is treated as a phrase only when the whole thing is quoted.
-// Mixed quoting - foo "bar baz" - is intentionally not supported yet.
-const PHRASE_QUERY_PATTERN = /^"(.+)"$/
 
 // How much an adjacent-words match is worth on top of the normal bag-of-words
 // score. Tuning knob - raise it if phrase hits should dominate more strongly.
@@ -216,8 +221,7 @@ export const getOsBody = (
 ): { body: any; alias: string; page: number; size: number } => {
   const INDEX_ALIAS = process.env.ADVERTS_SEARCH_ALIAS ?? 'ojoi_search'
   const q = qp?.search?.trim() ?? ''
-  const phraseMatch = q.match(PHRASE_QUERY_PATTERN)
-  const phrase = phraseMatch?.[1].trim() || null
+  const phrase = extractPhrase(q)
 
   const pageSize = Math.min(Math.max(1, qp?.pageSize ?? 20), 100)
   // OpenSearch rejects from + size > index.max_result_window (default 10000).
