@@ -16,6 +16,7 @@ import { LOGGER_PROVIDER } from '@dmr.is/logging'
 import { ICompanyService } from '../company/company.service.interface'
 import { CompanyDto } from '../company/dto/company.dto'
 import {
+  CompanyObligationStatusEnum,
   CompanyReportStatusEnum,
   CompanySectorEnum,
   CompanySizeEnum,
@@ -99,6 +100,8 @@ const COMPANY: CompanyDto = {
   legalFormId: null,
   legalFormName: null,
   reportStatus: CompanyReportStatusEnum.SATISFACTORY,
+  equalityObligationStatus: CompanyObligationStatusEnum.COVERED,
+  salaryObligationStatus: CompanyObligationStatusEnum.COVERED,
   equalityReportOverdue: false,
   salaryReportOverdue: false,
   hasLegacyReports: false,

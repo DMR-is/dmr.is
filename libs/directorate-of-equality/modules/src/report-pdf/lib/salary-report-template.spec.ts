@@ -363,7 +363,9 @@ describe('buildSalaryReportHtml', () => {
       expectedHourlyWage: 4400,
       deviationPercent: studentizedResidual < 0 ? -9.1 : 9.1,
       payStatus:
-        studentizedResidual < 0 ? PayStatusEnum.UNDERPAID : PayStatusEnum.OVERPAID,
+        studentizedResidual < 0
+          ? PayStatusEnum.UNDERPAID
+          : PayStatusEnum.OVERPAID,
       studentizedResidual,
     })
 
@@ -430,7 +432,9 @@ describe('buildSalaryReportHtml', () => {
     })
 
     it('renders only the direction that has anything', () => {
-      const html = withPayDispersion({ employees: [row(1, -2.4), row(2, -2.2)] })
+      const html = withPayDispersion({
+        employees: [row(1, -2.4), row(2, -2.2)],
+      })
 
       expect(html).toContain('Undir væntanlegu tímakaupi')
       expect(html).not.toContain('Yfir væntanlegu tímakaupi')
@@ -735,23 +739,37 @@ describe('buildSalaryReportHtml', () => {
   })
 
   describe('viðbótarlaun og aukagreiðslur', () => {
+    // The medians are part of `GenderBenefitsDto` but the PDF renders only the
+    // averages and the gap row, so they are here to make the fixture a shape
+    // the statistics service can actually produce. Deliberately NOT the sum of
+    // the two component medians — a median of sums is not the sum of medians,
+    // and equal values would invite that reading.
     const payComponents = {
       male: {
         averageAdditionalSalary: 50000,
         averageBonusSalary: 20000,
         averageTotal: 70000,
+        medianAdditionalSalary: 47000,
+        medianBonusSalary: 18000,
+        medianTotal: 66000,
         count: 8,
       },
       female: {
         averageAdditionalSalary: 30000,
         averageBonusSalary: 10000,
         averageTotal: 40000,
+        medianAdditionalSalary: 29000,
+        medianBonusSalary: 9000,
+        medianTotal: 37000,
         count: 6,
       },
       overall: {
         averageAdditionalSalary: 41429,
         averageBonusSalary: 15714,
         averageTotal: 57143,
+        medianAdditionalSalary: 38000,
+        medianBonusSalary: 13000,
+        medianTotal: 52000,
         count: 14,
       },
       additionalWageGapPercent: 40,
@@ -795,6 +813,9 @@ describe('buildSalaryReportHtml', () => {
               averageAdditionalSalary: 0,
               averageBonusSalary: 0,
               averageTotal: 0,
+              medianAdditionalSalary: 0,
+              medianBonusSalary: 0,
+              medianTotal: 0,
               count: 0,
             },
           },
@@ -811,7 +832,11 @@ describe('buildSalaryReportHtml', () => {
         makeData({
           payComponents: {
             ...payComponents,
-            overall: { ...payComponents.overall, averageTotal: 0 },
+            overall: {
+              ...payComponents.overall,
+              averageTotal: 0,
+              medianTotal: 0,
+            },
           },
         }),
       )

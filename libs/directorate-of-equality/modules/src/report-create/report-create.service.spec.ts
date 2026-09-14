@@ -611,6 +611,7 @@ describe('ReportCreateService', () => {
         action: 'a2',
         signatureName: 'n2',
         signatureRole: 'role2',
+        remedyDate: REMEDY_DATE,
         employeeOrdinals: [1],
       },
     ]

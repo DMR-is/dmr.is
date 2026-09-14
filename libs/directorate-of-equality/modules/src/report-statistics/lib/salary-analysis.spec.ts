@@ -69,8 +69,13 @@ describe('analyzeSalaryPayload', () => {
         ...row,
         paidHours: Number(row.paidHours.toFixed(2)),
         baseSalary: Number(row.baseSalary.toFixed(2)),
+        // `== null`, not `=== null`: the field is optional on
+        // `ParsedEmployeeDto` (`@ApiOptionalNumber`), so a client that omits
+        // the key sends `undefined` — which Postgres stores and returns as
+        // NULL, exactly what this mapping is simulating. `nullableToStored`
+        // makes the same distinction on the production path.
         additionalFixedOvertime:
-          row.additionalFixedOvertime === null
+          row.additionalFixedOvertime == null
             ? null
             : Number(row.additionalFixedOvertime.toFixed(2)),
       }))
