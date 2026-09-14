@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -9,6 +10,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import type { SignatureRecordModel as SignatureRecordModelRef } from './signature-record.model'
 import { SignatureRecordModel } from './signature-record.model'
 @DefaultScope(() => ({
   order: [['created', 'ASC']],
@@ -74,5 +76,5 @@ export class SignatureMemberModel extends Model {
   created!: string
 
   @BelongsTo(() => SignatureRecordModel, 'signature_record_id')
-  record!: SignatureRecordModel
+  record!: SignatureRecordModelRef
 }

@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   BelongsToMany,
@@ -11,14 +12,19 @@ import {
 } from 'sequelize-typescript'
 
 import { AdditionalPartiesModel } from '../../additional-parties/models/additional-parties.model'
+import type { AdvertTypeModel as AdvertTypeModelRef } from '../../advert-type/models'
 import { AdvertTypeModel } from '../../advert-type/models'
+import type { CaseModel as CaseModelRef } from '../../case/models'
 import { CaseAdditionModel, CaseModel } from '../../case/models'
 import { AdvertAttachmentsModel } from './advert-attachments.model'
 import { AdvertCategoriesModel } from './advert-categories.model'
 import { AdvertCategoryModel } from './advert-category.model'
 import { AdvertCorrectionModel } from './advert-correction.model'
+import type { AdvertDepartmentModel as AdvertDepartmentModelRef } from './advert-department.model'
 import { AdvertDepartmentModel } from './advert-department.model'
+import type { AdvertInvolvedPartyModel as AdvertInvolvedPartyModelRef } from './advert-involved-party.model'
 import { AdvertInvolvedPartyModel } from './advert-involved-party.model'
+import type { AdvertStatusModel as AdvertStatusModelRef } from './advert-status.model'
 import { AdvertStatusModel } from './advert-status.model'
 
 @Table({ tableName: 'advert', timestamps: false })
@@ -72,13 +78,13 @@ export class AdvertModel extends Model {
   departmentId!: string
 
   @BelongsTo(() => AdvertDepartmentModel, 'department_id')
-  department!: AdvertDepartmentModel
+  department!: AdvertDepartmentModelRef
 
   @Column({ type: DataType.UUID, field: 'type_id' })
   typeId!: string
 
   @BelongsTo(() => AdvertTypeModel, 'type_id')
-  type!: AdvertTypeModel
+  type!: AdvertTypeModelRef
 
   @BelongsToMany(() => AdvertCategoryModel, {
     through: { model: () => AdvertCategoriesModel },
@@ -92,7 +98,7 @@ export class AdvertModel extends Model {
   statusId!: string
 
   @BelongsTo(() => AdvertStatusModel, 'status_id')
-  status!: AdvertStatusModel
+  status!: AdvertStatusModelRef
 
   @Column({ field: 'serial_number' })
   serialNumber!: number
@@ -110,7 +116,7 @@ export class AdvertModel extends Model {
   involvedPartyId!: string
 
   @BelongsTo(() => AdvertInvolvedPartyModel, 'involved_party_id')
-  involvedParty!: AdvertInvolvedPartyModel
+  involvedParty!: AdvertInvolvedPartyModelRef
 
   @HasMany(() => AdditionalPartiesModel, 'advert_id')
   additionalParties?: AdditionalPartiesModel[]
@@ -148,5 +154,5 @@ export class AdvertModel extends Model {
   corrections?: AdvertCorrectionModel[]
 
   @HasOne(() => CaseModel)
-  case?: CaseModel
+  case?: CaseModelRef
 }

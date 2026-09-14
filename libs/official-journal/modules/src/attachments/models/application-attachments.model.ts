@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `src/models.md`.
 import {
   BelongsTo,
   Column,
@@ -8,6 +9,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 
+import type { ApplicationAttachmentModel as ApplicationAttachmentModelRef } from './application-attachment.model'
 import { ApplicationAttachmentModel } from './application-attachment.model'
 
 @Table({ tableName: 'application_attachments', timestamps: false })
@@ -31,5 +33,5 @@ export class ApplicationAttachmentsModel extends Model {
   applicationId!: string
 
   @BelongsTo(() => ApplicationAttachmentModel, 'attachment_id')
-  attachment!: ApplicationAttachmentModel
+  attachment!: ApplicationAttachmentModelRef
 }
