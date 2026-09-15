@@ -11,6 +11,10 @@ using an API key the employer issued.
 
 Every path below is relative to `https://<partner-api-host>/api/v1`.
 
+**Read section C first if the employer has no scoring model yet.** A salary
+report is filed *against* one, so a company with none cannot file at all — and
+authoring it is the employer's work, not yours.
+
 ---
 
 ## 0. Before the first call
@@ -270,14 +274,30 @@ Only when this report is `APPROVED` can the salary flow reference it. Its `id`
 
 ## B. Filing a salary report
 
-Ten steps, of which the outlier handling is the part integrations get wrong.
 The order matters: several of these calls exist so you learn about a rejection
-before you have built a megabyte of payload.
+before you have built a large payload.
 
 **There is no spreadsheet anywhere in this flow, by design.** Replacing the
 workbook is the reason this API exists: you build the payload from payroll data
-and validate it against B6 until it comes back clean. Nothing here reads,
+and validate it against B5 until it comes back clean. Nothing here reads,
 writes, or accepts an `.xlsx` file.
+
+### What you send, and what you do not
+
+A filing names a **scoring model** and sends a **payroll extract**. That is all.
+
+The scoring model (*starfsmat*) is the employer's: the criteria, the
+sub-criteria, the þrep on each, the weights, and which þrep every job sits at.
+It is authored once and reused, so it is **not part of a filing** — you send its
+id. A company's model rarely changes between filings, and re-transmitting a
+hundred step descriptions and a job-assignment matrix every year served nobody.
+
+What you send per filing is one row per employee: fifteen payroll fields, the id
+of the job they hold, and their personal-criterion assessment. Everything but
+that last part is data your payroll system already holds.
+
+Section C covers authoring the model. If the employer already has one, you only
+need its id — `GET /partner/scoring-models` lists them.
 
 ### B1. `GET /partner/company` — confirm the key
 
@@ -295,7 +315,7 @@ section A has to happen first and be approved. The submission answers the same
 `404` for the same reason if you skip ahead.
 
 The `id` in the response is the Directorate's own key. It is not a handle you
-can look anything up by on this API — use `providerId` for that (see B9).
+can look anything up by on this API — use `providerId` for that (see B8).
 
 ### B3. `GET /partner/reports/salary/eligibility` — may they file now?
 
@@ -313,52 +333,43 @@ Returns `{ eligible, reason, dueAt, earliestSubmissionDate }`.
 Cheaper than discovering the renewal window from a rejected submission after
 building the payload.
 
-### B4. `GET /partner/sub-criteria/catalog` — reference data
+### B4. Build the payroll extract
 
-*Scope: `report:read`*
+Not a call — the work, and it is smaller than it used to be. One row per
+employee:
 
-Jafnréttisstofa's catalog of sub-criteria (undirviðmið) and the generic step
-scale — the authoritative list of what may be scored and on what steps:
-`entries[]` with `criterionType`
-(`RESPONSIBILITY` | `STRAIN` | `CONDITION` | `COMPETENCE` | `PERSONAL`),
-`parentTitle`, `title`, `description`, `numSteps`, `steps[]`, plus
-`generalScale[]`.
+- `ordinal` — this employee's identity for the whole submission. The analysis
+  returns ordinals and the outlier groups reference them. Assign once, keep
+  stable.
+- `identifier` — a pseudonymous handle of the employer's own, **never a
+  kennitala**. Reviewers see it, so a flagged row can be traced back internally.
+- `roleId` — the job they hold, from the scoring model. Not a title: a job that
+  is not in the model is a `400`, where a mismatched title used to be a silently
+  unmatched row.
+- `gender`, `field`, `department`, `startDate`, `paidHours`, `baseSalary`, and
+  the viðbótarlaun / aukagreiðslur components.
+- `personalSteps[]` — `{ subCriterionId, stepId }` per personal sub-criterion in
+  the model.
 
-This is where the criteria tree in B5 comes from, so fetch it before building
-anything. Group for display by `parentTitle`, not by `criterionType` — several
-distinct Icelandic labels map to `PERSONAL`.
+⚠️ **`personalSteps` is the one part no system can derive.** It is the
+employer's assessment, carries roughly a tenth of the total weight, and has to
+be collected from them rather than defaulted — a default is a score they never
+agreed to. Everything else in the row is payroll data.
 
-### B5. Build the payload
+`paidHours` is *greiddar stundir í mánuðinum*: fixed overtime counts, incidental
+hours do not. It is the denominator of reglulegt tímakaup, so an employee with
+unusable hours fails the payload gate rather than scoring oddly.
 
-Not a call — the work. The salary submission carries a `parsed` object
-(`ParsedReportDto`) that you construct from payroll data and the B4 catalog:
+**You do not send the criteria tree, the þrep, or the job step assignments.**
+They live in the scoring model you named, and the server expands them. If a þrep
+description or a weight is wrong, fix the *model* (section C) — not the filing.
 
-- `criteria[]` — the criteria tree: type, title, description, weight, and
-  `subCriteria[]` each with their `steps[]` (order, description, score).
-- `roles[]` — each role title plus its `stepAssignments[]`.
-- `employees[]` — one row per employee: `ordinal`, pseudonymous `identifier`,
-  `roleTitle`, `gender`, `field`, `department`, `startDate`, `paidHours`,
-  `baseSalary`, the viðbótarlaun/aukagreiðslur components, and
-  `personalStepAssignments[]`.
-
-⚠️ The **personal criteria** are the employer's judgement, not payroll data —
-they carry roughly a tenth of the total weight and no system can derive them.
-Collect them from the employer rather than defaulting them, or you are filing a
-score they never agreed to.
-
-`employees[].ordinal` is the identity every later step uses — the analysis
-returns ordinals, the outlier groups reference ordinals. Assign them once and
-keep them stable for the whole submission.
-
-The type is still named `ParsedReportDto` after the island.is workbook parser
-that produces the same shape on that surface. Nothing on this API parses
-anything; read the name as "the scoring payload".
-
-### B6. `POST /partner/reports/salary-analysis` — find the outliers first
+### B5. `POST /partner/reports/salary-analysis` — find the outliers first
 
 *Scope: `salary:submit`*
 
-Body: `{ "parsed": <ParsedReportDto> }`. Nothing is stored. Returns:
+Body: `{ "scoringModelId", "employees" }` — the same pair the submission takes.
+Nothing is stored. Returns:
 
 - **`outliers[]` — the lágmarksmengi.** This is the list that matters: each
   entry has `employeeOrdinal`, `gender`, `roleTitle`, `score`,
@@ -385,11 +396,11 @@ Body: `{ "parsed": <ParsedReportDto> }`. Nothing is stored. Returns:
 Run this before you ask the employer anything. It is how you find out which
 employees need an explanation *before* filing rather than after.
 
-### B7. Build the outlier groups
+### B6. Build the outlier groups
 
-Not a call — the modelling step between B6 and B8.
+Not a call — the modelling step between B5 and B7.
 
-Partition the `employeeOrdinal`s from B6 into one or more groups. Each group is
+Partition the `employeeOrdinal`s from B5 into one or more groups. Each group is
 one shared explanation (úrbótaáætlun) over the employees in it:
 
 | Field | Notes |
@@ -411,8 +422,9 @@ The submission validates the partition strictly. The union of every group's
 - an ordinal in two groups → `400` ("appears in more than one outlier group")
 - detected outliers but `outlierGroups` empty or absent → `400`
 
-Because the set is recomputed at submit time, **any edit to `parsed` between
-B6 and B8 can reshuffle who is in it.** If the payload changes, re-run B6 and
+Because the set is recomputed at submit time, **any edit to the payroll extract
+or the scoring model between
+B5 and B7 can reshuffle who is in it.** If the payload changes, re-run B5 and
 re-partition; do not carry groups over.
 
 **The deferral option.** Instead of groups, send `outliersPostponed: true` and
@@ -428,7 +440,7 @@ only on the island.is surface; the partner API exposes no such route. A
 submission until it is resolved. Unless the employer specifically wants to
 defer and finish on island.is themselves, send real groups.
 
-### B8. `POST /partner/reports/salary` — file it
+### B7. `POST /partner/reports/salary` — file it
 
 *Scope: `salary:submit` → `201 { reportId, replayed: false }`, or
 `200 { reportId, replayed: true }` when the `providerId` was already used and
@@ -454,8 +466,9 @@ the strict validation above:
 | `salaryDataBasis` | `MONTH` (one specific payroll month) or `AVERAGE` (a twelve-month average). The employer must declare one |
 | `salaryDataPeriod` | required when `MONTH`: ISO `YYYY-MM-DD`, any day in the month, normalised to the 1st. Must be a month that has already happened and no earlier than 36 months ago. Ignored for `AVERAGE` |
 | `averageEmployeeMaleCount` / `...FemaleCount` / `...NeutralCount` | required |
-| `parsed` | the payload from B5, as validated by B6 |
-| `outlierGroups?` | the partition from B7 |
+| `scoringModelId` | the model B5 validated against. Must be `VALID` |
+| `employees` | the payroll extract from B4, unchanged since B5 |
+| `outlierGroups?` | the partition from B6 |
 | `outliersPostponed?` | defaults to `false`. `true` defers every explanation |
 
 Resulting status: `SUBMITTED` when explanations were supplied (it lands in the
@@ -471,7 +484,7 @@ withdrawn and replaced; a prior `IN_REVIEW` **or `POSTPONED`** one gives `409`.
 `503` means the write collided and should be retried with the same
 `providerId` — it does not mean the payload was wrong.
 
-### B9. `GET /partner/reports/:providerId` — track the review
+### B8. `GET /partner/reports/:providerId` — track the review
 
 *Scope: `report:read`*
 
@@ -480,7 +493,7 @@ As A4, plus the salary-only fields: `salaryDataBasis`, `salaryDataPeriod`,
 least one outlier), and `result` — the frozen `ReportResultDto` snapshot the
 decision rests on.
 
-### B10. `GET /partner/reports/:providerId/outliers` — the filed outlier list
+### B9. `GET /partner/reports/:providerId/outliers` — the filed outlier list
 
 *Scope: `report:read`*
 
@@ -490,9 +503,90 @@ rows.
 
 Use it to show the employer what was actually filed and how each row was
 explained. If all you need is "are there any", read `includesImprovementPlan`
-from B9 instead of paginating.
+from B8 instead of paginating.
 
 ---
+
+## C. The scoring model (starfsmat)
+
+The criteria a salary report is scored against, stored once against the company
+and named by a filing. **Authored once, reused every year** — a company's
+starfsmat changes when the organisation does, not when it files.
+
+### Whose work this is
+
+Not yours, unless the employer has asked you to do it. Authoring a model is
+three jobs and none of them is data entry: choosing which sub-criteria apply,
+distributing the weight — a policy decision about how this company values work —
+and writing the þrep descriptions for the personal criterion. If the employer
+already has a model, `GET /partner/scoring-models` gives you its id and you are
+done with this section.
+
+`GET /partner/sub-criteria/catalog` is Jafnréttisstofa's set of **examples**, not
+a menu you must pick from: nothing validates a model against it, it carries no
+weights, and its personal entries ship with step 1 only. Copy from it freely and
+edit whatever you copy.
+
+### The rules a model must satisfy
+
+- At least one criterion of each of the four job-based **types**
+  (`RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`) — the types are
+  mandatory, not any particular criteria. Two criteria of one type are fine.
+- At most one `PERSONAL` criterion.
+- **Every sub-criterion weight in the model sums to 100.** Not per criterion —
+  across the whole model. A criterion's own weight is the sum of its
+  sub-criteria's and is returned for display; you never send it.
+- Each sub-criterion has between 2 and 8 þrep, numbered 1..n with no gaps. You
+  do not send the numbers: position in the array is the þrep.
+- Every job carries exactly one þrep per **job-based** sub-criterion. Personal
+  sub-criteria are scored per employee (B4), never per job.
+- Two sub-criteria may not share both their title and their parent's.
+
+### Writes always succeed; the filing is what refuses
+
+A model is built over many calls and cannot total 100 until the last
+sub-criterion lands, so **every write succeeds even when it leaves the model
+incomplete** — refusing them would make a model impossible to author. Every
+response, reads included, carries:
+
+```json
+{
+  "validation": {
+    "status": "INVALID",
+    "reasons": [
+      { "scope": "SUB_CRITERIA", "message": "Vægi undirviðmiða leggst saman í 110%, á að vera 100%" }
+    ]
+  }
+}
+```
+
+Every reason at once, not the first — one round trip tells you everything
+outstanding. The messages are Icelandic and written for the employer who has to
+fix them, so you can show them as they are. `scope` says which part of the model
+each concerns, so you can attach it to the right thing without parsing the text.
+
+⚠️ **`VALID` means the model is complete, not that your next filing will
+succeed.** Two of the submission's rules need the filing's own employees and
+cannot be judged here: that the report covers enough of them, and that each one
+carries a þrep for every personal sub-criterion.
+
+### Scales and job assignments are written whole
+
+`PUT …/sub-criteria/{id}/steps` and `PUT …/roles/{id}/step-assignments` replace
+the whole array rather than editing one entry. A þrep's score derives from its
+position over the scale's length, so the numbers must run 1..n — and building
+that one call at a time passes through states no single call can repair.
+
+Replacing a scale drops any job assignment onto it. That is deliberate: you are
+a program rebuilding the model, and the model will tell you the job is missing an
+assignment rather than silently re-pointing it at a þrep you did not choose.
+
+### Deleting
+
+`DELETE /partner/scoring-models/{modelId}` takes its criteria, sub-criteria,
+þrep and jobs with it. **Reports already filed against it are unaffected** — a
+filing copies the model it was scored under, so the figures on a filed report
+never move when the model changes or goes away.
 
 ## Quick reference
 
@@ -501,12 +595,32 @@ from B9 instead of paginating.
 | 1 | `GET` | `/partner/company` | `report:read` |
 | 2 | `GET` | `/partner/reports/equality/active` | `report:read` |
 | 3 | `GET` | `/partner/reports/salary/eligibility` | `report:read` |
-| 4 | `GET` | `/partner/sub-criteria/catalog` | `report:read` |
-| 5 | `POST` | `/partner/reports/salary-analysis` | `salary:submit` |
-| 6 | `POST` | `/partner/reports/salary` | `salary:submit` |
-| 7 | `POST` | `/partner/reports/equality` | `equality:submit` |
-| 8 | `GET` | `/partner/reports/:providerId` | `report:read` |
-| 9 | `GET` | `/partner/reports/:providerId/outliers` | `report:read` |
+| 4 | `POST` | `/partner/reports/salary-analysis` | `salary:submit` |
+| 5 | `POST` | `/partner/reports/salary` | `salary:submit` |
+| 6 | `POST` | `/partner/reports/equality` | `equality:submit` |
+| 7 | `GET` | `/partner/reports/:providerId` | `report:read` |
+| 8 | `GET` | `/partner/reports/:providerId/outliers` | `report:read` |
+
+Scoring model (section C):
+
+| Method | Path | Scope |
+| --- | --- | --- |
+| `GET` | `/partner/scoring-models` | `report:read` |
+| `GET` | `/partner/scoring-models/{modelId}` | `report:read` |
+| `POST` | `/partner/scoring-models` | `scoring:write` |
+| `DELETE` | `/partner/scoring-models/{modelId}` | `scoring:write` |
+| `POST` | `/partner/scoring-models/{modelId}/criteria` | `scoring:write` |
+| `PATCH` | `/partner/scoring-models/{modelId}/criteria/{criterionId}` | `scoring:write` |
+| `DELETE` | `/partner/scoring-models/{modelId}/criteria/{criterionId}` | `scoring:write` |
+| `POST` | `…/criteria/{criterionId}/sub-criteria` | `scoring:write` |
+| `PATCH` | `…/sub-criteria/{subCriterionId}` | `scoring:write` |
+| `DELETE` | `…/sub-criteria/{subCriterionId}` | `scoring:write` |
+| `PUT` | `…/sub-criteria/{subCriterionId}/steps` | `scoring:write` |
+| `POST` | `/partner/scoring-models/{modelId}/roles` | `scoring:write` |
+| `PATCH` | `…/roles/{roleId}` | `scoring:write` |
+| `DELETE` | `…/roles/{roleId}` | `scoring:write` |
+| `PUT` | `…/roles/{roleId}/step-assignments` | `scoring:write` |
+| `GET` | `/partner/sub-criteria/catalog` | `report:read` |
 
 ## Status codes
 
