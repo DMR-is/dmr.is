@@ -131,8 +131,11 @@ export const CreateEqualityReportDrawer = () => {
     }
   }
 
-  const { options: companyOptions, isLoading: isLoadingCompanies } =
-    useAllCompanies()
+  const {
+    options: companyOptions,
+    isLoading: isLoadingCompanies,
+    isError: companyLoadFailed,
+  } = useAllCompanies()
 
   const submitMutation = useMutation({
     ...trpc.adminReport.submitEquality.mutationOptions(),
@@ -246,6 +249,15 @@ export const CreateEqualityReportDrawer = () => {
               backgroundColor="blue"
             />
           </GridColumn>
+          {/* Without this the admin sees an empty dropdown with no spinner —
+              indistinguishable from a register that genuinely has no
+              companies. The hook deliberately does not fall back to a partial
+              list, so a failed fetch empties the field entirely. */}
+          {companyLoadFailed && (
+            <GridColumn span="12/12">
+              <AlertMessage type="error" message={s.form.companyLoadError} />
+            </GridColumn>
+          )}
         </GridRow>
 
         <GridRow rowGap={1} marginBottom={4}>

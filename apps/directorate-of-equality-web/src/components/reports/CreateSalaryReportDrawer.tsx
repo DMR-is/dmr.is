@@ -210,6 +210,7 @@ export const CreateSalaryReportDrawer = () => {
     companies,
     options: companyOptions,
     isLoading: isLoadingCompanies,
+    isError: companyLoadFailed,
   } = useAllCompanies()
 
   // A salary report must reference an approved, in-force equality report. The
@@ -506,6 +507,15 @@ export const CreateSalaryReportDrawer = () => {
               backgroundColor="blue"
             />
           </GridColumn>
+          {/* Without this the admin sees an empty dropdown with no spinner —
+              indistinguishable from a register that genuinely has no
+              companies. The hook deliberately does not fall back to a partial
+              list, so a failed fetch empties the field entirely. */}
+          {companyLoadFailed && (
+            <GridColumn span="12/12">
+              <AlertMessage type="error" message={s.form.companyLoadError} />
+            </GridColumn>
+          )}
           {missingEqualityReport && (
             <GridColumn span="12/12">
               <AlertMessage
