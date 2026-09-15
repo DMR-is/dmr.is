@@ -3,18 +3,17 @@ import { useMemo } from 'react'
 
 import { useQuery } from '@dmr.is/trpc/client/trpc'
 
-import type { CompanyDto } from '../gen/fetch/types.gen'
-import { useTRPCClient } from '../lib/trpc/client/trpc'
+import { useTRPC } from '../lib/trpc/client/trpc'
 import { formatNationalId } from '../lib/utils'
 
 /**
- * Rows per request while sweeping the register.
+ * Size of the probe request.
  *
- * NOT a ceiling: the sweep runs until `paging.totalPages` is exhausted, so this
- * only trades request count against payload size. It must stay that way — a
- * fixed cap here is exactly the bug this hook exists to remove. The register
- * outgrew a hardcoded `pageSize: 1000` and the selector silently stopped
- * listing companies from "L" onwards, with no error anywhere.
+ * NOT a ceiling on the selector: anything larger is re-fetched at the server's
+ * own reported size. It must stay that way — a fixed cap is exactly the bug
+ * this hook exists to remove. The register outgrew a hardcoded
+ * `pageSize: 1000` and the selector silently stopped listing companies from
+ * "L" onwards, with no error anywhere.
  */
 const PAGE_SIZE = 500
 
@@ -32,6 +31,9 @@ const SELECTOR_QUERY = {
   includeInactive: true,
 } as const
 
+/** The register moves on import runs, not within a session. */
+const STALE_TIME = 5 * 60_000
+
 /**
  * The whole company register, for the "file on a company's behalf" selectors.
  *
@@ -40,38 +42,42 @@ const SELECTOR_QUERY = {
  * unreachable — including by typing, since the field filters client-side.
  */
 export function useAllCompanies() {
-  const client = useTRPCClient()
+  const trpc = useTRPC()
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['company', 'all', SELECTOR_QUERY],
-    // The register moves on import runs, not within a session.
-    staleTime: 5 * 60_000,
-    queryFn: async (): Promise<Array<CompanyDto>> => {
-      const first = await client.company.list.query({
-        ...SELECTOR_QUERY,
-        page: 1,
-        pageSize: PAGE_SIZE,
-      })
+  // One ordinary page, read only for `paging.totalItems` — the server's own
+  // count of the filtered register. Asking it beats guessing a ceiling.
+  const probe = useQuery(
+    trpc.company.list.queryOptions(
+      { ...SELECTOR_QUERY, page: 1, pageSize: PAGE_SIZE },
+      { staleTime: STALE_TIME },
+    ),
+  )
 
-      // Pages 2..n in parallel. Page 1 has to land first because only the
-      // response knows how many pages there are.
-      const rest = await Promise.all(
-        Array.from(
-          { length: Math.max(first.paging.totalPages - 1, 0) },
-          (_, i) =>
-            client.company.list.query({
-              ...SELECTOR_QUERY,
-              page: i + 2,
-              pageSize: PAGE_SIZE,
-            }),
-        ),
-      )
+  const totalItems = probe.data?.paging.totalItems ?? 0
+  const needsFullFetch = totalItems > PAGE_SIZE
 
-      return [first, ...rest].flatMap((response) => response.companies)
-    },
-  })
+  // Re-ask for the register sized to what the server just said it holds. If it
+  // grew between the two requests the newest few rows are missed until the next
+  // refetch — acceptable for a register that changes on import runs.
+  const full = useQuery(
+    trpc.company.list.queryOptions(
+      // `|| PAGE_SIZE` keeps the input valid while the probe is still in
+      // flight: the router's schema requires `pageSize >= 1`, and a disabled
+      // query should still describe a request that would succeed.
+      { ...SELECTOR_QUERY, page: 1, pageSize: totalItems || PAGE_SIZE },
+      { enabled: needsFullFetch, staleTime: STALE_TIME },
+    ),
+  )
 
-  const companies = useMemo(() => data ?? [], [data])
+  // Never fall back to the probe's page while the full fetch is in flight —
+  // that would put a truncated list in front of the admin, which is the bug.
+  const companies = useMemo(
+    () => (needsFullFetch ? full.data?.companies : probe.data?.companies) ?? [],
+    [needsFullFetch, full.data, probe.data],
+  )
+
+  const isLoading = probe.isLoading || (needsFullFetch && full.isLoading)
+  const isError = probe.isError || full.isError
 
   const options = useMemo(
     () =>
