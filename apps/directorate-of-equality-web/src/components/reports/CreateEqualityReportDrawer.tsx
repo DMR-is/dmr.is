@@ -17,12 +17,13 @@ import { Text } from '@dmr.is/ui/components/island-is/Text'
 import { toast } from '@dmr.is/ui/components/island-is/ToastContainer'
 
 import { GenderEnum } from '../../gen/fetch/types.gen'
+import { useAllCompanies } from '../../hooks/useAllCompanies'
 import { overviewText, reportText, sharedText } from '../../lib/text'
 import { useTRPC } from '../../lib/trpc/client/trpc'
-import { formatNationalId, parseInflightConflictStatus } from '../../lib/utils'
+import { parseInflightConflictStatus } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const t = overviewText.createEqualityReport
 const s = sharedText
@@ -130,25 +131,8 @@ export const CreateEqualityReportDrawer = () => {
     }
   }
 
-  const companiesQuery = useQuery(
-    // ⚠️ Inclusion flags are required here. The register hides companies with
-    // no reporting obligation and companies off the register BY DEFAULT, which
-    // is right for a working list of who owes what — but this is a selector,
-    // not the register. An admin filing on a company's behalf must still be
-    // able to pick one that owes nothing (voluntary certification) or one that
-    // has been deregistered. Backend submission eligibility is unchanged and
-    // still has the final say.
-    trpc.company.list.queryOptions({
-      pageSize: 1000,
-      includeNotObliged: true,
-      includeInactive: true,
-    }),
-  )
-
-  const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({
-    label: `${c.name} (${formatNationalId(c.nationalId)})`,
-    value: c.id,
-  }))
+  const { options: companyOptions, isLoading: isLoadingCompanies } =
+    useAllCompanies()
 
   const submitMutation = useMutation({
     ...trpc.adminReport.submitEquality.mutationOptions(),
@@ -257,7 +241,7 @@ export const CreateEqualityReportDrawer = () => {
               options={companyOptions}
               value={companyOptions.find((o) => o.value === companyId) ?? null}
               onChange={(opt) => setCompanyId(opt?.value ?? null)}
-              isLoading={companiesQuery.isLoading}
+              isLoading={isLoadingCompanies}
               size="xs"
               backgroundColor="blue"
             />

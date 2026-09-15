@@ -29,6 +29,7 @@ import {
   type SalaryAnalysisOutlierDto,
   SalaryDataBasisEnum,
 } from '../../gen/fetch/types.gen'
+import { useAllCompanies } from '../../hooks/useAllCompanies'
 import { formatMonthYearIS } from '../../lib/constants'
 import { putWorkbookToPresignedUrl } from '../../lib/import-upload'
 import { overviewText, sharedText } from '../../lib/text'
@@ -36,13 +37,12 @@ import { useTRPC } from '../../lib/trpc/client/trpc'
 import {
   foldDeviationDirection,
   formatHourlyRate,
-  formatNationalId,
   formatPercent,
   parseInflightConflictStatus,
 } from '../../lib/utils'
 import { UtilityButton } from '../buttons/UtilityButton'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type ColumnDef } from '@tanstack/react-table'
 
 const OUTLIERS_PAGE_SIZE = 10
@@ -206,32 +206,17 @@ export const CreateSalaryReportDrawer = () => {
     })
   }, [])
 
-  const companiesQuery = useQuery(
-    // ⚠️ Inclusion flags are required here. The register hides companies with
-    // no reporting obligation and companies off the register BY DEFAULT, which
-    // is right for a working list of who owes what — but this is a selector,
-    // not the register. An admin filing on a company's behalf must still be
-    // able to pick one that owes nothing (voluntary certification) or one that
-    // has been deregistered. Backend submission eligibility is unchanged and
-    // still has the final say.
-    trpc.company.list.queryOptions({
-      pageSize: 1000,
-      includeNotObliged: true,
-      includeInactive: true,
-    }),
-  )
-
-  const companyOptions = (companiesQuery.data?.companies ?? []).map((c) => ({
-    label: `${c.name} (${formatNationalId(c.nationalId)})`,
-    value: c.id,
-  }))
+  const {
+    companies,
+    options: companyOptions,
+    isLoading: isLoadingCompanies,
+  } = useAllCompanies()
 
   // A salary report must reference an approved, in-force equality report. The
   // company's server-computed report status already tells us when one is
   // missing, so we can warn the admin up front rather than let them fill in the
   // whole form and hit a 404 on submit.
-  const selectedCompany =
-    companiesQuery.data?.companies.find((c) => c.id === companyId) ?? null
+  const selectedCompany = companies.find((c) => c.id === companyId) ?? null
   const missingEqualityReport =
     selectedCompany?.reportStatus ===
     CompanyReportStatusEnum.MISSING_EQUALITY_REPORT
@@ -516,7 +501,7 @@ export const CreateSalaryReportDrawer = () => {
                 setImportErrors(null)
                 if (fileInputRef.current) fileInputRef.current.value = ''
               }}
-              isLoading={companiesQuery.isLoading}
+              isLoading={isLoadingCompanies}
               size="xs"
               backgroundColor="blue"
             />
