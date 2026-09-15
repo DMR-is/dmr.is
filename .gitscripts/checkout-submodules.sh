@@ -35,8 +35,26 @@ while read -r submodule; do
     fi
   fi
 
-  # Quietly ensure submodule is initialized and updated
-  git submodule update --init --quiet "${SUBMODULE_PATH}"
+  # Quietly ensure submodule is initialized and updated.
+  #
+  # In CI this is always a fresh clone and only the pinned commit is ever read,
+  # so skip the history. island.is is 448 MiB cloned in full against 46 MiB at
+  # --depth 1, and that clone was 24-27s of the 31s the tsc job spent in
+  # actions/checkout. Locally keep the full clone: the "commits since" listing at
+  # the bottom of this loop needs history, and a developer's clone is reused.
+  #
+  # Note the flag that looks like it should help here and does not.
+  # --filter=blob:none through `git submodule update` is *worse* than no filter
+  # (87 MiB): git checks out the default branch, then the pinned SHA, and each
+  # checkout demand-fetches every blob in the tree, because the sparse patterns
+  # below are not set yet. A blobless clone only pays off if the sparse patterns
+  # are in place before the first checkout, which `git submodule update` gives
+  # no way to arrange.
+  if [ -n "${CI:-}" ] && [ ! -e "${SUBMODULE_PATH}/.git" ]; then
+    git submodule update --init --depth 1 --quiet "${SUBMODULE_PATH}"
+  else
+    git submodule update --init --quiet "${SUBMODULE_PATH}"
+  fi
 
   # Fetch so the "commits since" listing below is current. In CI that listing is
   # never read and actions/checkout has already fetched, so only pay for it when
@@ -89,8 +107,15 @@ while read -r submodule; do
   fi
 
   # Informational: what has landed upstream in the paths we actually consume.
+  #
+  # Skipped on a shallow clone. There origin/main is whatever tip the depth-1
+  # fetch happened to land on with no history behind it, so the listing would be
+  # silently wrong rather than merely empty - and `git log` can exit non-zero,
+  # which `set -e` would turn into a failed checkout.
   SPARSE_PATHS=$(echo "${submodule}" | jq -r '.sparseCheckoutPaths[]' | xargs)
-  if [ -n "$SPARSE_PATHS" ] && git -C "${SUBMODULE_PATH}" rev-parse --verify --quiet origin/main >/dev/null; then
+  IS_SHALLOW=$(git -C "${SUBMODULE_PATH}" rev-parse --is-shallow-repository 2>/dev/null || echo true)
+  if [ -n "$SPARSE_PATHS" ] && [ "${IS_SHALLOW}" != "true" ] &&
+    git -C "${SUBMODULE_PATH}" rev-parse --verify --quiet origin/main >/dev/null; then
     echo -e "🚀 Commits in ${NAME} from ${SHA} to origin/main affecting paths:\n"
     git -C "${SUBMODULE_PATH}" log --color=always --pretty=format:'%C(auto)%h%C(reset) - %s %C(bold blue)<%an>%Creset %C(green)(%ar)%Creset' --name-only "${SHA}..origin/main" -- $SPARSE_PATHS |
       awk '/^[0-9a-f]{7,}/ {print "\n"$0} !/^[0-9a-f]{7,}/ {print "    "$0}'

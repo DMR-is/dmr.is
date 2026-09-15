@@ -14,11 +14,11 @@ inputs:
     required: false
     default: 'true'
   cache-node-modules:
-    description: 'Cache node_modules, might speed up link step (invalidated lock/os/node-version/branch)'
+    description: 'Cache node_modules, might speed up link step (invalidated lock/os/node-version)'
     required: false
     default: 'false'
   cache-install-state:
-    description: 'Cache yarn install state, might speed up resolution step when node-modules cache is activated (invalidated lock/os/node-version/branch)'
+    description: 'Cache yarn install state, might speed up resolution step when node-modules cache is activated (invalidated lock/os/node-version)'
     required: false
     default: 'false'
   enable-corepack:
@@ -45,7 +45,6 @@ runs:
       run: |
         echo "CACHE_FOLDER=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
         echo "CURRENT_NODE_VERSION="node-$(node --version)"" >> $GITHUB_OUTPUT
-        echo "CURRENT_BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's,/,-,g')" >> $GITHUB_OUTPUT
         echo "NPM_GLOBAL_CACHE_FOLDER=$(npm config get cache)" >> $GITHUB_OUTPUT
 
     - name: ♻️ Restore yarn cache
@@ -57,13 +56,27 @@ runs:
         restore-keys: |
           yarn-download-cache-${{ inputs.cache-prefix }}-
 
+    # The branch name is deliberately NOT in this key. With it, a PR built a key
+    # that by construction had never existed - GitHub scopes a cache to the branch
+    # that wrote it, so only pushes to main ever restored node_modules and every
+    # PR job paid a full Resolution -> Fetch -> Link. Keyed on the lockfile alone,
+    # a PR restores main's tree, and a second push to the same PR restores its own.
+    #
+    # restore-keys relaxes the lockfile hash, so a PR that *does* touch yarn.lock
+    # still starts from a near tree. `yarn install` then reconciles it: the linker
+    # diffs the desired tree against node_modules/.yarn-state.yml (which travels
+    # inside the cache) and adds, removes and relinks the delta. Verified against a
+    # 149-entry lockfile removal in both directions - the reconciled tree is
+    # byte-identical to a clean install.
     - name: ♻️ Restore node_modules
       if: inputs.cache-node-modules == 'true'
       id: yarn-nm-cache
       uses: actions/cache@v4
       with:
         path: ${{ inputs.cwd }}/**/node_modules
-        key: yarn-nm-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ steps.yarn-config.outputs.CURRENT_BRANCH }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+        key: yarn-nm-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+        restore-keys: |
+          yarn-nm-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-
 
     - name: ♻️ Restore global npm cache folder
       if: inputs.cache-npm-cache == 'true'
@@ -73,18 +86,39 @@ runs:
         path: ${{ steps.yarn-config.outputs.NPM_GLOBAL_CACHE_FOLDER }}
         key: npm-global-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
 
+    # Branch dropped for the same reason as above. No restore-keys: the install
+    # state is a resolution snapshot that is only valid for the lockfile that
+    # produced it, so an inexact hit would have to be discarded anyway.
     - name: ♻️ Restore yarn install state
       if: inputs.cache-install-state == 'true' && inputs.cache-node-modules == 'true'
       id: yarn-install-state-cache
       uses: actions/cache@v4
       with:
         path: ${{ inputs.cwd }}/.yarn/ci-cache
-        key: yarn-install-state-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ steps.yarn-config.outputs.CURRENT_BRANCH }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+        key: yarn-install-state-cache-${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
 
+    # No --check-cache. Yarn's own description of it: it "will always refetch the
+    # packages", and it "is recommended as part of your CI workflow if you're both
+    # following the Zero-Installs model and accepting PRs from third-parties, as
+    # they'd otherwise have the ability to alter the checked-in packages before
+    # submitting them". We do not follow Zero-Installs - .yarn/cache is gitignored
+    # and no archive is tracked - so the thing it protects does not exist here,
+    # while the refetch was paid by every job of every run. It is why the Fetch
+    # step measured ~18-20s whether every cache hit or every cache missed.
+    # Measured locally, same lockfile and warm cache, back to back: Fetch 30.2s
+    # with it, 1.1s without.
+    #
+    # This does not weaken checksum validation. checksumBehavior already defaults
+    # to `throw`, so every install verifies package checksums against the lockfile.
+    #
+    # --immutable-cache is deliberately NOT used in its place. It aborts if the
+    # cache folder would be modified, and the download cache above restores
+    # through restore-keys, so a PR that changes yarn.lock legitimately has to add
+    # archives to it. That flag would fail exactly the dependency-bump PRs.
     - name: 📥 Install dependencies
       shell: bash
       working-directory: ${{ inputs.cwd }}
-      run: yarn install --immutable --inline-builds --check-cache
+      run: yarn install --immutable --inline-builds
       env:
         # Overrides/align yarnrc.yml options (v3, v4) for a CI context
         YARN_ENABLE_GLOBAL_CACHE: 'false'
@@ -94,3 +128,16 @@ runs:
         YARN_HTTP_TIMEOUT: '10000'
         YARN_INSTALL_STATE_PATH: '.yarn/ci-cache/install-state.gz'
         HUSKY: '0'
+        # Yarn enables hardened mode automatically when it detects a pull request
+        # against a *public* repository (`enableHardenedMode` defaults to
+        # `isPR && isPublicRepository`), and says so in the log. It forces
+        # --check-resolutions --refresh-lockfile, which queries the remote
+        # registries to validate the lockfile, and cost ~18s of Resolution on
+        # every PR job against 0.4s on a push to main.
+        #
+        # dmr.is is public because it is a government project, not because it
+        # takes outside contributions: every PR is opened from a branch in this
+        # repo, so its author already has write access and gains nothing by
+        # manipulating the lockfile. Keep the guard for the case it is actually
+        # for - a PR opened from a fork - and drop it otherwise.
+        YARN_ENABLE_HARDENED_MODE: "${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && '1' || '0' }}"
