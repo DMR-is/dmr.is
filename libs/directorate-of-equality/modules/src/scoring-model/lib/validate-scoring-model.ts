@@ -1,3 +1,13 @@
+import { BadRequestException } from '@nestjs/common'
+
+import {
+  assertWithinCapacity,
+  collectParsedPayloadIntegrity,
+} from '../../report/lib/employee-scores'
+import {
+  PayloadIssueBag,
+  PayloadIssueScope,
+} from '../../report/lib/parsed-payload-issues'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import {
   MANDATORY_JOB_BASED_CRITERIA,
@@ -13,6 +23,7 @@ import {
   ScoringValidationReasonDto,
   ScoringValidationScopeEnum,
 } from '../dto/scoring-validation.dto'
+import { expandToParsedPayload } from './expand-to-parsed-payload'
 
 /**
  * Weights are stored as DECIMAL(6,4) and summed in floating point, so an exact
@@ -74,6 +85,89 @@ class ReasonBag {
  * assignment per personal sub-criterion. So `VALID` means "this model is
  * complete", never "the next filing will succeed".
  */
+
+/** Scopes the filing gate reports that a model, with no employees, can own. */
+const MODEL_LEVEL_SCOPES: ReadonlySet<PayloadIssueScope> = new Set([
+  PayloadIssueScope.CRITERIA,
+  PayloadIssueScope.SUB_CRITERIA,
+  PayloadIssueScope.ROLES,
+  PayloadIssueScope.ROLE_CLASSIFICATION,
+])
+
+/**
+ * Runs the submission's own structural gate over the model, expanded with no
+ * employees, and folds anything it finds into the reason list.
+ *
+ * `assertWithinCapacity` throws rather than accumulating, so it is caught: a
+ * model over a ceiling is a reason like any other here, not a 500.
+ */
+const runFilingGate = (
+  criteria: ScoringCriterionDto[],
+  roles: ScoringRoleDto[],
+  reasons: ReasonBag,
+): void => {
+  let parsed
+  try {
+    parsed = expandToParsedPayload({ criteria, roles }, [])
+  } catch (error) {
+    // The expansion refuses models the gate would never see — a duplicate
+    // (criterion, sub-criterion) title pair, an assignment pointing at a þrep
+    // that is gone. Those already have their own reasons above; anything else
+    // is surfaced rather than swallowed.
+    if (error instanceof BadRequestException) {
+      const message = error.message
+      if (!reasons.all().some((r) => r.message === message)) {
+        reasons.add(ScoringValidationScopeEnum.SUB_CRITERIA, message)
+      }
+      return
+    }
+    throw error
+  }
+
+  try {
+    assertWithinCapacity(parsed)
+  } catch (error) {
+    if (error instanceof BadRequestException) {
+      for (const message of messagesOf(error)) {
+        reasons.add(ScoringValidationScopeEnum.CRITERIA, message)
+      }
+    } else {
+      throw error
+    }
+  }
+
+  const issues = new PayloadIssueBag()
+  collectParsedPayloadIntegrity(parsed, issues)
+
+  for (const issue of issues.list) {
+    if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
+    if (reasons.all().some((r) => r.message === issue.message)) continue
+    reasons.add(toValidationScope(issue.scope), issue.message)
+  }
+}
+
+const toValidationScope = (
+  scope: PayloadIssueScope,
+): ScoringValidationScopeEnum => {
+  switch (scope) {
+    case PayloadIssueScope.SUB_CRITERIA:
+      return ScoringValidationScopeEnum.SUB_CRITERIA
+    case PayloadIssueScope.ROLES:
+      return ScoringValidationScopeEnum.ROLES
+    case PayloadIssueScope.ROLE_CLASSIFICATION:
+      return ScoringValidationScopeEnum.ROLE_ASSIGNMENTS
+    default:
+      return ScoringValidationScopeEnum.CRITERIA
+  }
+}
+
+/** `BadRequestException` carries either one message or an array of them. */
+const messagesOf = (error: BadRequestException): string[] => {
+  const response = error.getResponse() as { message?: string | string[] }
+  const message = response?.message ?? error.message
+  return Array.isArray(message) ? message : [message]
+}
+
 export const validateScoringModel = (
   model: ScoringModelShape,
 ): ScoringModelValidationDto => {
@@ -218,6 +312,21 @@ export const validateScoringModel = (
       'Starfsmatið hefur engin störf — ekkert er hægt að meta á starf',
     )
   }
+
+  // **The backstop, and the reason this validator can no longer be weaker than
+  // the filing gate it claims parity with.**
+  //
+  // The rules above are hand-written because they carry better labels — they
+  // name the parent criterion, and they speak about a model rather than a
+  // payload. That is worth having, but restating a rule is how the two drifted:
+  // the capacity ceilings, duplicate role titles and duplicate criterion titles
+  // were all enforced at filing and silent here, so a model could report VALID
+  // and then be refused. Running the real gate over the expanded model closes
+  // that structurally rather than one rule at a time.
+  //
+  // Employees are deliberately absent, so the two employee-dependent rules do
+  // not fire; anything scoped to them is dropped below.
+  runFilingGate(criteria, roles, reasons)
 
   const all = reasons.all()
   return {

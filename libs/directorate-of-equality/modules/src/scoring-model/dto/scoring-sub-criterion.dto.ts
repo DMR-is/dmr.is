@@ -1,3 +1,5 @@
+import { Max, Min } from 'class-validator'
+
 import {
   ApiDtoArray,
   ApiNumber,
@@ -6,6 +8,24 @@ import {
   ApiString,
   ApiUUId,
 } from '@dmr.is/decorators'
+
+/**
+ * Why `weight` carries `@Min(0) @Max(100)` in both DTOs below.
+ *
+ * `@ApiNumber` is `IsNumber()` and nothing else, and every weight rule — here
+ * and in the filing gate — compares only the **sum** against 100. So `60, 60,
+ * -20` totals 100, reports VALID, and emits negative step scores:
+ * `computeStepScore` is an unguarded `(order / numSteps) * weight *
+ * SCORE_FACTOR`, so a negative weight inverts its sub-criterion's scale and a
+ * higher þrep scores lower. That reaches `computeEmployeeScores`, which is an
+ * employee's x-coordinate in the wage-gap regression, with nothing raised
+ * anywhere. A per-value bound is the only thing that can catch it; a sum check
+ * never will.
+ *
+ * The upper bound also turns `weight: 100` — legal, when a model has one
+ * sub-criterion — from a `NUMERIC` overflow 500 into a 400, alongside the
+ * column widening in `m-20260915-scoring-weight-precision`.
+ */
 
 export class ScoringSubCriterionStepDto {
   @ApiUUId()
@@ -48,7 +68,9 @@ export class CreateScoringSubCriterionDto {
   @ApiString({ minLength: 1 })
   description!: string
 
-  @ApiNumber()
+  @ApiNumber({ minimum: 0, maximum: 100 })
+  @Min(0)
+  @Max(100)
   weight!: number
 }
 
@@ -64,6 +86,8 @@ export class UpdateScoringSubCriterionDto {
   @ApiOptionalString({ minLength: 1 })
   description?: string
 
-  @ApiOptionalNumber()
+  @ApiOptionalNumber({ minimum: 0, maximum: 100 })
+  @Min(0)
+  @Max(100)
   weight?: number
 }

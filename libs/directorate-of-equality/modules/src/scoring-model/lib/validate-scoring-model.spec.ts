@@ -115,14 +115,61 @@ describe('validateScoringModel', () => {
       )
     })
 
+    // Two criteria of one type are fine — but only with distinct titles. The
+    // filing gate rejects duplicate criterion titles, so the original version of
+    // this test asserted something that could never be filed: it reused the type
+    // name as the title and the backstop now catches it.
     it('is satisfied by the type, so two criteria of one type are fine', () => {
       const model = validModel()
       const extra = criterion(ReportCriterionTypeEnum.RESPONSIBILITY, [])
       extra.id = 'criterion-second-responsibility'
+      extra.title = 'Aukaábyrgð'
       model.criteria.push(extra)
 
       expect(scopesOf(model)).not.toContain(
         ScoringValidationScopeEnum.CRITERIA,
+      )
+    })
+
+    it('refuses two criteria sharing a title, which the filing rejects', () => {
+      const model = validModel()
+      const extra = criterion(ReportCriterionTypeEnum.RESPONSIBILITY, [])
+      extra.id = 'criterion-second-responsibility'
+      model.criteria.push(extra) // title collides with the existing one
+
+      expect(validateScoringModel(model).status).toBe(
+        ScoringModelStatusEnum.INVALID,
+      )
+    })
+
+    // MAX_CRITERIA is 5, and four mandatory types plus one personal already sit
+    // at the cap — so a company that splits a criterion in two is over it.
+    it('refuses a model over the criterion ceiling', () => {
+      const model = validModel()
+      for (const [i, type] of [
+        ReportCriterionTypeEnum.PERSONAL,
+        ReportCriterionTypeEnum.STRAIN,
+      ].entries()) {
+        const extra = criterion(type, [])
+        extra.id = `criterion-extra-${i}`
+        extra.title = `Auka ${i}`
+        model.criteria.push(extra)
+      }
+
+      expect(validateScoringModel(model).status).toBe(
+        ScoringModelStatusEnum.INVALID,
+      )
+    })
+
+    it('refuses two jobs sharing a title, which the filing rejects', () => {
+      const model = validModel()
+      model.roles.push({
+        ...model.roles[0],
+        id: 'role-2',
+      })
+
+      expect(validateScoringModel(model).status).toBe(
+        ScoringModelStatusEnum.INVALID,
       )
     })
 

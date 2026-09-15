@@ -1,4 +1,13 @@
-import { ApiDtoArray, ApiString, ApiUUId } from '@dmr.is/decorators'
+import { ArrayMaxSize } from 'class-validator'
+
+import {
+  ApiDtoArray,
+  ApiOptionalString,
+  ApiString,
+  ApiUUId,
+} from '@dmr.is/decorators'
+
+import { MAX_TOTAL_SUB_CRITERIA } from '../../report-excel/workbook.schema'
 
 export class CreateScoringRoleDto {
   @ApiString({
@@ -10,8 +19,15 @@ export class CreateScoringRoleDto {
   title!: string
 }
 
+/**
+ * PATCH semantics, and `ApiOptionalString` rather than
+ * `ApiString({ required: false })` — the latter relaxes only the published
+ * document while class-validator still demands the field, so an omitted
+ * `title` answered 400. The sibling DTO carries a comment about this exact
+ * mistake; this one made it anyway.
+ */
 export class UpdateScoringRoleDto {
-  @ApiString({ minLength: 1, required: false })
+  @ApiOptionalString({ minLength: 1 })
   title?: string
 }
 
@@ -40,6 +56,10 @@ export class SetScoringRoleStepAssignmentDto {
  * uniqueness structural: the array is the job's assignments, entire.
  */
 export class SetScoringRoleStepAssignmentsDto {
+  // One assignment per job-based sub-criterion, so the model-wide sub-criterion
+  // ceiling is the natural bound. Without it this array was unbounded in the
+  // same way the þrep array was.
+  @ArrayMaxSize(MAX_TOTAL_SUB_CRITERIA)
   @ApiDtoArray(SetScoringRoleStepAssignmentDto, {
     description: [
       'This job’s complete set of step assignments. Replaces whatever it had.',

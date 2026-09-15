@@ -704,7 +704,7 @@ domain entity of the equality register but a service-level concern.
 | `key_id`                 | `text` (unique — public half of the credential, the lookup key)                      |
 | `secret_hash`            | `text` (HMAC-SHA256 of the secret under a server-side pepper)                        |
 | `label`                  | `text` (nullable — free text set by the issuer)                                      |
-| `scopes`                 | `text[]` (`ApiKeyScopeEnum` values; never empty)                                     |
+| `scopes`                 | `text[]` (`ApiKeyScopeEnum`: `report:read`, `salary:submit`, `equality:submit`, `scoring:write`; never empty. The first three are the default set — `scoring:write` is never granted implicitly) |
 | `created_via`            | `doe_api_key_origin_enum` (`ApiKeyOriginEnum`)                                       |
 | `created_by_user_id`     | `fk → doe_user` (nullable — set on the `ADMIN` path)                                 |
 | `created_by_national_id` | `text` (nullable — set on the `ISLAND_IS` path)                                      |

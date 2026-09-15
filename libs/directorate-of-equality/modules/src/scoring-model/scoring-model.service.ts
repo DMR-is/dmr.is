@@ -82,6 +82,17 @@ export class ScoringModelService implements IScoringModelService {
               model: ScoringSubCriterionModel,
               as: 'subCriteria',
               required: false,
+              // `separate: true` on both second-level collections, because this
+              // query nests two independent hasMany branches — criteria and
+              // roles. Without it Sequelize emits one statement whose LEFT
+              // OUTER JOINs return the *product* of the branches rather than
+              // the sum, every row carrying the TEXT descriptions of its
+              // criterion, sub-criterion and þrep. The DTO came out correct
+              // (Sequelize dedupes by PK); the cost was waste, paid twice on
+              // every mutation since each runs this as its ownership gate and
+              // then again through `reload`.
+              separate: true,
+              order: [['createdAt', 'ASC']],
               include: [
                 {
                   model: ScoringSubCriterionStepModel,
@@ -101,22 +112,23 @@ export class ScoringModelService implements IScoringModelService {
               model: ScoringRoleStepModel,
               as: 'stepAssignments',
               required: false,
+              separate: true,
+              // The one collection that had no ordering at all, and no
+              // compensating sort in `toDto` either — so a job's assignments
+              // reshuffled between identical reads.
+              order: [['createdAt', 'ASC']],
             },
           ],
         },
       ],
-      // Without this the tree comes back in whatever order Postgres returns,
-      // which shifts between calls and reshuffles a caller's list for no
-      // reason. Steps are ordered in `toDto` by `stepOrder`, which is their
-      // own meaning; everything else has none, so insertion order it is.
+      // Without ordering the tree comes back however Postgres returns it, which
+      // shifts between identical calls and reshuffles a caller's list for no
+      // reason. The two `separate: true` collections carry their own `order`
+      // above — a top-level clause cannot reach a separately-fetched include —
+      // and þrep are sorted in `toDto` by `stepOrder`, which is their own
+      // meaning rather than an arbitrary tie-break.
       order: [
         [{ model: ScoringCriterionModel, as: 'criteria' }, 'createdAt', 'ASC'],
-        [
-          { model: ScoringCriterionModel, as: 'criteria' },
-          { model: ScoringSubCriterionModel, as: 'subCriteria' },
-          'createdAt',
-          'ASC',
-        ],
         [{ model: ScoringRoleModel, as: 'roles' }, 'createdAt', 'ASC'],
       ],
     })

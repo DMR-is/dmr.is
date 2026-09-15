@@ -174,9 +174,13 @@ export const expandToParsedPayload = (
     }
   })
 
+  // `satisfies`, not `as unknown as`. The assertion discarded the one
+  // compile-time guarantee this function exists to provide — that what it emits
+  // really is the payload the pipeline takes — so a field renamed downstream
+  // would have gone unnoticed until runtime. It type-checks clean as it stands.
   return {
     criteria,
     roles,
     employees: expandedEmployees,
-  } as unknown as ParsedReportDto
+  } satisfies ParsedReportDto
 }

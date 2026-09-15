@@ -519,6 +519,106 @@ describe('ScoringModelService', () => {
     })
   })
 
+  // `expandToParsedPayload` is the only code enforcing company ownership before
+  // a filing or a preview, and nothing tested it: this spec never referenced it,
+  // `partner-submission.service.spec.ts` mocks it away, and the pure-lib spec
+  // hand-builds a model and so never crosses the gate. A live check is not a
+  // regression test.
+  // Pinned on the query itself. The previous ordering assertions matched with
+  // `objectContaining({ where })` and the þrep test passed through `toDto`'s
+  // in-memory sort, so both `order` clauses could be deleted with every test
+  // still green — which is how a fix claimed in a PR body stays unproven.
+  describe('the tree is fetched in a stable order', () => {
+    const includeFor = (as: string) => {
+      const call = modelFindOne.mock.calls[0][0]
+      const find = (nodes: unknown[]): Record<string, unknown> | undefined => {
+        for (const node of nodes as Record<string, unknown>[]) {
+          if (node.as === as) return node
+          const nested = node.include as unknown[] | undefined
+          if (nested) {
+            const hit = find(nested)
+            if (hit) return hit
+          }
+        }
+        return undefined
+      }
+      return find(call.include as unknown[])
+    }
+
+    it('orders the two top-level collections by insertion', async () => {
+      await service.getModel(COMPANY, MODEL_ID)
+
+      expect(modelFindOne.mock.calls[0][0].order).toEqual([
+        [expect.objectContaining({ as: 'criteria' }), 'createdAt', 'ASC'],
+        [expect.objectContaining({ as: 'roles' }), 'createdAt', 'ASC'],
+      ])
+    })
+
+    // A top-level `order` cannot reach a separately-fetched include, so these
+    // two carry their own — and without `separate` the two hasMany branches
+    // join into a cartesian product.
+    it.each(['subCriteria', 'stepAssignments'])(
+      'fetches %s separately, with its own order',
+      async (as) => {
+        await service.getModel(COMPANY, MODEL_ID)
+
+        expect(includeFor(as)).toMatchObject({
+          separate: true,
+          order: [['createdAt', 'ASC']],
+        })
+      },
+    )
+  })
+
+  describe('expandToParsedPayload — the ownership gate before filing', () => {
+    it('resolves the model scoped to the calling company', async () => {
+      await service.expandToParsedPayload(COMPANY, MODEL_ID, [])
+
+      expect(modelFindOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: MODEL_ID, companyId: COMPANY.id },
+        }),
+      )
+    })
+
+    it('404s for a model this company does not own, before expanding anything', async () => {
+      modelFindOne.mockResolvedValue(null)
+
+      await expect(
+        service.expandToParsedPayload(COMPANY, MODEL_ID, []),
+      ).rejects.toThrow(NotFoundException)
+    })
+
+    it('expands the tree it loaded', async () => {
+      modelFindOne.mockResolvedValue(
+        loadedModel({
+          criteria: [
+            {
+              id: CRITERION_ID,
+              type: ReportCriterionTypeEnum.RESPONSIBILITY,
+              title: 'Ábyrgð',
+              description: 'd',
+              subCriteria: [
+                {
+                  id: SUB_ID,
+                  title: 'Mannaforráð',
+                  description: 'd',
+                  weight: 100,
+                  steps: [{ id: 'st-1', stepOrder: 1, description: 'a' }],
+                },
+              ],
+            },
+          ],
+        }),
+      )
+
+      const parsed = await service.expandToParsedPayload(COMPANY, MODEL_ID, [])
+
+      expect(parsed.criteria[0].title).toBe('Ábyrgð')
+      expect(parsed.criteria[0].subCriteria[0].steps[0].score).toBe(1000)
+    })
+  })
+
   it('lists only this company’s models', async () => {
     modelFindAll.mockResolvedValue([{ id: MODEL_ID, name: 'Starfsmat' }])
 

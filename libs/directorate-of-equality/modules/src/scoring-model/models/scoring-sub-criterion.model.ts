@@ -50,7 +50,7 @@ export class ScoringSubCriterionModel extends MutableModel<
   description!: string
 
   @Column({
-    type: DataType.DECIMAL(6, 4),
+    type: DataType.DECIMAL(7, 4),
     allowNull: false,
     get() {
       const value = this.getDataValue('weight')

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Inject,
   Param,
   ParseUUIDPipe,
@@ -89,6 +90,7 @@ export class ScoringModelController {
   @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
   @PartnerResponse({
     operationId: 'createScoringModel',
+    status: HttpStatus.CREATED,
     type: ScoringModelSummaryDto,
     description:
       'Creates an empty scoring model for the company this key belongs to. It starts invalid — no criteria, no weights — and becomes fit to file as criteria and sub-criteria are added. Read it back, or make any write, to see what is still missing.',
@@ -118,6 +120,7 @@ export class ScoringModelController {
   @RequireApiScope(ApiKeyScopeEnum.REPORT_READ)
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'getScoringModel',
     type: ScoringModelDto,
     description:
@@ -134,6 +137,7 @@ export class ScoringModelController {
   @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'deleteScoringModel',
     successDescription:
       'Deleted, along with its criteria, sub-criteria, steps and roles. Reports already filed against it are unaffected — a filing snapshots the model it was scored under.',
@@ -149,7 +153,9 @@ export class ScoringModelController {
   @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'createScoringCriterion',
+    status: HttpStatus.CREATED,
     type: ScoringModelDto,
     description:
       'Adds a criterion (viðmið). `title` and `description` are yours to choose — the catalog at `GET /partner/sub-criteria/catalog` is a set of examples, not a list to pick from. `type` is constrained: a model needs at least one criterion of each of the four job-based types and at most one PERSONAL, and nothing stops two of the same type. Returns the whole model so the new validity is visible immediately.',
@@ -167,6 +173,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'updateScoringCriterion',
     type: ScoringModelDto,
     description:
@@ -191,6 +198,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'deleteScoringCriterion',
     type: ScoringModelDto,
     description:
@@ -213,7 +221,9 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'createScoringSubCriterion',
+    status: HttpStatus.CREATED,
     type: ScoringModelDto,
     description:
       'Adds a sub-criterion (undirviðmið) under a criterion. `weight` is the only weight in the model that reaches a score: every sub-criterion weight across the whole model sums to 100, and a criterion’s weight is the sum of its own. Nested under the criterion so the parent is asserted rather than trusted.',
@@ -238,6 +248,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @ApiParam({ name: 'subCriterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'updateScoringSubCriterion',
     type: ScoringModelDto,
     description:
@@ -265,6 +276,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @ApiParam({ name: 'subCriterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'deleteScoringSubCriterion',
     type: ScoringModelDto,
     description:
@@ -290,6 +302,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'criterionId', type: String, format: 'uuid' })
   @ApiParam({ name: 'subCriterionId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'setScoringSubCriterionSteps',
     type: ScoringModelDto,
     description:
@@ -315,7 +328,9 @@ export class ScoringModelController {
   @RequireApiScope(ApiKeyScopeEnum.SCORING_WRITE)
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'createScoringRole',
+    status: HttpStatus.CREATED,
     type: ScoringModelDto,
     description:
       'Adds a job (starf). A job owns the job-based criteria: its step assignments are what score every employee who holds it, so an employee never carries job-based þrep of their own — only personal ones. Newly created jobs have no assignments, which the model reports until they are set.',
@@ -333,6 +348,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'updateScoringRole',
     type: ScoringModelDto,
     description:
@@ -352,6 +368,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'deleteScoringRole',
     type: ScoringModelDto,
     description:
@@ -370,6 +387,7 @@ export class ScoringModelController {
   @ApiParam({ name: 'modelId', type: String, format: 'uuid' })
   @ApiParam({ name: 'roleId', type: String, format: 'uuid' })
   @PartnerResponse({
+    include404: true,
     operationId: 'setScoringRoleStepAssignments',
     type: ScoringModelDto,
     description:

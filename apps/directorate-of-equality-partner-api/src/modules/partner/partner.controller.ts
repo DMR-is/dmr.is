@@ -31,7 +31,6 @@ import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
 import {
-  SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
 } from '@dmr.is/doe-modules/report-statistics'
 import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
@@ -161,7 +160,7 @@ export class PartnerController {
     operationId: 'analyzePartnerSalaryReport',
     type: SalaryAnalysisResponseDto,
     description:
-      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payload parses, that its criteria tree is accepted, and which employees will need an explanation — all of which the submission would otherwise refuse for the first time. Nothing is stored, so it can be called as often as the payload changes; when the answer looks right, the same payload goes to `POST /reports/salary`.',
+      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payroll extract is accepted against the scoring model it names, and which employees will need an explanation — both of which the submission would otherwise refuse for the first time. It expands through the identical call the submission uses, so a payload that previews clean is the payload that gets filed. Nothing is stored, so it can be called as often as the extract changes; when the answer looks right, the same body goes to `POST /reports/salary`.',
   })
   analyzeSalaryReport(
     @Body() input: PartnerSalaryPayloadFields,

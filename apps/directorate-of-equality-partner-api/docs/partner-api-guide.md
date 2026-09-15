@@ -68,13 +68,19 @@ A key carries some subset of:
 
 | Scope | Grants |
 | --- | --- |
-| `report:read` | every `GET` below |
+| `report:read` | every `GET` below, including reading a scoring model |
 | `salary:submit` | the analysis preview and the salary submission |
 | `equality:submit` | the equality submission |
+| `scoring:write` | authoring a scoring model — section C |
 
-A key issued without an explicit scope set gets all three. A call outside the
-key's scopes is `403`, and the scope check runs *before* the rate limiter, so a
-refused call does not spend your allowance.
+A key issued without an explicit scope set gets the first three. **`scoring:write`
+is never granted by default** and has to be asked for: authoring a starfsmat is a
+different act from filing against one, a vendor that only files never needs it,
+and it carries a `DELETE` that cascades a whole model away. If you only file,
+`report:read` plus a submit scope is the whole set.
+
+A call outside the key's scopes is `403`, and the scope check runs *before* the
+rate limiter, so a refused call does not spend your allowance.
 
 ### A company off the register
 
@@ -531,7 +537,12 @@ edit whatever you copy.
 
 - At least one criterion of each of the four job-based **types**
   (`RESPONSIBILITY`, `STRAIN`, `CONDITION`, `COMPETENCE`) — the types are
-  mandatory, not any particular criteria. Two criteria of one type are fine.
+  mandatory, not any particular criteria. Two criteria of one type are fine
+  **provided their titles differ**, and a model holds at most 5 criteria in
+  total — four mandatory types plus one `PERSONAL` is already the ceiling, so
+  splitting one in two means dropping another.
+- Criterion titles are unique within a model, and so are job titles. Both are
+  how a filing resolves what an employee is scored against.
 - At most one `PERSONAL` criterion.
 - **Every sub-criterion weight in the model sums to 100.** Not per criterion —
   across the whole model. A criterion's own weight is the sum of its

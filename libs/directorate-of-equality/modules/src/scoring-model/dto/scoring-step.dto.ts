@@ -1,3 +1,5 @@
+import { ArrayMaxSize, ArrayMinSize } from 'class-validator'
+
 import { ApiDtoArray, ApiString } from '@dmr.is/decorators'
 
 import { MAX_STEPS, MIN_STEPS } from '../../report-excel/workbook.schema'
@@ -27,6 +29,15 @@ export class SetScoringStepDto {
  * once against the same bounds the filing enforces.
  */
 export class SetScoringStepsDto {
+  // `MIN_STEPS`/`MAX_STEPS` were imported here only to interpolate into the
+  // description below, so the published contract promised a bound nothing
+  // enforced: `ApiDtoArray` applies no size validator and `setSteps` checked no
+  // length. Under the body limit one request could insert hundreds of thousands
+  // of þrep onto a single sub-criterion — and `deleteModel` loads the tree
+  // before destroying it, so the only cleanup path had to read what it could
+  // not read.
+  @ArrayMinSize(MIN_STEPS)
+  @ArrayMaxSize(MAX_STEPS)
   @ApiDtoArray(SetScoringStepDto, {
     description: [
       `The complete scale, in order, from step 1. Between ${MIN_STEPS} and ${MAX_STEPS} entries — the same bounds a filing enforces, so a scale that is accepted here cannot be refused there for its length.`,

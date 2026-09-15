@@ -1,3 +1,5 @@
+import { NotFoundException } from '@nestjs/common'
+
 import { IApplicationService } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 import { IScoringModelService } from '@dmr.is/doe-modules/scoring-model'
@@ -87,6 +89,43 @@ describe('PartnerSubmissionService', () => {
 
       await expect(service.submitSalary(input, COMPANY)).rejects.toThrow()
       expect(submitSalary).not.toHaveBeenCalled()
+    })
+  })
+
+  // Tenant isolation on the two routes a vendor actually calls. The gate lives
+  // in `expandToParsedPayload`, and nothing here proved a foreign model id
+  // reaches it before anything is filed or analysed.
+  describe('a scoring model the caller does not own', () => {
+    const notFound = new NotFoundException('Starfsmat fannst ekki')
+
+    it('404s the submission, and files nothing', async () => {
+      expandToParsedPayload.mockRejectedValue(notFound)
+
+      await expect(
+        service.submitSalary(
+          {
+            providerId: 'p-1',
+            scoringModelId: 'someone-elses-model',
+            employees: EMPLOYEES,
+          } as never,
+          COMPANY,
+        ),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(submitSalary).not.toHaveBeenCalled()
+    })
+
+    it('404s the preview, and analyses nothing', async () => {
+      expandToParsedPayload.mockRejectedValue(notFound)
+
+      await expect(
+        service.salaryAnalysis(
+          { scoringModelId: 'someone-elses-model', employees: EMPLOYEES } as never,
+          COMPANY,
+        ),
+      ).rejects.toThrow(NotFoundException)
+
+      expect(salaryAnalysis).not.toHaveBeenCalled()
     })
   })
 
