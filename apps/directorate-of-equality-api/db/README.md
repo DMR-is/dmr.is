@@ -353,6 +353,38 @@ Each new island.is submission gets its own `provider_id` — the type identifies
 
 **Uniqueness.** A partial unique index on `(provider_type, provider_id) WHERE provider_id IS NOT NULL` enforces one-row-per-tuple at the DB level. The application layer in `report-create.service.ts` also short-circuits on replay: if a non-null `(provider_type, provider_id)` already exists _and the submitting company matches the existing row's parent_, the create returns the existing `reportId` instead of inserting. That makes upstream network retries transparent — same payload + same key = same response. Cross-company collisions on the same tuple (an unlikely but theoretically possible "a new provider channel emits an id that an existing channel already used" scenario) are rejected with a 409.
 
+## Scoring model (starfsmat)
+
+A company's criteria tree, the þrep on each sub-criterion, the weights, and which þrep every
+job sits at. Stored once against the company in the `scoring_*` tables and **named by a
+filing** rather than sent with it.
+
+It exists because the partner API asks a payroll vendor for the payload, and the criteria
+tree is not theirs: it is the employer's, it does not change between filings, and
+re-transmitting roughly a hundred step descriptions and a job-assignment matrix every year
+served nobody. A partner filing sends `scoringModelId` and a flat payroll extract; the
+server expands the two into the same `ParsedReportDto` every other channel submits, so
+nothing downstream knows a scoring model exists.
+
+**A filing takes a frozen copy.** Submitting materialises the report's own
+`report_criterion`, `report_sub_criterion`, `report_sub_criterion_step` and
+`report_employee_role` rows from the model, and there is no FK back. That is what lets a
+company rework its starfsmat without moving the figures on a report already filed — and why
+the model needs no version column.
+
+Two values are **derived, never stored**:
+
+- a criterion's weight is the sum of its own sub-criteria's (`computeStepScore` reads only
+  the sub-criterion weight, so a stored one could only disagree with what scores);
+- a þrep's score is `(step_order / numSteps) × weight × SCORE_FACTOR`, which normalises
+  scales of different lengths so the top þrep is worth the sub-criterion's full weight
+  whether the scale has two steps or eight.
+
+A model may be **incomplete**: it is authored over many calls and its weights cannot total
+100 until the last sub-criterion lands, so the API accepts partial states and reports
+validity on every read and write. The filing is what refuses. island.is has no equivalent —
+its drafts still build a tree per report.
+
 ## API keys (third-party integration)
 
 Employers reach us through the island.is application system, authenticated by an IdS user
@@ -698,6 +730,110 @@ an FK constraint does not require an association. `company_national_id` is denor
 the same reason: it lets the partner API resolve the tenant from one indexed read on this
 table. Safe to copy because a kennitala _is_ the company's identity and does not change, so
 the two columns cannot drift.
+
+### `scoring_model`
+
+A company's **starfsmat**: the criteria a salary report is scored against, stored once and
+named by a filing rather than re-transmitted with it. Written only by the partner API — see
+**API keys** above for the surface, and the *Scoring model* section for why the criteria
+tree stopped being part of a submission.
+
+It has **no FK from `report`**, deliberately. Submitting materialises the report's own
+`report_criterion` / `report_sub_criterion` / `report_employee_role` rows from the model,
+so a company can rework its starfsmat without moving the figures on a report already filed.
+That frozen copy is also why this table carries no version column.
+
+| Column       | Type             |
+| ------------ | ---------------- |
+| `id`         | `uuid` PK        |
+| `company_id` | `fk → company`   |
+| `name`       | `text`           |
+
+### `scoring_criterion`
+
+One criterion (viðmið) in a model. **No `weight` column**: a criterion's weight is the sum
+of its own sub-criteria's and is derived on read. `computeStepScore` reads only the
+sub-criterion weight, so a stored criterion weight would reach no score and could only
+disagree with the figures that do.
+
+`type` reuses `report_criterion_type_enum` — the same five values with the same meaning as
+on a filed report.
+
+| Column             | Type                                          |
+| ------------------ | --------------------------------------------- |
+| `id`               | `uuid` PK                                     |
+| `scoring_model_id` | `fk → scoring_model` (cascade)                |
+| `type`             | `report_criterion_type_enum`                  |
+| `title`            | `text`                                        |
+| `description`      | `text`                                        |
+
+A valid model holds at least one criterion of each of the four job-based **types** and at
+most one `PERSONAL`. Two criteria of the same type are allowed.
+
+### `scoring_sub_criterion`
+
+One sub-criterion (undirviðmið), and the only place a weight is stored. Every
+sub-criterion weight **across the whole model** sums to 100 — not per criterion. This is
+the one weight that reaches a score.
+
+| Column                 | Type                               |
+| ---------------------- | ---------------------------------- |
+| `id`                   | `uuid` PK                          |
+| `scoring_criterion_id` | `fk → scoring_criterion` (cascade) |
+| `title`                | `text`                             |
+| `description`          | `text`                             |
+| `weight`               | `numeric(6,4)`                     |
+
+No two sub-criteria may share both their own title and their parent's: the submission
+pipeline keys on `(criterionTitle, subTitle)` and would collapse them onto one row.
+
+### `scoring_sub_criterion_step`
+
+One þrep on a sub-criterion's scale. **No `score` column** — a step's score is
+`(step_order / numSteps) × weight × SCORE_FACTOR`, derived at expansion, so a report filed
+through the partner API sits on the same stig scale as one filed through any other.
+
+| Column                     | Type                                   |
+| -------------------------- | -------------------------------------- |
+| `id`                       | `uuid` PK                              |
+| `scoring_sub_criterion_id` | `fk → scoring_sub_criterion` (cascade) |
+| `step_order`               | `integer`                              |
+| `description`              | `text`                                 |
+
+`UNIQUE (scoring_sub_criterion_id, step_order)`. Orders run 1..n with no gaps — a gap would
+put the top step above the scale's own maximum — and a scale holds between `MIN_STEPS` (2)
+and `MAX_STEPS` (8) þrep, the same bounds the filing enforces.
+
+### `scoring_role`
+
+A job (starf) in the model. A role owns the job-based criteria: every employee holding it
+scores from the role's assignments, and carries þrep of their own only for the personal
+criterion.
+
+| Column             | Type                           |
+| ------------------ | ------------------------------ |
+| `id`               | `uuid` PK                      |
+| `scoring_model_id` | `fk → scoring_model` (cascade) |
+| `title`            | `text`                         |
+
+### `scoring_role_step`
+
+Which þrep a job sits at for one sub-criterion. Row existence is the assignment, so there is
+nothing to mutate and **no `updated_at`** — re-assigning deletes and re-inserts, the same
+shape `report_employee_role_criterion_step` uses.
+
+| Column                          | Type                                        |
+| ------------------------------- | ------------------------------------------- |
+| `id`                            | `uuid` PK                                   |
+| `scoring_role_id`               | `fk → scoring_role` (cascade)               |
+| `scoring_sub_criterion_id`      | `fk → scoring_sub_criterion` (cascade)      |
+| `scoring_sub_criterion_step_id` | `fk → scoring_sub_criterion_step` (cascade) |
+
+`UNIQUE (scoring_role_id, scoring_sub_criterion_id)` — at most one assignment per job per
+sub-criterion. `scoring_sub_criterion_id` is denormalised from the step's own parent so that
+uniqueness can be a table constraint; the service asserts the step really belongs to that
+sub-criterion. Completeness — every job assigned on every job-based sub-criterion — is a
+validation concern, not one the table can hold.
 
 ### `company`
 
