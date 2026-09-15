@@ -277,5 +277,5 @@ erDiagram
     scoring_model ||--o{ scoring_role : "scoring_model_id"
     scoring_role ||--o{ scoring_role_step : "scoring_role_id"
     scoring_sub_criterion ||--o{ scoring_role_step : "scoring_sub_criterion_id"
-    scoring_sub_criterion_step ||--o{ scoring_role_step : "scoring_sub_criterion_step_id"
+    scoring_sub_criterion_step ||--o{ scoring_role_step : "(scoring_sub_criterion_step_id, scoring_sub_criterion_id)"
 ```
