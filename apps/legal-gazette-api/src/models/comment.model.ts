@@ -7,16 +7,18 @@ import {
   ForeignKey,
 } from 'sequelize-typescript'
 
-import { ApiProperty, PickType } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 
-import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
 import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
+// Type-only: `comment.dto.ts` imports this module back for `PickType`, and the
+// DTO is only ever a mapper return type here. See `models.md`.
+import type { CommentDto } from './comment.dto'
 import type { StatusModel as StatusModelRef } from './status.model'
-import { StatusDto, StatusModel } from './status.model'
+import { StatusModel } from './status.model'
 
 export enum CommentTypeEnum {
   SUBMIT = 'SUBMIT',
@@ -72,12 +74,12 @@ type CreatePublishComment = CreateCommentBaseAttributes & {
 }
 
 type CreateDeletePublicationComment = CreateCommentBaseAttributes & {
-  type: CommentTypeEnum.DELETE_PUBLICATION,
+  type: CommentTypeEnum.DELETE_PUBLICATION
   comment: string
 }
 
 type CreateCreatePublicationComment = CreateCommentBaseAttributes & {
-  type: CommentTypeEnum.CREATE_PUBLICATION,
+  type: CommentTypeEnum.CREATE_PUBLICATION
   comment: string
 }
 
@@ -179,19 +181,4 @@ export class CommentModel extends ParanoidModel<
   fromModel(): CommentDto {
     return CommentModel.fromModel(this)
   }
-}
-
-export class CommentDto extends PickType(CommentModel, [
-  'id',
-  'type',
-  'advertId',
-  'actor',
-  'receiver',
-  'comment',
-] as const) {
-  @ApiProperty({ type: StatusDto })
-  status!: StatusDto
-
-  @ApiDateTime()
-  createdAt!: Date
 }

@@ -1,9 +1,7 @@
 import { type DMRUser } from '@dmr.is/island-auth-nest/dmrUser'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
-import {
-  AdvertDetailedDto,
-} from '../../models/advert.model'
+import { AdvertDetailedDto } from '../../models/advert.dto'
 import {
   CreateAdvertInternalDto,
   GetAdvertsDto,
