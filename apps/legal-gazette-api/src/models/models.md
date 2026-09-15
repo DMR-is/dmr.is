@@ -67,43 +67,42 @@ The fix is the same move: lift `AdvertDto` and its siblings into an
 `advert.dto.ts` that nothing in the cycle imports at value level. Deliberately
 not done here - it is larger than the transform switch should absorb.
 
-### What actually resolves today - measure, do not infer
+### Verifying a site - and the `PickType` trap
 
-**The "does that module import `advert.model.ts` back?" rule does not predict the
-outcome.** Reading the metadata directly is the only reliable check:
+Reading the metadata is the right check, but **read it on the class that carries
+the decorator**, not on a projection of it:
 
 ```
-Reflect.getMetadata('swagger/apiModelProperties', AdvertDto.prototype, '<prop>').type
+Reflect.getMetadata('swagger/apiModelProperties', AdvertDetailedDto.prototype, 'courtDistrict').type
 ```
 
-Measured on this branch, in the ordinary import order:
+Measured on `AdvertDetailedDto`, which is where all seven eager `@Api*Dto` sites
+in this file live, **all seven resolve to their real classes** - `courtDistrict`,
+`settlement`, `signature`, `category`, `type`, `status` and `assignedUser`. None
+of them is currently broken, and the generated client matches.
 
-| property | eager site | resolves to |
-|---|---|---|
-| `courtDistrict` | 781 | **`undefined`** |
-| `settlement` | 784 | **`undefined`** |
-| `signature` | 817 | **`undefined`** |
-| `category` | 793 | `CategoryDto` |
-| `type` | 796 | `TypeDto` |
-| `status` | 799 | `StatusDto` |
-| `assignedUser` | 808 | `UserDto` |
+**The trap.** `AdvertDto` is `PickType(AdvertDetailedDto, [...])`, and the same
+read against `AdvertDto.prototype` returns **no metadata at all** for
+`courtDistrict`, `settlement` and `signature` - simply because the pick list does
+not include them. `Reflect.getMetadata(...) === undefined` (the property is not on
+this class) and `Reflect.getMetadata(...).type === undefined` (the property is
+there and its type failed to resolve) are completely different findings, and a
+probe written as `metadata?.type` collapses them into one. An earlier revision of
+this file reported three properties as broken on that basis; they were not.
 
-So three of the seven are **already shipping `ApiProperty({ type: undefined })`
-and `Type(() => undefined)`** - a wrong OpenAPI `$ref` and no class-transformer
-nesting - not merely latent. This is **pre-existing**: the same three are
-`undefined` on the merge base under `ts-jest`. The transform switch neither
-causes nor worsens it.
+So when auditing:
 
-`status` resolves correctly in the ordinary order but still throws if
-`status.model.ts` is imported first, so it is order-fragile rather than safe.
+- probe the class that declares the property, not a `PickType`/`OmitType` of it;
+- distinguish "no metadata" from "type is undefined";
+- a property missing from a generated client may simply be unpicked by design.
 
-**`courtDistrict` is unexplained.** `court-district.model.ts` imports only
-`@dmr.is/legal-gazette-html`, `@dmr.is/shared-models-base`, `../core/constants`
-(which has no imports of its own) and a base DTO - no path back to
-`advert.model.ts` - yet it resolves to `undefined` in both import orders tested,
-so it is not order-dependent either. `assignedUser` uses the same
-`@ApiOptionalDto` decorator and resolves fine, so the decorator variant is not
-the cause. Do not treat the cycle rule as sufficient until this is understood.
+So the three sites in the table are a **latent crash**, not a live schema defect.
+Verified still reproducing:
+
+```
+import './status.model'   // before advert.model
+ReferenceError: Cannot access 'StatusDto' before initialization
+```
 
 Tracked in #1506 along with the `advert.dto.ts` extraction.
 
