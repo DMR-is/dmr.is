@@ -26,20 +26,8 @@ import {
 } from '../dto/scoring-validation.dto'
 import { expandToParsedPayload } from './expand-to-parsed-payload'
 
-/**
- * Weights are stored as DECIMAL(7,4) and summed in floating point, so an exact
- * `=== 100` would reject models that are correct to every digit anyone typed.
- * Same tolerance the submission validator uses.
- */
-const WEIGHT_EPSILON = 0.01
-
 /** Guard against a pathological model producing an unbounded response. */
 const MAX_REASONS = 200
-
-const approximately = (actual: number, expected: number): boolean =>
-  Math.abs(actual - expected) <= WEIGHT_EPSILON
-
-const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0)
 
 /**
  * Sub-criterion titles are not unique — nothing stops "Menntun" appearing under
@@ -66,14 +54,32 @@ type ScoringModelShape = {
 
 class ReasonBag {
   private readonly reasons: ScoringValidationReasonDto[] = []
+  private truncated = false
 
   add(scope: ScoringValidationScopeEnum, message: string): void {
-    if (this.reasons.length >= MAX_REASONS) return
+    if (this.reasons.length >= MAX_REASONS) {
+      this.truncated = true
+      return
+    }
     this.reasons.push({ scope, message })
   }
 
+  /**
+   * The cap used to be silent: a badly broken model returned exactly
+   * `MAX_REASONS` reasons and nothing said more existed, so a caller working
+   * through the list would fix every one and still be refused. The notice costs
+   * one slot and is the difference between a long list and a wrong one.
+   */
   all(): ScoringValidationReasonDto[] {
-    return this.reasons
+    if (!this.truncated) return this.reasons
+
+    return [
+      ...this.reasons.slice(0, MAX_REASONS - 1),
+      {
+        scope: ScoringValidationScopeEnum.CRITERIA,
+        message: `Fleiri en ${MAX_REASONS - 1} atriði eru óuppfyllt; listinn er styttur. Lagfærðu ofangreint og sæktu starfsmatið aftur til að sjá afganginn.`,
+      },
+    ]
   }
 }
 

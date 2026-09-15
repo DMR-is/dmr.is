@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
-import { getModelToken } from '@nestjs/sequelize'
+import { getConnectionToken, getModelToken } from '@nestjs/sequelize'
 import { Test } from '@nestjs/testing'
 
 import { CompanyDto } from '../company/dto/company.dto'
@@ -21,6 +21,8 @@ import { ScoringModelService } from './scoring-model.service'
 const MODEL_ID = 'model-1'
 const CRITERION_ID = 'criterion-1'
 const SUB_ID = 'sub-1'
+
+const TRANSACTION = Symbol('transaction')
 
 const COMPANY = {
   id: 'company-1',
@@ -79,6 +81,16 @@ describe('ScoringModelService', () => {
     const module = await Test.createTestingModule({
       providers: [
         ScoringModelService,
+        {
+          // The two replace-whole writes take a row lock inside a transaction,
+          // so the service needs a connection. Run the callback inline with a
+          // sentinel: the assertions are about what the writes do and in which
+          // order, not about Sequelize's transaction machinery.
+          provide: getConnectionToken(),
+          useValue: {
+            transaction: (fn: (t: unknown) => unknown) => fn(TRANSACTION),
+          },
+        },
         {
           provide: getModelToken(ScoringModelModel),
           useValue: {
@@ -344,11 +356,14 @@ describe('ScoringModelService', () => {
         ],
       })
 
-      expect(stepBulkCreate).toHaveBeenCalledWith([
-        { scoringSubCriterionId: SUB_ID, stepOrder: 1, description: 'lægst' },
-        { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
-        { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
-      ])
+      expect(stepBulkCreate).toHaveBeenCalledWith(
+        [
+          { scoringSubCriterionId: SUB_ID, stepOrder: 1, description: 'lægst' },
+          { scoringSubCriterionId: SUB_ID, stepOrder: 2, description: 'mið' },
+          { scoringSubCriterionId: SUB_ID, stepOrder: 3, description: 'hæst' },
+        ],
+        { transaction: TRANSACTION },
+      )
     })
 
     it('clears the old scale before writing the new one', async () => {
@@ -356,11 +371,27 @@ describe('ScoringModelService', () => {
         steps: [{ description: 'a' }, { description: 'b' }],
       })
 
+      // Both halves inside the same transaction — that is what stops two
+      // concurrent replaces interleaving onto the same scale.
       expect(stepDestroy).toHaveBeenCalledWith({
         where: { scoringSubCriterionId: SUB_ID },
+        transaction: TRANSACTION,
       })
       expect(stepDestroy.mock.invocationCallOrder[0]).toBeLessThan(
         stepBulkCreate.mock.invocationCallOrder[0],
+      )
+    })
+
+    it('locks the parent row for the duration of the replace', async () => {
+      await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
+        steps: [{ description: 'a' }, { description: 'b' }],
+      })
+
+      expect(subFindOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transaction: TRANSACTION,
+          lock: expect.anything(),
+        }),
       )
     })
 
@@ -432,14 +463,18 @@ describe('ScoringModelService', () => {
 
       expect(roleStepDestroy).toHaveBeenCalledWith({
         where: { scoringRoleId: ROLE_ID },
+        transaction: TRANSACTION,
       })
-      expect(roleStepBulkCreate).toHaveBeenCalledWith([
-        {
-          scoringRoleId: ROLE_ID,
-          scoringSubCriterionId: JOB_SUB,
-          scoringSubCriterionStepId: JOB_STEP,
-        },
-      ])
+      expect(roleStepBulkCreate).toHaveBeenCalledWith(
+        [
+          {
+            scoringRoleId: ROLE_ID,
+            scoringSubCriterionId: JOB_SUB,
+            scoringSubCriterionStepId: JOB_STEP,
+          },
+        ],
+        { transaction: TRANSACTION },
+      )
     })
 
     // Incomplete is reported by the validator; only incoherent is refused.

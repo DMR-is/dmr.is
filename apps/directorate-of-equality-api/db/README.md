@@ -669,7 +669,7 @@ No `deleted_at`. Report lifecycle handled via `report.status` enum — children 
 
 Exceptions:
 
-- **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`): only `created_at`. Join rows don't mutate — existence is the state.
+- **Join tables** (`company_report`, `report_employee_role_criterion_step`, `report_employee_personal_criterion_step`, `scoring_role_step`): only `created_at`. Join rows don't mutate — existence is the state, and re-assigning deletes and re-inserts.
 - **`public_report`**: insert-only, `created_at` only. No `updated_at`. Retraction flow deferred (see Notes).
 - **`report_event`**: insert-only, `created_at` only. Immutable audit row — never edited, never deleted.
 - **`report_comment`**: `created_at` + `updated_at` + `deleted_at`. Comments are immutable after insert in application logic (no edit endpoint) — `updated_at` is present only to fit the `ParanoidModel` base shape. Soft-delete hides the row from the rendered thread (no tombstone).

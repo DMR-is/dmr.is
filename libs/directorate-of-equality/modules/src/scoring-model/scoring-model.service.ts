@@ -1,9 +1,12 @@
+import { Transaction } from 'sequelize'
+import { Sequelize } from 'sequelize-typescript'
+
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { InjectModel } from '@nestjs/sequelize'
+import { InjectConnection, InjectModel } from '@nestjs/sequelize'
 
 import { CompanyDto } from '../company/dto/company.dto'
 import { ReportCriterionTypeEnum } from '../report-criterion/models/report-criterion.model'
@@ -45,6 +48,7 @@ import { IScoringModelService } from './scoring-model.service.interface'
 @Injectable()
 export class ScoringModelService implements IScoringModelService {
   constructor(
+    @InjectConnection() private readonly sequelize: Sequelize,
     @InjectModel(ScoringModelModel)
     private readonly scoringModelModel: typeof ScoringModelModel,
     @InjectModel(ScoringCriterionModel)
@@ -178,9 +182,13 @@ export class ScoringModelService implements IScoringModelService {
   private async findOwnedSubCriterion(
     criterionId: string,
     subCriterionId: string,
+    transaction?: Transaction,
   ): Promise<ScoringSubCriterionModel> {
     const sub = await this.subCriterionModel.findOne({
       where: { id: subCriterionId, scoringCriterionId: criterionId },
+      // Locked when a transaction is passed: the replace-whole writes take the
+      // parent row so two of them cannot interleave.
+      ...(transaction ? { transaction, lock: Transaction.LOCK.UPDATE } : {}),
     })
 
     if (!sub) {
@@ -402,29 +410,39 @@ export class ScoringModelService implements IScoringModelService {
   ): Promise<ScoringModelDto> {
     await this.findOwnedModel(company, modelId)
     await this.findOwnedCriterion(modelId, criterionId)
-    await this.findOwnedSubCriterion(criterionId, subCriterionId)
 
-    // Replace rather than reconcile. Any role assignment onto the old steps
-    // goes with them through the FK cascade, and the model then reports that
-    // job as missing an assignment — dropped where the caller can see it,
-    // rather than re-homed onto a step they did not choose.
-    await this.stepModel.destroy({
-      where: { scoringSubCriterionId: subCriterionId },
-    })
+    // The whole replace runs under one transaction with the parent row locked.
+    // Two callers replacing the same scale concurrently would otherwise
+    // interleave their destroy and bulkCreate and collide on
+    // UNIQUE (scoring_sub_criterion_id, step_order) — surfacing as a raw 500
+    // rather than the last write winning.
+    await this.sequelize.transaction(async (transaction) => {
+      await this.findOwnedSubCriterion(criterionId, subCriterionId, transaction)
+
+      // Replace rather than reconcile. Any role assignment onto the old steps
+      // goes with them through the FK cascade, and the model then reports that
+      // job as missing an assignment — dropped where the caller can see it,
+      // rather than re-homed onto a step they did not choose.
+      await this.stepModel.destroy({
+        where: { scoringSubCriterionId: subCriterionId },
+        transaction,
+      })
 
     // No empty-array branch: `SetScoringStepsDto` carries
     // `@ArrayMinSize(MIN_STEPS)`, so the only route that reaches this method
     // cannot deliver one. A clear-to-empty path that nothing can call is a path
     // nothing keeps honest.
-    await this.stepModel.bulkCreate(
-      input.steps.map((step, index) => ({
-        scoringSubCriterionId: subCriterionId,
-        // Position is the þrep number. Deriving it here is what makes a gap
-        // impossible rather than something the validator has to catch.
-        stepOrder: index + 1,
-        description: step.description,
-      })),
-    )
+      await this.stepModel.bulkCreate(
+        input.steps.map((step, index) => ({
+          scoringSubCriterionId: subCriterionId,
+          // Position is the þrep number. Deriving it here is what makes a gap
+          // impossible rather than something the validator has to catch.
+          stepOrder: index + 1,
+          description: step.description,
+        })),
+        { transaction },
+      )
+    })
 
     return this.reload(company, modelId)
   }
@@ -433,9 +451,11 @@ export class ScoringModelService implements IScoringModelService {
   private async findOwnedRole(
     modelId: string,
     roleId: string,
+    transaction?: Transaction,
   ): Promise<ScoringRoleModel> {
     const role = await this.roleModel.findOne({
       where: { id: roleId, scoringModelId: modelId },
+      ...(transaction ? { transaction, lock: Transaction.LOCK.UPDATE } : {}),
     })
 
     if (!role) {
@@ -562,17 +582,34 @@ export class ScoringModelService implements IScoringModelService {
       seen.add(assignment.subCriterionId)
     }
 
-    await this.roleStepModel.destroy({ where: { scoringRoleId: roleId } })
+    // Validation first, outside the transaction — it reads only the tree that
+    // was already loaded, and refusing before opening one keeps the lock held
+    // for the write alone.
+    //
+    // The replace then runs under one transaction with the job's row locked:
+    // two callers replacing the same job's assignments concurrently would
+    // otherwise interleave and collide on
+    // UNIQUE (scoring_role_id, scoring_sub_criterion_id), which surfaces as a
+    // raw 500 instead of the last write winning.
+    await this.sequelize.transaction(async (transaction) => {
+      await this.findOwnedRole(modelId, roleId, transaction)
 
-    if (input.assignments.length > 0) {
-      await this.roleStepModel.bulkCreate(
-        input.assignments.map((assignment) => ({
-          scoringRoleId: roleId,
-          scoringSubCriterionId: assignment.subCriterionId,
-          scoringSubCriterionStepId: assignment.stepId,
-        })),
-      )
-    }
+      await this.roleStepModel.destroy({
+        where: { scoringRoleId: roleId },
+        transaction,
+      })
+
+      if (input.assignments.length > 0) {
+        await this.roleStepModel.bulkCreate(
+          input.assignments.map((assignment) => ({
+            scoringRoleId: roleId,
+            scoringSubCriterionId: assignment.subCriterionId,
+            scoringSubCriterionStepId: assignment.stepId,
+          })),
+          { transaction },
+        )
+      }
+    })
 
     return this.reload(company, modelId)
   }
