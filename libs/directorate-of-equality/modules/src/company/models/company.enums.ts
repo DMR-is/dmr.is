@@ -55,24 +55,34 @@ export enum CompanyStatusEnum {
  * classifies what an entity *does*, so a state-owned hospital and a private
  * clinic share `86xxx` and section Q. See `utils/legal-form-sector.ts`.
  *
- *   UNKNOWN → not classified. Either RSK has not been consulted for this
- *             company yet, or it returned a legal form we do not map.
- *   PRIVATE → privately owned (hf., ehf., sf., sole trader, …).
- *   PUBLIC  → central government, municipalities, and public institutions.
+ *   UNKNOWN     → not classified. Either RSK has not been consulted for this
+ *                 company yet, or it returned a legal form we do not map.
+ *   FYRIRTAEKI  → privately owned (hf., ehf., sf., sole trader, …).
+ *   RADUNEYTI   → a government ministry. Not derivable from RSK legal form or
+ *                 ÍSAT (a ministry's rekstrarform and ÍSAT code look exactly
+ *                 like any other central-government office), so this value is
+ *                 always set by hand via `updateSector` — see
+ *                 `utils/legal-form-sector.ts`.
+ *   RIKISADILI  → central government other than a ministry: state agencies,
+ *                 state-owned companies (ohf.), state institutions.
+ *   SVEITARFELAG → a municipality or inter-municipal body (byggðasamlag).
  *
- * UNKNOWN is deliberately its own value and must never be folded into PRIVATE:
- * an admin filtering for private companies must not silently be shown companies
- * we merely failed to classify. Report it as its own bucket in the UI.
+ * UNKNOWN is deliberately its own value and must never be folded into
+ * FYRIRTAEKI: an admin filtering for private companies must not silently be
+ * shown companies we merely failed to classify. Report it as its own bucket
+ * in the UI.
  *
  * Declaration order is load-bearing (Postgres orders by declaration order), so
- * `ORDER BY sector` yields UNKNOWN < PRIVATE < PUBLIC. A finer split (e.g.
- * MUNICIPAL separate from central government) can be added in Postgres with
+ * `ORDER BY sector` yields UNKNOWN < FYRIRTAEKI < RADUNEYTI < RIKISADILI <
+ * SVEITARFELAG. A further split can be added in Postgres with
  * `ALTER TYPE company_sector_enum ADD VALUE`.
  */
 export enum CompanySectorEnum {
   UNKNOWN = 'UNKNOWN',
-  PRIVATE = 'PRIVATE',
-  PUBLIC = 'PUBLIC',
+  FYRIRTAEKI = 'FYRIRTAEKI',
+  RADUNEYTI = 'RADUNEYTI',
+  RIKISADILI = 'RIKISADILI',
+  SVEITARFELAG = 'SVEITARFELAG',
 }
 
 /**

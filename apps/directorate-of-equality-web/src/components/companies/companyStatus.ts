@@ -125,11 +125,10 @@ export const SALARY_DETAIL_LABEL: Record<
  * shared, so this is expressed as an override rather than a second full map —
  * a second map would drift.
  */
-export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT =
-  {
-    ...OBLIGATION_STATUS_TAG_VARIANT,
-    [CompanyObligationStatusEnum.MISSING]: 'purple',
-  }
+export const SALARY_OBLIGATION_TAG_VARIANT: typeof OBLIGATION_STATUS_TAG_VARIANT = {
+  ...OBLIGATION_STATUS_TAG_VARIANT,
+  [CompanyObligationStatusEnum.MISSING]: 'purple',
+}
 
 /**
  * The two default-on hides, as opt-in reveals.
@@ -164,20 +163,26 @@ export const FLAG_FILTER_OPTIONS = [
   { value: 'quarantined', label: 'Fyrirtæki er í var' },
 ]
 
-// Ownership sector (private vs government/state), derived server-side from the
-// RSK legal form. UNKNOWN is offered as its own choice on purpose: it is not a
-// synonym for private, so an admin has to be able to see — and count — the
-// companies we have not classified yet rather than have them hidden inside
-// another bucket.
+// Ownership sector, derived server-side mostly from the RSK legal form
+// (Ráðuneyti is the exception — it is always set by hand, since no legal
+// form or ÍSAT code distinguishes a ministry from any other central
+// government office). UNKNOWN is offered as its own choice on purpose: it is
+// not a synonym for Fyrirtæki, so an admin has to be able to see — and
+// count — the companies we have not classified yet rather than have them
+// hidden inside another bucket.
 export const SECTOR_LABEL: Record<CompanySectorEnum, string> = {
-  [CompanySectorEnum.PRIVATE]: 'Almennur markaður',
-  [CompanySectorEnum.PUBLIC]: 'Ríki og sveitarfélög',
+  [CompanySectorEnum.FYRIRTAEKI]: 'Fyrirtæki',
+  [CompanySectorEnum.RADUNEYTI]: 'Ráðuneyti',
+  [CompanySectorEnum.RIKISADILI]: 'Ríkisaðilar',
+  [CompanySectorEnum.SVEITARFELAG]: 'Sveitarfélög',
   [CompanySectorEnum.UNKNOWN]: 'Óflokkað',
 }
 
 export const SECTOR_FILTER_OPTIONS = [
-  CompanySectorEnum.PRIVATE,
-  CompanySectorEnum.PUBLIC,
+  CompanySectorEnum.FYRIRTAEKI,
+  CompanySectorEnum.RADUNEYTI,
+  CompanySectorEnum.RIKISADILI,
+  CompanySectorEnum.SVEITARFELAG,
   CompanySectorEnum.UNKNOWN,
 ].map((value) => ({ value, label: SECTOR_LABEL[value] }))
 

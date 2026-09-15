@@ -659,7 +659,7 @@
             "name": "sector",
             "required": false,
             "in": "query",
-            "description": "Return only companies in one of the given ownership sectors — the premade \"private vs government/state\" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
             "schema": {
               "type": "array",
               "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
@@ -5651,7 +5651,13 @@
       },
       "CompanySectorEnum": {
         "type": "string",
-        "enum": ["UNKNOWN", "PRIVATE", "PUBLIC"]
+        "enum": [
+          "UNKNOWN",
+          "FYRIRTAEKI",
+          "RADUNEYTI",
+          "RIKISADILI",
+          "SVEITARFELAG"
+        ]
       },
       "CompanySortByEnum": {
         "type": "string",
@@ -5960,7 +5966,7 @@
         "type": "object",
         "properties": {
           "sector": {
-            "description": "The ownership sector to set. PRIVATE or PUBLIC marks the classification as admin-owned (`sectorOverride = true`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
+            "description": "The ownership sector to set. FYRIRTAEKI, RADUNEYTI, RIKISADILI or SVEITARFELAG marks the classification as admin-owned (`sectorOverride = true`), so a backfill will not overwrite it. UNKNOWN clears the override and hands the company back to automatic RSK classification.",
             "allOf": [{ "$ref": "#/components/schemas/CompanySectorEnum" }]
           }
         },
@@ -6386,6 +6392,14 @@
             "type": "boolean",
             "description": "When true, return only companies whose next equality or salary report due date has passed."
           },
+          "includeNotObliged": {
+            "type": "boolean",
+            "description": "When true, also return companies that owe no report at all (\"ekki lagaskylt\": under 25 employees with no salary-report override). These are HIDDEN BY DEFAULT — the admin register is a list of who owes what, and ~250 companies that owe nothing crowd it out. Companies of UNKNOWN size are never hidden: an unestablished size is an open question, not a settled \"owes nothing\". Ignored when `employeeCountCategory` is set, which is a more specific request about the same axis."
+          },
+          "includeInactive": {
+            "type": "boolean",
+            "description": "When true, also return companies that are off the register (status = INACTIVE). HIDDEN BY DEFAULT. Ignored when `status` is set — filtering explicitly to INACTIVE must not return an empty page."
+          },
           "isatCategoryCode": {
             "description": "Return only companies whose admin-owned ÍSAT2008 category is one of the given leaf codes (e.g. \"01110\").",
             "type": "array",
@@ -6398,7 +6412,7 @@
           },
           "sector": {
             "type": "array",
-            "description": "Return only companies in one of the given ownership sectors — the premade \"private vs government/state\" filter. UNKNOWN is filterable on its own and is never included in PRIVATE.",
+            "description": "Return only companies in one of the given ownership sectors — the premade Fyrirtæki / Ráðuneyti / Ríkisaðilar / Sveitarfélög filter (FYRIRTAEKI, RADUNEYTI, RIKISADILI, SVEITARFELAG). UNKNOWN is filterable on its own and is never included in any of the classified sectors.",
             "items": { "$ref": "#/components/schemas/CompanySectorEnum" }
           },
           "regionCode": {

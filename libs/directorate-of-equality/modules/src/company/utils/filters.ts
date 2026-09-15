@@ -137,11 +137,13 @@ export function buildCompanyIsatCategoryInclude(
 }
 
 /**
- * Filter by ownership sector (private vs government/state). A direct column on
- * the company, derived from the RSK legal form.
+ * Filter by ownership sector (Fyrirtæki / Ráðuneyti / Ríkisaðilar /
+ * Sveitarfélög). A direct column on the company, derived from the RSK legal
+ * form — except RADUNEYTI, which is only ever set by hand.
  *
- * Note UNKNOWN is filterable in its own right and is never merged into PRIVATE —
- * asking for PRIVATE returns only companies we actually classified as private.
+ * Note UNKNOWN is filterable in its own right and is never merged into a
+ * classified bucket — asking for FYRIRTAEKI returns only companies we actually
+ * classified as such, not everything we failed to classify.
  */
 export function buildCompanySectorWhere(
   sectors: CompanySectorEnum[],
