@@ -27,7 +27,7 @@ export class PartnerPersonalStepDto {
 /**
  * One employee, as a payroll system holds them.
  *
- * Everything here except `personalSteps` is payroll data. That one field is the
+ * Everything here except `personalSteps` is payroll data — fourteen fields of it. That one field is the
  * employer's assessment — around a tenth of the total weight — and no system
  * derives it; it is the reason a vendor still needs somewhere to collect input.
  *

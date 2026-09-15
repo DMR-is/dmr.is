@@ -90,9 +90,9 @@ describe('validateScoringModel', () => {
     const result = validateScoringModel({ criteria: [], roles: [] })
 
     expect(result.status).toBe(ScoringModelStatusEnum.INVALID)
-    // Four missing mandatory types plus "no sub-criteria" — a first-time
-    // integration should learn all of it in one round trip.
-    expect(result.reasons).toHaveLength(5)
+    // Four missing mandatory types, "no sub-criteria" and "at least one job" —
+    // a first-time integration learns all of it in one round trip.
+    expect(result.reasons).toHaveLength(6)
     expect(
       result.reasons.filter(
         (r) => r.scope === ScoringValidationScopeEnum.CRITERIA,
@@ -358,7 +358,9 @@ describe('validateScoringModel', () => {
 
       expect(messagesOf(model)).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('metið á starfsmann, ekki starf'),
+          // The filing gate's wording, since the rule is now run rather than
+          // restated: a job is only scored on job-based criteria.
+          expect.stringContaining('störf eru aðeins metin á starfsbundin viðmið'),
         ]),
       )
     })
@@ -395,6 +397,26 @@ describe('validateScoringModel', () => {
       model.roles = []
 
       expect(scopesOf(model)).toContain(ScoringValidationScopeEnum.ROLES)
+    })
+
+    // The case that made the early-return version of the backstop worse than
+    // no backstop: deleting a criterion leaves its jobs dangling, and the
+    // expansion refused — hiding the missing-mandatory-type reason entirely.
+    it('still reports the missing type when deleting a criterion strands its assignments', () => {
+      const model = validModel()
+      model.criteria = model.criteria.filter(
+        (c) => c.type !== ReportCriterionTypeEnum.COMPETENCE,
+      )
+
+      const messages = messagesOf(model)
+      expect(messages).toEqual(
+        expect.arrayContaining([expect.stringContaining('COMPETENCE')]),
+      )
+      expect(messages).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('er ekki lengur til í starfsmatinu'),
+        ]),
+      )
     })
   })
 

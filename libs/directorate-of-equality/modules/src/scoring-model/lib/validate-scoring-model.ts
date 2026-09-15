@@ -8,6 +8,7 @@ import {
   PayloadIssueBag,
   PayloadIssueScope,
 } from '../../report/lib/parsed-payload-issues'
+import { collectParsedPayloadSemantics } from '../../report/lib/parsed-payload-semantics'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import {
   MANDATORY_JOB_BASED_CRITERIA,
@@ -26,7 +27,7 @@ import {
 import { expandToParsedPayload } from './expand-to-parsed-payload'
 
 /**
- * Weights are stored as DECIMAL(6,4) and summed in floating point, so an exact
+ * Weights are stored as DECIMAL(7,4) and summed in floating point, so an exact
  * `=== 100` would reject models that are correct to every digit anyone typed.
  * Same tolerance the submission validator uses.
  */
@@ -95,55 +96,29 @@ const MODEL_LEVEL_SCOPES: ReadonlySet<PayloadIssueScope> = new Set([
 ])
 
 /**
- * Runs the submission's own structural gate over the model, expanded with no
- * employees, and folds anything it finds into the reason list.
+ * Which part of the model a gate message is about.
  *
- * `assertWithinCapacity` throws rather than accumulating, so it is caught: a
- * model over a ceiling is a reason like any other here, not a 500.
+ * `assertWithinCapacity` throws plain strings with no scope of their own, and
+ * the expansion's refusals likewise — so both are classified by what they name.
+ * `scope` is documented as the field a caller routes its UI on, so filing a
+ * jobs overflow under `CRITERIA` puts it in the wrong panel, which is the only
+ * thing that field exists to prevent.
  */
-const runFilingGate = (
-  criteria: ScoringCriterionDto[],
-  roles: ScoringRoleDto[],
-  reasons: ReasonBag,
-): void => {
-  let parsed
-  try {
-    parsed = expandToParsedPayload({ criteria, roles }, [])
-  } catch (error) {
-    // The expansion refuses models the gate would never see — a duplicate
-    // (criterion, sub-criterion) title pair, an assignment pointing at a þrep
-    // that is gone. Those already have their own reasons above; anything else
-    // is surfaced rather than swallowed.
-    if (error instanceof BadRequestException) {
-      const message = error.message
-      if (!reasons.all().some((r) => r.message === message)) {
-        reasons.add(ScoringValidationScopeEnum.SUB_CRITERIA, message)
-      }
-      return
-    }
-    throw error
+const scopeForMessage = (
+  message: string,
+): ScoringValidationScopeEnum => {
+  if (/\bstörf\b|\bStarfið\b/.test(message)) {
+    return /vísar í úthlutun/.test(message)
+      ? ScoringValidationScopeEnum.ROLE_ASSIGNMENTS
+      : ScoringValidationScopeEnum.ROLES
   }
-
-  try {
-    assertWithinCapacity(parsed)
-  } catch (error) {
-    if (error instanceof BadRequestException) {
-      for (const message of messagesOf(error)) {
-        reasons.add(ScoringValidationScopeEnum.CRITERIA, message)
-      }
-    } else {
-      throw error
-    }
+  if (/undirviðmið/i.test(message)) {
+    return ScoringValidationScopeEnum.SUB_CRITERIA
   }
-
-  const issues = new PayloadIssueBag()
-  collectParsedPayloadIntegrity(parsed, issues)
-
-  for (const issue of issues.list) {
-    if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
-    if (reasons.all().some((r) => r.message === issue.message)) continue
-    reasons.add(toValidationScope(issue.scope), issue.message)
+  if (/þrep/i.test(message)) {
+    return ScoringValidationScopeEnum.STEPS
   }
+  return ScoringValidationScopeEnum.CRITERIA
 }
 
 const toValidationScope = (
@@ -168,69 +143,145 @@ const messagesOf = (error: BadRequestException): string[] => {
   return Array.isArray(message) ? message : [message]
 }
 
+/**
+ * Makes a model expandable without changing what it says.
+ *
+ * The expander is strict on purpose — at filing, an assignment that does not
+ * resolve must refuse rather than score something approximate. But a validator
+ * that cannot expand cannot run the gate at all, and the first version of this
+ * reported the expansion failure and returned: one dangling assignment then hid
+ * every other reason, against a contract promising "every reason at once". The
+ * case is not hypothetical — deleting a criterion leaves the jobs assigned on
+ * its sub-criteria dangling, so the most ordinary edit there is silenced the
+ * missing-mandatory-type reason it should have produced.
+ *
+ * So unresolvable assignments are reported and then dropped, and the gate runs
+ * over what is left. Dropping only ever removes reasons the gate would give, and
+ * each dropped one is stated here first.
+ */
+const sanitiseForGate = (
+  criteria: ScoringCriterionDto[],
+  roles: ScoringRoleDto[],
+  reasons: ReasonBag,
+): { criteria: ScoringCriterionDto[]; roles: ScoringRoleDto[] } => {
+  const subIds = new Set<string>()
+  const stepIds = new Set<string>()
+  const seenPairs = new Set<string>()
+  const keptCriteria: ScoringCriterionDto[] = []
+
+  for (const criterion of criteria) {
+    const subCriteria = []
+    for (const sub of criterion.subCriteria) {
+      const pair = `${criterion.title}\0${sub.title}`
+      if (seenPairs.has(pair)) {
+        // The pipeline keys on this pair and would collapse the two rows, so
+        // the expander refuses it. Reported, then held back so everything else
+        // about the model can still be judged.
+        reasons.add(
+          ScoringValidationScopeEnum.SUB_CRITERIA,
+          `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
+        )
+        continue
+      }
+      seenPairs.add(pair)
+      subCriteria.push(sub)
+      subIds.add(sub.id)
+      for (const step of sub.steps) stepIds.add(step.id)
+    }
+    keptCriteria.push({ ...criterion, subCriteria })
+  }
+
+  const keptRoles = roles.map((role) => {
+    const stepAssignments = role.stepAssignments.filter((assignment) => {
+      const resolves =
+        subIds.has(assignment.subCriterionId) && stepIds.has(assignment.stepId)
+      if (!resolves) {
+        reasons.add(
+          ScoringValidationScopeEnum.ROLE_ASSIGNMENTS,
+          `Starfið „${role.title}“ vísar í úthlutun sem er ekki lengur til í starfsmatinu`,
+        )
+      }
+      return resolves
+    })
+
+    return { ...role, stepAssignments }
+  })
+
+  return { criteria: keptCriteria, roles: keptRoles }
+}
+
+/**
+ * Runs the submission's own gate over the model, expanded with no employees,
+ * and folds everything it finds into the reason list.
+ *
+ * Nothing is deduped against the hand-written rules above, and nothing needs to
+ * be: every rule this gate covers was deleted from that set rather than stated
+ * twice. A dedupe on message text could not have worked anyway — the two were
+ * worded differently on purpose, so the comparison never matched and each
+ * double-covered fault was reported twice under two scopes.
+ */
+const runFilingGate = (
+  criteria: ScoringCriterionDto[],
+  roles: ScoringRoleDto[],
+  reasons: ReasonBag,
+): void => {
+  const clean = sanitiseForGate(criteria, roles, reasons)
+
+  let parsed
+  try {
+    parsed = expandToParsedPayload(clean, [])
+  } catch (error) {
+    if (!(error instanceof BadRequestException)) throw error
+    for (const message of messagesOf(error)) {
+      reasons.add(scopeForMessage(message), message)
+    }
+    return
+  }
+
+  // Capacity first, then the two halves of the gate — and all three run, since
+  // a ceiling breach says nothing about whether the tree is also malformed.
+  try {
+    assertWithinCapacity(parsed)
+  } catch (error) {
+    if (!(error instanceof BadRequestException)) throw error
+    for (const message of messagesOf(error)) {
+      reasons.add(scopeForMessage(message), message)
+    }
+  }
+
+  const issues = new PayloadIssueBag()
+  collectParsedPayloadIntegrity(parsed, issues)
+  collectParsedPayloadSemantics(parsed, issues)
+
+  for (const issue of issues.list) {
+    if (!MODEL_LEVEL_SCOPES.has(issue.scope)) continue
+    reasons.add(toValidationScope(issue.scope), issue.message)
+  }
+}
+
 export const validateScoringModel = (
   model: ScoringModelShape,
 ): ScoringModelValidationDto => {
   const reasons = new ReasonBag()
   const { criteria, roles } = model
 
-  const presentTypes = new Set(criteria.map((c) => c.type))
-  for (const required of MANDATORY_JOB_BASED_CRITERIA) {
-    if (!presentTypes.has(required)) {
-      reasons.add(
-        ScoringValidationScopeEnum.CRITERIA,
-        `Skyldubundið starfsbundið viðmið „${required}“ vantar — hvert starfsmat verður að innihalda öll fjögur`,
-      )
-    }
-  }
-
-  const personalCount = criteria.filter(
-    (c) => c.type === ReportCriterionTypeEnum.PERSONAL,
-  ).length
-  if (personalCount > MAX_PERSONAL_CRITERIA) {
-    reasons.add(
-      ScoringValidationScopeEnum.CRITERIA,
-      `Að hámarki ${MAX_PERSONAL_CRITERIA} einstaklingsbundið viðmið er leyft; fjöldi var ${personalCount}`,
-    )
-  }
-
   const allSubs = criteria.flatMap((c) => c.subCriteria)
   const labels = labelFor(criteria)
   const label = (id: string): string => labels.get(id) ?? id
 
-  // The submission pipeline keys on `(criterionTitle, subTitle)`, so two
-  // sub-criteria sharing both titles collapse onto one key there. Titles are
-  // unconstrained here, which makes that reachable — and without this rule the
-  // model reads VALID and the expansion refuses it at filing instead, which is
-  // the "previews clean, rejected at submit" failure this validation exists to
-  // prevent.
-  const seenPairs = new Set<string>()
-  for (const criterion of criteria) {
-    for (const sub of criterion.subCriteria) {
-      const pair = `${criterion.title}\0${sub.title}`
-      if (seenPairs.has(pair)) {
-        reasons.add(
-          ScoringValidationScopeEnum.SUB_CRITERIA,
-          `Tvö undirviðmið heita „${criterion.title} / ${sub.title}“; heitin verða að vera einkvæm`,
-        )
-      }
-      seenPairs.add(pair)
-    }
-  }
-
+  // What remains hand-written is only what the filing gate does NOT check.
+  //
+  // The mandatory criterion types, the personal-criterion cap, the weight
+  // total and the role-assignment completeness rules all used to be restated
+  // here. They are `collectParsedPayloadSemantics`' rules, `runFilingGate` now
+  // runs that too, and its `subCriterionLabel` renders the same
+  // `Ábyrgð / Mannaforráð` form these did — so restating them bought nothing
+  // and cost a second copy to drift.
   if (allSubs.length === 0) {
     reasons.add(
       ScoringValidationScopeEnum.SUB_CRITERIA,
       'Starfsmatið hefur engin undirviðmið — ekkert er hægt að meta',
     )
-  } else {
-    const total = sum(allSubs.map((s) => s.weight))
-    if (!approximately(total, 100)) {
-      reasons.add(
-        ScoringValidationScopeEnum.SUB_CRITERIA,
-        `Vægi undirviðmiða leggst saman í ${total}%, á að vera 100%`,
-      )
-    }
   }
 
   // A step's score is (stepOrder / numSteps) x weight x SCORE_FACTOR, so the
@@ -245,16 +296,11 @@ export const validateScoringModel = (
       continue
     }
 
-    // The same bounds `assertParsedPayloadIntegrity` enforces on every filing
-    // path. Without this a scale of one step, or of twelve, reads VALID here
-    // and is refused at submit — the precise failure this validation exists to
-    // prevent.
-    if (sub.steps.length < MIN_STEPS || sub.steps.length > MAX_STEPS) {
-      reasons.add(
-        ScoringValidationScopeEnum.STEPS,
-        `Undirviðmiðið „${label(sub.id)}“ hefur ${sub.steps.length} þrep; leyfilegt bil er ${MIN_STEPS}–${MAX_STEPS}`,
-      )
-    }
+    // The scale-length bound is NOT restated here: `runFilingGate` reports it
+    // from `collectParsedPayloadIntegrity`, which is the rule the filing
+    // actually applies. Stating it in both places produced the same fault twice
+    // under two scopes, because the two are deliberately worded differently and
+    // a dedupe on message text could never match them.
 
     const orders = sub.steps.map((s) => s.stepOrder).sort((a, b) => a - b)
     const contiguous = orders.every((order, i) => order === i + 1)
@@ -264,53 +310,6 @@ export const validateScoringModel = (
         `Þrep undirviðmiðsins „${label(sub.id)}“ verða að vera samfelld frá 1; fundust ${orders.join(', ')}`,
       )
     }
-  }
-
-  // A role owns the job-based criteria: exactly one assignment per role per
-  // job-based sub-criterion. Personal sub-criteria belong to the employee and a
-  // role must not be assigned on them.
-  const jobBasedSubIds = new Set(
-    criteria
-      .filter((c) => c.type !== ReportCriterionTypeEnum.PERSONAL)
-      .flatMap((c) => c.subCriteria)
-      .map((s) => s.id),
-  )
-  const personalSubIds = new Set(
-    criteria
-      .filter((c) => c.type === ReportCriterionTypeEnum.PERSONAL)
-      .flatMap((c) => c.subCriteria)
-      .map((s) => s.id),
-  )
-
-  for (const role of roles) {
-    const assigned = new Set(
-      role.stepAssignments.map((a) => a.subCriterionId),
-    )
-
-    for (const subId of jobBasedSubIds) {
-      if (!assigned.has(subId)) {
-        reasons.add(
-          ScoringValidationScopeEnum.ROLE_ASSIGNMENTS,
-          `Starfið „${role.title}“: vantar úthlutun fyrir „${label(subId)}“`,
-        )
-      }
-    }
-
-    for (const assignment of role.stepAssignments) {
-      if (personalSubIds.has(assignment.subCriterionId)) {
-        reasons.add(
-          ScoringValidationScopeEnum.ROLE_ASSIGNMENTS,
-          `Starfið „${role.title}“: „${label(assignment.subCriterionId)}“ er einstaklingsbundið viðmið og er metið á starfsmann, ekki starf`,
-        )
-      }
-    }
-  }
-
-  if (roles.length === 0 && allSubs.length > 0) {
-    reasons.add(
-      ScoringValidationScopeEnum.ROLES,
-      'Starfsmatið hefur engin störf — ekkert er hægt að meta á starf',
-    )
   }
 
   // **The backstop, and the reason this validator can no longer be weaker than

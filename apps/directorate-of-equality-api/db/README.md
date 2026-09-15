@@ -640,7 +640,7 @@ Bucket placement is informational only, and always was. Compliance is decided by
 | `CompanySizeEnum`         | `UNKNOWN`, `SMALL`, `MEDIUM`, `LARGE`                                                                                                                                                                                                                                                                          |
 | `CompanyEventTypeEnum`    | `CREATED`, `STATUS_CHANGED`, `FINES_STARTED`, `FINES_STOPPED`, `QUARANTINED`, `UNQUARANTINED`, `EQUALITY_REPORT_DEADLINE_REMINDER_SENT`, `SALARY_REPORT_DEADLINE_REMINDER_SENT`, `EQUALITY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `SALARY_REPORT_DEADLINE_REMINDER_NO_EMAIL`, `API_KEY_ISSUED`, `API_KEY_REVOKED` |
 | `ApiKeyOriginEnum`        | `ISLAND_IS`, `ADMIN`                                                                                                                                                                                                                                                                                           |
-| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`                                                                                                                                                                                                                                                              |
+| `ApiKeyScopeEnum`         | `salary:submit`, `equality:submit`, `report:read`, `scoring:write`                                                                                                                                                                                                                                                              |
 | `CompanyReminderTierEnum` | `SIX_MONTHS`, `TWO_MONTHS`, `TWO_WEEKS`, `DUE`                                                                                                                                                                                                                                                                 |
 | `CommentVisibilityEnum`   | `INTERNAL`, `EXTERNAL`                                                                                                                                                                                                                                                                                         |
 | `CommentAuthorKindEnum`   | `REVIEWER`, `COMPANY`                                                                                                                                                                                                                                                                                          |
@@ -782,7 +782,7 @@ the one weight that reaches a score.
 | `scoring_criterion_id` | `fk → scoring_criterion` (cascade) |
 | `title`                | `text`                             |
 | `description`          | `text`                             |
-| `weight`               | `numeric(6,4)`                     |
+| `weight`               | `numeric(7,4)` (0–100, bounded on the DTO) |
 
 No two sub-criteria may share both their own title and their parent's: the submission
 pipeline keys on `(criterionTitle, subTitle)` and would collapse them onto one row.

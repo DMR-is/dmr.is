@@ -364,15 +364,6 @@ describe('ScoringModelService', () => {
       )
     })
 
-    it('clears the scale and writes nothing when given an empty array', async () => {
-      await service.setSteps(COMPANY, MODEL_ID, CRITERION_ID, SUB_ID, {
-        steps: [],
-      })
-
-      expect(stepDestroy).toHaveBeenCalled()
-      expect(stepBulkCreate).not.toHaveBeenCalled()
-    })
-
     it('refuses a sub-criterion outside the named criterion', async () => {
       subFindOne.mockResolvedValue(null)
 
@@ -545,26 +536,22 @@ describe('ScoringModelService', () => {
       return find(call.include as unknown[])
     }
 
-    it('orders the two top-level collections by insertion', async () => {
-      await service.getModel(COMPANY, MODEL_ID)
-
-      expect(modelFindOne.mock.calls[0][0].order).toEqual([
-        [expect.objectContaining({ as: 'criteria' }), 'createdAt', 'ASC'],
-        [expect.objectContaining({ as: 'roles' }), 'createdAt', 'ASC'],
-      ])
-    })
-
-    // A top-level `order` cannot reach a separately-fetched include, so these
-    // two carry their own — and without `separate` the two hasMany branches
-    // join into a cartesian product.
-    it.each(['subCriteria', 'stepAssignments'])(
-      'fetches %s separately, with its own order',
+    // Every collection is fetched separately, so nothing joins to anything and
+    // no branch multiplies another. A top-level `order` cannot reach a
+    // separately-fetched include, so each carries its own — with `id` as the
+    // tiebreak, because a `bulkCreate` stamps one `createdAt` across the set
+    // and ordering on it alone would be an all-ties sort.
+    it.each(['criteria', 'roles', 'subCriteria', 'stepAssignments'])(
+      'fetches %s separately, ordered deterministically',
       async (as) => {
         await service.getModel(COMPANY, MODEL_ID)
 
         expect(includeFor(as)).toMatchObject({
           separate: true,
-          order: [['createdAt', 'ASC']],
+          order: [
+            ['createdAt', 'ASC'],
+            ['id', 'ASC'],
+          ],
         })
       },
     )

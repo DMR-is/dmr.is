@@ -105,6 +105,19 @@ export const expandToParsedPayload = (
         )
       }
 
+      // The check the employee branch below already made, and this one did not.
+      // A `stepId` belonging to a different sub-criterion resolved to a real
+      // þrep, and the expansion emitted the *named* sub-criterion at the other
+      // one's `stepOrder` — no error, a silently wrong score feeding the
+      // wage-gap regression. Nothing here made that unreachable: it was
+      // prevented only by a write-time guard in the service, in another file,
+      // with nothing tying the two together.
+      if (step.subCriterionId !== assignment.subCriterionId) {
+        throw new BadRequestException(
+          `Starfið „${role.title}“: þrepið tilheyrir ekki undirviðmiðinu „${sub.criterionTitle} / ${sub.subTitle}“`,
+        )
+      }
+
       return {
         criterionTitle: sub.criterionTitle,
         subTitle: sub.subTitle,

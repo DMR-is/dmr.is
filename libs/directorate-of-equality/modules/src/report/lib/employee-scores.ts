@@ -124,13 +124,12 @@ const subPairKey = (criterionTitle: string, subTitle: string) =>
  *
  * Runs before anything is walked, so an over-large payload costs three length
  * comparisons.
- */
-/**
- * Exported so the scoring model's validator can run the *real* capacity rules
- * rather than restate them. It re-stated them once and drifted: `MAX_CRITERIA`
- * is 5, four mandatory job-based types plus one personal already sit at the
- * cap, and a model that split one criterion in two reported VALID and then
- * threw here on both preview and submit.
+ *
+ * **Exported** so the scoring model's validator runs these rules rather than
+ * restating them. It restated them once and drifted: `MAX_CRITERIA` is 5, four
+ * mandatory job-based types plus one personal already sit at the cap, and a
+ * model that split one criterion in two reported VALID and then threw here on
+ * both preview and submit.
  */
 export function assertWithinCapacity(parsed: ParsedReportDto): void {
   if (parsed.criteria.length > MAX_CRITERIA) {

@@ -1,4 +1,7 @@
-import { assertParsedPayloadValid } from '../../report/lib/employee-scores'
+import {
+  assertParsedPayloadValid,
+  computeEmployeeScores,
+} from '../../report/lib/employee-scores'
 import { GenderEnum } from '../../report/models/report.model'
 import { ReportCriterionTypeEnum } from '../../report-criterion/models/report-criterion.model'
 import { PartnerEmployeeDto } from '../dto/partner-salary-payload.dto'
@@ -98,13 +101,18 @@ describe('a VALID scoring model expands into a payload the filing gate accepts',
     const parsed = expandToParsedPayload(fileableModel(), employees(8))
     const scoreByKey = assertParsedPayloadValid(parsed)
 
-    // Four sub-criteria at 25%, each assigned at þrep 2 of 3:
-    // 4 x (2/3 x 25 x 10) = 666.67
-    const total = [...scoreByKey.entries()]
-      .filter(([, score]) => score > 0)
-      .map(([, score]) => score)
+    // The map is keyed per þrep, so its maximum is the top þrep of one
+    // sub-criterion — (3/3) x 25 x 10 = 250 — not an employee's total. The
+    // comment here used to compute 4 x (2/3 x 25 x 10) = 666.67, a different
+    // quantity from the one asserted; that total is an employee's score and is
+    // reached through `computeEmployeeScores`, which this test never calls.
+    const perStep = [...scoreByKey.values()].filter((score) => score > 0)
 
-    expect(Math.max(...total)).toBeCloseTo((3 / 3) * 25 * 10, 5)
+    expect(Math.max(...perStep)).toBeCloseTo((3 / 3) * 25 * 10, 5)
+
+    // And the employee total the comment was reaching for, computed properly.
+    const scores = computeEmployeeScores(parsed, scoreByKey)
+    expect([...scores.values()][0]).toBeCloseTo(4 * (2 / 3) * 25 * 10, 5)
   })
 
   describe('what the validator now refuses, because the gate does', () => {
@@ -165,9 +173,13 @@ describe('a VALID scoring model expands into a payload the filing gate accepts',
     })
   })
 
-  // The bound that a sum check can never catch: 60 + 60 - 20 totals 100, so
-  // every weight rule passed while the negative one inverted its own scale.
-  it('cannot express a negative weight, because the DTO refuses it', () => {
+  // Named for what it actually asserts. It used to be called "cannot express a
+  // negative weight, because the DTO refuses it", which is the opposite of what
+  // it does — it proves nothing downstream rejects a negative weight, which is
+  // *why* the bound has to sit on the DTO. The bound itself is pinned in
+  // `scoring-dto-bounds.spec.ts`; a reader auditing this file would otherwise
+  // have believed it was pinned here.
+  it('nothing downstream rejects a negative weight — which is why the DTO must', () => {
     const model = fileableModel()
     model.criteria[0].subCriteria[0].weight = 60
     model.criteria[1].subCriteria[0].weight = 60

@@ -298,7 +298,7 @@ It is authored once and reused, so it is **not part of a filing** — you send i
 id. A company's model rarely changes between filings, and re-transmitting a
 hundred step descriptions and a job-assignment matrix every year served nobody.
 
-What you send per filing is one row per employee: fifteen payroll fields, the id
+What you send per filing is one row per employee: fourteen payroll fields, the id
 of the job they hold, and their personal-criterion assessment. Everything but
 that last part is data your payroll system already holds.
 

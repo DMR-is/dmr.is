@@ -32,11 +32,11 @@ export class ScoringValidationReasonDto {
     description: [
       'Which part of the model the reason is about, so it can be shown against the right thing rather than parsed out of the message.',
       '',
-      '- `CRITERIA` — the criteria themselves: a mandatory job-based type with no criterion, or more than one personal criterion.',
-      '- `SUB_CRITERIA` — the sub-criteria as a set: none at all, or weights that do not total 100 across the whole model.',
-      '- `STEPS` — one sub-criterion’s scale: no steps, or step orders that are not contiguous from 1.',
-      '- `ROLES` — the jobs as a set: currently only that there are none.',
-      '- `ROLE_ASSIGNMENTS` — one job’s step assignments: a job-based sub-criterion it is not assigned on, or an assignment onto a personal sub-criterion, which is scored per employee and never per job.',
+      '- `CRITERIA` — the criteria themselves: a mandatory job-based type with no criterion, more than one personal criterion, two criteria sharing a title, or more criteria than a model may hold.',
+      '- `SUB_CRITERIA` — the sub-criteria as a set: none at all, weights that do not total 100 across the whole model, two sharing a title under the same criterion, or more than a criterion — or the model — may hold.',
+      '- `STEPS` — one sub-criterion’s scale: no þrep, a length outside the permitted range, or orders that are not contiguous from 1.',
+      '- `ROLES` — the jobs as a set: none at all, two sharing a title, or more than a model may hold.',
+      '- `ROLE_ASSIGNMENTS` — one job’s step assignments: a job-based sub-criterion it is not assigned on, an assignment onto a personal sub-criterion (scored per employee, never per job), or one naming a sub-criterion or þrep that no longer exists.',
     ].join('\n'),
     example: 'SUB_CRITERIA',
   })

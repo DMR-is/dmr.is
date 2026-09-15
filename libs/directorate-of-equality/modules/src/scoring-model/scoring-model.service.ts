@@ -77,6 +77,16 @@ export class ScoringModelService implements IScoringModelService {
           model: ScoringCriterionModel,
           as: 'criteria',
           required: false,
+          // `separate` here rather than only a level down. `criteria` and
+          // `roles` are the two independent hasMany branches, so joining them
+          // to each other returns their product — the deep rows were the
+          // expensive part but these two still multiplied. Each is now its own
+          // query.
+          separate: true,
+          order: [
+            ['createdAt', 'ASC'],
+            ['id', 'ASC'],
+          ],
           include: [
             {
               model: ScoringSubCriterionModel,
@@ -92,7 +102,12 @@ export class ScoringModelService implements IScoringModelService {
               // every mutation since each runs this as its ownership gate and
               // then again through `reload`.
               separate: true,
-              order: [['createdAt', 'ASC']],
+              // Same reason as the assignments below: sub-criteria created in
+              // one call share a timestamp.
+              order: [
+                ['createdAt', 'ASC'],
+                ['id', 'ASC'],
+              ],
               include: [
                 {
                   model: ScoringSubCriterionStepModel,
@@ -107,30 +122,34 @@ export class ScoringModelService implements IScoringModelService {
           model: ScoringRoleModel,
           as: 'roles',
           required: false,
+          separate: true,
+          order: [
+            ['createdAt', 'ASC'],
+            ['id', 'ASC'],
+          ],
           include: [
             {
               model: ScoringRoleStepModel,
               as: 'stepAssignments',
               required: false,
               separate: true,
-              // The one collection that had no ordering at all, and no
-              // compensating sort in `toDto` either — so a job's assignments
-              // reshuffled between identical reads.
-              order: [['createdAt', 'ASC']],
+              // `id` as the tiebreak, not decoration: these rows are written
+              // by one `bulkCreate`, so every `createdAt` in a job's set is the
+              // same millisecond and ordering on it alone is an all-ties sort —
+              // the reshuffle would have survived the fix for it.
+              order: [
+                ['createdAt', 'ASC'],
+                ['id', 'ASC'],
+              ],
             },
           ],
         },
       ],
-      // Without ordering the tree comes back however Postgres returns it, which
-      // shifts between identical calls and reshuffles a caller's list for no
-      // reason. The two `separate: true` collections carry their own `order`
-      // above — a top-level clause cannot reach a separately-fetched include —
-      // and þrep are sorted in `toDto` by `stepOrder`, which is their own
-      // meaning rather than an arbitrary tie-break.
-      order: [
-        [{ model: ScoringCriterionModel, as: 'criteria' }, 'createdAt', 'ASC'],
-        [{ model: ScoringRoleModel, as: 'roles' }, 'createdAt', 'ASC'],
-      ],
+      // Every collection carries its own `order` above, because a top-level
+      // clause cannot reach a separately-fetched include. þrep are sorted in
+      // `toDto` by `stepOrder`, which is their own meaning rather than a
+      // tie-break.
+
     })
 
     if (!model) {
@@ -393,17 +412,19 @@ export class ScoringModelService implements IScoringModelService {
       where: { scoringSubCriterionId: subCriterionId },
     })
 
-    if (input.steps.length > 0) {
-      await this.stepModel.bulkCreate(
-        input.steps.map((step, index) => ({
-          scoringSubCriterionId: subCriterionId,
-          // Position is the þrep number. Deriving it here is what makes a gap
-          // impossible rather than something the validator has to catch.
-          stepOrder: index + 1,
-          description: step.description,
-        })),
-      )
-    }
+    // No empty-array branch: `SetScoringStepsDto` carries
+    // `@ArrayMinSize(MIN_STEPS)`, so the only route that reaches this method
+    // cannot deliver one. A clear-to-empty path that nothing can call is a path
+    // nothing keeps honest.
+    await this.stepModel.bulkCreate(
+      input.steps.map((step, index) => ({
+        scoringSubCriterionId: subCriterionId,
+        // Position is the þrep number. Deriving it here is what makes a gap
+        // impossible rather than something the validator has to catch.
+        stepOrder: index + 1,
+        description: step.description,
+      })),
+    )
 
     return this.reload(company, modelId)
   }
