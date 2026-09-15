@@ -36,8 +36,10 @@ search reports the tree clean when it is not.
 ## 2. Decorator _arguments_ - keep them out of the cycle
 
 `@ApiDto(TypeDto)` reads `TypeDto` eagerly too, and no alias can help: the class
-is the argument. DTO classes whose decorators name another model's DTO therefore
-live in a `*.dto.ts` that nothing in the cycle imports at value level:
+is the argument. The rule covers **any class or enum argument** - `@ApiEnum` is
+the same read, and the `advert-html.ts` case below was an enum, not a DTO. DTO
+classes whose decorators name another module's class or enum therefore live in a
+`*.dto.ts` that nothing in the cycle imports at value level:
 `type-categories.dto.ts`, `advert.dto.ts`, `application.dto.ts`,
 `comment.dto.ts`, `foreclosure.dto.ts`.
 
@@ -47,14 +49,20 @@ the part that is easy to get wrong. `ApiDto` and `ApiOptionalDto` store
 `type: () => classRef`. That inner thunk defers nothing that matters: a decorator
 is a function call, so `@ApiDtoArray(CommentDto)` evaluates `CommentDto` at
 decoration time exactly like `@ApiDto(CommentDto)` does, and the thunk only
-defers dereferencing a parameter that is already bound. What *is* lazy is a
+defers dereferencing a parameter that is already bound. What _is_ lazy is a
 **call-site** thunk - `@BelongsTo(() => CaseModel)`, `@Scopes(() => ({ ... }))`,
 `@ForeignKey(() => ApplicationModel)` - where the identifier sits inside the
 arrow and is not read until sequelize resolves it. Do not treat an `*Array` site
 as safe; `foreclosure.model.ts` was broken by exactly that assumption.
 
 **A bare `@ApiProperty({ type: X })` is the same defect**, and a grep for
-`@Api*Dto(` does not match it. `comment.model.ts` carried one.
+`@Api*Dto(` does not match it. `comment.model.ts` carried one. Grep
+`type: [A-Z]\w*Dto\b` (excluding `() =>`) as well as `@Api(Optional)?Dto\(`, or
+the count will be an undercount - as every count in #1506 was.
+
+`@ApiEnum(SomeEnum)` is eager for the same reason. `advert.dto.ts` and
+`application.dto.ts` each carry one today; both are safe only because neither
+file is in a cycle with the module the enum comes from.
 
 **Module-level constants count too.** `core/html/advert-html.ts` computed
 `const DEFAULT_VERSION = AdvertVersionEnum.A` at module scope, where the enum
@@ -88,7 +96,7 @@ So when auditing:
 
 ### The regression guard
 
-Reading one site by hand does not prove much: a cycle only misfires for *some*
+Reading one site by hand does not prove much: a cycle only misfires for _some_
 entry orders, and the order a spec happens to use is usually the safe one. So
 `model-cycle.spec.ts` brute-forces it - for each `*.model.ts` / `*.dto.ts` in
 this directory it resets the module registry, requires that file **first**, and
@@ -110,7 +118,7 @@ the same file, 22 cross files that do not import back. DoE keeps its DTOs in
 `*.dto.ts` files separate from the model layer already, which is why.
 
 One latent case is worth knowing about:
-`libs/directorate-of-equality/modules/src/report/dto/report-list-item.dto.ts` *is*
+`libs/directorate-of-equality/modules/src/report/dto/report-list-item.dto.ts` _is_
 inside a cycle with `report/models/report.model.ts` (it imports enums from it at
 value level), but its only eager argument, `UserDto`, comes from outside that
 cycle. Safe today; unsafe the moment an eager `@Api*Dto` there names an in-cycle

@@ -22,10 +22,14 @@ describe('type <-> type-categories model cycle', () => {
     expect(meta.type).toBe(expected)
   })
 
-  // `TypeWithCategoriesDto` moved out of the cycle for the same reason, but it
-  // carries `@ApiDtoArray`, which stores `() => classRef` rather than the class.
-  // The thunk defers the read, so this site was never the eager defect - pinned
-  // so that swapping it to an eager `@ApiDto` cannot pass unnoticed.
+  // `TypeWithCategoriesDto` moved out of the cycle for the same reason. It
+  // carries `@ApiDtoArray`, which stores `() => classRef` rather than the class -
+  // but that thunk is NOT what keeps this site safe. A decorator is a function
+  // call, so `@ApiDtoArray(CategoryDto)` reads `CategoryDto` at the call site
+  // exactly like `@ApiDto` would; the stored thunk only defers dereferencing an
+  // already-bound parameter. This site is safe because `type-categories.dto.ts`
+  // sits outside the cycle - the same reason `foreclosure.dto.ts` had to be
+  // extracted once its `@ApiDtoArray` site was found inside one. See models.md.
   it('resolves the real class through the array thunk on categories', () => {
     const meta = Reflect.getMetadata(
       'swagger/apiModelProperties',
@@ -160,11 +164,44 @@ const EAGER_SITES: Array<[string, string, string, string, string]> = [
     './category.model',
     'CategoryDto',
   ],
+  // `type-categories.dto.ts` - the file the original #1505 defect lived in. The
+  // hand-written block at the top of this file pins these too, but only for one
+  // import order; these rows put them through every entry point.
+  [
+    './type-categories.dto',
+    'TypeCategoryDto',
+    'type',
+    './type.model',
+    'TypeDto',
+  ],
+  [
+    './type-categories.dto',
+    'TypeCategoryDto',
+    'category',
+    './category.model',
+    'CategoryDto',
+  ],
+  [
+    './type-categories.dto',
+    'TypeWithCategoriesDto',
+    'categories',
+    './category.model',
+    'CategoryDto',
+  ],
 ]
 
-/** `@ApiDtoArray` stores `() => classRef`; the eager variants store the class. */
-const resolveType = (meta: { isArray?: boolean; type: unknown }) =>
-  meta.isArray ? (meta.type as () => unknown)() : meta.type
+/**
+ * `@ApiDtoArray` stores `() => classRef`; the eager variants store the class.
+ * Branch on "is this a non-class function", not on `isArray` - a plain
+ * `@ApiProperty({ type: X, isArray: true })` stores the class itself, and
+ * calling it would throw "Class constructor cannot be invoked without 'new'"
+ * instead of failing with a readable assertion.
+ */
+const resolveType = (meta: { type: unknown }) =>
+  typeof meta.type === 'function' &&
+  !(meta.type as { prototype?: unknown }).prototype
+    ? (meta.type as () => unknown)()
+    : meta.type
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 describe('model cycle, entered from every direction', () => {
@@ -194,6 +231,47 @@ describe('model cycle, entered from every direction', () => {
         // `OmitType` projection of it. See models.md.
         expect(meta).toBeDefined()
         expect(resolveType(meta)).toBe(require(argModule)[argName])
+      }
+
+      // The table above is hand-maintained, and a hand-maintained list is
+      // precisely what let `comment.model.ts` and `foreclosure.model.ts` go
+      // unnoticed. So sweep the whole directory too - registration is not
+      // required for a new eager site to be covered.
+      //
+      // Under `@swc/jest` the signal is almost always the require above
+      // throwing, not this assertion: a read of a half-initialised binding is
+      // a TDZ error, so `type` rarely survives as `undefined`. The sweep still
+      // earns its place by *touching* every class - it forces each module to
+      // load and each stored thunk to be called - and the `undefined` check is
+      // what would catch the tsc-side failure mode, which is silent.
+      for (const module of ENTRY_POINTS) {
+        for (const [className, declared] of Object.entries<any>(
+          require(`./${module}`),
+        )) {
+          if (typeof declared !== 'function' || !declared.prototype) continue
+
+          const properties: Array<string> =
+            Reflect.getMetadata(
+              'swagger/apiModelPropertiesArray',
+              declared.prototype,
+            ) ?? []
+
+          for (const raw of properties) {
+            const property = raw.replace(/^:/, '')
+            const meta = Reflect.getMetadata(
+              'swagger/apiModelProperties',
+              declared.prototype,
+              property,
+            )
+            if (!meta) continue
+
+            // A thunk that throws surfaces here as the TDZ error it is.
+            expect({
+              site: `${module}: ${className}.${property}`,
+              type: resolveType(meta),
+            }).not.toMatchObject({ type: undefined })
+          }
+        }
       }
     },
   )
