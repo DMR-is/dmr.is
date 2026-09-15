@@ -27,6 +27,12 @@ import { ReportEmployeeRoleModel } from './report-employee/models/report-employe
 import { ReportEmployeeRoleCriterionStepModel } from './report-employee/models/report-employee-role-criterion-step.model'
 import { ReportOutlierGroupModel } from './report-employee/models/report-outlier-group.model'
 import { ReportResultModel } from './report-result/models/report-result.model'
+import { ScoringCriterionModel } from './scoring-model/models/scoring-criterion.model'
+import { ScoringModelModel } from './scoring-model/models/scoring-model.model'
+import { ScoringRoleModel } from './scoring-model/models/scoring-role.model'
+import { ScoringRoleStepModel } from './scoring-model/models/scoring-role-step.model'
+import { ScoringSubCriterionModel } from './scoring-model/models/scoring-sub-criterion.model'
+import { ScoringSubCriterionStepModel } from './scoring-model/models/scoring-sub-criterion-step.model'
 import { UserModel } from './user/models/user.model'
 
 /**
@@ -115,4 +121,13 @@ export const DOE_MODELS = [
   LegacyReportModel,
   ConfigModel,
   ApiKeyModel,
+
+  // The company-scoped scoring model. Registered for both APIs like everything
+  // else here, though only the partner surface reads or writes it today.
+  ScoringModelModel,
+  ScoringCriterionModel,
+  ScoringSubCriterionModel,
+  ScoringSubCriterionStepModel,
+  ScoringRoleModel,
+  ScoringRoleStepModel,
 ]

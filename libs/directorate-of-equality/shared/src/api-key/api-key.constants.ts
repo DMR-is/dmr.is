@@ -27,6 +27,13 @@ export enum ApiKeyScopeEnum {
   SALARY_SUBMIT = 'salary:submit',
   EQUALITY_SUBMIT = 'equality:submit',
   REPORT_READ = 'report:read',
+  /**
+   * Author the company's scoring model (starfsmat). Separate from the submit
+   * scopes because it is a different act by a possibly different party: a
+   * payroll vendor that only files needs `report:read` to reference a model
+   * somebody else authored, and never this.
+   */
+  SCORING_WRITE = 'scoring:write',
 }
 
 /** Granted when a caller does not ask for a narrower set. */
@@ -34,4 +41,10 @@ export const DEFAULT_API_KEY_SCOPES: ApiKeyScopeEnum[] = [
   ApiKeyScopeEnum.SALARY_SUBMIT,
   ApiKeyScopeEnum.EQUALITY_SUBMIT,
   ApiKeyScopeEnum.REPORT_READ,
+  // `SCORING_WRITE` is deliberately NOT here. Its own docblock above says a
+  // vendor that only files needs `report:read` and never this — and the default
+  // set is what a caller gets when it asks for nothing, so including it handed
+  // every default key the ability to DELETE a company's whole starfsmat by
+  // cascade. Authoring a starfsmat is a different act by a possibly different
+  // party; a key that does it should have said so.
 ]

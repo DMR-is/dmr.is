@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   Inject,
   Param,
@@ -31,9 +32,9 @@ import { EqualityReportSummaryDto } from '@dmr.is/doe-modules/report'
 import { CreateReportResponseDto } from '@dmr.is/doe-modules/report-create'
 import { GetReportOutliersResponseDto } from '@dmr.is/doe-modules/report-employee'
 import {
-  SalaryAnalysisRequestDto,
   SalaryAnalysisResponseDto,
 } from '@dmr.is/doe-modules/report-statistics'
+import { PartnerSalaryPayloadFields } from '@dmr.is/doe-modules/scoring-model'
 import { ApiKeyScopeEnum } from '@dmr.is/doe-shared'
 import { PagingQuery } from '@dmr.is/shared-dto'
 
@@ -46,6 +47,7 @@ import { RequireApiScope } from '../../core/guards/api-key-scope/require-api-sco
 import { RequireApiScopeGuard } from '../../core/guards/api-key-scope/require-api-scope.guard'
 import { ApiKeyThrottlerGuard } from '../../core/guards/api-key-throttler/api-key-throttler.guard'
 import { PartnerCompanyGuard } from '../../core/guards/partner-company/partner-company.guard'
+import { PartnerSubmissionService } from '../submission/partner-submission.service'
 
 /**
  * The public third-party surface.
@@ -94,6 +96,7 @@ export class PartnerController {
   constructor(
     @Inject(IApplicationService)
     private readonly applicationService: IApplicationService,
+    private readonly submissionService: PartnerSubmissionService,
   ) {}
 
   @Get('company')
@@ -153,18 +156,26 @@ export class PartnerController {
   }
 
   @Post('reports/salary-analysis')
+  // Nothing is created here, so the bare `@Post` default of 201 was wrong on
+  // its own terms — and `PartnerResponse` documented 200 while Nest answered
+  // 201, so a generated client modelled neither.
+  @HttpCode(HttpStatus.OK)
   @RequireApiScope(ApiKeyScopeEnum.SALARY_SUBMIT)
   @PartnerResponse({
+    // `scoringModelId` reaches `findOwnedModel`, so an unknown or foreign id is
+    // the tenant-isolation 404 — the first refusal a vendor hits on a bad id,
+    // and it was undeclared on the one route the flow calls "not optional".
+    include404: true,
     operationId: 'analyzePartnerSalaryReport',
     type: SalaryAnalysisResponseDto,
     description:
-      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payload parses, that its criteria tree is accepted, and which employees will need an explanation — all of which the submission would otherwise refuse for the first time. Nothing is stored, so it can be called as often as the payload changes; when the answer looks right, the same payload goes to `POST /reports/salary`.',
+      'Validates a payload and runs the outlier analysis over it, without submitting anything. **This is the first half of the salary flow and is not optional in practice:** it is where a vendor learns that its payroll extract is accepted against the scoring model it names, and which employees will need an explanation — both of which the submission would otherwise refuse for the first time. It expands through the identical call the submission uses, so a payload that previews clean is the payload that gets filed. Nothing is stored, so it can be called as often as the extract changes; when the answer looks right, the same body goes to `POST /reports/salary`.',
   })
   analyzeSalaryReport(
-    @Body() input: SalaryAnalysisRequestDto,
+    @Body() input: PartnerSalaryPayloadFields,
     @CurrentCompany() company: CompanyDto,
   ): Promise<SalaryAnalysisResponseDto> {
-    return this.applicationService.salaryAnalysis(input, company)
+    return this.submissionService.salaryAnalysis(input, company)
   }
 
   @Post('reports/salary')
@@ -184,14 +195,14 @@ export class PartnerController {
         'Replayed. The `providerId` had already been used, so nothing was filed and `reportId` names the report that submission created earlier — the body just sent was not read. A corrected re-file needs a NEW `providerId`; see `replayed`.',
     },
     description:
-      'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means there is none, and section A has to happen first. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
+      'Files a salary report. The equality report it is audited against is resolved server-side — the company’s approved, in-force one, the same report `GET /reports/equality/active` returns — so it is not part of this body; a **404** means either there is none, or the `scoringModelId` names a model this key’s company does not own. `providerId` is the vendor’s own id for the submission and is stored namespaced by the company, so two vendors may use the same id freely. Idempotent: re-sending the same `providerId` for the same company returns the original `reportId` rather than filing twice, which makes a network retry safe. **A 503 means the write collided and should be retried** — it does not mean the payload was wrong. A **409** means the company’s own state prevents filing right now: it is not active in the register, the renewal window is not open, or a previous report is still in review — the response says which.',
   })
   async submitSalaryReport(
     @Body() input: SubmitPartnerSalaryReportDto,
     @CurrentCompany() company: CompanyDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<CreateReportResponseDto> {
-    const result = await this.applicationService.submitSalary(input, company)
+    const result = await this.submissionService.submitSalary(input, company)
 
     return this.answerCreated(res, result)
   }

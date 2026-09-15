@@ -1,5 +1,7 @@
-import { OmitType } from '@nestjs/swagger'
+import { IntersectionType, OmitType } from '@nestjs/swagger'
 
+import { ParsedReportDto } from '../../report-excel/dto/parsed-report.dto'
+import { PartnerSalaryPayloadFields } from '../../scoring-model/dto/submit-partner-salary.dto'
 import { SubmitSalaryReportDto } from './submit-salary-report.dto'
 
 /**
@@ -24,13 +26,26 @@ import { SubmitSalaryReportDto } from './submit-salary-report.dto'
  *   validated it, nothing branched on it, and the back office displayed it as
  *   provenance.
  *
+ * - **`parsed`** — the scoring payload, which on this channel is assembled from
+ *   two things the caller *does* hold sensibly: `scoringModelId`, naming the
+ *   company's stored starfsmat, and a flat `employees[]` payroll extract. The
+ *   criteria tree, the þrep and the job step assignments never cross the wire:
+ *   they are the employer's, unchanged since the last filing, and a payroll
+ *   system does not hold them. The server expands the pair into the same
+ *   `ParsedReportDto` every other channel submits, so nothing downstream knows
+ *   a scoring model exists. See [[Directorate of Equality Scoring Model]].
+ *
  * `OmitType` rather than a hand-written class: the remaining twenty-odd fields
  * are the same contract island.is submits, and a copy would drift from it field
  * by field. What this surface subtracts is the whole statement here.
  */
-export class SubmitPartnerSalaryReportDto extends OmitType(
-  SubmitSalaryReportDto,
-  ['equalityReportId', 'importedFromExcel'] as const,
+export class SubmitPartnerSalaryReportDto extends IntersectionType(
+  OmitType(SubmitSalaryReportDto, [
+    'equalityReportId',
+    'importedFromExcel',
+    'parsed',
+  ] as const),
+  PartnerSalaryPayloadFields,
 ) {}
 
 /**
@@ -40,7 +55,11 @@ export class SubmitPartnerSalaryReportDto extends OmitType(
  * leaves them for the service to resolve — so one service method still serves
  * both and the submission rules cannot fork per channel.
  */
-export type SubmitSalaryReportInput = SubmitPartnerSalaryReportDto & {
+export type SubmitSalaryReportInput = Omit<
+  SubmitPartnerSalaryReportDto,
+  'scoringModelId' | 'employees'
+> & {
   equalityReportId?: string
   importedFromExcel?: boolean
+  parsed: ParsedReportDto
 }

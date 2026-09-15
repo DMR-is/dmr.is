@@ -8,9 +8,7 @@ export const SWAGGER_CONFIG: SetupSwaggerOptions[] = [
     swaggerDescription:
       'Public API for third-party submission of equality and salary reports. ' +
       'Intended for payroll and HR systems submitting on behalf of an employer, ' +
-      'authenticated with an API key the employer issues to them. ' +
-      'Reached over the public internet — unlike the island.is application API, ' +
-      'which is served over X-Road.',
+      'authenticated with an API key the employer issues to them.',
     tag: 'Partner API',
     modules: [PartnerSwaggerModule],
     autoTagControllers: true,

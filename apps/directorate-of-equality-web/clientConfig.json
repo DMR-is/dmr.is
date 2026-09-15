@@ -5500,10 +5500,15 @@
           },
           "scopes": {
             "type": "array",
-            "description": "Narrows what the key may do. Omit to grant the full set. An unrecognised scope is rejected rather than stored.",
+            "description": "What the key may do. Omit for the default set — `report:read`, `salary:submit` and `equality:submit`, which is everything a vendor needs to file. `scoring:write` is never granted implicitly and must be named here: it authors the company’s starfsmat, which is a different act from filing against one, and it carries a delete that cascades the whole model away. An unrecognised scope is rejected rather than stored.",
             "items": {
               "type": "string",
-              "enum": ["salary:submit", "equality:submit", "report:read"]
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
             }
           },
           "expiresAt": {
@@ -5529,7 +5534,12 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["salary:submit", "equality:submit", "report:read"]
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
             }
           },
           "createdAt": {
@@ -5570,7 +5580,12 @@
             "description": "What this key is permitted to do.",
             "items": {
               "type": "string",
-              "enum": ["salary:submit", "equality:submit", "report:read"]
+              "enum": [
+                "salary:submit",
+                "equality:submit",
+                "report:read",
+                "scoring:write"
+              ]
             }
           },
           "createdVia": {

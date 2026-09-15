@@ -1176,6 +1176,11 @@ export const companiesText = {
         expires1Year: '1 ár',
         expires2Years: '2 ár',
         expiresNever: 'Ótímabundinn',
+        scopingLabel: 'Heimildir',
+        scopingHint:
+          'Sjálfgefið fær lykillinn að lesa og skila skýrslum, sem er allt sem launakerfi þarf. Starfsmatsheimildin er til viðbótar og felur í sér að eyða starfsmati fyrirtækisins.',
+        scopeFilingOnly: 'Lesa og skila skýrslum',
+        scopeFilingAndScoring: 'Lesa, skila skýrslum og breyta starfsmati',
         createButton: 'Búa til lykil',
         cancelButton: 'Hætta við',
         createErrorToast: 'Villa við að búa til aðgangslykil',

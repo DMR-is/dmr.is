@@ -5,6 +5,7 @@ import { HttpStatus } from '@nestjs/common'
 import { IApplicationService } from '@dmr.is/doe-modules/application'
 import { CompanyDto } from '@dmr.is/doe-modules/company'
 
+import { PartnerSubmissionService } from '../submission/partner-submission.service'
 import { PartnerController } from './partner.controller'
 
 const COMPANY = { id: 'company-1', nationalId: '5555555555' } as CompanyDto
@@ -35,10 +36,10 @@ describe('PartnerController — the replay status split', () => {
     submitSalary = jest.fn()
     submitEquality = jest.fn()
 
-    controller = new PartnerController({
-      submitSalary,
-      submitEquality,
-    } as unknown as IApplicationService)
+    controller = new PartnerController(
+      { submitEquality } as unknown as IApplicationService,
+      { submitSalary } as unknown as PartnerSubmissionService,
+    )
   })
 
   describe('salary', () => {
