@@ -75,16 +75,17 @@ module.exports = {
       -- so a failure here says which assignments are cross-wired rather than
       -- leaving someone to find them by hand.
       DO $$
-      DECLARE bad int;
+      DECLARE bad int; ids text;
       BEGIN
-        SELECT count(*) INTO bad
+        SELECT count(*), string_agg(rs.id::text, ', ' ORDER BY rs.id)
+          INTO bad, ids
         FROM scoring_role_step rs
         JOIN scoring_sub_criterion_step st ON st.id = rs.scoring_sub_criterion_step_id
         WHERE st.scoring_sub_criterion_id IS DISTINCT FROM rs.scoring_sub_criterion_id;
 
         IF bad > 0 THEN
           RAISE EXCEPTION
-            '% scoring_role_step row(s) name a þrep belonging to a different sub-criterion; resolve them before this migration can add the composite FK', bad;
+            '% scoring_role_step row(s) name a þrep belonging to a different sub-criterion; resolve them before this migration can add the composite FK. Offending scoring_role_step.id: %', bad, ids;
         END IF;
       END $$;
 

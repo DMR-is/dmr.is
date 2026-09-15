@@ -539,6 +539,16 @@ export class ScoringModelService implements IScoringModelService {
   ): Promise<ScoringModelDto> {
     const model = await this.findOwnedModel(company, modelId)
 
+    // Before the payload is looked at, not after. A job that does not exist is a
+    // 404 whatever the body says, and validating first made that depend on the
+    // body: an unknown `roleId` sent with an assignment that also fails
+    // validation came back 400, while the same `roleId` with a clean body came
+    // back 404. Resolving the path first makes the status a fact about the URL.
+    //
+    // It also takes the `FOR UPDATE` before the work rather than after it, which
+    // is the order a lock is useful in.
+    await this.findOwnedRole(modelId, roleId)
+
     // An incomplete set is reported by the validator, not refused here. An
     // incoherent one is refused: it does not describe a model that could exist,
     // so accepting it would store a row nothing could ever score.
@@ -596,13 +606,21 @@ export class ScoringModelService implements IScoringModelService {
     // The lock in `findOwnedRole` serialises two callers replacing the *same
     // job's* assignments. It does not serialise this against a concurrent
     // `setSteps` on a sub-criterion these assignments name — that takes a
-    // different row's lock, and the composite FK added in
-    // m-20260915-scoring-index-and-fk turns the collision into a raw 500. The
-    // fix for that is ordering the two locks, which is a larger change than the
-    // race it closes; recorded here rather than implied by a comment that
-    // claims more than the lock delivers.
-    await this.findOwnedRole(modelId, roleId)
-
+    // different row's lock.
+    //
+    // That race is **pre-existing and unchanged by this PR**, which is worth
+    // saying because the composite FK looks like a plausible cause and is not.
+    // Raced against Postgres with and without m-20260915 applied; the outcome is
+    // identical either way and only the constraint's name differs:
+    //
+    //   scale replaced before the assignment inserts  →  23503, FK violation
+    //   the two flows cross each other's row locks    →  40P01, deadlock
+    //
+    // The first surfaces as a raw 500. The second Postgres detects and breaks
+    // itself after `deadlock_timeout`, killing this flow and letting `setSteps`
+    // commit. Closing it means ordering the two locks, which is a larger change
+    // than the race deserves; recorded here rather than implied by a comment
+    // that claims more than the lock delivers.
     await this.roleStepModel.destroy({ where: { scoringRoleId: roleId } })
 
     if (input.assignments.length > 0) {

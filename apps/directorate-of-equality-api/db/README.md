@@ -840,7 +840,7 @@ uniqueness can be a table constraint.
 
 The two step columns are **one composite foreign key**, not two single-column ones:
 
-```
+```sql
 FOREIGN KEY (scoring_sub_criterion_step_id, scoring_sub_criterion_id)
   REFERENCES scoring_sub_criterion_step (id, scoring_sub_criterion_id) ON DELETE CASCADE
 ```

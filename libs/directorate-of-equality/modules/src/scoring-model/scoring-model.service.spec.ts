@@ -549,6 +549,30 @@ describe('ScoringModelService', () => {
         }),
       ).rejects.toThrow(NotFoundException)
     })
+
+    // The case above passes `assignments: []`, which skips the validation loop
+    // entirely — so it held whichever side of the loop the lookup sat on, and
+    // the precedence was unpinned in both directions. A missing job together
+    // with a bad body is the case that actually distinguishes them.
+    it('reports a missing job as 404 even when the body is also invalid', async () => {
+      roleFindOne.mockResolvedValue(null)
+
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [{ subCriterionId: 'not-in-this-model', stepId: 'nope' }],
+        }),
+      ).rejects.toThrow(NotFoundException)
+    })
+
+    // The other direction: an existing job with a bad body is still a 400, so
+    // resolving the path first has not swallowed the payload rules.
+    it('still reports a bad body as 400 when the job does exist', async () => {
+      await expect(
+        service.setRoleStepAssignments(COMPANY, MODEL_ID, ROLE_ID, {
+          assignments: [{ subCriterionId: 'not-in-this-model', stepId: 'nope' }],
+        }),
+      ).rejects.toThrow(BadRequestException)
+    })
   })
 
   // `expandToParsedPayload` is the only code enforcing company ownership before
