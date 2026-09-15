@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import {
   BelongsTo,
   Column,
@@ -12,7 +13,9 @@ import { ApiDateTime, ApiString } from '@dmr.is/decorators'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 
 import { LegalGazetteModels } from '../core/constants'
+import type { AdvertModel as AdvertModelRef } from './advert.model'
 import { AdvertModel } from './advert.model'
+import type { StatusModel as StatusModelRef } from './status.model'
 import { StatusDto, StatusModel } from './status.model'
 
 export enum CommentTypeEnum {
@@ -155,10 +158,10 @@ export class CommentModel extends ParanoidModel<
   comment?: string
 
   @BelongsTo(() => AdvertModel)
-  advert!: AdvertModel
+  advert!: AdvertModelRef
 
   @BelongsTo(() => StatusModel)
-  status!: StatusModel
+  status!: StatusModelRef
 
   static fromModel(model: CommentModel): CommentDto {
     return {

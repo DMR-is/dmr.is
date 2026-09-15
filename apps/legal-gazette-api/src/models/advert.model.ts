@@ -1,3 +1,4 @@
+// Association annotations use a type-only alias - see `models.md`.
 import { BulkCreateOptions } from 'sequelize'
 import {
   BeforeBulkCreate,
@@ -44,7 +45,9 @@ import {
   AdvertVersionEnum,
 } from './advert-publication.model'
 import { ApplicationModel } from './application.model'
+import type { CaseModel as CaseModelRef } from './case.model'
 import { CaseModel } from './case.model'
+import type { CategoryModel as CategoryModelRef } from './category.model'
 import { CategoryDto, CategoryModel } from './category.model'
 import { CommentDto, CommentModel, CommentTypeEnum } from './comment.model'
 import {
@@ -52,23 +55,31 @@ import {
   CommunicationChannelDto,
   CommunicationChannelModel,
 } from './communication-channel.model'
+import type { CourtDistrictModel as CourtDistrictModelRef } from './court-district.model'
 import { CourtDistrictDto, CourtDistrictModel } from './court-district.model'
 import { FeeCodeModel } from './fee-code.model'
+import type { ForeclosureModel as ForeclosureModelRef } from './foreclosure.model'
 import { ForeclosureModel } from './foreclosure.model'
 import { ForeclosurePropertyModel } from './foreclosure-property.model'
+import type { SettlementModel as SettlementModelRef } from './settlement.model'
 import {
   SettlementCreateAttributes,
   SettlementDto,
   SettlementModel,
 } from './settlement.model'
+import type { SignatureModel as SignatureModelRef } from './signature.model'
 import {
   SignatureCreationAttributes,
   SignatureDto,
   SignatureModel,
 } from './signature.model'
+import type { StatusModel as StatusModelRef } from './status.model'
 import { StatusDto, StatusModel } from './status.model'
+import type { TBRTransactionModel as TBRTransactionModelRef } from './tbr-transactions.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
+import type { TypeModel as TypeModelRef } from './type.model'
 import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
+import type { UserModel as UserModelRef } from './users.model'
 import { UserDto, UserModel } from './users.model'
 
 export enum AdvertTemplateType {
@@ -419,31 +430,31 @@ export class AdvertModel extends ParanoidModel<
   }
 
   @BelongsTo(() => CaseModel, { foreignKey: 'caseId' })
-  case!: CaseModel
+  case!: CaseModelRef
 
   @HasMany(() => CommunicationChannelModel)
   communicationChannels?: CommunicationChannelModel[]
 
   @BelongsTo(() => TypeModel)
-  type!: TypeModel
+  type!: TypeModelRef
 
   @BelongsTo(() => CategoryModel)
-  category!: CategoryModel
+  category!: CategoryModelRef
 
   @BelongsTo(() => StatusModel)
-  status!: StatusModel
+  status!: StatusModelRef
 
   @BelongsTo(() => SettlementModel)
-  settlement?: SettlementModel
+  settlement?: SettlementModelRef
 
   @BelongsTo(() => CourtDistrictModel)
-  courtDistrict?: CourtDistrictModel
+  courtDistrict?: CourtDistrictModelRef
 
   @BelongsTo(() => UserModel)
-  assignedUser?: UserModel
+  assignedUser?: UserModelRef
 
   @HasOne(() => SignatureModel)
-  signature?: SignatureModel
+  signature?: SignatureModelRef
 
   @HasMany(() => AdvertPublicationModel)
   publications!: AdvertPublicationModel[]
@@ -458,13 +469,13 @@ export class AdvertModel extends ParanoidModel<
   transactionId?: string | null
 
   @BelongsTo(() => TBRTransactionModel)
-  transaction?: TBRTransactionModel
+  transaction?: TBRTransactionModelRef
 
   @HasMany(() => CommentModel)
   comments!: CommentModel[]
 
   @HasOne(() => ForeclosureModel)
-  foreclosure?: ForeclosureModel
+  foreclosure?: ForeclosureModelRef
 
   get hasInternalComments(): boolean {
     const found = this.comments.find((c) => c.type === CommentTypeEnum.COMMENT)
