@@ -13,6 +13,7 @@ import {
 export enum LeanSearchQueryKind {
   Empty = 'empty',
   FreeText = 'free_text',
+  Phrase = 'phrase',
   PrefixWildcard = 'prefix_wildcard',
   PublicationNumber = 'publication_number',
   InternalCaseNumber = 'internal_case_number',

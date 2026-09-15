@@ -25,6 +25,7 @@ export const DEFAULT_SEARCH_DASHBOARD_PRESET = '30d'
 const QUERY_KIND_LABELS: Record<string, string> = {
   empty: 'Tóm leit',
   free_text: 'Frjáls leit',
+  phrase: 'Frasaleit',
   prefix_wildcard: 'Forskeytisleit',
   publication_number: 'Birtingarnúmer',
   internal_case_number: 'Málnúmer',
