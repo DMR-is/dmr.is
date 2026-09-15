@@ -15,7 +15,7 @@ import {
 } from '@dmr.is/decorators'
 import { Paging, PagingQuery } from '@dmr.is/shared-dto'
 
-import { AdvertDto } from '../../../../models/advert.model'
+import { AdvertDto } from '../../../../models/advert.dto'
 import {
   AdvertPublicationDto,
   AdvertVersionEnum,

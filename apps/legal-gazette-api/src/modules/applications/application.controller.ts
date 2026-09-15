@@ -27,7 +27,7 @@ import { ApplicationWebScopes } from '../../core/guards/scope-guards/scopes.deco
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-} from '../../models/application.model'
+} from '../../models/application.dto'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationAdvertPriceDto,

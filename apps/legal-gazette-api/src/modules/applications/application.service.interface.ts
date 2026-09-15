@@ -4,7 +4,7 @@ import { ApplicationTypeEnum } from '@dmr.is/legal-gazette-schemas'
 import {
   ApplicationDetailedDto,
   ApplicationDto,
-} from '../../models/application.model'
+} from '../../models/application.dto'
 import { GetMyApplicationsQueryDto } from '../../modules/applications/dto/application.dto'
 import {
   GetApplicationsDto,

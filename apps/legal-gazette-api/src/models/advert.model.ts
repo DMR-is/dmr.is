@@ -13,22 +13,7 @@ import {
 } from 'sequelize-typescript'
 
 import { InternalServerErrorException } from '@nestjs/common'
-import { PickType } from '@nestjs/swagger'
 
-import {
-  ApiBoolean,
-  ApiDto,
-  ApiDtoArray,
-  ApiEnum,
-  ApiNumber,
-  ApiOptionalDateTime,
-  ApiOptionalDto,
-  ApiOptionalNumber,
-  ApiOptionalString,
-  ApiOptionalUuid,
-  ApiString,
-  ApiUUId,
-} from '@dmr.is/decorators'
 import { getLogger } from '@dmr.is/logging'
 import { ParanoidModel, ParanoidTable } from '@dmr.is/shared-models-base'
 import { cleanLegalGazetteLegacyHtml } from '@dmr.is/utils-server/cleanLegacyHtml'
@@ -37,9 +22,15 @@ import { getHtmlTextLength } from '@dmr.is/utils-server/serverUtils'
 import { LegalGazetteModels } from '../core/constants'
 import { StatusIdEnum } from '../core/enums/status.enum'
 import { getAdvertHtmlMarkup } from '../core/html/advert-html'
-import { DetailedDto } from '../modules/shared/dto/detailed.dto'
+// Type-only: `advert.dto.ts` imports this module back, and the DTOs are only
+// ever mapper return types here - never constructed - so no runtime read is
+// emitted and the two files stay acyclic at value level. See `models.md`.
+import type {
+  AdvertDetailedDto,
+  AdvertDto,
+  ExternalAdvertDto,
+} from './advert.dto'
 import {
-  AdvertPublicationDto,
   AdvertPublicationModel,
   AdvertPublicationsCreateAttributes,
   AdvertVersionEnum,
@@ -48,39 +39,30 @@ import { ApplicationModel } from './application.model'
 import type { CaseModel as CaseModelRef } from './case.model'
 import { CaseModel } from './case.model'
 import type { CategoryModel as CategoryModelRef } from './category.model'
-import { CategoryDto, CategoryModel } from './category.model'
-import { CommentDto, CommentModel, CommentTypeEnum } from './comment.model'
+import { CategoryModel } from './category.model'
+import { CommentModel, CommentTypeEnum } from './comment.model'
 import {
   CommunicationChannelCreateAttributes,
-  CommunicationChannelDto,
   CommunicationChannelModel,
 } from './communication-channel.model'
 import type { CourtDistrictModel as CourtDistrictModelRef } from './court-district.model'
-import { CourtDistrictDto, CourtDistrictModel } from './court-district.model'
+import { CourtDistrictModel } from './court-district.model'
 import { FeeCodeModel } from './fee-code.model'
 import type { ForeclosureModel as ForeclosureModelRef } from './foreclosure.model'
 import { ForeclosureModel } from './foreclosure.model'
 import { ForeclosurePropertyModel } from './foreclosure-property.model'
 import type { SettlementModel as SettlementModelRef } from './settlement.model'
-import {
-  SettlementCreateAttributes,
-  SettlementDto,
-  SettlementModel,
-} from './settlement.model'
+import { SettlementCreateAttributes, SettlementModel } from './settlement.model'
 import type { SignatureModel as SignatureModelRef } from './signature.model'
-import {
-  SignatureCreationAttributes,
-  SignatureDto,
-  SignatureModel,
-} from './signature.model'
+import { SignatureCreationAttributes, SignatureModel } from './signature.model'
 import type { StatusModel as StatusModelRef } from './status.model'
-import { StatusDto, StatusModel } from './status.model'
+import { StatusModel } from './status.model'
 import type { TBRTransactionModel as TBRTransactionModelRef } from './tbr-transactions.model'
 import { TBRTransactionModel } from './tbr-transactions.model'
 import type { TypeModel as TypeModelRef } from './type.model'
-import { TypeDto, TypeIdEnum, TypeModel } from './type.model'
+import { TypeIdEnum, TypeModel } from './type.model'
 import type { UserModel as UserModelRef } from './users.model'
-import { UserDto, UserModel } from './users.model'
+import { UserModel } from './users.model'
 
 export enum AdvertTemplateType {
   COMMON = 'COMMON',
@@ -727,149 +709,4 @@ export class AdvertModel extends ParanoidModel<
   fromModelToExternal(): ExternalAdvertDto {
     return AdvertModel.fromModelToExternal(this)
   }
-}
-
-export class AdvertDetailedDto extends DetailedDto {
-  @ApiUUId()
-  id!: string
-
-  @ApiEnum(AdvertTemplateType, { enumName: 'AdvertTemplateType' })
-  templateType!: AdvertTemplateType
-
-  @ApiOptionalUuid()
-  caseId?: string
-
-  @ApiString()
-  title!: string
-
-  @ApiString()
-  createdBy!: string
-
-  @ApiString()
-  createdByNationalId!: string
-
-  @ApiOptionalString()
-  caption?: string
-
-  @ApiOptionalString()
-  content?: string
-
-  @ApiOptionalString()
-  publicationNumber?: string
-
-  @ApiOptionalString()
-  additionalText?: string
-
-  @ApiOptionalDateTime()
-  judgementDate?: Date
-
-  @ApiOptionalDateTime()
-  divisionMeetingDate?: Date
-
-  @ApiOptionalString()
-  divisionMeetingLocation?: string
-
-  @ApiBoolean()
-  canEdit!: boolean
-
-  @ApiBoolean()
-  canPublish!: boolean
-
-  @ApiBoolean()
-  isAssignedToMe!: boolean
-
-  @ApiOptionalDto(CourtDistrictDto)
-  courtDistrict?: CourtDistrictDto
-
-  @ApiOptionalDto(SettlementDto)
-  settlement?: SettlementDto
-
-  @ApiDtoArray(CommunicationChannelDto)
-  communicationChannels!: CommunicationChannelDto[]
-
-  @ApiDtoArray(AdvertPublicationDto)
-  publications!: AdvertPublicationDto[]
-
-  @ApiDto(CategoryDto)
-  category!: CategoryDto
-
-  @ApiDto(TypeDto)
-  type!: TypeDto
-
-  @ApiDto(StatusDto)
-  status!: StatusDto
-
-  @ApiOptionalDateTime()
-  scheduledAt!: Date | null
-
-  @ApiOptionalDateTime()
-  lastPublishedAt!: Date | null
-
-  @ApiOptionalDto(UserDto)
-  assignedUser?: UserDto
-
-  @ApiBoolean()
-  hasInternalComments!: boolean
-
-  @ApiDtoArray(CommentDto)
-  comments!: CommentDto[]
-
-  @ApiOptionalDto(SignatureDto)
-  signature?: SignatureDto
-
-  @ApiOptionalDateTime()
-  paidAt?: Date
-
-  @ApiOptionalNumber()
-  totalPrice?: number
-
-  @ApiNumber()
-  estimatedPrice!: number
-
-  @ApiOptionalNumber()
-  feeQuantity?: number
-}
-
-export class AdvertDto extends PickType(AdvertDetailedDto, [
-  'id',
-  'title',
-  'createdAt',
-  'updatedAt',
-  'deletedAt',
-  'createdBy',
-  'hasInternalComments',
-  'category',
-  'type',
-  'status',
-  'scheduledAt',
-  'assignedUser',
-  'publications',
-  'publicationNumber',
-] as const) {
-  @ApiOptionalDateTime()
-  lastPublishedAt!: Date | null
-}
-
-export class ExternalAdvertDto extends PickType(AdvertDetailedDto, [
-  'id',
-  'title',
-  'createdAt',
-  'updatedAt',
-  'createdBy',
-  'scheduledAt',
-  'caption',
-  'content',
-  'lastPublishedAt',
-] as const) {
-  @ApiOptionalString()
-  externalId?: string
-
-  @ApiString()
-  category!: string
-
-  @ApiString()
-  type!: string
-
-  @ApiString()
-  status!: string
 }
